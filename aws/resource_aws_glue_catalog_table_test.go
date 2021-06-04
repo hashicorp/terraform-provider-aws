@@ -6,18 +6,21 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
-	RegisterServiceErrorCheckFunc(glue.EndpointsID, testAccErrorCheckSkipGlue)
+	atest.RegisterServiceErrorCheckFunc(glue.EndpointsID, testAccErrorCheckSkipGlue)
 }
 
 func testAccErrorCheckSkipGlue(t *testing.T) resource.ErrorCheckFunc {
-	return testAccErrorCheckSkipMessagesContaining(t,
+	return atest.ErrorCheckSkipMessagesContaining(t,
 		"AccessDeniedException: Operation not allowed",
 	)
 }
@@ -27,9 +30,9 @@ func TestAccAWSGlueCatalogTable_basic(t *testing.T) {
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -37,12 +40,12 @@ func TestAccAWSGlueCatalogTable_basic(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogTableExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("table/%s/%s", rName, rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("table/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "partition_keys.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_table.#", "0"),
-					testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
+					atest.CheckAttrAccountID(resourceName, "catalog_id"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.#", "0"),
 				),
@@ -61,9 +64,9 @@ func TestAccAWSGlueCatalogTable_columnParameters(t *testing.T) {
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -92,9 +95,9 @@ func TestAccAWSGlueCatalogTable_full(t *testing.T) {
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -156,9 +159,9 @@ func TestAccAWSGlueCatalogTable_update_addValues(t *testing.T) {
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -229,9 +232,9 @@ func TestAccAWSGlueCatalogTable_update_replaceValues(t *testing.T) {
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -343,9 +346,9 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_EmptyConfigurationBlock(t *tes
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -364,9 +367,9 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_SerDeInfo_EmptyConfigurationBl
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -386,9 +389,9 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_SerDeInfo_UpdateValues(t *test
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -427,9 +430,9 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_SkewedInfo_EmptyConfigurationB
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -449,9 +452,9 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_schemaReference(t *testing.T) 
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -480,9 +483,9 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_schemaReferenceArn(t *testing.
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -510,9 +513,9 @@ func TestAccAWSGlueCatalogTable_partitionIndexesSingle(t *testing.T) {
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -520,7 +523,7 @@ func TestAccAWSGlueCatalogTable_partitionIndexesSingle(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogTableExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("table/%s/%s", rName, rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("table/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.0.index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.0.index_status", "ACTIVE"),
@@ -541,9 +544,9 @@ func TestAccAWSGlueCatalogTable_partitionIndexesMultiple(t *testing.T) {
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -551,7 +554,7 @@ func TestAccAWSGlueCatalogTable_partitionIndexesMultiple(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogTableExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("table/%s/%s", rName, rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("table/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.0.index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.0.index_status", "ACTIVE"),
@@ -575,9 +578,9 @@ func TestAccAWSGlueCatalogTable_disappears_database(t *testing.T) {
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -585,7 +588,7 @@ func TestAccAWSGlueCatalogTable_disappears_database(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogTableExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueCatalogDatabase(), "aws_glue_catalog_database.test"),
+					atest.CheckDisappears(atest.Provider, resourceAwsGlueCatalogDatabase(), "aws_glue_catalog_database.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -598,9 +601,9 @@ func TestAccAWSGlueCatalogTable_targetTable(t *testing.T) {
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -628,9 +631,9 @@ func TestAccAWSGlueCatalogTable_disappears(t *testing.T) {
 	resourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -638,7 +641,7 @@ func TestAccAWSGlueCatalogTable_disappears(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogTableExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueCatalogTable(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsGlueCatalogTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1092,7 +1095,7 @@ resource "aws_glue_catalog_table" "test" {
 }
 
 func testAccCheckGlueTableDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).glueconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).GlueConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glue_catalog_table" {
@@ -1106,7 +1109,7 @@ func testAccCheckGlueTableDestroy(s *terraform.State) error {
 
 		if _, err := finder.TableByName(conn, catalogId, dbName, resourceName); err != nil {
 			//Verify the error is what we want
-			if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 				continue
 			}
 
@@ -1133,7 +1136,7 @@ func testAccCheckGlueCatalogTableExists(name string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).GlueConn
 		out, err := finder.TableByName(conn, catalogId, dbName, resourceName)
 		if err != nil {
 			return err
