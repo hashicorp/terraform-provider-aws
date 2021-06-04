@@ -6,9 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCloudWatchDashboard() *schema.Resource {
@@ -54,7 +56,7 @@ func resourceAwsCloudWatchDashboard() *schema.Resource {
 func resourceAwsCloudWatchDashboardRead(d *schema.ResourceData, meta interface{}) error {
 	dashboardName := d.Get("dashboard_name").(string)
 	log.Printf("[DEBUG] Reading CloudWatch Dashboard: %s", dashboardName)
-	conn := meta.(*AWSClient).cloudwatchconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchConn
 
 	params := cloudwatch.GetDashboardInput{
 		DashboardName: aws.String(d.Id()),
@@ -77,7 +79,7 @@ func resourceAwsCloudWatchDashboardRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsCloudWatchDashboardPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchConn
 	params := cloudwatch.PutDashboardInput{
 		DashboardBody: aws.String(d.Get("dashboard_body").(string)),
 		DashboardName: aws.String(d.Get("dashboard_name").(string)),
@@ -97,7 +99,7 @@ func resourceAwsCloudWatchDashboardPut(d *schema.ResourceData, meta interface{})
 
 func resourceAwsCloudWatchDashboardDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Deleting CloudWatch Dashboard %s", d.Id())
-	conn := meta.(*AWSClient).cloudwatchconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchConn
 	params := cloudwatch.DeleteDashboardsInput{
 		DashboardNames: []*string{aws.String(d.Id())},
 	}
@@ -114,7 +116,7 @@ func resourceAwsCloudWatchDashboardDelete(d *schema.ResourceData, meta interface
 }
 
 func isCloudWatchDashboardNotFoundErr(err error) bool {
-	return isAWSErr(
+	return tfawserr.ErrMessageContains(
 		err,
 		"ResourceNotFound",
 		"does not exist")
