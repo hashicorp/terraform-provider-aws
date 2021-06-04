@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSAPIGatewayV2Authorizer_basic(t *testing.T) {
@@ -19,9 +22,9 @@ func TestAccAWSAPIGatewayV2Authorizer_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -56,16 +59,16 @@ func TestAccAWSAPIGatewayV2Authorizer_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayV2AuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2AuthorizerExists(resourceName, &apiId, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayV2Authorizer(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsApiGatewayV2Authorizer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,9 +85,9 @@ func TestAccAWSAPIGatewayV2Authorizer_Credentials(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -152,9 +155,9 @@ func TestAccAWSAPIGatewayV2Authorizer_JWT(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -212,9 +215,9 @@ func TestAccAWSAPIGatewayV2Authorizer_HttpApiLambdaRequestAuthorizer_InitialMiss
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -285,9 +288,9 @@ func TestAccAWSAPIGatewayV2Authorizer_HttpApiLambdaRequestAuthorizer_InitialZero
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -335,7 +338,7 @@ func TestAccAWSAPIGatewayV2Authorizer_HttpApiLambdaRequestAuthorizer_InitialZero
 }
 
 func testAccCheckAWSAPIGatewayV2AuthorizerDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_authorizer" {
@@ -346,7 +349,7 @@ func testAccCheckAWSAPIGatewayV2AuthorizerDestroy(s *terraform.State) error {
 			ApiId:        aws.String(rs.Primary.Attributes["api_id"]),
 			AuthorizerId: aws.String(rs.Primary.ID),
 		})
-		if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 			continue
 		}
 		if err != nil {
@@ -370,7 +373,7 @@ func testAccCheckAWSAPIGatewayV2AuthorizerExists(n string, vApiId *string, v *ap
 			return fmt.Errorf("No API Gateway v2 authorizer ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayV2Conn
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
 		resp, err := conn.GetAuthorizer(&apigatewayv2.GetAuthorizerInput{
@@ -419,7 +422,7 @@ resource "aws_apigatewayv2_api" "test" {
 }
 
 func testAccAWSAPIGatewayV2AuthorizerConfig_baseLambda(rName string) string {
-	return composeConfig(baseAccAWSLambdaConfig(rName, rName, rName), fmt.Sprintf(`
+	return atest.ComposeConfig(baseAccAWSLambdaConfig(rName, rName, rName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
@@ -447,7 +450,7 @@ EOF
 }
 
 func testAccAWSAPIGatewayV2AuthorizerConfig_basic(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2AuthorizerConfig_apiWebSocket(rName),
 		testAccAWSAPIGatewayV2AuthorizerConfig_baseLambda(rName),
 		fmt.Sprintf(`
@@ -461,7 +464,7 @@ resource "aws_apigatewayv2_authorizer" "test" {
 }
 
 func testAccAWSAPIGatewayV2AuthorizerConfig_credentials(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2AuthorizerConfig_apiWebSocket(rName),
 		testAccAWSAPIGatewayV2AuthorizerConfig_baseLambda(rName),
 		fmt.Sprintf(`
@@ -478,7 +481,7 @@ resource "aws_apigatewayv2_authorizer" "test" {
 }
 
 func testAccAWSAPIGatewayV2AuthorizerConfig_credentialsUpdated(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2AuthorizerConfig_apiWebSocket(rName),
 		testAccAWSAPIGatewayV2AuthorizerConfig_baseLambda(rName),
 		fmt.Sprintf(`
@@ -495,7 +498,7 @@ resource "aws_apigatewayv2_authorizer" "test" {
 }
 
 func testAccAWSAPIGatewayV2AuthorizerConfig_jwt(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2AuthorizerConfig_apiHttp(rName),
 		testAccAWSAPIGatewayV2AuthorizerConfig_baseLambda(rName),
 		fmt.Sprintf(`
@@ -518,7 +521,7 @@ resource "aws_apigatewayv2_authorizer" "test" {
 }
 
 func testAccAWSAPIGatewayV2AuthorizerConfig_jwtUpdated(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2AuthorizerConfig_apiHttp(rName),
 		testAccAWSAPIGatewayV2AuthorizerConfig_baseLambda(rName),
 		fmt.Sprintf(`
@@ -541,7 +544,7 @@ resource "aws_apigatewayv2_authorizer" "test" {
 }
 
 func testAccAWSAPIGatewayV2AuthorizerConfig_httpApiLambdaRequestAuthorizer(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2AuthorizerConfig_apiHttp(rName),
 		testAccAWSAPIGatewayV2AuthorizerConfig_baseLambda(rName),
 		fmt.Sprintf(`
@@ -558,7 +561,7 @@ resource "aws_apigatewayv2_authorizer" "test" {
 }
 
 func testAccAWSAPIGatewayV2AuthorizerConfig_httpApiLambdaRequestAuthorizerUpdated(rName string, authorizerResultTtl int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2AuthorizerConfig_apiHttp(rName),
 		testAccAWSAPIGatewayV2AuthorizerConfig_baseLambda(rName),
 		fmt.Sprintf(`
