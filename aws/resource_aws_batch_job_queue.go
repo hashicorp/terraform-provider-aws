@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsBatchJobQueue() *schema.Resource {
@@ -63,8 +64,8 @@ func resourceAwsBatchJobQueue() *schema.Resource {
 }
 
 func resourceAwsBatchJobQueueCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).batchconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).BatchConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	input := batch.CreateJobQueueInput{
 		ComputeEnvironmentOrder: createComputeEnvironmentOrder(d.Get("compute_environments").([]interface{})),
@@ -105,9 +106,9 @@ func resourceAwsBatchJobQueueCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsBatchJobQueueRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).batchconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).BatchConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	jq, err := getJobQueue(conn, d.Id())
 	if err != nil {
@@ -154,7 +155,7 @@ func resourceAwsBatchJobQueueRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsBatchJobQueueUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).batchconn
+	conn := meta.(*awsprovider.AWSClient).BatchConn
 
 	if d.HasChanges("compute_environments", "priority", "state") {
 		name := d.Get("name").(string)
@@ -195,7 +196,7 @@ func resourceAwsBatchJobQueueUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsBatchJobQueueDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).batchconn
+	conn := meta.(*awsprovider.AWSClient).BatchConn
 	name := d.Get("name").(string)
 
 	log.Printf("[DEBUG] Disabling Batch Job Queue %s", name)
