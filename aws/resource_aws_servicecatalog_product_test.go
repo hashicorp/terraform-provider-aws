@@ -13,8 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	tfservicecatalog "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // add sweeper to delete known test servicecat products
@@ -29,14 +31,14 @@ func init() {
 }
 
 func testSweepServiceCatalogProducts(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).scconn
-	sweepResources := make([]*testSweepResource, 0)
+	conn := client.(*awsprovider.AWSClient).ServiceCatalogConn
+	sweepResources := make([]*atest.TestSweepResource, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.SearchProductsAsAdminInput{}
@@ -57,7 +59,7 @@ func testSweepServiceCatalogProducts(region string) error {
 			d := r.Data(nil)
 			d.SetId(id)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, atest.NewTestSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -67,11 +69,11 @@ func testSweepServiceCatalogProducts(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Products for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = atest.TestSweepResourceOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Products for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if atest.SweepSkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Products sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -84,18 +86,18 @@ func TestAccAWSServiceCatalogProduct_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, servicecatalog.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSServiceCatalogProductConfig_basic(rName, "beskrivning", "supportbeskrivning"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexp.MustCompile(`product/prod-.*`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "catalog", regexp.MustCompile(`product/prod-.*`)),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
-					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
+					atest.CheckAttrRfc3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "description", "beskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "distributor", "distributör"),
 					resource.TestCheckResourceAttr(resourceName, "has_default_path", "false"),
@@ -134,16 +136,16 @@ func TestAccAWSServiceCatalogProduct_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, servicecatalog.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSServiceCatalogProductConfig_basic(rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogProduct(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsServiceCatalogProduct(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -156,9 +158,9 @@ func TestAccAWSServiceCatalogProduct_update(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, servicecatalog.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -190,9 +192,9 @@ func TestAccAWSServiceCatalogProduct_updateTags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, servicecatalog.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -221,21 +223,21 @@ func TestAccAWSServiceCatalogProduct_physicalID(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, servicecatalog.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSServiceCatalogProductConfig_physicalID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexp.MustCompile(`product/prod-.*`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "catalog", regexp.MustCompile(`product/prod-.*`)),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.description", "artefaktbeskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioning_artifact_parameters.0.template_physical_id"),
-					testAccMatchResourceAttrRegionalARN(
+					atest.MatchAttrRegionalARN(
 						resourceName,
 						"provisioning_artifact_parameters.0.template_physical_id",
 						"cloudformation",
@@ -258,7 +260,7 @@ func TestAccAWSServiceCatalogProduct_physicalID(t *testing.T) {
 }
 
 func testAccCheckAwsServiceCatalogProductDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).scconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ServiceCatalogConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_product" {
@@ -295,7 +297,7 @@ func testAccCheckAwsServiceCatalogProductExists(resourceName string) resource.Te
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).scconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ServiceCatalogConn
 
 		input := &servicecatalog.DescribeProductAsAdminInput{
 			Id: aws.String(rs.Primary.ID),
@@ -349,7 +351,7 @@ resource "aws_s3_bucket_object" "test" {
 }
 
 func testAccAWSServiceCatalogProductConfig_basic(rName, description, supportDescription string) string {
-	return composeConfig(testAccAWSServiceCatalogProductConfigTemplateURLBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSServiceCatalogProductConfigTemplateURLBase(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_servicecatalog_product" "test" {
@@ -378,7 +380,7 @@ resource "aws_servicecatalog_product" "test" {
 }
 
 func testAccAWSServiceCatalogProductConfig_updateTags(rName, description, supportDescription string) string {
-	return composeConfig(testAccAWSServiceCatalogProductConfigTemplateURLBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSServiceCatalogProductConfigTemplateURLBase(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_servicecatalog_product" "test" {
