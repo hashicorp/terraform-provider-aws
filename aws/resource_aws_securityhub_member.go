@@ -6,7 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -59,7 +61,7 @@ func resourceAwsSecurityHubMember() *schema.Resource {
 }
 
 func resourceAwsSecurityHubMemberCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*awsprovider.AWSClient).SecurityHubConn
 	log.Printf("[DEBUG] Creating Security Hub member %s", d.Get("account_id").(string))
 
 	resp, err := conn.CreateMembers(&securityhub.CreateMembersInput{
@@ -100,7 +102,7 @@ func resourceAwsSecurityHubMemberCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsSecurityHubMemberRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*awsprovider.AWSClient).SecurityHubConn
 
 	log.Printf("[DEBUG] Reading Security Hub member %s", d.Id())
 	resp, err := conn.GetMembers(&securityhub.GetMembersInput{
@@ -108,7 +110,7 @@ func resourceAwsSecurityHubMemberRead(d *schema.ResourceData, meta interface{}) 
 	})
 
 	if err != nil {
-		if isAWSErr(err, securityhub.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, securityhub.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Security Hub member (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -138,12 +140,12 @@ func resourceAwsSecurityHubMemberRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSecurityHubMemberDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*awsprovider.AWSClient).SecurityHubConn
 
 	_, err := conn.DisassociateMembers(&securityhub.DisassociateMembersInput{
 		AccountIds: []*string{aws.String(d.Id())},
 	})
-	if isAWSErr(err, securityhub.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, securityhub.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
@@ -154,7 +156,7 @@ func resourceAwsSecurityHubMemberDelete(d *schema.ResourceData, meta interface{}
 		AccountIds: []*string{aws.String(d.Id())},
 	})
 
-	if isAWSErr(err, securityhub.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, securityhub.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
