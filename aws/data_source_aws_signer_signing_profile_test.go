@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/signer"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAWSSignerSigningProfile_basic(t *testing.T) {
@@ -16,9 +17,9 @@ func TestAccDataSourceAWSSignerSigningProfile_basic(t *testing.T) {
 	profileName := fmt.Sprintf("tf_acc_sp_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck: testAccErrorCheck(t, signer.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck: atest.ErrorCheck(t, signer.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSSignerSigningProfileConfigBasic(profileName),
