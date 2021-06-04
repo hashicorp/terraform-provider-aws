@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCodeBuildSourceCredential() *schema.Resource {
@@ -60,7 +62,7 @@ func resourceAwsCodeBuildSourceCredential() *schema.Resource {
 }
 
 func resourceAwsCodeBuildSourceCredentialCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codebuildconn
+	conn := meta.(*awsprovider.AWSClient).CodeBuildConn
 
 	authType := d.Get("auth_type").(string)
 
@@ -85,7 +87,7 @@ func resourceAwsCodeBuildSourceCredentialCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsCodeBuildSourceCredentialRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codebuildconn
+	conn := meta.(*awsprovider.AWSClient).CodeBuildConn
 
 	resp, err := conn.ListSourceCredentials(&codebuild.ListSourceCredentialsInput{})
 	if err != nil {
@@ -115,14 +117,14 @@ func resourceAwsCodeBuildSourceCredentialRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsCodeBuildSourceCredentialDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codebuildconn
+	conn := meta.(*awsprovider.AWSClient).CodeBuildConn
 
 	deleteOpts := &codebuild.DeleteSourceCredentialsInput{
 		Arn: aws.String(d.Id()),
 	}
 
 	if _, err := conn.DeleteSourceCredentials(deleteOpts); err != nil {
-		if isAWSErr(err, codebuild.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, codebuild.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting Source Credentials(%s): %s", d.Id(), err)
