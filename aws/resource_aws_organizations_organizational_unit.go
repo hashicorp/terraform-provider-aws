@@ -12,8 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsOrganizationsOrganizationalUnit() *schema.Resource {
@@ -75,8 +76,8 @@ func resourceAwsOrganizationsOrganizationalUnit() *schema.Resource {
 }
 
 func resourceAwsOrganizationsOrganizationalUnitCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).OrganizationsConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Create the organizational unit
@@ -116,9 +117,9 @@ func resourceAwsOrganizationsOrganizationalUnitCreate(d *schema.ResourceData, me
 }
 
 func resourceAwsOrganizationsOrganizationalUnitRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).OrganizationsConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	describeOpts := &organizations.DescribeOrganizationalUnitInput{
 		OrganizationalUnitId: aws.String(d.Id()),
@@ -200,7 +201,7 @@ func resourceAwsOrganizationsOrganizationalUnitRead(d *schema.ResourceData, meta
 }
 
 func resourceAwsOrganizationsOrganizationalUnitUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*awsprovider.AWSClient).OrganizationsConn
 
 	if d.HasChange("name") {
 		updateOpts := &organizations.UpdateOrganizationalUnitInput{
@@ -226,7 +227,7 @@ func resourceAwsOrganizationsOrganizationalUnitUpdate(d *schema.ResourceData, me
 }
 
 func resourceAwsOrganizationsOrganizationalUnitDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*awsprovider.AWSClient).OrganizationsConn
 
 	input := &organizations.DeleteOrganizationalUnitInput{
 		OrganizationalUnitId: aws.String(d.Id()),
