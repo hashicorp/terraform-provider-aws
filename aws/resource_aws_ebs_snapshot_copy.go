@@ -8,9 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEbsSnapshotCopy() *schema.Resource {
@@ -79,8 +81,8 @@ func resourceAwsEbsSnapshotCopy() *schema.Resource {
 }
 
 func resourceAwsEbsSnapshotCopyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &ec2.CopySnapshotInput{
@@ -114,15 +116,15 @@ func resourceAwsEbsSnapshotCopyCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsEbsSnapshotCopyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeSnapshotsInput{
 		SnapshotIds: []*string{aws.String(d.Id())},
 	}
 	res, err := conn.DescribeSnapshots(req)
-	if isAWSErr(err, "InvalidSnapshot.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidSnapshot.NotFound", "") {
 		log.Printf("Snapshot %q Not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -155,8 +157,8 @@ func resourceAwsEbsSnapshotCopyRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	snapshotArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Resource:  fmt.Sprintf("snapshot/%s", d.Id()),
 		Service:   ec2.ServiceName,
 	}.String()
@@ -167,7 +169,7 @@ func resourceAwsEbsSnapshotCopyRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsEbsSnapshotCopyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 	input := &ec2.DeleteSnapshotInput{
 		SnapshotId: aws.String(d.Id()),
 	}
@@ -177,11 +179,11 @@ func resourceAwsEbsSnapshotCopyDelete(d *schema.ResourceData, meta interface{}) 
 			return nil
 		}
 
-		if isAWSErr(err, "SnapshotInUse", "") {
+		if tfawserr.ErrMessageContains(err, "SnapshotInUse", "") {
 			return resource.RetryableError(fmt.Errorf("EBS SnapshotInUse - trying again while it detaches"))
 		}
 
-		if isAWSErr(err, "InvalidSnapshot.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidSnapshot.NotFound", "") {
 			return nil
 		}
 
@@ -189,7 +191,7 @@ func resourceAwsEbsSnapshotCopyDelete(d *schema.ResourceData, meta interface{}) 
 	})
 	if isResourceTimeoutError(err) {
 		_, err = conn.DeleteSnapshot(input)
-		if isAWSErr(err, "InvalidSnapshot.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidSnapshot.NotFound", "") {
 			return nil
 		}
 	}
@@ -200,7 +202,7 @@ func resourceAwsEbsSnapshotCopyDelete(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsEbsSnapshotCopyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
