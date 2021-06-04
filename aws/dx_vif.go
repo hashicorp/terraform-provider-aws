@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dxVirtualInterfaceRead(id string, conn *directconnect.DirectConnect) (*directconnect.VirtualInterface, error) {
@@ -25,7 +27,7 @@ func dxVirtualInterfaceRead(id string, conn *directconnect.DirectConnect) (*dire
 }
 
 func dxVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	if d.HasChange("mtu") {
 		req := &directconnect.UpdateVirtualInterfaceAttributesInput{
@@ -53,14 +55,14 @@ func dxVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func dxVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	log.Printf("[DEBUG] Deleting Direct Connect virtual interface: %s", d.Id())
 	_, err := conn.DeleteVirtualInterface(&directconnect.DeleteVirtualInterfaceInput{
 		VirtualInterfaceId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, directconnect.ErrCodeClientException, "does not exist") {
+		if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "does not exist") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Direct Connect virtual interface (%s): %s", d.Id(), err)
