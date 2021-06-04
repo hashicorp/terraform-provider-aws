@@ -8,8 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDirectoryServiceConditionalForwarder() *schema.Resource {
@@ -50,7 +52,7 @@ func resourceAwsDirectoryServiceConditionalForwarder() *schema.Resource {
 }
 
 func resourceAwsDirectoryServiceConditionalForwarderCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dsconn
+	conn := meta.(*awsprovider.AWSClient).DirectoryConn
 
 	dnsIps := expandStringList(d.Get("dns_ips").([]interface{}))
 
@@ -73,7 +75,7 @@ func resourceAwsDirectoryServiceConditionalForwarderCreate(d *schema.ResourceDat
 }
 
 func resourceAwsDirectoryServiceConditionalForwarderRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dsconn
+	conn := meta.(*awsprovider.AWSClient).DirectoryConn
 
 	directoryId, domainName, err := parseDSConditionalForwarderId(d.Id())
 	if err != nil {
@@ -86,7 +88,7 @@ func resourceAwsDirectoryServiceConditionalForwarderRead(d *schema.ResourceData,
 	})
 
 	if err != nil {
-		if isAWSErr(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
 			log.Printf("[WARN] Directory Service Conditional Forwarder (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -110,7 +112,7 @@ func resourceAwsDirectoryServiceConditionalForwarderRead(d *schema.ResourceData,
 }
 
 func resourceAwsDirectoryServiceConditionalForwarderUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dsconn
+	conn := meta.(*awsprovider.AWSClient).DirectoryConn
 
 	directoryId, domainName, err := parseDSConditionalForwarderId(d.Id())
 	if err != nil {
@@ -133,7 +135,7 @@ func resourceAwsDirectoryServiceConditionalForwarderUpdate(d *schema.ResourceDat
 }
 
 func resourceAwsDirectoryServiceConditionalForwarderDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dsconn
+	conn := meta.(*awsprovider.AWSClient).DirectoryConn
 
 	directoryId, domainName, err := parseDSConditionalForwarderId(d.Id())
 	if err != nil {
@@ -145,7 +147,7 @@ func resourceAwsDirectoryServiceConditionalForwarderDelete(d *schema.ResourceDat
 		RemoteDomainName: aws.String(domainName),
 	})
 
-	if err != nil && !isAWSErr(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
+	if err != nil && !tfawserr.ErrMessageContains(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
 		return err
 	}
 
