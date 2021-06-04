@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func testResourceAwsCloudWatchEventTargetStateDataV0() map[string]interface{} {
+func testresourceAwsCloudWatchEventTargetStateDataV0() map[string]interface{} {
 	return map[string]interface{}{
 		"arn":       "arn:aws:test:us-east-1:123456789012:test", //lintignore:AWSAT003,AWSAT005
 		"rule":      "testrule",
@@ -14,7 +14,7 @@ func testResourceAwsCloudWatchEventTargetStateDataV0() map[string]interface{} {
 	}
 }
 
-func testResourceAwsCloudWatchEventTargetStateDataV0EventBusName() map[string]interface{} {
+func testresourceAwsCloudWatchEventTargetStateDataV0EventBusName() map[string]interface{} {
 	return map[string]interface{}{
 		"arn":            "arn:aws:test:us-east-1:123456789012:test", //lintignore:AWSAT003,AWSAT005
 		"event_bus_name": "testbus",
@@ -23,8 +23,8 @@ func testResourceAwsCloudWatchEventTargetStateDataV0EventBusName() map[string]in
 	}
 }
 
-func testResourceAwsCloudWatchEventTargetStateDataV1() map[string]interface{} {
-	v0 := testResourceAwsCloudWatchEventTargetStateDataV0()
+func testresourceAwsCloudWatchEventTargetStateDataV1() map[string]interface{} {
+	v0 := testresourceAwsCloudWatchEventTargetStateDataV0()
 	return map[string]interface{}{
 		"arn":            v0["arn"],
 		"event_bus_name": "default",
@@ -33,8 +33,8 @@ func testResourceAwsCloudWatchEventTargetStateDataV1() map[string]interface{} {
 	}
 }
 
-func testResourceAwsCloudWatchEventTargetStateDataV1EventBusName() map[string]interface{} {
-	v0 := testResourceAwsCloudWatchEventTargetStateDataV0EventBusName()
+func testresourceAwsCloudWatchEventTargetStateDataV1EventBusName() map[string]interface{} {
+	v0 := testresourceAwsCloudWatchEventTargetStateDataV0EventBusName()
 	return map[string]interface{}{
 		"arn":            v0["arn"],
 		"event_bus_name": v0["event_bus_name"],
@@ -43,9 +43,9 @@ func testResourceAwsCloudWatchEventTargetStateDataV1EventBusName() map[string]in
 	}
 }
 
-func TestResourceAwsCloudWatchEventTargetStateUpgradeV0(t *testing.T) {
-	expected := testResourceAwsCloudWatchEventTargetStateDataV1()
-	actual, err := resourceAwsCloudWatchEventTargetStateUpgradeV0(context.Background(), testResourceAwsCloudWatchEventTargetStateDataV0(), nil)
+func TestresourceAwsCloudWatchEventTargetStateUpgradeV0(t *testing.T) {
+	expected := testresourceAwsCloudWatchEventTargetStateDataV1()
+	actual, err := resourceAwsCloudWatchEventTargetStateUpgradeV0(context.Background(), testresourceAwsCloudWatchEventTargetStateDataV0(), nil)
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)
 	}
@@ -55,9 +55,9 @@ func TestResourceAwsCloudWatchEventTargetStateUpgradeV0(t *testing.T) {
 	}
 }
 
-func TestResourceAwsCloudWatchEventTargetStateUpgradeV0EventBusName(t *testing.T) {
-	expected := testResourceAwsCloudWatchEventTargetStateDataV1EventBusName()
-	actual, err := resourceAwsCloudWatchEventTargetStateUpgradeV0(context.Background(), testResourceAwsCloudWatchEventTargetStateDataV0EventBusName(), nil)
+func TestresourceAwsCloudWatchEventTargetStateUpgradeV0EventBusName(t *testing.T) {
+	expected := testresourceAwsCloudWatchEventTargetStateDataV1EventBusName()
+	actual, err := resourceAwsCloudWatchEventTargetStateUpgradeV0(context.Background(), testresourceAwsCloudWatchEventTargetStateDataV0EventBusName(), nil)
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)
 	}
