@@ -9,10 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfiam "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsInstance() *schema.Resource {
@@ -20,7 +22,7 @@ func dataSourceAwsInstance() *schema.Resource {
 		Read: dataSourceAwsInstanceRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter":        dataSourceFiltersSchema(),
+			"filter":        awsprovider.DataSourceFiltersSchema(),
 			"tags":          tagsSchemaComputed(),
 			"instance_tags": tagsSchemaComputed(),
 			"instance_id": {
@@ -349,8 +351,8 @@ func dataSourceAwsInstance() *schema.Resource {
 
 // dataSourceAwsInstanceRead performs the instanceID lookup
 func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	filters, filtersOk := d.GetOk("filter")
 	instanceID, instanceIDOk := d.GetOk("instance_id")
@@ -363,7 +365,7 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	// Build up search parameters
 	params := &ec2.DescribeInstancesInput{}
 	if filtersOk {
-		params.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
+		params.Filters = awsprovider.BuildDataSourceFilters(filters.(*schema.Set))
 	}
 	if instanceIDOk {
 		params.InstanceIds = []*string{aws.String(instanceID.(string))}
@@ -423,10 +425,10 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	// ARN
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Service:   ec2.ServiceName,
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("instance/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
@@ -560,7 +562,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US)
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362
-		if err != nil && !isAWSErr(err, "UnsupportedOperation", "") {
+		if err != nil && !tfawserr.ErrMessageContains(err, "UnsupportedOperation", "") {
 			return fmt.Errorf("error getting EC2 Instance (%s) Credit Specifications: %w", d.Id(), err)
 		}
 	}
