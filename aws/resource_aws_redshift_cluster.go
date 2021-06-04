@@ -10,10 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsRedshiftCluster() *schema.Resource {
@@ -197,7 +199,7 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"elastic_ip": {
@@ -338,8 +340,8 @@ func resourceAwsRedshiftClusterImport(
 }
 
 func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RedshiftConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	if v, ok := d.GetOk("snapshot_identifier"); ok {
@@ -526,9 +528,9 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RedshiftConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading Redshift Cluster Information: %s", d.Id())
 	resp, err := conn.DescribeClusters(&redshift.DescribeClustersInput{
@@ -536,7 +538,7 @@ func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) er
 	})
 
 	if err != nil {
-		if isAWSErr(err, redshift.ErrCodeClusterNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, redshift.ErrCodeClusterNotFoundFault, "") {
 			d.SetId("")
 			log.Printf("[DEBUG] Redshift Cluster (%s) not found", d.Id())
 			return nil
@@ -643,10 +645,10 @@ func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "redshift",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
 	}.String()
 
@@ -656,7 +658,7 @@ func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*awsprovider.AWSClient).RedshiftConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -883,7 +885,7 @@ func enableRedshiftSnapshotCopy(id string, scList []interface{}, conn *redshift.
 }
 
 func resourceAwsRedshiftClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*awsprovider.AWSClient).RedshiftConn
 	log.Printf("[DEBUG] Destroying Redshift Cluster (%s)", d.Id())
 
 	deleteOpts := redshift.DeleteClusterInput{
@@ -918,7 +920,7 @@ func deleteAwsRedshiftCluster(opts *redshift.DeleteClusterInput, conn *redshift.
 	log.Printf("[INFO] Deleting Redshift Cluster %q", id)
 	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteCluster(opts)
-		if isAWSErr(err, redshift.ErrCodeInvalidClusterStateFault, "") {
+		if tfawserr.ErrMessageContains(err, redshift.ErrCodeInvalidClusterStateFault, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -955,7 +957,7 @@ func resourceAwsRedshiftClusterStateRefreshFunc(id string, conn *redshift.Redshi
 		})
 
 		if err != nil {
-			if isAWSErr(err, redshift.ErrCodeClusterNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, redshift.ErrCodeClusterNotFoundFault, "") {
 				return 42, "destroyed", nil
 			}
 			log.Printf("[WARN] Error on retrieving Redshift Cluster (%s) when waiting: %s", id, err)
