@@ -7,11 +7,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53resolver/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -26,11 +29,11 @@ func init() {
 }
 
 func testSweepRoute53ResolverFirewallRuleGroups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).route53resolverconn
+	conn := client.(*awsprovider.AWSClient).Route53ResolverConn
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListFirewallRuleGroupsPages(&route53resolver.ListFirewallRuleGroupsInput{}, func(page *route53resolver.ListFirewallRuleGroupsOutput, lastPage bool) bool {
@@ -56,7 +59,7 @@ func testSweepRoute53ResolverFirewallRuleGroups(region string) error {
 
 		return !lastPage
 	})
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Route53 Resolver DNS Firewall rule groups sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -73,9 +76,9 @@ func TestAccAWSRoute53ResolverFirewallRuleGroup_basic(t *testing.T) {
 	resourceName := "aws_route53_resolver_firewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53resolver.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -83,7 +86,7 @@ func TestAccAWSRoute53ResolverFirewallRuleGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallRuleGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					atest.CheckAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -103,16 +106,16 @@ func TestAccAWSRoute53ResolverFirewallRuleGroup_disappears(t *testing.T) {
 	resourceName := "aws_route53_resolver_firewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53resolver.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53ResolverFirewallRuleGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallRuleGroupExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53ResolverFirewallRuleGroup(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsRoute53ResolverFirewallRuleGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -126,9 +129,9 @@ func TestAccAWSRoute53ResolverFirewallRuleGroup_tags(t *testing.T) {
 	resourceName := "aws_route53_resolver_firewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53resolver.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -136,7 +139,7 @@ func TestAccAWSRoute53ResolverFirewallRuleGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallRuleGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					atest.CheckAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -152,7 +155,7 @@ func TestAccAWSRoute53ResolverFirewallRuleGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallRuleGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					atest.CheckAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -164,7 +167,7 @@ func TestAccAWSRoute53ResolverFirewallRuleGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallRuleGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					atest.CheckAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -175,7 +178,7 @@ func TestAccAWSRoute53ResolverFirewallRuleGroup_tags(t *testing.T) {
 }
 
 func testAccCheckRoute53ResolverFirewallRuleGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).Route53ResolverConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_firewall_rule_group" {
@@ -185,7 +188,7 @@ func testAccCheckRoute53ResolverFirewallRuleGroupDestroy(s *terraform.State) err
 		// Try to find the resource
 		_, err := finder.FirewallRuleGroupByID(conn, rs.Primary.ID)
 		// Verify the error is what we want
-		if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 		if err != nil {
@@ -208,7 +211,7 @@ func testAccCheckRoute53ResolverFirewallRuleGroupExists(n string, v *route53reso
 			return fmt.Errorf("No Route 53 Resolver DNS Firewall rule group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).Route53ResolverConn
 		out, err := finder.FirewallRuleGroupByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
