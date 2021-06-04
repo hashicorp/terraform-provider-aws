@@ -9,7 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDxHostedPublicVirtualInterfaceAccepter() *schema.Resource {
@@ -46,7 +47,7 @@ func resourceAwsDxHostedPublicVirtualInterfaceAccepter() *schema.Resource {
 }
 
 func resourceAwsDxHostedPublicVirtualInterfaceAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	vifId := d.Get("virtual_interface_id").(string)
 	req := &directconnect.ConfirmPublicVirtualInterfaceInput{
@@ -61,10 +62,10 @@ func resourceAwsDxHostedPublicVirtualInterfaceAccepterCreate(d *schema.ResourceD
 
 	d.SetId(vifId)
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Service:   "directconnect",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -77,9 +78,9 @@ func resourceAwsDxHostedPublicVirtualInterfaceAccepterCreate(d *schema.ResourceD
 }
 
 func resourceAwsDxHostedPublicVirtualInterfaceAccepterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
 	if err != nil {
@@ -136,7 +137,7 @@ func resourceAwsDxHostedPublicVirtualInterfaceAccepterDelete(d *schema.ResourceD
 }
 
 func resourceAwsDxHostedPublicVirtualInterfaceAccepterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
 	if err != nil {
@@ -151,10 +152,10 @@ func resourceAwsDxHostedPublicVirtualInterfaceAccepterImport(d *schema.ResourceD
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Service:   "directconnect",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
