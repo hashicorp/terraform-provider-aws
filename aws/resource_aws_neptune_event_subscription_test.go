@@ -8,11 +8,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/neptune/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -23,11 +26,11 @@ func init() {
 }
 
 func testSweepNeptuneEventSubscriptions(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).neptuneconn
+	conn := client.(*awsprovider.AWSClient).NeptuneConn
 	var sweeperErrs *multierror.Error
 
 	err = conn.DescribeEventSubscriptionsPages(&neptune.DescribeEventSubscriptionsInput{}, func(page *neptune.DescribeEventSubscriptionsOutput, lastPage bool) bool {
@@ -42,7 +45,7 @@ func testSweepNeptuneEventSubscriptions(region string) error {
 			_, err = conn.DeleteEventSubscription(&neptune.DeleteEventSubscriptionInput{
 				SubscriptionName: aws.String(name),
 			})
-			if isAWSErr(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
 				continue
 			}
 			if err != nil {
@@ -53,7 +56,7 @@ func testSweepNeptuneEventSubscriptions(region string) error {
 			}
 
 			_, err = waiter.EventSubscriptionDeleted(conn, name)
-			if isAWSErr(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
 				continue
 			}
 			if err != nil {
@@ -66,7 +69,7 @@ func testSweepNeptuneEventSubscriptions(region string) error {
 
 		return !lastPage
 	})
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Neptune Event Subscriptions sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -85,16 +88,16 @@ func TestAccAWSNeptuneEventSubscription_basic(t *testing.T) {
 	resourceName := "aws_neptune_event_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, neptune.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNeptuneEventSubscriptionConfig(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneEventSubscriptionExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("es:%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("es:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "source_type", "db-instance"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -129,9 +132,9 @@ func TestAccAWSNeptuneEventSubscription_withPrefix(t *testing.T) {
 	resourceName := "aws_neptune_event_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, neptune.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -158,9 +161,9 @@ func TestAccAWSNeptuneEventSubscription_withSourceIds(t *testing.T) {
 	resourceName := "aws_neptune_event_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, neptune.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -196,9 +199,9 @@ func TestAccAWSNeptuneEventSubscription_withCategories(t *testing.T) {
 	resourceName := "aws_neptune_event_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, neptune.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -237,7 +240,7 @@ func testAccCheckAWSNeptuneEventSubscriptionExists(n string, v *neptune.EventSub
 			return fmt.Errorf("No Neptune Event Subscription is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).neptuneconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).NeptuneConn
 
 		opts := neptune.DescribeEventSubscriptionsInput{
 			SubscriptionName: aws.String(rs.Primary.ID),
@@ -260,7 +263,7 @@ func testAccCheckAWSNeptuneEventSubscriptionExists(n string, v *neptune.EventSub
 }
 
 func testAccCheckAWSNeptuneEventSubscriptionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).neptuneconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).NeptuneConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_neptune_event_subscription" {
@@ -273,7 +276,7 @@ func testAccCheckAWSNeptuneEventSubscriptionDestroy(s *terraform.State) error {
 				SubscriptionName: aws.String(rs.Primary.ID),
 			})
 
-		if isAWSErr(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
 			continue
 		}
 
