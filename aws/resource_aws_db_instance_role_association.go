@@ -8,8 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // Constants not currently provided by the AWS Go SDK
@@ -44,14 +46,14 @@ func resourceAwsDbInstanceRoleAssociation() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 		},
 	}
 }
 
 func resourceAwsDbInstanceRoleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	dbInstanceIdentifier := d.Get("db_instance_identifier").(string)
 	roleArn := d.Get("role_arn").(string)
@@ -79,7 +81,7 @@ func resourceAwsDbInstanceRoleAssociationCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsDbInstanceRoleAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	dbInstanceIdentifier, roleArn, err := resourceAwsDbInstanceRoleAssociationDecodeId(d.Id())
 
@@ -89,7 +91,7 @@ func resourceAwsDbInstanceRoleAssociationRead(d *schema.ResourceData, meta inter
 
 	dbInstanceRole, err := rdsDescribeDbInstanceRole(conn, dbInstanceIdentifier, roleArn)
 
-	if isAWSErr(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
 		log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", dbInstanceIdentifier)
 		d.SetId("")
 		return nil
@@ -113,7 +115,7 @@ func resourceAwsDbInstanceRoleAssociationRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsDbInstanceRoleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	dbInstanceIdentifier, roleArn, err := resourceAwsDbInstanceRoleAssociationDecodeId(d.Id())
 
@@ -130,11 +132,11 @@ func resourceAwsDbInstanceRoleAssociationDelete(d *schema.ResourceData, meta int
 	log.Printf("[DEBUG] RDS DB Instance (%s) IAM Role disassociating: %s", dbInstanceIdentifier, roleArn)
 	_, err = conn.RemoveRoleFromDBInstance(input)
 
-	if isAWSErr(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
 		return nil
 	}
 
-	if isAWSErr(err, rds.ErrCodeDBInstanceRoleNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceRoleNotFoundFault, "") {
 		return nil
 	}
 
@@ -233,7 +235,7 @@ func waitForRdsDbInstanceRoleDisassociation(conn *rds.RDS, dbInstanceIdentifier,
 		Refresh: func() (interface{}, string, error) {
 			dbInstanceRole, err := rdsDescribeDbInstanceRole(conn, dbInstanceIdentifier, roleArn)
 
-			if isAWSErr(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
 				return &rds.DBInstanceRole{}, rdsDbInstanceRoleStatusDeleted, nil
 			}
 
