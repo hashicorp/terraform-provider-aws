@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsBackupVault() *schema.Resource {
@@ -36,7 +38,7 @@ func resourceAwsBackupVault() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -53,8 +55,8 @@ func resourceAwsBackupVault() *schema.Resource {
 }
 
 func resourceAwsBackupVaultCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).BackupConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &backup.CreateBackupVaultInput{
@@ -77,21 +79,21 @@ func resourceAwsBackupVaultCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).BackupConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &backup.DescribeBackupVaultInput{
 		BackupVaultName: aws.String(d.Id()),
 	}
 
 	resp, err := conn.DescribeBackupVault(input)
-	if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Backup Vault %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
-	if isAWSErr(err, "AccessDeniedException", "") {
+	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
 		log.Printf("[WARN] Backup Vault %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -124,7 +126,7 @@ func resourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsBackupVaultUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*awsprovider.AWSClient).BackupConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -137,7 +139,7 @@ func resourceAwsBackupVaultUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsBackupVaultDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*awsprovider.AWSClient).BackupConn
 
 	input := &backup.DeleteBackupVaultInput{
 		BackupVaultName: aws.String(d.Get("name").(string)),
