@@ -11,11 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -250,8 +252,8 @@ func resourceAwsAmi() *schema.Resource {
 }
 
 func resourceAwsAmiCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	client := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &ec2.RegisterImageInput{
@@ -327,9 +329,9 @@ func resourceAwsAmiCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	client := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	id := d.Id()
 
@@ -342,7 +344,7 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		res, err = client.DescribeImages(req)
 		if err != nil {
-			if isAWSErr(err, "InvalidAMIID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidAMIID.NotFound", "") {
 				if d.IsNewResource() {
 					return resource.RetryableError(err)
 				}
@@ -423,8 +425,8 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("virtualization_type", image.VirtualizationType)
 
 	imageArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Resource:  fmt.Sprintf("image/%s", d.Id()),
 		Service:   ec2.ServiceName,
 	}.String()
@@ -454,7 +456,7 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsAmiUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).ec2conn
+	client := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -480,7 +482,7 @@ func resourceAwsAmiUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsAmiDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).ec2conn
+	client := meta.(*awsprovider.AWSClient).EC2Conn
 
 	req := &ec2.DeregisterImageInput{
 		ImageId: aws.String(d.Id()),
@@ -532,7 +534,7 @@ func AMIStateRefreshFunc(client *ec2.EC2, id string) resource.StateRefreshFunc {
 
 		resp, err := client.DescribeImages(&ec2.DescribeImagesInput{ImageIds: []*string{aws.String(id)}})
 		if err != nil {
-			if isAWSErr(err, "InvalidAMIID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidAMIID.NotFound", "") {
 				return emptyResp, "destroyed", nil
 			} else if resp != nil && len(resp.Images) == 0 {
 				return emptyResp, "destroyed", nil
