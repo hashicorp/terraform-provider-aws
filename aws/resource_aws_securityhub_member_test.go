@@ -9,7 +9,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	tfsecurityhub "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccAWSSecurityHubMember_basic(t *testing.T) {
@@ -17,9 +19,9 @@ func testAccAWSSecurityHubMember_basic(t *testing.T) {
 	resourceName := "aws_securityhub_member.example"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, securityhub.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityHubMemberDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -42,9 +44,9 @@ func testAccAWSSecurityHubMember_invite(t *testing.T) {
 	resourceName := "aws_securityhub_member.example"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, securityhub.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityHubMemberDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -71,7 +73,7 @@ func testAccCheckAWSSecurityHubMemberExists(n string, member *securityhub.Member
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SecurityHubConn
 
 		resp, err := conn.GetMembers(&securityhub.GetMembersInput{
 			AccountIds: []*string{aws.String(rs.Primary.ID)},
@@ -92,7 +94,7 @@ func testAccCheckAWSSecurityHubMemberExists(n string, member *securityhub.Member
 }
 
 func testAccCheckAWSSecurityHubMemberDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SecurityHubConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_member" {
