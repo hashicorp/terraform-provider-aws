@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsS3ControlBucketLifecycleConfiguration() *schema.Resource {
@@ -30,7 +31,7 @@ func resourceAwsS3ControlBucketLifecycleConfiguration() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"rule": {
 				Type:     schema.TypeSet,
@@ -116,7 +117,7 @@ func resourceAwsS3ControlBucketLifecycleConfiguration() *schema.Resource {
 }
 
 func resourceAwsS3ControlBucketLifecycleConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
+	conn := meta.(*awsprovider.AWSClient).S3ControlConn
 
 	bucket := d.Get("bucket").(string)
 
@@ -150,7 +151,7 @@ func resourceAwsS3ControlBucketLifecycleConfigurationCreate(d *schema.ResourceDa
 }
 
 func resourceAwsS3ControlBucketLifecycleConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
+	conn := meta.(*awsprovider.AWSClient).S3ControlConn
 
 	parsedArn, err := arn.Parse(d.Id())
 
@@ -205,7 +206,7 @@ func resourceAwsS3ControlBucketLifecycleConfigurationRead(d *schema.ResourceData
 }
 
 func resourceAwsS3ControlBucketLifecycleConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
+	conn := meta.(*awsprovider.AWSClient).S3ControlConn
 
 	parsedArn, err := arn.Parse(d.Id())
 
@@ -235,7 +236,7 @@ func resourceAwsS3ControlBucketLifecycleConfigurationUpdate(d *schema.ResourceDa
 }
 
 func resourceAwsS3ControlBucketLifecycleConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
+	conn := meta.(*awsprovider.AWSClient).S3ControlConn
 
 	parsedArn, err := arn.Parse(d.Id())
 
