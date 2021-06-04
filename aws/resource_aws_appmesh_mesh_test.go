@@ -8,9 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -27,11 +30,11 @@ func init() {
 }
 
 func testSweepAppmeshMeshes(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).appmeshconn
+	conn := client.(*awsprovider.AWSClient).AppMeshConn
 
 	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
 		if page == nil {
@@ -56,7 +59,7 @@ func testSweepAppmeshMeshes(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Appmesh Mesh sweep for %s: %s", region, err)
 			return nil
 		}
@@ -72,9 +75,9 @@ func testAccAwsAppmeshMesh_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appmesh.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appmesh.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAppmeshMeshDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -84,9 +87,9 @@ func testAccAwsAppmeshMesh_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appmesh", regexp.MustCompile(`mesh/.+`)),
+					atest.CheckAttrAccountID(resourceName, "mesh_owner"),
+					atest.CheckAttrAccountID(resourceName, "resource_owner"),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "appmesh", regexp.MustCompile(`mesh/.+`)),
 				),
 			},
 			{
@@ -104,9 +107,9 @@ func testAccAwsAppmeshMesh_egressFilter(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appmesh.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appmesh.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAppmeshMeshDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -144,9 +147,9 @@ func testAccAwsAppmeshMesh_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appmesh.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appmesh.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAppmeshMeshDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -184,7 +187,7 @@ func testAccAwsAppmeshMesh_tags(t *testing.T) {
 }
 
 func testAccCheckAppmeshMeshDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).appmeshconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).AppMeshConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appmesh_mesh" {
@@ -194,7 +197,7 @@ func testAccCheckAppmeshMeshDestroy(s *terraform.State) error {
 		_, err := conn.DescribeMesh(&appmesh.DescribeMeshInput{
 			MeshName: aws.String(rs.Primary.Attributes["name"]),
 		})
-		if isAWSErr(err, "NotFoundException", "") {
+		if tfawserr.ErrMessageContains(err, "NotFoundException", "") {
 			continue
 		}
 		if err != nil {
@@ -208,7 +211,7 @@ func testAccCheckAppmeshMeshDestroy(s *terraform.State) error {
 
 func testAccCheckAppmeshMeshExists(name string, v *appmesh.MeshData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).appmeshconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AppMeshConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
