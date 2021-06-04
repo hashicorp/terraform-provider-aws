@@ -8,7 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSEc2Tag_basic(t *testing.T) {
@@ -16,9 +18,9 @@ func TestAccAWSEc2Tag_basic(t *testing.T) {
 	resourceName := "aws_ec2_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEc2TagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -43,16 +45,16 @@ func TestAccAWSEc2Tag_disappears(t *testing.T) {
 	resourceName := "aws_ec2_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEc2TagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2TagConfig(rBgpAsn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2TagExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2Tag(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsEc2Tag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -65,9 +67,9 @@ func TestAccAWSEc2Tag_Value(t *testing.T) {
 	resourceName := "aws_ec2_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEc2TagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -96,7 +98,7 @@ func TestAccAWSEc2Tag_Value(t *testing.T) {
 }
 
 func testAccCheckEc2TagDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_tag" {
@@ -140,7 +142,7 @@ func testAccCheckEc2TagExists(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 		exists, _, err := keyvaluetags.Ec2GetTag(conn, resourceID, key)
 
