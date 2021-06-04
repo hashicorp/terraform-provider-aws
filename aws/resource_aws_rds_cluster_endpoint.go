@@ -7,10 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -81,8 +83,8 @@ func resourceAwsRDSClusterEndpoint() *schema.Resource {
 }
 
 func resourceAwsRDSClusterEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	clusterId := d.Get("cluster_identifier").(string)
@@ -119,9 +121,9 @@ func resourceAwsRDSClusterEndpointCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsRDSClusterEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &rds.DescribeDBClusterEndpointsInput{
 		DBClusterEndpointIdentifier: aws.String(d.Id()),
@@ -187,7 +189,7 @@ func resourceAwsRDSClusterEndpointRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsRDSClusterEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 	input := &rds.ModifyDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(d.Id()),
 	}
@@ -225,7 +227,7 @@ func resourceAwsRDSClusterEndpointUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsRDSClusterEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 	input := &rds.DeleteDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(d.Id()),
 	}
@@ -286,7 +288,7 @@ func DBClusterEndpointStateRefreshFunc(conn *rds.RDS, id string) resource.StateR
 				DBClusterEndpointIdentifier: aws.String(id),
 			})
 		if err != nil {
-			if isAWSErr(err, rds.ErrCodeDBClusterNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterNotFoundFault, "") {
 				return emptyResp, "destroyed", nil
 			} else if resp != nil && len(resp.DBClusterEndpoints) == 0 {
 				return emptyResp, "destroyed", nil
