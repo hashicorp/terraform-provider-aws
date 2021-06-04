@@ -11,12 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsLaunchTemplate() *schema.Resource {
@@ -129,7 +131,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 									"kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 									"snapshot_id": {
 										Type:     schema.TypeString,
@@ -275,7 +277,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ConflictsWith: []string{"iam_instance_profile.0.name"},
-							ValidateFunc:  validateArn,
+							ValidateFunc:  ValidateArn,
 						},
 						"name": {
 							Type:     schema.TypeString,
@@ -372,7 +374,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						"license_configuration_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -547,7 +549,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ConflictsWith: []string{"placement.0.host_id"},
-							ValidateFunc:  validateArn,
+							ValidateFunc:  ValidateArn,
 						},
 						"spread_domain": {
 							Type:     schema.TypeString,
@@ -661,8 +663,8 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 }
 
 func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	ltName := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
@@ -698,9 +700,9 @@ func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading launch template %s", d.Id())
 
@@ -708,14 +710,14 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 		LaunchTemplateIds: []*string{aws.String(d.Id())},
 	})
 
-	if isAWSErr(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
+	if tfawserr.ErrMessageContains(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
 		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	// AWS SDK constant above is currently incorrect
-	if isAWSErr(err, "InvalidLaunchTemplateId.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") {
 		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -754,10 +756,10 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -863,7 +865,7 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	latestVersion := int64(d.Get("latest_version").(int))
 	defaultVersion := d.Get("default_version").(int)
@@ -925,18 +927,18 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsLaunchTemplateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	log.Printf("[DEBUG] Launch Template destroy: %v", d.Id())
 	_, err := conn.DeleteLaunchTemplate(&ec2.DeleteLaunchTemplateInput{
 		LaunchTemplateId: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
+	if tfawserr.ErrMessageContains(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
 		return nil
 	}
 	// AWS SDK constant above is currently incorrect
-	if isAWSErr(err, "InvalidLaunchTemplateId.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") {
 		return nil
 	}
 	if err != nil {
