@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsEfsFileSystem_id(t *testing.T) {
@@ -15,9 +16,9 @@ func TestAccDataSourceAwsEfsFileSystem_id(t *testing.T) {
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, efs.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEfsFileSystemIDConfig,
@@ -45,9 +46,9 @@ func TestAccDataSourceAwsEfsFileSystem_name(t *testing.T) {
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, efs.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEfsFileSystemNameConfig,
@@ -75,9 +76,9 @@ func TestAccDataSourceAwsEfsFileSystem_availabilityZone(t *testing.T) {
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, efs.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEfsFileSystemAvailabilityZoneConfig,
@@ -94,9 +95,9 @@ func TestAccDataSourceAwsEfsFileSystem_availabilityZone(t *testing.T) {
 func TestAccDataSourceAwsEfsFileSystem_NonExistent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, efs.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsEfsFileSystemIDConfig_NonExistent,
