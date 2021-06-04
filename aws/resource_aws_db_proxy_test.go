@@ -8,9 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -21,11 +24,11 @@ func init() {
 }
 
 func testSweepRdsDbProxies(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).rdsconn
+	conn := client.(*awsprovider.AWSClient).RDSConn
 
 	err = conn.DescribeDBProxiesPages(&rds.DescribeDBProxiesInput{}, func(out *rds.DescribeDBProxiesOutput, lastPage bool) bool {
 		for _, dbpg := range out.DBProxies {
@@ -51,7 +54,7 @@ func testSweepRdsDbProxies(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping RDS DB Proxy sweep for %s: %s", region, err)
 		return nil
 	}
@@ -69,9 +72,9 @@ func TestAccAWSDBProxy_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -80,7 +83,7 @@ func TestAccAWSDBProxy_basic(t *testing.T) {
 					testAccCheckAWSDBProxyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "engine_family", "MYSQL"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db-proxy:.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db-proxy:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auth.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "auth.*", map[string]string{
 						"auth_scheme": "SECRETS",
@@ -112,9 +115,9 @@ func TestAccAWSDBProxy_Name(t *testing.T) {
 	nName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -146,9 +149,9 @@ func TestAccAWSDBProxy_DebugLogging(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -180,9 +183,9 @@ func TestAccAWSDBProxy_IdleClientTimeout(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -214,9 +217,9 @@ func TestAccAWSDBProxy_RequireTls(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -249,9 +252,9 @@ func TestAccAWSDBProxy_RoleArn(t *testing.T) {
 	nName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -284,9 +287,9 @@ func TestAccAWSDBProxy_VpcSecurityGroupIds(t *testing.T) {
 	nName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -321,9 +324,9 @@ func TestAccAWSDBProxy_AuthDescription(t *testing.T) {
 	description := "foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -356,9 +359,9 @@ func TestAccAWSDBProxy_AuthIamAuth(t *testing.T) {
 	iamAuth := "REQUIRED"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -391,9 +394,9 @@ func TestAccAWSDBProxy_AuthSecretArn(t *testing.T) {
 	nName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -427,9 +430,9 @@ func TestAccAWSDBProxy_Tags(t *testing.T) {
 	value := "bar"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -460,16 +463,16 @@ func TestAccAWSDBProxy_disappears(t *testing.T) {
 	resourceName := "aws_db_proxy.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBProxyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDbProxy(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsDbProxy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -479,12 +482,12 @@ func TestAccAWSDBProxy_disappears(t *testing.T) {
 
 // testAccDBProxyPreCheck checks if a call to describe db proxies errors out meaning feature not supported
 func testAccDBProxyPreCheck(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).RDSConn
 
 	input := &rds.DescribeDBProxiesInput{}
 	_, err := conn.DescribeDBProxies(input)
 
-	if isAWSErr(err, "InvalidAction", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidAction", "") {
 		t.Skipf("skipping acceptance test, RDS Proxy not supported: %s", err)
 	}
 
@@ -494,7 +497,7 @@ func testAccDBProxyPreCheck(t *testing.T) {
 }
 
 func testAccCheckAWSDBProxyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_proxy" {
@@ -514,7 +517,7 @@ func testAccCheckAWSDBProxyDestroy(s *terraform.State) error {
 			}
 		}
 
-		if !isAWSErr(err, rds.ErrCodeDBProxyNotFoundFault, "") {
+		if !tfawserr.ErrMessageContains(err, rds.ErrCodeDBProxyNotFoundFault, "") {
 			return err
 		}
 	}
@@ -533,7 +536,7 @@ func testAccCheckAWSDBProxyExists(n string, v *rds.DBProxy) resource.TestCheckFu
 			return fmt.Errorf("No DB Proxy ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).RDSConn
 
 		opts := rds.DescribeDBProxiesInput{
 			DBProxyName: aws.String(rs.Primary.ID),
