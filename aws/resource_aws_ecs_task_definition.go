@@ -853,22 +853,27 @@ func expandEcsVolumesEFSVolume(efsConfig []interface{}) *ecs.EFSVolumeConfigurat
 	if v, ok := config["transit_encryption_port"].(int); ok && v > 0 {
 		efsVol.TransitEncryptionPort = aws.Int64(int64(v))
 	}
-	authConfig, ok := config["authorization_config"].([]interface{})
-	if ok && len(authConfig) > 0 {
-		authconfig := authConfig[0].(map[string]interface{})
+	if v, ok := config["authorization_config"].([]interface{}); ok && len(v) > 0 {
 		efsVol.RootDirectory = nil
-		efsVol.AuthorizationConfig = &ecs.EFSAuthorizationConfig{}
-
-		if v, ok := authconfig["access_point_id"].(string); ok && v != "" {
-			efsVol.AuthorizationConfig.AccessPointId = aws.String(v)
-		}
-
-		if v, ok := authconfig["iam"].(string); ok && v != "" {
-			efsVol.AuthorizationConfig.Iam = aws.String(v)
-		}
+		efsVol.AuthorizationConfig = expandEcsVolumesEFSVolumeAuthorizationConfig(v)
 	}
 
 	return efsVol
+}
+
+func expandEcsVolumesEFSVolumeAuthorizationConfig(efsConfig []interface{}) *ecs.EFSAuthorizationConfig {
+	authconfig := efsConfig[0].(map[string]interface{})
+	auth := &ecs.EFSAuthorizationConfig{}
+
+	if v, ok := authconfig["access_point_id"].(string); ok && v != "" {
+		auth.AccessPointId = aws.String(v)
+	}
+
+	if v, ok := authconfig["iam"].(string); ok && v != "" {
+		auth.Iam = aws.String(v)
+	}
+
+	return auth
 }
 
 func expandEcsVolumesFsxWinVolume(fsxWinConfig []interface{}) *ecs.FSxWindowsFileServerVolumeConfiguration {
@@ -883,21 +888,26 @@ func expandEcsVolumesFsxWinVolume(fsxWinConfig []interface{}) *ecs.FSxWindowsFil
 		fsxVol.RootDirectory = aws.String(v)
 	}
 
-	authConfig, ok := config["authorization_config"].([]interface{})
-	if ok && len(authConfig) > 0 {
-		authconfig := authConfig[0].(map[string]interface{})
-		fsxVol.AuthorizationConfig = &ecs.FSxWindowsFileServerAuthorizationConfig{}
-
-		if v, ok := authconfig["credentials_parameter"].(string); ok && v != "" {
-			fsxVol.AuthorizationConfig.CredentialsParameter = aws.String(v)
-		}
-
-		if v, ok := authconfig["domain"].(string); ok && v != "" {
-			fsxVol.AuthorizationConfig.Domain = aws.String(v)
-		}
+	if v, ok := config["authorization_config"].([]interface{}); ok && len(v) > 0 {
+		fsxVol.AuthorizationConfig = expandEcsVolumesFsxWinVolumeAuthorizationConfig(v)
 	}
 
 	return fsxVol
+}
+
+func expandEcsVolumesFsxWinVolumeAuthorizationConfig(config []interface{}) *ecs.FSxWindowsFileServerAuthorizationConfig {
+	authconfig := config[0].(map[string]interface{})
+	auth := &ecs.FSxWindowsFileServerAuthorizationConfig{}
+
+	if v, ok := authconfig["credentials_parameter"].(string); ok && v != "" {
+		auth.CredentialsParameter = aws.String(v)
+	}
+
+	if v, ok := authconfig["domain"].(string); ok && v != "" {
+		auth.Domain = aws.String(v)
+	}
+
+	return auth
 }
 
 func flattenEcsVolumes(list []*ecs.Volume) []map[string]interface{} {
