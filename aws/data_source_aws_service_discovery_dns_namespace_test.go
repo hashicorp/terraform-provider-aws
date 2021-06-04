@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_private(t *testing.T) {
@@ -15,9 +16,9 @@ func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_private(t *testing.T) {
 	resourceName := "aws_service_discovery_private_dns_namespace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
-		ErrorCheck: testAccErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
+		ErrorCheck: atest.ErrorCheck(t, servicediscovery.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceConfig(rName),
@@ -38,9 +39,9 @@ func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_public(t *testing.T) {
 	resourceName := "aws_service_discovery_public_dns_namespace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
-		ErrorCheck: testAccErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
+		ErrorCheck: atest.ErrorCheck(t, servicediscovery.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsServiceDiscoveryPublicDnsNamespaceConfig(rName),
