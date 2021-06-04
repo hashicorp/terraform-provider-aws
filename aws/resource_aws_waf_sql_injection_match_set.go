@@ -6,7 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsWafSqlInjectionMatchSet() *schema.Resource {
@@ -59,7 +61,7 @@ func resourceAwsWafSqlInjectionMatchSet() *schema.Resource {
 }
 
 func resourceAwsWafSqlInjectionMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*awsprovider.AWSClient).WAFConn
 
 	log.Printf("[INFO] Creating SqlInjectionMatchSet: %s", d.Get("name").(string))
 
@@ -82,7 +84,7 @@ func resourceAwsWafSqlInjectionMatchSetCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsWafSqlInjectionMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*awsprovider.AWSClient).WAFConn
 	log.Printf("[INFO] Reading SqlInjectionMatchSet: %s", d.Get("name").(string))
 	params := &waf.GetSqlInjectionMatchSetInput{
 		SqlInjectionMatchSetId: aws.String(d.Id()),
@@ -90,7 +92,7 @@ func resourceAwsWafSqlInjectionMatchSetRead(d *schema.ResourceData, meta interfa
 
 	resp, err := conn.GetSqlInjectionMatchSet(params)
 	if err != nil {
-		if isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
 			log.Printf("[WARN] WAF IPSet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -109,7 +111,7 @@ func resourceAwsWafSqlInjectionMatchSetRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsWafSqlInjectionMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*awsprovider.AWSClient).WAFConn
 
 	if d.HasChange("sql_injection_match_tuples") {
 		o, n := d.GetChange("sql_injection_match_tuples")
@@ -125,7 +127,7 @@ func resourceAwsWafSqlInjectionMatchSetUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsWafSqlInjectionMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*awsprovider.AWSClient).WAFConn
 
 	oldTuples := d.Get("sql_injection_match_tuples").(*schema.Set).List()
 
