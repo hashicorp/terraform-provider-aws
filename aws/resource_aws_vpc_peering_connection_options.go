@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsVpcPeeringConnectionOptions() *schema.Resource {
@@ -40,7 +41,7 @@ func resourceAwsVpcPeeringConnectionOptionsCreate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsVpcPeeringConnectionOptionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	pc, err := vpcPeeringConnection(conn, d.Id())
 
@@ -67,7 +68,7 @@ func resourceAwsVpcPeeringConnectionOptionsRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsVpcPeeringConnectionOptionsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	pc, err := vpcPeeringConnection(conn, d.Id())
 
