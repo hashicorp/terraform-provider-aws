@@ -9,7 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3outposts/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSS3OutpostsEndpoint_basic(t *testing.T) {
@@ -17,16 +19,16 @@ func TestAccAWSS3OutpostsEndpoint_basic(t *testing.T) {
 	rInt := acctest.RandIntRange(0, 255)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3outposts.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3outposts.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3OutpostsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSS3OutpostsEndpointConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3OutpostsEndpointExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexp.MustCompile(`outpost/[^/]+/endpoint/[a-z0-9]+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "s3-outposts", regexp.MustCompile(`outpost/[^/]+/endpoint/[a-z0-9]+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttrPair(resourceName, "cidr_block", "aws_vpc.test", "cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "4"),
@@ -50,16 +52,16 @@ func TestAccAWSS3OutpostsEndpoint_disappears(t *testing.T) {
 	rInt := acctest.RandIntRange(0, 255)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3outposts.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3outposts.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3OutpostsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSS3OutpostsEndpointConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3OutpostsEndpointExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsS3OutpostsEndpoint(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsS3OutpostsEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -68,7 +70,7 @@ func TestAccAWSS3OutpostsEndpoint_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSS3OutpostsEndpointDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).s3outpostsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).S3OutpostsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3outposts_endpoint" {
@@ -100,7 +102,7 @@ func testAccCheckAWSS3OutpostsEndpointExists(resourceName string) resource.TestC
 			return fmt.Errorf("no resource ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).s3outpostsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).S3OutpostsConn
 
 		endpoint, err := finder.Endpoint(conn, rs.Primary.ID)
 
