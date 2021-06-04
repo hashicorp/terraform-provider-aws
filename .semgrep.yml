@@ -23,7 +23,7 @@ rules:
         - aws/*wafregional*.go
         - aws/resource_aws_serverlessapplicationrepository_cloudformation_stack.go
         - aws/*_test.go
-        - aws/internal/keyvaluetags/
+        - aws/keyvaluetags/
         - aws/internal/service/wafregional/
         # Legacy resource handling
         - aws/resource_aws_autoscaling_group.go
@@ -70,7 +70,7 @@ rules:
         - aws/structure.go
         - aws/waf_helpers.go
         - aws/internal/generators/
-        - aws/internal/keyvaluetags/
+        - aws/keyvaluetags/
         - awsproviderlint/vendor/
       include:
         - aws/
@@ -104,7 +104,7 @@ rules:
         - aws/resource*_test.go
         - aws/structure.go
         - aws/internal/generators/
-        - aws/internal/keyvaluetags/
+        - aws/keyvaluetags/
         - aws/internal/naming/
         - awsproviderlint/vendor/
       include:
@@ -171,38 +171,38 @@ rules:
 
   - id: helper-acctest-RandInt-compiled
     languages: [go]
-    message: Using `acctest.RandInt()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
+    message: Using `atest.RandInt()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
     paths:
       include:
         - aws/
     patterns:
       - pattern-either:
-        - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandInt() ...>, ...)
-        - pattern: var $VAR = fmt.Sprintf(..., <... acctest.RandInt() ...>, ...)
+        - pattern: const $CONST = fmt.Sprintf(..., <... atest.RandInt() ...>, ...)
+        - pattern: var $VAR = fmt.Sprintf(..., <... atest.RandInt() ...>, ...)
     severity: WARNING
 
   - id: helper-acctest-RandString-compiled
     languages: [go]
-    message: Using `acctest.RandString()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
+    message: Using `atest.RandString()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
     paths:
       include:
         - aws/
     patterns:
       - pattern-either:
-        - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandString(...) ...>, ...)
-        - pattern: var $VAR = fmt.Sprintf(..., <... acctest.RandString(...) ...>, ...)
+        - pattern: const $CONST = fmt.Sprintf(..., <... atest.RandString(...) ...>, ...)
+        - pattern: var $VAR = fmt.Sprintf(..., <... atest.RandString(...) ...>, ...)
     severity: WARNING
 
   - id: helper-acctest-RandomWithPrefix-compiled
     languages: [go]
-    message: Using `acctest.RandomWithPrefix()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
+    message: Using `atest.RandomWithPrefix()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
     paths:
       include:
         - aws/
     patterns:
       - pattern-either:
-        - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandomWithPrefix(...) ...>, ...)
-        - pattern: var $VAR = fmt.Sprintf(..., <... acctest.RandomWithPrefix(...) ...>, ...)
+        - pattern: const $CONST = fmt.Sprintf(..., <... atest.RandomWithPrefix(...) ...>, ...)
+        - pattern: var $VAR = fmt.Sprintf(..., <... atest.RandomWithPrefix(...) ...>, ...)
     severity: WARNING
 
   - id: helper-schema-Set-extraneous-NewSet-with-flattenStringList
