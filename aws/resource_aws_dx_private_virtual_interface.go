@@ -11,7 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDxPrivateVirtualInterface() *schema.Resource {
@@ -122,8 +123,8 @@ func resourceAwsDxPrivateVirtualInterface() *schema.Resource {
 }
 
 func resourceAwsDxPrivateVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	vgwIdRaw, vgwOk := d.GetOk("vpn_gateway_id")
@@ -178,9 +179,9 @@ func resourceAwsDxPrivateVirtualInterfaceCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsDxPrivateVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
 	if err != nil {
@@ -196,10 +197,10 @@ func resourceAwsDxPrivateVirtualInterfaceRead(d *schema.ResourceData, meta inter
 	d.Set("amazon_address", vif.AmazonAddress)
 	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(vif.AmazonSideAsn), 10))
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Service:   "directconnect",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -240,7 +241,7 @@ func resourceAwsDxPrivateVirtualInterfaceUpdate(d *schema.ResourceData, meta int
 		return err
 	}
 
-	if err := dxPrivateVirtualInterfaceWaitUntilAvailable(meta.(*AWSClient).dxconn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := dxPrivateVirtualInterfaceWaitUntilAvailable(meta.(*awsprovider.AWSClient).DirectConnectConn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return err
 	}
 
@@ -252,7 +253,7 @@ func resourceAwsDxPrivateVirtualInterfaceDelete(d *schema.ResourceData, meta int
 }
 
 func resourceAwsDxPrivateVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
 	if err != nil {
