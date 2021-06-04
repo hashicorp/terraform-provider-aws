@@ -6,7 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsImageBuilderImage() *schema.Resource {
@@ -17,7 +18,7 @@ func dataSourceAwsImageBuilderImage() *schema.Resource {
 			"arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"build_version_arn": {
 				Type:     schema.TypeString,
@@ -117,7 +118,7 @@ func dataSourceAwsImageBuilderImage() *schema.Resource {
 }
 
 func dataSourceAwsImageBuilderImageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
+	conn := meta.(*awsprovider.AWSClient).ImageBuilderConn
 
 	input := &imagebuilder.GetImageInput{}
 
@@ -179,7 +180,7 @@ func dataSourceAwsImageBuilderImageRead(d *schema.ResourceData, meta interface{}
 		d.Set("output_resources", nil)
 	}
 
-	d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(image.Tags).IgnoreAws().IgnoreConfig(meta.(*AWSClient).IgnoreTagsConfig).Map())
+	d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(image.Tags).IgnoreAws().IgnoreConfig(meta.(*awsprovider.AWSClient).IgnoreTagsConfig).Map())
 	d.Set("version", image.Version)
 
 	return nil
