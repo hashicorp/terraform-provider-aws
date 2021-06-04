@@ -7,7 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsApiGatewayDocumentationVersion() *schema.Resource {
@@ -41,7 +43,7 @@ func resourceAwsApiGatewayDocumentationVersion() *schema.Resource {
 }
 
 func resourceAwsApiGatewayDocumentationVersionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	restApiId := d.Get("rest_api_id").(string)
 
@@ -66,7 +68,7 @@ func resourceAwsApiGatewayDocumentationVersionCreate(d *schema.ResourceData, met
 }
 
 func resourceAwsApiGatewayDocumentationVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Reading API Gateway Documentation Version %s", d.Id())
 
 	apiId, docVersion, err := decodeApiGatewayDocumentationVersionId(d.Id())
@@ -79,7 +81,7 @@ func resourceAwsApiGatewayDocumentationVersionRead(d *schema.ResourceData, meta 
 		RestApiId:            aws.String(apiId),
 	})
 	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] API Gateway Documentation Version (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -95,7 +97,7 @@ func resourceAwsApiGatewayDocumentationVersionRead(d *schema.ResourceData, meta 
 }
 
 func resourceAwsApiGatewayDocumentationVersionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Updating API Gateway Documentation Version %s", d.Id())
 
 	_, err := conn.UpdateDocumentationVersion(&apigateway.UpdateDocumentationVersionInput{
@@ -118,7 +120,7 @@ func resourceAwsApiGatewayDocumentationVersionUpdate(d *schema.ResourceData, met
 }
 
 func resourceAwsApiGatewayDocumentationVersionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Documentation Version: %s", d.Id())
 
 	_, err := conn.DeleteDocumentationVersion(&apigateway.DeleteDocumentationVersionInput{
