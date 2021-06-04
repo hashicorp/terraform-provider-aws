@@ -5,14 +5,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsEc2InstanceType_basic(t *testing.T) {
 	resourceBasic := "data.aws_ec2_instance_type.basic"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceEc2InstanceTypeBasic,
@@ -69,9 +70,9 @@ func TestAccDataSourceAwsEc2InstanceType_basic(t *testing.T) {
 func TestAccDataSourceAwsEc2InstanceType_metal(t *testing.T) {
 	resourceMetal := "data.aws_ec2_instance_type.metal"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceEc2InstanceTypeMetal,
@@ -96,9 +97,9 @@ func TestAccDataSourceAwsEc2InstanceType_metal(t *testing.T) {
 func TestAccDataSourceAwsEc2InstanceType_gpu(t *testing.T) {
 	resourceGpu := "data.aws_ec2_instance_type.gpu"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceEc2InstanceTypeGpu,
@@ -117,9 +118,9 @@ func TestAccDataSourceAwsEc2InstanceType_gpu(t *testing.T) {
 func TestAccDataSourceAwsEc2InstanceType_fpga(t *testing.T) {
 	resourceFpga := "data.aws_ec2_instance_type.fpga"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceEc2InstanceTypeFgpa,
