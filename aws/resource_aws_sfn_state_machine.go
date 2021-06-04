@@ -11,10 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sfn/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sfn/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSfnStateMachine() *schema.Resource {
@@ -79,7 +80,7 @@ func resourceAwsSfnStateMachine() *schema.Resource {
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"status": {
@@ -120,8 +121,8 @@ func resourceAwsSfnStateMachine() *schema.Resource {
 }
 
 func resourceAwsSfnStateMachineCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sfnconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SFNConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -182,9 +183,9 @@ func resourceAwsSfnStateMachineCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sfnconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SFNConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.StateMachineByARN(conn, d.Id())
 
@@ -251,7 +252,7 @@ func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sfnconn
+	conn := meta.(*awsprovider.AWSClient).SFNConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		// "You must include at least one of definition or roleArn or you will receive a MissingRequiredParameter error"
@@ -315,7 +316,7 @@ func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSfnStateMachineDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sfnconn
+	conn := meta.(*awsprovider.AWSClient).SFNConn
 
 	_, err := conn.DeleteStateMachine(&sfn.DeleteStateMachineInput{
 		StateMachineArn: aws.String(d.Id()),
