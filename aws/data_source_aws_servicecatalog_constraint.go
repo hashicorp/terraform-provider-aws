@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfservicecatalog "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsServiceCatalogConstraint() *schema.Resource {
@@ -59,7 +60,7 @@ func dataSourceAwsServiceCatalogConstraint() *schema.Resource {
 }
 
 func dataSourceAwsServiceCatalogConstraintRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*awsprovider.AWSClient).ServiceCatalogConn
 
 	output, err := waiter.ConstraintReady(conn, d.Get("accept_language").(string), d.Get("id").(string))
 
