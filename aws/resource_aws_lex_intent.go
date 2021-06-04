@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -251,7 +252,7 @@ func resourceAwsLexIntent() *schema.Resource {
 }
 
 func resourceAwsLexIntentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*awsprovider.AWSClient).LexModelBuildingConn
 	name := d.Get("name").(string)
 
 	input := &lexmodelbuildingservice.PutIntentInput{
@@ -324,13 +325,13 @@ func resourceAwsLexIntentCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*awsprovider.AWSClient).LexModelBuildingConn
 
 	resp, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
 		Name:    aws.String(d.Id()),
 		Version: aws.String(LexIntentVersionLatest),
 	})
-	if isAWSErr(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Intent (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -340,10 +341,10 @@ func resourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Service:   "lex",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("intent:%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
@@ -402,7 +403,7 @@ func resourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsLexIntentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*awsprovider.AWSClient).LexModelBuildingConn
 
 	input := &lexmodelbuildingservice.PutIntentInput{
 		Checksum:      aws.String(d.Get("checksum").(string)),
@@ -450,7 +451,7 @@ func resourceAwsLexIntentUpdate(d *schema.ResourceData, meta interface{}) error 
 	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 		_, err := conn.PutIntent(input)
 
-		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
+		if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
 			return resource.RetryableError(fmt.Errorf("%q: intent still updating", d.Id()))
 		}
 		if err != nil {
@@ -472,7 +473,7 @@ func resourceAwsLexIntentUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsLexIntentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*awsprovider.AWSClient).LexModelBuildingConn
 
 	input := &lexmodelbuildingservice.DeleteIntentInput{
 		Name: aws.String(d.Id()),
@@ -481,7 +482,7 @@ func resourceAwsLexIntentDelete(d *schema.ResourceData, meta interface{}) error 
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DeleteIntent(input)
 
-		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
+		if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
 			return resource.RetryableError(fmt.Errorf("%q: there is a pending operation, intent still deleting", d.Id()))
 		}
 		if err != nil {
@@ -514,7 +515,7 @@ var lexCodeHookResource = &schema.Resource{
 		"uri": {
 			Type:         schema.TypeString,
 			Required:     true,
-			ValidateFunc: validateArn,
+			ValidateFunc: ValidateArn,
 		},
 	},
 }
