@@ -9,10 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -24,11 +27,11 @@ func init() {
 }
 
 func testSweepWorkspacesDirectories(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).workspacesconn
+	conn := client.(*awsprovider.AWSClient).WorkSpacesConn
 
 	var errors error
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
@@ -41,7 +44,7 @@ func testSweepWorkspacesDirectories(region string) error {
 		}
 		return true
 	})
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Workspace Directory sweep for %s: %s", region, err)
 		return errors // In case we have completed some pages, but had errors
 	}
@@ -62,13 +65,13 @@ func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -126,13 +129,13 @@ func TestAccAwsWorkspacesDirectory_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -155,13 +158,13 @@ func TestAccAwsWorkspacesDirectory_subnetIds(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -188,13 +191,13 @@ func TestAccAwsWorkspacesDirectory_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -239,13 +242,13 @@ func TestAccAwsWorkspacesDirectory_selfServicePermissions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -272,13 +275,13 @@ func TestAccAwsWorkspacesDirectory_workspaceAccessProperties(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -308,13 +311,13 @@ func TestAccAwsWorkspacesDirectory_workspaceCreationProperties(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -342,13 +345,13 @@ func TestAccAwsWorkspacesDirectory_workspaceCreationProperties_customSecurityGro
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -390,9 +393,9 @@ func TestAccAwsWorkspacesDirectory_ipGroupIds(t *testing.T) {
 	resourceName := "aws_workspaces_directory.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -688,17 +691,17 @@ func TestFlattenWorkspaceCreationProperties(t *testing.T) {
 }
 
 func testAccPreCheckHasIAMRole(t *testing.T, roleName string) {
-	conn := testAccProvider.Meta().(*AWSClient).iamconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 	input := &iam.GetRoleInput{
 		RoleName: aws.String(roleName),
 	}
 	_, err := conn.GetRole(input)
 
-	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 		t.Skipf("skipping acceptance test: required IAM role \"%s\" is not present", roleName)
 	}
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance test: %s", err)
 	}
 	if err != nil {
@@ -707,7 +710,7 @@ func testAccPreCheckHasIAMRole(t *testing.T, roleName string) {
 }
 
 func testAccCheckAwsWorkspacesDirectoryDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).workspacesconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).WorkSpacesConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_workspaces_directory" {
@@ -736,7 +739,7 @@ func testAccCheckAwsWorkspacesDirectoryDestroy(s *terraform.State) error {
 
 func testAccCheckAwsWorkspacesDirectoryDisappears(v *workspaces.WorkspaceDirectory) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return workspacesDirectoryDelete(aws.StringValue(v.DirectoryId), testAccProvider.Meta().(*AWSClient).workspacesconn)
+		return workspacesDirectoryDelete(aws.StringValue(v.DirectoryId), atest.Provider.Meta().(*awsprovider.AWSClient).WorkSpacesConn)
 	}
 }
 
@@ -751,7 +754,7 @@ func testAccCheckAwsWorkspacesDirectoryExists(n string, v *workspaces.WorkspaceD
 			return fmt.Errorf("workspaces directory resource ID is not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).workspacesconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).WorkSpacesConn
 		resp, err := conn.DescribeWorkspaceDirectories(&workspaces.DescribeWorkspaceDirectoriesInput{
 			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
 		})
@@ -769,13 +772,13 @@ func testAccCheckAwsWorkspacesDirectoryExists(n string, v *workspaces.WorkspaceD
 }
 
 func testAccPreCheckWorkspacesDirectory(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).workspacesconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).WorkSpacesConn
 
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
 
 	_, err := conn.DescribeWorkspaceDirectories(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -785,7 +788,7 @@ func testAccPreCheckWorkspacesDirectory(t *testing.T) {
 }
 
 func testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAvailableAZsNoOptInConfig(),
 		//lintignore:AWSAT003
 		fmt.Sprintf(`
@@ -845,7 +848,7 @@ resource "aws_directory_service_directory" "main" {
 }
 
 func testAccWorkspacesDirectoryConfig(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
@@ -863,7 +866,7 @@ data "aws_iam_role" "workspaces-default" {
 }
 
 func testAccWorkspacesDirectory_selfServicePermissions(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
@@ -885,7 +888,7 @@ resource "aws_workspaces_directory" "main" {
 }
 
 func testAccWorkspacesDirectoryConfig_subnetIds(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
@@ -900,7 +903,7 @@ resource "aws_workspaces_directory" "main" {
 }
 
 func testAccWorkspacesDirectoryConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
@@ -914,7 +917,7 @@ resource "aws_workspaces_directory" "main" {
 }
 
 func testAccWorkspacesDirectoryConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
@@ -929,7 +932,7 @@ resource "aws_workspaces_directory" "main" {
 }
 
 func testAccWorkspacesDirectory_workspaceAccessProperties(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
@@ -953,7 +956,7 @@ resource "aws_workspaces_directory" "main" {
 }
 
 func testAccWorkspacesDirectoryConfig_workspaceCreationProperties(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
@@ -980,7 +983,7 @@ resource "aws_workspaces_directory" "main" {
 }
 
 func testAccWorkspacesDirectoryConfig_workspaceCreationProperties_customSecurityGroupId_defaultOu_Absent(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
@@ -1000,7 +1003,7 @@ resource "aws_workspaces_directory" "main" {
 }
 
 func testAccWorkspacesDirectoryConfig_workspaceCreationProperties_customSecurityGroupId_defaultOu_Present(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
@@ -1027,7 +1030,7 @@ resource "aws_workspaces_directory" "main" {
 }
 
 func testAccWorkspacesDirectoryConfig_ipGroupIds_create(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_ip_group" "test_alpha" {
@@ -1049,7 +1052,7 @@ resource "aws_workspaces_directory" "test" {
 }
 
 func testAccWorkspacesDirectoryConfig_ipGroupIds_update(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_ip_group" "test_beta" {
