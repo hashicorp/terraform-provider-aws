@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/acmpca/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsAcmpcaCertificateAuthorityCertificate() *schema.Resource {
@@ -33,7 +34,7 @@ func resourceAwsAcmpcaCertificateAuthorityCertificate() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"certificate_chain": {
 				Type:         schema.TypeString,
@@ -46,7 +47,7 @@ func resourceAwsAcmpcaCertificateAuthorityCertificate() *schema.Resource {
 }
 
 func resourceAwsAcmpcaCertificateAuthorityCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).acmpcaconn
+	conn := meta.(*awsprovider.AWSClient).ACMPCAConn
 
 	certificateAuthorityArn := d.Get("certificate_authority_arn").(string)
 
@@ -69,7 +70,7 @@ func resourceAwsAcmpcaCertificateAuthorityCertificateCreate(d *schema.ResourceDa
 }
 
 func resourceAwsAcmpcaCertificateAuthorityCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).acmpcaconn
+	conn := meta.(*awsprovider.AWSClient).ACMPCAConn
 
 	output, err := finder.CertificateAuthorityCertificateByARN(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
