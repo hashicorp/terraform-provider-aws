@@ -13,10 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsIAMServerCertificate() *schema.Resource {
@@ -100,8 +102,8 @@ func resourceAwsIAMServerCertificate() *schema.Resource {
 }
 
 func resourceAwsIAMServerCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).IAMConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var sslCertName string
@@ -141,15 +143,15 @@ func resourceAwsIAMServerCertificateCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsIAMServerCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).IAMConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.GetServerCertificate(&iam.GetServerCertificateInput{
 		ServerCertificateName: aws.String(d.Get("name").(string)),
 	})
 
-	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 		log.Printf("[WARN] IAM Server Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -194,7 +196,7 @@ func resourceAwsIAMServerCertificateRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsIAMServerCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*awsprovider.AWSClient).IAMConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -208,7 +210,7 @@ func resourceAwsIAMServerCertificateUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsIAMServerCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*awsprovider.AWSClient).IAMConn
 	log.Printf("[INFO] Deleting IAM Server Certificate: %s", d.Id())
 	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteServerCertificate(&iam.DeleteServerCertificateInput{
@@ -218,7 +220,7 @@ func resourceAwsIAMServerCertificateDelete(d *schema.ResourceData, meta interfac
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
 				if awsErr.Code() == iam.ErrCodeDeleteConflictException && strings.Contains(awsErr.Message(), "currently in use by arn") {
-					currentlyInUseBy(awsErr.Message(), meta.(*AWSClient).elbconn)
+					currentlyInUseBy(awsErr.Message(), meta.(*awsprovider.AWSClient).ELBConn)
 					log.Printf("[WARN] Conflict deleting server certificate: %s, retrying", awsErr.Message())
 					return resource.RetryableError(err)
 				}
@@ -256,7 +258,7 @@ func currentlyInUseBy(awsErr string, conn *elb.ELB) {
 			LoadBalancerNames: []*string{aws.String(lbName)},
 		}
 		if _, err := conn.DescribeLoadBalancers(describeElbOpts); err != nil {
-			if isAWSErr(err, "LoadBalancerNotFound", "") {
+			if tfawserr.ErrMessageContains(err, "LoadBalancerNotFound", "") {
 				log.Printf("[WARN] Load Balancer (%s) causing delete conflict not found", lbName)
 			}
 		}
