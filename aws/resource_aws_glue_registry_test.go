@@ -7,10 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -21,16 +24,16 @@ func init() {
 }
 
 func testSweepGlueRegistry(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).glueconn
+	conn := client.(*awsprovider.AWSClient).GlueConn
 
 	listOutput, err := conn.ListRegistries(&glue.ListRegistriesInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Registrys return InternalFailure
-		if testSweepSkipSweepError(err) || isAWSErr(err, "InternalFailure", "") {
+		if atest.SweepSkipSweepError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
 			log.Printf("[WARN] Skipping Glue Registry sweep for %s: %s", region, err)
 			return nil
 		}
@@ -57,16 +60,16 @@ func TestAccAWSGlueRegistry_basic(t *testing.T) {
 	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGlueRegistry(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSGlueRegistry(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSGlueRegistryBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueRegistryExists(resourceName, &registry),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("registry/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("registry/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "registry_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -88,9 +91,9 @@ func TestAccAWSGlueRegistry_Description(t *testing.T) {
 	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGlueRegistry(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSGlueRegistry(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -122,9 +125,9 @@ func TestAccAWSGlueRegistry_Tags(t *testing.T) {
 	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGlueRegistry(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSGlueRegistry(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -168,16 +171,16 @@ func TestAccAWSGlueRegistry_disappears(t *testing.T) {
 	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGlueRegistry(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSGlueRegistry(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSGlueRegistryBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueRegistryExists(resourceName, &registry),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueRegistry(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsGlueRegistry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -186,12 +189,12 @@ func TestAccAWSGlueRegistry_disappears(t *testing.T) {
 }
 
 func testAccPreCheckAWSGlueRegistry(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).glueconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).GlueConn
 
 	_, err := conn.ListRegistries(&glue.ListRegistriesInput{})
 
 	// Some endpoints that do not support Glue Registrys return InternalFailure
-	if testAccPreCheckSkipError(err) || isAWSErr(err, "InternalFailure", "") {
+	if atest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -211,7 +214,7 @@ func testAccCheckAWSGlueRegistryExists(resourceName string, registry *glue.GetRe
 			return fmt.Errorf("No Glue Registry ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).GlueConn
 		output, err := finder.RegistryByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -236,10 +239,10 @@ func testAccCheckAWSGlueRegistryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).GlueConn
 		output, err := finder.RegistryByID(conn, rs.Primary.ID)
 		if err != nil {
-			if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 				return nil
 			}
 
