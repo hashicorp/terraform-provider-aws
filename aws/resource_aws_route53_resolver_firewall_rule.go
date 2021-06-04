@@ -6,11 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfroute53resolver "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53resolver"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53resolver/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsRoute53ResolverFirewallRule() *schema.Resource {
@@ -83,7 +85,7 @@ func resourceAwsRoute53ResolverFirewallRule() *schema.Resource {
 }
 
 func resourceAwsRoute53ResolverFirewallRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*awsprovider.AWSClient).Route53ResolverConn
 
 	firewallRuleGroupId := d.Get("firewall_rule_group_id").(string)
 	firewallDomainListId := d.Get("firewall_domain_list_id").(string)
@@ -124,11 +126,11 @@ func resourceAwsRoute53ResolverFirewallRuleCreate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsRoute53ResolverFirewallRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*awsprovider.AWSClient).Route53ResolverConn
 
 	rule, err := finder.FirewallRuleByID(conn, d.Id())
 
-	if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Route53 Resolver DNS Firewall rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -158,7 +160,7 @@ func resourceAwsRoute53ResolverFirewallRuleRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsRoute53ResolverFirewallRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*awsprovider.AWSClient).Route53ResolverConn
 
 	input := &route53resolver.UpdateFirewallRuleInput{
 		Name:                 aws.String(d.Get("name").(string)),
@@ -194,14 +196,14 @@ func resourceAwsRoute53ResolverFirewallRuleUpdate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsRoute53ResolverFirewallRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*awsprovider.AWSClient).Route53ResolverConn
 
 	_, err := conn.DeleteFirewallRule(&route53resolver.DeleteFirewallRuleInput{
 		FirewallRuleGroupId:  aws.String(d.Get("firewall_rule_group_id").(string)),
 		FirewallDomainListId: aws.String(d.Get("firewall_domain_list_id").(string)),
 	})
 
-	if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
