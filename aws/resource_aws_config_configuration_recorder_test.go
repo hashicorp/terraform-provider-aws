@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -20,16 +22,16 @@ func init() {
 }
 
 func testSweepConfigConfigurationRecorder(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).configconn
+	conn := client.(*awsprovider.AWSClient).ConfigConn
 
 	req := &configservice.DescribeConfigurationRecordersInput{}
 	resp, err := conn.DescribeConfigurationRecorders(req)
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Config Configuration Recorders sweep for %s: %s", region, err)
 			return nil
 		}
@@ -71,9 +73,9 @@ func testAccConfigConfigurationRecorder_basic(t *testing.T) {
 	resourceName := "aws_config_configuration_recorder.foo"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -81,7 +83,7 @@ func testAccConfigConfigurationRecorder_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConfigurationRecorderExists(resourceName, &cr),
 					testAccCheckConfigConfigurationRecorderName(resourceName, expectedName, &cr),
-					testAccCheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf("role/%s", expectedRoleName)),
+					atest.CheckAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf("role/%s", expectedRoleName)),
 					resource.TestCheckResourceAttr(resourceName, "name", expectedName),
 				),
 			},
@@ -98,9 +100,9 @@ func testAccConfigConfigurationRecorder_allParams(t *testing.T) {
 	resourceName := "aws_config_configuration_recorder.foo"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -108,7 +110,7 @@ func testAccConfigConfigurationRecorder_allParams(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConfigurationRecorderExists(resourceName, &cr),
 					testAccCheckConfigConfigurationRecorderName(resourceName, expectedName, &cr),
-					testAccCheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf("role/%s", expectedRoleName)),
+					atest.CheckAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf("role/%s", expectedRoleName)),
 					resource.TestCheckResourceAttr(resourceName, "name", expectedName),
 					resource.TestCheckResourceAttr(resourceName, "recording_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recording_group.0.all_supported", "false"),
@@ -125,9 +127,9 @@ func testAccConfigConfigurationRecorder_importBasic(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -170,7 +172,7 @@ func testAccCheckConfigConfigurationRecorderExists(n string, obj *configservice.
 			return fmt.Errorf("No configuration recorder ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).configconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ConfigConn
 		out, err := conn.DescribeConfigurationRecorders(&configservice.DescribeConfigurationRecordersInput{
 			ConfigurationRecorderNames: []*string{aws.String(rs.Primary.Attributes["name"])},
 		})
@@ -189,7 +191,7 @@ func testAccCheckConfigConfigurationRecorderExists(n string, obj *configservice.
 }
 
 func testAccCheckConfigConfigurationRecorderDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).configconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ConfigConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_configuration_recorder_status" {
