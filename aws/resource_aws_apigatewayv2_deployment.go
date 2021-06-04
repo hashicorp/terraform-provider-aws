@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apigatewayv2/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsApiGatewayV2Deployment() *schema.Resource {
@@ -48,7 +50,7 @@ func resourceAwsApiGatewayV2Deployment() *schema.Resource {
 }
 
 func resourceAwsApiGatewayV2DeploymentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.CreateDeploymentInput{
 		ApiId: aws.String(d.Get("api_id").(string)),
@@ -73,10 +75,10 @@ func resourceAwsApiGatewayV2DeploymentCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsApiGatewayV2DeploymentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	outputRaw, _, err := waiter.DeploymentStatus(conn, d.Get("api_id").(string), d.Id())()
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway v2 deployment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -93,7 +95,7 @@ func resourceAwsApiGatewayV2DeploymentRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsApiGatewayV2DeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.UpdateDeploymentInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
@@ -117,14 +119,14 @@ func resourceAwsApiGatewayV2DeploymentUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsApiGatewayV2DeploymentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 deployment (%s)", d.Id())
 	_, err := conn.DeleteDeployment(&apigatewayv2.DeleteDeploymentInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
 		DeploymentId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
