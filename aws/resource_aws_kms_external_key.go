@@ -12,13 +12,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsKmsExternalKey() *schema.Resource {
@@ -95,8 +97,8 @@ func resourceAwsKmsExternalKey() *schema.Resource {
 }
 
 func resourceAwsKmsExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).KMSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &kms.CreateKeyInput{
@@ -127,7 +129,7 @@ func resourceAwsKmsExternalKeyCreate(d *schema.ResourceData, meta interface{}) e
 		// KMS will report this error until it can validate the policy itself.
 		// They acknowledge this here:
 		// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
-		if isAWSErr(err, kms.ErrCodeMalformedPolicyDocumentException, "") {
+		if tfawserr.ErrMessageContains(err, kms.ErrCodeMalformedPolicyDocumentException, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -164,9 +166,9 @@ func resourceAwsKmsExternalKeyCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsKmsExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).KMSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &kms.DescribeKeyInput{
 		KeyId: aws.String(d.Id()),
@@ -179,7 +181,7 @@ func resourceAwsKmsExternalKeyRead(d *schema.ResourceData, meta interface{}) err
 
 		output, err = conn.DescribeKey(input)
 
-		if d.IsNewResource() && isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+		if d.IsNewResource() && tfawserr.ErrMessageContains(err, kms.ErrCodeNotFoundException, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -194,7 +196,7 @@ func resourceAwsKmsExternalKeyRead(d *schema.ResourceData, meta interface{}) err
 		output, err = conn.DescribeKey(input)
 	}
 
-	if !d.IsNewResource() && isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, kms.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] KMS External Key (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -270,7 +272,7 @@ func resourceAwsKmsExternalKeyRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsKmsExternalKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*awsprovider.AWSClient).KMSConn
 
 	if d.HasChange("enabled") && d.Get("enabled").(bool) && d.Get("key_state") != kms.KeyStatePendingImport {
 		// Enable before any attributes will be modified
@@ -334,7 +336,7 @@ func resourceAwsKmsExternalKeyUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsKmsExternalKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*awsprovider.AWSClient).KMSConn
 
 	input := &kms.ScheduleKeyDeletionInput{
 		KeyId:               aws.String(d.Id()),
@@ -343,7 +345,7 @@ func resourceAwsKmsExternalKeyDelete(d *schema.ResourceData, meta interface{}) e
 
 	_, err := conn.ScheduleKeyDeletion(input)
 
-	if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, kms.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
@@ -353,7 +355,7 @@ func resourceAwsKmsExternalKeyDelete(d *schema.ResourceData, meta interface{}) e
 
 	_, err = waiter.KeyStatePendingDeletion(conn, d.Id())
 
-	if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, kms.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
@@ -378,7 +380,7 @@ func importKmsExternalKeyMaterial(conn *kms.KMS, keyID, keyMaterialBase64, valid
 
 		getParametersForImportOutput, err = conn.GetParametersForImport(getParametersForImportInput)
 
-		if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, kms.ErrCodeNotFoundException, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -441,7 +443,7 @@ func importKmsExternalKeyMaterial(conn *kms.KMS, keyID, keyMaterialBase64, valid
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.ImportKeyMaterial(importKeyMaterialInput)
 
-		if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, kms.ErrCodeNotFoundException, "") {
 			return resource.RetryableError(err)
 		}
 
