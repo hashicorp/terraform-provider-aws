@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGlueDataCatalogEncryptionSettings() *schema.Resource {
@@ -41,7 +42,7 @@ func resourceAwsGlueDataCatalogEncryptionSettings() *schema.Resource {
 									"aws_kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 									"return_connection_password_encrypted": {
 										Type:     schema.TypeBool,
@@ -64,7 +65,7 @@ func resourceAwsGlueDataCatalogEncryptionSettings() *schema.Resource {
 									"sse_aws_kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 								},
 							},
@@ -77,8 +78,8 @@ func resourceAwsGlueDataCatalogEncryptionSettings() *schema.Resource {
 }
 
 func resourceAwsGlueDataCatalogEncryptionSettingsPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	catalogID := createAwsGlueCatalogID(d, meta.(*AWSClient).accountid)
+	conn := meta.(*awsprovider.AWSClient).GlueConn
+	catalogID := createAwsGlueCatalogID(d, meta.(*awsprovider.AWSClient).AccountID)
 
 	input := &glue.PutDataCatalogEncryptionSettingsInput{
 		CatalogId:                     aws.String(catalogID),
@@ -96,7 +97,7 @@ func resourceAwsGlueDataCatalogEncryptionSettingsPut(d *schema.ResourceData, met
 }
 
 func resourceAwsGlueDataCatalogEncryptionSettingsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	input := &glue.GetDataCatalogEncryptionSettingsInput{
 		CatalogId: aws.String(d.Id()),
