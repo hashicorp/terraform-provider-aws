@@ -11,9 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsIamUser() *schema.Resource {
@@ -76,8 +77,8 @@ func resourceAwsIamUser() *schema.Resource {
 }
 
 func resourceAwsIamUserCreate(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	IAMConn := meta.(*awsprovider.AWSClient).IAMConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 	path := d.Get("path").(string)
@@ -96,7 +97,7 @@ func resourceAwsIamUserCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Println("[DEBUG] Create IAM User request:", request)
-	createResp, err := iamconn.CreateUser(request)
+	createResp, err := IAMConn.CreateUser(request)
 	if err != nil {
 		return fmt.Errorf("Error creating IAM User %s: %s", name, err)
 	}
@@ -107,9 +108,9 @@ func resourceAwsIamUserCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsIamUserRead(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	IAMConn := meta.(*awsprovider.AWSClient).IAMConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	request := &iam.GetUserInput{
 		UserName: aws.String(d.Id()),
@@ -120,7 +121,7 @@ func resourceAwsIamUserRead(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		output, err = iamconn.GetUser(request)
+		output, err = IAMConn.GetUser(request)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return resource.RetryableError(err)
@@ -134,7 +135,7 @@ func resourceAwsIamUserRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = iamconn.GetUser(request)
+		output, err = IAMConn.GetUser(request)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
@@ -174,7 +175,7 @@ func resourceAwsIamUserRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	IAMConn := meta.(*awsprovider.AWSClient).IAMConn
 
 	if d.HasChanges("name", "path") {
 		on, nn := d.GetChange("name")
@@ -187,9 +188,9 @@ func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Println("[DEBUG] Update IAM User request:", request)
-		_, err := iamconn.UpdateUser(request)
+		_, err := IAMConn.UpdateUser(request)
 		if err != nil {
-			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 				log.Printf("[WARN] No IAM user by name (%s) found", d.Id())
 				d.SetId("")
 				return nil
@@ -207,7 +208,7 @@ func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
 				PermissionsBoundary: aws.String(permissionsBoundary),
 				UserName:            aws.String(d.Id()),
 			}
-			_, err := iamconn.PutUserPermissionsBoundary(input)
+			_, err := IAMConn.PutUserPermissionsBoundary(input)
 			if err != nil {
 				return fmt.Errorf("error updating IAM User permissions boundary: %s", err)
 			}
@@ -215,7 +216,7 @@ func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
 			input := &iam.DeleteUserPermissionsBoundaryInput{
 				UserName: aws.String(d.Id()),
 			}
-			_, err := iamconn.DeleteUserPermissionsBoundary(input)
+			_, err := IAMConn.DeleteUserPermissionsBoundary(input)
 			if err != nil {
 				return fmt.Errorf("error deleting IAM User permissions boundary: %s", err)
 			}
@@ -225,7 +226,7 @@ func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.IamUserUpdateTags(iamconn, d.Id(), o, n); err != nil {
+		if err := keyvaluetags.IamUserUpdateTags(IAMConn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating IAM User (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -234,36 +235,36 @@ func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	IAMConn := meta.(*awsprovider.AWSClient).IAMConn
 
 	// IAM Users must be removed from all groups before they can be deleted
-	if err := deleteAwsIamUserGroupMemberships(iamconn, d.Id()); err != nil {
+	if err := deleteAwsIamUserGroupMemberships(IAMConn, d.Id()); err != nil {
 		return fmt.Errorf("error removing IAM User (%s) group memberships: %s", d.Id(), err)
 	}
 
 	// All access keys, MFA devices and login profile for the user must be removed
 	if d.Get("force_destroy").(bool) {
-		if err := deleteAwsIamUserAccessKeys(iamconn, d.Id()); err != nil {
+		if err := deleteAwsIamUserAccessKeys(IAMConn, d.Id()); err != nil {
 			return fmt.Errorf("error removing IAM User (%s) access keys: %s", d.Id(), err)
 		}
 
-		if err := deleteAwsIamUserSSHKeys(iamconn, d.Id()); err != nil {
+		if err := deleteAwsIamUserSSHKeys(IAMConn, d.Id()); err != nil {
 			return fmt.Errorf("error removing IAM User (%s) SSH keys: %s", d.Id(), err)
 		}
 
-		if err := deleteAwsIamUserVirtualMFADevices(iamconn, d.Id()); err != nil {
+		if err := deleteAwsIamUserVirtualMFADevices(IAMConn, d.Id()); err != nil {
 			return fmt.Errorf("error removing IAM User (%s) Virtual MFA devices: %s", d.Id(), err)
 		}
 
-		if err := deactivateAwsIamUserMFADevices(iamconn, d.Id()); err != nil {
+		if err := deactivateAwsIamUserMFADevices(IAMConn, d.Id()); err != nil {
 			return fmt.Errorf("error removing IAM User (%s) MFA devices: %s", d.Id(), err)
 		}
 
-		if err := deleteAwsIamUserLoginProfile(iamconn, d.Id()); err != nil {
+		if err := deleteAwsIamUserLoginProfile(IAMConn, d.Id()); err != nil {
 			return fmt.Errorf("error removing IAM User (%s) login profile: %s", d.Id(), err)
 		}
 
-		if err := deleteAwsIamUserSigningCertificates(iamconn, d.Id()); err != nil {
+		if err := deleteAwsIamUserSigningCertificates(IAMConn, d.Id()); err != nil {
 			return fmt.Errorf("error removing IAM User (%s) signing certificate: %s", d.Id(), err)
 		}
 	}
@@ -273,9 +274,9 @@ func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Println("[DEBUG] Delete IAM User request:", deleteUserInput)
-	_, err := iamconn.DeleteUser(deleteUserInput)
+	_, err := IAMConn.DeleteUser(deleteUserInput)
 
-	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 		return nil
 	}
 
@@ -419,11 +420,11 @@ func deleteAwsIamUserLoginProfile(svc *iam.IAM, username string) error {
 	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		_, err = svc.DeleteLoginProfile(input)
 		if err != nil {
-			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 				return nil
 			}
 			// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
-			if isAWSErr(err, iam.ErrCodeEntityTemporarilyUnmodifiableException, "") {
+			if tfawserr.ErrMessageContains(err, iam.ErrCodeEntityTemporarilyUnmodifiableException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
