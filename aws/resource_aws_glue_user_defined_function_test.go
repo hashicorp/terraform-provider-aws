@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSGlueUserDefinedFunction_basic(t *testing.T) {
@@ -17,16 +20,16 @@ func TestAccAWSGlueUserDefinedFunction_basic(t *testing.T) {
 	resourceName := "aws_glue_user_defined_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlueUDFDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlueUserDefinedFunctionBasicConfig(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueUserDefinedFunctionExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("userDefinedFunction/%s/%s", rName, rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("userDefinedFunction/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "class_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "owner_name", rName),
@@ -57,9 +60,9 @@ func TestAccAWSGlueUserDefinedFunction_resource_uri(t *testing.T) {
 	resourceName := "aws_glue_user_defined_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlueUDFDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -97,16 +100,16 @@ func TestAccAWSGlueUserDefinedFunction_disappears(t *testing.T) {
 	resourceName := "aws_glue_user_defined_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlueUDFDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlueUserDefinedFunctionBasicConfig(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueUserDefinedFunctionExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueUserDefinedFunction(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsGlueUserDefinedFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -115,7 +118,7 @@ func TestAccAWSGlueUserDefinedFunction_disappears(t *testing.T) {
 }
 
 func testAccCheckGlueUDFDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).glueconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).GlueConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glue_user_defined_function" {
@@ -134,7 +137,7 @@ func testAccCheckGlueUDFDestroy(s *terraform.State) error {
 		}
 		if _, err := conn.GetUserDefinedFunction(input); err != nil {
 			//Verify the error is what we want
-			if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 				continue
 			}
 
@@ -161,7 +164,7 @@ func testAccCheckGlueUserDefinedFunctionExists(name string) resource.TestCheckFu
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).GlueConn
 		out, err := conn.GetUserDefinedFunction(&glue.GetUserDefinedFunctionInput{
 			CatalogId:    aws.String(catalogId),
 			DatabaseName: aws.String(dbName),
