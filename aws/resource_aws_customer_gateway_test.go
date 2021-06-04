@@ -8,9 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSCustomerGateway_basic(t *testing.T) {
@@ -19,16 +22,16 @@ func TestAccAWSCustomerGateway_basic(t *testing.T) {
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomerGatewayConfig(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGateway(resourceName, &gateway),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`customer-gateway/cgw-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`customer-gateway/cgw-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(rBgpAsn)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -54,9 +57,9 @@ func TestAccAWSCustomerGateway_tags(t *testing.T) {
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -96,9 +99,9 @@ func TestAccAWSCustomerGateway_similarAlreadyExists(t *testing.T) {
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -126,16 +129,16 @@ func TestAccAWSCustomerGateway_deviceName(t *testing.T) {
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomerGatewayConfigDeviceName(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGateway(resourceName, &gateway),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`customer-gateway/cgw-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`customer-gateway/cgw-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(rBgpAsn)),
 					resource.TestCheckResourceAttr(resourceName, "device_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -156,16 +159,16 @@ func TestAccAWSCustomerGateway_disappears(t *testing.T) {
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomerGatewayConfig(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGateway(resourceName, &gateway),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCustomerGateway(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCustomerGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -179,16 +182,16 @@ func TestAccAWSCustomerGateway_4ByteAsn(t *testing.T) {
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomerGatewayConfig4ByteAsn(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGateway(resourceName, &gateway),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`customer-gateway/cgw-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`customer-gateway/cgw-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", rBgpAsn),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -203,7 +206,7 @@ func TestAccAWSCustomerGateway_4ByteAsn(t *testing.T) {
 }
 
 func testAccCheckCustomerGatewayDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_customer_gatewah" {
@@ -219,7 +222,7 @@ func testAccCheckCustomerGatewayDestroy(s *terraform.State) error {
 			Filters: []*ec2.Filter{gatewayFilter},
 		})
 
-		if isAWSErr(err, "InvalidCustomerGatewayID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidCustomerGatewayID.NotFound", "") {
 			continue
 		}
 
@@ -255,13 +258,13 @@ func testAccCheckCustomerGateway(gatewayResource string, cgw *ec2.CustomerGatewa
 			return fmt.Errorf("Not found: %s", gatewayResource)
 		}
 
-		ec2conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		EC2Conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 		gatewayFilter := &ec2.Filter{
 			Name:   aws.String("customer-gateway-id"),
 			Values: []*string{aws.String(gateway.Primary.ID)},
 		}
 
-		resp, err := ec2conn.DescribeCustomerGateways(&ec2.DescribeCustomerGatewaysInput{
+		resp, err := EC2Conn.DescribeCustomerGateways(&ec2.DescribeCustomerGatewaysInput{
 			Filters: []*ec2.Filter{gatewayFilter},
 		})
 
