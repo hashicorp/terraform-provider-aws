@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsDaxParameterGroup_basic(t *testing.T) {
@@ -16,9 +19,9 @@ func TestAccAwsDaxParameterGroup_basic(t *testing.T) {
 	resourceName := "aws_dax_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
-		ErrorCheck:   testAccErrorCheck(t, dax.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDax(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dax.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsDaxParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +48,7 @@ func TestAccAwsDaxParameterGroup_basic(t *testing.T) {
 }
 
 func testAccCheckAwsDaxParameterGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).daxconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).DAXConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dax_parameter_group" {
@@ -56,7 +59,7 @@ func testAccCheckAwsDaxParameterGroupDestroy(s *terraform.State) error {
 			ParameterGroupNames: []*string{aws.String(rs.Primary.ID)},
 		})
 		if err != nil {
-			if isAWSErr(err, dax.ErrCodeParameterGroupNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, dax.ErrCodeParameterGroupNotFoundFault, "") {
 				return nil
 			}
 			return err
@@ -72,7 +75,7 @@ func testAccCheckAwsDaxParameterGroupExists(name string) resource.TestCheckFunc 
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).daxconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DAXConn
 
 		_, err := conn.DescribeParameterGroups(&dax.DescribeParameterGroupsInput{
 			ParameterGroupNames: []*string{aws.String(rs.Primary.ID)},
