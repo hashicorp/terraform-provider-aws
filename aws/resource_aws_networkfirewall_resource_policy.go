@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/networkfirewall/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsNetworkFirewallResourcePolicy() *schema.Resource {
@@ -36,14 +37,14 @@ func resourceAwsNetworkFirewallResourcePolicy() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 		},
 	}
 }
 
 func resourceAwsNetworkFirewallResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).networkfirewallconn
+	conn := meta.(*awsprovider.AWSClient).NetworkFirewallConn
 	resourceArn := d.Get("resource_arn").(string)
 	input := &networkfirewall.PutResourcePolicyInput{
 		ResourceArn: aws.String(resourceArn),
@@ -63,7 +64,7 @@ func resourceAwsNetworkFirewallResourcePolicyPut(ctx context.Context, d *schema.
 }
 
 func resourceAwsNetworkFirewallResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).networkfirewallconn
+	conn := meta.(*awsprovider.AWSClient).NetworkFirewallConn
 	resourceArn := d.Id()
 
 	log.Printf("[DEBUG] Reading NetworkFirewall Resource Policy for resource: %s", resourceArn)
@@ -89,7 +90,7 @@ func resourceAwsNetworkFirewallResourcePolicyRead(ctx context.Context, d *schema
 }
 
 func resourceAwsNetworkFirewallResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).networkfirewallconn
+	conn := meta.(*awsprovider.AWSClient).NetworkFirewallConn
 
 	log.Printf("[DEBUG] Deleting NetworkFirewall Resource Policy for resource: %s", d.Id())
 
