@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -21,15 +23,15 @@ func init() {
 }
 
 func testSweepConfigAggregateAuthorizations(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).configconn
+	conn := client.(*awsprovider.AWSClient).ConfigConn
 
 	aggregateAuthorizations, err := describeConfigAggregateAuthorizations(conn)
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Config Aggregate Authorizations sweep for %s: %s", region, err)
 			return nil
 		}
@@ -63,9 +65,9 @@ func TestAccAWSConfigAggregateAuthorization_basic(t *testing.T) {
 	dataSourceName := "data.aws_region.current"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSConfigAggregateAuthorizationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -73,7 +75,7 @@ func TestAccAWSConfigAggregateAuthorization_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "account_id", rString),
 					resource.TestCheckResourceAttrPair(resourceName, "region", dataSourceName, "name"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf(`aggregation-authorization/%s/%s$`, rString, testAccGetRegion()))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf(`aggregation-authorization/%s/%s$`, rString, atest.Region()))),
 				),
 			},
 			{
@@ -90,9 +92,9 @@ func TestAccAWSConfigAggregateAuthorization_tags(t *testing.T) {
 	resourceName := "aws_config_aggregate_authorization.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSConfigAggregateAuthorizationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -129,7 +131,7 @@ func TestAccAWSConfigAggregateAuthorization_tags(t *testing.T) {
 }
 
 func testAccCheckAWSConfigAggregateAuthorizationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).configconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ConfigConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_aggregate_authorization" {
