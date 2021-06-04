@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsSecretsManagerSecretVersion_basic(t *testing.T) {
@@ -17,9 +18,9 @@ func TestAccDataSourceAwsSecretsManagerSecretVersion_basic(t *testing.T) {
 	datasourceName := "data.aws_secretsmanager_secret_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		ErrorCheck: testAccErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck: atest.ErrorCheck(t, secretsmanager.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsSecretsManagerSecretVersionConfig_NonExistent,
@@ -41,9 +42,9 @@ func TestAccDataSourceAwsSecretsManagerSecretVersion_VersionID(t *testing.T) {
 	datasourceName := "data.aws_secretsmanager_secret_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		ErrorCheck: testAccErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck: atest.ErrorCheck(t, secretsmanager.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsSecretsManagerSecretVersionConfig_VersionID(rName),
@@ -61,9 +62,9 @@ func TestAccDataSourceAwsSecretsManagerSecretVersion_VersionStage(t *testing.T) 
 	datasourceName := "data.aws_secretsmanager_secret_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		ErrorCheck: testAccErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck: atest.ErrorCheck(t, secretsmanager.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsSecretsManagerSecretVersionConfig_VersionStage_Custom(rName),
