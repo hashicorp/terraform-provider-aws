@@ -9,11 +9,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -24,11 +27,11 @@ func init() {
 }
 
 func testSweepDbEventSubscriptions(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).rdsconn
+	conn := client.(*awsprovider.AWSClient).RDSConn
 	var sweeperErrs *multierror.Error
 
 	err = conn.DescribeEventSubscriptionsPages(&rds.DescribeEventSubscriptionsInput{}, func(page *rds.DescribeEventSubscriptionsOutput, lastPage bool) bool {
@@ -43,7 +46,7 @@ func testSweepDbEventSubscriptions(region string) error {
 			_, err = conn.DeleteEventSubscription(&rds.DeleteEventSubscriptionInput{
 				SubscriptionName: aws.String(name),
 			})
-			if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
 				continue
 			}
 			if err != nil {
@@ -54,7 +57,7 @@ func testSweepDbEventSubscriptions(region string) error {
 			}
 
 			_, err = waiter.EventSubscriptionDeleted(conn, name)
-			if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
 				continue
 			}
 			if err != nil {
@@ -67,7 +70,7 @@ func testSweepDbEventSubscriptions(region string) error {
 
 		return !lastPage
 	})
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping RDS Event Subscriptions sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -85,16 +88,16 @@ func TestAccAWSDBEventSubscription_basicUpdate(t *testing.T) {
 	subscriptionName := fmt.Sprintf("tf-acc-test-rds-event-subs-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBEventSubscriptionConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBEventSubscriptionExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(fmt.Sprintf("es:%s$", subscriptionName))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(fmt.Sprintf("es:%s$", subscriptionName))),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "source_type", "db-instance"),
 					resource.TestCheckResourceAttr(resourceName, "name", subscriptionName),
@@ -128,9 +131,9 @@ func TestAccAWSDBEventSubscription_disappears(t *testing.T) {
 	resourceName := "aws_db_event_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -152,9 +155,9 @@ func TestAccAWSDBEventSubscription_withPrefix(t *testing.T) {
 	resourceName := "aws_db_event_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -178,9 +181,9 @@ func TestAccAWSDBEventSubscription_withSourceIds(t *testing.T) {
 	subscriptionName := fmt.Sprintf("tf-acc-test-rds-event-subs-with-ids-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -220,9 +223,9 @@ func TestAccAWSDBEventSubscription_categoryUpdate(t *testing.T) {
 	subscriptionName := fmt.Sprintf("tf-acc-test-rds-event-subs-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -263,7 +266,7 @@ func testAccCheckAWSDBEventSubscriptionExists(n string, v *rds.EventSubscription
 			return fmt.Errorf("No RDS Event Subscription is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).RDSConn
 
 		eventSubscription, err := resourceAwsDbEventSubscriptionRetrieve(rs.Primary.ID, conn)
 
@@ -282,7 +285,7 @@ func testAccCheckAWSDBEventSubscriptionExists(n string, v *rds.EventSubscription
 }
 
 func testAccCheckAWSDBEventSubscriptionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_event_subscription" {
@@ -291,7 +294,7 @@ func testAccCheckAWSDBEventSubscriptionDestroy(s *terraform.State) error {
 
 		eventSubscription, err := resourceAwsDbEventSubscriptionRetrieve(rs.Primary.ID, conn)
 
-		if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
 			continue
 		}
 
@@ -309,7 +312,7 @@ func testAccCheckAWSDBEventSubscriptionDestroy(s *terraform.State) error {
 
 func testAccCheckAWSDBEventSubscriptionDisappears(eventSubscription *rds.EventSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).RDSConn
 
 		input := &rds.DeleteEventSubscriptionInput{
 			SubscriptionName: eventSubscription.CustSubscriptionId,
