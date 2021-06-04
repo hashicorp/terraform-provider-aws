@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/swf"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSwfDomain() *schema.Resource {
@@ -67,8 +69,8 @@ func resourceAwsSwfDomain() *schema.Resource {
 }
 
 func resourceAwsSwfDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).swfconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SWFConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
@@ -102,9 +104,9 @@ func resourceAwsSwfDomainCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsSwfDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).swfconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SWFConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &swf.DescribeDomainInput{
 		Name: aws.String(d.Id()),
@@ -112,7 +114,7 @@ func resourceAwsSwfDomainRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.DescribeDomain(input)
 	if err != nil {
-		if isAWSErr(err, swf.ErrCodeUnknownResourceFault, "") {
+		if tfawserr.ErrMessageContains(err, swf.ErrCodeUnknownResourceFault, "") {
 			log.Printf("[WARN] SWF Domain %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -153,7 +155,7 @@ func resourceAwsSwfDomainRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsSwfDomainUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).swfconn
+	conn := meta.(*awsprovider.AWSClient).SWFConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -167,7 +169,7 @@ func resourceAwsSwfDomainUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsSwfDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).swfconn
+	conn := meta.(*awsprovider.AWSClient).SWFConn
 
 	input := &swf.DeprecateDomainInput{
 		Name: aws.String(d.Get("name").(string)),
@@ -175,10 +177,10 @@ func resourceAwsSwfDomainDelete(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := conn.DeprecateDomain(input)
 	if err != nil {
-		if isAWSErr(err, swf.ErrCodeDomainDeprecatedFault, "") {
+		if tfawserr.ErrMessageContains(err, swf.ErrCodeDomainDeprecatedFault, "") {
 			return nil
 		}
-		if isAWSErr(err, swf.ErrCodeUnknownResourceFault, "") {
+		if tfawserr.ErrMessageContains(err, swf.ErrCodeUnknownResourceFault, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting SWF Domain: %s", err)
