@@ -6,7 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsConfigConfigurationRecorderStatus() *schema.Resource {
@@ -37,7 +39,7 @@ func resourceAwsConfigConfigurationRecorderStatus() *schema.Resource {
 }
 
 func resourceAwsConfigConfigurationRecorderStatusPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*awsprovider.AWSClient).ConfigConn
 
 	name := d.Get("name").(string)
 	d.SetId(name)
@@ -69,7 +71,7 @@ func resourceAwsConfigConfigurationRecorderStatusPut(d *schema.ResourceData, met
 }
 
 func resourceAwsConfigConfigurationRecorderStatusRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*awsprovider.AWSClient).ConfigConn
 
 	name := d.Id()
 	statusInput := configservice.DescribeConfigurationRecorderStatusInput{
@@ -77,7 +79,7 @@ func resourceAwsConfigConfigurationRecorderStatusRead(d *schema.ResourceData, me
 	}
 	statusOut, err := conn.DescribeConfigurationRecorderStatus(&statusInput)
 	if err != nil {
-		if isAWSErr(err, configservice.ErrCodeNoSuchConfigurationRecorderException, "") {
+		if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigurationRecorderException, "") {
 			log.Printf("[WARN] Configuration Recorder (status) %q is gone (NoSuchConfigurationRecorderException)", name)
 			d.SetId("")
 			return nil
@@ -104,7 +106,7 @@ func resourceAwsConfigConfigurationRecorderStatusRead(d *schema.ResourceData, me
 }
 
 func resourceAwsConfigConfigurationRecorderStatusDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*awsprovider.AWSClient).ConfigConn
 	input := configservice.StopConfigurationRecorderInput{
 		ConfigurationRecorderName: aws.String(d.Get("name").(string)),
 	}
