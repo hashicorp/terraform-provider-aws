@@ -10,8 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	tfservicecatalog "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSServiceCatalogPortfolioShare_basic(t *testing.T) {
@@ -23,12 +25,12 @@ func TestAccAWSServiceCatalogPortfolioShare_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
-			testAccPartitionHasServicePreCheck(servicecatalog.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckAlternateAccount(t)
+			atest.PreCheckPartitionService(servicecatalog.EndpointsID, t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, servicecatalog.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsServiceCatalogPortfolioShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -62,13 +64,13 @@ func TestAccAWSServiceCatalogPortfolioShare_organizationalUnit(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccOrganizationsEnabledPreCheck(t)
-			testAccOrganizationManagementAccountPreCheck(t)
-			testAccPartitionHasServicePreCheck(servicecatalog.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckOrganizationsEnabled(t)
+			atest.PreCheckOrganizationManagementAccount(t)
+			atest.PreCheckPartitionService(servicecatalog.EndpointsID, t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, servicecatalog.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -96,7 +98,7 @@ func TestAccAWSServiceCatalogPortfolioShare_organizationalUnit(t *testing.T) {
 }
 
 func testAccCheckAwsServiceCatalogPortfolioShareDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).scconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ServiceCatalogConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_portfolio_share" {
@@ -134,7 +136,7 @@ func testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName string) reso
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).scconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ServiceCatalogConn
 
 		_, err := finder.PortfolioShare(
 			conn,
@@ -156,7 +158,7 @@ func testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName string) reso
 }
 
 func testAccAWSServiceCatalogPortfolioShareConfig_basic(rName string) string {
-	return composeConfig(testAccAlternateAccountProviderConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(atest.ConfigProviderAlternateAccount(), fmt.Sprintf(`
 data "aws_caller_identity" "alternate" {
   provider = "awsalternate"
 }
