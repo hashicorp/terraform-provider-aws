@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSLoadBalancerPolicy_basic(t *testing.T) {
@@ -21,9 +23,9 @@ func TestAccAWSLoadBalancerPolicy_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLoadBalancerPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -45,9 +47,9 @@ func TestAccAWSLoadBalancerPolicy_disappears(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLoadBalancerPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -79,9 +81,9 @@ func TestAccAWSLoadBalancerPolicy_updateWhileAssigned(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLoadBalancerPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -115,7 +117,7 @@ func testAccCheckAWSLoadBalancerPolicyExists(resourceName string, policyDescript
 
 		loadBalancerName, policyName := resourceAwsLoadBalancerPolicyParseId(rs.Primary.ID)
 
-		conn := testAccProvider.Meta().(*AWSClient).elbconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ELBConn
 
 		input := &elb.DescribeLoadBalancerPoliciesInput{
 			LoadBalancerName: aws.String(loadBalancerName),
@@ -139,7 +141,7 @@ func testAccCheckAWSLoadBalancerPolicyExists(resourceName string, policyDescript
 }
 
 func testAccCheckAWSLoadBalancerPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elbconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ELBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_load_balancer_policy" {
@@ -168,7 +170,7 @@ func testAccCheckAWSLoadBalancerPolicyDestroy(s *terraform.State) error {
 
 func testAccCheckAWSLoadBalancerPolicyDisappears(loadBalancer *elb.LoadBalancerDescription, policy *elb.PolicyDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).elbconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ELBConn
 
 		input := elb.DeleteLoadBalancerPolicyInput{
 			LoadBalancerName: loadBalancer.LoadBalancerName,
@@ -196,9 +198,9 @@ func testAccCheckAWSLoadBalancerPolicyState(elbResource string, policyResource s
 			return fmt.Errorf("Not found: %s", policyResource)
 		}
 
-		elbconn := testAccProvider.Meta().(*AWSClient).elbconn
+		ELBConn := atest.Provider.Meta().(*awsprovider.AWSClient).ELBConn
 		loadBalancerName, policyName := resourceAwsLoadBalancerPolicyParseId(policy.Primary.ID)
-		loadBalancerPolicies, err := elbconn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
+		loadBalancerPolicies, err := ELBConn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
 			LoadBalancerName: aws.String(loadBalancerName),
 			PolicyNames:      []*string{aws.String(policyName)},
 		})
@@ -240,7 +242,7 @@ func testAccCheckAWSLoadBalancerPolicyState(elbResource string, policyResource s
 }
 
 func testAccAWSLoadBalancerPolicyConfig_basic(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
   name               = "test-lb-%[1]d"
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -271,7 +273,7 @@ resource "aws_load_balancer_policy" "test-policy" {
 }
 
 func testAccAWSLoadBalancerPolicyConfig_updateWhileAssigned0(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
   name               = "test-lb-%[1]d"
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -311,7 +313,7 @@ resource "aws_load_balancer_listener_policy" "test-lb-test-policy-80" {
 }
 
 func testAccAWSLoadBalancerPolicyConfig_updateWhileAssigned1(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
   name               = "test-lb-%[1]d"
   availability_zones = [data.aws_availability_zones.available.names[0]]
