@@ -10,7 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatch/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSCloudWatchMetricAlarm_basic(t *testing.T) {
@@ -19,9 +21,9 @@ func TestAccAWSCloudWatchMetricAlarm_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -30,7 +32,7 @@ func TestAccAWSCloudWatchMetricAlarm_basic(t *testing.T) {
 					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", "CPUUtilization"),
 					resource.TestCheckResourceAttr(resourceName, "statistic", "Average"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "cloudwatch", regexp.MustCompile(`alarm:.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "cloudwatch", regexp.MustCompile(`alarm:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "alarm_description", "This metric monitors ec2 cpu utilization"),
 					resource.TestCheckResourceAttr(resourceName, "threshold", "80"),
@@ -60,9 +62,9 @@ func TestAccAWSCloudWatchMetricAlarm_AlarmActions_EC2Automate(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -108,9 +110,9 @@ func TestAccAWSCloudWatchMetricAlarm_AlarmActions_SNSTopic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -135,9 +137,9 @@ func TestAccAWSCloudWatchMetricAlarm_AlarmActions_SWFAction(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -162,9 +164,9 @@ func TestAccAWSCloudWatchMetricAlarm_datapointsToAlarm(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -184,9 +186,9 @@ func TestAccAWSCloudWatchMetricAlarm_treatMissingData(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -213,9 +215,9 @@ func TestAccAWSCloudWatchMetricAlarm_evaluateLowSampleCountPercentiles(t *testin
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -242,9 +244,9 @@ func TestAccAWSCloudWatchMetricAlarm_extendedStatistic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -264,9 +266,9 @@ func TestAccAWSCloudWatchMetricAlarm_expression(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -320,9 +322,9 @@ func TestAccAWSCloudWatchMetricAlarm_expression(t *testing.T) {
 func TestAccAWSCloudWatchMetricAlarm_missingStatistic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -339,9 +341,9 @@ func TestAccAWSCloudWatchMetricAlarm_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -384,16 +386,16 @@ func TestAccAWSCloudWatchMetricAlarm_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudWatchMetricAlarmConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchMetricAlarm(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCloudWatchMetricAlarm(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -408,7 +410,7 @@ func testAccCheckCloudWatchMetricAlarmExists(n string, alarm *cloudwatch.MetricA
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatchconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchConn
 		resp, err := finder.MetricAlarmByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -423,7 +425,7 @@ func testAccCheckCloudWatchMetricAlarmExists(n string, alarm *cloudwatch.MetricA
 }
 
 func testAccCheckAWSCloudWatchMetricAlarmDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudwatchconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_metric_alarm" {
@@ -798,7 +800,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 // EC2 Automate requires a valid EC2 instance
 // ValidationError: Invalid use of EC2 'Recover' action. i-abc123 is not a valid EC2 instance.
 func testAccAWSCloudWatchMetricAlarmConfigAlarmActionsEC2Automate(rName, action string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
