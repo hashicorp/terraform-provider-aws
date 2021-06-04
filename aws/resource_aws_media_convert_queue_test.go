@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSMediaConvertQueue_basic(t *testing.T) {
@@ -18,16 +21,16 @@ func TestAccAWSMediaConvertQueue_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaConvert(t) },
-		ErrorCheck:   testAccErrorCheck(t, mediaconvert.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMediaConvert(t) },
+		ErrorCheck:   atest.ErrorCheck(t, mediaconvert.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMediaConvertQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMediaConvertQueueConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMediaConvertQueueExists(resourceName, &queue),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mediaconvert", regexp.MustCompile(`queues/.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "mediaconvert", regexp.MustCompile(`queues/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "pricing_plan", mediaconvert.PricingPlanOnDemand),
 					resource.TestCheckResourceAttr(resourceName, "status", mediaconvert.QueueStatusActive),
@@ -43,16 +46,16 @@ func TestAccAWSMediaConvertQueue_basic(t *testing.T) {
 }
 
 func TestAccAWSMediaConvertQueue_ReservationPlanSettings(t *testing.T) {
-	TestAccSkip(t, "MediaConvert Reserved Queues are $400/month and cannot be deleted for 1 year.")
+	atest.Skip(t, "MediaConvert Reserved Queues are $400/month and cannot be deleted for 1 year.")
 
 	var queue mediaconvert.Queue
 	resourceName := "aws_media_convert_queue.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaConvert(t) },
-		ErrorCheck:   testAccErrorCheck(t, mediaconvert.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMediaConvert(t) },
+		ErrorCheck:   atest.ErrorCheck(t, mediaconvert.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMediaConvertQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -92,9 +95,9 @@ func TestAccAWSMediaConvertQueue_withStatus(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaConvert(t) },
-		ErrorCheck:   testAccErrorCheck(t, mediaconvert.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMediaConvert(t) },
+		ErrorCheck:   atest.ErrorCheck(t, mediaconvert.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMediaConvertQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -126,9 +129,9 @@ func TestAccAWSMediaConvertQueue_withTags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaConvert(t) },
-		ErrorCheck:   testAccErrorCheck(t, mediaconvert.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMediaConvert(t) },
+		ErrorCheck:   atest.ErrorCheck(t, mediaconvert.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMediaConvertQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -171,9 +174,9 @@ func TestAccAWSMediaConvertQueue_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaConvert(t) },
-		ErrorCheck:   testAccErrorCheck(t, mediaconvert.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMediaConvert(t) },
+		ErrorCheck:   atest.ErrorCheck(t, mediaconvert.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMediaConvertQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -196,9 +199,9 @@ func TestAccAWSMediaConvertQueue_withDescription(t *testing.T) {
 	description2 := acctest.RandomWithPrefix("Description: ")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaConvert(t) },
-		ErrorCheck:   testAccErrorCheck(t, mediaconvert.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMediaConvert(t) },
+		ErrorCheck:   atest.ErrorCheck(t, mediaconvert.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMediaConvertQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -224,7 +227,7 @@ func testAccCheckAwsMediaConvertQueueDestroy(s *terraform.State) error {
 		if rs.Type != "aws_media_convert_queue" {
 			continue
 		}
-		conn, err := getAwsMediaConvertAccountClient(testAccProvider.Meta().(*AWSClient))
+		conn, err := getAwsMediaConvertAccountClient(atest.Provider.Meta().(*awsprovider.AWSClient))
 		if err != nil {
 			return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 		}
@@ -233,7 +236,7 @@ func testAccCheckAwsMediaConvertQueueDestroy(s *terraform.State) error {
 			Name: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
-			if isAWSErr(err, mediaconvert.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, mediaconvert.ErrCodeNotFoundException, "") {
 				continue
 			}
 			return err
@@ -245,7 +248,7 @@ func testAccCheckAwsMediaConvertQueueDestroy(s *terraform.State) error {
 
 func testAccCheckAwsMediaConvertQueueDisappears(queue *mediaconvert.Queue) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn, err := getAwsMediaConvertAccountClient(testAccProvider.Meta().(*AWSClient))
+		conn, err := getAwsMediaConvertAccountClient(atest.Provider.Meta().(*awsprovider.AWSClient))
 		if err != nil {
 			return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 		}
@@ -271,7 +274,7 @@ func testAccCheckAwsMediaConvertQueueExists(n string, queue *mediaconvert.Queue)
 			return fmt.Errorf("No Queue id is set")
 		}
 
-		conn, err := getAwsMediaConvertAccountClient(testAccProvider.Meta().(*AWSClient))
+		conn, err := getAwsMediaConvertAccountClient(atest.Provider.Meta().(*awsprovider.AWSClient))
 		if err != nil {
 			return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 		}
@@ -289,9 +292,9 @@ func testAccCheckAwsMediaConvertQueueExists(n string, queue *mediaconvert.Queue)
 }
 
 func testAccPreCheckAWSMediaConvert(t *testing.T) {
-	_, err := getAwsMediaConvertAccountClient(testAccProvider.Meta().(*AWSClient))
+	_, err := getAwsMediaConvertAccountClient(atest.Provider.Meta().(*awsprovider.AWSClient))
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
