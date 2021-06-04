@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSCodeCommitTrigger_basic(t *testing.T) {
@@ -17,9 +19,9 @@ func TestAccAWSCodeCommitTrigger_basic(t *testing.T) {
 	resourceName := "aws_codecommit_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codecommit.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, codecommit.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCodeCommitTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -34,7 +36,7 @@ func TestAccAWSCodeCommitTrigger_basic(t *testing.T) {
 }
 
 func testAccCheckCodeCommitTriggerDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).codecommitconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CodeCommitConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codecommit_trigger" {
@@ -68,8 +70,8 @@ func testAccCheckCodeCommitTriggerExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		codecommitconn := testAccProvider.Meta().(*AWSClient).codecommitconn
-		out, err := codecommitconn.GetRepositoryTriggers(&codecommit.GetRepositoryTriggersInput{
+		CodeCommitConn := atest.Provider.Meta().(*awsprovider.AWSClient).CodeCommitConn
+		out, err := CodeCommitConn.GetRepositoryTriggers(&codecommit.GetRepositoryTriggersInput{
 			RepositoryName: aws.String(rs.Primary.ID),
 		})
 
