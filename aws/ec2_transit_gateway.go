@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -356,7 +357,7 @@ func ec2TransitGatewayRefreshFunc(conn *ec2.EC2, transitGatewayID string) resour
 	return func() (interface{}, string, error) {
 		transitGateway, err := ec2DescribeTransitGateway(conn, transitGatewayID)
 
-		if isAWSErr(err, "InvalidTransitGatewayID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayID.NotFound", "") {
 			return nil, ec2.TransitGatewayStateDeleted, nil
 		}
 
@@ -376,7 +377,7 @@ func ec2TransitGatewayRouteTableRefreshFunc(conn *ec2.EC2, transitGatewayRouteTa
 	return func() (interface{}, string, error) {
 		transitGatewayRouteTable, err := ec2DescribeTransitGatewayRouteTable(conn, transitGatewayRouteTableID)
 
-		if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 			return nil, ec2.TransitGatewayRouteTableStateDeleted, nil
 		}
 
@@ -396,7 +397,7 @@ func ec2TransitGatewayRouteTableAssociationRefreshFunc(conn *ec2.EC2, transitGat
 	return func() (interface{}, string, error) {
 		transitGatewayAssociation, err := ec2DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-		if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 			return nil, ec2.TransitGatewayRouteTableStateDeleted, nil
 		}
 
@@ -416,7 +417,7 @@ func ec2TransitGatewayPeeringAttachmentRefreshFunc(conn *ec2.EC2, transitGateway
 	return func() (interface{}, string, error) {
 		transitGatewayPeeringAttachment, err := ec2DescribeTransitGatewayPeeringAttachment(conn, transitGatewayAttachmentID)
 
-		if isAWSErr(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
 			return nil, ec2.TransitGatewayAttachmentStateDeleted, nil
 		}
 
@@ -440,7 +441,7 @@ func ec2TransitGatewayVpcAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAtta
 	return func() (interface{}, string, error) {
 		transitGatewayVpcAttachment, err := ec2DescribeTransitGatewayVpcAttachment(conn, transitGatewayAttachmentID)
 
-		if isAWSErr(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
 			return nil, ec2.TransitGatewayAttachmentStateDeleted, nil
 		}
 
