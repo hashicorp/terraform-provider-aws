@@ -7,10 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGlueMLTransform() *schema.Resource {
@@ -126,7 +128,7 @@ func resourceAwsGlueMLTransform() *schema.Resource {
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
@@ -174,8 +176,8 @@ func resourceAwsGlueMLTransform() *schema.Resource {
 }
 
 func resourceAwsGlueMLTransformCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &glue.CreateMLTransformInput{
@@ -223,9 +225,9 @@ func resourceAwsGlueMLTransformCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsGlueMLTransformRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &glue.GetMLTransformInput{
 		TransformId: aws.String(d.Id()),
@@ -234,7 +236,7 @@ func resourceAwsGlueMLTransformRead(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Reading Glue ML Transform: %s", input)
 	output, err := conn.GetMLTransform(input)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue ML Transform (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -251,10 +253,10 @@ func resourceAwsGlueMLTransformRead(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] setting Glue ML Transform: %#v", output)
 
 	mlTransformArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "glue",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("mlTransform/%s", d.Id()),
 	}.String()
 	d.Set("arn", mlTransformArn)
@@ -303,7 +305,7 @@ func resourceAwsGlueMLTransformRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsGlueMLTransformUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	if d.HasChanges("description", "glue_version", "max_capacity", "max_retries", "number_of_workers",
 		"role_arn", "timeout", "worker_type", "parameters") {
@@ -360,7 +362,7 @@ func resourceAwsGlueMLTransformUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsGlueMLTransformDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue ML Trasform: %s", d.Id())
 
@@ -370,14 +372,14 @@ func resourceAwsGlueMLTransformDelete(d *schema.ResourceData, meta interface{}) 
 
 	_, err := conn.DeleteMLTransform(input)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Glue ML Transform (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waiter.MLTransformDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error waiting for Glue ML Transform (%s) to be Deleted: %w", d.Id(), err)
