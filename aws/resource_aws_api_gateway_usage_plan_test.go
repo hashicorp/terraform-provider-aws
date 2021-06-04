@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSAPIGatewayUsagePlan_basic(t *testing.T) {
@@ -19,9 +22,9 @@ func TestAccAWSAPIGatewayUsagePlan_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -29,7 +32,7 @@ func TestAccAWSAPIGatewayUsagePlan_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/usageplans/+.`)),
+					atest.MatchAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/usageplans/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "api_stages.%", "0"),
@@ -59,9 +62,9 @@ func TestAccAWSAPIGatewayUsagePlan_tags(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -106,9 +109,9 @@ func TestAccAWSAPIGatewayUsagePlan_description(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -160,9 +163,9 @@ func TestAccAWSAPIGatewayUsagePlan_productCode(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -208,9 +211,9 @@ func TestAccAWSAPIGatewayUsagePlan_throttling(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -263,9 +266,9 @@ func TestAccAWSAPIGatewayUsagePlan_throttlingInitialRateLimit(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -290,9 +293,9 @@ func TestAccAWSAPIGatewayUsagePlan_quota(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -346,9 +349,9 @@ func TestAccAWSAPIGatewayUsagePlan_apiStages(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			// Create UsagePlan WITH Stages as the API calls are different
@@ -430,9 +433,9 @@ func TestAccAWSAPIGatewayUsagePlan_apiStages_multiple(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -463,16 +466,16 @@ func TestAccAWSAPIGatewayUsagePlan_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSApiGatewayUsagePlanBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayUsagePlan(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsApiGatewayUsagePlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -491,7 +494,7 @@ func testAccCheckAWSAPIGatewayUsagePlanExists(n string, res *apigateway.UsagePla
 			return fmt.Errorf("No API Gateway Usage Plan ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayConn
 
 		req := &apigateway.GetUsagePlanInput{
 			UsagePlanId: aws.String(rs.Primary.ID),
@@ -512,7 +515,7 @@ func testAccCheckAWSAPIGatewayUsagePlanExists(n string, res *apigateway.UsagePla
 }
 
 func testAccCheckAWSAPIGatewayUsagePlanDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_usage_plan" {
@@ -530,7 +533,7 @@ func testAccCheckAWSAPIGatewayUsagePlanDestroy(s *terraform.State) error {
 			}
 		}
 
-		if !isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if !tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			return err
 		}
 
