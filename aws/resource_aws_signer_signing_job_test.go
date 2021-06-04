@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSSignerSigningJob_basic(t *testing.T) {
@@ -20,9 +22,9 @@ func TestAccAWSSignerSigningJob_basic(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   testAccErrorCheck(t, signer.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:   atest.ErrorCheck(t, signer.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -100,7 +102,7 @@ func testAccCheckAWSSignerSigningJobExists(res string, job *signer.DescribeSigni
 			return fmt.Errorf("Signing job with that ID does not exist")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).signerconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SignerConn
 
 		params := &signer.DescribeSigningJobInput{
 			JobId: aws.String(rs.Primary.ID),
