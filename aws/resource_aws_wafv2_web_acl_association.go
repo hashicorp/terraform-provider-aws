@@ -8,8 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -38,20 +40,20 @@ func resourceAwsWafv2WebACLAssociation() *schema.Resource {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"web_acl_arn": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 		},
 	}
 }
 
 func resourceAwsWafv2WebACLAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
+	conn := meta.(*awsprovider.AWSClient).WAFV2Conn
 	resourceArn := d.Get("resource_arn").(string)
 	webAclArn := d.Get("web_acl_arn").(string)
 	params := &wafv2.AssociateWebACLInput{
@@ -63,7 +65,7 @@ func resourceAwsWafv2WebACLAssociationCreate(d *schema.ResourceData, meta interf
 		var err error
 		_, err = conn.AssociateWebACL(params)
 		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
+			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -84,7 +86,7 @@ func resourceAwsWafv2WebACLAssociationCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsWafv2WebACLAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
+	conn := meta.(*awsprovider.AWSClient).WAFV2Conn
 	resourceArn := d.Get("resource_arn").(string)
 	webAclArn := d.Get("web_acl_arn").(string)
 	params := &wafv2.GetWebACLForResourceInput{
@@ -93,7 +95,7 @@ func resourceAwsWafv2WebACLAssociationRead(d *schema.ResourceData, meta interfac
 
 	resp, err := conn.GetWebACLForResource(params)
 	if err != nil {
-		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
 			log.Printf("[WARN] WAFv2 Web ACL (%s) not found, removing from state", webAclArn)
 			d.SetId("")
 			return nil
@@ -110,7 +112,7 @@ func resourceAwsWafv2WebACLAssociationRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsWafv2WebACLAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
+	conn := meta.(*awsprovider.AWSClient).WAFV2Conn
 
 	log.Printf("[INFO] Deleting WAFv2 Web ACL Association %s", d.Id())
 
