@@ -10,12 +10,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/eks/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEksAddon() *schema.Resource {
@@ -60,7 +62,7 @@ func resourceAwsEksAddon() *schema.Resource {
 			"service_account_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"resolve_conflicts": {
 				Type:         schema.TypeString,
@@ -82,8 +84,8 @@ func resourceAwsEksAddon() *schema.Resource {
 }
 
 func resourceAwsEksAddonCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).eksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EKSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("cluster_name").(string)
@@ -114,10 +116,10 @@ func resourceAwsEksAddonCreate(ctx context.Context, d *schema.ResourceData, meta
 	err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateAddonWithContext(ctx, input)
 		if err != nil {
-			if isAWSErr(err, eks.ErrCodeInvalidParameterException, "CREATE_FAILED") {
+			if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "CREATE_FAILED") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, eks.ErrCodeInvalidParameterException, "does not exist") {
+			if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "does not exist") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -152,9 +154,9 @@ func resourceAwsEksAddonCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceAwsEksAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).eksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EKSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	clusterName, addonName, err := resourceAwsEksAddonParseId(d.Id())
 	if err != nil {
@@ -169,7 +171,7 @@ func resourceAwsEksAddonRead(ctx context.Context, d *schema.ResourceData, meta i
 	log.Printf("[DEBUG] Reading EKS add-on: %s", d.Id())
 	output, err := conn.DescribeAddonWithContext(ctx, input)
 	if err != nil {
-		if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, eks.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] EKS add-on (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -207,7 +209,7 @@ func resourceAwsEksAddonRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceAwsEksAddonUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).eksconn
+	conn := meta.(*awsprovider.AWSClient).EKSConn
 
 	clusterName, addonName, err := resourceAwsEksAddonParseId(d.Id())
 	if err != nil {
@@ -276,7 +278,7 @@ func resourceAwsEksAddonUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceAwsEksAddonDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).eksconn
+	conn := meta.(*awsprovider.AWSClient).EKSConn
 
 	clusterName, addonName, err := resourceAwsEksAddonParseId(d.Id())
 	if err != nil {
