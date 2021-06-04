@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDefaultVpc() *schema.Resource {
@@ -35,7 +36,7 @@ func resourceAwsDefaultVpc() *schema.Resource {
 }
 
 func resourceAwsDefaultVpcCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 	req := &ec2.DescribeVpcsInput{
 		Filters: []*ec2.Filter{
 			{
