@@ -6,9 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -50,8 +52,8 @@ func resourceAwsEc2LocalGatewayRouteTableVpcAssociation() *schema.Resource {
 }
 
 func resourceAwsEc2LocalGatewayRouteTableVpcAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &ec2.CreateLocalGatewayRouteTableVpcAssociationInput{
@@ -76,9 +78,9 @@ func resourceAwsEc2LocalGatewayRouteTableVpcAssociationCreate(d *schema.Resource
 }
 
 func resourceAwsEc2LocalGatewayRouteTableVpcAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	association, err := getEc2LocalGatewayRouteTableVpcAssociation(conn, d.Id())
 
@@ -118,7 +120,7 @@ func resourceAwsEc2LocalGatewayRouteTableVpcAssociationRead(d *schema.ResourceDa
 }
 
 func resourceAwsEc2LocalGatewayRouteTableVpcAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -132,7 +134,7 @@ func resourceAwsEc2LocalGatewayRouteTableVpcAssociationUpdate(d *schema.Resource
 }
 
 func resourceAwsEc2LocalGatewayRouteTableVpcAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	input := &ec2.DeleteLocalGatewayRouteTableVpcAssociationInput{
 		LocalGatewayRouteTableVpcAssociationId: aws.String(d.Id()),
@@ -140,7 +142,7 @@ func resourceAwsEc2LocalGatewayRouteTableVpcAssociationDelete(d *schema.Resource
 
 	_, err := conn.DeleteLocalGatewayRouteTableVpcAssociation(input)
 
-	if isAWSErr(err, "InvalidLocalGatewayRouteTableVpcAssociationID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidLocalGatewayRouteTableVpcAssociationID.NotFound", "") {
 		return nil
 	}
 
