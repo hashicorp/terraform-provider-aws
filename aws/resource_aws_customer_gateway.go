@@ -9,10 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCustomerGateway() *schema.Resource {
@@ -73,8 +75,8 @@ func resourceAwsCustomerGateway() *schema.Resource {
 }
 
 func resourceAwsCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	ipAddress := d.Get("ip_address").(string)
@@ -151,7 +153,7 @@ func customerGatewayRefreshFunc(conn *ec2.EC2, gatewayId string) resource.StateR
 			Filters: []*ec2.Filter{gatewayFilter},
 		})
 		if err != nil {
-			if isAWSErr(err, "InvalidCustomerGatewayID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidCustomerGatewayID.NotFound", "") {
 				resp = nil
 			} else {
 				log.Printf("Error on CustomerGatewayRefresh: %s", err)
@@ -207,9 +209,9 @@ func resourceAwsCustomerGatewayExists(vpnType, ipAddress, bgpAsn, deviceName str
 }
 
 func resourceAwsCustomerGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	gatewayFilter := &ec2.Filter{
 		Name:   aws.String("customer-gateway-id"),
@@ -220,7 +222,7 @@ func resourceAwsCustomerGatewayRead(d *schema.ResourceData, meta interface{}) er
 		Filters: []*ec2.Filter{gatewayFilter},
 	})
 	if err != nil {
-		if isAWSErr(err, "InvalidCustomerGatewayID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidCustomerGatewayID.NotFound", "") {
 			log.Printf("[WARN] Customer Gateway (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -258,10 +260,10 @@ func resourceAwsCustomerGatewayRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("customer-gateway/%s", d.Id()),
 	}.String()
 
@@ -271,7 +273,7 @@ func resourceAwsCustomerGatewayRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsCustomerGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -285,13 +287,13 @@ func resourceAwsCustomerGatewayUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsCustomerGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	_, err := conn.DeleteCustomerGateway(&ec2.DeleteCustomerGatewayInput{
 		CustomerGatewayId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, "InvalidCustomerGatewayID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidCustomerGatewayID.NotFound", "") {
 			return nil
 		} else {
 			return fmt.Errorf("[ERROR] Error deleting CustomerGateway: %s", err)
@@ -310,7 +312,7 @@ func resourceAwsCustomerGatewayDelete(d *schema.ResourceData, meta interface{}) 
 		resp, err := conn.DescribeCustomerGateways(input)
 
 		if err != nil {
-			if isAWSErr(err, "InvalidCustomerGatewayID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidCustomerGatewayID.NotFound", "") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
