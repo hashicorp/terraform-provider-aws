@@ -5,8 +5,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/workspaces/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsWorkspacesDirectory() *schema.Resource {
@@ -159,8 +160,8 @@ func dataSourceAwsWorkspacesDirectory() *schema.Resource {
 }
 
 func dataSourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).workspacesconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).WorkSpacesConn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	directoryID := d.Get("directory_id").(string)
 
