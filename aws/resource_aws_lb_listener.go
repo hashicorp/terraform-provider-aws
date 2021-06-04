@@ -17,10 +17,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elbv2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elbv2/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsLbListener() *schema.Resource {
@@ -59,7 +60,7 @@ func resourceAwsLbListener() *schema.Resource {
 			"certificate_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"default_action": {
 				Type:     schema.TypeList,
@@ -105,7 +106,7 @@ func resourceAwsLbListener() *schema.Resource {
 									"user_pool_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 									"user_pool_client_id": {
 										Type:     schema.TypeString,
@@ -230,7 +231,7 @@ func resourceAwsLbListener() *schema.Resource {
 												"arn": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: ValidateArn,
 												},
 												"weight": {
 													Type:         schema.TypeInt,
@@ -322,7 +323,7 @@ func resourceAwsLbListener() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumForward),
-							ValidateFunc:     validateArn,
+							ValidateFunc:     ValidateArn,
 						},
 						"type": {
 							Type:     schema.TypeString,
@@ -339,7 +340,7 @@ func resourceAwsLbListener() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"port": {
 				Type:         schema.TypeInt,
@@ -382,8 +383,8 @@ func suppressIfDefaultActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
 }
 
 func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ELBV2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	lbArn := d.Get("load_balancer_arn").(string)
@@ -467,9 +468,9 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ELBV2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	var listener *elbv2.Listener
 
@@ -554,7 +555,7 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*awsprovider.AWSClient).ELBV2Conn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		params := &elbv2.ModifyListenerInput{
@@ -647,7 +648,7 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsLbListenerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*awsprovider.AWSClient).ELBV2Conn
 
 	_, err := conn.DeleteListener(&elbv2.DeleteListenerInput{
 		ListenerArn: aws.String(d.Id()),
