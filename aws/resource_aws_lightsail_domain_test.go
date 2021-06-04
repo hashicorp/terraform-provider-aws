@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSLightsailDomain_basic(t *testing.T) {
@@ -19,9 +21,9 @@ func TestAccAWSLightsailDomain_basic(t *testing.T) {
 	resourceName := "aws_lightsail_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckLightsailDomain(t) },
-		ErrorCheck:        testAccErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccPreCheckLightsailDomain(t) },
+		ErrorCheck:        atest.ErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSLightsailDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -40,16 +42,16 @@ func TestAccAWSLightsailDomain_disappears(t *testing.T) {
 	resourceName := "aws_lightsail_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckLightsailDomain(t) },
-		ErrorCheck:        testAccErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccPreCheckLightsailDomain(t) },
+		ErrorCheck:        atest.ErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSLightsailDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLightsailDomainConfig_basic(lightsailDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLightsailDomainExists(resourceName, &domain),
-					testAccCheckResourceDisappears(testAccProviderLightsailDomain, resourceAwsLightsailDomain(), resourceName),
+					atest.CheckDisappears(testAccProviderLightsailDomain, resourceAwsLightsailDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -68,7 +70,7 @@ func testAccCheckAWSLightsailDomainExists(n string, domain *lightsail.Domain) re
 			return errors.New("No Lightsail Domain ID is set")
 		}
 
-		conn := testAccProviderLightsailDomain.Meta().(*AWSClient).lightsailconn
+		conn := testAccProviderLightsailDomain.Meta().(*awsprovider.AWSClient).LightsailConn
 
 		resp, err := conn.GetDomain(&lightsail.GetDomainInput{
 			DomainName: aws.String(rs.Primary.ID),
@@ -92,7 +94,7 @@ func testAccCheckAWSLightsailDomainDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProviderLightsailDomain.Meta().(*AWSClient).lightsailconn
+		conn := testAccProviderLightsailDomain.Meta().(*awsprovider.AWSClient).LightsailConn
 
 		resp, err := conn.GetDomain(&lightsail.GetDomainInput{
 			DomainName: aws.String(rs.Primary.ID),
@@ -117,7 +119,7 @@ func testAccCheckAWSLightsailDomainDestroy(s *terraform.State) error {
 }
 
 func testAccAWSLightsailDomainConfig_basic(lightsailDomainName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccLightsailDomainRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_lightsail_domain" "test" {
