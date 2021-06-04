@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsLambdaCodeSigningConfig() *schema.Resource {
@@ -36,7 +37,7 @@ func resourceAwsLambdaCodeSigningConfig() *schema.Resource {
 							MaxItems: 20,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validateArn,
+								ValidateFunc: ValidateArn,
 							},
 							Set: schema.HashString,
 						},
@@ -82,7 +83,7 @@ func resourceAwsLambdaCodeSigningConfig() *schema.Resource {
 }
 
 func resourceAwsLambdaCodeSigningConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	log.Printf("[DEBUG] Creating Lambda code signing config")
 
@@ -113,7 +114,7 @@ func resourceAwsLambdaCodeSigningConfigCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsLambdaCodeSigningConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	configOutput, err := conn.GetCodeSigningConfig(&lambda.GetCodeSigningConfigInput{
 		CodeSigningConfigArn: aws.String(d.Id()),
@@ -162,7 +163,7 @@ func resourceAwsLambdaCodeSigningConfigRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsLambdaCodeSigningConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	configInput := &lambda.UpdateCodeSigningConfigInput{
 		CodeSigningConfigArn: aws.String(d.Id()),
@@ -199,7 +200,7 @@ func resourceAwsLambdaCodeSigningConfigUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsLambdaCodeSigningConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	_, err := conn.DeleteCodeSigningConfig(&lambda.DeleteCodeSigningConfigInput{
 		CodeSigningConfigArn: aws.String(d.Id()),
