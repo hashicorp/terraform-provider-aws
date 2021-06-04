@@ -6,10 +6,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
-func datasourceAwsImageBuilderInfrastructureConfiguration() *schema.Resource {
+func dataSourceAwsImageBuilderInfrastructureConfiguration() *schema.Resource {
 	return &schema.Resource{
 		Read: datasourceAwsImageBuilderInfrastructureConfigurationRead,
 
@@ -17,7 +18,7 @@ func datasourceAwsImageBuilderInfrastructureConfiguration() *schema.Resource {
 			"arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"date_created": {
 				Type:     schema.TypeString,
@@ -96,8 +97,8 @@ func datasourceAwsImageBuilderInfrastructureConfiguration() *schema.Resource {
 }
 
 func datasourceAwsImageBuilderInfrastructureConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ImageBuilderConn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetInfrastructureConfigurationInput{}
 
