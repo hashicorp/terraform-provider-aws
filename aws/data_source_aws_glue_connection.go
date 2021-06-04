@@ -7,9 +7,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsGlueConnection() *schema.Resource {
@@ -80,7 +82,7 @@ func dataSourceAwsGlueConnection() *schema.Resource {
 }
 
 func dataSourceAwsGlueConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 	id := d.Get("id").(string)
 	catalogID, connectionName, err := decodeGlueConnectionID(id)
 	if err != nil {
@@ -92,7 +94,7 @@ func dataSourceAwsGlueConnectionRead(ctx context.Context, d *schema.ResourceData
 	}
 	output, err := conn.GetConnection(input)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return diag.Errorf("error Glue Connection (%s) not found", id)
 		}
 		return diag.Errorf("error reading Glue Connection (%s): %s", id, err)
@@ -106,10 +108,10 @@ func dataSourceAwsGlueConnectionRead(ctx context.Context, d *schema.ResourceData
 	d.Set("description", connection.Description)
 
 	connectionArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "glue",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("connection/%s", connectionName),
 	}.String()
 	d.Set("arn", connectionArn)
