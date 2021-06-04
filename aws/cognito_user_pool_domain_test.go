@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // Cognito User Pool Custom Domains can only be created with ACM Certificates in specific regions.
@@ -32,7 +34,7 @@ var testAccProviderCognitoUserPoolCustomDomainConfigure sync.Once
 
 // testAccPreCheckCognitoUserPoolCustomDomain verifies AWS credentials and that Cognito User Pool Custom Domains is supported
 func testAccPreCheckCognitoUserPoolCustomDomain(t *testing.T) {
-	testAccPartitionHasServicePreCheck(cognitoidentityprovider.EndpointsID, t)
+	atest.PreCheckPartitionService(cognitoidentityprovider.EndpointsID, t)
 
 	region := testAccGetCognitoUserPoolCustomDomainRegion()
 
@@ -43,7 +45,7 @@ func testAccPreCheckCognitoUserPoolCustomDomain(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderCognitoUserPoolCustomDomainConfigure.Do(func() {
-		testAccProviderCognitoUserPoolCustomDomain = Provider()
+		testAccProviderCognitoUserPoolCustomDomain = awsprovider.Provider()
 
 		config := map[string]interface{}{
 			"region": region,
@@ -66,7 +68,7 @@ func testAccPreCheckCognitoUserPoolCustomDomain(t *testing.T) {
 // Testing Cognito User Pool Custom Domains assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
 func testAccCognitoUserPoolCustomDomainRegionProviderConfig() string {
-	return testAccRegionalProviderConfig(testAccGetCognitoUserPoolCustomDomainRegion())
+	return atest.ConfigProviderRegional(testAccGetCognitoUserPoolCustomDomainRegion())
 }
 
 // testAccGetCognitoUserPoolCustomDomainRegion returns the Cognito User Pool Custom Domains region for testing
@@ -78,7 +80,7 @@ func testAccGetCognitoUserPoolCustomDomainRegion() string {
 	// AWS Commercial: https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-add-custom-domain.html
 	// AWS GovCloud (US) - not supported: https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-cog.html
 	// AWS China - not supported: https://docs.amazonaws.cn/en_us/aws/latest/userguide/cognito.html
-	switch testAccGetPartition() {
+	switch atest.Partition() {
 	case endpoints.AwsPartitionID:
 		testAccCognitoUserPoolCustomDomainRegion = endpoints.UsEast1RegionID
 	}
