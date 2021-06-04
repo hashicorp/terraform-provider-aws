@@ -7,7 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsApiGatewayIntegrationResponse() *schema.Resource {
@@ -87,7 +89,7 @@ func resourceAwsApiGatewayIntegrationResponse() *schema.Resource {
 }
 
 func resourceAwsApiGatewayIntegrationResponseCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	templates := make(map[string]string)
 	for k, v := range d.Get("response_templates").(map[string]interface{}) {
@@ -131,7 +133,7 @@ func resourceAwsApiGatewayIntegrationResponseCreate(d *schema.ResourceData, meta
 }
 
 func resourceAwsApiGatewayIntegrationResponseRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Integration Response %s", d.Id())
 	integrationResponse, err := conn.GetIntegrationResponse(&apigateway.GetIntegrationResponseInput{
@@ -141,7 +143,7 @@ func resourceAwsApiGatewayIntegrationResponseRead(d *schema.ResourceData, meta i
 		StatusCode: aws.String(d.Get("status_code").(string)),
 	})
 	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] API Gateway Integration Response (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -172,7 +174,7 @@ func resourceAwsApiGatewayIntegrationResponseRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsApiGatewayIntegrationResponseDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Integration Response: %s", d.Id())
 
 	_, err := conn.DeleteIntegrationResponse(&apigateway.DeleteIntegrationResponseInput{
@@ -182,7 +184,7 @@ func resourceAwsApiGatewayIntegrationResponseDelete(d *schema.ResourceData, meta
 		StatusCode: aws.String(d.Get("status_code").(string)),
 	})
 
-	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
