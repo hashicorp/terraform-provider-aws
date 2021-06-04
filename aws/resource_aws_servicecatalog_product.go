@@ -11,11 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	tfservicecatalog "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsServiceCatalogProduct() *schema.Resource {
@@ -142,8 +143,8 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 }
 
 func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ServiceCatalogConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &servicecatalog.CreateProductInput{
@@ -232,9 +233,9 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ServiceCatalogConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	output, err := waiter.ProductReady(conn, d.Get("accept_language").(string), d.Id())
 
@@ -284,7 +285,7 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsServiceCatalogProductUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*awsprovider.AWSClient).ServiceCatalogConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &servicecatalog.UpdateProductInput{
@@ -358,7 +359,7 @@ func resourceAwsServiceCatalogProductUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsServiceCatalogProductDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*awsprovider.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.DeleteProductInput{
 		Id: aws.String(d.Id()),
