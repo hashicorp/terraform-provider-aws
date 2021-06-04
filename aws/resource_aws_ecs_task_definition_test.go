@@ -303,6 +303,35 @@ func TestAccAWSEcsTaskDefinition_withEFSAccessPoint(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsTaskDefinition_withFsxWinFileSystem(t *testing.T) {
+	var def ecs.TaskDefinition
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinitionWithFsxVolume(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEcsTaskDefinition_withTaskScopedDockerVolume(t *testing.T) {
 	var def ecs.TaskDefinition
 
@@ -2199,6 +2228,52 @@ TASK_DEFINITION
   inference_accelerator {
     device_name = "device_1"
     device_type = "eia1.medium"
+  }
+}
+`, tdName)
+}
+
+func testAccAWSEcsTaskDefinitionWithFsxVolume(tdName string) string {
+	return testAccAwsFsxWindowsFileSystemConfigSubnetIds1() + fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name                    = %[1]q
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode({ username : "admin", password : "${aws_directory_service_directory.test.password}" })
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+
+
+  volume {
+    name = %[1]q
+
+    fsx_windows_file_server_volume_configuration {
+      file_system_id = aws_fsx_windows_file_system.test.id
+	  root_directory = "\\data"
+
+      authorization_config {
+        credentials_parameter = aws_secretsmanager_secret_version.test.arn
+        domain                = aws_directory_service_directory.test.name
+      }
+    }
   }
 }
 `, tdName)
