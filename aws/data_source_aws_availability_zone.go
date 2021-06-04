@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsAvailabilityZone() *schema.Resource {
@@ -72,7 +73,7 @@ func dataSourceAwsAvailabilityZone() *schema.Resource {
 }
 
 func dataSourceAwsAvailabilityZoneRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	req := &ec2.DescribeAvailabilityZonesInput{}
 
@@ -86,7 +87,7 @@ func dataSourceAwsAvailabilityZoneRead(d *schema.ResourceData, meta interface{})
 	if v := d.Get("zone_id").(string); v != "" {
 		req.ZoneIds = []*string{aws.String(v)}
 	}
-	req.Filters = buildEC2AttributeFilterList(
+	req.Filters = BuildEC2AttributeFilterList(
 		map[string]string{
 			"state": d.Get("state").(string),
 		},
