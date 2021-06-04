@@ -7,7 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSServiceCatalogOrganizationsAccess_basic(t *testing.T) {
@@ -15,12 +17,12 @@ func TestAccAWSServiceCatalogOrganizationsAccess_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccOrganizationsEnabledPreCheck(t)
-			testAccOrganizationManagementAccountPreCheck(t)
+			atest.PreCheck(t)
+			atest.PreCheckOrganizationsEnabled(t)
+			atest.PreCheckOrganizationManagementAccount(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, servicecatalog.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogOrganizationsAccessDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -35,7 +37,7 @@ func TestAccAWSServiceCatalogOrganizationsAccess_basic(t *testing.T) {
 }
 
 func testAccCheckAwsServiceCatalogOrganizationsAccessDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).scconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ServiceCatalogConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_organizations_access" {
@@ -66,7 +68,7 @@ func testAccCheckAwsServiceCatalogOrganizationsAccessExists(resourceName string)
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).scconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ServiceCatalogConn
 
 		output, err := waiter.OrganizationsAccessStable(conn)
 
