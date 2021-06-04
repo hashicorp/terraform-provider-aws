@@ -7,8 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsApiGatewayV2Integration() *schema.Resource {
@@ -46,7 +48,7 @@ func resourceAwsApiGatewayV2Integration() *schema.Resource {
 			"credentials_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -166,7 +168,7 @@ func resourceAwsApiGatewayV2Integration() *schema.Resource {
 }
 
 func resourceAwsApiGatewayV2IntegrationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.CreateIntegrationInput{
 		ApiId:           aws.String(d.Get("api_id").(string)),
@@ -233,13 +235,13 @@ func resourceAwsApiGatewayV2IntegrationCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsApiGatewayV2IntegrationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetIntegration(&apigatewayv2.GetIntegrationInput{
 		ApiId:         aws.String(d.Get("api_id").(string)),
 		IntegrationId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway v2 integration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -282,7 +284,7 @@ func resourceAwsApiGatewayV2IntegrationRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsApiGatewayV2IntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.UpdateIntegrationInput{
 		ApiId:         aws.String(d.Get("api_id").(string)),
@@ -388,14 +390,14 @@ func resourceAwsApiGatewayV2IntegrationUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsApiGatewayV2IntegrationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 integration (%s)", d.Id())
 	_, err := conn.DeleteIntegration(&apigatewayv2.DeleteIntegrationInput{
 		ApiId:         aws.String(d.Get("api_id").(string)),
 		IntegrationId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
@@ -414,7 +416,7 @@ func resourceAwsApiGatewayV2IntegrationImport(d *schema.ResourceData, meta inter
 	apiId := parts[0]
 	integrationId := parts[1]
 
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetIntegration(&apigatewayv2.GetIntegrationInput{
 		ApiId:         aws.String(apiId),
