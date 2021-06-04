@@ -7,7 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsEc2LocalGatewayRouteTable() *schema.Resource {
@@ -47,8 +48,8 @@ func dataSourceAwsEc2LocalGatewayRouteTable() *schema.Resource {
 }
 
 func dataSourceAwsEc2LocalGatewayRouteTableRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeLocalGatewayRouteTablesInput{}
 
@@ -56,7 +57,7 @@ func dataSourceAwsEc2LocalGatewayRouteTableRead(d *schema.ResourceData, meta int
 		req.LocalGatewayRouteTableIds = []*string{aws.String(v.(string))}
 	}
 
-	req.Filters = buildEC2AttributeFilterList(
+	req.Filters = BuildEC2AttributeFilterList(
 		map[string]string{
 			"local-gateway-id": d.Get("local_gateway_id").(string),
 			"outpost-arn":      d.Get("outpost_arn").(string),
