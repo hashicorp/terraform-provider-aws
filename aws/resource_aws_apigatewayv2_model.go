@@ -8,9 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsApiGatewayV2Model() *schema.Resource {
@@ -65,7 +67,7 @@ func resourceAwsApiGatewayV2Model() *schema.Resource {
 }
 
 func resourceAwsApiGatewayV2ModelCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.CreateModelInput{
 		ApiId:       aws.String(d.Get("api_id").(string)),
@@ -89,13 +91,13 @@ func resourceAwsApiGatewayV2ModelCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsApiGatewayV2ModelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetModel(&apigatewayv2.GetModelInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
 		ModelId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway v2 model (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -113,7 +115,7 @@ func resourceAwsApiGatewayV2ModelRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsApiGatewayV2ModelUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.UpdateModelInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
@@ -142,14 +144,14 @@ func resourceAwsApiGatewayV2ModelUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsApiGatewayV2ModelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 model (%s)", d.Id())
 	_, err := conn.DeleteModel(&apigatewayv2.DeleteModelInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
 		ModelId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
