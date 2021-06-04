@@ -13,8 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/networkfirewall/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsNetworkFirewallFirewall() *schema.Resource {
@@ -52,7 +53,7 @@ func resourceAwsNetworkFirewallFirewall() *schema.Resource {
 			"firewall_policy_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"firewall_policy_change_protection": {
 				Type:     schema.TypeBool,
@@ -131,8 +132,8 @@ func resourceAwsNetworkFirewallFirewall() *schema.Resource {
 }
 
 func resourceAwsNetworkFirewallFirewallCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).networkfirewallconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).NetworkFirewallConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 	input := &networkfirewall.CreateFirewallInput{
@@ -178,9 +179,9 @@ func resourceAwsNetworkFirewallFirewallCreate(ctx context.Context, d *schema.Res
 }
 
 func resourceAwsNetworkFirewallFirewallRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).networkfirewallconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).NetworkFirewallConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading NetworkFirewall Firewall %s", d.Id())
 
@@ -234,7 +235,7 @@ func resourceAwsNetworkFirewallFirewallRead(ctx context.Context, d *schema.Resou
 }
 
 func resourceAwsNetworkFirewallFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).networkfirewallconn
+	conn := meta.(*awsprovider.AWSClient).NetworkFirewallConn
 	arn := d.Id()
 	updateToken := aws.String(d.Get("update_token").(string))
 
@@ -379,7 +380,7 @@ func resourceAwsNetworkFirewallFirewallUpdate(ctx context.Context, d *schema.Res
 }
 
 func resourceAwsNetworkFirewallFirewallDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).networkfirewallconn
+	conn := meta.(*awsprovider.AWSClient).NetworkFirewallConn
 
 	log.Printf("[DEBUG] Deleting NetworkFirewall Firewall %s", d.Id())
 
