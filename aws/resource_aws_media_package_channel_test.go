@@ -7,25 +7,28 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediapackage"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSMediaPackageChannel_basic(t *testing.T) {
 	resourceName := "aws_media_package_channel.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaPackage(t) },
-		ErrorCheck:   testAccErrorCheck(t, mediapackage.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMediaPackage(t) },
+		ErrorCheck:   atest.ErrorCheck(t, mediapackage.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMediaPackageChannelConfig(acctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMediaPackageChannelExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mediapackage", regexp.MustCompile(`channels/.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "mediapackage", regexp.MustCompile(`channels/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "hls_ingest.0.ingest_endpoints.0.password", regexp.MustCompile("^[0-9a-f]*$")),
 					resource.TestMatchResourceAttr(resourceName, "hls_ingest.0.ingest_endpoints.0.url", regexp.MustCompile("^https://")),
 					resource.TestMatchResourceAttr(resourceName, "hls_ingest.0.ingest_endpoints.0.username", regexp.MustCompile("^[0-9a-f]*$")),
@@ -48,9 +51,9 @@ func TestAccAWSMediaPackageChannel_description(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaPackage(t) },
-		ErrorCheck:   testAccErrorCheck(t, mediapackage.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMediaPackage(t) },
+		ErrorCheck:   atest.ErrorCheck(t, mediapackage.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -81,9 +84,9 @@ func TestAccAWSMediaPackageChannel_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaPackage(t) },
-		ErrorCheck:   testAccErrorCheck(t, mediapackage.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMediaPackage(t) },
+		ErrorCheck:   atest.ErrorCheck(t, mediapackage.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -121,7 +124,7 @@ func TestAccAWSMediaPackageChannel_tags(t *testing.T) {
 }
 
 func testAccCheckAwsMediaPackageChannelDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).mediapackageconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).MediaPackageConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_media_package_channel" {
@@ -137,7 +140,7 @@ func testAccCheckAwsMediaPackageChannelDestroy(s *terraform.State) error {
 			return fmt.Errorf("MediaPackage Channel (%s) not deleted", rs.Primary.ID)
 		}
 
-		if !isAWSErr(err, mediapackage.ErrCodeNotFoundException, "") {
+		if !tfawserr.ErrMessageContains(err, mediapackage.ErrCodeNotFoundException, "") {
 			return err
 		}
 	}
@@ -152,7 +155,7 @@ func testAccCheckAwsMediaPackageChannelExists(name string) resource.TestCheckFun
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).mediapackageconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).MediaPackageConn
 
 		input := &mediapackage.DescribeChannelInput{
 			Id: aws.String(rs.Primary.ID),
@@ -165,13 +168,13 @@ func testAccCheckAwsMediaPackageChannelExists(name string) resource.TestCheckFun
 }
 
 func testAccPreCheckAWSMediaPackage(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).mediapackageconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).MediaPackageConn
 
 	input := &mediapackage.ListChannelsInput{}
 
 	_, err := conn.ListChannels(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
