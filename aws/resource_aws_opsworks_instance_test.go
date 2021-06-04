@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSOpsworksInstance_basic(t *testing.T) {
@@ -19,9 +21,9 @@ func TestAccAWSOpsworksInstance_basic(t *testing.T) {
 	dataSourceName := "data.aws_availability_zones.available"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(opsworks.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, opsworks.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -69,9 +71,9 @@ func TestAccAWSOpsworksInstance_UpdateHostNameForceNew(t *testing.T) {
 	var before, after opsworks.Instance
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(opsworks.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, opsworks.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -121,7 +123,7 @@ func testAccCheckAWSOpsworksInstanceExists(
 			return fmt.Errorf("No Opsworks Instance is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).opsworksconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).OpsWorksConn
 
 		params := &opsworks.DescribeInstancesInput{
 			InstanceIds: []*string{&rs.Primary.ID},
@@ -169,7 +171,7 @@ func testAccCheckAWSOpsworksInstanceAttributes(
 }
 
 func testAccCheckAwsOpsworksInstanceDestroy(s *terraform.State) error {
-	opsworksconn := testAccProvider.Meta().(*AWSClient).opsworksconn
+	OpsWorksConn := atest.Provider.Meta().(*awsprovider.AWSClient).OpsWorksConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_opsworks_instance" {
 			continue
@@ -180,7 +182,7 @@ func testAccCheckAwsOpsworksInstanceDestroy(s *terraform.State) error {
 			},
 		}
 
-		_, err := opsworksconn.DescribeInstances(req)
+		_, err := OpsWorksConn.DescribeInstances(req)
 		if err != nil {
 			if awserr, ok := err.(awserr.Error); ok {
 				if awserr.Code() == "ResourceNotFoundException" {
