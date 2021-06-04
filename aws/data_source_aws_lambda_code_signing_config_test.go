@@ -5,15 +5,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAWSLambdaCodeSigningConfig_basic(t *testing.T) {
 	dataSourceName := "data.aws_lambda_code_signing_config.test"
 	resourceName := "aws_lambda_code_signing_config.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLambdaCodeSigningConfigBasic,
@@ -30,9 +31,9 @@ func TestAccDataSourceAWSLambdaCodeSigningConfig_PolicyConfigId(t *testing.T) {
 	dataSourceName := "data.aws_lambda_code_signing_config.test"
 	resourceName := "aws_lambda_code_signing_config.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLambdaCodeSigningConfigConfigurePolicy,
@@ -51,9 +52,9 @@ func TestAccDataSourceAWSLambdaCodeSigningConfig_Description(t *testing.T) {
 	dataSourceName := "data.aws_lambda_code_signing_config.test"
 	resourceName := "aws_lambda_code_signing_config.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLambdaCodeSigningConfigConfigureDescription,
