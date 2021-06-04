@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSDmsCertificate_basic(t *testing.T) {
@@ -17,9 +19,9 @@ func TestAccAWSDmsCertificate_basic(t *testing.T) {
 	randId := acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDmsCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -43,16 +45,16 @@ func TestAccAWSDmsCertificate_disappears(t *testing.T) {
 	randId := acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDmsCertificateConfig(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSDmsCertificateExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDmsCertificate(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsDmsCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -65,9 +67,9 @@ func TestAccAWSDmsCertificate_CertificateWallet(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDmsCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -91,9 +93,9 @@ func TestAccAWSDmsCertificate_tags(t *testing.T) {
 	randId := acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDmsCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -136,7 +138,7 @@ func testAccCheckAWSDmsCertificateDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dmsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DMSConn
 
 		output, err := conn.DescribeCertificates(&dms.DescribeCertificatesInput{
 			Filters: []*dms.Filter{
@@ -174,7 +176,7 @@ func testAccAWSDmsCertificateExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dmsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DMSConn
 
 		output, err := conn.DescribeCertificates(&dms.DescribeCertificatesInput{
 			Filters: []*dms.Filter{
