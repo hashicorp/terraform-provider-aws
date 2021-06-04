@@ -11,7 +11,9 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudhsmv2/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -22,12 +24,12 @@ func init() {
 }
 
 func testSweepCloudhsmv2Clusters(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).cloudhsmv2conn
-	sweepResources := make([]*testSweepResource, 0)
+	conn := client.(*awsprovider.AWSClient).CloudHSMV2Conn
+	sweepResources := make([]*atest.TestSweepResource, 0)
 	var errors *multierror.Error
 
 	input := &cloudhsmv2.DescribeClustersInput{}
@@ -45,7 +47,7 @@ func testSweepCloudhsmv2Clusters(region string) error {
 			r := resourceAwsCloudHsmV2Cluster()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(cluster.ClusterId))
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, atest.NewTestSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -57,12 +59,12 @@ func testSweepCloudhsmv2Clusters(region string) error {
 
 	if len(sweepResources) > 0 {
 		// any errors didn't prevent gathering of some work, so do it
-		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+		if err := atest.TestSweepResourceOrchestrator(sweepResources); err != nil {
 			errors = multierror.Append(errors, fmt.Errorf("error sweeping CloudHSMv2 Clusters for %s: %w", region, err))
 		}
 	}
 
-	if testSweepSkipSweepError(errors.ErrorOrNil()) {
+	if atest.SweepSkipSweepError(errors.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping CloudHSMv2 Cluster sweep for %s: %s", region, errors)
 		return nil
 	}
@@ -74,9 +76,9 @@ func TestAccAWSCloudHsmV2Cluster_basic(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudhsmv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudHsmV2ClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,18 +111,18 @@ func TestAccAWSCloudHsmV2Cluster_disappears(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudhsmv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudHsmV2ClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudHsmV2ClusterConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudHsmV2ClusterExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudHsmV2Cluster(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCloudHsmV2Cluster(), resourceName),
 					// Verify Delete error handling
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudHsmV2Cluster(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCloudHsmV2Cluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -132,9 +134,9 @@ func TestAccAWSCloudHsmV2Cluster_Tags(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudhsmv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudHsmV2ClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -199,7 +201,7 @@ resource "aws_subnet" "test" {
 }
 
 func testAccAWSCloudHsmV2ClusterConfig() string {
-	return composeConfig(testAccAWSCloudHsmV2ClusterConfigBase(), `
+	return atest.ComposeConfig(testAccAWSCloudHsmV2ClusterConfigBase(), `
 resource "aws_cloudhsm_v2_cluster" "test" {
   hsm_type   = "hsm1.medium"
   subnet_ids = aws_subnet.test[*].id
@@ -208,7 +210,7 @@ resource "aws_cloudhsm_v2_cluster" "test" {
 }
 
 func testAccAWSCloudHsmV2ClusterConfigTags1(tagKey1, tagValue1 string) string {
-	return composeConfig(testAccAWSCloudHsmV2ClusterConfigBase(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSCloudHsmV2ClusterConfigBase(), fmt.Sprintf(`
 resource "aws_cloudhsm_v2_cluster" "test" {
   hsm_type   = "hsm1.medium"
   subnet_ids = aws_subnet.test[*].id
@@ -221,7 +223,7 @@ resource "aws_cloudhsm_v2_cluster" "test" {
 }
 
 func testAccAWSCloudHsmV2ClusterConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(testAccAWSCloudHsmV2ClusterConfigBase(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSCloudHsmV2ClusterConfigBase(), fmt.Sprintf(`
 resource "aws_cloudhsm_v2_cluster" "test" {
   hsm_type   = "hsm1.medium"
   subnet_ids = aws_subnet.test[*].id
@@ -235,7 +237,7 @@ resource "aws_cloudhsm_v2_cluster" "test" {
 }
 
 func testAccCheckAWSCloudHsmV2ClusterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudhsmv2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudHSMV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudhsm_v2_cluster" {
@@ -257,7 +259,7 @@ func testAccCheckAWSCloudHsmV2ClusterDestroy(s *terraform.State) error {
 
 func testAccCheckAWSCloudHsmV2ClusterExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cloudhsmv2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudHSMV2Conn
 		it, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
