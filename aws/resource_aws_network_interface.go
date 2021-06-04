@@ -10,11 +10,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsNetworkInterface() *schema.Resource {
@@ -144,8 +146,8 @@ func resourceAwsNetworkInterface() *schema.Resource {
 
 func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
 
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &ec2.CreateNetworkInterfaceInput{
@@ -224,9 +226,9 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
 		NetworkInterfaceIds: []*string{aws.String(d.Id())},
@@ -234,7 +236,7 @@ func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) e
 	describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
 
 	if err != nil {
-		if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
 			// The ENI is gone now, so just remove it from the state
 			log.Printf("[WARN] EC2 Network Interface (%s) not found, removing from state", d.Id())
 			d.SetId("")
@@ -326,10 +328,10 @@ func resourceAwsNetworkInterfaceDetach(oa *schema.Set, meta interface{}, eniId s
 			AttachmentId: aws.String(old_attachment["attachment_id"].(string)),
 			Force:        aws.Bool(true),
 		}
-		conn := meta.(*AWSClient).ec2conn
+		conn := meta.(*awsprovider.AWSClient).EC2Conn
 		_, detach_err := conn.DetachNetworkInterface(detach_request)
 		if detach_err != nil {
-			if !isAWSErr(detach_err, "InvalidAttachmentID.NotFound", "") {
+			if !tfawserr.ErrMessageContains(detach_err, "InvalidAttachmentID.NotFound", "") {
 				return fmt.Errorf("Error detaching ENI: %s", detach_err)
 			}
 		}
@@ -351,7 +353,7 @@ func resourceAwsNetworkInterfaceDetach(oa *schema.Set, meta interface{}, eniId s
 }
 
 func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("attachment") {
 		oa, na := d.GetChange("attachment")
@@ -577,7 +579,7 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsNetworkInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Deleting ENI: %s", d.Id())
 
@@ -608,7 +610,7 @@ func deleteNetworkInterface(conn *ec2.EC2, eniId string) error {
 		NetworkInterfaceId: aws.String(eniId),
 	})
 
-	if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
 		return nil
 	}
 
@@ -635,7 +637,7 @@ func detachNetworkInterface(conn *ec2.EC2, eni *ec2.NetworkInterface, timeout ti
 		Force:        aws.Bool(true),
 	})
 
-	if isAWSErr(err, "InvalidAttachmentID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidAttachmentID.NotFound", "") {
 		return nil
 	}
 
@@ -679,7 +681,7 @@ func networkInterfaceAttachmentStateRefresh(conn *ec2.EC2, eniId string) resourc
 			NetworkInterfaceIds: aws.StringSlice([]string{eniId}),
 		})
 
-		if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
 			return nil, ec2.AttachmentStatusDetached, nil
 		}
 
@@ -711,7 +713,7 @@ func networkInterfaceStateRefresh(conn *ec2.EC2, eniId string) resource.StateRef
 			NetworkInterfaceIds: aws.StringSlice([]string{eniId}),
 		})
 
-		if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
 			return nil, "", nil
 		}
 
