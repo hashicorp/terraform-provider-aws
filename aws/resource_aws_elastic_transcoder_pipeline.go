@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsElasticTranscoderPipeline() *schema.Resource {
@@ -31,7 +33,7 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 			"aws_kms_key_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			// ContentConfig also requires ThumbnailConfig
@@ -122,22 +124,22 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 						"completed": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"error": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"progressing": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"warning": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -156,7 +158,7 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 			"role": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"thumbnail_config": {
@@ -224,7 +226,7 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 }
 
 func resourceAwsElasticTranscoderPipelineCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elastictranscoderconn
+	conn := meta.(*awsprovider.AWSClient).ElasticTranscoderConn
 
 	req := &elastictranscoder.CreatePipelineInput{
 		AwsKmsKeyArn:    aws.String(d.Get("aws_kms_key_arn").(string)),
@@ -400,7 +402,7 @@ func flattenETPermList(perms []*elastictranscoder.Permission) []map[string]inter
 }
 
 func resourceAwsElasticTranscoderPipelineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elastictranscoderconn
+	conn := meta.(*awsprovider.AWSClient).ElasticTranscoderConn
 
 	req := &elastictranscoder.UpdatePipelineInput{
 		Id: aws.String(d.Id()),
@@ -449,14 +451,14 @@ func resourceAwsElasticTranscoderPipelineUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsElasticTranscoderPipelineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elastictranscoderconn
+	conn := meta.(*awsprovider.AWSClient).ElasticTranscoderConn
 
 	resp, err := conn.ReadPipeline(&elastictranscoder.ReadPipelineInput{
 		Id: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		if isAWSErr(err, elastictranscoder.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, elastictranscoder.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] No such resource found for Elastic Transcoder Pipeline (%s)", d.Id())
 			d.SetId("")
 			return nil
@@ -522,7 +524,7 @@ func resourceAwsElasticTranscoderPipelineRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsElasticTranscoderPipelineDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elastictranscoderconn
+	conn := meta.(*awsprovider.AWSClient).ElasticTranscoderConn
 
 	log.Printf("[DEBUG] Elastic Transcoder Delete Pipeline: %s", d.Id())
 	_, err := conn.DeletePipeline(&elastictranscoder.DeletePipelineInput{
