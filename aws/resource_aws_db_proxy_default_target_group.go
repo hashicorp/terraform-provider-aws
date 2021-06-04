@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDbProxyDefaultTargetGroup() *schema.Resource {
@@ -91,12 +93,12 @@ func resourceAwsDbProxyDefaultTargetGroup() *schema.Resource {
 }
 
 func resourceAwsDbProxyDefaultTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	tg, err := resourceAwsDbProxyDefaultTargetGroupGet(conn, d.Id())
 
 	if err != nil {
-		if isAWSErr(err, rds.ErrCodeDBProxyNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBProxyNotFoundFault, "") {
 			log.Printf("[WARN] DB Proxy (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -130,7 +132,7 @@ func resourceAwsDbProxyDefaultTargetGroupUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsDbProxyDefaultTargetGroupCreateUpdate(d *schema.ResourceData, meta interface{}, timeout string) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	params := rds.ModifyDBProxyTargetGroupInput{
 		DBProxyName:     aws.String(d.Get("db_proxy_name").(string)),
@@ -224,7 +226,7 @@ func resourceAwsDbProxyDefaultTargetGroupRefreshFunc(conn *rds.RDS, proxyName st
 		tg, err := resourceAwsDbProxyDefaultTargetGroupGet(conn, proxyName)
 
 		if err != nil {
-			if isAWSErr(err, rds.ErrCodeDBProxyNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBProxyNotFoundFault, "") {
 				return 42, "", nil
 			}
 			return 42, "", err
