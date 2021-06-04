@@ -7,7 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsPinpointAPNSChannel() *schema.Resource {
@@ -82,7 +84,7 @@ func resourceAwsPinpointAPNSChannelUpsert(d *schema.ResourceData, meta interface
 		return errors.New("At least one set of credentials is required; either [certificate, private_key] or [bundle_id, team_id, token_key, token_key_id]")
 	}
 
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*awsprovider.AWSClient).PinpointConn
 
 	applicationId := d.Get("application_id").(string)
 
@@ -115,7 +117,7 @@ func resourceAwsPinpointAPNSChannelUpsert(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsPinpointAPNSChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*awsprovider.AWSClient).PinpointConn
 
 	log.Printf("[INFO] Reading Pinpoint APNs Channel for Application %s", d.Id())
 
@@ -123,7 +125,7 @@ func resourceAwsPinpointAPNSChannelRead(d *schema.ResourceData, meta interface{}
 		ApplicationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Pinpoint APNs Channel for application %s not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
@@ -141,14 +143,14 @@ func resourceAwsPinpointAPNSChannelRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsPinpointAPNSChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*awsprovider.AWSClient).PinpointConn
 
 	log.Printf("[DEBUG] Deleting Pinpoint APNs Channel: %s", d.Id())
 	_, err := conn.DeleteApnsChannel(&pinpoint.DeleteApnsChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
