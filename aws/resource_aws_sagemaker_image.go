@@ -8,11 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSagemakerImage() *schema.Resource {
@@ -44,7 +46,7 @@ func resourceAwsSagemakerImage() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"display_name": {
 				Type:         schema.TypeString,
@@ -65,8 +67,8 @@ func resourceAwsSagemakerImage() *schema.Resource {
 }
 
 func resourceAwsSagemakerImageCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("image_name").(string)
@@ -104,13 +106,13 @@ func resourceAwsSagemakerImageCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSagemakerImageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	image, err := finder.ImageByName(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker Image (%s); removing from state", d.Id())
 			return nil
@@ -147,7 +149,7 @@ func resourceAwsSagemakerImageRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsSagemakerImageUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 	needsUpdate := false
 
 	input := &sagemaker.UpdateImageInput{
@@ -200,21 +202,21 @@ func resourceAwsSagemakerImageUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSagemakerImageDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteImageInput{
 		ImageName: aws.String(d.Id()),
 	}
 
 	if _, err := conn.DeleteImage(input); err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "No Image with the name") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "No Image with the name") {
 			return nil
 		}
 		return fmt.Errorf("error deleting SageMaker Image (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waiter.ImageDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			return nil
 		}
 		return fmt.Errorf("error waiting for SageMaker Image (%s) to delete: %w", d.Id(), err)
