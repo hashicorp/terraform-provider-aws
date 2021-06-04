@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -191,7 +192,7 @@ var validateLexBotVersion = validation.All(
 )
 
 func resourceAwsLexBotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*awsprovider.AWSClient).LexModelBuildingConn
 	name := d.Get("name").(string)
 
 	input := &lexmodelbuildingservice.PutBotInput{
@@ -249,13 +250,13 @@ func resourceAwsLexBotCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*awsprovider.AWSClient).LexModelBuildingConn
 
 	resp, err := conn.GetBot(&lexmodelbuildingservice.GetBotInput{
 		Name:           aws.String(d.Id()),
 		VersionOrAlias: aws.String(LexBotVersionLatest),
 	})
-	if isAWSErr(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Bot (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -265,10 +266,10 @@ func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Service:   "lex",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("bot:%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
@@ -320,7 +321,7 @@ func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsLexBotUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*awsprovider.AWSClient).LexModelBuildingConn
 
 	input := &lexmodelbuildingservice.PutBotInput{
 		Checksum:                     aws.String(d.Get("checksum").(string)),
@@ -352,7 +353,7 @@ func resourceAwsLexBotUpdate(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 		_, err := conn.PutBot(input)
 
-		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
+		if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
 			return resource.RetryableError(fmt.Errorf("%q: bot still updating", d.Id()))
 		}
 		if err != nil {
@@ -374,7 +375,7 @@ func resourceAwsLexBotUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsLexBotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*awsprovider.AWSClient).LexModelBuildingConn
 
 	input := &lexmodelbuildingservice.DeleteBotInput{
 		Name: aws.String(d.Id()),
@@ -383,7 +384,7 @@ func resourceAwsLexBotDelete(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DeleteBot(input)
 
-		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
+		if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
 			return resource.RetryableError(fmt.Errorf("%q: there is a pending operation, bot still deleting", d.Id()))
 		}
 		if err != nil {
