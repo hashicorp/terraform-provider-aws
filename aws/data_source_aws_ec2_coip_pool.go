@@ -7,7 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsEc2CoipPool() *schema.Resource {
@@ -42,8 +43,8 @@ func dataSourceAwsEc2CoipPool() *schema.Resource {
 }
 
 func dataSourceAwsEc2CoipPoolRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeCoipPoolsInput{}
 
@@ -57,7 +58,7 @@ func dataSourceAwsEc2CoipPoolRead(d *schema.ResourceData, meta interface{}) erro
 		filters["coip-pool.local-gateway-route-table-id"] = v.(string)
 	}
 
-	req.Filters = buildEC2AttributeFilterList(filters)
+	req.Filters = BuildEC2AttributeFilterList(filters)
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
 		req.Filters = append(req.Filters, buildEC2TagFilterList(
