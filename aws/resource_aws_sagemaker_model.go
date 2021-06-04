@@ -7,10 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSagemakerModel() *schema.Resource {
@@ -123,7 +125,7 @@ func resourceAwsSagemakerModel() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"enable_network_isolation": {
@@ -201,8 +203,8 @@ func resourceAwsSagemakerModel() *schema.Resource {
 }
 
 func resourceAwsSagemakerModelCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
@@ -267,9 +269,9 @@ func expandSageMakerVpcConfigRequest(l []interface{}) *sagemaker.VpcConfig {
 }
 
 func resourceAwsSagemakerModelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	request := &sagemaker.DescribeModelInput{
 		ModelName: aws.String(d.Id()),
@@ -277,7 +279,7 @@ func resourceAwsSagemakerModelRead(d *schema.ResourceData, meta interface{}) err
 
 	model, err := conn.DescribeModel(request)
 	if err != nil {
-		if isAWSErr(err, "ValidationException", "") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "") {
 			log.Printf("[INFO] unable to find the sagemaker model resource and therefore it is removed from the state: %s", d.Id())
 			d.SetId("")
 			return nil
@@ -340,7 +342,7 @@ func flattenSageMakerVpcConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[str
 }
 
 func resourceAwsSagemakerModelUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -354,7 +356,7 @@ func resourceAwsSagemakerModelUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSagemakerModelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	deleteOpts := &sagemaker.DeleteModelInput{
 		ModelName: aws.String(d.Id()),
@@ -367,7 +369,7 @@ func resourceAwsSagemakerModelDelete(d *schema.ResourceData, meta interface{}) e
 			return nil
 		}
 
-		if isAWSErr(err, "ResourceNotFound", "") {
+		if tfawserr.ErrMessageContains(err, "ResourceNotFound", "") {
 			return resource.RetryableError(err)
 		}
 		return resource.NonRetryableError(err)
