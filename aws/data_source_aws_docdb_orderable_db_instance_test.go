@@ -7,6 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSDocdbOrderableDbInstanceDataSource_basic(t *testing.T) {
@@ -17,9 +19,9 @@ func TestAccAWSDocdbOrderableDbInstanceDataSource_basic(t *testing.T) {
 	license := "na"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDocdbOrderableDbInstance(t) },
-		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDocdbOrderableDbInstance(t) },
+		ErrorCheck:   atest.ErrorCheck(t, docdb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -43,9 +45,9 @@ func TestAccAWSDocdbOrderableDbInstanceDataSource_preferred(t *testing.T) {
 	preferredOption := "db.r5.large"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDocdbOrderableDbInstance(t) },
-		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDocdbOrderableDbInstance(t) },
+		ErrorCheck:   atest.ErrorCheck(t, docdb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -62,7 +64,7 @@ func TestAccAWSDocdbOrderableDbInstanceDataSource_preferred(t *testing.T) {
 }
 
 func testAccPreCheckAWSDocdbOrderableDbInstance(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).docdbconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).DocDBConn
 
 	input := &docdb.DescribeOrderableDBInstanceOptionsInput{
 		Engine: aws.String("docdb"),
@@ -70,7 +72,7 @@ func testAccPreCheckAWSDocdbOrderableDbInstance(t *testing.T) {
 
 	_, err := conn.DescribeOrderableDBInstanceOptions(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
