@@ -10,8 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	arn2 "github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const awsMutexLambdaLayerKey = `aws_lambda_layer_version`
@@ -118,7 +120,7 @@ func resourceAwsLambdaLayerVersion() *schema.Resource {
 }
 
 func resourceAwsLambdaLayerVersionPublish(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	layerName := d.Get("layer_name").(string)
 	filename, hasFilename := d.GetOk("filename")
@@ -132,8 +134,8 @@ func resourceAwsLambdaLayerVersionPublish(d *schema.ResourceData, meta interface
 
 	var layerContent *lambda.LayerVersionContentInput
 	if hasFilename {
-		awsMutexKV.Lock(awsMutexLambdaLayerKey)
-		defer awsMutexKV.Unlock(awsMutexLambdaLayerKey)
+		awsprovider.MutexKV.Lock(awsMutexLambdaLayerKey)
+		defer awsprovider.MutexKV.Unlock(awsMutexLambdaLayerKey)
 		file, err := loadFileContent(filename.(string))
 		if err != nil {
 			return fmt.Errorf("Unable to load %q: %s", filename.(string), err)
@@ -176,7 +178,7 @@ func resourceAwsLambdaLayerVersionPublish(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsLambdaLayerVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	layerName, version, err := resourceAwsLambdaLayerVersionParseId(d.Id())
 	if err != nil {
@@ -188,7 +190,7 @@ func resourceAwsLambdaLayerVersionRead(d *schema.ResourceData, meta interface{})
 		VersionNumber: aws.Int64(version),
 	})
 
-	if isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Lambda Layer Version (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -239,7 +241,7 @@ func resourceAwsLambdaLayerVersionRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsLambdaLayerVersionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	version, err := strconv.ParseInt(d.Get("version").(string), 10, 64)
 	if err != nil {
