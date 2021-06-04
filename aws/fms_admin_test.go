@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // Firewall Management Service admin APIs are only enabled in specific regions, otherwise:
@@ -33,12 +35,12 @@ var testAccProviderFmsAdminConfigure sync.Once
 
 // testAccPreCheckFmsAdmin verifies AWS credentials and that Firewall Management Service is supported
 func testAccPreCheckFmsAdmin(t *testing.T) {
-	testAccPartitionHasServicePreCheck(fms.EndpointsID, t)
+	atest.PreCheckPartitionService(fms.EndpointsID, t)
 
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderFmsAdminConfigure.Do(func() {
-		testAccProviderFmsAdmin = Provider()
+		testAccProviderFmsAdmin = awsprovider.Provider()
 
 		config := map[string]interface{}{
 			"region": testAccGetFmsAdminRegion(),
@@ -61,7 +63,7 @@ func testAccPreCheckFmsAdmin(t *testing.T) {
 // Testing Firewall Management Service assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
 func testAccFmsAdminRegionProviderConfig() string {
-	return testAccRegionalProviderConfig(testAccGetFmsAdminRegion())
+	return atest.ConfigProviderRegional(testAccGetFmsAdminRegion())
 }
 
 // testAccGetFmsAdminRegion returns the Firewall Management Service region for testing
