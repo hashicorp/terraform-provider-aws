@@ -10,9 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsIamServiceLinkedRole() *schema.Resource {
@@ -79,7 +81,7 @@ func resourceAwsIamServiceLinkedRole() *schema.Resource {
 }
 
 func resourceAwsIamServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*awsprovider.AWSClient).IAMConn
 
 	serviceName := d.Get("aws_service_name").(string)
 
@@ -106,7 +108,7 @@ func resourceAwsIamServiceLinkedRoleCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsIamServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*awsprovider.AWSClient).IAMConn
 
 	serviceName, roleName, customSuffix, err := decodeIamServiceLinkedRoleID(d.Id())
 	if err != nil {
@@ -120,7 +122,7 @@ func resourceAwsIamServiceLinkedRoleRead(d *schema.ResourceData, meta interface{
 	resp, err := conn.GetRole(params)
 
 	if err != nil {
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			log.Printf("[WARN] IAM service linked role %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -143,7 +145,7 @@ func resourceAwsIamServiceLinkedRoleRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsIamServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*awsprovider.AWSClient).IAMConn
 
 	_, roleName, _, err := decodeIamServiceLinkedRoleID(d.Id())
 	if err != nil {
@@ -165,7 +167,7 @@ func resourceAwsIamServiceLinkedRoleUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsIamServiceLinkedRoleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*awsprovider.AWSClient).IAMConn
 
 	_, roleName, _, err := decodeIamServiceLinkedRoleID(d.Id())
 	if err != nil {
@@ -218,7 +220,7 @@ func deleteIamServiceLinkedRole(conn *iam.IAM, roleName string) (string, error) 
 	resp, err := conn.DeleteServiceLinkedRole(params)
 
 	if err != nil {
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			return "", nil
 		}
 		return "", err
@@ -238,7 +240,7 @@ func deleteIamServiceLinkedRoleWaiter(conn *iam.IAM, deletionTaskID string) erro
 
 	_, err := stateConf.WaitForState()
 	if err != nil {
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			return nil
 		}
 		return err
