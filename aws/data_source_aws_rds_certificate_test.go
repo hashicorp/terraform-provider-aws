@@ -6,15 +6,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSRDSCertificateDataSource_Id(t *testing.T) {
 	dataSourceName := "data.aws_rds_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAWSRDSCertificatePreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAWSRDSCertificatePreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -31,22 +33,22 @@ func TestAccAWSRDSCertificateDataSource_LatestValidTill(t *testing.T) {
 	dataSourceName := "data.aws_rds_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAWSRDSCertificatePreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAWSRDSCertificatePreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSRDSCertificateDataSourceConfigLatestValidTill(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccMatchResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "rds", regexp.MustCompile(`cert:rds-ca-[0-9]{4}`)),
+					atest.MatchAttrRegionalARNNoAccount(dataSourceName, "arn", "rds", regexp.MustCompile(`cert:rds-ca-[0-9]{4}`)),
 					resource.TestCheckResourceAttr(dataSourceName, "certificate_type", "CA"),
 					resource.TestCheckResourceAttr(dataSourceName, "customer_override", "false"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "customer_override_valid_till"),
 					resource.TestMatchResourceAttr(dataSourceName, "id", regexp.MustCompile(`rds-ca-[0-9]{4}`)),
 					resource.TestMatchResourceAttr(dataSourceName, "thumbprint", regexp.MustCompile(`[0-9a-f]+`)),
-					resource.TestMatchResourceAttr(dataSourceName, "valid_from", regexp.MustCompile(rfc3339RegexPattern)),
-					resource.TestMatchResourceAttr(dataSourceName, "valid_till", regexp.MustCompile(rfc3339RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "valid_from", regexp.MustCompile(atest.RFC3339RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "valid_till", regexp.MustCompile(atest.RFC3339RegexPattern)),
 				),
 			},
 		},
@@ -54,13 +56,13 @@ func TestAccAWSRDSCertificateDataSource_LatestValidTill(t *testing.T) {
 }
 
 func testAccAWSRDSCertificatePreCheck(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).RDSConn
 
 	input := &rds.DescribeCertificatesInput{}
 
 	_, err := conn.DescribeCertificates(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
