@@ -13,7 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsTimestreamWriteTable() *schema.Resource {
@@ -85,8 +86,8 @@ func resourceAwsTimestreamWriteTable() *schema.Resource {
 }
 
 func resourceAwsTimestreamWriteTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).timestreamwriteconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).TimeStreamWriteConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	tableName := d.Get("table_name").(string)
@@ -119,9 +120,9 @@ func resourceAwsTimestreamWriteTableCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceAwsTimestreamWriteTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).timestreamwriteconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).TimeStreamWriteConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	tableName, databaseName, err := resourceAwsTimestreamWriteTableParseId(d.Id())
 
@@ -179,7 +180,7 @@ func resourceAwsTimestreamWriteTableRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceAwsTimestreamWriteTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).timestreamwriteconn
+	conn := meta.(*awsprovider.AWSClient).TimeStreamWriteConn
 
 	if d.HasChange("retention_properties") {
 		tableName, databaseName, err := resourceAwsTimestreamWriteTableParseId(d.Id())
@@ -213,7 +214,7 @@ func resourceAwsTimestreamWriteTableUpdate(ctx context.Context, d *schema.Resour
 }
 
 func resourceAwsTimestreamWriteTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).timestreamwriteconn
+	conn := meta.(*awsprovider.AWSClient).TimeStreamWriteConn
 
 	tableName, databaseName, err := resourceAwsTimestreamWriteTableParseId(d.Id())
 
