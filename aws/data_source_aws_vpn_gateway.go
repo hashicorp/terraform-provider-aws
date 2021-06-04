@@ -9,7 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsVpnGateway() *schema.Resource {
@@ -53,8 +54,8 @@ func dataSourceAwsVpnGateway() *schema.Resource {
 }
 
 func dataSourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeVpnGatewaysInput{}
 
@@ -62,21 +63,21 @@ func dataSourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error
 		req.VpnGatewayIds = aws.StringSlice([]string{id.(string)})
 	}
 
-	req.Filters = buildEC2AttributeFilterList(
+	req.Filters = BuildEC2AttributeFilterList(
 		map[string]string{
 			"state":             d.Get("state").(string),
 			"availability-zone": d.Get("availability_zone").(string),
 		},
 	)
 	if asn, ok := d.GetOk("amazon_side_asn"); ok {
-		req.Filters = append(req.Filters, buildEC2AttributeFilterList(
+		req.Filters = append(req.Filters, BuildEC2AttributeFilterList(
 			map[string]string{
 				"amazon-side-asn": asn.(string),
 			},
 		)...)
 	}
 	if id, ok := d.GetOk("attached_vpc_id"); ok {
-		req.Filters = append(req.Filters, buildEC2AttributeFilterList(
+		req.Filters = append(req.Filters, BuildEC2AttributeFilterList(
 			map[string]string{
 				"attachment.state":  "attached",
 				"attachment.vpc-id": id.(string),
@@ -125,10 +126,10 @@ func dataSourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpn-gateway/%s", d.Id()),
 	}.String()
 
