@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSInspectorTemplate_basic(t *testing.T) {
@@ -19,16 +21,16 @@ func TestAccAWSInspectorTemplate_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, inspector.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, inspector.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSInspectorTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSInspectorTemplateAssessmentBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSInspectorTemplateExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`target/.+/template/.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`target/.+/template/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "duration", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "rules_package_arns.#", "data.aws_inspector_rules_packages.available", "arns.#"),
@@ -51,9 +53,9 @@ func TestAccAWSInspectorTemplate_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, inspector.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, inspector.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSInspectorTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -74,9 +76,9 @@ func TestAccAWSInspectorTemplate_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, inspector.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, inspector.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSInspectorTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -121,7 +123,7 @@ func TestAccAWSInspectorTemplate_tags(t *testing.T) {
 }
 
 func testAccCheckAWSInspectorTemplateDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).inspectorconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).InspectorConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_inspector_assessment_template" {
@@ -152,7 +154,7 @@ func testAccCheckAWSInspectorTemplateDestroy(s *terraform.State) error {
 
 func testAccCheckAWSInspectorTemplateDisappears(v *inspector.AssessmentTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).inspectorconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).InspectorConn
 
 		_, err := conn.DeleteAssessmentTemplate(&inspector.DeleteAssessmentTemplateInput{
 			AssessmentTemplateArn: v.Arn,
@@ -176,7 +178,7 @@ func testAccCheckAWSInspectorTemplateExists(name string, v *inspector.Assessment
 			return fmt.Errorf("No Inspector assessment template ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).inspectorconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).InspectorConn
 
 		resp, err := conn.DescribeAssessmentTemplates(&inspector.DescribeAssessmentTemplatesInput{
 			AssessmentTemplateArns: aws.StringSlice([]string{rs.Primary.ID}),
