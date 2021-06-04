@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccAWSSecurityHubInviteAccepter_basic(t *testing.T) {
@@ -18,11 +20,11 @@ func testAccAWSSecurityHubInviteAccepter_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			atest.PreCheck(t)
+			atest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, securityhub.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, securityhub.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSSecurityHubInviteAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -48,7 +50,7 @@ func testAccCheckAWSSecurityHubInviteAccepterExists(resourceName string) resourc
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SecurityHubConn
 
 		resp, err := conn.GetMasterAccount(&securityhub.GetMasterAccountInput{})
 
@@ -65,7 +67,7 @@ func testAccCheckAWSSecurityHubInviteAccepterExists(resourceName string) resourc
 }
 
 func testAccCheckAWSSecurityHubInviteAccepterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SecurityHubConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_invite_accepter" {
@@ -94,8 +96,8 @@ func testAccCheckAWSSecurityHubInviteAccepterDestroy(s *terraform.State) error {
 }
 
 func testAccAWSSecurityHubInviteAccepterConfig_basic() string {
-	return composeConfig(
-		testAccAlternateAccountProviderConfig(), `
+	return atest.ComposeConfig(
+		atest.ConfigProviderAlternateAccount(), `
 resource "aws_securityhub_invite_accepter" "test" {
   master_id = aws_securityhub_member.source.master_id
 
