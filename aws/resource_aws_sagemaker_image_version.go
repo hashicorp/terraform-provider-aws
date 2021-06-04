@@ -6,9 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSagemakerImageVersion() *schema.Resource {
@@ -52,7 +54,7 @@ func resourceAwsSagemakerImageVersion() *schema.Resource {
 }
 
 func resourceAwsSagemakerImageVersionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	name := d.Get("image_name").(string)
 	input := &sagemaker.CreateImageVersionInput{
@@ -75,11 +77,11 @@ func resourceAwsSagemakerImageVersionCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsSagemakerImageVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	image, err := finder.ImageVersionByName(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find Sagemaker Image Version (%s); removing from state", d.Id())
 			return nil
@@ -99,7 +101,7 @@ func resourceAwsSagemakerImageVersionRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsSagemakerImageVersionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteImageVersionInput{
 		ImageName: aws.String(d.Id()),
@@ -107,14 +109,14 @@ func resourceAwsSagemakerImageVersionDelete(d *schema.ResourceData, meta interfa
 	}
 
 	if _, err := conn.DeleteImageVersion(input); err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Sagemaker Image Version (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waiter.ImageVersionDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			return nil
 		}
 		return fmt.Errorf("error waiting for SageMaker Image Version (%s) to delete: %w", d.Id(), err)
