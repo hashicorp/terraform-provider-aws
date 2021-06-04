@@ -14,8 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -159,8 +160,8 @@ func resourceAwsVpcEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 		return errors.New("An Interface VPC Endpoint must always have at least one Security Group")
 	}
 
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &ec2.CreateVpcEndpointInput{
@@ -206,9 +207,9 @@ func resourceAwsVpcEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	vpceRaw, state, err := vpcEndpointStateRefresh(conn, d.Id())()
 	if err != nil && state != "failed" {
@@ -231,9 +232,9 @@ func resourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error 
 	vpce := vpceRaw.(*ec2.VpcEndpoint)
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		AccountID: aws.StringValue(vpce.OwnerId),
 		Resource:  fmt.Sprintf("vpc-endpoint/%s", d.Id()),
 	}.String()
@@ -245,7 +246,7 @@ func resourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("vpc_id", vpce.VpcId)
 
 	respPl, err := conn.DescribePrefixLists(&ec2.DescribePrefixListsInput{
-		Filters: buildEC2AttributeFilterList(map[string]string{
+		Filters: BuildEC2AttributeFilterList(map[string]string{
 			"prefix-list-name": serviceName,
 		}),
 	})
@@ -316,7 +317,7 @@ func resourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsVpcEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get("state").(string) == "pendingAcceptance" {
 		if err := vpcEndpointAccept(conn, d.Id(), d.Get("service_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -371,7 +372,7 @@ func resourceAwsVpcEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsVpcEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	input := &ec2.DeleteVpcEndpointsInput{
 		VpcEndpointIds: aws.StringSlice([]string{d.Id()}),
@@ -404,7 +405,7 @@ func resourceAwsVpcEndpointDelete(d *schema.ResourceData, meta interface{}) erro
 
 func vpcEndpointAccept(conn *ec2.EC2, vpceId, svcName string, timeout time.Duration) error {
 	describeSvcReq := &ec2.DescribeVpcEndpointServiceConfigurationsInput{}
-	describeSvcReq.Filters = buildEC2AttributeFilterList(
+	describeSvcReq.Filters = BuildEC2AttributeFilterList(
 		map[string]string{
 			"service-name": svcName,
 		},
@@ -453,7 +454,7 @@ func vpcEndpointStateRefresh(conn *ec2.EC2, vpceId string) resource.StateRefresh
 			VpcEndpointIds: aws.StringSlice([]string{vpceId}),
 		})
 		if err != nil {
-			if isAWSErr(err, "InvalidVpcEndpointId.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidVpcEndpointId.NotFound", "") {
 				return "", "deleted", nil
 			}
 
