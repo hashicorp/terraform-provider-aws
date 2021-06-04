@@ -6,9 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSsmMaintenanceWindow() *schema.Resource {
@@ -88,8 +90,8 @@ func resourceAwsSsmMaintenanceWindow() *schema.Resource {
 }
 
 func resourceAwsSsmMaintenanceWindowCreate(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	SSMConn := meta.(*awsprovider.AWSClient).SSMConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &ssm.CreateMaintenanceWindowInput{
@@ -124,7 +126,7 @@ func resourceAwsSsmMaintenanceWindowCreate(d *schema.ResourceData, meta interfac
 		params.Description = aws.String(v.(string))
 	}
 
-	resp, err := ssmconn.CreateMaintenanceWindow(params)
+	resp, err := SSMConn.CreateMaintenanceWindow(params)
 	if err != nil {
 		return fmt.Errorf("error creating SSM Maintenance Window: %s", err)
 	}
@@ -137,7 +139,7 @@ func resourceAwsSsmMaintenanceWindowCreate(d *schema.ResourceData, meta interfac
 			WindowId: aws.String(d.Id()),
 		}
 
-		_, err := ssmconn.UpdateMaintenanceWindow(input)
+		_, err := SSMConn.UpdateMaintenanceWindow(input)
 		if err != nil {
 			return fmt.Errorf("error disabling SSM Maintenance Window (%s): %s", d.Id(), err)
 		}
@@ -147,7 +149,7 @@ func resourceAwsSsmMaintenanceWindowCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsSsmMaintenanceWindowUpdate(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	SSMConn := meta.(*awsprovider.AWSClient).SSMConn
 
 	// Replace must be set otherwise its not possible to remove optional attributes, e.g.
 	// ValidationException: 1 validation error detected: Value '' at 'startDate' failed to satisfy constraint: Member must have length greater than or equal to 1
@@ -182,9 +184,9 @@ func resourceAwsSsmMaintenanceWindowUpdate(d *schema.ResourceData, meta interfac
 		params.Description = aws.String(v.(string))
 	}
 
-	_, err := ssmconn.UpdateMaintenanceWindow(params)
+	_, err := SSMConn.UpdateMaintenanceWindow(params)
 	if err != nil {
-		if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
 			log.Printf("[WARN] Maintenance Window %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -195,7 +197,7 @@ func resourceAwsSsmMaintenanceWindowUpdate(d *schema.ResourceData, meta interfac
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.SsmUpdateTags(ssmconn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow, o, n); err != nil {
+		if err := keyvaluetags.SsmUpdateTags(SSMConn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow, o, n); err != nil {
 			return fmt.Errorf("error updating SSM Maintenance Window (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -204,17 +206,17 @@ func resourceAwsSsmMaintenanceWindowUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsSsmMaintenanceWindowRead(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	SSMConn := meta.(*awsprovider.AWSClient).SSMConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	params := &ssm.GetMaintenanceWindowInput{
 		WindowId: aws.String(d.Id()),
 	}
 
-	resp, err := ssmconn.GetMaintenanceWindow(params)
+	resp, err := SSMConn.GetMaintenanceWindow(params)
 	if err != nil {
-		if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
 			log.Printf("[WARN] Maintenance Window %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -234,7 +236,7 @@ func resourceAwsSsmMaintenanceWindowRead(d *schema.ResourceData, meta interface{
 	d.Set("start_date", resp.StartDate)
 	d.Set("description", resp.Description)
 
-	tags, err := keyvaluetags.SsmListTags(ssmconn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow)
+	tags, err := keyvaluetags.SsmListTags(SSMConn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SSM Maintenance Window (%s): %s", d.Id(), err)
@@ -255,7 +257,7 @@ func resourceAwsSsmMaintenanceWindowRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsSsmMaintenanceWindowDelete(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	SSMConn := meta.(*awsprovider.AWSClient).SSMConn
 
 	log.Printf("[INFO] Deleting SSM Maintenance Window: %s", d.Id())
 
@@ -263,7 +265,7 @@ func resourceAwsSsmMaintenanceWindowDelete(d *schema.ResourceData, meta interfac
 		WindowId: aws.String(d.Id()),
 	}
 
-	_, err := ssmconn.DeleteMaintenanceWindow(params)
+	_, err := SSMConn.DeleteMaintenanceWindow(params)
 	if err != nil {
 		return fmt.Errorf("error deleting SSM Maintenance Window (%s): %s", d.Id(), err)
 	}
