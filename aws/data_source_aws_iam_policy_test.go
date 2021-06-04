@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestPolicySearchDetails(t *testing.T) {
@@ -84,9 +85,9 @@ func TestAccAWSDataSourceIAMPolicy_Arn(t *testing.T) {
 	policyName := fmt.Sprintf("test-policy-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsDataSourceIamPolicyConfig_Arn(policyName, "/"),
@@ -110,9 +111,9 @@ func TestAccAWSDataSourceIAMPolicy_Name(t *testing.T) {
 	policyName := fmt.Sprintf("test-policy-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsDataSourceIamPolicyConfig_Name(policyName, "/"),
@@ -138,9 +139,9 @@ func TestAccAWSDataSourceIAMPolicy_NameAndPathPrefix(t *testing.T) {
 	policyPath := "/test-path/"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsDataSourceIamPolicyConfig_PathPrefix(policyName, policyPath),
@@ -163,9 +164,9 @@ func TestAccAWSDataSourceIAMPolicy_NonExistent(t *testing.T) {
 	policyPath := "/test-path/"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAwsDataSourceIamPolicyConfig_NonExistent(policyName, policyPath),
@@ -200,7 +201,7 @@ EOF
 }
 
 func testAccAwsDataSourceIamPolicyConfig_Arn(policyName, policyPath string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsDataSourceIamPolicyBaseConfig(policyName, policyPath),
 		`
 data "aws_iam_policy" "test" {
@@ -210,7 +211,7 @@ data "aws_iam_policy" "test" {
 }
 
 func testAccAwsDataSourceIamPolicyConfig_Name(policyName, policyPath string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsDataSourceIamPolicyBaseConfig(policyName, policyPath),
 		`
 data "aws_iam_policy" "test" {
@@ -220,7 +221,7 @@ data "aws_iam_policy" "test" {
 }
 
 func testAccAwsDataSourceIamPolicyConfig_PathPrefix(policyName, policyPath string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsDataSourceIamPolicyBaseConfig(policyName, policyPath),
 		fmt.Sprintf(`
 data "aws_iam_policy" "test" {
@@ -231,7 +232,7 @@ data "aws_iam_policy" "test" {
 }
 
 func testAccAwsDataSourceIamPolicyConfig_NonExistent(policyName, policyPath string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsDataSourceIamPolicyBaseConfig(policyName, policyPath),
 		fmt.Sprintf(`
 data "aws_iam_policy" "test" {
