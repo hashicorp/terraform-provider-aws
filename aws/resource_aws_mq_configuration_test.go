@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSMqConfiguration_basic(t *testing.T) {
@@ -18,19 +21,19 @@ func TestAccAWSMqConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMqConfigurationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqConfigurationExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "simple"),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
@@ -48,7 +51,7 @@ func TestAccAWSMqConfiguration_basic(t *testing.T) {
 				Config: testAccMqConfigurationConfig_descriptionUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqConfigurationExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration Updated"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
@@ -66,19 +69,19 @@ func TestAccAWSMqConfiguration_withData(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMqConfigurationWithDataConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqConfigurationExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
@@ -101,19 +104,19 @@ func TestAccAWSMqConfiguration_withLdapData(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMqConfigurationWithLdapDataConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqConfigurationExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "ldap"),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
@@ -137,12 +140,12 @@ func TestAccAWSMqConfiguration_updateTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -180,7 +183,7 @@ func TestAccAWSMqConfiguration_updateTags(t *testing.T) {
 }
 
 func testAccCheckAwsMqConfigurationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).mqconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).MQConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_mq_configuration" {
@@ -193,7 +196,7 @@ func testAccCheckAwsMqConfigurationDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeConfiguration(input)
 		if err != nil {
-			if isAWSErr(err, mq.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, mq.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return err
