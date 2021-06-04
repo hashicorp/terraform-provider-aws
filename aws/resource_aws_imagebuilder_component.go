@@ -10,7 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsImageBuilderComponent() *schema.Resource {
@@ -114,8 +115,8 @@ func resourceAwsImageBuilderComponent() *schema.Resource {
 }
 
 func resourceAwsImageBuilderComponentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ImageBuilderConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateComponentInput{
@@ -178,9 +179,9 @@ func resourceAwsImageBuilderComponentCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsImageBuilderComponentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ImageBuilderConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetComponentInput{
 		ComponentBuildVersionArn: aws.String(d.Id()),
@@ -234,7 +235,7 @@ func resourceAwsImageBuilderComponentRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsImageBuilderComponentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
+	conn := meta.(*awsprovider.AWSClient).ImageBuilderConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -248,7 +249,7 @@ func resourceAwsImageBuilderComponentUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsImageBuilderComponentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
+	conn := meta.(*awsprovider.AWSClient).ImageBuilderConn
 
 	input := &imagebuilder.DeleteComponentInput{
 		ComponentBuildVersionArn: aws.String(d.Id()),
