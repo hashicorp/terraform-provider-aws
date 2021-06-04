@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -21,11 +23,11 @@ func init() {
 }
 
 func testSweepIamServerCertificates(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).iamconn
+	conn := client.(*awsprovider.AWSClient).IAMConn
 
 	err = conn.ListServerCertificatesPages(&iam.ListServerCertificatesInput{}, func(out *iam.ListServerCertificatesOutput, lastPage bool) bool {
 		for _, sc := range out.ServerCertificateMetadataList {
@@ -43,7 +45,7 @@ func testSweepIamServerCertificates(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping IAM Server Certificate sweep for %s: %s", region, err)
 			return nil
 		}
@@ -63,18 +65,18 @@ func TestAccAWSIAMServerCertificate_basic(t *testing.T) {
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIAMServerCertConfig(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(resourceName, &cert),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("server-certificate/%s", rName)),
-					testAccCheckResourceAttrRfc3339(resourceName, "expiration"),
-					testAccCheckResourceAttrRfc3339(resourceName, "upload_date"),
+					atest.CheckAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("server-certificate/%s", rName)),
+					atest.CheckAttrRfc3339(resourceName, "expiration"),
+					atest.CheckAttrRfc3339(resourceName, "upload_date"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
@@ -102,9 +104,9 @@ func TestAccAWSIAMServerCertificate_tags(t *testing.T) {
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -152,9 +154,9 @@ func TestAccAWSIAMServerCertificate_name_prefix(t *testing.T) {
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -175,16 +177,16 @@ func TestAccAWSIAMServerCertificate_disappears(t *testing.T) {
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIAMServerCertConfig_random(key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(resourceName, &cert),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsIAMServerCertificate(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsIAMServerCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -202,9 +204,9 @@ func TestAccAWSIAMServerCertificate_file(t *testing.T) {
 	resourceId := fmt.Sprintf("terraform-test-cert-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -240,9 +242,9 @@ func TestAccAWSIAMServerCertificate_Path(t *testing.T) {
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -274,7 +276,7 @@ func testAccCheckCertExists(n string, cert *iam.ServerCertificate) resource.Test
 			return fmt.Errorf("No Server Cert ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iamconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 		describeOpts := &iam.GetServerCertificateInput{
 			ServerCertificateName: aws.String(rs.Primary.Attributes["name"]),
 		}
@@ -290,7 +292,7 @@ func testAccCheckCertExists(n string, cert *iam.ServerCertificate) resource.Test
 }
 
 func testAccCheckIAMServerCertificateDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iamconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_server_certificate" {
