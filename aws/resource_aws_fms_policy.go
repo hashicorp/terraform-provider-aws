@@ -7,8 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fms"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsFmsPolicy() *schema.Resource {
@@ -147,7 +149,7 @@ func resourceAwsFmsPolicy() *schema.Resource {
 }
 
 func resourceAwsFmsPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fmsconn
+	conn := meta.(*awsprovider.AWSClient).FMSConn
 
 	fmsPolicy := resourceAwsFmsPolicyExpandPolicy(d)
 
@@ -170,7 +172,7 @@ func resourceAwsFmsPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsFmsPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fmsconn
+	conn := meta.(*awsprovider.AWSClient).FMSConn
 
 	var resp *fms.GetPolicyOutput
 	var req = &fms.GetPolicyInput{
@@ -180,7 +182,7 @@ func resourceAwsFmsPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.GetPolicy(req)
 
 	if err != nil {
-		if isAWSErr(err, fms.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, fms.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] FMS Policy (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -259,7 +261,7 @@ func resourceAwsFmsPolicyExpandPolicy(d *schema.ResourceData) *fms.Policy {
 }
 
 func resourceAwsFmsPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fmsconn
+	conn := meta.(*awsprovider.AWSClient).FMSConn
 
 	fmsPolicy := resourceAwsFmsPolicyExpandPolicy(d)
 
@@ -274,7 +276,7 @@ func resourceAwsFmsPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsFmsPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fmsconn
+	conn := meta.(*awsprovider.AWSClient).FMSConn
 	log.Printf("[DEBUG] Delete FMS Policy: %s", d.Id())
 
 	_, err := conn.DeletePolicy(&fms.DeletePolicyInput{
@@ -282,7 +284,7 @@ func resourceAwsFmsPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 		DeleteAllPolicyResources: aws.Bool(d.Get("delete_all_policy_resources").(bool)),
 	})
 
-	if isAWSErr(err, fms.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, fms.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
