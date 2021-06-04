@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAWSRDSCluster_basic(t *testing.T) {
@@ -15,9 +16,9 @@ func TestAccDataSourceAWSRDSCluster_basic(t *testing.T) {
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, rds.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsRdsClusterConfigBasic(clusterName),
@@ -39,7 +40,7 @@ func TestAccDataSourceAWSRDSCluster_basic(t *testing.T) {
 }
 
 func testAccDataSourceAwsRdsClusterConfigBasic(clusterName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier              = "%[1]s"
   database_name                   = "mydb"
