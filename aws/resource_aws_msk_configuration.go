@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kafka/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsMskConfiguration() *schema.Resource {
@@ -56,7 +58,7 @@ func resourceAwsMskConfiguration() *schema.Resource {
 }
 
 func resourceAwsMskConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
+	conn := meta.(*awsprovider.AWSClient).KafkaConn
 
 	input := &kafka.CreateConfigurationInput{
 		Name:             aws.String(d.Get("name").(string)),
@@ -83,7 +85,7 @@ func resourceAwsMskConfigurationCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsMskConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
+	conn := meta.(*awsprovider.AWSClient).KafkaConn
 
 	configurationInput := &kafka.DescribeConfigurationInput{
 		Arn: aws.String(d.Id()),
@@ -91,7 +93,7 @@ func resourceAwsMskConfigurationRead(d *schema.ResourceData, meta interface{}) e
 
 	configurationOutput, err := conn.DescribeConfiguration(configurationInput)
 
-	if isAWSErr(err, kafka.ErrCodeBadRequestException, "Configuration ARN does not exist") {
+	if tfawserr.ErrMessageContains(err, kafka.ErrCodeBadRequestException, "Configuration ARN does not exist") {
 		log.Printf("[WARN] MSK Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -140,7 +142,7 @@ func resourceAwsMskConfigurationRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsMskConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
+	conn := meta.(*awsprovider.AWSClient).KafkaConn
 
 	input := &kafka.UpdateConfigurationInput{
 		Arn:              aws.String(d.Id()),
@@ -161,7 +163,7 @@ func resourceAwsMskConfigurationUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsMskConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
+	conn := meta.(*awsprovider.AWSClient).KafkaConn
 
 	input := &kafka.DeleteConfigurationInput{
 		Arn: aws.String(d.Id()),
