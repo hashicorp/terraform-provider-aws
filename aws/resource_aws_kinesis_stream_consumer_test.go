@@ -10,7 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesis/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSKinesisStreamConsumer_basic(t *testing.T) {
@@ -19,16 +21,16 @@ func TestAccAWSKinesisStreamConsumer_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kinesis.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKinesisStreamConsumerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSKinesisStreamConsumerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSKinesisStreamConsumerExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "kinesis", regexp.MustCompile(fmt.Sprintf("stream/%[1]s/consumer/%[1]s", rName))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "kinesis", regexp.MustCompile(fmt.Sprintf("stream/%[1]s/consumer/%[1]s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "stream_arn", streamName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_timestamp"),
@@ -48,16 +50,16 @@ func TestAccAWSKinesisStreamConsumer_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kinesis.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSKinesisStreamConsumerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSKinesisStreamConsumerExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsKinesisStreamConsumer(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsKinesisStreamConsumer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -70,9 +72,9 @@ func TestAccAWSKinesisStreamConsumer_MaxConcurrentConsumers(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kinesis.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKinesisStreamConsumerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -95,9 +97,9 @@ func TestAccAWSKinesisStreamConsumer_ExceedMaxConcurrentConsumers(t *testing.T) 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kinesis.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKinesisStreamConsumerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -121,7 +123,7 @@ func TestAccAWSKinesisStreamConsumer_ExceedMaxConcurrentConsumers(t *testing.T) 
 }
 
 func testAccCheckAWSKinesisStreamConsumerDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).kinesisconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).KinesisConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kinesis_stream_consumer" {
@@ -158,7 +160,7 @@ func testAccAWSKinesisStreamConsumerExists(resourceName string) resource.TestChe
 			return fmt.Errorf("resource %s has not set its id", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kinesisconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).KinesisConn
 
 		consumer, err := finder.StreamConsumerByARN(conn, rs.Primary.ID)
 
@@ -184,7 +186,7 @@ resource "aws_kinesis_stream" "test" {
 }
 
 func testAccAWSKinesisStreamConsumerConfig_basic(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSKinesisStreamConsumerBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_stream_consumer" "test" {
@@ -195,7 +197,7 @@ resource "aws_kinesis_stream_consumer" "test" {
 }
 
 func testAccAWSKinesisStreamConsumerConfig_multiple(rName string, count int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSKinesisStreamConsumerBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_stream_consumer" "test" {
