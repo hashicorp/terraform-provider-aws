@@ -19,6 +19,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lambda/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lambda/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsLambdaEventSourceMapping() *schema.Resource {
@@ -88,7 +89,7 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 									"destination_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 								},
 							},
@@ -285,7 +286,7 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 }
 
 func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	functionName := d.Get("function_name").(string)
 	input := &lambda.CreateEventSourceMappingInput{
@@ -409,7 +410,7 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	eventSourceMappingConfiguration, err := finder.EventSourceMappingConfigurationByID(conn, d.Id())
 
@@ -483,7 +484,7 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	log.Printf("[DEBUG] Updating Lambda Event Source Mapping: %s", d.Id())
 
@@ -573,7 +574,7 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsLambdaEventSourceMappingDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	log.Printf("[INFO] Deleting Lambda Event Source Mapping: %s", d.Id())
 
