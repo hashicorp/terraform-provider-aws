@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -48,7 +50,7 @@ func resourceAwsVpcIpv4CidrBlockAssociation() *schema.Resource {
 }
 
 func resourceAwsVpcIpv4CidrBlockAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	req := &ec2.AssociateVpcCidrBlockInput{
 		VpcId:     aws.String(d.Get("vpc_id").(string)),
@@ -79,10 +81,10 @@ func resourceAwsVpcIpv4CidrBlockAssociationCreate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsVpcIpv4CidrBlockAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	input := &ec2.DescribeVpcsInput{
-		Filters: buildEC2AttributeFilterList(
+		Filters: BuildEC2AttributeFilterList(
 			map[string]string{
 				"cidr-block-association.association-id": d.Id(),
 			},
@@ -124,14 +126,14 @@ func resourceAwsVpcIpv4CidrBlockAssociationRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsVpcIpv4CidrBlockAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	log.Printf("[DEBUG] Deleting VPC IPv4 CIDR block association: %s", d.Id())
 	_, err := conn.DisassociateVpcCidrBlock(&ec2.DisassociateVpcCidrBlockInput{
 		AssociationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, "InvalidVpcID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVpcID.NotFound", "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting VPC IPv4 CIDR block association: %s", err)
