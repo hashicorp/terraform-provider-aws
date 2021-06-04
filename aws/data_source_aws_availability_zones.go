@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsAvailabilityZones() *schema.Resource {
@@ -61,7 +62,7 @@ func dataSourceAwsAvailabilityZones() *schema.Resource {
 }
 
 func dataSourceAwsAvailabilityZonesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	log.Printf("[DEBUG] Reading Availability Zones.")
 
@@ -128,7 +129,7 @@ func dataSourceAwsAvailabilityZonesRead(d *schema.ResourceData, meta interface{}
 		zoneIds = append(zoneIds, zoneID)
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*awsprovider.AWSClient).Region)
 
 	if err := d.Set("group_names", groupNames); err != nil {
 		return fmt.Errorf("error setting group_names: %w", err)
