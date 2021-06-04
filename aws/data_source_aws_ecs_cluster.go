@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsEcsCluster() *schema.Resource {
@@ -65,7 +66,7 @@ func dataSourceAwsEcsCluster() *schema.Resource {
 }
 
 func dataSourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
+	conn := meta.(*awsprovider.AWSClient).ECSConn
 
 	params := &ecs.DescribeClustersInput{
 		Clusters: []*string{aws.String(d.Get("cluster_name").(string))},
