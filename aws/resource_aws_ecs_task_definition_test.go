@@ -147,6 +147,19 @@ func TestAccAWSEcsTaskDefinition_withDockerVolume(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
+						"name":                                             tdName,
+						"docker_volume_configuration.#":                    "1",
+						"docker_volume_configuration.0.driver":             "local",
+						"docker_volume_configuration.0.scope":              "shared",
+						"docker_volume_configuration.0.autoprovision":      "true",
+						"docker_volume_configuration.0.driver_opts.%":      "2",
+						"docker_volume_configuration.0.driver_opts.device": "tmpfs",
+						"docker_volume_configuration.0.driver_opts.uid":    "1000",
+						"docker_volume_configuration.0.labels.%":           "2",
+						"docker_volume_configuration.0.labels.environment": "test",
+						"docker_volume_configuration.0.labels.stack":       "april",
+					}),
 				),
 			},
 			{
@@ -176,6 +189,11 @@ func TestAccAWSEcsTaskDefinition_withDockerVolumeMinimalConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
+						"name":                          tdName,
+						"docker_volume_configuration.#": "1",
+						"docker_volume_configuration.0.autoprovision": "true",
+					}),
 				),
 			},
 			{
@@ -205,6 +223,11 @@ func TestAccAWSEcsTaskDefinition_withEFSVolumeMinimal(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
+						"name":                       tdName,
+						"efs_volume_configuration.#": "1",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "volume.*.efs_volume_configuration.0.file_system_id", "aws_efs_file_system.test", "id"),
 				),
 			},
 			{
@@ -234,6 +257,12 @@ func TestAccAWSEcsTaskDefinition_withEFSVolume(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
+						"name":                       tdName,
+						"efs_volume_configuration.#": "1",
+						"efs_volume_configuration.0.root_directory": "/home/test",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "volume.*.efs_volume_configuration.0.file_system_id", "aws_efs_file_system.test", "id"),
 				),
 			},
 			{
@@ -262,6 +291,14 @@ func TestAccAWSEcsTaskDefinition_withTransitEncryptionEFSVolume(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
+						"name":                       tdName,
+						"efs_volume_configuration.#": "1",
+						"efs_volume_configuration.0.root_directory":          "/home/test",
+						"efs_volume_configuration.0.transit_encryption":      "ENABLED",
+						"efs_volume_configuration.0.transit_encryption_port": "2999",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "volume.*.efs_volume_configuration.0.file_system_id", "aws_efs_file_system.test", "id"),
 				),
 			},
 			{
@@ -291,6 +328,17 @@ func TestAccAWSEcsTaskDefinition_withEFSAccessPoint(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
+						"name":                       tdName,
+						"efs_volume_configuration.#": "1",
+						"efs_volume_configuration.0.root_directory":             "/",
+						"efs_volume_configuration.0.transit_encryption":         "ENABLED",
+						"efs_volume_configuration.0.transit_encryption_port":    "2999",
+						"efs_volume_configuration.0.authorization_config.#":     "1",
+						"efs_volume_configuration.0.authorization_config.0.iam": "DISABLED",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "volume.*.efs_volume_configuration.0.file_system_id", "aws_efs_file_system.test", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "volume.*.efs_volume_configuration.0.authorization_config.0.access_point_id", "aws_efs_access_point.test", "id"),
 				),
 			},
 			{
@@ -320,6 +368,15 @@ func TestAccAWSEcsTaskDefinition_withFsxWinFileSystem(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
+						"name": rName,
+						"fsx_windows_file_server_volume_configuration.#":                        "1",
+						"fsx_windows_file_server_volume_configuration.0.root_directory":         "\\data",
+						"fsx_windows_file_server_volume_configuration.0.authorization_config.#": "1",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "volume.*.fsx_windows_file_server_volume_configuration.0.file_system_id", "aws_fsx_windows_file_system.test", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "volume.*.fsx_windows_file_server_volume_configuration.0.authorization_config.0.credentials_parameter", "aws_secretsmanager_secret_version.test", "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "volume.*.fsx_windows_file_server_volume_configuration.0.authorization_config.0.domain", "aws_directory_service_directory.test", "name"),
 				),
 			},
 			{
