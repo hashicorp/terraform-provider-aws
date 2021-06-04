@@ -14,8 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -73,8 +74,8 @@ func resourceAwsS3ControlBucket() *schema.Resource {
 }
 
 func resourceAwsS3ControlBucketCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).S3ControlConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	bucket := d.Get("bucket").(string)
@@ -106,9 +107,9 @@ func resourceAwsS3ControlBucketCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsS3ControlBucketRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).S3ControlConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	parsedArn, err := arn.Parse(d.Id())
 
@@ -181,7 +182,7 @@ func resourceAwsS3ControlBucketRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsS3ControlBucketUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
+	conn := meta.(*awsprovider.AWSClient).S3ControlConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -195,7 +196,7 @@ func resourceAwsS3ControlBucketUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsS3ControlBucketDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
+	conn := meta.(*awsprovider.AWSClient).S3ControlConn
 
 	parsedArn, err := arn.Parse(d.Id())
 
