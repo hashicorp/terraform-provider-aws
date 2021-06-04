@@ -6,27 +6,28 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSOutpostsOutpostDataSource_Id(t *testing.T) {
 	dataSourceName := "data.aws_outposts_outpost.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, outposts.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck:   atest.ErrorCheck(t, outposts.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSOutpostsOutpostDataSourceConfigId(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceAttrRegionalARNIgnoreRegionAndAccount(dataSourceName, "arn", "outposts", regexp.MustCompile(`outpost/op-.+$`).String()),
+					atest.CheckAttrRegionalARNIgnoreRegionAndAccount(dataSourceName, "arn", "outposts", regexp.MustCompile(`outpost/op-.+$`).String()),
 					resource.TestMatchResourceAttr(dataSourceName, "availability_zone", regexp.MustCompile(`^.+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "availability_zone_id", regexp.MustCompile(`^.+$`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "description"),
 					resource.TestMatchResourceAttr(dataSourceName, "id", regexp.MustCompile(`^op-.+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "name", regexp.MustCompile(`^.+$`)),
-					testAccMatchResourceAttrAccountID(dataSourceName, "owner_id"),
+					atest.MatchAttrAccountID(dataSourceName, "owner_id"),
 				),
 			},
 		},
@@ -38,9 +39,9 @@ func TestAccAWSOutpostsOutpostDataSource_Name(t *testing.T) {
 	dataSourceName := "data.aws_outposts_outpost.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, outposts.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck:   atest.ErrorCheck(t, outposts.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -64,9 +65,9 @@ func TestAccAWSOutpostsOutpostDataSource_Arn(t *testing.T) {
 	dataSourceName := "data.aws_outposts_outpost.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, outposts.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck:   atest.ErrorCheck(t, outposts.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -90,9 +91,9 @@ func TestAccAWSOutpostsOutpostDataSource_OwnerId(t *testing.T) {
 	dataSourceName := "data.aws_outposts_outpost.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, outposts.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck:   atest.ErrorCheck(t, outposts.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
