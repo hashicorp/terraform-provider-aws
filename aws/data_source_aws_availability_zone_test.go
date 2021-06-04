@@ -7,6 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccDataSourceAwsAvailabilityZone_AllAvailabilityZones(t *testing.T) {
@@ -14,21 +16,21 @@ func TestAccDataSourceAwsAvailabilityZone_AllAvailabilityZones(t *testing.T) {
 	dataSourceName := "data.aws_availability_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsAvailabilityZoneConfigAllAvailabilityZones(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "group_name", testAccGetRegion()),
+					resource.TestCheckResourceAttr(dataSourceName, "group_name", atest.Region()),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexp.MustCompile(`^[a-z]$`)),
-					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", testAccGetRegion()),
+					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", atest.Region()),
 					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptInNotRequired),
 					resource.TestCheckResourceAttr(dataSourceName, "parent_zone_id", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "parent_zone_name", ""),
-					resource.TestCheckResourceAttr(dataSourceName, "region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(dataSourceName, "region", atest.Region()),
 					resource.TestCheckResourceAttrPair(dataSourceName, "zone_id", availabilityZonesDataSourceName, "zone_ids.0"),
 					resource.TestCheckResourceAttr(dataSourceName, "zone_type", "availability-zone"),
 				),
@@ -42,21 +44,21 @@ func TestAccDataSourceAwsAvailabilityZone_Filter(t *testing.T) {
 	dataSourceName := "data.aws_availability_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsAvailabilityZoneConfigFilter(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "group_name", testAccGetRegion()),
+					resource.TestCheckResourceAttr(dataSourceName, "group_name", atest.Region()),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexp.MustCompile(`^[a-z]$`)),
-					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", testAccGetRegion()),
+					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", atest.Region()),
 					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptInNotRequired),
 					resource.TestCheckResourceAttr(dataSourceName, "parent_zone_id", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "parent_zone_name", ""),
-					resource.TestCheckResourceAttr(dataSourceName, "region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(dataSourceName, "region", atest.Region()),
 					resource.TestCheckResourceAttrPair(dataSourceName, "zone_id", availabilityZonesDataSourceName, "zone_ids.0"),
 					resource.TestCheckResourceAttr(dataSourceName, "zone_type", "availability-zone"),
 				),
@@ -70,9 +72,9 @@ func TestAccDataSourceAwsAvailabilityZone_LocalZone(t *testing.T) {
 	dataSourceName := "data.aws_availability_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSLocalZoneAvailable(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckAWSLocalZoneAvailable(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsAvailabilityZoneConfigZoneType("local-zone"),
@@ -84,7 +86,7 @@ func TestAccDataSourceAwsAvailabilityZone_LocalZone(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptedIn),
 					resource.TestCheckResourceAttrSet(dataSourceName, "parent_zone_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "parent_zone_name"),
-					resource.TestCheckResourceAttr(dataSourceName, "region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(dataSourceName, "region", atest.Region()),
 					resource.TestCheckResourceAttrPair(dataSourceName, "zone_id", availabilityZonesDataSourceName, "zone_ids.0"),
 					resource.TestCheckResourceAttr(dataSourceName, "zone_type", "local-zone"),
 				),
@@ -98,21 +100,21 @@ func TestAccDataSourceAwsAvailabilityZone_Name(t *testing.T) {
 	dataSourceName := "data.aws_availability_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsAvailabilityZoneConfigName(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "group_name", testAccGetRegion()),
+					resource.TestCheckResourceAttr(dataSourceName, "group_name", atest.Region()),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexp.MustCompile(`^[a-z]$`)),
-					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", testAccGetRegion()),
+					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", atest.Region()),
 					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptInNotRequired),
 					resource.TestCheckResourceAttr(dataSourceName, "parent_zone_id", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "parent_zone_name", ""),
-					resource.TestCheckResourceAttr(dataSourceName, "region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(dataSourceName, "region", atest.Region()),
 					resource.TestCheckResourceAttrPair(dataSourceName, "zone_id", availabilityZonesDataSourceName, "zone_ids.0"),
 					resource.TestCheckResourceAttr(dataSourceName, "zone_type", "availability-zone"),
 				),
@@ -126,9 +128,9 @@ func TestAccDataSourceAwsAvailabilityZone_WavelengthZone(t *testing.T) {
 	dataSourceName := "data.aws_availability_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckAWSLocalZoneAvailable(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsAvailabilityZoneConfigZoneType("wavelength-zone"),
@@ -140,7 +142,7 @@ func TestAccDataSourceAwsAvailabilityZone_WavelengthZone(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptedIn),
 					resource.TestCheckResourceAttrSet(dataSourceName, "parent_zone_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "parent_zone_name"),
-					resource.TestCheckResourceAttr(dataSourceName, "region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(dataSourceName, "region", atest.Region()),
 					resource.TestCheckResourceAttrPair(dataSourceName, "zone_id", availabilityZonesDataSourceName, "zone_ids.0"),
 					resource.TestCheckResourceAttr(dataSourceName, "zone_type", "wavelength-zone"),
 				),
@@ -154,21 +156,21 @@ func TestAccDataSourceAwsAvailabilityZone_ZoneId(t *testing.T) {
 	dataSourceName := "data.aws_availability_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsAvailabilityZoneConfigZoneId(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "group_name", testAccGetRegion()),
+					resource.TestCheckResourceAttr(dataSourceName, "group_name", atest.Region()),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexp.MustCompile(`^[a-z]$`)),
-					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", testAccGetRegion()),
+					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", atest.Region()),
 					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptInNotRequired),
 					resource.TestCheckResourceAttr(dataSourceName, "parent_zone_id", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "parent_zone_name", ""),
-					resource.TestCheckResourceAttr(dataSourceName, "region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(dataSourceName, "region", atest.Region()),
 					resource.TestCheckResourceAttrPair(dataSourceName, "zone_id", availabilityZonesDataSourceName, "zone_ids.0"),
 					resource.TestCheckResourceAttr(dataSourceName, "zone_type", "availability-zone"),
 				),
@@ -178,10 +180,10 @@ func TestAccDataSourceAwsAvailabilityZone_ZoneId(t *testing.T) {
 }
 
 func testAccPreCheckAWSLocalZoneAvailable(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	input := &ec2.DescribeAvailabilityZonesInput{
-		Filters: buildEC2AttributeFilterList(map[string]string{
+		Filters: BuildEC2AttributeFilterList(map[string]string{
 			"zone-type":     "local-zone",
 			"opt-in-status": "opted-in",
 		}),
@@ -189,7 +191,7 @@ func testAccPreCheckAWSLocalZoneAvailable(t *testing.T) {
 
 	output, err := conn.DescribeAvailabilityZones(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -203,7 +205,7 @@ func testAccPreCheckAWSLocalZoneAvailable(t *testing.T) {
 }
 
 func testAccDataSourceAwsAvailabilityZoneConfigAllAvailabilityZones() string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAvailableAZsNoOptInConfig(),
 		`
 data "aws_availability_zone" "test" {
@@ -214,7 +216,7 @@ data "aws_availability_zone" "test" {
 }
 
 func testAccDataSourceAwsAvailabilityZoneConfigFilter() string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAvailableAZsNoOptInConfig(),
 		`
 data "aws_availability_zone" "test" {
@@ -227,7 +229,7 @@ data "aws_availability_zone" "test" {
 }
 
 func testAccDataSourceAwsAvailabilityZoneConfigName() string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAvailableAZsNoOptInConfig(),
 		`
 data "aws_availability_zone" "test" {
@@ -237,7 +239,7 @@ data "aws_availability_zone" "test" {
 }
 
 func testAccDataSourceAwsAvailabilityZoneConfigZoneId() string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAvailableAZsNoOptInConfig(),
 		`
 data "aws_availability_zone" "test" {
