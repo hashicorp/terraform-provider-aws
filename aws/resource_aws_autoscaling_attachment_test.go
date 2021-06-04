@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSAutoscalingAttachment_elb(t *testing.T) {
@@ -16,9 +18,9 @@ func TestAccAWSAutoscalingAttachment_elb(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAutocalingAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -60,9 +62,9 @@ func TestAccAWSAutoscalingAttachment_albTargetGroup(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAutocalingAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -100,7 +102,7 @@ func TestAccAWSAutoscalingAttachment_albTargetGroup(t *testing.T) {
 }
 
 func testAccCheckAWSAutocalingAttachmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).autoscalingconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).AutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_autoscaling_attachment" {
@@ -132,7 +134,7 @@ func testAccCheckAWSAutocalingElbAttachmentExists(asgname string, loadBalancerCo
 			return fmt.Errorf("Not found: %s", asgname)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).autoscalingconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AutoScalingConn
 		asg := rs.Primary.ID
 
 		actual, err := conn.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
@@ -158,7 +160,7 @@ func testAccCheckAWSAutocalingAlbAttachmentExists(asgname string, targetGroupCou
 			return fmt.Errorf("Not found: %s", asgname)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).autoscalingconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AutoScalingConn
 		asg := rs.Primary.ID
 
 		actual, err := conn.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
