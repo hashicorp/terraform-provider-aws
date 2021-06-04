@@ -7,7 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsIotTopicRule() *schema.Resource {
@@ -38,7 +39,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"state_reason": {
 							Type:     schema.TypeString,
@@ -81,7 +82,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -135,7 +136,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"table_name": {
 							Type:     schema.TypeString,
@@ -165,7 +166,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -191,7 +192,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"type": {
 							Type:     schema.TypeString,
@@ -216,7 +217,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"separator": {
 							Type:         schema.TypeString,
@@ -238,7 +239,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -259,7 +260,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -276,7 +277,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"stream_name": {
 							Type:     schema.TypeString,
@@ -293,7 +294,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						"function_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -318,7 +319,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"topic": {
 							Type:     schema.TypeString,
@@ -343,7 +344,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -364,7 +365,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -382,12 +383,12 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						"target_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -412,7 +413,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"use_base64": {
 							Type:     schema.TypeBool,
@@ -442,7 +443,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 									"state_reason": {
 										Type:     schema.TypeString,
@@ -503,7 +504,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 								},
 							},
@@ -571,7 +572,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 									"table_name": {
 										Type:     schema.TypeString,
@@ -619,7 +620,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 								},
 							},
@@ -663,7 +664,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 									"type": {
 										Type:     schema.TypeString,
@@ -702,7 +703,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 									"separator": {
 										Type:         schema.TypeString,
@@ -742,7 +743,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 								},
 							},
@@ -781,7 +782,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 								},
 							},
@@ -816,7 +817,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 									"stream_name": {
 										Type:     schema.TypeString,
@@ -851,7 +852,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 									"function_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 								},
 							},
@@ -888,7 +889,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 									"topic": {
 										Type:     schema.TypeString,
@@ -931,7 +932,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 								},
 							},
@@ -970,7 +971,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 								},
 							},
@@ -1006,12 +1007,12 @@ func resourceAwsIotTopicRule() *schema.Resource {
 									"target_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 								},
 							},
@@ -1046,7 +1047,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 									"use_base64": {
 										Type:     schema.TypeBool,
@@ -1082,8 +1083,8 @@ func resourceAwsIotTopicRule() *schema.Resource {
 }
 
 func resourceAwsIotTopicRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).IoTConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	ruleName := d.Get("name").(string)
@@ -1106,9 +1107,9 @@ func resourceAwsIotTopicRuleCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).IoTConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &iot.GetTopicRuleInput{
 		RuleName: aws.String(d.Id()),
@@ -1212,7 +1213,7 @@ func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsIotTopicRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*awsprovider.AWSClient).IoTConn
 
 	if d.HasChanges(
 		"cloudwatch_alarm",
@@ -1259,7 +1260,7 @@ func resourceAwsIotTopicRuleUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsIotTopicRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*awsprovider.AWSClient).IoTConn
 
 	input := &iot.DeleteTopicRuleInput{
 		RuleName: aws.String(d.Id()),
