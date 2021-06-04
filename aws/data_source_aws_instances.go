@@ -8,7 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsInstances() *schema.Resource {
@@ -16,7 +17,7 @@ func dataSourceAwsInstances() *schema.Resource {
 		Read: dataSourceAwsInstancesRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter":        dataSourceFiltersSchema(),
+			"filter":        awsprovider.DataSourceFiltersSchema(),
 			"instance_tags": tagsSchemaComputed(),
 			"instance_state_names": {
 				Type:     schema.TypeSet,
@@ -54,7 +55,7 @@ func dataSourceAwsInstances() *schema.Resource {
 }
 
 func dataSourceAwsInstancesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	filters, filtersOk := d.GetOk("filter")
 	tags, tagsOk := d.GetOk("instance_tags")
@@ -78,7 +79,7 @@ func dataSourceAwsInstancesRead(d *schema.ResourceData, meta interface{}) error 
 
 	if filtersOk {
 		params.Filters = append(params.Filters,
-			buildAwsDataSourceFilters(filters.(*schema.Set))...)
+			awsprovider.BuildDataSourceFilters(filters.(*schema.Set))...)
 	}
 	if tagsOk {
 		params.Filters = append(params.Filters, buildEC2TagFilterList(
@@ -113,7 +114,7 @@ func dataSourceAwsInstancesRead(d *schema.ResourceData, meta interface{}) error 
 
 	log.Printf("[DEBUG] Found %d instances via given filter", len(instanceIds))
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*awsprovider.AWSClient).Region)
 
 	err = d.Set("ids", instanceIds)
 	if err != nil {
