@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsEc2InstanceTypeOfferings() *schema.Resource {
@@ -14,7 +15,7 @@ func dataSourceAwsEc2InstanceTypeOfferings() *schema.Resource {
 		Read: dataSourceAwsEc2InstanceTypeOfferingsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": dataSourceFiltersSchema(),
+			"filter": awsprovider.DataSourceFiltersSchema(),
 			"instance_types": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -34,12 +35,12 @@ func dataSourceAwsEc2InstanceTypeOfferings() *schema.Resource {
 }
 
 func dataSourceAwsEc2InstanceTypeOfferingsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	input := &ec2.DescribeInstanceTypeOfferingsInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
+		input.Filters = awsprovider.BuildDataSourceFilters(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("location_type"); ok {
@@ -78,7 +79,7 @@ func dataSourceAwsEc2InstanceTypeOfferingsRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error setting instance_types: %w", err)
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*awsprovider.AWSClient).Region)
 
 	return nil
 }
