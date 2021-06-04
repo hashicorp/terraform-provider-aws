@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsWafv2WebACLLoggingConfiguration() *schema.Resource {
@@ -34,7 +35,7 @@ func resourceAwsWafv2WebACLLoggingConfiguration() *schema.Resource {
 				MaxItems: 100,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: ValidateArn,
 				},
 				Description: "AWS Kinesis Firehose Delivery Stream ARNs",
 			},
@@ -177,7 +178,7 @@ func resourceAwsWafv2WebACLLoggingConfiguration() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 				Description:  "AWS WebACL ARN",
 			},
 		},
@@ -185,7 +186,7 @@ func resourceAwsWafv2WebACLLoggingConfiguration() *schema.Resource {
 }
 
 func resourceAwsWafv2WebACLLoggingConfigurationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
+	conn := meta.(*awsprovider.AWSClient).WAFV2Conn
 
 	resourceArn := d.Get("resource_arn").(string)
 
@@ -224,7 +225,7 @@ func resourceAwsWafv2WebACLLoggingConfigurationPut(d *schema.ResourceData, meta 
 }
 
 func resourceAwsWafv2WebACLLoggingConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
+	conn := meta.(*awsprovider.AWSClient).WAFV2Conn
 
 	input := &wafv2.GetLoggingConfigurationInput{
 		ResourceArn: aws.String(d.Id()),
@@ -271,7 +272,7 @@ func resourceAwsWafv2WebACLLoggingConfigurationRead(d *schema.ResourceData, meta
 }
 
 func resourceAwsWafv2WebACLLoggingConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
+	conn := meta.(*awsprovider.AWSClient).WAFV2Conn
 
 	input := &wafv2.DeleteLoggingConfigurationInput{
 		ResourceArn: aws.String(d.Id()),
