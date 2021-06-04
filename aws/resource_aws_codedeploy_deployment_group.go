@@ -11,11 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
@@ -34,7 +36,7 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 
 				applicationName := idParts[0]
 				deploymentGroupName := idParts[1]
-				conn := meta.(*AWSClient).codedeployconn
+				conn := meta.(*awsprovider.AWSClient).CodeDeployConn
 
 				input := &codedeploy.GetDeploymentGroupInput{
 					ApplicationName:     aws.String(applicationName),
@@ -175,7 +177,7 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 			"service_role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"alarm_configuration": {
@@ -258,7 +260,7 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 													Required: true,
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
-														ValidateFunc: validateArn,
+														ValidateFunc: ValidateArn,
 													},
 												},
 											},
@@ -290,7 +292,7 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 													Required: true,
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
-														ValidateFunc: validateArn,
+														ValidateFunc: ValidateArn,
 													},
 												},
 											},
@@ -465,7 +467,7 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 						"trigger_target_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -480,8 +482,8 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 }
 
 func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codedeployconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CodeDeployConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	// required fields
 	applicationName := d.Get("app_name").(string)
@@ -552,11 +554,11 @@ func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta int
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		resp, err = conn.CreateDeploymentGroup(&input)
 
-		if isAWSErr(err, codedeploy.ErrCodeInvalidRoleException, "") {
+		if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeInvalidRoleException, "") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, codedeploy.ErrCodeInvalidTriggerConfigException, "Topic ARN") {
+		if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeInvalidTriggerConfigException, "Topic ARN") {
 			return resource.RetryableError(err)
 		}
 
@@ -580,9 +582,9 @@ func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsCodeDeployDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codedeployconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CodeDeployConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading CodeDeploy DeploymentGroup %s", d.Id())
 
@@ -593,8 +595,8 @@ func resourceAwsCodeDeployDeploymentGroupRead(d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		if isAWSErr(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException, "") ||
-			isAWSErr(err, codedeploy.ErrCodeApplicationDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException, "") ||
+			tfawserr.ErrMessageContains(err, codedeploy.ErrCodeApplicationDoesNotExistException, "") {
 			log.Printf("[INFO] CodeDeployment DeploymentGroup %s not found", deploymentGroupName)
 			d.SetId("")
 			return nil
@@ -607,10 +609,10 @@ func resourceAwsCodeDeployDeploymentGroupRead(d *schema.ResourceData, meta inter
 	appName := aws.StringValue(group.ApplicationName)
 	groupName := aws.StringValue(group.DeploymentGroupName)
 	groupArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "codedeploy",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("deploymentgroup:%s/%s", appName, groupName),
 	}.String()
 
@@ -691,7 +693,7 @@ func resourceAwsCodeDeployDeploymentGroupRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codedeployconn
+	conn := meta.(*awsprovider.AWSClient).CodeDeployConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		// required fields
@@ -781,11 +783,11 @@ func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta int
 		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 			_, err = conn.UpdateDeploymentGroup(&input)
 
-			if isAWSErr(err, codedeploy.ErrCodeInvalidRoleException, "") {
+			if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeInvalidRoleException, "") {
 				return resource.RetryableError(err)
 			}
 
-			if isAWSErr(err, codedeploy.ErrCodeInvalidTriggerConfigException, "Topic ARN") {
+			if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeInvalidTriggerConfigException, "Topic ARN") {
 				return resource.RetryableError(err)
 			}
 
@@ -816,7 +818,7 @@ func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsCodeDeployDeploymentGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codedeployconn
+	conn := meta.(*awsprovider.AWSClient).CodeDeployConn
 
 	log.Printf("[DEBUG] Deleting CodeDeploy DeploymentGroup %s", d.Id())
 	_, err := conn.DeleteDeploymentGroup(&codedeploy.DeleteDeploymentGroupInput{
@@ -825,7 +827,7 @@ func resourceAwsCodeDeployDeploymentGroupDelete(d *schema.ResourceData, meta int
 	})
 
 	if err != nil {
-		if isAWSErr(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException, "") {
 			return nil
 		}
 		return err
