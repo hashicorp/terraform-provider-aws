@@ -11,8 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	tfsagemaker "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -23,11 +25,11 @@ func init() {
 }
 
 func testSweepSagemakerCodeRepositories(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).sagemakerconn
+	conn := client.(*awsprovider.AWSClient).SageMakerConn
 
 	err = conn.ListCodeRepositoriesPages(&sagemaker.ListCodeRepositoriesInput{}, func(page *sagemaker.ListCodeRepositoriesOutput, lastPage bool) bool {
 		for _, instance := range page.CodeRepositorySummaryList {
@@ -47,7 +49,7 @@ func testSweepSagemakerCodeRepositories(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker Code Repository sweep for %s: %s", region, err)
 		return nil
 	}
@@ -65,9 +67,9 @@ func TestAccAWSSagemakerCodeRepository_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_code_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerCodeRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -75,7 +77,7 @@ func TestAccAWSSagemakerCodeRepository_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerCodeRepositoryExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "code_repository_name", rName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "git_config.0.repository_url", "https://github.com/hashicorp/terraform-provider-aws.git"),
 				),
@@ -95,9 +97,9 @@ func TestAccAWSSagemakerCodeRepository_gitConfig_branch(t *testing.T) {
 	resourceName := "aws_sagemaker_code_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerCodeRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -105,7 +107,7 @@ func TestAccAWSSagemakerCodeRepository_gitConfig_branch(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerCodeRepositoryExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "code_repository_name", rName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "git_config.0.repository_url", "https://github.com/hashicorp/terraform-provider-aws.git"),
 					resource.TestCheckResourceAttr(resourceName, "git_config.0.branch", "master"),
@@ -126,9 +128,9 @@ func TestAccAWSSagemakerCodeRepository_gitConfig_secret(t *testing.T) {
 	resourceName := "aws_sagemaker_code_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerCodeRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -136,7 +138,7 @@ func TestAccAWSSagemakerCodeRepository_gitConfig_secret(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerCodeRepositoryExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "code_repository_name", rName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "git_config.0.repository_url", "https://github.com/hashicorp/terraform-provider-aws.git"),
 					resource.TestCheckResourceAttrPair(resourceName, "git_config.0.secret_arn", "aws_secretsmanager_secret.test", "arn"),
@@ -152,7 +154,7 @@ func TestAccAWSSagemakerCodeRepository_gitConfig_secret(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerCodeRepositoryExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "code_repository_name", rName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "git_config.0.repository_url", "https://github.com/hashicorp/terraform-provider-aws.git"),
 					resource.TestCheckResourceAttrPair(resourceName, "git_config.0.secret_arn", "aws_secretsmanager_secret.test2", "arn"),
@@ -168,16 +170,16 @@ func TestAccAWSSagemakerCodeRepository_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_code_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerCodeRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSagemakerCodeRepositoryBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerCodeRepositoryExists(resourceName, &notebook),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerCodeRepository(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSagemakerCodeRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -186,7 +188,7 @@ func TestAccAWSSagemakerCodeRepository_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerCodeRepositoryDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SageMakerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_code_repository" {
@@ -222,7 +224,7 @@ func testAccCheckAWSSagemakerCodeRepositoryExists(n string, codeRepo *sagemaker.
 			return fmt.Errorf("No sagmaker Code Repository ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SageMakerConn
 		resp, err := finder.CodeRepositoryByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
