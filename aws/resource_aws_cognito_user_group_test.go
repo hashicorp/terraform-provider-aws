@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSCognitoUserGroup_basic(t *testing.T) {
@@ -20,9 +22,9 @@ func TestAccAWSCognitoUserGroup_basic(t *testing.T) {
 	resourceName := "aws_cognito_user_group.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoUserGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -55,9 +57,9 @@ func TestAccAWSCognitoUserGroup_complex(t *testing.T) {
 	resourceName := "aws_cognito_user_group.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoUserGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -94,9 +96,9 @@ func TestAccAWSCognitoUserGroup_RoleArn(t *testing.T) {
 	resourceName := "aws_cognito_user_group.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoUserGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -145,7 +147,7 @@ func testAccCheckAWSCognitoUserGroupExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf(fmt.Sprintf("ID should be user_pool_id/name. ID was %s. name was %s, user_pool_id was %s", id, name, userPoolId))
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cognitoidpconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 		params := &cognitoidentityprovider.GetGroupInput{
 			GroupName:  aws.String(rs.Primary.Attributes["name"]),
@@ -158,7 +160,7 @@ func testAccCheckAWSCognitoUserGroupExists(name string) resource.TestCheckFunc {
 }
 
 func testAccCheckAWSCognitoUserGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cognitoidpconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_user_group" {
