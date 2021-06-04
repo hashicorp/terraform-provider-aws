@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSAPIGatewayV2RouteResponse_basic(t *testing.T) {
@@ -20,9 +23,9 @@ func TestAccAWSAPIGatewayV2RouteResponse_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteResponseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -52,9 +55,9 @@ func TestAccAWSAPIGatewayV2RouteResponse_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteResponseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -79,9 +82,9 @@ func TestAccAWSAPIGatewayV2RouteResponse_Model(t *testing.T) {
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix("tf-acc-test"), "-", "")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteResponseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -106,7 +109,7 @@ func TestAccAWSAPIGatewayV2RouteResponse_Model(t *testing.T) {
 }
 
 func testAccCheckAWSAPIGatewayV2RouteResponseDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_route_response" {
@@ -118,7 +121,7 @@ func testAccCheckAWSAPIGatewayV2RouteResponseDestroy(s *terraform.State) error {
 			RouteId:         aws.String(rs.Primary.Attributes["route_id"]),
 			RouteResponseId: aws.String(rs.Primary.ID),
 		})
-		if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 			continue
 		}
 		if err != nil {
@@ -133,7 +136,7 @@ func testAccCheckAWSAPIGatewayV2RouteResponseDestroy(s *terraform.State) error {
 
 func testAccCheckAWSAPIGatewayV2RouteResponseDisappears(apiId, routeId *string, v *apigatewayv2.GetRouteResponseOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayV2Conn
 
 		_, err := conn.DeleteRouteResponse(&apigatewayv2.DeleteRouteResponseInput{
 			ApiId:           apiId,
@@ -156,7 +159,7 @@ func testAccCheckAWSAPIGatewayV2RouteResponseExists(n string, vApiId, vRouteId *
 			return fmt.Errorf("No API Gateway v2 route response ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayV2Conn
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
 		routeId := aws.String(rs.Primary.Attributes["route_id"])
@@ -189,7 +192,7 @@ func testAccAWSAPIGatewayV2RouteResponseImportStateIdFunc(resourceName string) r
 }
 
 func testAccAWSAPIGatewayV2RouteResponseConfig_basicWebSocket(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2RouteConfig_basicWebSocket(rName),
 		`
 resource "aws_apigatewayv2_route_response" "test" {
@@ -201,7 +204,7 @@ resource "aws_apigatewayv2_route_response" "test" {
 }
 
 func testAccAWSAPIGatewayV2RouteResponseConfig_model(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2RouteConfig_model(rName),
 		`
 resource "aws_apigatewayv2_route_response" "test" {
