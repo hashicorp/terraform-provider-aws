@@ -8,10 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -25,11 +28,11 @@ func init() {
 }
 
 func testSweepRoute53ResolverRules(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).route53resolverconn
+	conn := client.(*awsprovider.AWSClient).Route53ResolverConn
 
 	var errors error
 	err = conn.ListResolverRulesPages(&route53resolver.ListResolverRulesInput{}, func(page *route53resolver.ListResolverRulesOutput, lastPage bool) bool {
@@ -41,7 +44,7 @@ func testSweepRoute53ResolverRules(region string) error {
 			id := aws.StringValue(resolverRule.Id)
 
 			ownerID := aws.StringValue(resolverRule.OwnerId)
-			if ownerID != client.(*AWSClient).accountid {
+			if ownerID != client.(*awsprovider.AWSClient).AccountID {
 				log.Printf("[INFO] Skipping Route53 Resolver rule %q, owned by %q", id, ownerID)
 				continue
 			}
@@ -50,7 +53,7 @@ func testSweepRoute53ResolverRules(region string) error {
 			_, err := conn.DeleteResolverRule(&route53resolver.DeleteResolverRuleInput{
 				ResolverRuleId: aws.String(id),
 			})
-			if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 				continue
 			}
 			if err != nil {
@@ -70,7 +73,7 @@ func testSweepRoute53ResolverRules(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Route53 Resolver rule sweep for %s: %s", region, err)
 			return nil
 		}
@@ -85,9 +88,9 @@ func TestAccAWSRoute53ResolverRule_basic(t *testing.T) {
 	resourceName := "aws_route53_resolver_rule.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53resolver.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -97,7 +100,7 @@ func TestAccAWSRoute53ResolverRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					atest.CheckAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -115,9 +118,9 @@ func TestAccAWSRoute53ResolverRule_justDotDomainName(t *testing.T) {
 	resourceName := "aws_route53_resolver_rule.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53resolver.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -127,7 +130,7 @@ func TestAccAWSRoute53ResolverRule_justDotDomainName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "domain_name", "."),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					atest.CheckAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -145,9 +148,9 @@ func TestAccAWSRoute53ResolverRule_trailingDotDomainName(t *testing.T) {
 	resourceName := "aws_route53_resolver_rule.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53resolver.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -157,7 +160,7 @@ func TestAccAWSRoute53ResolverRule_trailingDotDomainName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					atest.CheckAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -175,9 +178,9 @@ func TestAccAWSRoute53ResolverRule_tags(t *testing.T) {
 	resourceName := "aws_route53_resolver_rule.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53resolver.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -228,9 +231,9 @@ func TestAccAWSRoute53ResolverRule_updateName(t *testing.T) {
 	name2 := fmt.Sprintf("terraform-testacc-r53-resolver-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53resolver.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -269,9 +272,9 @@ func TestAccAWSRoute53ResolverRule_forward(t *testing.T) {
 	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53resolver.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -345,9 +348,9 @@ func TestAccAWSRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53resolver.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -404,7 +407,7 @@ func testAccCheckRoute53ResolverRulesDifferent(before, after *route53resolver.Re
 }
 
 func testAccCheckRoute53ResolverRuleDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).Route53ResolverConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_rule" {
@@ -416,7 +419,7 @@ func testAccCheckRoute53ResolverRuleDestroy(s *terraform.State) error {
 			ResolverRuleId: aws.String(rs.Primary.ID),
 		})
 		// Verify the error is what we want
-		if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 		if err != nil {
@@ -438,7 +441,7 @@ func testAccCheckRoute53ResolverRuleExists(n string, rule *route53resolver.Resol
 			return fmt.Errorf("No Route 53 Resolver rule ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).Route53ResolverConn
 		res, err := conn.GetResolverRule(&route53resolver.GetResolverRuleInput{
 			ResolverRuleId: aws.String(rs.Primary.ID),
 		})
