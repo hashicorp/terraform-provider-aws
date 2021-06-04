@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSDefaultSubnet_basic(t *testing.T) {
@@ -18,9 +19,9 @@ func TestAccAWSDefaultSubnet_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDefaultSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -37,7 +38,7 @@ func TestAccAWSDefaultSubnet_basic(t *testing.T) {
 						resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(
 						resourceName, "tags.Name", fmt.Sprintf("terraform-testacc-default-subnet-%d", rInt)),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					atest.CheckAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 		},
@@ -52,9 +53,9 @@ func TestAccAWSDefaultSubnet_publicIp(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDefaultSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -99,7 +100,7 @@ func testAccCheckAWSDefaultSubnetDestroy(s *terraform.State) error {
 }
 
 func testAccAWSDefaultSubnetConfigBasic(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_default_subnet" "foo" {
   availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -111,7 +112,7 @@ resource "aws_default_subnet" "foo" {
 }
 
 func testAccAWSDefaultSubnetConfigPublicIp(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_default_subnet" "foo" {
   availability_zone       = data.aws_availability_zones.available.names[1]
   map_public_ip_on_launch = true
@@ -124,7 +125,7 @@ resource "aws_default_subnet" "foo" {
 }
 
 func testAccAWSDefaultSubnetConfigNoPublicIp(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_default_subnet" "foo" {
   availability_zone       = data.aws_availability_zones.available.names[1]
   map_public_ip_on_launch = false
