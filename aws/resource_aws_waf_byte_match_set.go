@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsWafByteMatchSet() *schema.Resource {
@@ -77,7 +79,7 @@ func resourceAwsWafByteMatchSet() *schema.Resource {
 }
 
 func resourceAwsWafByteMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*awsprovider.AWSClient).WAFConn
 
 	log.Printf("[INFO] Creating ByteMatchSet: %s", d.Get("name").(string))
 
@@ -100,7 +102,7 @@ func resourceAwsWafByteMatchSetCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsWafByteMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*awsprovider.AWSClient).WAFConn
 	log.Printf("[INFO] Reading ByteMatchSet: %s", d.Get("name").(string))
 	params := &waf.GetByteMatchSetInput{
 		ByteMatchSetId: aws.String(d.Id()),
@@ -108,7 +110,7 @@ func resourceAwsWafByteMatchSetRead(d *schema.ResourceData, meta interface{}) er
 
 	resp, err := conn.GetByteMatchSet(params)
 	if err != nil {
-		if isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
 			log.Printf("[WARN] WAF IPSet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -124,7 +126,7 @@ func resourceAwsWafByteMatchSetRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsWafByteMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*awsprovider.AWSClient).WAFConn
 
 	log.Printf("[INFO] Updating ByteMatchSet: %s", d.Get("name").(string))
 
@@ -141,7 +143,7 @@ func resourceAwsWafByteMatchSetUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsWafByteMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*awsprovider.AWSClient).WAFConn
 
 	oldTuples := d.Get("byte_match_tuples").(*schema.Set).List()
 	if len(oldTuples) > 0 {
