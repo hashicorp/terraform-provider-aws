@@ -5,23 +5,24 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSRedshiftServiceAccount_basic(t *testing.T) {
-	expectedAccountID := redshiftServiceAccountPerRegionMap[testAccGetRegion()]
+	expectedAccountID := redshiftServiceAccountPerRegionMap[atest.Region()]
 
 	dataSourceName := "data.aws_redshift_service_account.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, redshift.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsRedshiftServiceAccountConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
-					testAccCheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "user/logs"),
+					atest.CheckAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "user/logs"),
 				),
 			},
 		},
@@ -29,20 +30,20 @@ func TestAccAWSRedshiftServiceAccount_basic(t *testing.T) {
 }
 
 func TestAccAWSRedshiftServiceAccount_Region(t *testing.T) {
-	expectedAccountID := redshiftServiceAccountPerRegionMap[testAccGetRegion()]
+	expectedAccountID := redshiftServiceAccountPerRegionMap[atest.Region()]
 
 	dataSourceName := "data.aws_redshift_service_account.regional"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, redshift.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsRedshiftServiceAccountExplicitRegionConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
-					testAccCheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "user/logs"),
+					atest.CheckAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "user/logs"),
 				),
 			},
 		},
