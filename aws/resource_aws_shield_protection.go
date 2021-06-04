@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/shield"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsShieldProtection() *schema.Resource {
@@ -34,7 +36,7 @@ func resourceAwsShieldProtection() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
@@ -44,7 +46,7 @@ func resourceAwsShieldProtection() *schema.Resource {
 }
 
 func resourceAwsShieldProtectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).shieldconn
+	conn := meta.(*awsprovider.AWSClient).ShieldConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -57,9 +59,9 @@ func resourceAwsShieldProtectionUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsShieldProtectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).shieldconn
+	conn := meta.(*awsprovider.AWSClient).ShieldConn
 
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &shield.CreateProtectionInput{
@@ -77,9 +79,9 @@ func resourceAwsShieldProtectionCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsShieldProtectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).shieldconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ShieldConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &shield.DescribeProtectionInput{
 		ProtectionId: aws.String(d.Id()),
@@ -87,7 +89,7 @@ func resourceAwsShieldProtectionRead(d *schema.ResourceData, meta interface{}) e
 
 	resp, err := conn.DescribeProtection(input)
 
-	if isAWSErr(err, shield.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, shield.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Shield Protection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -123,7 +125,7 @@ func resourceAwsShieldProtectionRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsShieldProtectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).shieldconn
+	conn := meta.(*awsprovider.AWSClient).ShieldConn
 
 	input := &shield.DeleteProtectionInput{
 		ProtectionId: aws.String(d.Id()),
@@ -131,7 +133,7 @@ func resourceAwsShieldProtectionDelete(d *schema.ResourceData, meta interface{})
 
 	_, err := conn.DeleteProtection(input)
 
-	if isAWSErr(err, shield.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, shield.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
