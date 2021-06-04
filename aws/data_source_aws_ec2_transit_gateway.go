@@ -8,7 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsEc2TransitGateway() *schema.Resource {
@@ -48,7 +49,7 @@ func dataSourceAwsEc2TransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": dataSourceFiltersSchema(),
+			"filter": awsprovider.DataSourceFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -72,13 +73,13 @@ func dataSourceAwsEc2TransitGateway() *schema.Resource {
 }
 
 func dataSourceAwsEc2TransitGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewaysInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
+		input.Filters = awsprovider.BuildDataSourceFilters(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("id"); ok {
