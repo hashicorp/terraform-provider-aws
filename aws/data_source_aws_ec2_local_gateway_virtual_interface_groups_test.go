@@ -7,15 +7,16 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroups_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface_groups.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroupsConfig(),
@@ -32,9 +33,9 @@ func TestAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroups_Filter(t *testing
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface_groups.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroupsConfigFilter(),
@@ -52,9 +53,9 @@ func TestAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroups_Tags(t *testing.T
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface_groups.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroupsConfigTags(rName),
