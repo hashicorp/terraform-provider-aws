@@ -14,7 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsElasticacheParameterGroup() *schema.Resource {
@@ -75,8 +76,8 @@ func resourceAwsElasticacheParameterGroup() *schema.Resource {
 }
 
 func resourceAwsElasticacheParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := elasticache.CreateCacheParameterGroupInput{
@@ -100,9 +101,9 @@ func resourceAwsElasticacheParameterGroupCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsElasticacheParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	describeOpts := elasticache.DescribeCacheParameterGroupsInput{
 		CacheParameterGroupName: aws.String(d.Id()),
@@ -157,7 +158,7 @@ func resourceAwsElasticacheParameterGroupRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -286,7 +287,7 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsElasticacheParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
 
 	deleteOpts := elasticache.DeleteCacheParameterGroupInput{
 		CacheParameterGroupName: aws.String(d.Id()),
@@ -308,7 +309,7 @@ func resourceAwsElasticacheParameterGroupDelete(d *schema.ResourceData, meta int
 	if isResourceTimeoutError(err) {
 		_, err = conn.DeleteCacheParameterGroup(&deleteOpts)
 	}
-	if isAWSErr(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault, "") {
 		return nil
 	}
 
