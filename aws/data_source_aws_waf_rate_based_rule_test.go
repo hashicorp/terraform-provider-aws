@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsWafRateBasedRule_basic(t *testing.T) {
@@ -16,9 +17,9 @@ func TestAccDataSourceAwsWafRateBasedRule_basic(t *testing.T) {
 	datasourceName := "data.aws_waf_rate_based_rule.wafrule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(waf.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, waf.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); atest.PreCheckPartitionService(waf.EndpointsID, t) },
+		ErrorCheck: atest.ErrorCheck(t, waf.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsWafRateBasedRuleConfig_NonExistent,
