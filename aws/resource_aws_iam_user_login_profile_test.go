@@ -11,10 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/vault/helper/pgpkeys"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestGenerateIAMPassword(t *testing.T) {
@@ -65,9 +68,9 @@ func TestAccAWSUserLoginProfile_basic(t *testing.T) {
 	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -104,9 +107,9 @@ func TestAccAWSUserLoginProfile_keybase(t *testing.T) {
 	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -140,9 +143,9 @@ func TestAccAWSUserLoginProfile_keybaseDoesntExist(t *testing.T) {
 	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -158,9 +161,9 @@ func TestAccAWSUserLoginProfile_notAKey(t *testing.T) {
 	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -178,9 +181,9 @@ func TestAccAWSUserLoginProfile_PasswordLength(t *testing.T) {
 	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -207,18 +210,18 @@ func TestAccAWSUserLoginProfile_PasswordLength(t *testing.T) {
 }
 
 func testAccCheckAWSUserLoginProfileDestroy(s *terraform.State) error {
-	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+	IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_user_login_profile" {
 			continue
 		}
 
-		_, err := iamconn.GetLoginProfile(&iam.GetLoginProfileInput{
+		_, err := IAMConn.GetLoginProfile(&iam.GetLoginProfileInput{
 			UserName: aws.String(rs.Primary.ID),
 		})
 
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
 		}
 
@@ -257,7 +260,7 @@ func testDecryptPasswordAndTest(nProfile, nAccessKey, key string) resource.TestC
 		}
 
 		iamAsCreatedUserSession := session.New(&aws.Config{
-			Region:      aws.String(testAccGetRegion()),
+			Region:      aws.String(atest.Region()),
 			Credentials: credentials.NewStaticCredentials(accessKeyId, secretAccessKey, ""),
 		})
 		_, err = iamAsCreatedUserSession.Config.Credentials.Get()
@@ -277,10 +280,10 @@ func testDecryptPasswordAndTest(nProfile, nAccessKey, key string) resource.TestC
 			})
 			if err != nil {
 				// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
-				if isAWSErr(err, iam.ErrCodeEntityTemporarilyUnmodifiableException, "") {
+				if tfawserr.ErrMessageContains(err, iam.ErrCodeEntityTemporarilyUnmodifiableException, "") {
 					return resource.RetryableError(err)
 				}
-				if isAWSErr(err, "InvalidClientTokenId", "") {
+				if tfawserr.ErrMessageContains(err, "InvalidClientTokenId", "") {
 					return resource.RetryableError(err)
 				}
 
@@ -303,8 +306,8 @@ func testAccCheckAWSUserLoginProfileExists(n string, res *iam.GetLoginProfileOut
 			return errors.New("No UserName is set")
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
-		resp, err := iamconn.GetLoginProfile(&iam.GetLoginProfileInput{
+		IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
+		resp, err := IAMConn.GetLoginProfile(&iam.GetLoginProfileInput{
 			UserName: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
