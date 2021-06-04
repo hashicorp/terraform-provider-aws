@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsEcsContainerDefinition() *schema.Resource {
@@ -63,7 +64,7 @@ func dataSourceAwsEcsContainerDefinition() *schema.Resource {
 }
 
 func dataSourceAwsEcsContainerDefinitionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
+	conn := meta.(*awsprovider.AWSClient).ECSConn
 
 	params := &ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(d.Get("task_definition").(string)),
