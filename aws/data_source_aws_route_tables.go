@@ -7,7 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsRouteTables() *schema.Resource {
@@ -35,12 +36,12 @@ func dataSourceAwsRouteTables() *schema.Resource {
 }
 
 func dataSourceAwsRouteTablesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	req := &ec2.DescribeRouteTablesInput{}
 
 	if v, ok := d.GetOk("vpc_id"); ok {
-		req.Filters = buildEC2AttributeFilterList(
+		req.Filters = BuildEC2AttributeFilterList(
 			map[string]string{
 				"vpc-id": v.(string),
 			},
@@ -71,7 +72,7 @@ func dataSourceAwsRouteTablesRead(d *schema.ResourceData, meta interface{}) erro
 		routeTables = append(routeTables, aws.StringValue(routeTable.RouteTableId))
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*awsprovider.AWSClient).Region)
 
 	if err = d.Set("ids", routeTables); err != nil {
 		return fmt.Errorf("error setting ids: %w", err)
