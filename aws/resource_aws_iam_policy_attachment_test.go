@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSIAMPolicyAttachment_basic(t *testing.T) {
@@ -28,9 +30,9 @@ func TestAccAWSIAMPolicyAttachment_basic(t *testing.T) {
 	attachmentName := fmt.Sprintf("tf-acc-attachment-pa-basic-%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -64,9 +66,9 @@ func TestAccAWSIAMPolicyAttachment_paginatedEntities(t *testing.T) {
 	attachmentName := fmt.Sprintf("tf-acc-attachment-pa-pe-%s-", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -88,9 +90,9 @@ func TestAccAWSIAMPolicyAttachment_Groups_RenamedGroup(t *testing.T) {
 	resourceName := "aws_iam_policy_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -120,9 +122,9 @@ func TestAccAWSIAMPolicyAttachment_Roles_RenamedRole(t *testing.T) {
 	resourceName := "aws_iam_policy_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -152,9 +154,9 @@ func TestAccAWSIAMPolicyAttachment_Users_RenamedUser(t *testing.T) {
 	resourceName := "aws_iam_policy_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -190,7 +192,7 @@ func testAccCheckAWSPolicyAttachmentExists(n string, c int64, out *iam.ListEntit
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iamconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 		arn := rs.Primary.Attributes["policy_arn"]
 
 		resp, err := conn.GetPolicy(&iam.GetPolicyInput{
