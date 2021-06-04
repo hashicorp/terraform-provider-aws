@@ -48,6 +48,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/mitchellh/copystructure"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 	"gopkg.in/yaml.v2"
 )
 
@@ -2281,7 +2282,7 @@ func normalizeJsonOrYamlString(templateString interface{}) (string, error) {
 	return checkYamlString(templateString)
 }
 
-func buildApiGatewayInvokeURL(client *AWSClient, restApiId, stageName string) string {
+func buildApiGatewayInvokeURL(client *awsprovider.AWSClient, restApiId, stageName string) string {
 	hostname := client.RegionalHostname(fmt.Sprintf("%s.execute-api", restApiId))
 	return fmt.Sprintf("https://%s/%s", hostname, stageName)
 }
