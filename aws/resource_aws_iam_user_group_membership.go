@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsIamUserGroupMembership() *schema.Resource {
@@ -41,7 +42,7 @@ func resourceAwsIamUserGroupMembership() *schema.Resource {
 }
 
 func resourceAwsIamUserGroupMembershipCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*awsprovider.AWSClient).IAMConn
 
 	user := d.Get("user").(string)
 	groupList := expandStringSet(d.Get("groups").(*schema.Set))
@@ -57,7 +58,7 @@ func resourceAwsIamUserGroupMembershipCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsIamUserGroupMembershipRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*awsprovider.AWSClient).IAMConn
 
 	user := d.Get("user").(string)
 	groups := d.Get("groups").(*schema.Set)
@@ -128,7 +129,7 @@ func resourceAwsIamUserGroupMembershipRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsIamUserGroupMembershipUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*awsprovider.AWSClient).IAMConn
 
 	if d.HasChange("groups") {
 		user := d.Get("user").(string)
@@ -159,7 +160,7 @@ func resourceAwsIamUserGroupMembershipUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsIamUserGroupMembershipDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*awsprovider.AWSClient).IAMConn
 	user := d.Get("user").(string)
 	groups := expandStringSet(d.Get("groups").(*schema.Set))
 
@@ -174,7 +175,7 @@ func removeUserFromGroups(conn *iam.IAM, user string, groups []*string) error {
 			GroupName: group,
 		})
 		if err != nil {
-			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 				continue
 			}
 			return err
