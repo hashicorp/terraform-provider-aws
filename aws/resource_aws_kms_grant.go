@@ -10,10 +10,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsKmsGrant() *schema.Resource {
@@ -53,7 +55,7 @@ func resourceAwsKmsGrant() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"operations": {
 				Type: schema.TypeSet,
@@ -93,7 +95,7 @@ func resourceAwsKmsGrant() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"grant_creation_tokens": {
 				Type:     schema.TypeSet,
@@ -120,7 +122,7 @@ func resourceAwsKmsGrant() *schema.Resource {
 }
 
 func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*awsprovider.AWSClient).KMSConn
 	keyId := d.Get("key_id").(string)
 
 	input := kms.CreateGrantInput{
@@ -155,9 +157,9 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 			// Error Codes: https://docs.aws.amazon.com/sdk-for-go/api/service/kms/#KMS.CreateGrant
 			// Under some circumstances a newly created IAM Role doesn't show up and causes
 			// an InvalidArnException to be thrown.
-			if isAWSErr(err, kms.ErrCodeDependencyTimeoutException, "") ||
-				isAWSErr(err, kms.ErrCodeInternalException, "") ||
-				isAWSErr(err, kms.ErrCodeInvalidArnException, "") {
+			if tfawserr.ErrMessageContains(err, kms.ErrCodeDependencyTimeoutException, "") ||
+				tfawserr.ErrMessageContains(err, kms.ErrCodeInternalException, "") ||
+				tfawserr.ErrMessageContains(err, kms.ErrCodeInvalidArnException, "") {
 				return resource.RetryableError(
 					fmt.Errorf("error creating KMS Grant for Key (%s), retrying: %w", keyId, err))
 			}
@@ -182,7 +184,7 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsKmsGrantRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*awsprovider.AWSClient).KMSConn
 
 	keyId, grantId, err := decodeKmsGrantId(d.Id())
 	if err != nil {
@@ -242,7 +244,7 @@ func resourceAwsKmsGrantRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsKmsGrantDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*awsprovider.AWSClient).KMSConn
 
 	keyId, grantId, decodeErr := decodeKmsGrantId(d.Id())
 	if decodeErr != nil {
@@ -270,7 +272,7 @@ func resourceAwsKmsGrantDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, kms.ErrCodeNotFoundException, "") {
 			return nil
 		}
 		return err
@@ -371,9 +373,9 @@ func findKmsGrantById(conn *kms.KMS, keyId string, grantId string, marker *strin
 		out, err = conn.ListGrants(&input)
 
 		if err != nil {
-			if isAWSErr(err, kms.ErrCodeDependencyTimeoutException, "") ||
-				isAWSErr(err, kms.ErrCodeInternalException, "") ||
-				isAWSErr(err, kms.ErrCodeInvalidArnException, "") {
+			if tfawserr.ErrMessageContains(err, kms.ErrCodeDependencyTimeoutException, "") ||
+				tfawserr.ErrMessageContains(err, kms.ErrCodeInternalException, "") ||
+				tfawserr.ErrMessageContains(err, kms.ErrCodeInvalidArnException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
