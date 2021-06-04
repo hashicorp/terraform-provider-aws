@@ -10,9 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 var snsPlatformRequiresPlatformPrincipal = map[string]bool{
@@ -92,7 +94,7 @@ func resourceAwsSnsPlatformApplication() *schema.Resource {
 }
 
 func resourceAwsSnsPlatformApplicationCreate(d *schema.ResourceData, meta interface{}) error {
-	snsconn := meta.(*AWSClient).snsconn
+	SNSConn := meta.(*awsprovider.AWSClient).SNSConn
 
 	attributes := make(map[string]*string)
 	name := d.Get("name").(string)
@@ -111,7 +113,7 @@ func resourceAwsSnsPlatformApplicationCreate(d *schema.ResourceData, meta interf
 
 	log.Printf("[DEBUG] SNS create application: %s", req)
 
-	output, err := snsconn.CreatePlatformApplication(req)
+	output, err := SNSConn.CreatePlatformApplication(req)
 	if err != nil {
 		return fmt.Errorf("Error creating SNS platform application: %s", err)
 	}
@@ -122,7 +124,7 @@ func resourceAwsSnsPlatformApplicationCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsSnsPlatformApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
-	snsconn := meta.(*AWSClient).snsconn
+	SNSConn := meta.(*awsprovider.AWSClient).SNSConn
 
 	attributes := make(map[string]*string)
 
@@ -181,9 +183,9 @@ func resourceAwsSnsPlatformApplicationUpdate(d *schema.ResourceData, meta interf
 	}
 
 	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
-		_, err := snsconn.SetPlatformApplicationAttributes(req)
+		_, err := SNSConn.SetPlatformApplicationAttributes(req)
 		if err != nil {
-			if isAWSErr(err, sns.ErrCodeInvalidParameterException, "is not a valid role to allow SNS to write to Cloudwatch Logs") {
+			if tfawserr.ErrMessageContains(err, sns.ErrCodeInvalidParameterException, "is not a valid role to allow SNS to write to Cloudwatch Logs") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -191,7 +193,7 @@ func resourceAwsSnsPlatformApplicationUpdate(d *schema.ResourceData, meta interf
 		return nil
 	})
 	if isResourceTimeoutError(err) {
-		_, err = snsconn.SetPlatformApplicationAttributes(req)
+		_, err = SNSConn.SetPlatformApplicationAttributes(req)
 	}
 
 	if err != nil {
@@ -202,13 +204,13 @@ func resourceAwsSnsPlatformApplicationUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsSnsPlatformApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	snsconn := meta.(*AWSClient).snsconn
+	SNSConn := meta.(*awsprovider.AWSClient).SNSConn
 
 	// There is no SNS Describe/GetPlatformApplication to fetch attributes like name and platform
 	// We will use the ID, which should be a platform application ARN, to:
 	//  * Validate its an appropriate ARN on import
 	//  * Parse out the name and platform
-	arn, name, platform, err := decodeResourceAwsSnsPlatformApplicationID(d.Id())
+	arn, name, platform, err := decoderesourceAwsSnsPlatformApplicationID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -221,9 +223,9 @@ func resourceAwsSnsPlatformApplicationRead(d *schema.ResourceData, meta interfac
 		PlatformApplicationArn: aws.String(arn),
 	}
 
-	output, err := snsconn.GetPlatformApplicationAttributes(input)
+	output, err := SNSConn.GetPlatformApplicationAttributes(input)
 
-	if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] SNS Platform Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -273,16 +275,16 @@ func resourceAwsSnsPlatformApplicationRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsSnsPlatformApplicationDelete(d *schema.ResourceData, meta interface{}) error {
-	snsconn := meta.(*AWSClient).snsconn
+	SNSConn := meta.(*awsprovider.AWSClient).SNSConn
 
 	log.Printf("[DEBUG] SNS Delete Application: %s", d.Id())
-	_, err := snsconn.DeletePlatformApplication(&sns.DeletePlatformApplicationInput{
+	_, err := SNSConn.DeletePlatformApplication(&sns.DeletePlatformApplicationInput{
 		PlatformApplicationArn: aws.String(d.Id()),
 	})
 	return err
 }
 
-func decodeResourceAwsSnsPlatformApplicationID(input string) (arnS, name, platform string, err error) {
+func decoderesourceAwsSnsPlatformApplicationID(input string) (arnS, name, platform string, err error) {
 	platformApplicationArn, err := arn.Parse(input)
 	if err != nil {
 		err = fmt.Errorf(
