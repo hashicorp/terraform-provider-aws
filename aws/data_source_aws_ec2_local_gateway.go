@@ -7,7 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsEc2LocalGateway() *schema.Resource {
@@ -45,8 +46,8 @@ func dataSourceAwsEc2LocalGateway() *schema.Resource {
 }
 
 func dataSourceAwsEc2LocalGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeLocalGatewaysInput{}
 
@@ -54,7 +55,7 @@ func dataSourceAwsEc2LocalGatewayRead(d *schema.ResourceData, meta interface{}) 
 		req.LocalGatewayIds = []*string{aws.String(v.(string))}
 	}
 
-	req.Filters = buildEC2AttributeFilterList(
+	req.Filters = BuildEC2AttributeFilterList(
 		map[string]string{
 			"state": d.Get("state").(string),
 		},
