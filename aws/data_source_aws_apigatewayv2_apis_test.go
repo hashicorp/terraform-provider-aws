@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSAPIGatewayV2ApisDataSource_Name(t *testing.T) {
@@ -16,9 +17,9 @@ func TestAccAWSAPIGatewayV2ApisDataSource_Name(t *testing.T) {
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -39,9 +40,9 @@ func TestAccAWSAPIGatewayV2ApisDataSource_ProtocolType(t *testing.T) {
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -63,9 +64,9 @@ func TestAccAWSAPIGatewayV2ApisDataSource_Tags(t *testing.T) {
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -113,7 +114,7 @@ resource "aws_apigatewayv2_api" "test3" {
 }
 
 func testAccAWSAPIGatewayV2ApisDataSourceConfigName(rName1, rName2 string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2ApisDataSourceConfigBase(rName1, rName2),
 		`
 data "aws_apigatewayv2_apis" "test1" {
@@ -129,7 +130,7 @@ data "aws_apigatewayv2_apis" "test2" {
 }
 
 func testAccAWSAPIGatewayV2ApisDataSourceConfigProtocolType(rName1, rName2 string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2ApisDataSourceConfigBase(rName1, rName2),
 		fmt.Sprintf(`
 data "aws_apigatewayv2_apis" "test1" {
@@ -147,7 +148,7 @@ data "aws_apigatewayv2_apis" "test2" {
 }
 
 func testAccAWSAPIGatewayV2ApisDataSourceConfigTags(rName1, rName2 string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2ApisDataSourceConfigBase(rName1, rName2),
 		`
 data "aws_apigatewayv2_apis" "test1" {
