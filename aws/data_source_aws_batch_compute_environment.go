@@ -7,7 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsBatchComputeEnvironment() *schema.Resource {
@@ -61,8 +62,8 @@ func dataSourceAwsBatchComputeEnvironment() *schema.Resource {
 }
 
 func dataSourceAwsBatchComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).batchconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).BatchConn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	params := &batch.DescribeComputeEnvironmentsInput{
 		ComputeEnvironments: []*string{aws.String(d.Get("compute_environment_name").(string))},
