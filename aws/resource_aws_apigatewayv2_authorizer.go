@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apigatewayv2/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsApiGatewayV2Authorizer() *schema.Resource {
@@ -31,7 +33,7 @@ func resourceAwsApiGatewayV2Authorizer() *schema.Resource {
 			"authorizer_credentials_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"authorizer_payload_format_version": {
 				Type:         schema.TypeString,
@@ -92,7 +94,7 @@ func resourceAwsApiGatewayV2Authorizer() *schema.Resource {
 }
 
 func resourceAwsApiGatewayV2AuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	apiId := d.Get("api_id").(string)
 	authorizerType := d.Get("authorizer_type").(string)
@@ -146,13 +148,13 @@ func resourceAwsApiGatewayV2AuthorizerCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsApiGatewayV2AuthorizerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetAuthorizer(&apigatewayv2.GetAuthorizerInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
 		AuthorizerId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway v2 authorizer (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -179,7 +181,7 @@ func resourceAwsApiGatewayV2AuthorizerRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsApiGatewayV2AuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.UpdateAuthorizerInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
@@ -223,14 +225,14 @@ func resourceAwsApiGatewayV2AuthorizerUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsApiGatewayV2AuthorizerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 authorizer (%s)", d.Id())
 	_, err := conn.DeleteAuthorizer(&apigatewayv2.DeleteAuthorizerInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
 		AuthorizerId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
