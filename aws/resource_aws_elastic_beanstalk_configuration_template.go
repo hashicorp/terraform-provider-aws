@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsElasticBeanstalkConfigurationTemplate() *schema.Resource {
@@ -55,7 +56,7 @@ func resourceAwsElasticBeanstalkConfigurationTemplate() *schema.Resource {
 }
 
 func resourceAwsElasticBeanstalkConfigurationTemplateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticbeanstalkconn
+	conn := meta.(*awsprovider.AWSClient).ElasticBeanstalkConn
 
 	// Get the relevant properties
 	name := d.Get("name").(string)
@@ -92,7 +93,7 @@ func resourceAwsElasticBeanstalkConfigurationTemplateCreate(d *schema.ResourceDa
 }
 
 func resourceAwsElasticBeanstalkConfigurationTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticbeanstalkconn
+	conn := meta.(*awsprovider.AWSClient).ElasticBeanstalkConn
 
 	log.Printf("[DEBUG] Elastic Beanstalk configuration template read: %s", d.Get("name").(string))
 
@@ -126,7 +127,7 @@ func resourceAwsElasticBeanstalkConfigurationTemplateRead(d *schema.ResourceData
 }
 
 func resourceAwsElasticBeanstalkConfigurationTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticbeanstalkconn
+	conn := meta.(*awsprovider.AWSClient).ElasticBeanstalkConn
 
 	log.Printf("[DEBUG] Elastic Beanstalk configuration template update: %s", d.Get("name").(string))
 
@@ -221,7 +222,7 @@ func resourceAwsElasticBeanstalkConfigurationTemplateOptionSettingsUpdate(conn *
 }
 
 func resourceAwsElasticBeanstalkConfigurationTemplateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticbeanstalkconn
+	conn := meta.(*awsprovider.AWSClient).ElasticBeanstalkConn
 
 	application := d.Get("application").(string)
 
