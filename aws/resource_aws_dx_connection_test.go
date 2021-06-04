@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -21,13 +23,13 @@ func init() {
 }
 
 func testSweepDxConnections(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).dxconn
+	conn := client.(*awsprovider.AWSClient).DirectConnectConn
 
 	var sweeperErrs *multierror.Error
 
@@ -36,7 +38,7 @@ func testSweepDxConnections(region string) error {
 	// DescribeConnections has no pagination support
 	output, err := conn.DescribeConnections(input)
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Direct Connect Connection sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -82,9 +84,9 @@ func TestAccAWSDxConnection_basic(t *testing.T) {
 	resourceName := "aws_dx_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, directconnect.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsDxConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -111,9 +113,9 @@ func TestAccAWSDxConnection_tags(t *testing.T) {
 	resourceName := "aws_dx_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, directconnect.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsDxConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -144,7 +146,7 @@ func TestAccAWSDxConnection_tags(t *testing.T) {
 }
 
 func testAccCheckAwsDxConnectionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).dxconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).DirectConnectConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dx_connection" {
