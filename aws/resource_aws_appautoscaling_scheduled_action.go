@@ -15,6 +15,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/experimental/nullable"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/applicationautoscaling/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
@@ -104,7 +105,7 @@ func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 }
 
 func resourceAwsAppautoscalingScheduledActionPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appautoscalingconn
+	conn := meta.(*awsprovider.AWSClient).ApplicationAutoScalingConn
 
 	input := &applicationautoscaling.PutScheduledActionInput{
 		ScheduledActionName: aws.String(d.Get("name").(string)),
@@ -198,7 +199,7 @@ func appautoscalingScheduledActionPopulateInputForUpdate(input *applicationautos
 }
 
 func resourceAwsAppautoscalingScheduledActionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appautoscalingconn
+	conn := meta.(*awsprovider.AWSClient).ApplicationAutoScalingConn
 
 	scheduledAction, err := finder.ScheduledAction(conn, d.Get("name").(string), d.Get("service_namespace").(string), d.Get("resource_id").(string))
 	if tfresource.NotFound(err) {
@@ -228,7 +229,7 @@ func resourceAwsAppautoscalingScheduledActionRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsAppautoscalingScheduledActionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appautoscalingconn
+	conn := meta.(*awsprovider.AWSClient).ApplicationAutoScalingConn
 
 	input := &applicationautoscaling.DeleteScheduledActionInput{
 		ScheduledActionName: aws.String(d.Get("name").(string)),
