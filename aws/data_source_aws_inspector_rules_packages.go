@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsInspectorRulesPackages() *schema.Resource {
@@ -25,7 +26,7 @@ func dataSourceAwsInspectorRulesPackages() *schema.Resource {
 }
 
 func dataSourceAwsInspectorRulesPackagesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).inspectorconn
+	conn := meta.(*awsprovider.AWSClient).InspectorConn
 
 	log.Printf("[DEBUG] Reading Rules Packages.")
 
@@ -47,7 +48,7 @@ func dataSourceAwsInspectorRulesPackagesRead(d *schema.ResourceData, meta interf
 		return errors.New("No rules packages found.")
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*awsprovider.AWSClient).Region)
 
 	sort.Strings(arns)
 	d.Set("arns", arns)
