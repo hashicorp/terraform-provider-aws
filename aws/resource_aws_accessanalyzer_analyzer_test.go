@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // This test can be run via the pattern: TestAccAWSAccessAnalyzer
@@ -19,9 +22,9 @@ func testAccAWSAccessAnalyzerAnalyzer_basic(t *testing.T) {
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAccessAnalyzer(t) },
-		ErrorCheck:   testAccErrorCheck(t, accessanalyzer.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSAccessAnalyzer(t) },
+		ErrorCheck:   atest.ErrorCheck(t, accessanalyzer.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAccessAnalyzerAnalyzerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -29,7 +32,7 @@ func testAccAWSAccessAnalyzerAnalyzer_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAccessAnalyzerAnalyzerExists(resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "analyzer_name", rName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "access-analyzer", fmt.Sprintf("analyzer/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "access-analyzer", fmt.Sprintf("analyzer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", accessanalyzer.TypeAccount),
 				),
@@ -51,9 +54,9 @@ func testAccAWSAccessAnalyzerAnalyzer_disappears(t *testing.T) {
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAccessAnalyzer(t) },
-		ErrorCheck:   testAccErrorCheck(t, accessanalyzer.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSAccessAnalyzer(t) },
+		ErrorCheck:   atest.ErrorCheck(t, accessanalyzer.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAccessAnalyzerAnalyzerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -76,9 +79,9 @@ func testAccAWSAccessAnalyzerAnalyzer_Tags(t *testing.T) {
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAccessAnalyzer(t) },
-		ErrorCheck:   testAccErrorCheck(t, accessanalyzer.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSAccessAnalyzer(t) },
+		ErrorCheck:   atest.ErrorCheck(t, accessanalyzer.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAccessAnalyzerAnalyzerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -124,12 +127,12 @@ func testAccAWSAccessAnalyzerAnalyzer_Type_Organization(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSAccessAnalyzer(t)
-			testAccOrganizationsAccountPreCheck(t)
+			atest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, accessanalyzer.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, accessanalyzer.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAccessAnalyzerAnalyzerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -149,7 +152,7 @@ func testAccAWSAccessAnalyzerAnalyzer_Type_Organization(t *testing.T) {
 }
 
 func testAccCheckAccessAnalyzerAnalyzerDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).accessanalyzerconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).AccessAnalyzerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_accessanalyzer_analyzer" {
@@ -162,7 +165,7 @@ func testAccCheckAccessAnalyzerAnalyzerDestroy(s *terraform.State) error {
 
 		output, err := conn.GetAnalyzer(input)
 
-		if isAWSErr(err, accessanalyzer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, accessanalyzer.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 
@@ -181,7 +184,7 @@ func testAccCheckAccessAnalyzerAnalyzerDestroy(s *terraform.State) error {
 
 func testAccCheckAwsAccessAnalyzerAnalyzerDisappears(analyzer *accessanalyzer.AnalyzerSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).accessanalyzerconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AccessAnalyzerConn
 
 		input := &accessanalyzer.DeleteAnalyzerInput{
 			AnalyzerName: analyzer.Name,
@@ -204,7 +207,7 @@ func testAccCheckAwsAccessAnalyzerAnalyzerExists(resourceName string, analyzer *
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).accessanalyzerconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AccessAnalyzerConn
 
 		input := &accessanalyzer.GetAnalyzerInput{
 			AnalyzerName: aws.String(rs.Primary.ID),
