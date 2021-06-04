@@ -305,7 +305,7 @@ function ExampleThingCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 function ExampleThingRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).exampleconn
+	conn := meta.(*awsprovider.AWSClient).exampleconn
 
 	input := &example.OperationInput{/* ... */}
 
