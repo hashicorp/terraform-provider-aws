@@ -8,9 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccAwsOrganizationsPolicyAttachment_Account(t *testing.T) {
@@ -23,9 +26,9 @@ func testAccAwsOrganizationsPolicyAttachment_Account(t *testing.T) {
 	tagPolicyContent := `{ "tags": { "Product": { "tag_key": { "@@assign": "Product" }, "enforced_for": { "@@assign": [ "ec2:instance" ] } } } }`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -60,9 +63,9 @@ func testAccAwsOrganizationsPolicyAttachment_OrganizationalUnit(t *testing.T) {
 	targetIdResourceName := "aws_organizations_organizational_unit.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -89,9 +92,9 @@ func testAccAwsOrganizationsPolicyAttachment_Root(t *testing.T) {
 	targetIdResourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -112,7 +115,7 @@ func testAccAwsOrganizationsPolicyAttachment_Root(t *testing.T) {
 }
 
 func testAccCheckAwsOrganizationsPolicyAttachmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).OrganizationsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_organizations_policy_attachment" {
@@ -141,11 +144,11 @@ func testAccCheckAwsOrganizationsPolicyAttachmentDestroy(s *terraform.State) err
 			return !lastPage
 		})
 
-		if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+		if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
 			continue
 		}
 
-		if isAWSErr(err, organizations.ErrCodeTargetNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, organizations.ErrCodeTargetNotFoundException, "") {
 			continue
 		}
 
@@ -171,7 +174,7 @@ func testAccCheckAwsOrganizationsPolicyAttachmentExists(resourceName string) res
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).OrganizationsConn
 
 		targetID, policyID, err := decodeAwsOrganizationsPolicyAttachmentID(rs.Primary.ID)
 		if err != nil {
