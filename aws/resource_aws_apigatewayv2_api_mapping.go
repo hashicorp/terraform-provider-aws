@@ -7,7 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsApiGatewayV2ApiMapping() *schema.Resource {
@@ -44,7 +46,7 @@ func resourceAwsApiGatewayV2ApiMapping() *schema.Resource {
 }
 
 func resourceAwsApiGatewayV2ApiMappingCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.CreateApiMappingInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
@@ -67,13 +69,13 @@ func resourceAwsApiGatewayV2ApiMappingCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsApiGatewayV2ApiMappingRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetApiMapping(&apigatewayv2.GetApiMappingInput{
 		ApiMappingId: aws.String(d.Id()),
 		DomainName:   aws.String(d.Get("domain_name").(string)),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway v2 API mapping (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -90,7 +92,7 @@ func resourceAwsApiGatewayV2ApiMappingRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsApiGatewayV2ApiMappingUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.UpdateApiMappingInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
@@ -114,14 +116,14 @@ func resourceAwsApiGatewayV2ApiMappingUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsApiGatewayV2ApiMappingDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 API mapping (%s)", d.Id())
 	_, err := conn.DeleteApiMapping(&apigatewayv2.DeleteApiMappingInput{
 		ApiMappingId: aws.String(d.Id()),
 		DomainName:   aws.String(d.Get("domain_name").(string)),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
