@@ -15,7 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/networkfirewall/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -27,18 +29,18 @@ func init() {
 }
 
 func testSweepNetworkFirewallFirewalls(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).networkfirewallconn
+	conn := client.(*awsprovider.AWSClient).NetworkFirewallConn
 	ctx := context.TODO()
 	input := &networkfirewall.ListFirewallsInput{MaxResults: aws.Int64(100)}
 	var sweeperErrs *multierror.Error
 
 	for {
 		resp, err := conn.ListFirewallsWithContext(ctx, input)
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping NetworkFirewall Firewall sweep for %s: %s", region, err)
 			return nil
 		}
@@ -85,16 +87,16 @@ func TestAccAwsNetworkFirewallFirewall_basic(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkFirewallFirewall_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallFirewallExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("firewall/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("firewall/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "firewall_policy_arn", policyResourceName, "arn"),
@@ -127,9 +129,9 @@ func TestAccAwsNetworkFirewallFirewall_description(t *testing.T) {
 	resourceName := "aws_networkfirewall_firewall.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -167,9 +169,9 @@ func TestAccAwsNetworkFirewallFirewall_deleteProtection(t *testing.T) {
 	resourceName := "aws_networkfirewall_firewall.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallDestroy,
 		Steps: []resource.TestStep{
 
@@ -210,9 +212,9 @@ func TestAccAwsNetworkFirewallFirewall_subnetMappings_updateSubnet(t *testing.T)
 	updateSubnetResourceName := "aws_subnet.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallDestroy,
 		Steps: []resource.TestStep{
 
@@ -255,9 +257,9 @@ func TestAccAwsNetworkFirewallFirewall_subnetMappings_updateMultipleSubnets(t *t
 	updateSubnetResourceName := "aws_subnet.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -311,9 +313,9 @@ func TestAccAwsNetworkFirewallFirewall_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_firewall.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -354,16 +356,16 @@ func TestAccAwsNetworkFirewallFirewall_disappears(t *testing.T) {
 	resourceName := "aws_networkfirewall_firewall.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkFirewallFirewall_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallFirewallExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsNetworkFirewallFirewall(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsNetworkFirewallFirewall(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -377,7 +379,7 @@ func testAccCheckAwsNetworkFirewallFirewallDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).networkfirewallconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).NetworkFirewallConn
 		output, err := finder.Firewall(context.Background(), conn, rs.Primary.ID)
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			continue
@@ -404,7 +406,7 @@ func testAccCheckAwsNetworkFirewallFirewallExists(n string) resource.TestCheckFu
 			return fmt.Errorf("No NetworkFirewall Firewall ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).networkfirewallconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).NetworkFirewallConn
 		output, err := finder.Firewall(context.Background(), conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -419,13 +421,13 @@ func testAccCheckAwsNetworkFirewallFirewallExists(n string) resource.TestCheckFu
 }
 
 func testAccPreCheckAwsNetworkFirewall(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).networkfirewallconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).NetworkFirewallConn
 
 	input := &networkfirewall.ListFirewallsInput{}
 
 	_, err := conn.ListFirewalls(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -474,7 +476,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 }
 
 func testAccNetworkFirewallFirewall_basic(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccNetworkFirewallFirewallDependenciesConfig(rName),
 		fmt.Sprintf(`
 resource "aws_networkfirewall_firewall" "test" {
@@ -490,7 +492,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccNetworkFirewallFirewall_deleteProtection(rName string, deleteProtection bool) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccNetworkFirewallFirewallDependenciesConfig(rName),
 		fmt.Sprintf(`
 resource "aws_networkfirewall_firewall" "test" {
@@ -507,7 +509,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccNetworkFirewallFirewall_oneTag(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccNetworkFirewallFirewallDependenciesConfig(rName),
 		fmt.Sprintf(`
 resource "aws_networkfirewall_firewall" "test" {
@@ -525,7 +527,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccNetworkFirewallFirewall_twoTags(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccNetworkFirewallFirewallDependenciesConfig(rName),
 		fmt.Sprintf(`
 resource "aws_networkfirewall_firewall" "test" {
@@ -544,7 +546,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccNetworkFirewallFirewall_updateDescription(rName, description string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccNetworkFirewallFirewallDependenciesConfig(rName),
 		fmt.Sprintf(`
 resource "aws_networkfirewall_firewall" "test" {
@@ -560,7 +562,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccNetworkFirewallFirewall_updateSubnet(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccNetworkFirewallFirewallDependenciesConfig(rName),
 		fmt.Sprintf(`
 resource "aws_subnet" "example" {
@@ -586,7 +588,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccNetworkFirewallFirewall_updateMultipleSubnets(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccNetworkFirewallFirewallDependenciesConfig(rName),
 		fmt.Sprintf(`
 resource "aws_subnet" "example" {
