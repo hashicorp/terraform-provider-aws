@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
@@ -23,9 +25,9 @@ func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 	expectedRoleArn_second := regexp.MustCompile("role/" + secondName + "$")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayAccountDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -33,7 +35,7 @@ func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayAccountExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayAccountCloudwatchRoleArn(&conf, expectedRoleArn_first),
-					testAccMatchResourceAttrGlobalARN(resourceName, "cloudwatch_role_arn", "iam", expectedRoleArn_first),
+					atest.MatchAttrGlobalARN(resourceName, "cloudwatch_role_arn", "iam", expectedRoleArn_first),
 				),
 			},
 			{
@@ -47,7 +49,7 @@ func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayAccountExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayAccountCloudwatchRoleArn(&conf, expectedRoleArn_second),
-					testAccMatchResourceAttrGlobalARN(resourceName, "cloudwatch_role_arn", "iam", expectedRoleArn_second),
+					atest.MatchAttrGlobalARN(resourceName, "cloudwatch_role_arn", "iam", expectedRoleArn_second),
 				),
 			},
 			{
@@ -93,7 +95,7 @@ func testAccCheckAWSAPIGatewayAccountExists(n string, res *apigateway.Account) r
 			return fmt.Errorf("No API Gateway Account ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayConn
 
 		req := &apigateway.GetAccountInput{}
 		describe, err := conn.GetAccount(req)
@@ -118,11 +120,11 @@ func testAccCheckAWSAPIGatewayAccountDestroy(s *terraform.State) error {
 
 // testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn checks whether a CloudWatch role ARN has been configured in the current AWS region.
 func testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayConn
 
 	output, err := conn.GetAccount(&apigateway.GetAccountInput{})
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping tests: %s", err)
 	}
 
