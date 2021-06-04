@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cognitoidentityprovider/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCognitoUserPoolUICustomization() *schema.Resource {
@@ -73,7 +74,7 @@ func resourceAwsCognitoUserPoolUICustomization() *schema.Resource {
 }
 
 func resourceAwsCognitoUserPoolUICustomizationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	clientId := d.Get("client_id").(string)
 	userPoolId := d.Get("user_pool_id").(string)
@@ -108,7 +109,7 @@ func resourceAwsCognitoUserPoolUICustomizationPut(d *schema.ResourceData, meta i
 }
 
 func resourceAwsCognitoUserPoolUICustomizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	userPoolId, clientId, err := parseCognitoUserPoolUICustomizationID(d.Id())
 
@@ -150,7 +151,7 @@ func resourceAwsCognitoUserPoolUICustomizationRead(d *schema.ResourceData, meta 
 }
 
 func resourceAwsCognitoUserPoolUICustomizationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	userPoolId, clientId, err := parseCognitoUserPoolUICustomizationID(d.Id())
 
