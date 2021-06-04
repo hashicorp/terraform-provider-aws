@@ -10,8 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ram/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ram/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsRamPrincipalAssociation_basic(t *testing.T) {
@@ -20,9 +22,9 @@ func TestAccAwsRamPrincipalAssociation_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ram.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ram.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsRamPrincipalAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -46,16 +48,16 @@ func TestAccAwsRamPrincipalAssociation_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ram.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ram.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsRamPrincipalAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsRamPrincipalAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRamPrincipalAssociationExists(resourceName, &association),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRamPrincipalAssociation(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsRamPrincipalAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -65,7 +67,7 @@ func TestAccAwsRamPrincipalAssociation_disappears(t *testing.T) {
 
 func testAccCheckAwsRamPrincipalAssociationExists(resourceName string, resourceShare *ram.ResourceShareAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ramconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).RAMConn
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -110,7 +112,7 @@ func testAccCheckAwsRamPrincipalAssociationExists(resourceName string, resourceS
 }
 
 func testAccCheckAwsRamPrincipalAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ramconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).RAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ram_principal_association" {
