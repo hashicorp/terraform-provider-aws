@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
@@ -31,7 +32,7 @@ func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: ValidateArn,
 				},
 			},
 			"catalog_id": {
@@ -103,7 +104,7 @@ func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 }
 
 func resourceAwsLakeFormationDataLakeSettingsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lakeformationconn
+	conn := meta.(*awsprovider.AWSClient).LakeFormationConn
 
 	input := &lakeformation.PutDataLakeSettingsInput{}
 
@@ -136,10 +137,10 @@ func resourceAwsLakeFormationDataLakeSettingsCreate(d *schema.ResourceData, meta
 		var err error
 		output, err = conn.PutDataLakeSettings(input)
 		if err != nil {
-			if isAWSErr(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
+			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, lakeformation.ErrCodeConcurrentModificationException, "") {
+			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeConcurrentModificationException, "") {
 				return resource.RetryableError(err)
 			}
 
@@ -166,7 +167,7 @@ func resourceAwsLakeFormationDataLakeSettingsCreate(d *schema.ResourceData, meta
 }
 
 func resourceAwsLakeFormationDataLakeSettingsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lakeformationconn
+	conn := meta.(*awsprovider.AWSClient).LakeFormationConn
 
 	input := &lakeformation.GetDataLakeSettingsInput{}
 
@@ -201,7 +202,7 @@ func resourceAwsLakeFormationDataLakeSettingsRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsLakeFormationDataLakeSettingsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lakeformationconn
+	conn := meta.(*awsprovider.AWSClient).LakeFormationConn
 
 	input := &lakeformation.PutDataLakeSettingsInput{
 		DataLakeSettings: &lakeformation.DataLakeSettings{
