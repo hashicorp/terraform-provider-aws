@@ -9,7 +9,8 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsWorkspacesIpGroup() *schema.Resource {
@@ -59,8 +60,8 @@ func resourceAwsWorkspacesIpGroup() *schema.Resource {
 }
 
 func resourceAwsWorkspacesIpGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).workspacesconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).WorkSpacesConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	rules := d.Get("rules").(*schema.Set).List()
@@ -81,9 +82,9 @@ func resourceAwsWorkspacesIpGroupCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsWorkspacesIpGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).workspacesconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).WorkSpacesConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeIpGroups(&workspaces.DescribeIpGroupsInput{
 		GroupIds: []*string{aws.String(d.Id())},
@@ -132,7 +133,7 @@ func resourceAwsWorkspacesIpGroupRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsWorkspacesIpGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).workspacesconn
+	conn := meta.(*awsprovider.AWSClient).WorkSpacesConn
 
 	if d.HasChange("rules") {
 		rules := d.Get("rules").(*schema.Set).List()
@@ -158,7 +159,7 @@ func resourceAwsWorkspacesIpGroupUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsWorkspacesIpGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).workspacesconn
+	conn := meta.(*awsprovider.AWSClient).WorkSpacesConn
 
 	var found bool
 	var sweeperErrs *multierror.Error
