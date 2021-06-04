@@ -7,7 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsTransferSshKey() *schema.Resource {
@@ -49,7 +51,7 @@ func resourceAwsTransferSshKey() *schema.Resource {
 }
 
 func resourceAwsTransferSshKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
+	conn := meta.(*awsprovider.AWSClient).TransferConn
 	userName := d.Get("user_name").(string)
 	serverID := d.Get("server_id").(string)
 
@@ -72,7 +74,7 @@ func resourceAwsTransferSshKeyCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsTransferSshKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
+	conn := meta.(*awsprovider.AWSClient).TransferConn
 	serverID, userName, sshKeyID, err := decodeTransferSshKeyId(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing Transfer SSH Public Key ID: %s", err)
@@ -87,7 +89,7 @@ func resourceAwsTransferSshKeyRead(d *schema.ResourceData, meta interface{}) err
 
 	resp, err := conn.DescribeUser(descOpts)
 	if err != nil {
-		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, transfer.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Transfer User (%s) for Server (%s) not found, removing ssh public key (%s) from state", userName, serverID, sshKeyID)
 			d.SetId("")
 			return nil
@@ -115,7 +117,7 @@ func resourceAwsTransferSshKeyRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsTransferSshKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
+	conn := meta.(*awsprovider.AWSClient).TransferConn
 	serverID, userName, sshKeyID, err := decodeTransferSshKeyId(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing Transfer SSH Public Key ID: %s", err)
@@ -131,7 +133,7 @@ func resourceAwsTransferSshKeyDelete(d *schema.ResourceData, meta interface{}) e
 
 	_, err = conn.DeleteSshPublicKey(delOpts)
 	if err != nil {
-		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, transfer.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Transfer User Ssh Key (%s): %s", d.Id(), err)
