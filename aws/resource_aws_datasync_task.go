@@ -11,10 +11,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/datasync/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/datasync/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDataSyncTask() *schema.Resource {
@@ -38,13 +39,13 @@ func resourceAwsDataSyncTask() *schema.Resource {
 			"cloudwatch_log_group_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"destination_location_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"excludes": {
 				Type:     schema.TypeList,
@@ -178,7 +179,7 @@ func resourceAwsDataSyncTask() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
@@ -189,8 +190,8 @@ func resourceAwsDataSyncTask() *schema.Resource {
 }
 
 func resourceAwsDataSyncTaskCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DataSyncConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateTaskInput{
@@ -233,9 +234,9 @@ func resourceAwsDataSyncTaskCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsDataSyncTaskRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DataSyncConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.TaskByARN(conn, d.Id())
 
@@ -285,7 +286,7 @@ func resourceAwsDataSyncTaskRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsDataSyncTaskUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
+	conn := meta.(*awsprovider.AWSClient).DataSyncConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &datasync.UpdateTaskInput{
@@ -330,7 +331,7 @@ func resourceAwsDataSyncTaskUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsDataSyncTaskDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
+	conn := meta.(*awsprovider.AWSClient).DataSyncConn
 
 	input := &datasync.DeleteTaskInput{
 		TaskArn: aws.String(d.Id()),
