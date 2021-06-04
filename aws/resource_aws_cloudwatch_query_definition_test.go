@@ -14,7 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchlogs/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -25,14 +27,14 @@ func init() {
 }
 
 func testSweepCloudwatchlogQueryDefinitions(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).cloudwatchlogsconn
-	sweepResources := make([]*testSweepResource, 0)
+	conn := client.(*awsprovider.AWSClient).CloudWatchLogsConn
+	sweepResources := make([]*atest.TestSweepResource, 0)
 	var errs *multierror.Error
 
 	input := &cloudwatchlogs.DescribeQueryDefinitionsInput{}
@@ -54,7 +56,7 @@ func testSweepCloudwatchlogQueryDefinitions(region string) error {
 
 			d.SetId(aws.StringValue(queryDefinition.QueryDefinitionId))
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, atest.NewTestSweepResource(r, d, client))
 		}
 
 		if aws.StringValue(output.NextToken) == "" {
@@ -64,11 +66,11 @@ func testSweepCloudwatchlogQueryDefinitions(region string) error {
 		input.NextToken = output.NextToken
 	}
 
-	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := atest.TestSweepResourceOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping CloudWatch Log Query Definition for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if atest.SweepSkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping CloudWatch Log Query Definition sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -87,9 +89,9 @@ func TestAccAWSCloudWatchQueryDefinition_basic(t *testing.T) {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchQueryDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -115,9 +117,9 @@ func TestAccAWSCloudWatchQueryDefinition_basic(t *testing.T) {
 func testAccAWSCloudWatchQueryDefinitionImportStateId(v *cloudwatchlogs.QueryDefinition) resource.ImportStateIdFunc {
 	return func(*terraform.State) (string, error) {
 		id := arn.ARN{
-			AccountID: testAccGetAccountID(),
-			Partition: testAccGetPartition(),
-			Region:    testAccGetRegion(),
+			AccountID: atest.AccountID(),
+			Partition: atest.Partition(),
+			Region:    atest.Region(),
 			Service:   cloudwatchlogs.ServiceName,
 			Resource:  fmt.Sprintf("query-definition:%s", aws.StringValue(v.QueryDefinitionId)),
 		}
@@ -132,16 +134,16 @@ func TestAccAWSCloudWatchQueryDefinition_disappears(t *testing.T) {
 	queryName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchQueryDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudWatchQueryDefinitionConfig_Basic(queryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudWatchQueryDefinitionExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchQueryDefinition(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCloudWatchQueryDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -156,9 +158,9 @@ func TestAccAWSCloudWatchQueryDefinition_Rename(t *testing.T) {
 	updatedQueryName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchQueryDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -191,9 +193,9 @@ func TestAccAWSCloudWatchQueryDefinition_LogGroups(t *testing.T) {
 	queryName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchQueryDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -231,7 +233,7 @@ func testAccCheckAWSCloudWatchQueryDefinitionExists(rName string, v *cloudwatchl
 		if !ok {
 			return fmt.Errorf("Not found: %s", rName)
 		}
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchLogsConn
 
 		result, err := finder.QueryDefinition(context.Background(), conn, "", rs.Primary.ID)
 
@@ -250,7 +252,7 @@ func testAccCheckAWSCloudWatchQueryDefinitionExists(rName string, v *cloudwatchl
 }
 
 func testAccCheckAWSCloudWatchQueryDefinitionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchLogsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_query_definition" {
