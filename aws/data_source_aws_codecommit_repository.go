@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codecommit"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsCodeCommitRepository() *schema.Resource {
@@ -45,7 +47,7 @@ func dataSourceAwsCodeCommitRepository() *schema.Resource {
 }
 
 func dataSourceAwsCodeCommitRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codecommitconn
+	conn := meta.(*awsprovider.AWSClient).CodeCommitConn
 
 	repositoryName := d.Get("repository_name").(string)
 	input := &codecommit.GetRepositoryInput{
@@ -54,7 +56,7 @@ func dataSourceAwsCodeCommitRepositoryRead(d *schema.ResourceData, meta interfac
 
 	out, err := conn.GetRepository(input)
 	if err != nil {
-		if isAWSErr(err, codecommit.ErrCodeRepositoryDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, codecommit.ErrCodeRepositoryDoesNotExistException, "") {
 			log.Printf("[WARN] CodeCommit Repository (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return fmt.Errorf("Resource codecommit repository not found for %s", repositoryName)
