@@ -8,9 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSNeptuneClusterParameterGroup_basic(t *testing.T) {
@@ -21,9 +24,9 @@ func TestAccAWSNeptuneClusterParameterGroup_basic(t *testing.T) {
 	resourceName := "aws_neptune_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, neptune.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -31,7 +34,7 @@ func TestAccAWSNeptuneClusterParameterGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterParameterGroupExists(resourceName, &v),
 					testAccCheckAWSNeptuneClusterParameterGroupAttributes(&v, parameterGroupName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster-pg:%s", parameterGroupName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster-pg:%s", parameterGroupName)),
 					resource.TestCheckResourceAttr(resourceName, "name", parameterGroupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "neptune1"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
@@ -54,9 +57,9 @@ func TestAccAWSNeptuneClusterParameterGroup_namePrefix(t *testing.T) {
 	resourceName := "aws_neptune_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, neptune.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -82,9 +85,9 @@ func TestAccAWSNeptuneClusterParameterGroup_generatedName(t *testing.T) {
 	resourceName := "aws_neptune_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, neptune.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -110,9 +113,9 @@ func TestAccAWSNeptuneClusterParameterGroup_Description(t *testing.T) {
 	parameterGroupName := acctest.RandomWithPrefix("cluster-parameter-group-test-terraform")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, neptune.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -140,9 +143,9 @@ func TestAccAWSNeptuneClusterParameterGroup_NamePrefix_Parameter(t *testing.T) {
 	prefix := "tf-acc-test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, neptune.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -187,9 +190,9 @@ func TestAccAWSNeptuneClusterParameterGroup_Parameter(t *testing.T) {
 	parameterGroupName := acctest.RandomWithPrefix("cluster-parameter-group-test-tf")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, neptune.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -235,9 +238,9 @@ func TestAccAWSNeptuneClusterParameterGroup_Tags(t *testing.T) {
 	parameterGroupName := acctest.RandomWithPrefix("cluster-parameter-group-test-tf")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, neptune.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -277,7 +280,7 @@ func TestAccAWSNeptuneClusterParameterGroup_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSNeptuneClusterParameterGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).neptuneconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).NeptuneConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_neptune_cluster_parameter_group" {
@@ -297,7 +300,7 @@ func testAccCheckAWSNeptuneClusterParameterGroupDestroy(s *terraform.State) erro
 		}
 
 		if err != nil {
-			if isAWSErr(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
 				return nil
 			}
 			return err
@@ -332,7 +335,7 @@ func testAccCheckAWSNeptuneClusterParameterGroupExists(n string, v *neptune.DBCl
 			return errors.New("No Neptune Cluster Parameter Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).neptuneconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).NeptuneConn
 
 		opts := neptune.DescribeDBClusterParameterGroupsInput{
 			DBClusterParameterGroupName: aws.String(rs.Primary.ID),
