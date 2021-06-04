@@ -8,10 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -22,20 +25,20 @@ func init() {
 }
 
 func testSweepSsmMaintenanceWindows(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).ssmconn
+	conn := client.(*awsprovider.AWSClient).SSMConn
 	input := &ssm.DescribeMaintenanceWindowsInput{}
 	var sweeperErrs *multierror.Error
 
 	for {
 		output, err := conn.DescribeMaintenanceWindows(input)
 
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping SSM Maintenance Window sweep for %s: %s", region, err)
 			return nil
 		}
@@ -54,7 +57,7 @@ func testSweepSsmMaintenanceWindows(region string) error {
 
 			_, err := conn.DeleteMaintenanceWindow(input)
 
-			if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+			if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
 				continue
 			}
 
@@ -82,9 +85,9 @@ func TestAccAWSSSMMaintenanceWindow_basic(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -118,9 +121,9 @@ func TestAccAWSSSMMaintenanceWindow_description(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -154,9 +157,9 @@ func TestAccAWSSSMMaintenanceWindow_tags(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -199,9 +202,9 @@ func TestAccAWSSSMMaintenanceWindow_disappears(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -223,9 +226,9 @@ func TestAccAWSSSMMaintenanceWindow_multipleUpdates(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -260,9 +263,9 @@ func TestAccAWSSSMMaintenanceWindow_Cutoff(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -294,9 +297,9 @@ func TestAccAWSSSMMaintenanceWindow_Duration(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -328,9 +331,9 @@ func TestAccAWSSSMMaintenanceWindow_Enabled(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -364,9 +367,9 @@ func TestAccAWSSSMMaintenanceWindow_EndDate(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -405,9 +408,9 @@ func TestAccAWSSSMMaintenanceWindow_Schedule(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -439,9 +442,9 @@ func TestAccAWSSSMMaintenanceWindow_ScheduleTimezone(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -480,9 +483,9 @@ func TestAccAWSSSMMaintenanceWindow_ScheduleOffset(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -516,9 +519,9 @@ func TestAccAWSSSMMaintenanceWindow_StartDate(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -562,7 +565,7 @@ func testAccCheckAWSSSMMaintenanceWindowExists(n string, res *ssm.MaintenanceWin
 			return fmt.Errorf("No SSM Maintenance Window ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ssmconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SSMConn
 
 		resp, err := conn.DescribeMaintenanceWindows(&ssm.DescribeMaintenanceWindowsInput{
 			Filters: []*ssm.MaintenanceWindowFilter{
@@ -589,7 +592,7 @@ func testAccCheckAWSSSMMaintenanceWindowExists(n string, res *ssm.MaintenanceWin
 
 func testAccCheckAWSSSMMaintenanceWindowDisappears(maintenanceWindowIdentity *ssm.MaintenanceWindowIdentity) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ssmconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SSMConn
 
 		id := aws.StringValue(maintenanceWindowIdentity.WindowId)
 		_, err := conn.DeleteMaintenanceWindow(&ssm.DeleteMaintenanceWindowInput{
@@ -603,7 +606,7 @@ func testAccCheckAWSSSMMaintenanceWindowDisappears(maintenanceWindowIdentity *ss
 }
 
 func testAccCheckAWSSSMMaintenanceWindowDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ssmconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SSMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_maintenance_window" {
@@ -621,7 +624,7 @@ func testAccCheckAWSSSMMaintenanceWindowDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the SSM Maintenance Window is already destroyed
-		if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
 			continue
 		}
 
