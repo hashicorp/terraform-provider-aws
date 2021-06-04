@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGlueClassifier() *schema.Resource {
@@ -158,7 +160,7 @@ func resourceAwsGlueClassifier() *schema.Resource {
 }
 
 func resourceAwsGlueClassifierCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 	name := d.Get("name").(string)
 
 	input := &glue.CreateClassifierInput{}
@@ -195,7 +197,7 @@ func resourceAwsGlueClassifierCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsGlueClassifierRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	input := &glue.GetClassifierInput{
 		Name: aws.String(d.Id()),
@@ -204,7 +206,7 @@ func resourceAwsGlueClassifierRead(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG] Reading Glue Classifier: %s", input)
 	output, err := conn.GetClassifier(input)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Classifier (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -241,7 +243,7 @@ func resourceAwsGlueClassifierRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsGlueClassifierUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	input := &glue.UpdateClassifierInput{}
 
@@ -275,7 +277,7 @@ func resourceAwsGlueClassifierUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsGlueClassifierDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Classifier: %s", d.Id())
 	err := deleteGlueClassifier(conn, d.Id())
@@ -293,7 +295,7 @@ func deleteGlueClassifier(conn *glue.Glue, name string) error {
 
 	_, err := conn.DeleteClassifier(input)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
 		return err
