@@ -11,7 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dynamodb/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsDynamoDbKinesisStreamingDestination_basic(t *testing.T) {
@@ -19,16 +21,16 @@ func TestAccAwsDynamoDbKinesisStreamingDestination_basic(t *testing.T) {
 	resourceName := "aws_dynamodb_kinesis_streaming_destination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSDynamoDbKinesisStreamingDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsDynamodbKinesisStreamingDestinationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "stream_arn", "kinesis", regexp.MustCompile(fmt.Sprintf("stream/%s", rName))),
+					atest.MatchAttrRegionalARN(resourceName, "stream_arn", "kinesis", regexp.MustCompile(fmt.Sprintf("stream/%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "table_name", rName),
 				),
 			},
@@ -46,16 +48,16 @@ func TestAccAwsDynamoDbKinesisStreamingDestination_disappears(t *testing.T) {
 	resourceName := "aws_dynamodb_kinesis_streaming_destination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSDynamoDbKinesisStreamingDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsDynamodbKinesisStreamingDestinationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDynamoDbKinesisStreamingDestination(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsDynamoDbKinesisStreamingDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -70,16 +72,16 @@ func TestAccAwsDynamoDbKinesisStreamingDestination_disappears_DynamoDbTable(t *t
 	tableResourceName := "aws_dynamodb_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSDynamoDbKinesisStreamingDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsDynamodbKinesisStreamingDestinationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDynamoDbTable(), tableResourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsDynamoDbTable(), tableResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -130,7 +132,7 @@ func testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName string) 
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DynamoDBConn
 
 		output, err := finder.DynamoDBKinesisDataStreamDestination(context.Background(), conn, streamArn, tableName)
 
@@ -147,7 +149,7 @@ func testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName string) 
 }
 
 func testAccCheckAWSDynamoDbKinesisStreamingDestinationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).DynamoDBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dynamodb_kinesis_streaming_destination" {
