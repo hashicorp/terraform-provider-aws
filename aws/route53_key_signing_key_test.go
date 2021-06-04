@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // Route 53 Key Signing Key can only be enabled with KMS Keys in specific regions,
@@ -32,7 +34,7 @@ var testAccProviderRoute53KeySigningKeyConfigure sync.Once
 
 // testAccPreCheckRoute53KeySigningKey verifies AWS credentials and that Route 53 Key Signing Key is supported
 func testAccPreCheckRoute53KeySigningKey(t *testing.T) {
-	testAccPartitionHasServicePreCheck(route53.EndpointsID, t)
+	atest.PreCheckPartitionService(route53.EndpointsID, t)
 
 	region := testAccGetRoute53KeySigningKeyRegion()
 
@@ -43,7 +45,7 @@ func testAccPreCheckRoute53KeySigningKey(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderRoute53KeySigningKeyConfigure.Do(func() {
-		testAccProviderRoute53KeySigningKey = Provider()
+		testAccProviderRoute53KeySigningKey = awsprovider.Provider()
 
 		config := map[string]interface{}{
 			"region": region,
@@ -66,7 +68,7 @@ func testAccPreCheckRoute53KeySigningKey(t *testing.T) {
 // Testing Route 53 Key Signing Key assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
 func testAccRoute53KeySigningKeyRegionProviderConfig() string {
-	return testAccRegionalProviderConfig(testAccGetRoute53KeySigningKeyRegion())
+	return atest.ConfigProviderRegional(testAccGetRoute53KeySigningKeyRegion())
 }
 
 // testAccGetRoute53KeySigningKeyRegion returns the Route 53 Key Signing Key region for testing
@@ -78,7 +80,7 @@ func testAccGetRoute53KeySigningKeyRegion() string {
 	// AWS Commercial: https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-configuring-dnssec-cmk-requirements.html
 	// AWS GovCloud (US) - not available yet: https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-r53.html
 	// AWS China - not available yet: https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
-	switch testAccGetPartition() {
+	switch atest.Partition() {
 	case endpoints.AwsPartitionID:
 		testAccRoute53KeySigningKeyRegion = endpoints.UsEast1RegionID
 	}
