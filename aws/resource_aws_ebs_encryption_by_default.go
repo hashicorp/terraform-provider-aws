@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEbsEncryptionByDefault() *schema.Resource {
@@ -26,7 +27,7 @@ func resourceAwsEbsEncryptionByDefault() *schema.Resource {
 }
 
 func resourceAwsEbsEncryptionByDefaultCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	enabled := d.Get("enabled").(bool)
 	if err := setEbsEncryptionByDefault(conn, enabled); err != nil {
@@ -40,7 +41,7 @@ func resourceAwsEbsEncryptionByDefaultCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsEbsEncryptionByDefaultRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	resp, err := conn.GetEbsEncryptionByDefault(&ec2.GetEbsEncryptionByDefaultInput{})
 	if err != nil {
@@ -53,7 +54,7 @@ func resourceAwsEbsEncryptionByDefaultRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsEbsEncryptionByDefaultUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	enabled := d.Get("enabled").(bool)
 	if err := setEbsEncryptionByDefault(conn, enabled); err != nil {
@@ -64,7 +65,7 @@ func resourceAwsEbsEncryptionByDefaultUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsEbsEncryptionByDefaultDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	// Removing the resource disables default encryption.
 	if err := setEbsEncryptionByDefault(conn, false); err != nil {
