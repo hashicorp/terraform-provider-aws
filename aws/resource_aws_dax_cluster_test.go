@@ -8,9 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -21,17 +24,17 @@ func init() {
 }
 
 func testSweepDAXClusters(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).daxconn
+	conn := client.(*awsprovider.AWSClient).DAXConn
 
 	resp, err := conn.DescribeClusters(&dax.DescribeClustersInput{})
 	if err != nil {
 		// GovCloud (with no DAX support) has an endpoint that responds with:
 		// InvalidParameterValueException: Access Denied to API Version: DAX_V3
-		if testSweepSkipSweepError(err) || isAWSErr(err, "InvalidParameterValueException", "Access Denied to API Version: DAX_V3") {
+		if atest.SweepSkipSweepError(err) || tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version: DAX_V3") {
 			log.Printf("[WARN] Skipping DAX Cluster sweep for %s: %s", region, err)
 			return nil
 		}
@@ -65,16 +68,16 @@ func TestAccAWSDAXCluster_basic(t *testing.T) {
 	resourceName := "aws_dax_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
-		ErrorCheck:   testAccErrorCheck(t, dax.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDax(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dax.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDAXClusterConfig(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDAXClusterExists(resourceName, &dc),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "dax", regexp.MustCompile("cache/.+")),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "dax", regexp.MustCompile("cache/.+")),
 					resource.TestMatchResourceAttr(
 						resourceName, "cluster_name", regexp.MustCompile(`^tf-\w+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, "arn"),
@@ -119,9 +122,9 @@ func TestAccAWSDAXCluster_resize(t *testing.T) {
 	resourceName := "aws_dax_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
-		ErrorCheck:   testAccErrorCheck(t, dax.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDax(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dax.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -163,9 +166,9 @@ func TestAccAWSDAXCluster_encryption_disabled(t *testing.T) {
 	resourceName := "aws_dax_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
-		ErrorCheck:   testAccErrorCheck(t, dax.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDax(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dax.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -197,9 +200,9 @@ func TestAccAWSDAXCluster_encryption_enabled(t *testing.T) {
 	resourceName := "aws_dax_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
-		ErrorCheck:   testAccErrorCheck(t, dax.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDax(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dax.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -226,7 +229,7 @@ func TestAccAWSDAXCluster_encryption_enabled(t *testing.T) {
 }
 
 func testAccCheckAWSDAXClusterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).daxconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).DAXConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dax_cluster" {
@@ -237,7 +240,7 @@ func testAccCheckAWSDAXClusterDestroy(s *terraform.State) error {
 		})
 		if err != nil {
 			// Verify the error is what we want
-			if isAWSErr(err, dax.ErrCodeClusterNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, dax.ErrCodeClusterNotFoundFault, "") {
 				continue
 			}
 			return err
@@ -260,7 +263,7 @@ func testAccCheckAWSDAXClusterExists(n string, v *dax.Cluster) resource.TestChec
 			return fmt.Errorf("No DAX cluster ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).daxconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DAXConn
 		resp, err := conn.DescribeClusters(&dax.DescribeClustersInput{
 			ClusterNames: []*string{aws.String(rs.Primary.ID)},
 		})
@@ -279,13 +282,13 @@ func testAccCheckAWSDAXClusterExists(n string, v *dax.Cluster) resource.TestChec
 }
 
 func testAccPreCheckAWSDax(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).daxconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).DAXConn
 
 	input := &dax.DescribeClustersInput{}
 
 	_, err := conn.DescribeClusters(input)
 
-	if testAccPreCheckSkipError(err) || isAWSErr(err, "InvalidParameterValueException", "Access Denied to API Version: DAX_V3") {
+	if atest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version: DAX_V3") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
