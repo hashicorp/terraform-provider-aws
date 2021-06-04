@@ -8,9 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/athena"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsAthenaWorkgroup() *schema.Resource {
@@ -77,7 +79,7 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 												"kms_key_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: ValidateArn,
 												},
 											},
 										},
@@ -129,8 +131,8 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 }
 
 func resourceAwsAthenaWorkgroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).athenaconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).AthenaConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -173,9 +175,9 @@ func resourceAwsAthenaWorkgroupCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).athenaconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).AthenaConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &athena.GetWorkGroupInput{
 		WorkGroup: aws.String(d.Id()),
@@ -183,7 +185,7 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 
 	resp, err := conn.GetWorkGroup(input)
 
-	if isAWSErr(err, athena.ErrCodeInvalidRequestException, "is not found") {
+	if tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, "is not found") {
 		log.Printf("[WARN] Athena WorkGroup (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -194,10 +196,10 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Service:   "athena",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("workgroup/%s", d.Id()),
 	}
 
@@ -238,7 +240,7 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsAthenaWorkgroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).athenaconn
+	conn := meta.(*awsprovider.AWSClient).AthenaConn
 
 	input := &athena.DeleteWorkGroupInput{
 		WorkGroup: aws.String(d.Id()),
@@ -257,7 +259,7 @@ func resourceAwsAthenaWorkgroupDelete(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).athenaconn
+	conn := meta.(*awsprovider.AWSClient).AthenaConn
 
 	workGroupUpdate := false
 
