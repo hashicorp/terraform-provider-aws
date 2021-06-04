@@ -9,11 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsVpnGateway() *schema.Resource {
@@ -61,8 +63,8 @@ func resourceAwsVpnGateway() *schema.Resource {
 }
 
 func resourceAwsVpnGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := &ec2.CreateVpnGatewayInput{
@@ -98,15 +100,15 @@ func resourceAwsVpnGatewayCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeVpnGateways(&ec2.DescribeVpnGatewaysInput{
 		VpnGatewayIds: []*string{aws.String(d.Id())},
 	})
 	if err != nil {
-		if isAWSErr(err, "InvalidVpnGatewayID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVpnGatewayID.NotFound", "") {
 			log.Printf("[WARN] VPC Gateway (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -148,10 +150,10 @@ func resourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpn-gateway/%s", d.Id()),
 	}.String()
 
@@ -173,7 +175,7 @@ func resourceAwsVpnGatewayUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -187,7 +189,7 @@ func resourceAwsVpnGatewayUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsVpnGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	// Detach if it is attached
 	if err := resourceAwsVpnGatewayDetach(d, meta); err != nil {
@@ -204,10 +206,10 @@ func resourceAwsVpnGatewayDelete(d *schema.ResourceData, meta interface{}) error
 			return nil
 		}
 
-		if isAWSErr(err, "InvalidVpnGatewayID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVpnGatewayID.NotFound", "") {
 			return nil
 		}
-		if isAWSErr(err, "IncorrectState", "") {
+		if tfawserr.ErrMessageContains(err, "IncorrectState", "") {
 			return resource.RetryableError(err)
 		}
 
@@ -215,7 +217,7 @@ func resourceAwsVpnGatewayDelete(d *schema.ResourceData, meta interface{}) error
 	})
 	if isResourceTimeoutError(err) {
 		_, err = conn.DeleteVpnGateway(input)
-		if isAWSErr(err, "InvalidVpnGatewayID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVpnGatewayID.NotFound", "") {
 			return nil
 		}
 	}
@@ -227,7 +229,7 @@ func resourceAwsVpnGatewayDelete(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsVpnGatewayAttach(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	vpcId := d.Get("vpc_id").(string)
 
@@ -249,7 +251,7 @@ func resourceAwsVpnGatewayAttach(d *schema.ResourceData, meta interface{}) error
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.AttachVpnGateway(req)
 		if err != nil {
-			if isAWSErr(err, tfec2.InvalidVpnGatewayIDNotFound, "") {
+			if tfawserr.ErrMessageContains(err, tfec2.InvalidVpnGatewayIDNotFound, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -276,7 +278,7 @@ func resourceAwsVpnGatewayAttach(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsVpnGatewayDetach(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	// Get the old VPC ID to detach from
 	vpcIdRaw, _ := d.GetChange("vpc_id")
@@ -299,7 +301,7 @@ func resourceAwsVpnGatewayDetach(d *schema.ResourceData, meta interface{}) error
 		VpcId:        aws.String(vpcId),
 	})
 
-	if isAWSErr(err, tfec2.InvalidVpnGatewayAttachmentNotFound, "") || isAWSErr(err, tfec2.InvalidVpnGatewayIDNotFound, "") {
+	if tfawserr.ErrMessageContains(err, tfec2.InvalidVpnGatewayAttachmentNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.InvalidVpnGatewayIDNotFound, "") {
 		return nil
 	}
 
