@@ -8,17 +8,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	tfsns "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sns"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
-	RegisterServiceErrorCheckFunc(sns.EndpointsID, testAccErrorCheckSkipSNS)
+	atest.RegisterServiceErrorCheckFunc(sns.EndpointsID, testAccErrorCheckSkipSNS)
 
 	resource.AddTestSweepers("aws_sns_topic", &resource.Sweeper{
 		Name: "aws_sns_topic",
@@ -47,11 +50,11 @@ func init() {
 }
 
 func testSweepSnsTopics(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).snsconn
+	conn := client.(*awsprovider.AWSClient).SNSConn
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListTopicsPages(&sns.ListTopicsInput{}, func(page *sns.ListTopicsOutput, lastPage bool) bool {
@@ -66,7 +69,7 @@ func testSweepSnsTopics(region string) error {
 			_, err := conn.DeleteTopic(&sns.DeleteTopicInput{
 				TopicArn: aws.String(arn),
 			})
-			if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
 				continue
 			}
 			if err != nil {
@@ -79,7 +82,7 @@ func testSweepSnsTopics(region string) error {
 
 		return !lastPage
 	})
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping SNS Topics sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -91,7 +94,7 @@ func testSweepSnsTopics(region string) error {
 }
 
 func testAccErrorCheckSkipSNS(t *testing.T) resource.ErrorCheckFunc {
-	return testAccErrorCheckSkipMessagesContaining(t,
+	return atest.ErrorCheckSkipMessagesContaining(t,
 		"Invalid protocol type: firehose",
 		"Unknown attribute FifoTopic",
 	)
@@ -102,9 +105,9 @@ func TestAccAWSSNSTopic_basic(t *testing.T) {
 	resourceName := "aws_sns_topic.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -114,7 +117,7 @@ func TestAccAWSSNSTopic_basic(t *testing.T) {
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "false"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner"),
+					atest.CheckAttrAccountID(resourceName, "owner"),
 				),
 			},
 			{
@@ -132,9 +135,9 @@ func TestAccAWSSNSTopic_Name(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -160,9 +163,9 @@ func TestAccAWSSNSTopic_NamePrefix(t *testing.T) {
 	rName := "tf-acc-test-prefix-"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -187,12 +190,12 @@ func TestAccAWSSNSTopic_policy(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic.test"
 	rName := acctest.RandString(10)
-	expectedPolicy := fmt.Sprintf(`{"Statement":[{"Sid":"Stmt1445931846145","Effect":"Allow","Principal":{"AWS":"*"},"Action":"sns:Publish","Resource":"arn:%s:sns:%s::example"}],"Version":"2012-10-17","Id":"Policy1445931846145"}`, testAccGetPartition(), testAccGetRegion())
+	expectedPolicy := fmt.Sprintf(`{"Statement":[{"Sid":"Stmt1445931846145","Effect":"Allow","Principal":{"AWS":"*"},"Action":"sns:Publish","Resource":"arn:%s:sns:%s::example"}],"Version":"2012-10-17","Id":"Policy1445931846145"}`, atest.Partition(), atest.Region())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -217,9 +220,9 @@ func TestAccAWSSNSTopic_withIAMRole(t *testing.T) {
 	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -240,9 +243,9 @@ func TestAccAWSSNSTopic_withIAMRole(t *testing.T) {
 func TestAccAWSSNSTopic_withFakeIAMRole(t *testing.T) {
 	rName := acctest.RandString(10)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -260,9 +263,9 @@ func TestAccAWSSNSTopic_withDeliveryPolicy(t *testing.T) {
 	expectedPolicy := `{"http":{"defaultHealthyRetryPolicy": {"minDelayTarget": 20,"maxDelayTarget": 20,"numMaxDelayRetries": 0,"numRetries": 3,"numNoDelayRetries": 0,"numMinDelayRetries": 0,"backoffFunction": "linear"},"disableSubscriptionOverrides": false}}`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -289,9 +292,9 @@ func TestAccAWSSNSTopic_deliveryStatus(t *testing.T) {
 	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -329,9 +332,9 @@ func TestAccAWSSNSTopic_Name_Generated_FIFOTopic(t *testing.T) {
 	resourceName := "aws_sns_topic.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -358,9 +361,9 @@ func TestAccAWSSNSTopic_Name_FIFOTopic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test") + tfsns.FifoTopicNameSuffix
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -386,9 +389,9 @@ func TestAccAWSSNSTopic_NamePrefix_FIFOTopic(t *testing.T) {
 	rName := "tf-acc-test-prefix-"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -415,9 +418,9 @@ func TestAccAWSSNSTopic_FIFOWithContentBasedDeduplication(t *testing.T) {
 	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -448,9 +451,9 @@ func TestAccAWSSNSTopic_FIFOWithContentBasedDeduplication(t *testing.T) {
 func TestAccAWSSNSTopic_FIFOExpectContentBasedDeduplicationError(t *testing.T) {
 	rName := acctest.RandString(10)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -467,9 +470,9 @@ func TestAccAWSSNSTopic_encryption(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -501,9 +504,9 @@ func TestAccAWSSNSTopic_tags(t *testing.T) {
 	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -545,16 +548,16 @@ func TestAccAWSSNSTopic_disappears(t *testing.T) {
 	resourceName := "aws_sns_topic.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSNSTopicConfigNameGenerated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists(resourceName, attributes),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSnsTopic(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSnsTopic(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -581,7 +584,7 @@ func testAccCheckAWSNSTopicHasPolicy(n string, expectedPolicyText string) resour
 			return fmt.Errorf("No SNS topic with that ARN exists")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).snsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SNSConn
 
 		params := &sns.GetTopicAttributesInput{
 			TopicArn: aws.String(rs.Primary.ID),
@@ -623,7 +626,7 @@ func testAccCheckAWSNSTopicHasDeliveryPolicy(n string, expectedPolicyText string
 			return fmt.Errorf("no Queue URL specified")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).snsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SNSConn
 
 		params := &sns.GetTopicAttributesInput{
 			TopicArn: aws.String(rs.Primary.ID),
@@ -653,7 +656,7 @@ func testAccCheckAWSNSTopicHasDeliveryPolicy(n string, expectedPolicyText string
 }
 
 func testAccCheckAWSSNSTopicDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).snsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SNSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sns_topic" {
@@ -666,7 +669,7 @@ func testAccCheckAWSSNSTopicDestroy(s *terraform.State) error {
 		}
 		_, err := conn.GetTopicAttributes(params)
 		if err != nil {
-			if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return err
@@ -688,7 +691,7 @@ func testAccCheckAWSSNSTopicExists(n string, attributes map[string]string) resou
 			return fmt.Errorf("No SNS topic with that ARN exists")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).snsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SNSConn
 
 		params := &sns.GetTopicAttributesInput{
 			TopicArn: aws.String(rs.Primary.ID),
