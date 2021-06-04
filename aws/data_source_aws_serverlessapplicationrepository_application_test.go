@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsServerlessApplicationRepositoryApplication_Basic(t *testing.T) {
@@ -15,9 +16,9 @@ func TestAccDataSourceAwsServerlessApplicationRepositoryApplication_Basic(t *tes
 	appARN := testAccAwsServerlessApplicationRepositoryCloudFormationApplicationID()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, serverlessapplicationrepository.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, serverlessapplicationrepository.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceConfig(appARN),
@@ -48,9 +49,9 @@ func TestAccDataSourceAwsServerlessApplicationRepositoryApplication_Versioned(t 
 	)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, serverlessapplicationrepository.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, serverlessapplicationrepository.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceConfig_Versioned(appARN, version1),
