@@ -16,6 +16,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsVpcEndpointRouteTableAssociation() *schema.Resource {
@@ -43,7 +44,7 @@ func resourceAwsVpcEndpointRouteTableAssociation() *schema.Resource {
 }
 
 func resourceAwsVpcEndpointRouteTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	endpointId := d.Get("vpc_endpoint_id").(string)
 	rtId := d.Get("route_table_id").(string)
@@ -67,7 +68,7 @@ func resourceAwsVpcEndpointRouteTableAssociationCreate(d *schema.ResourceData, m
 }
 
 func resourceAwsVpcEndpointRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	endpointId := d.Get("vpc_endpoint_id").(string)
 	rtId := d.Get("route_table_id").(string)
@@ -126,7 +127,7 @@ func resourceAwsVpcEndpointRouteTableAssociationRead(d *schema.ResourceData, met
 }
 
 func resourceAwsVpcEndpointRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	endpointId := d.Get("vpc_endpoint_id").(string)
 	rtId := d.Get("route_table_id").(string)
