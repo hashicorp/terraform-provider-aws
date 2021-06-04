@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCloudWatchEventArchive() *schema.Resource {
@@ -33,7 +34,7 @@ func resourceAwsCloudWatchEventArchive() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -62,7 +63,7 @@ func resourceAwsCloudWatchEventArchive() *schema.Resource {
 }
 
 func resourceAwsCloudWatchEventArchiveCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchEventsConn
 
 	input, err := buildCreateArchiveInputStruct(d)
 
@@ -85,14 +86,14 @@ func resourceAwsCloudWatchEventArchiveCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsCloudWatchEventArchiveRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchEventsConn
 	input := &events.DescribeArchiveInput{
 		ArchiveName: aws.String(d.Id()),
 	}
 
 	out, err := conn.DescribeArchive(input)
 
-	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] CloudWatch Events archive (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -115,7 +116,7 @@ func resourceAwsCloudWatchEventArchiveRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsCloudWatchEventArchiveUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchEventsConn
 
 	input, err := buildUpdateArchiveInputStruct(d)
 
@@ -133,7 +134,7 @@ func resourceAwsCloudWatchEventArchiveUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsCloudWatchEventArchiveDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchEventsConn
 
 	input := &events.DeleteArchiveInput{
 		ArchiveName: aws.String(d.Get("name").(string)),
