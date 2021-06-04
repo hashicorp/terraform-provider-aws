@@ -13,12 +13,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	cffinder "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/finder"
 	cfwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/serverlessapplicationrepository/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/serverlessapplicationrepository/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -55,7 +56,7 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStack() *schema.Res
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"capabilities": {
 				Type:     schema.TypeSet,
@@ -91,9 +92,9 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStack() *schema.Res
 }
 
 func resourceAwsServerlessApplicationRepositoryCloudFormationStackCreate(d *schema.ResourceData, meta interface{}) error {
-	cfConn := meta.(*AWSClient).cfconn
+	cfConn := meta.(*awsprovider.AWSClient).CloudFormationConn
 
-	changeSet, err := createServerlessApplicationRepositoryCloudFormationChangeSet(d, meta.(*AWSClient))
+	changeSet, err := createServerlessApplicationRepositoryCloudFormationChangeSet(d, meta.(*awsprovider.AWSClient))
 	if err != nil {
 		return fmt.Errorf("error creating Serverless Application Repository CloudFormation change set: %w", err)
 	}
@@ -124,10 +125,10 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackCreate(d *sche
 }
 
 func resourceAwsServerlessApplicationRepositoryCloudFormationStackRead(d *schema.ResourceData, meta interface{}) error {
-	serverlessConn := meta.(*AWSClient).serverlessapplicationrepositoryconn
-	cfConn := meta.(*AWSClient).cfconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	serverlessConn := meta.(*awsprovider.AWSClient).ServerlessApplicationRepositoryConn
+	cfConn := meta.(*awsprovider.AWSClient).CloudFormationConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	stack, err := cffinder.Stack(cfConn, d.Id())
 	if tfresource.NotFound(err) {
@@ -217,9 +218,9 @@ func flattenServerlessRepositoryParameterDefinitions(parameterDefinitions []*ser
 }
 
 func resourceAwsServerlessApplicationRepositoryCloudFormationStackUpdate(d *schema.ResourceData, meta interface{}) error {
-	cfConn := meta.(*AWSClient).cfconn
+	cfConn := meta.(*awsprovider.AWSClient).CloudFormationConn
 
-	changeSet, err := createServerlessApplicationRepositoryCloudFormationChangeSet(d, meta.(*AWSClient))
+	changeSet, err := createServerlessApplicationRepositoryCloudFormationChangeSet(d, meta.(*awsprovider.AWSClient))
 	if err != nil {
 		return fmt.Errorf("error creating Serverless Application Repository CloudFormation Stack (%s) change set: %w", d.Id(), err)
 	}
@@ -248,7 +249,7 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackUpdate(d *sche
 }
 
 func resourceAwsServerlessApplicationRepositoryCloudFormationStackDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
+	conn := meta.(*awsprovider.AWSClient).CloudFormationConn
 
 	requestToken := resource.UniqueId()
 	input := &cloudformation.DeleteStackInput{
@@ -284,7 +285,7 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackImport(d *sche
 		}
 	}
 
-	cfConn := meta.(*AWSClient).cfconn
+	cfConn := meta.(*awsprovider.AWSClient).CloudFormationConn
 	stack, err := cffinder.Stack(cfConn, stackID)
 	if err != nil {
 		return nil, fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): %w", stackID, err)
@@ -295,9 +296,9 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackImport(d *sche
 	return []*schema.ResourceData{d}, nil
 }
 
-func createServerlessApplicationRepositoryCloudFormationChangeSet(d *schema.ResourceData, client *AWSClient) (*cloudformation.DescribeChangeSetOutput, error) {
-	serverlessConn := client.serverlessapplicationrepositoryconn
-	cfConn := client.cfconn
+func createServerlessApplicationRepositoryCloudFormationChangeSet(d *schema.ResourceData, client *awsprovider.AWSClient) (*cloudformation.DescribeChangeSetOutput, error) {
+	serverlessConn := client.ServerlessApplicationRepositoryConn
+	cfConn := client.CloudFormationConn
 	defaultTagsConfig := client.DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
