@@ -9,9 +9,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/schemas/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSchemasDiscoverer() *schema.Resource {
@@ -40,7 +41,7 @@ func resourceAwsSchemasDiscoverer() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"tags":     tagsSchema(),
@@ -52,8 +53,8 @@ func resourceAwsSchemasDiscoverer() *schema.Resource {
 }
 
 func resourceAwsSchemasDiscovererCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SchemasConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	sourceARN := d.Get("source_arn").(string)
@@ -82,9 +83,9 @@ func resourceAwsSchemasDiscovererCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsSchemasDiscovererRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SchemasConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.DiscovererByID(conn, d.Id())
 
@@ -122,7 +123,7 @@ func resourceAwsSchemasDiscovererRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSchemasDiscovererUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
+	conn := meta.(*awsprovider.AWSClient).SchemasConn
 
 	if d.HasChange("description") {
 		input := &schemas.UpdateDiscovererInput{
@@ -149,7 +150,7 @@ func resourceAwsSchemasDiscovererUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsSchemasDiscovererDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
+	conn := meta.(*awsprovider.AWSClient).SchemasConn
 
 	log.Printf("[INFO] Deleting EventBridge Schemas Discoverer (%s)", d.Id())
 	_, err := conn.DeleteDiscoverer(&schemas.DeleteDiscovererInput{
