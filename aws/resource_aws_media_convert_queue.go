@@ -7,9 +7,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsMediaConvertQueue() *schema.Resource {
@@ -94,12 +96,12 @@ func resourceAwsMediaConvertQueue() *schema.Resource {
 }
 
 func resourceAwsMediaConvertQueueCreate(d *schema.ResourceData, meta interface{}) error {
-	conn, err := getAwsMediaConvertAccountClient(meta.(*AWSClient))
+	conn, err := getAwsMediaConvertAccountClient(meta.(*awsprovider.AWSClient))
 	if err != nil {
 		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 	}
 
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := &mediaconvert.CreateQueueInput{
@@ -128,20 +130,20 @@ func resourceAwsMediaConvertQueueCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsMediaConvertQueueRead(d *schema.ResourceData, meta interface{}) error {
-	conn, err := getAwsMediaConvertAccountClient(meta.(*AWSClient))
+	conn, err := getAwsMediaConvertAccountClient(meta.(*awsprovider.AWSClient))
 	if err != nil {
 		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 	}
 
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	getOpts := &mediaconvert.GetQueueInput{
 		Name: aws.String(d.Id()),
 	}
 
 	resp, err := conn.GetQueue(getOpts)
-	if isAWSErr(err, mediaconvert.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, mediaconvert.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Media Convert Queue (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -181,7 +183,7 @@ func resourceAwsMediaConvertQueueRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsMediaConvertQueueUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn, err := getAwsMediaConvertAccountClient(meta.(*AWSClient))
+	conn, err := getAwsMediaConvertAccountClient(meta.(*awsprovider.AWSClient))
 	if err != nil {
 		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 	}
@@ -203,7 +205,7 @@ func resourceAwsMediaConvertQueueUpdate(d *schema.ResourceData, meta interface{}
 		}
 
 		_, err = conn.UpdateQueue(updateOpts)
-		if isAWSErr(err, mediaconvert.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, mediaconvert.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Media Convert Queue (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -224,7 +226,7 @@ func resourceAwsMediaConvertQueueUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsMediaConvertQueueDelete(d *schema.ResourceData, meta interface{}) error {
-	conn, err := getAwsMediaConvertAccountClient(meta.(*AWSClient))
+	conn, err := getAwsMediaConvertAccountClient(meta.(*awsprovider.AWSClient))
 	if err != nil {
 		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 	}
@@ -234,7 +236,7 @@ func resourceAwsMediaConvertQueueDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	_, err = conn.DeleteQueue(delOpts)
-	if isAWSErr(err, mediaconvert.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, mediaconvert.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
@@ -244,20 +246,20 @@ func resourceAwsMediaConvertQueueDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func getAwsMediaConvertAccountClient(awsClient *AWSClient) (*mediaconvert.MediaConvert, error) {
-	const mutexKey = `mediaconvertaccountconn`
-	awsMutexKV.Lock(mutexKey)
-	defer awsMutexKV.Unlock(mutexKey)
+func getAwsMediaConvertAccountClient(awsClient *awsprovider.AWSClient) (*mediaconvert.MediaConvert, error) {
+	const mutexKey = `MediaConvertAccountConn`
+	awsprovider.MutexKV.Lock(mutexKey)
+	defer awsprovider.MutexKV.Unlock(mutexKey)
 
-	if awsClient.mediaconvertaccountconn != nil {
-		return awsClient.mediaconvertaccountconn, nil
+	if awsClient.MediaConvertAccountConn != nil {
+		return awsClient.MediaConvertAccountConn, nil
 	}
 
 	input := &mediaconvert.DescribeEndpointsInput{
 		Mode: aws.String(mediaconvert.DescribeEndpointsModeDefault),
 	}
 
-	output, err := awsClient.mediaconvertconn.DescribeEndpoints(input)
+	output, err := awsClient.MediaConvertConn.DescribeEndpoints(input)
 
 	if err != nil {
 		return nil, fmt.Errorf("error describing MediaConvert Endpoints: %w", err)
@@ -269,7 +271,7 @@ func getAwsMediaConvertAccountClient(awsClient *AWSClient) (*mediaconvert.MediaC
 
 	endpointURL := aws.StringValue(output.Endpoints[0].Url)
 
-	sess, err := session.NewSession(&awsClient.mediaconvertconn.Config)
+	sess, err := session.NewSession(&awsClient.MediaConvertConn.Config)
 
 	if err != nil {
 		return nil, fmt.Errorf("error creating AWS MediaConvert session: %w", err)
@@ -277,7 +279,7 @@ func getAwsMediaConvertAccountClient(awsClient *AWSClient) (*mediaconvert.MediaC
 
 	conn := mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(endpointURL)}))
 
-	awsClient.mediaconvertaccountconn = conn
+	awsClient.MediaConvertAccountConn = conn
 
 	return conn, nil
 }
