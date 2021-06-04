@@ -9,10 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsApiGatewayStage() *schema.Resource {
@@ -128,8 +130,8 @@ func resourceAwsApiGatewayStage() *schema.Resource {
 }
 
 func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := apigateway.CreateStageInput{
@@ -204,9 +206,9 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading API Gateway Stage %s", d.Id())
 	restApiId := d.Get("rest_api_id").(string)
@@ -217,7 +219,7 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 	}
 	stage, err := conn.GetStage(&input)
 
-	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway Stage (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -260,8 +262,8 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	stageArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Service:   "apigateway",
 		Resource:  fmt.Sprintf("/restapis/%s/stages/%s", d.Get("rest_api_id").(string), d.Get("stage_name").(string)),
 	}.String()
@@ -271,13 +273,13 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error setting variables: %s", err)
 	}
 
-	d.Set("invoke_url", buildApiGatewayInvokeURL(meta.(*AWSClient), restApiId, stageName))
+	d.Set("invoke_url", buildApiGatewayInvokeURL(meta.(*awsprovider.AWSClient), restApiId, stageName))
 
 	executionArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "execute-api",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("%s/%s", restApiId, stageName),
 	}.String()
 	d.Set("execution_arn", executionArn)
@@ -286,11 +288,11 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	stageArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Service:   "apigateway",
 		Resource:  fmt.Sprintf("/restapis/%s/stages/%s", d.Get("rest_api_id").(string), d.Get("stage_name").(string)),
 	}.String()
@@ -467,7 +469,7 @@ func apiGatewayStageCacheRefreshFunc(conn *apigateway.APIGateway, apiId, stageNa
 }
 
 func resourceAwsApiGatewayStageDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Stage: %s", d.Id())
 	input := apigateway.DeleteStageInput{
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),
@@ -475,7 +477,7 @@ func resourceAwsApiGatewayStageDelete(d *schema.ResourceData, meta interface{}) 
 	}
 	_, err := conn.DeleteStage(&input)
 
-	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
