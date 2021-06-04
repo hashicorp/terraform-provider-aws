@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGlueSecurityConfiguration() *schema.Resource {
@@ -117,7 +119,7 @@ func resourceAwsGlueSecurityConfiguration() *schema.Resource {
 }
 
 func resourceAwsGlueSecurityConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 	name := d.Get("name").(string)
 
 	input := &glue.CreateSecurityConfigurationInput{
@@ -137,7 +139,7 @@ func resourceAwsGlueSecurityConfigurationCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsGlueSecurityConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	input := &glue.GetSecurityConfigurationInput{
 		Name: aws.String(d.Id()),
@@ -146,7 +148,7 @@ func resourceAwsGlueSecurityConfigurationRead(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Reading Glue Security Configuration: %s", input)
 	output, err := conn.GetSecurityConfiguration(input)
 
-	if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 		log.Printf("[WARN] Glue Security Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -173,7 +175,7 @@ func resourceAwsGlueSecurityConfigurationRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsGlueSecurityConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Security Configuration: %s", d.Id())
 	err := deleteGlueSecurityConfiguration(conn, d.Id())
@@ -191,7 +193,7 @@ func deleteGlueSecurityConfiguration(conn *glue.Glue, name string) error {
 
 	_, err := conn.DeleteSecurityConfiguration(input)
 
-	if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 		return nil
 	}
 
