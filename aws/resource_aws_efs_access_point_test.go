@@ -8,10 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -22,11 +25,11 @@ func init() {
 }
 
 func testSweepEfsAccessPoints(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).efsconn
+	conn := client.(*awsprovider.AWSClient).EFSConn
 	var sweeperErrs *multierror.Error
 
 	var errors error
@@ -89,9 +92,9 @@ func TestAccAWSEFSAccessPoint_basic(t *testing.T) {
 	fsResourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -100,7 +103,7 @@ func TestAccAWSEFSAccessPoint_basic(t *testing.T) {
 					testAccCheckEfsAccessPointExists(resourceName, &ap),
 					resource.TestCheckResourceAttrPair(resourceName, "file_system_arn", fsResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "file_system_id", fsResourceName, "id"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticfilesystem", regexp.MustCompile(`access-point/fsap-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "elasticfilesystem", regexp.MustCompile(`access-point/fsap-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.#", "0"),
@@ -123,9 +126,9 @@ func TestAccAWSEFSAccessPoint_root_directory(t *testing.T) {
 	resourceName := "aws_efs_access_point.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -152,9 +155,9 @@ func TestAccAWSEFSAccessPoint_root_directory_creation_info(t *testing.T) {
 	resourceName := "aws_efs_access_point.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -184,9 +187,9 @@ func TestAccAWSEFSAccessPoint_posix_user(t *testing.T) {
 	resourceName := "aws_efs_access_point.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -214,9 +217,9 @@ func TestAccAWSEFSAccessPoint_posix_user_secondary_gids(t *testing.T) {
 	resourceName := "aws_efs_access_point.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -243,9 +246,9 @@ func TestAccAWSEFSAccessPoint_tags(t *testing.T) {
 	resourceName := "aws_efs_access_point.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -288,16 +291,16 @@ func TestAccAWSEFSAccessPoint_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEFSAccessPointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsAccessPointExists(resourceName, &ap),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEfsAccessPoint(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsEfsAccessPoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -306,7 +309,7 @@ func TestAccAWSEFSAccessPoint_disappears(t *testing.T) {
 }
 
 func testAccCheckEfsAccessPointDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).efsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EFSConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_efs_access_point" {
 			continue
@@ -316,7 +319,7 @@ func testAccCheckEfsAccessPointDestroy(s *terraform.State) error {
 			AccessPointId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
-			if isAWSErr(err, efs.ErrCodeAccessPointNotFound, "") {
+			if tfawserr.ErrMessageContains(err, efs.ErrCodeAccessPointNotFound, "") {
 				continue
 			}
 			return fmt.Errorf("Error describing EFS access point in tests: %s", err)
@@ -345,7 +348,7 @@ func testAccCheckEfsAccessPointExists(resourceID string, mount *efs.AccessPointD
 			return fmt.Errorf("Not found: %s", resourceID)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).efsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EFSConn
 		mt, err := conn.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
 			AccessPointId: aws.String(fs.Primary.ID),
 		})
