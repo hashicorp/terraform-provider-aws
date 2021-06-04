@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsLambdaCodeSigningConfig() *schema.Resource {
@@ -16,7 +17,7 @@ func dataSourceAwsLambdaCodeSigningConfig() *schema.Resource {
 			"arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"allowed_publishers": {
 				Type:     schema.TypeList,
@@ -63,7 +64,7 @@ func dataSourceAwsLambdaCodeSigningConfig() *schema.Resource {
 }
 
 func dataSourceAwsLambdaCodeSigningConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	arn := d.Get("arn").(string)
 
