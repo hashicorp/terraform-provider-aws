@@ -8,8 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSesConfigurationSet() *schema.Resource {
@@ -67,7 +69,7 @@ func resourceAwsSesConfigurationSet() *schema.Resource {
 }
 
 func resourceAwsSesConfigurationSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*awsprovider.AWSClient).SESConn
 
 	configurationSetName := d.Get("name").(string)
 
@@ -124,7 +126,7 @@ func resourceAwsSesConfigurationSetCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsSesConfigurationSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*awsprovider.AWSClient).SESConn
 
 	configSetInput := &ses.DescribeConfigurationSetInput{
 		ConfigurationSetName: aws.String(d.Id()),
@@ -136,7 +138,7 @@ func resourceAwsSesConfigurationSetRead(d *schema.ResourceData, meta interface{}
 	response, err := conn.DescribeConfigurationSet(configSetInput)
 
 	if err != nil {
-		if isAWSErr(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
 			log.Printf("[WARN] SES Configuration Set (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -158,10 +160,10 @@ func resourceAwsSesConfigurationSetRead(d *schema.ResourceData, meta interface{}
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   ses.ServiceName,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("configuration-set/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -170,7 +172,7 @@ func resourceAwsSesConfigurationSetRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsSesConfigurationSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*awsprovider.AWSClient).SESConn
 
 	if d.HasChange("delivery_options") {
 		input := &ses.PutConfigurationSetDeliveryOptionsInput{
@@ -212,7 +214,7 @@ func resourceAwsSesConfigurationSetUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsSesConfigurationSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*awsprovider.AWSClient).SESConn
 
 	log.Printf("[DEBUG] SES Delete Configuration Rule Set: %s", d.Id())
 	input := &ses.DeleteConfigurationSetInput{
@@ -220,7 +222,7 @@ func resourceAwsSesConfigurationSetDelete(d *schema.ResourceData, meta interface
 	}
 
 	if _, err := conn.DeleteConfigurationSet(input); err != nil {
-		if !isAWSErr(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
+		if !tfawserr.ErrMessageContains(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
 			return fmt.Errorf("error deleting SES Configuration Set (%s): %w", d.Id(), err)
 		}
 	}
