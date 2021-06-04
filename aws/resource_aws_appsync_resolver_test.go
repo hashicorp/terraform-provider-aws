@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsAppsyncResolver_basic(t *testing.T) {
@@ -18,16 +21,16 @@ func TestAccAwsAppsyncResolver_basic(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appsync.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppsyncResolver_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver1),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile("apis/.+/types/.+/resolvers/.+")),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile("apis/.+/types/.+/resolvers/.+")),
 					resource.TestCheckResourceAttr(resourceName, "data_source", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "request_template"),
 				),
@@ -49,9 +52,9 @@ func TestAccAwsAppsyncResolver_disappears(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appsync.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -59,7 +62,7 @@ func TestAccAwsAppsyncResolver_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncGraphqlApiExists(appsyncGraphqlApiResourceName, &api1),
 					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver1),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppsyncResolver(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsAppsyncResolver(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -73,9 +76,9 @@ func TestAccAwsAppsyncResolver_DataSource(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appsync.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -107,9 +110,9 @@ func TestAccAwsAppsyncResolver_DataSource_lambda(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appsync.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -134,9 +137,9 @@ func TestAccAwsAppsyncResolver_RequestTemplate(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appsync.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -168,9 +171,9 @@ func TestAccAwsAppsyncResolver_ResponseTemplate(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appsync.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -202,9 +205,9 @@ func TestAccAwsAppsyncResolver_multipleResolvers(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appsync.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -232,9 +235,9 @@ func TestAccAwsAppsyncResolver_PipelineConfig(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appsync.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -260,9 +263,9 @@ func TestAccAwsAppsyncResolver_CachingConfig(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appsync.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -283,7 +286,7 @@ func TestAccAwsAppsyncResolver_CachingConfig(t *testing.T) {
 }
 
 func testAccCheckAwsAppsyncResolverDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).appsyncconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).AppSyncConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_resolver" {
 			continue
@@ -303,7 +306,7 @@ func testAccCheckAwsAppsyncResolverDestroy(s *terraform.State) error {
 
 		_, err = conn.GetResolver(input)
 
-		if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 			continue
 		}
 
@@ -330,7 +333,7 @@ func testAccCheckAwsAppsyncResolverExists(name string, resolver *appsync.Resolve
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).appsyncconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AppSyncConn
 
 		input := &appsync.GetResolverInput{
 			ApiId:     aws.String(apiID),
