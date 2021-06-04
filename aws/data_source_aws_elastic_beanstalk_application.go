@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsElasticBeanstalkApplication() *schema.Resource {
@@ -54,7 +55,7 @@ func dataSourceAwsElasticBeanstalkApplication() *schema.Resource {
 }
 
 func dataSourceAwsElasticBeanstalkApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticbeanstalkconn
+	conn := meta.(*awsprovider.AWSClient).ElasticBeanstalkConn
 
 	// Get the name and description
 	name := d.Get("name").(string)
