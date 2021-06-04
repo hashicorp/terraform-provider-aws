@@ -10,7 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsSsoAdminPermissionSet() *schema.Resource {
@@ -22,7 +23,7 @@ func dataSourceAwsSsoAdminPermissionSet() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 				ExactlyOneOf: []string{"arn", "name"},
 			},
 
@@ -39,7 +40,7 @@ func dataSourceAwsSsoAdminPermissionSet() *schema.Resource {
 			"instance_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"name": {
@@ -69,8 +70,8 @@ func dataSourceAwsSsoAdminPermissionSet() *schema.Resource {
 }
 
 func dataSourceAwsSsoAdminPermissionSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SSOAdminConn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	instanceArn := d.Get("instance_arn").(string)
 
