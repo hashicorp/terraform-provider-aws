@@ -15,6 +15,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsLakeFormationPermissions() *schema.Resource {
@@ -60,7 +61,7 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 						"arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"catalog_id": {
 							Type:         schema.TypeString,
@@ -245,7 +246,7 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 // returns.
 
 func resourceAwsLakeFormationPermissionsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lakeformationconn
+	conn := meta.(*awsprovider.AWSClient).LakeFormationConn
 
 	input := &lakeformation.GrantPermissionsInput{
 		Permissions: expandStringList(d.Get("permissions").([]interface{})),
@@ -327,7 +328,7 @@ func resourceAwsLakeFormationPermissionsCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lakeformationconn
+	conn := meta.(*awsprovider.AWSClient).LakeFormationConn
 
 	input := &lakeformation.ListPermissionsInput{
 		Principal: &lakeformation.DataLakePrincipal{
@@ -534,7 +535,7 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsLakeFormationPermissionsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lakeformationconn
+	conn := meta.(*awsprovider.AWSClient).LakeFormationConn
 
 	input := &lakeformation.RevokePermissionsInput{
 		Permissions: expandStringList(d.Get("permissions").([]interface{})),
