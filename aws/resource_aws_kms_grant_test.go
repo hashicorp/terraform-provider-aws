@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSKmsGrant_basic(t *testing.T) {
@@ -16,9 +18,9 @@ func TestAccAWSKmsGrant_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -48,9 +50,9 @@ func TestAccAWSKmsGrant_withConstraints(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -96,9 +98,9 @@ func TestAccAWSKmsGrant_withRetiringPrincipal(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -123,9 +125,9 @@ func TestAccAWSKmsGrant_bare(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -152,9 +154,9 @@ func TestAccAWSKmsGrant_ARN(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -184,9 +186,9 @@ func TestAccAWSKmsGrant_AsymmetricKey(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -210,9 +212,9 @@ func TestAccAWSKmsGrant_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -228,7 +230,7 @@ func TestAccAWSKmsGrant_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSKmsGrantDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).kmsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).KMSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kms_grant" {
@@ -260,7 +262,7 @@ func testAccCheckAWSKmsGrantDisappears(name string) resource.TestCheckFunc {
 			return fmt.Errorf("not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kmsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).KMSConn
 
 		revokeInput := kms.RevokeGrantInput{
 			GrantId: aws.String(rs.Primary.Attributes["grant_id"]),
