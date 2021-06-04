@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -34,7 +36,7 @@ func testAccEC2ClassicPreCheck(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderEc2ClassicConfigure.Do(func() {
-		testAccProviderEc2Classic = Provider()
+		testAccProviderEc2Classic = awsprovider.Provider()
 
 		config := map[string]interface{}{
 			"region": testAccGetEc2ClassicRegion(),
@@ -47,10 +49,10 @@ func testAccEC2ClassicPreCheck(t *testing.T) {
 		}
 	})
 
-	client := testAccProviderEc2Classic.Meta().(*AWSClient)
-	platforms := client.supportedplatforms
-	region := client.region
-	if !hasEc2Classic(platforms) {
+	client := testAccProviderEc2Classic.Meta().(*awsprovider.AWSClient)
+	platforms := client.SupportedPlatforms
+	region := client.Region
+	if !awsprovider.HasEC2Classic(platforms) {
 		t.Skipf("this test can only run in EC2-Classic, platforms available in %s: %q", region, platforms)
 	}
 }
@@ -60,7 +62,7 @@ func testAccEC2ClassicPreCheck(t *testing.T) {
 // Testing EC2-Classic assumes no other provider configurations are necessary
 // and overwrites the "aws" provider configuration.
 func testAccEc2ClassicRegionProviderConfig() string {
-	return testAccRegionalProviderConfig(testAccGetEc2ClassicRegion())
+	return atest.ConfigProviderRegional(testAccGetEc2ClassicRegion())
 }
 
 // testAccGetEc2ClassicRegion returns the EC2-Classic region for testing
@@ -71,19 +73,19 @@ func testAccGetEc2ClassicRegion() string {
 		return v
 	}
 
-	if testAccGetPartition() == endpoints.AwsPartitionID {
+	if atest.Partition() == endpoints.AwsPartitionID {
 		return endpoints.UsEast1RegionID
 	}
 
-	return testAccGetRegion()
+	return atest.Region()
 }
 
 // testAccCheckResourceAttrRegionalARNEc2Classic ensures the Terraform state exactly matches a formatted ARN with EC2-Classic region
 func testAccCheckResourceAttrRegionalARNEc2Classic(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		attributeValue := arn.ARN{
-			AccountID: testAccGetAccountID(),
-			Partition: testAccGetPartition(),
+			AccountID: atest.AccountID(),
+			Partition: atest.Partition(),
 			Region:    testAccGetEc2ClassicRegion(),
 			Resource:  arnResource,
 			Service:   arnService,
