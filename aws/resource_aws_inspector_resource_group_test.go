@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSInspectorResourceGroup_basic(t *testing.T) {
@@ -16,16 +18,16 @@ func TestAccAWSInspectorResourceGroup_basic(t *testing.T) {
 	resourceName := "aws_inspector_resource_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, inspector.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, inspector.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSInspectorResourceGroup,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSInspectorResourceGroupExists(resourceName, &v1),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`resourcegroup/.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`resourcegroup/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "foo"),
 				),
 			},
@@ -33,7 +35,7 @@ func TestAccAWSInspectorResourceGroup_basic(t *testing.T) {
 				Config: testAccCheckAWSInspectorResourceGroupModified,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSInspectorResourceGroupExists(resourceName, &v2),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`resourcegroup/.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`resourcegroup/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "bar"),
 					testAccCheckAWSInspectorResourceGroupRecreated(&v1, &v2),
 				),
@@ -44,7 +46,7 @@ func TestAccAWSInspectorResourceGroup_basic(t *testing.T) {
 
 func testAccCheckAWSInspectorResourceGroupExists(name string, rg *inspector.ResourceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).inspectorconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).InspectorConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
