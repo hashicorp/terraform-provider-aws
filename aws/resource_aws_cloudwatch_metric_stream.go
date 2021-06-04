@@ -13,9 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatch/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCloudWatchMetricStream() *schema.Resource {
@@ -62,7 +63,7 @@ func resourceAwsCloudWatchMetricStream() *schema.Resource {
 			"firehose_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"include_filter": {
 				Type:          schema.TypeSet,
@@ -106,7 +107,7 @@ func resourceAwsCloudWatchMetricStream() *schema.Resource {
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"state": {
 				Type:     schema.TypeString,
@@ -119,8 +120,8 @@ func resourceAwsCloudWatchMetricStream() *schema.Resource {
 }
 
 func resourceAwsCloudWatchMetricStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cloudwatchconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CloudWatchConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
@@ -153,9 +154,9 @@ func resourceAwsCloudWatchMetricStreamCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceAwsCloudWatchMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).cloudwatchconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CloudWatchConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	output, err := waiter.MetricStreamReady(ctx, conn, d.Id())
 
@@ -217,7 +218,7 @@ func resourceAwsCloudWatchMetricStreamRead(ctx context.Context, d *schema.Resour
 
 func resourceAwsCloudWatchMetricStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting CloudWatch MetricStream %s", d.Id())
-	conn := meta.(*AWSClient).cloudwatchconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchConn
 	params := cloudwatch.DeleteMetricStreamInput{
 		Name: aws.String(d.Id()),
 	}
