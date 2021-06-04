@@ -8,7 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsSecurityGroups() *schema.Resource {
@@ -16,7 +17,7 @@ func dataSourceAwsSecurityGroups() *schema.Resource {
 		Read: dataSourceAwsSecurityGroupsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": dataSourceFiltersSchema(),
+			"filter": awsprovider.DataSourceFiltersSchema(),
 			"tags":   tagsSchemaComputed(),
 
 			"ids": {
@@ -39,7 +40,7 @@ func dataSourceAwsSecurityGroups() *schema.Resource {
 }
 
 func dataSourceAwsSecurityGroupsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 	req := &ec2.DescribeSecurityGroupsInput{}
 
 	filters, filtersOk := d.GetOk("filter")
@@ -51,7 +52,7 @@ func dataSourceAwsSecurityGroupsRead(d *schema.ResourceData, meta interface{}) e
 
 	if filtersOk {
 		req.Filters = append(req.Filters,
-			buildAwsDataSourceFilters(filters.(*schema.Set))...)
+			awsprovider.BuildDataSourceFilters(filters.(*schema.Set))...)
 	}
 	if tagsOk {
 		req.Filters = append(req.Filters, buildEC2TagFilterList(
@@ -73,9 +74,9 @@ func dataSourceAwsSecurityGroupsRead(d *schema.ResourceData, meta interface{}) e
 			vpcIds = append(vpcIds, aws.StringValue(sg.VpcId))
 
 			arn := arn.ARN{
-				Partition: meta.(*AWSClient).partition,
+				Partition: meta.(*awsprovider.AWSClient).Partition,
 				Service:   ec2.ServiceName,
-				Region:    meta.(*AWSClient).region,
+				Region:    meta.(*awsprovider.AWSClient).Region,
 				AccountID: aws.StringValue(sg.OwnerId),
 				Resource:  fmt.Sprintf("security-group/%s", aws.StringValue(sg.GroupId)),
 			}.String()
@@ -95,7 +96,7 @@ func dataSourceAwsSecurityGroupsRead(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] Found %d security groups via given filter: %s", len(ids), req)
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*awsprovider.AWSClient).Region)
 
 	err := d.Set("ids", ids)
 	if err != nil {
