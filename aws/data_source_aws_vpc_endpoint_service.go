@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsVpcEndpointService() *schema.Resource {
@@ -77,14 +78,14 @@ func dataSourceAwsVpcEndpointService() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"filter": dataSourceFiltersSchema(),
+			"filter": awsprovider.DataSourceFiltersSchema(),
 		},
 	}
 }
 
 func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	filters, filtersOk := d.GetOk("filter")
 	tags, tagsOk := d.GetOk("tags")
@@ -95,13 +96,13 @@ func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{
 		serviceName = v.(string)
 		serviceNameOk = true
 	} else if v, ok := d.GetOk("service"); ok {
-		serviceName = fmt.Sprintf("com.amazonaws.%s.%s", meta.(*AWSClient).region, v.(string))
+		serviceName = fmt.Sprintf("com.amazonaws.%s.%s", meta.(*awsprovider.AWSClient).Region, v.(string))
 		serviceNameOk = true
 	}
 
 	req := &ec2.DescribeVpcEndpointServicesInput{}
 	if filtersOk {
-		req.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
+		req.Filters = awsprovider.BuildDataSourceFilters(filters.(*schema.Set))
 	}
 	if serviceNameOk {
 		req.ServiceNames = aws.StringSlice([]string{serviceName})
@@ -155,10 +156,10 @@ func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{
 	d.SetId(strconv.Itoa(hashcode.String(serviceName)))
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpc-endpoint-service/%s", serviceId),
 	}.String()
 	d.Set("arn", arn)
