@@ -8,8 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -105,7 +107,7 @@ func resourceAwsDxGatewayAssociation() *schema.Resource {
 }
 
 func resourceAwsDxGatewayAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	dxgwId := d.Get("dx_gateway_id").(string)
 	gwIdRaw, gwIdOk := d.GetOk("associated_gateway_id")
@@ -168,7 +170,7 @@ func resourceAwsDxGatewayAssociationCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsDxGatewayAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	associationId := d.Get("dx_gateway_association_id").(string)
 	assocRaw, state, err := dxGatewayAssociationStateRefresh(conn, associationId)()
@@ -199,7 +201,7 @@ func resourceAwsDxGatewayAssociationRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDxGatewayAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	if d.HasChange("allowed_prefixes") {
 		associationId := d.Get("dx_gateway_association_id").(string)
@@ -231,7 +233,7 @@ func resourceAwsDxGatewayAssociationUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsDxGatewayAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	associationId := d.Get("dx_gateway_association_id").(string)
 
@@ -239,7 +241,7 @@ func resourceAwsDxGatewayAssociationDelete(d *schema.ResourceData, meta interfac
 	_, err := conn.DeleteDirectConnectGatewayAssociation(&directconnect.DeleteDirectConnectGatewayAssociationInput{
 		AssociationId: aws.String(associationId),
 	})
-	if isAWSErr(err, directconnect.ErrCodeClientException, "No association exists") {
+	if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "No association exists") {
 		return nil
 	}
 	if err != nil {
@@ -264,7 +266,7 @@ func resourceAwsDxGatewayAssociationImport(d *schema.ResourceData, meta interfac
 	id := dxGatewayAssociationId(dxgwId, gwId)
 	log.Printf("[DEBUG] Importing Direct Connect gateway association %s/%s", dxgwId, gwId)
 
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	resp, err := conn.DescribeDirectConnectGatewayAssociations(&directconnect.DescribeDirectConnectGatewayAssociationsInput{
 		AssociatedGatewayId:    aws.String(gwId),
