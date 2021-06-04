@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSXrayEncryptionConfig_basic(t *testing.T) {
@@ -16,9 +18,9 @@ func TestAccAWSXrayEncryptionConfig_basic(t *testing.T) {
 	keyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, xray.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, xray.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -62,7 +64,7 @@ func testAccCheckXrayEncryptionConfigExists(n string, EncryptionConfig *xray.Enc
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No XRay Encryption Config ID is set")
 		}
-		conn := testAccProvider.Meta().(*AWSClient).xrayconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).XRayConn
 
 		config, err := conn.GetEncryptionConfig(&xray.GetEncryptionConfigInput{})
 
