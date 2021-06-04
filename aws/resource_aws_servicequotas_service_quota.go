@@ -8,8 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicequotas"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsServiceQuotasServiceQuota() *schema.Resource {
@@ -80,7 +82,7 @@ func resourceAwsServiceQuotasServiceQuota() *schema.Resource {
 }
 
 func resourceAwsServiceQuotasServiceQuotaCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).servicequotasconn
+	conn := meta.(*awsprovider.AWSClient).ServiceQuotasConn
 
 	quotaCode := d.Get("quota_code").(string)
 	serviceCode := d.Get("service_code").(string)
@@ -127,7 +129,7 @@ func resourceAwsServiceQuotasServiceQuotaCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsServiceQuotasServiceQuotaRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).servicequotasconn
+	conn := meta.(*awsprovider.AWSClient).ServiceQuotasConn
 
 	serviceCode, quotaCode, err := resourceAwsServiceQuotasServiceQuotaParseID(d.Id())
 
@@ -142,7 +144,7 @@ func resourceAwsServiceQuotasServiceQuotaRead(d *schema.ResourceData, meta inter
 
 	output, err := conn.GetServiceQuota(input)
 
-	if isAWSErr(err, servicequotas.ErrCodeNoSuchResourceException, "") {
+	if tfawserr.ErrMessageContains(err, servicequotas.ErrCodeNoSuchResourceException, "") {
 		log.Printf("[WARN] Service Quotas Service Quota (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -189,7 +191,7 @@ func resourceAwsServiceQuotasServiceQuotaRead(d *schema.ResourceData, meta inter
 
 		output, err := conn.GetRequestedServiceQuotaChange(input)
 
-		if isAWSErr(err, servicequotas.ErrCodeNoSuchResourceException, "") {
+		if tfawserr.ErrMessageContains(err, servicequotas.ErrCodeNoSuchResourceException, "") {
 			d.Set("request_id", "")
 			d.Set("request_status", "")
 			return nil
@@ -218,7 +220,7 @@ func resourceAwsServiceQuotasServiceQuotaRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsServiceQuotasServiceQuotaUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).servicequotasconn
+	conn := meta.(*awsprovider.AWSClient).ServiceQuotasConn
 
 	value := d.Get("value").(float64)
 	serviceCode, quotaCode, err := resourceAwsServiceQuotasServiceQuotaParseID(d.Id())
