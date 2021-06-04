@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSUserGroupMembership_basic(t *testing.T) {
@@ -23,9 +26,9 @@ func TestAccAWSUserGroupMembership_basic(t *testing.T) {
 	usersAndGroupsConfig := testAccAWSUserGroupMembershipConfigUsersAndGroups(userName1, userName2, groupName1, groupName2, groupName3)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccAWSUserGroupMembershipDestroy,
 		Steps: []resource.TestStep{
 			// simplest test
@@ -111,7 +114,7 @@ func TestAccAWSUserGroupMembership_basic(t *testing.T) {
 }
 
 func testAccAWSUserGroupMembershipDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iamconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type == "aws_iam_user_group_membership" {
@@ -126,7 +129,7 @@ func testAccAWSUserGroupMembershipDestroy(s *terraform.State) error {
 				return !lastPage
 			})
 			if err != nil {
-				if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+				if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 					continue
 				}
 				return err
@@ -142,7 +145,7 @@ func testAccAWSUserGroupMembershipDestroy(s *terraform.State) error {
 
 func testAccAWSUserGroupMembershipCheckGroupListForUser(userName string, groups []string, groupsNeg []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).iamconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 		// get list of groups for user
 		userGroupList, err := conn.ListGroupsForUser(&iam.ListGroupsForUserInput{
