@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsRamResourceShare_basic(t *testing.T) {
@@ -16,9 +17,9 @@ func TestAccDataSourceAwsRamResourceShare_basic(t *testing.T) {
 	datasourceName := "data.aws_ram_resource_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ram.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ram.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsRamResourceShareConfig_NonExistent,
@@ -42,9 +43,9 @@ func TestAccDataSourceAwsRamResourceShare_Tags(t *testing.T) {
 	datasourceName := "data.aws_ram_resource_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ram.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ram.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsRamResourceShareConfig_Tags(rName),
