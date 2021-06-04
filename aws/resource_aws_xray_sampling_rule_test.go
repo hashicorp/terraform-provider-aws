@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSXraySamplingRule_basic(t *testing.T) {
@@ -16,16 +18,16 @@ func TestAccAWSXraySamplingRule_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSXray(t) },
-		ErrorCheck:   testAccErrorCheck(t, xray.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSXray(t) },
+		ErrorCheck:   atest.ErrorCheck(t, xray.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSXraySamplingRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "priority", "5"),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reservoir_size", "10"),
@@ -57,16 +59,16 @@ func TestAccAWSXraySamplingRule_update(t *testing.T) {
 	updatedReservoirSize := acctest.RandIntRange(0, 2147483647)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSXray(t) },
-		ErrorCheck:   testAccErrorCheck(t, xray.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSXray(t) },
+		ErrorCheck:   atest.ErrorCheck(t, xray.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSXraySamplingRuleConfig_update(rName, acctest.RandIntRange(0, 9999), acctest.RandIntRange(0, 2147483647)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "priority"),
 					resource.TestCheckResourceAttrSet(resourceName, "reservoir_size"),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -84,7 +86,7 @@ func TestAccAWSXraySamplingRule_update(t *testing.T) {
 				Config: testAccAWSXraySamplingRuleConfig_update(rName, updatedPriority, updatedReservoirSize),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "priority", fmt.Sprintf("%d", updatedPriority)),
 					resource.TestCheckResourceAttr(resourceName, "reservoir_size", fmt.Sprintf("%d", updatedReservoirSize)),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -113,9 +115,9 @@ func TestAccAWSXraySamplingRule_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSXray(t) },
-		ErrorCheck:   testAccErrorCheck(t, xray.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSXray(t) },
+		ErrorCheck:   atest.ErrorCheck(t, xray.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -158,16 +160,16 @@ func TestAccAWSXraySamplingRule_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSXray(t) },
-		ErrorCheck:   testAccErrorCheck(t, xray.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSXray(t) },
+		ErrorCheck:   atest.ErrorCheck(t, xray.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSXraySamplingRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsXraySamplingRule(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsXraySamplingRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -185,7 +187,7 @@ func testAccCheckXraySamplingRuleExists(n string, samplingRule *xray.SamplingRul
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No XRay Sampling Rule ID is set")
 		}
-		conn := testAccProvider.Meta().(*AWSClient).xrayconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).XRayConn
 
 		rule, err := getXraySamplingRule(conn, rs.Primary.ID)
 
@@ -205,7 +207,7 @@ func testAccCheckAWSXraySamplingRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).xrayconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).XRayConn
 
 		rule, err := getXraySamplingRule(conn, rs.Primary.ID)
 
@@ -222,13 +224,13 @@ func testAccCheckAWSXraySamplingRuleDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAWSXray(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).xrayconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).XRayConn
 
 	input := &xray.GetSamplingRulesInput{}
 
 	_, err := conn.GetSamplingRules(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
