@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccAwsSesDomainIdentityDomainFromEnv(t *testing.T) string {
@@ -30,9 +32,9 @@ func TestAccAwsSesDomainIdentityVerification_basic(t *testing.T) {
 	domain := fmt.Sprintf("tf-acc-%d.%s", acctest.RandInt(), rootDomain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -49,9 +51,9 @@ func TestAccAwsSesDomainIdentityVerification_timeout(t *testing.T) {
 		acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -68,9 +70,9 @@ func TestAccAwsSesDomainIdentityVerification_nonexistent(t *testing.T) {
 		acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -93,7 +95,7 @@ func testAccCheckAwsSesDomainIdentityVerificationPassed(n string) resource.TestC
 		}
 
 		domain := rs.Primary.ID
-		conn := testAccProvider.Meta().(*AWSClient).sesconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SESConn
 
 		params := &ses.GetIdentityVerificationAttributesInput{
 			Identities: []*string{
@@ -115,9 +117,9 @@ func testAccCheckAwsSesDomainIdentityVerificationPassed(n string) resource.TestC
 		}
 
 		expected := arn.ARN{
-			AccountID: testAccProvider.Meta().(*AWSClient).accountid,
-			Partition: testAccProvider.Meta().(*AWSClient).partition,
-			Region:    testAccProvider.Meta().(*AWSClient).region,
+			AccountID: atest.Provider.Meta().(*awsprovider.AWSClient).AccountID,
+			Partition: atest.Provider.Meta().(*awsprovider.AWSClient).Partition,
+			Region:    atest.Provider.Meta().(*awsprovider.AWSClient).Region,
 			Resource:  fmt.Sprintf("identity/%s", domain),
 			Service:   "ses",
 		}
