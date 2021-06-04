@@ -9,9 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEfsMountTarget() *schema.Resource {
@@ -89,7 +91,7 @@ func resourceAwsEfsMountTarget() *schema.Resource {
 }
 
 func resourceAwsEfsMountTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
+	conn := meta.(*awsprovider.AWSClient).EFSConn
 
 	fsId := d.Get("file_system_id").(string)
 	subnetId := d.Get("subnet_id").(string)
@@ -98,13 +100,13 @@ func resourceAwsEfsMountTargetCreate(d *schema.ResourceData, meta interface{}) e
 	// to parallel requests if they both include the same AZ
 	// and we would end up managing the same MT as 2 resources.
 	// So we make it fail by calling 1 request per AZ at a time.
-	az, err := getAzFromSubnetId(subnetId, meta.(*AWSClient).ec2conn)
+	az, err := getAzFromSubnetId(subnetId, meta.(*awsprovider.AWSClient).EC2Conn)
 	if err != nil {
 		return fmt.Errorf("Failed getting Availability Zone from subnet ID (%s): %s", subnetId, err)
 	}
 	mtKey := "efs-mt-" + fsId + "-" + az
-	awsMutexKV.Lock(mtKey)
-	defer awsMutexKV.Unlock(mtKey)
+	awsprovider.MutexKV.Lock(mtKey)
+	defer awsprovider.MutexKV.Unlock(mtKey)
 
 	input := efs.CreateMountTargetInput{
 		FileSystemId: aws.String(fsId),
@@ -164,7 +166,7 @@ func resourceAwsEfsMountTargetCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsEfsMountTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
+	conn := meta.(*awsprovider.AWSClient).EFSConn
 
 	if d.HasChange("security_groups") {
 		input := efs.ModifyMountTargetSecurityGroupsInput{
@@ -181,12 +183,12 @@ func resourceAwsEfsMountTargetUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsEfsMountTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
+	conn := meta.(*awsprovider.AWSClient).EFSConn
 	resp, err := conn.DescribeMountTargets(&efs.DescribeMountTargetsInput{
 		MountTargetId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, efs.ErrCodeMountTargetNotFound, "") {
+		if tfawserr.ErrMessageContains(err, efs.ErrCodeMountTargetNotFound, "") {
 			// The EFS mount target could not be found,
 			// which would indicate that it might be
 			// already deleted.
@@ -206,9 +208,9 @@ func resourceAwsEfsMountTargetRead(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG] Found EFS mount target: %#v", mt)
 
 	fsARN := arn.ARN{
-		AccountID: meta.(*AWSClient).accountid,
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Resource:  fmt.Sprintf("file-system/%s", aws.StringValue(mt.FileSystemId)),
 		Service:   "elasticfilesystem",
 	}.String()
@@ -234,8 +236,8 @@ func resourceAwsEfsMountTargetRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	d.Set("dns_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(mt.FileSystemId))))
-	d.Set("mount_target_dns_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.%s.efs", aws.StringValue(mt.AvailabilityZoneName), aws.StringValue(mt.FileSystemId))))
+	d.Set("dns_name", meta.(*awsprovider.AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(mt.FileSystemId))))
+	d.Set("mount_target_dns_name", meta.(*awsprovider.AWSClient).RegionalHostname(fmt.Sprintf("%s.%s.efs", aws.StringValue(mt.AvailabilityZoneName), aws.StringValue(mt.FileSystemId))))
 
 	return nil
 }
@@ -257,7 +259,7 @@ func getAzFromSubnetId(subnetId string, conn *ec2.EC2) (string, error) {
 }
 
 func resourceAwsEfsMountTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
+	conn := meta.(*awsprovider.AWSClient).EFSConn
 
 	log.Printf("[DEBUG] Deleting EFS mount target %q", d.Id())
 	_, err := conn.DeleteMountTarget(&efs.DeleteMountTargetInput{
@@ -286,7 +288,7 @@ func waitForDeleteEfsMountTarget(conn *efs.EFS, id string, timeout time.Duration
 				MountTargetId: aws.String(id),
 			})
 			if err != nil {
-				if isAWSErr(err, efs.ErrCodeMountTargetNotFound, "") {
+				if tfawserr.ErrMessageContains(err, efs.ErrCodeMountTargetNotFound, "") {
 					return nil, "", nil
 				}
 
