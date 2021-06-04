@@ -7,10 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -21,17 +24,17 @@ func init() {
 }
 
 func testSweepSesConfigurationSets(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).sesconn
+	conn := client.(*awsprovider.AWSClient).SESConn
 	input := &ses.ListConfigurationSetsInput{}
 	var sweeperErrs *multierror.Error
 
 	for {
 		output, err := conn.ListConfigurationSets(input)
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping SES Configuration Sets sweep for %s: %s", region, err)
 			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
@@ -47,7 +50,7 @@ func testSweepSesConfigurationSets(region string) error {
 			_, err := conn.DeleteConfigurationSet(&ses.DeleteConfigurationSetInput{
 				ConfigurationSetName: aws.String(name),
 			})
-			if isAWSErr(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
+			if tfawserr.ErrMessageContains(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
 				continue
 			}
 			if err != nil {
@@ -73,18 +76,18 @@ func TestAccAWSSESConfigurationSet_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSESConfigurationSetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESConfigurationSetExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", ses.ServiceName, fmt.Sprintf("configuration-set/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", ses.ServiceName, fmt.Sprintf("configuration-set/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sending_enabled", "true"),
@@ -107,11 +110,11 @@ func TestAccAWSSESConfigurationSet_sendingEnabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -153,11 +156,11 @@ func TestAccAWSSESConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -196,11 +199,11 @@ func TestAccAWSSESConfigurationSet_deliveryOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -226,11 +229,11 @@ func TestAccAWSSESConfigurationSet_update_deliveryOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -282,11 +285,11 @@ func TestAccAWSSESConfigurationSet_emptyDeliveryOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -312,11 +315,11 @@ func TestAccAWSSESConfigurationSet_update_emptyDeliveryOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -361,18 +364,18 @@ func TestAccAWSSESConfigurationSet_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSESConfigurationSetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESConfigurationSetExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesConfigurationSet(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSesConfigurationSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -391,7 +394,7 @@ func testAccCheckAwsSESConfigurationSetExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("SES configuration set ID not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sesconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SESConn
 
 		response, err := conn.DescribeConfigurationSet(&ses.DescribeConfigurationSetInput{
 			ConfigurationSetName: aws.String(rs.Primary.ID),
@@ -410,7 +413,7 @@ func testAccCheckAwsSESConfigurationSetExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckSESConfigurationSetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_configuration_set" {
@@ -422,7 +425,7 @@ func testAccCheckSESConfigurationSetDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if isAWSErr(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
+			if tfawserr.ErrMessageContains(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
 				return nil
 			}
 			return err
