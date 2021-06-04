@@ -11,9 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecr/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEcrRepository() *schema.Resource {
@@ -106,8 +107,8 @@ func resourceAwsEcrRepository() *schema.Resource {
 }
 
 func resourceAwsEcrRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ECRConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := ecr.CreateRepositoryInput{
@@ -144,9 +145,9 @@ func resourceAwsEcrRepositoryCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ECRConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading ECR repository %s", d.Id())
 	var out *ecr.DescribeRepositoriesOutput
@@ -270,7 +271,7 @@ func flattenEcrRepositoryEncryptionConfiguration(ec *ecr.EncryptionConfiguration
 
 func resourceAwsEcrRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	arn := d.Get("arn").(string)
-	conn := meta.(*AWSClient).ecrconn
+	conn := meta.(*awsprovider.AWSClient).ECRConn
 
 	if d.HasChange("image_tag_mutability") {
 		if err := resourceAwsEcrRepositoryUpdateImageTagMutability(conn, d); err != nil {
@@ -296,7 +297,7 @@ func resourceAwsEcrRepositoryUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsEcrRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
+	conn := meta.(*awsprovider.AWSClient).ECRConn
 
 	_, err := conn.DeleteRepository(&ecr.DeleteRepositoryInput{
 		RepositoryName: aws.String(d.Id()),
@@ -304,7 +305,7 @@ func resourceAwsEcrRepositoryDelete(d *schema.ResourceData, meta interface{}) er
 		Force:          aws.Bool(true),
 	})
 	if err != nil {
-		if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting ECR repository: %s", err)
@@ -317,7 +318,7 @@ func resourceAwsEcrRepositoryDelete(d *schema.ResourceData, meta interface{}) er
 	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err = conn.DescribeRepositories(input)
 		if err != nil {
-			if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -329,7 +330,7 @@ func resourceAwsEcrRepositoryDelete(d *schema.ResourceData, meta interface{}) er
 		_, err = conn.DescribeRepositories(input)
 	}
 
-	if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
 		return nil
 	}
 
