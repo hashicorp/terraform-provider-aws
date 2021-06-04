@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsMainRouteTableAssociation() *schema.Resource {
@@ -40,7 +41,7 @@ func resourceAwsMainRouteTableAssociation() *schema.Resource {
 }
 
 func resourceAwsMainRouteTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 	vpcId := d.Get("vpc_id").(string)
 	routeTableId := d.Get("route_table_id").(string)
 
@@ -72,7 +73,7 @@ func resourceAwsMainRouteTableAssociationCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsMainRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	mainAssociation, err := findMainRouteTableAssociation(
 		conn,
@@ -93,7 +94,7 @@ func resourceAwsMainRouteTableAssociationRead(d *schema.ResourceData, meta inter
 // original_route_table_id - this needs to stay recorded as the AWS-created
 // table from VPC creation.
 func resourceAwsMainRouteTableAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 	vpcId := d.Get("vpc_id").(string)
 	routeTableId := d.Get("route_table_id").(string)
 
@@ -114,7 +115,7 @@ func resourceAwsMainRouteTableAssociationUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsMainRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 	vpcId := d.Get("vpc_id").(string)
 	originalRouteTableId := d.Get("original_route_table_id").(string)
 
