@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSSESDomainDkim_basic(t *testing.T) {
@@ -21,11 +23,11 @@ func TestAccAWSSESDomainDkim_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSESDomainDkimDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -40,7 +42,7 @@ func TestAccAWSSESDomainDkim_basic(t *testing.T) {
 }
 
 func testAccCheckAwsSESDomainDkimDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_domain_dkim" {
@@ -80,7 +82,7 @@ func testAccCheckAwsSESDomainDkimExists(n string) resource.TestCheckFunc {
 		}
 
 		domain := rs.Primary.ID
-		conn := testAccProvider.Meta().(*AWSClient).sesconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SESConn
 
 		params := &ses.GetIdentityDkimAttributesInput{
 			Identities: []*string{
