@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudfront/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsCloudFrontFunction() *schema.Resource {
@@ -66,7 +67,7 @@ func dataSourceAwsCloudFrontFunction() *schema.Resource {
 }
 
 func dataSourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*awsprovider.AWSClient).CloudFrontConn
 
 	name := d.Get("name").(string)
 	stage := d.Get("stage").(string)
