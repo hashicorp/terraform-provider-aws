@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSRolePolicyAttachment_basic(t *testing.T) {
@@ -20,9 +23,9 @@ func TestAccAWSRolePolicyAttachment_basic(t *testing.T) {
 	testPolicy3 := fmt.Sprintf("tf-acctest3-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSRolePolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -71,9 +74,9 @@ func TestAccAWSRolePolicyAttachment_disappears(t *testing.T) {
 	resourceName := "aws_iam_role_policy_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSRolePolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -97,9 +100,9 @@ func TestAccAWSRolePolicyAttachment_disappears_Role(t *testing.T) {
 	resourceName := "aws_iam_role_policy_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSRolePolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -118,7 +121,7 @@ func TestAccAWSRolePolicyAttachment_disappears_Role(t *testing.T) {
 }
 
 func testAccCheckAWSRolePolicyAttachmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iamconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_role_policy_attachment" {
@@ -130,7 +133,7 @@ func testAccCheckAWSRolePolicyAttachmentDestroy(s *terraform.State) error {
 
 		hasPolicyAttachment, err := iamRoleHasPolicyARNAttachment(conn, role, policyARN)
 
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
 		}
 
@@ -157,7 +160,7 @@ func testAccCheckAWSRolePolicyAttachmentExists(n string, c int, out *iam.ListAtt
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iamconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 		role := rs.Primary.Attributes["role"]
 
 		attachedPolicies, err := conn.ListAttachedRolePolicies(&iam.ListAttachedRolePoliciesInput{
@@ -197,7 +200,7 @@ func testAccCheckAWSRolePolicyAttachmentAttributes(policies []string, out *iam.L
 
 func testAccCheckAWSIAMRolePolicyAttachmentDisappears(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).iamconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 		rs, ok := s.RootModule().Resources[resourceName]
 
