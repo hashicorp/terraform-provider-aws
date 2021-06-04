@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSMskConfigurationDataSource_Name(t *testing.T) {
@@ -15,9 +16,9 @@ func TestAccAWSMskConfigurationDataSource_Name(t *testing.T) {
 	resourceName := "aws_msk_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
