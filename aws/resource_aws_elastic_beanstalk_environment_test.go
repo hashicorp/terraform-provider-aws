@@ -11,11 +11,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -26,18 +29,18 @@ func init() {
 }
 
 func testSweepElasticBeanstalkEnvironments(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	beanstalkconn := client.(*AWSClient).elasticbeanstalkconn
+	beanstalkconn := client.(*awsprovider.AWSClient).ElasticBeanstalkConn
 
 	resp, err := beanstalkconn.DescribeEnvironments(&elasticbeanstalk.DescribeEnvironmentsInput{
 		IncludeDeleted: aws.Bool(false),
 	})
 
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Elastic Beanstalk Environment sweep for %s: %s", region, err)
 			return nil
 		}
@@ -79,16 +82,16 @@ func TestAccAWSBeanstalkEnv_basic(t *testing.T) {
 	beanstalkEndpointURL := regexp.MustCompile("awseb.+?EBLoa[^,].+?elb.amazonaws.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkEnvConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "elasticbeanstalk", fmt.Sprintf("environment/%s/%s", rName, rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "elasticbeanstalk", fmt.Sprintf("environment/%s/%s", rName, rName)),
 					resource.TestMatchResourceAttr(resourceName, "autoscaling_groups.0", beanstalkAsgNameRegexp),
 					resource.TestMatchResourceAttr(resourceName, "endpoint_url", beanstalkEndpointURL),
 					resource.TestMatchResourceAttr(resourceName, "instances.0", beanstalkInstancesNameRegexp),
@@ -117,9 +120,9 @@ func TestAccAWSBeanstalkEnv_tier(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -151,9 +154,9 @@ func TestAccAWSBeanstalkEnv_cname_prefix(t *testing.T) {
 	beanstalkCnameRegexp := regexp.MustCompile("^" + rName + ".+?elasticbeanstalk.com$")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -183,9 +186,9 @@ func TestAccAWSBeanstalkEnv_config(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -230,9 +233,9 @@ func TestAccAWSBeanstalkEnv_resource(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -261,9 +264,9 @@ func TestAccAWSBeanstalkEnv_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -307,9 +310,9 @@ func TestAccAWSBeanstalkEnv_template_change(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -341,9 +344,9 @@ func TestAccAWSBeanstalkEnv_settings_update(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -385,9 +388,9 @@ func TestAccAWSBeanstalkEnv_version_label(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -422,9 +425,9 @@ func TestAccAWSBeanstalkEnv_settingWithJsonValue(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -453,16 +456,16 @@ func TestAccAWSBeanstalkEnv_platformArn(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBeanstalkEnvConfig_platform_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
-					testAccCheckResourceAttrRegionalARNNoAccount(resourceName, "platform_arn", "elasticbeanstalk", "platform/Python 3.6 running on 64bit Amazon Linux/2.9.6"),
+					atest.CheckAttrRegionalARNNoAccount(resourceName, "platform_arn", "elasticbeanstalk", "platform/Python 3.6 running on 64bit Amazon Linux/2.9.6"),
 				),
 			},
 			{
@@ -483,7 +486,7 @@ func testAccVerifyBeanstalkConfig(env *elasticbeanstalk.EnvironmentDescription, 
 		if env == nil {
 			return fmt.Errorf("Nil environment in testAccVerifyBeanstalkConfig")
 		}
-		conn := testAccProvider.Meta().(*AWSClient).elasticbeanstalkconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ElasticBeanstalkConn
 
 		resp, err := conn.DescribeConfigurationSettings(&elasticbeanstalk.DescribeConfigurationSettingsInput{
 			ApplicationName: env.ApplicationName,
@@ -531,7 +534,7 @@ func testAccVerifyBeanstalkConfig(env *elasticbeanstalk.EnvironmentDescription, 
 }
 
 func testAccCheckBeanstalkEnvDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elasticbeanstalkconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ElasticBeanstalkConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elastic_beanstalk_environment" {
@@ -557,7 +560,7 @@ func testAccCheckBeanstalkEnvDestroy(s *terraform.State) error {
 			}
 		}
 
-		if !isAWSErr(err, "InvalidBeanstalkEnvID.NotFound", "") {
+		if !tfawserr.ErrMessageContains(err, "InvalidBeanstalkEnvID.NotFound", "") {
 			return err
 		}
 	}
@@ -576,7 +579,7 @@ func testAccCheckBeanstalkEnvExists(n string, app *elasticbeanstalk.EnvironmentD
 			return fmt.Errorf("Elastic Beanstalk ENV is not set")
 		}
 
-		env, err := describeBeanstalkEnv(testAccProvider.Meta().(*AWSClient).elasticbeanstalkconn, aws.String(rs.Primary.ID))
+		env, err := describeBeanstalkEnv(atest.Provider.Meta().(*awsprovider.AWSClient).ElasticBeanstalkConn, aws.String(rs.Primary.ID))
 		if err != nil {
 			return err
 		}
@@ -598,7 +601,7 @@ func testAccCheckBeanstalkEnvTier(n string, app *elasticbeanstalk.EnvironmentDes
 			return fmt.Errorf("Elastic Beanstalk ENV is not set")
 		}
 
-		env, err := describeBeanstalkEnv(testAccProvider.Meta().(*AWSClient).elasticbeanstalkconn, aws.String(rs.Primary.ID))
+		env, err := describeBeanstalkEnv(atest.Provider.Meta().(*awsprovider.AWSClient).ElasticBeanstalkConn, aws.String(rs.Primary.ID))
 		if err != nil {
 			return err
 		}
@@ -614,7 +617,7 @@ func testAccCheckBeanstalkEnvTier(n string, app *elasticbeanstalk.EnvironmentDes
 
 func testAccCheckBeanstalkEnvConfigValue(n string, expectedValue string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).elasticbeanstalkconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ElasticBeanstalkConn
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -661,7 +664,7 @@ func testAccCheckBeanstalkEnvTagsMatch(env *elasticbeanstalk.EnvironmentDescript
 			return fmt.Errorf("Nil environment in testAccCheckBeanstalkEnvTagsMatch")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).elasticbeanstalkconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ElasticBeanstalkConn
 
 		tags, err := conn.ListTagsForResource(&elasticbeanstalk.ListTagsForResourceInput{
 			ResourceArn: env.EnvironmentArn,
@@ -692,7 +695,7 @@ func testAccCheckBeanstalkApplicationVersionDeployed(n string, app *elasticbeans
 			return fmt.Errorf("Elastic Beanstalk ENV is not set")
 		}
 
-		env, err := describeBeanstalkEnv(testAccProvider.Meta().(*AWSClient).elasticbeanstalkconn, aws.String(rs.Primary.ID))
+		env, err := describeBeanstalkEnv(atest.Provider.Meta().(*awsprovider.AWSClient).ElasticBeanstalkConn, aws.String(rs.Primary.ID))
 		if err != nil {
 			return err
 		}
