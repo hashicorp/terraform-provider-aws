@@ -6,9 +6,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccAwsOrganizationsOrganizationalUnit_basic(t *testing.T) {
@@ -19,9 +22,9 @@ func testAccAwsOrganizationsOrganizationalUnit_basic(t *testing.T) {
 	resourceName := "aws_organizations_organizational_unit.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -29,7 +32,7 @@ func testAccAwsOrganizationsOrganizationalUnit_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationalUnitExists(resourceName, &unit),
 					resource.TestCheckResourceAttr(resourceName, "accounts.#", "0"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile(`ou/o-.+/ou-.+`)),
+					atest.MatchAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile(`ou/o-.+/ou-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -51,16 +54,16 @@ func testAccAwsOrganizationsOrganizationalUnit_disappears(t *testing.T) {
 	resourceName := "aws_organizations_organizational_unit.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsOrganizationsOrganizationalUnitConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationalUnitExists(resourceName, &unit),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsOrganizationsOrganizationalUnit(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsOrganizationsOrganizationalUnit(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -77,9 +80,9 @@ func testAccAwsOrganizationsOrganizationalUnit_Name(t *testing.T) {
 	resourceName := "aws_organizations_organizational_unit.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -113,9 +116,9 @@ func testAccAwsOrganizationsOrganizationalUnit_Tags(t *testing.T) {
 	resourceName := "aws_organizations_organizational_unit.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -152,7 +155,7 @@ func testAccAwsOrganizationsOrganizationalUnit_Tags(t *testing.T) {
 }
 
 func testAccCheckAwsOrganizationsOrganizationalUnitDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).OrganizationsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_organizations_organizational_unit" {
@@ -166,10 +169,10 @@ func testAccCheckAwsOrganizationsOrganizationalUnitDestroy(s *terraform.State) e
 		resp, err := conn.DescribeOrganizationalUnit(params)
 
 		if err != nil {
-			if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+			if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
 				continue
 			}
-			if isAWSErr(err, organizations.ErrCodeOrganizationalUnitNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, organizations.ErrCodeOrganizationalUnitNotFoundException, "") {
 				continue
 			}
 			return err
@@ -191,7 +194,7 @@ func testAccCheckAwsOrganizationsOrganizationalUnitExists(n string, ou *organiza
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).OrganizationsConn
 		params := &organizations.DescribeOrganizationalUnitInput{
 			OrganizationalUnitId: &rs.Primary.ID,
 		}
@@ -199,7 +202,7 @@ func testAccCheckAwsOrganizationsOrganizationalUnitExists(n string, ou *organiza
 		resp, err := conn.DescribeOrganizationalUnit(params)
 
 		if err != nil {
-			if isAWSErr(err, organizations.ErrCodeOrganizationalUnitNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, organizations.ErrCodeOrganizationalUnitNotFoundException, "") {
 				return fmt.Errorf("Organizational Unit %q does not exist", rs.Primary.ID)
 			}
 			return err
