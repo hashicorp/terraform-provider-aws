@@ -1024,7 +1024,7 @@ func flattenFsxWinVolumeAuthorizationConfig(config *ecs.FSxWindowsFileServerAuth
 	m := make(map[string]interface{})
 	if config != nil {
 		if v := config.CredentialsParameter; v != nil {
-			m["credentials_parameters"] = aws.StringValue(v)
+			m["credentials_parameter"] = aws.StringValue(v)
 		}
 		if v := config.Domain; v != nil {
 			m["domain"] = aws.StringValue(v)
