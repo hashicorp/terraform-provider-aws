@@ -11,9 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 var LambdaFunctionRegexp = `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
@@ -67,7 +69,7 @@ func resourceAwsLambdaPermission() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"statement_id": {
 				Type:          schema.TypeString,
@@ -89,7 +91,7 @@ func resourceAwsLambdaPermission() *schema.Resource {
 }
 
 func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	functionName := d.Get("function_name").(string)
 
@@ -105,8 +107,8 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 	// There is a bug in the API (reported and acknowledged by AWS)
 	// which causes some permissions to be ignored when API calls are sent in parallel
 	// We work around this bug via mutex
-	awsMutexKV.Lock(functionName)
-	defer awsMutexKV.Unlock(functionName)
+	awsprovider.MutexKV.Lock(functionName)
+	defer awsprovider.MutexKV.Unlock(functionName)
 
 	input := lambda.AddPermissionInput{
 		Action:       aws.String(d.Get("action").(string)),
@@ -135,7 +137,7 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 		var err error
 		out, err = conn.AddPermission(&input)
 
-		if isAWSErr(err, lambda.ErrCodeResourceConflictException, "") || isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceConflictException, "") || tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -189,7 +191,7 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	input := lambda.GetPolicyInput{
 		FunctionName: aws.String(d.Get("function_name").(string)),
@@ -273,7 +275,7 @@ func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("qualifier", qualifier)
 
 	// Save Lambda function name in the same format
-	if strings.HasPrefix(d.Get("function_name").(string), "arn:"+meta.(*AWSClient).partition+":lambda:") {
+	if strings.HasPrefix(d.Get("function_name").(string), "arn:"+meta.(*awsprovider.AWSClient).Partition+":lambda:") {
 		// Strip qualifier off
 		trimmedArn := strings.TrimSuffix(statement.Resource, ":"+qualifier)
 		d.Set("function_name", trimmedArn)
@@ -308,15 +310,15 @@ func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsLambdaPermissionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	functionName := d.Get("function_name").(string)
 
 	// There is a bug in the API (reported and acknowledged by AWS)
 	// which causes some permissions to be ignored when API calls are sent in parallel
 	// We work around this bug via mutex
-	awsMutexKV.Lock(functionName)
-	defer awsMutexKV.Unlock(functionName)
+	awsprovider.MutexKV.Lock(functionName)
+	defer awsprovider.MutexKV.Unlock(functionName)
 
 	input := lambda.RemovePermissionInput{
 		FunctionName: aws.String(functionName),
@@ -349,7 +351,7 @@ func resourceAwsLambdaPermissionDelete(d *schema.ResourceData, meta interface{})
 
 	resp, err := conn.GetPolicy(params)
 
-	if isAWSErr(err, "ResourceNotFoundException", "") {
+	if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "") {
 		return nil
 	}
 
@@ -445,7 +447,7 @@ func resourceAwsLambdaPermissionImport(d *schema.ResourceData, meta interface{})
 	statementId := idParts[1]
 	log.Printf("[DEBUG] Importing Lambda Permission %s for function name %s", statementId, functionName)
 
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 	getFunctionOutput, err := conn.GetFunction(input)
 	if err != nil {
 		return nil, err
