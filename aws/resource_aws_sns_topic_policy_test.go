@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSSNSTopicPolicy_basic(t *testing.T) {
@@ -18,9 +21,9 @@ func TestAccAWSSNSTopicPolicy_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -30,7 +33,7 @@ func TestAccAWSSNSTopicPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sns_topic.test", "arn"),
 					resource.TestMatchResourceAttr(resourceName, "policy",
 						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
-					testAccCheckResourceAttrAccountID(resourceName, "owner"),
+					atest.CheckAttrAccountID(resourceName, "owner"),
 				),
 			},
 			{
@@ -48,9 +51,9 @@ func TestAccAWSSNSTopicPolicy_updated(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -86,16 +89,16 @@ func TestAccAWSSNSTopicPolicy_disappears_topic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSNSTopicPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists(topicResourceName, attributes),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSnsTopic(), topicResourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSnsTopic(), topicResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -109,16 +112,16 @@ func TestAccAWSSNSTopicPolicy_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSNSTopicPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test", attributes),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSnsTopicPolicy(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSnsTopicPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -127,7 +130,7 @@ func TestAccAWSSNSTopicPolicy_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSNSTopicPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).snsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SNSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sns_topic_policy" {
@@ -140,7 +143,7 @@ func testAccCheckAWSSNSTopicPolicyDestroy(s *terraform.State) error {
 		}
 		_, err := conn.GetTopicAttributes(params)
 		if err != nil {
-			if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return err
