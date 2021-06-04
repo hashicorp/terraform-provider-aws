@@ -8,9 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -24,11 +27,11 @@ func init() {
 }
 
 func testSweepEbsVolumes(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).ec2conn
+	conn := client.(*awsprovider.AWSClient).EC2Conn
 
 	err = conn.DescribeVolumesPages(&ec2.DescribeVolumesInput{}, func(page *ec2.DescribeVolumesOutput, lastPage bool) bool {
 		for _, volume := range page.Volumes {
@@ -54,7 +57,7 @@ func testSweepEbsVolumes(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 EBS Volume sweep for %s: %s", region, err)
 		return nil
 	}
@@ -68,7 +71,7 @@ func testSweepEbsVolumes(region string) error {
 
 // testAccErrorCheckSkipEBSVolume skips EBS volume tests that have error messages indicating unsupported features
 func testAccErrorCheckSkipEBSVolume(t *testing.T) resource.ErrorCheckFunc {
-	return testAccErrorCheckSkipMessagesContaining(t,
+	return atest.ErrorCheckSkipMessagesContaining(t,
 		"specified zone does not support multi-attach-enabled volumes",
 		"Unsupported volume type",
 	)
@@ -79,16 +82,16 @@ func TestAccAWSEBSVolume_basic(t *testing.T) {
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -114,9 +117,9 @@ func TestAccAWSEBSVolume_updateAttachedEbsVolume(t *testing.T) {
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -149,9 +152,9 @@ func TestAccAWSEBSVolume_updateSize(t *testing.T) {
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -184,9 +187,9 @@ func TestAccAWSEBSVolume_updateType(t *testing.T) {
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -219,9 +222,9 @@ func TestAccAWSEBSVolume_updateIops_Io1(t *testing.T) {
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -254,9 +257,9 @@ func TestAccAWSEBSVolume_updateIops_Io2(t *testing.T) {
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -292,9 +295,9 @@ func TestAccAWSEBSVolume_kmsKey(t *testing.T) {
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -320,9 +323,9 @@ func TestAccAWSEBSVolume_NoIops(t *testing.T) {
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -345,9 +348,9 @@ func TestAccAWSEBSVolume_NoIops(t *testing.T) {
 func TestAccAWSEBSVolume_InvalidIopsForType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -361,9 +364,9 @@ func TestAccAWSEBSVolume_InvalidIopsForType(t *testing.T) {
 func TestAccAWSEBSVolume_InvalidThroughputForType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -379,9 +382,9 @@ func TestAccAWSEBSVolume_withTags(t *testing.T) {
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -407,9 +410,9 @@ func TestAccAWSEBSVolume_multiAttach(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -435,9 +438,9 @@ func TestAccAWSEBSVolume_outpost(t *testing.T) {
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
 		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -462,16 +465,16 @@ func TestAccAWSEBSVolume_gp3_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp3", "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -500,16 +503,16 @@ func TestAccAWSEBSVolume_gp3_iops(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp3", "4000", "200"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "4000"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -532,7 +535,7 @@ func TestAccAWSEBSVolume_gp3_iops(t *testing.T) {
 				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp3", "5000", "200"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "5000"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -556,16 +559,16 @@ func TestAccAWSEBSVolume_gp3_throughput(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp3", "", "400"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -588,7 +591,7 @@ func TestAccAWSEBSVolume_gp3_throughput(t *testing.T) {
 				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp3", "", "600"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -612,16 +615,16 @@ func TestAccAWSEBSVolume_gp3_to_gp2(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp3", "3000", "400"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -644,7 +647,7 @@ func TestAccAWSEBSVolume_gp3_to_gp2(t *testing.T) {
 				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp2", "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -669,16 +672,16 @@ func TestAccAWSEBSVolume_snapshotID(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfigSnapshotId(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -708,16 +711,16 @@ func TestAccAWSEBSVolume_snapshotIDAndSize(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfigSnapshotIdAndSize(rName, 20),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -745,16 +748,16 @@ func TestAccAWSEBSVolume_disappears(t *testing.T) {
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEbsVolume(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsEbsVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -763,7 +766,7 @@ func TestAccAWSEBSVolume_disappears(t *testing.T) {
 }
 
 func testAccCheckVolumeDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ebs_volume" {
@@ -776,7 +779,7 @@ func testAccCheckVolumeDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeVolumes(request)
 
-		if isAWSErr(err, "InvalidVolume.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVolume.NotFound", "") {
 			continue
 		}
 
@@ -805,7 +808,7 @@ func testAccCheckVolumeExists(n string, v *ec2.Volume) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 		request := &ec2.DescribeVolumesInput{
 			VolumeIds: []*string{aws.String(rs.Primary.ID)},
@@ -1273,7 +1276,7 @@ func testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, size, volumeType, io
 		throughput = "null"
 	}
 
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAvailableAZsNoOptInConfig(),
 		fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
@@ -1291,7 +1294,7 @@ resource "aws_ebs_volume" "test" {
 }
 
 func testAccAwsEbsVolumeConfigSnapshotId(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAvailableAZsNoOptInConfig(),
 		fmt.Sprintf(`
 resource "aws_ebs_volume" "source" {
@@ -1323,7 +1326,7 @@ resource "aws_ebs_volume" "test" {
 }
 
 func testAccAwsEbsVolumeConfigSnapshotIdAndSize(rName string, size int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAvailableAZsNoOptInConfig(),
 		fmt.Sprintf(`
 resource "aws_ebs_volume" "source" {
