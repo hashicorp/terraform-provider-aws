@@ -7,11 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/inspector"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
-func resourceAWSInspectorAssessmentTarget() *schema.Resource {
+func ResourceAWSInspectorAssessmentTarget() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsInspectorAssessmentTargetCreate,
 		Read:   resourceAwsInspectorAssessmentTargetRead,
@@ -40,7 +42,7 @@ func resourceAWSInspectorAssessmentTarget() *schema.Resource {
 }
 
 func resourceAwsInspectorAssessmentTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).inspectorconn
+	conn := meta.(*awsprovider.AWSClient).InspectorConn
 
 	input := &inspector.CreateAssessmentTargetInput{
 		AssessmentTargetName: aws.String(d.Get("name").(string)),
@@ -61,7 +63,7 @@ func resourceAwsInspectorAssessmentTargetCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsInspectorAssessmentTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).inspectorconn
+	conn := meta.(*awsprovider.AWSClient).InspectorConn
 
 	assessmentTarget, err := describeInspectorAssessmentTarget(conn, d.Id())
 
@@ -83,7 +85,7 @@ func resourceAwsInspectorAssessmentTargetRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsInspectorAssessmentTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).inspectorconn
+	conn := meta.(*awsprovider.AWSClient).InspectorConn
 
 	input := inspector.UpdateAssessmentTargetInput{
 		AssessmentTargetArn:  aws.String(d.Id()),
@@ -103,14 +105,14 @@ func resourceAwsInspectorAssessmentTargetUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsInspectorAssessmentTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).inspectorconn
+	conn := meta.(*awsprovider.AWSClient).InspectorConn
 	input := &inspector.DeleteAssessmentTargetInput{
 		AssessmentTargetArn: aws.String(d.Id()),
 	}
 	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteAssessmentTarget(input)
 
-		if isAWSErr(err, inspector.ErrCodeAssessmentRunInProgressException, "") {
+		if tfawserr.ErrMessageContains(err, inspector.ErrCodeAssessmentRunInProgressException, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -136,7 +138,7 @@ func describeInspectorAssessmentTarget(conn *inspector.Inspector, arn string) (*
 
 	output, err := conn.DescribeAssessmentTargets(input)
 
-	if isAWSErr(err, inspector.ErrCodeInvalidInputException, "") {
+	if tfawserr.ErrMessageContains(err, inspector.ErrCodeInvalidInputException, "") {
 		return nil, nil
 	}
 
