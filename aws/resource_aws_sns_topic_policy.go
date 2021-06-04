@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSnsTopicPolicy() *schema.Resource {
@@ -26,7 +28,7 @@ func resourceAwsSnsTopicPolicy() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"policy": {
 				Type:             schema.TypeString,
@@ -55,7 +57,7 @@ func resourceAwsSnsTopicPolicyUpsert(d *schema.ResourceData, meta interface{}) e
 	// Retry the update in the event of an eventually consistent style of
 	// error, where say an IAM resource is successfully created but not
 	// actually available. See https://github.com/hashicorp/terraform/issues/3660
-	conn := meta.(*AWSClient).snsconn
+	conn := meta.(*awsprovider.AWSClient).SNSConn
 	_, err := retryOnAwsCode("InvalidParameter", func() (interface{}, error) {
 		return conn.SetTopicAttributes(&req)
 	})
@@ -67,13 +69,13 @@ func resourceAwsSnsTopicPolicyUpsert(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSnsTopicPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).snsconn
+	conn := meta.(*awsprovider.AWSClient).SNSConn
 
 	attributeOutput, err := conn.GetTopicAttributes(&sns.GetTopicAttributesInput{
 		TopicArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] SNS Topic (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -117,7 +119,7 @@ func resourceAwsSnsTopicPolicyDelete(d *schema.ResourceData, meta interface{}) e
 	// error, where say an IAM resource is successfully created but not
 	// actually available. See https://github.com/hashicorp/terraform/issues/3660
 	log.Printf("[DEBUG] Resetting SNS Topic Policy to default: %s", req)
-	conn := meta.(*AWSClient).snsconn
+	conn := meta.(*awsprovider.AWSClient).SNSConn
 	_, err := retryOnAwsCode("InvalidParameter", func() (interface{}, error) {
 		return conn.SetTopicAttributes(&req)
 	})
