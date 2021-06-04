@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsElasticacheSecurityGroup() *schema.Resource {
@@ -45,7 +46,7 @@ func resourceAwsElasticacheSecurityGroup() *schema.Resource {
 }
 
 func resourceAwsElasticacheSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
 
 	name := d.Get("name").(string)
 	desc := d.Get("description").(string)
@@ -87,7 +88,7 @@ func resourceAwsElasticacheSecurityGroupCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsElasticacheSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
 	req := &elasticache.DescribeCacheSecurityGroupsInput{
 		CacheSecurityGroupName: aws.String(d.Id()),
 	}
@@ -124,7 +125,7 @@ func resourceAwsElasticacheSecurityGroupRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsElasticacheSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
 
 	log.Printf("[DEBUG] Cache security group delete: %s", d.Id())
 
