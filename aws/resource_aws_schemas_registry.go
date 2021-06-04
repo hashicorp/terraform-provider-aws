@@ -10,9 +10,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/schemas/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSchemasRegistry() *schema.Resource {
@@ -56,8 +57,8 @@ func resourceAwsSchemasRegistry() *schema.Resource {
 }
 
 func resourceAwsSchemasRegistryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SchemasConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -86,9 +87,9 @@ func resourceAwsSchemasRegistryCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSchemasRegistryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SchemasConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.RegistryByName(conn, d.Id())
 
@@ -126,7 +127,7 @@ func resourceAwsSchemasRegistryRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsSchemasRegistryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
+	conn := meta.(*awsprovider.AWSClient).SchemasConn
 
 	if d.HasChanges("description") {
 		input := &schemas.UpdateRegistryInput{
@@ -153,7 +154,7 @@ func resourceAwsSchemasRegistryUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSchemasRegistryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
+	conn := meta.(*awsprovider.AWSClient).SchemasConn
 
 	log.Printf("[INFO] Deleting EventBridge Schemas Registry (%s)", d.Id())
 	_, err := conn.DeleteRegistry(&schemas.DeleteRegistryInput{
