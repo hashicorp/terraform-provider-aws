@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSSignerSigningProfile_basic(t *testing.T) {
@@ -21,9 +23,9 @@ func TestAccAWSSignerSigningProfile_basic(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   testAccErrorCheck(t, signer.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:   atest.ErrorCheck(t, signer.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -52,9 +54,9 @@ func TestAccAWSSignerSigningProfile_GenerateNameWithNamePrefix(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   testAccErrorCheck(t, signer.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:   atest.ErrorCheck(t, signer.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -74,9 +76,9 @@ func TestAccAWSSignerSigningProfile_GenerateName(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   testAccErrorCheck(t, signer.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:   atest.ErrorCheck(t, signer.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -97,9 +99,9 @@ func TestAccAWSSignerSigningProfile_tags(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   testAccErrorCheck(t, signer.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:   atest.ErrorCheck(t, signer.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -128,9 +130,9 @@ func TestAccAWSSignerSigningProfile_SignatureValidityPeriod(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   testAccErrorCheck(t, signer.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:   atest.ErrorCheck(t, signer.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -154,13 +156,13 @@ func TestAccAWSSignerSigningProfile_SignatureValidityPeriod(t *testing.T) {
 }
 
 func testAccPreCheckSingerSigningProfile(t *testing.T, platformID string) {
-	conn := testAccProvider.Meta().(*AWSClient).signerconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SignerConn
 
 	input := &signer.ListSigningPlatformsInput{}
 
 	output, err := conn.ListSigningPlatforms(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -274,7 +276,7 @@ func testAccCheckAWSSignerSigningProfileExists(res string, sp *signer.GetSigning
 			return fmt.Errorf("Signing Profile with that ARN does not exist")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).signerconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SignerConn
 
 		params := &signer.GetSigningProfileInput{
 			ProfileName: aws.String(rs.Primary.ID),
@@ -292,7 +294,7 @@ func testAccCheckAWSSignerSigningProfileExists(res string, sp *signer.GetSigning
 }
 
 func testAccCheckAWSSignerSigningProfileDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).signerconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SignerConn
 
 	time.Sleep(5 * time.Second)
 
