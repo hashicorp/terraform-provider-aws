@@ -9,10 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsAppautoscalingPolicy() *schema.Resource {
@@ -201,7 +203,7 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 }
 
 func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appautoscalingconn
+	conn := meta.(*awsprovider.AWSClient).ApplicationAutoScalingConn
 
 	params, err := getAwsAppautoscalingPutScalingPolicyInput(d)
 	if err != nil {
@@ -214,16 +216,16 @@ func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interfac
 		var err error
 		resp, err = conn.PutScalingPolicy(&params)
 		if err != nil {
-			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "Rate exceeded") {
+			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "Rate exceeded") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "is not authorized to perform") {
+			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "is not authorized to perform") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "token included in the request is invalid") {
+			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "token included in the request is invalid") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(fmt.Errorf("Error putting scaling policy: %s", err))
@@ -251,7 +253,7 @@ func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{
 		var err error
 		p, err = getAwsAppautoscalingPolicy(d, meta)
 		if err != nil {
-			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
+			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -294,7 +296,7 @@ func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsAppautoscalingPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appautoscalingconn
+	conn := meta.(*awsprovider.AWSClient).ApplicationAutoScalingConn
 
 	params, inputErr := getAwsAppautoscalingPutScalingPolicyInput(d)
 	if inputErr != nil {
@@ -305,10 +307,10 @@ func resourceAwsAppautoscalingPolicyUpdate(d *schema.ResourceData, meta interfac
 	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutScalingPolicy(&params)
 		if err != nil {
-			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
+			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -326,7 +328,7 @@ func resourceAwsAppautoscalingPolicyUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsAppautoscalingPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appautoscalingconn
+	conn := meta.(*awsprovider.AWSClient).ApplicationAutoScalingConn
 	p, err := getAwsAppautoscalingPolicy(d, meta)
 	if err != nil {
 		return fmt.Errorf("Error getting policy: %s", err)
@@ -345,11 +347,11 @@ func resourceAwsAppautoscalingPolicyDelete(d *schema.ResourceData, meta interfac
 	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err = conn.DeleteScalingPolicy(&params)
 
-		if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
+		if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
 			return nil
 		}
 
@@ -589,7 +591,7 @@ func getAwsAppautoscalingPutScalingPolicyInput(d *schema.ResourceData) (applicat
 }
 
 func getAwsAppautoscalingPolicy(d *schema.ResourceData, meta interface{}) (*applicationautoscaling.ScalingPolicy, error) {
-	conn := meta.(*AWSClient).appautoscalingconn
+	conn := meta.(*awsprovider.AWSClient).ApplicationAutoScalingConn
 
 	params := applicationautoscaling.DescribeScalingPoliciesInput{
 		PolicyNames:       []*string{aws.String(d.Get("name").(string))},
