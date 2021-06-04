@@ -6,9 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codecommit"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCodeCommitRepository() *schema.Resource {
@@ -68,8 +70,8 @@ func resourceAwsCodeCommitRepository() *schema.Resource {
 }
 
 func resourceAwsCodeCommitRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codecommitconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CodeCommitConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &codecommit.CreateRepositoryInput{
@@ -99,7 +101,7 @@ func resourceAwsCodeCommitRepositoryCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsCodeCommitRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codecommitconn
+	conn := meta.(*awsprovider.AWSClient).CodeCommitConn
 
 	if d.HasChange("default_branch") {
 		if err := resourceAwsCodeCommitUpdateDefaultBranch(conn, d); err != nil {
@@ -125,9 +127,9 @@ func resourceAwsCodeCommitRepositoryUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsCodeCommitRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codecommitconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CodeCommitConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &codecommit.GetRepositoryInput{
 		RepositoryName: aws.String(d.Id()),
@@ -135,7 +137,7 @@ func resourceAwsCodeCommitRepositoryRead(d *schema.ResourceData, meta interface{
 
 	out, err := conn.GetRepository(input)
 	if err != nil {
-		if isAWSErr(err, codecommit.ErrCodeRepositoryDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, codecommit.ErrCodeRepositoryDoesNotExistException, "") {
 			log.Printf("[WARN] CodeCommit Repository (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -178,7 +180,7 @@ func resourceAwsCodeCommitRepositoryRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsCodeCommitRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codecommitconn
+	conn := meta.(*awsprovider.AWSClient).CodeCommitConn
 
 	log.Printf("[DEBUG] CodeCommit Delete Repository: %s", d.Id())
 	_, err := conn.DeleteRepository(&codecommit.DeleteRepositoryInput{
