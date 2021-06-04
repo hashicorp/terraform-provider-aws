@@ -4,7 +4,8 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsCloudwatchLogGroup() *schema.Resource {
@@ -39,8 +40,8 @@ func dataSourceAwsCloudwatchLogGroup() *schema.Resource {
 
 func dataSourceAwsCloudwatchLogGroupRead(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
-	conn := meta.(*AWSClient).cloudwatchlogsconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CloudWatchLogsConn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	logGroup, err := lookupCloudWatchLogGroup(conn, name)
 	if err != nil {
