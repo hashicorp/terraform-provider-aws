@@ -7,10 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGameliftBuild() *schema.Resource {
@@ -53,7 +55,7 @@ func resourceAwsGameliftBuild() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -77,8 +79,8 @@ func resourceAwsGameliftBuild() *schema.Resource {
 }
 
 func resourceAwsGameliftBuildCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GameLiftConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	sl := expandGameliftStorageLocation(d.Get("storage_location").([]interface{}))
@@ -97,7 +99,7 @@ func resourceAwsGameliftBuildCreate(d *schema.ResourceData, meta interface{}) er
 		var err error
 		out, err = conn.CreateBuild(&input)
 		if err != nil {
-			if isAWSErr(err, gamelift.ErrCodeInvalidRequestException, "Provided build is not accessible.") {
+			if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, "Provided build is not accessible.") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -137,16 +139,16 @@ func resourceAwsGameliftBuildCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsGameliftBuildRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GameLiftConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading Gamelift Build: %s", d.Id())
 	out, err := conn.DescribeBuild(&gamelift.DescribeBuildInput{
 		BuildId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, gamelift.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, gamelift.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Gamelift Build (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -182,7 +184,7 @@ func resourceAwsGameliftBuildRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsGameliftBuildUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
+	conn := meta.(*awsprovider.AWSClient).GameLiftConn
 
 	log.Printf("[INFO] Updating Gamelift Build: %s", d.Id())
 	input := gamelift.UpdateBuildInput{
@@ -211,7 +213,7 @@ func resourceAwsGameliftBuildUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsGameliftBuildDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
+	conn := meta.(*awsprovider.AWSClient).GameLiftConn
 
 	log.Printf("[INFO] Deleting Gamelift Build: %s", d.Id())
 	_, err := conn.DeleteBuild(&gamelift.DeleteBuildInput{
