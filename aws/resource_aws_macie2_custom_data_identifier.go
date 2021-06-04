@@ -13,8 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsMacie2CustomDataIdentifier() *schema.Resource {
@@ -98,9 +99,9 @@ func resourceAwsMacie2CustomDataIdentifier() *schema.Resource {
 }
 
 func resourceMacie2CustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*awsprovider.AWSClient).Macie2Conn
 
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &macie2.CreateCustomDataIdentifierInput{
@@ -156,10 +157,10 @@ func resourceMacie2CustomDataIdentifierCreate(ctx context.Context, d *schema.Res
 }
 
 func resourceMacie2CustomDataIdentifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*awsprovider.AWSClient).Macie2Conn
 
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 	input := &macie2.GetCustomDataIdentifierInput{
 		Id: aws.String(d.Id()),
 	}
@@ -210,7 +211,7 @@ func resourceMacie2CustomDataIdentifierRead(ctx context.Context, d *schema.Resou
 }
 
 func resourceMacie2CustomDataIdentifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*awsprovider.AWSClient).Macie2Conn
 
 	input := &macie2.DeleteCustomDataIdentifierInput{
 		Id: aws.String(d.Id()),
