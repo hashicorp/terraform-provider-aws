@@ -7,8 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsNeptuneClusterSnapshot() *schema.Resource {
@@ -94,7 +96,7 @@ func resourceAwsNeptuneClusterSnapshot() *schema.Resource {
 }
 
 func resourceAwsNeptuneClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*awsprovider.AWSClient).NeptuneConn
 
 	input := &neptune.CreateDBClusterSnapshotInput{
 		DBClusterIdentifier:         aws.String(d.Get("db_cluster_identifier").(string)),
@@ -127,7 +129,7 @@ func resourceAwsNeptuneClusterSnapshotCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsNeptuneClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*awsprovider.AWSClient).NeptuneConn
 
 	input := &neptune.DescribeDBClusterSnapshotsInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),
@@ -136,7 +138,7 @@ func resourceAwsNeptuneClusterSnapshotRead(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] Reading Neptune DB Cluster Snapshot: %s", input)
 	output, err := conn.DescribeDBClusterSnapshots(input)
 	if err != nil {
-		if isAWSErr(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 			log.Printf("[WARN] Neptune DB Cluster Snapshot %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -174,7 +176,7 @@ func resourceAwsNeptuneClusterSnapshotRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsNeptuneClusterSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*awsprovider.AWSClient).NeptuneConn
 
 	input := &neptune.DeleteDBClusterSnapshotInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),
@@ -183,7 +185,7 @@ func resourceAwsNeptuneClusterSnapshotDelete(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG] Deleting Neptune DB Cluster Snapshot: %s", input)
 	_, err := conn.DeleteDBClusterSnapshot(input)
 	if err != nil {
-		if isAWSErr(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Neptune DB Cluster Snapshot %q: %s", d.Id(), err)
@@ -201,7 +203,7 @@ func resourceAwsNeptuneClusterSnapshotStateRefreshFunc(dbClusterSnapshotIdentifi
 		log.Printf("[DEBUG] Reading Neptune DB Cluster Snapshot: %s", input)
 		output, err := conn.DescribeDBClusterSnapshots(input)
 		if err != nil {
-			if isAWSErr(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 				return nil, "", nil
 			}
 			return nil, "", fmt.Errorf("Error retrieving DB Cluster Snapshots: %s", err)
