@@ -10,10 +10,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfs3 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsS3BucketMetric() *schema.Resource {
@@ -62,7 +63,7 @@ func resourceAwsS3BucketMetric() *schema.Resource {
 }
 
 func resourceAwsS3BucketMetricPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*awsprovider.AWSClient).S3Conn
 	bucket := d.Get("bucket").(string)
 	name := d.Get("name").(string)
 
@@ -112,7 +113,7 @@ func resourceAwsS3BucketMetricPut(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsS3BucketMetricDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*awsprovider.AWSClient).S3Conn
 
 	bucket, name, err := resourceAwsS3BucketMetricParseID(d.Id())
 	if err != nil {
@@ -143,7 +144,7 @@ func resourceAwsS3BucketMetricDelete(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsS3BucketMetricRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*awsprovider.AWSClient).S3Conn
 
 	bucket, name, err := resourceAwsS3BucketMetricParseID(d.Id())
 	if err != nil {
