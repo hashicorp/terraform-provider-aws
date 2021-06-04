@@ -6,9 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53resolver/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53resolver/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsRoute53ResolverQueryLogConfigAssociation() *schema.Resource {
@@ -37,7 +39,7 @@ func resourceAwsRoute53ResolverQueryLogConfigAssociation() *schema.Resource {
 }
 
 func resourceAwsRoute53ResolverQueryLogConfigAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*awsprovider.AWSClient).Route53ResolverConn
 
 	input := &route53resolver.AssociateResolverQueryLogConfigInput{
 		ResolverQueryLogConfigId: aws.String(d.Get("resolver_query_log_config_id").(string)),
@@ -63,11 +65,11 @@ func resourceAwsRoute53ResolverQueryLogConfigAssociationCreate(d *schema.Resourc
 }
 
 func resourceAwsRoute53ResolverQueryLogConfigAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*awsprovider.AWSClient).Route53ResolverConn
 
 	queryLogConfigAssociation, err := finder.ResolverQueryLogConfigAssociationByID(conn, d.Id())
 
-	if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Route53 Resolver Query Log Config Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -90,7 +92,7 @@ func resourceAwsRoute53ResolverQueryLogConfigAssociationRead(d *schema.ResourceD
 }
 
 func resourceAwsRoute53ResolverQueryLogConfigAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*awsprovider.AWSClient).Route53ResolverConn
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Query Log Config Association (%s)", d.Id())
 	_, err := conn.DisassociateResolverQueryLogConfig(&route53resolver.DisassociateResolverQueryLogConfigInput{
@@ -98,7 +100,7 @@ func resourceAwsRoute53ResolverQueryLogConfigAssociationDelete(d *schema.Resourc
 		ResourceId:               aws.String(d.Get("resource_id").(string)),
 	})
 
-	if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
