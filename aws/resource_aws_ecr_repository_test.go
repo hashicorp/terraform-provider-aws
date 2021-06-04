@@ -8,10 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -22,11 +25,11 @@ func init() {
 }
 
 func testSweepEcrRepositories(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).ecrconn
+	conn := client.(*awsprovider.AWSClient).ECRConn
 
 	var errors error
 	err = conn.DescribeRepositoriesPages(&ecr.DescribeRepositoriesInput{}, func(page *ecr.DescribeRepositoriesOutput, lastPage bool) bool {
@@ -45,7 +48,7 @@ func testSweepEcrRepositories(region string) error {
 				RepositoryName: repository.RepositoryName,
 			})
 			if err != nil {
-				if !isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+				if !tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
 					sweeperErr := fmt.Errorf("Error deleting ECR repository (%s): %w", repositoryName, err)
 					log.Printf("[ERROR] %s", sweeperErr)
 					errors = multierror.Append(errors, sweeperErr)
@@ -57,7 +60,7 @@ func testSweepEcrRepositories(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping ECR repository sweep for %s: %s", region, err)
 			return nil
 		}
@@ -73,16 +76,16 @@ func TestAccAWSEcrRepository_basic(t *testing.T) {
 	resourceName := "aws_ecr_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcrRepositoryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrRepositoryExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ecr", fmt.Sprintf("repository/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "ecr", fmt.Sprintf("repository/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					testAccCheckAWSEcrRepositoryRegistryID(resourceName),
 					testAccCheckAWSEcrRepositoryRepositoryURL(resourceName, rName),
@@ -106,9 +109,9 @@ func TestAccAWSEcrRepository_tags(t *testing.T) {
 	resourceName := "aws_ecr_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -139,9 +142,9 @@ func TestAccAWSEcrRepository_immutability(t *testing.T) {
 	resourceName := "aws_ecr_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -167,9 +170,9 @@ func TestAccAWSEcrRepository_image_scanning_configuration(t *testing.T) {
 	resourceName := "aws_ecr_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -218,9 +221,9 @@ func TestAccAWSEcrRepository_encryption_kms(t *testing.T) {
 	kmsKeyDataSourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -230,7 +233,7 @@ func TestAccAWSEcrRepository_encryption_kms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", ecr.EncryptionTypeKms),
 					// This will be the default ECR service KMS key. We don't currently have a way to look this up.
-					testAccMatchResourceAttrRegionalARN(resourceName, "encryption_configuration.0.kms_key", "kms", regexp.MustCompile(fmt.Sprintf("key/%s$", uuidRegexPattern))),
+					atest.MatchAttrRegionalARN(resourceName, "encryption_configuration.0.kms_key", "kms", regexp.MustCompile(fmt.Sprintf("key/%s$", uuidRegexPattern))),
 				),
 			},
 			{
@@ -263,9 +266,9 @@ func TestAccAWSEcrRepository_encryption_aes256(t *testing.T) {
 	resourceName := "aws_ecr_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -300,7 +303,7 @@ func TestAccAWSEcrRepository_encryption_aes256(t *testing.T) {
 }
 
 func testAccCheckAWSEcrRepositoryDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ecrconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ECRConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecr_repository" {
@@ -313,7 +316,7 @@ func testAccCheckAWSEcrRepositoryDestroy(s *terraform.State) error {
 
 		out, err := conn.DescribeRepositories(&input)
 
-		if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
 			return nil
 		}
 
@@ -342,7 +345,7 @@ func testAccCheckAWSEcrRepositoryExists(name string, res *ecr.Repository) resour
 			return fmt.Errorf("No ECR repository ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ecrconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ECRConn
 
 		output, err := conn.DescribeRepositories(&ecr.DescribeRepositoriesInput{
 			RepositoryNames: aws.StringSlice([]string{rs.Primary.ID}),
@@ -362,14 +365,14 @@ func testAccCheckAWSEcrRepositoryExists(name string, res *ecr.Repository) resour
 
 func testAccCheckAWSEcrRepositoryRegistryID(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		attributeValue := testAccGetAccountID()
+		attributeValue := atest.AccountID()
 		return resource.TestCheckResourceAttr(resourceName, "registry_id", attributeValue)(s)
 	}
 }
 
 func testAccCheckAWSEcrRepositoryRepositoryURL(resourceName, repositoryName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		attributeValue := fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com/%s", testAccGetAccountID(), testAccGetRegion(), repositoryName)
+		attributeValue := fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com/%s", atest.AccountID(), atest.Region(), repositoryName)
 		return resource.TestCheckResourceAttr(resourceName, "repository_url", attributeValue)(s)
 	}
 }
