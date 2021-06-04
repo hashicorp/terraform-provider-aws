@@ -6,7 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCloudFrontKeyGroup() *schema.Resource {
@@ -43,7 +45,7 @@ func resourceAwsCloudFrontKeyGroup() *schema.Resource {
 }
 
 func resourceAwsCloudFrontKeyGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*awsprovider.AWSClient).CloudFrontConn
 
 	input := &cloudfront.CreateKeyGroupInput{
 		KeyGroupConfig: expandCloudFrontKeyGroupConfig(d),
@@ -65,14 +67,14 @@ func resourceAwsCloudFrontKeyGroupCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsCloudFrontKeyGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*awsprovider.AWSClient).CloudFrontConn
 	input := &cloudfront.GetKeyGroupInput{
 		Id: aws.String(d.Id()),
 	}
 
 	output, err := conn.GetKeyGroup(input)
 	if err != nil {
-		if !d.IsNewResource() && isAWSErr(err, cloudfront.ErrCodeNoSuchResource, "") {
+		if !d.IsNewResource() && tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchResource, "") {
 			log.Printf("[WARN] No key group found: %s, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -95,7 +97,7 @@ func resourceAwsCloudFrontKeyGroupRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsCloudFrontKeyGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*awsprovider.AWSClient).CloudFrontConn
 
 	input := &cloudfront.UpdateKeyGroupInput{
 		Id:             aws.String(d.Id()),
@@ -112,7 +114,7 @@ func resourceAwsCloudFrontKeyGroupUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsCloudFrontKeyGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*awsprovider.AWSClient).CloudFrontConn
 
 	input := &cloudfront.DeleteKeyGroupInput{
 		Id:      aws.String(d.Id()),
@@ -121,7 +123,7 @@ func resourceAwsCloudFrontKeyGroupDelete(d *schema.ResourceData, meta interface{
 
 	_, err := conn.DeleteKeyGroup(input)
 	if err != nil {
-		if isAWSErr(err, cloudfront.ErrCodeNoSuchResource, "") {
+		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchResource, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting CloudFront Key Group (%s): %w", d.Id(), err)
