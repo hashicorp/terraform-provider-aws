@@ -8,15 +8,17 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSEc2InstanceTypeOfferingsDataSource_Filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_instance_type_offerings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2InstanceTypeOfferings(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2InstanceTypeOfferings(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -33,9 +35,9 @@ func TestAccAWSEc2InstanceTypeOfferingsDataSource_LocationType(t *testing.T) {
 	dataSourceName := "data.aws_ec2_instance_type_offerings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2InstanceTypeOfferings(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2InstanceTypeOfferings(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -64,7 +66,7 @@ func testAccCheckEc2InstanceTypeOfferingsInstanceTypes(dataSourceName string) re
 }
 
 func testAccPreCheckAWSEc2InstanceTypeOfferings(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	input := &ec2.DescribeInstanceTypeOfferingsInput{
 		MaxResults: aws.Int64(5),
@@ -72,7 +74,7 @@ func testAccPreCheckAWSEc2InstanceTypeOfferings(t *testing.T) {
 
 	_, err := conn.DescribeInstanceTypeOfferings(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
