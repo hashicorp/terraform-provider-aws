@@ -7,6 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsBackupGlobalSettings_basic(t *testing.T) {
@@ -15,11 +17,11 @@ func TestAccAwsBackupGlobalSettings_basic(t *testing.T) {
 	resourceName := "aws_backup_global_settings.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSBackup(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -58,7 +60,7 @@ func TestAccAwsBackupGlobalSettings_basic(t *testing.T) {
 func testAccCheckAwsBackupGlobalSettingsExists(settings *backup.DescribeGlobalSettingsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
-		conn := testAccProvider.Meta().(*AWSClient).backupconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).BackupConn
 		resp, err := conn.DescribeGlobalSettings(&backup.DescribeGlobalSettingsInput{})
 		if err != nil {
 			return err
