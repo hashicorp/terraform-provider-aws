@@ -14,8 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDbInstance() *schema.Resource {
@@ -454,7 +455,7 @@ func resourceAwsDbInstance() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"timezone": {
@@ -514,7 +515,7 @@ func resourceAwsDbInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"performance_insights_retention_period": {
@@ -538,8 +539,8 @@ func resourceAwsDbInstance() *schema.Resource {
 }
 
 func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Some API calls (e.g. CreateDBInstanceReadReplica and
@@ -839,17 +840,17 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err = conn.RestoreDBInstanceFromS3(&opts)
 			if err != nil {
-				if isAWSErr(err, "InvalidParameterValue", "ENHANCED_MONITORING") {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "ENHANCED_MONITORING") {
 					return resource.RetryableError(err)
 				}
-				if isAWSErr(err, "InvalidParameterValue", "S3_SNAPSHOT_INGESTION") {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "S3_SNAPSHOT_INGESTION") {
 					return resource.RetryableError(err)
 				}
-				if isAWSErr(err, "InvalidParameterValue", "S3 bucket cannot be found") {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "S3 bucket cannot be found") {
 					return resource.RetryableError(err)
 				}
 				// InvalidParameterValue: Files from the specified Amazon S3 bucket cannot be downloaded. Make sure that you have created an AWS Identity and Access Management (IAM) role that lets Amazon RDS access Amazon S3 for you.
-				if isAWSErr(err, "InvalidParameterValue", "Files from the specified Amazon S3 bucket cannot be downloaded") {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Files from the specified Amazon S3 bucket cannot be downloaded") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -1066,7 +1067,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		// Since engine is not a required argument when using snapshot_identifier
 		// and the RDS API determines this condition, we catch the error
 		// and remove the invalid configuration for it to be fixed afterwards.
-		if isAWSErr(err, "InvalidParameterValue", "Mirroring cannot be applied to instances with backup retention set to zero") {
+		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Mirroring cannot be applied to instances with backup retention set to zero") {
 			opts.MultiAZ = aws.Bool(false)
 			modifyDbInstanceInput.MultiAZ = aws.Bool(true)
 			requiresModifyDbInstance = true
@@ -1308,7 +1309,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 			createdDBInstanceOutput, err = conn.CreateDBInstance(&opts)
 			if err != nil {
-				if isAWSErr(err, "InvalidParameterValue", "ENHANCED_MONITORING") {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "ENHANCED_MONITORING") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -1319,7 +1320,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			_, err = conn.CreateDBInstance(&opts)
 		}
 		if err != nil {
-			if isAWSErr(err, "InvalidParameterValue", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "") {
 				opts.MasterUserPassword = aws.String("********")
 				return fmt.Errorf("Error creating DB Instance: %s, %+v", err, opts)
 			}
@@ -1387,9 +1388,9 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	v, err := resourceAwsDbInstanceRetrieve(d.Id(), conn)
 
@@ -1528,7 +1529,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsDbInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	log.Printf("[DEBUG] DB Instance destroy: %v", d.Id())
 
@@ -1556,7 +1557,7 @@ func resourceAwsDbInstanceDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	// InvalidDBInstanceState: Instance XXX is already being deleted.
-	if err != nil && !isAWSErr(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
+	if err != nil && !tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
 		return fmt.Errorf("error deleting Database Instance %q: %s", d.Id(), err)
 	}
 
@@ -1591,7 +1592,7 @@ func waitUntilAwsDbInstanceIsDeleted(id string, conn *rds.RDS, timeout time.Dura
 }
 
 func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	req := &rds.ModifyDBInstanceInput{
 		ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
@@ -1774,7 +1775,7 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 			_, err := conn.ModifyDBInstance(req)
 
 			// Retry for IAM eventual consistency
-			if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 				return resource.RetryableError(err)
 			}
 
@@ -1847,7 +1848,7 @@ func resourceAwsDbInstanceRetrieve(id string, conn *rds.RDS) (*rds.DBInstance, e
 
 	resp, err := conn.DescribeDBInstances(&opts)
 	if err != nil {
-		if isAWSErr(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("Error retrieving DB Instances: %s", err)
