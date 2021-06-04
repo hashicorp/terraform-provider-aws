@@ -16,7 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/mq/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -75,17 +77,17 @@ func TestResourceAWSMqBrokerPasswordValidation(t *testing.T) {
 }
 
 func testSweepMqBrokers(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).mqconn
+	conn := client.(*awsprovider.AWSClient).MQConn
 
 	resp, err := conn.ListBrokers(&mq.ListBrokersInput{
 		MaxResults: aws.Int64(100),
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping MQ Broker sweep for %s: %s", region, err)
 			return nil
 		}
@@ -259,12 +261,12 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -301,7 +303,7 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
 						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
@@ -332,12 +334,12 @@ func TestAccAWSMqBroker_throughputOptimized(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -373,7 +375,7 @@ func TestAccAWSMqBroker_throughputOptimized(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
 						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
@@ -411,12 +413,12 @@ func TestAccAWSMqBroker_allFieldsDefaultVpc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -459,7 +461,7 @@ func TestAccAWSMqBroker_allFieldsDefaultVpc(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "2"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
 						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
@@ -535,12 +537,12 @@ func TestAccAWSMqBroker_allFieldsCustomVpc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -583,7 +585,7 @@ func TestAccAWSMqBroker_allFieldsCustomVpc(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "2"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
 						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
@@ -647,12 +649,12 @@ func TestAccAWSMqBroker_EncryptionOptions_KmsKeyId(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -681,12 +683,12 @@ func TestAccAWSMqBroker_EncryptionOptions_UseAwsOwnedKey_Disabled(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -714,12 +716,12 @@ func TestAccAWSMqBroker_EncryptionOptions_UseAwsOwnedKey_Enabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -747,12 +749,12 @@ func TestAccAWSMqBroker_updateUsers(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -820,12 +822,12 @@ func TestAccAWSMqBroker_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -870,12 +872,12 @@ func TestAccAWSMqBroker_updateSecurityGroup(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -923,12 +925,12 @@ func TestAccAWSMqBroker_updateEngineVersion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -962,19 +964,19 @@ func TestAccAWSMqBroker_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMqBrokerConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqBrokerExists(resourceName, &broker),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsMqBroker(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsMqBroker(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -989,12 +991,12 @@ func TestAccAWSMqBroker_rabbitmq(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1030,12 +1032,12 @@ func TestAccAWSMqBroker_rabbitmq_Logs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1071,12 +1073,12 @@ func TestAccAWSMqBroker_rabbitmq_Validation_AuditLog(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1105,12 +1107,12 @@ func TestAccAWSMqBroker_clusterRabbitMQ(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1142,7 +1144,7 @@ func TestAccAWSMqBroker_clusterRabbitMQ(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
 						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com$`)),
@@ -1167,12 +1169,12 @@ func TestAccAWSMqBroker_ldap(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1201,7 +1203,7 @@ func TestAccAWSMqBroker_ldap(t *testing.T) {
 }
 
 func testAccCheckAwsMqBrokerDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).mqconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).MQConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_mq_broker" {
@@ -1214,7 +1216,7 @@ func testAccCheckAwsMqBrokerDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeBroker(input)
 		if err != nil {
-			if isAWSErr(err, mq.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, mq.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return err
@@ -1237,7 +1239,7 @@ func testAccCheckAwsMqBrokerExists(name string, broker *mq.DescribeBrokerRespons
 			return fmt.Errorf("No MQ Broker is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).mqconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).MQConn
 		resp, err := conn.DescribeBroker(&mq.DescribeBrokerInput{
 			BrokerId: aws.String(rs.Primary.ID),
 		})
@@ -1253,13 +1255,13 @@ func testAccCheckAwsMqBrokerExists(name string, broker *mq.DescribeBrokerRespons
 }
 
 func testAccPreCheckAWSMq(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).mqconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).MQConn
 
 	input := &mq.ListBrokersInput{}
 
 	_, err := conn.ListBrokers(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
