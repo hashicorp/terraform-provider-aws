@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSLambdaProvisionedConcurrencyConfig_basic(t *testing.T) {
@@ -17,9 +20,9 @@ func TestAccAWSLambdaProvisionedConcurrencyConfig_basic(t *testing.T) {
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -47,9 +50,9 @@ func TestAccAWSLambdaProvisionedConcurrencyConfig_disappears_LambdaFunction(t *t
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -70,9 +73,9 @@ func TestAccAWSLambdaProvisionedConcurrencyConfig_disappears_LambdaProvisionedCo
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -92,9 +95,9 @@ func TestAccAWSLambdaProvisionedConcurrencyConfig_ProvisionedConcurrentExecution
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -130,9 +133,9 @@ func TestAccAWSLambdaProvisionedConcurrencyConfig_Qualifier_AliasName(t *testing
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -152,7 +155,7 @@ func TestAccAWSLambdaProvisionedConcurrencyConfig_Qualifier_AliasName(t *testing
 }
 
 func testAccCheckLambdaProvisionedConcurrencyConfigDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).LambdaConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_provisioned_concurrency_config" {
@@ -172,7 +175,7 @@ func testAccCheckLambdaProvisionedConcurrencyConfigDestroy(s *terraform.State) e
 
 		output, err := conn.GetProvisionedConcurrencyConfig(input)
 
-		if isAWSErr(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException, "") || isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException, "") || tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 
@@ -200,7 +203,7 @@ func testAccCheckAwsLambdaProvisionedConcurrencyConfigDisappears(resourceName st
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).LambdaConn
 
 		functionName, qualifier, err := resourceAwsLambdaProvisionedConcurrencyConfigParseId(rs.Primary.ID)
 
@@ -230,7 +233,7 @@ func testAccCheckAwsLambdaProvisionedConcurrencyConfigExists(resourceName string
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).LambdaConn
 
 		functionName, qualifier, err := resourceAwsLambdaProvisionedConcurrencyConfigParseId(rs.Primary.ID)
 
