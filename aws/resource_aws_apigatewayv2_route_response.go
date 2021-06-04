@@ -7,7 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsApiGatewayV2RouteResponse() *schema.Resource {
@@ -49,7 +51,7 @@ func resourceAwsApiGatewayV2RouteResponse() *schema.Resource {
 }
 
 func resourceAwsApiGatewayV2RouteResponseCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.CreateRouteResponseInput{
 		ApiId:            aws.String(d.Get("api_id").(string)),
@@ -75,14 +77,14 @@ func resourceAwsApiGatewayV2RouteResponseCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsApiGatewayV2RouteResponseRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetRouteResponse(&apigatewayv2.GetRouteResponseInput{
 		ApiId:           aws.String(d.Get("api_id").(string)),
 		RouteId:         aws.String(d.Get("route_id").(string)),
 		RouteResponseId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway v2 route response (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -101,7 +103,7 @@ func resourceAwsApiGatewayV2RouteResponseRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsApiGatewayV2RouteResponseUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.UpdateRouteResponseInput{
 		ApiId:           aws.String(d.Get("api_id").(string)),
@@ -128,7 +130,7 @@ func resourceAwsApiGatewayV2RouteResponseUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsApiGatewayV2RouteResponseDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 route response (%s)", d.Id())
 	_, err := conn.DeleteRouteResponse(&apigatewayv2.DeleteRouteResponseInput{
@@ -136,7 +138,7 @@ func resourceAwsApiGatewayV2RouteResponseDelete(d *schema.ResourceData, meta int
 		RouteId:         aws.String(d.Get("route_id").(string)),
 		RouteResponseId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
