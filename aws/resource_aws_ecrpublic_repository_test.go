@@ -7,10 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecrpublic"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -21,14 +24,14 @@ func init() {
 }
 
 func testSweepEcrPublicRepositories(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).ecrpublicconn
-	sweepResources := make([]*testSweepResource, 0)
+	conn := client.(*awsprovider.AWSClient).ECRPublicConn
+	sweepResources := make([]*atest.TestSweepResource, 0)
 	var errs *multierror.Error
 
 	err = conn.DescribeRepositoriesPages(&ecrpublic.DescribeRepositoriesInput{}, func(page *ecrpublic.DescribeRepositoriesOutput, lastPage bool) bool {
@@ -43,7 +46,7 @@ func testSweepEcrPublicRepositories(region string) error {
 			d.Set("registry_id", repository.RegistryId)
 			d.Set("force_destroy", true)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, atest.NewTestSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -53,11 +56,11 @@ func testSweepEcrPublicRepositories(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing ECR Public Repositories for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = atest.TestSweepResourceOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping ECR Public Repositories for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if atest.SweepSkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping ECR Public Repositories sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -71,9 +74,9 @@ func TestAccAWSEcrPublicRepository_basic(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecrpublic.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -81,8 +84,8 @@ func TestAccAWSEcrPublicRepository_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "repository_name", rName),
-					testAccCheckResourceAttrAccountID(resourceName, "registry_id"),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "ecr-public", "repository/"+rName),
+					atest.CheckAttrAccountID(resourceName, "registry_id"),
+					atest.CheckAttrGlobalARN(resourceName, "arn", "ecr-public", "repository/"+rName),
 				),
 			},
 			{
@@ -100,9 +103,9 @@ func TestAccAWSEcrPublicRepository_catalogdata_abouttext(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecrpublic.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -136,9 +139,9 @@ func TestAccAWSEcrPublicRepository_catalogdata_architectures(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecrpublic.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -172,9 +175,9 @@ func TestAccAWSEcrPublicRepository_catalogdata_description(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecrpublic.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -208,9 +211,9 @@ func TestAccAWSEcrPublicRepository_catalogdata_operatingsystems(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecrpublic.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -244,9 +247,9 @@ func TestAccAWSEcrPublicRepository_catalogdata_usagetext(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecrpublic.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -280,9 +283,9 @@ func TestAccAWSEcrPublicRepository_catalogdata_logoimageblob(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecrpublic.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -309,9 +312,9 @@ func TestAccAWSEcrPublicRepository_basic_forcedestroy(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecrpublic.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -319,8 +322,8 @@ func TestAccAWSEcrPublicRepository_basic_forcedestroy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "repository_name", rName),
-					testAccCheckResourceAttrAccountID(resourceName, "registry_id"),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "ecr-public", "repository/"+rName),
+					atest.CheckAttrAccountID(resourceName, "registry_id"),
+					atest.CheckAttrGlobalARN(resourceName, "arn", "ecr-public", "repository/"+rName),
 				),
 			},
 			{
@@ -339,16 +342,16 @@ func TestAccAWSEcrPublicRepository_disappears(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecrpublic.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcrPublicRepositoryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEcrPublicRepository(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsEcrPublicRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -367,7 +370,7 @@ func testAccCheckAWSEcrPublicRepositoryExists(name string, res *ecrpublic.Reposi
 			return fmt.Errorf("No ECR Public repository ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ecrpublicconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ECRPublicConn
 
 		output, err := conn.DescribeRepositories(&ecrpublic.DescribeRepositoriesInput{
 			RepositoryNames: aws.StringSlice([]string{rs.Primary.ID}),
@@ -386,7 +389,7 @@ func testAccCheckAWSEcrPublicRepositoryExists(name string, res *ecrpublic.Reposi
 }
 
 func testAccCheckAWSEcrPublicRepositoryDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ecrpublicconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ECRPublicConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecrpublic_repository" {
@@ -399,7 +402,7 @@ func testAccCheckAWSEcrPublicRepositoryDestroy(s *terraform.State) error {
 
 		out, err := conn.DescribeRepositories(&input)
 
-		if isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
 			return nil
 		}
 
@@ -501,10 +504,10 @@ resource "aws_ecrpublic_repository" "test" {
 }
 
 func testAccPreCheckAwsEcrPublic(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).ecrpublicconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ECRPublicConn
 	input := &ecrpublic.DescribeRepositoriesInput{}
 	_, err := conn.DescribeRepositories(input)
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 	if err != nil {
