@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsMskConfiguration() *schema.Resource {
@@ -47,7 +48,7 @@ func dataSourceAwsMskConfiguration() *schema.Resource {
 }
 
 func dataSourceAwsMskConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
+	conn := meta.(*awsprovider.AWSClient).KafkaConn
 
 	listConfigurationsInput := &kafka.ListConfigurationsInput{}
 
