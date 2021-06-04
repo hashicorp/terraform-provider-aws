@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsRamResourceShare_basic(t *testing.T) {
@@ -18,16 +20,16 @@ func TestAccAwsRamResourceShare_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ram.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ram.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsRamResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsRamResourceShareConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRamResourceShareExists(resourceName, &resourceShare),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ram", regexp.MustCompile(`resource-share/.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "ram", regexp.MustCompile(`resource-share/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -48,9 +50,9 @@ func TestAccAwsRamResourceShare_AllowExternalPrincipals(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ram.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ram.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsRamResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -83,9 +85,9 @@ func TestAccAwsRamResourceShare_Name(t *testing.T) {
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ram.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ram.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsRamResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -117,9 +119,9 @@ func TestAccAwsRamResourceShare_Tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ram.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ram.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsRamResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -158,7 +160,7 @@ func TestAccAwsRamResourceShare_Tags(t *testing.T) {
 
 func testAccCheckAwsRamResourceShareExists(resourceName string, resourceShare *ram.ResourceShare) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ramconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).RAMConn
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -194,7 +196,7 @@ func testAccCheckAwsRamResourceShareExists(resourceName string, resourceShare *r
 }
 
 func testAccCheckAwsRamResourceShareDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ramconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).RAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ram_resource_share" {
