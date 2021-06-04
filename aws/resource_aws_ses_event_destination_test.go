@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSSESEventDestination_basic(t *testing.T) {
@@ -22,11 +24,11 @@ func TestAccAWSSESEventDestination_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESEventDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -35,9 +37,9 @@ func TestAccAWSSESEventDestination_basic(t *testing.T) {
 					testAccCheckAwsSESEventDestinationExists(cloudwatchDestinationResourceName, &v1),
 					testAccCheckAwsSESEventDestinationExists(kinesisDestinationResourceName, &v2),
 					testAccCheckAwsSESEventDestinationExists(snsDestinationResourceName, &v3),
-					testAccCheckResourceAttrRegionalARN(cloudwatchDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName1)),
-					testAccCheckResourceAttrRegionalARN(kinesisDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName2)),
-					testAccCheckResourceAttrRegionalARN(snsDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName3)),
+					atest.CheckAttrRegionalARN(cloudwatchDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName1)),
+					atest.CheckAttrRegionalARN(kinesisDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName2)),
+					atest.CheckAttrRegionalARN(snsDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName3)),
 					resource.TestCheckResourceAttr(cloudwatchDestinationResourceName, "name", rName1),
 					resource.TestCheckResourceAttr(kinesisDestinationResourceName, "name", rName2),
 					resource.TestCheckResourceAttr(snsDestinationResourceName, "name", rName3),
@@ -76,11 +78,11 @@ func TestAccAWSSESEventDestination_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESEventDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -89,9 +91,9 @@ func TestAccAWSSESEventDestination_disappears(t *testing.T) {
 					testAccCheckAwsSESEventDestinationExists(cloudwatchDestinationResourceName, &v1),
 					testAccCheckAwsSESEventDestinationExists(kinesisDestinationResourceName, &v2),
 					testAccCheckAwsSESEventDestinationExists(snsDestinationResourceName, &v3),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesEventDestination(), cloudwatchDestinationResourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesEventDestination(), kinesisDestinationResourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesEventDestination(), snsDestinationResourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSesEventDestination(), cloudwatchDestinationResourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSesEventDestination(), kinesisDestinationResourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSesEventDestination(), snsDestinationResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -100,7 +102,7 @@ func TestAccAWSSESEventDestination_disappears(t *testing.T) {
 }
 
 func testAccCheckSESEventDestinationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_configuration_set" {
@@ -140,7 +142,7 @@ func testAccCheckAwsSESEventDestinationExists(n string, v *ses.EventDestination)
 			return fmt.Errorf("SES event destination ID not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sesconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SESConn
 
 		response, err := conn.DescribeConfigurationSet(&ses.DescribeConfigurationSetInput{
 			ConfigurationSetAttributeNames: aws.StringSlice([]string{ses.ConfigurationSetAttributeEventDestinations}),
