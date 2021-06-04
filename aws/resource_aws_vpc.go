@@ -15,10 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsVpc() *schema.Resource {
@@ -138,8 +139,8 @@ func resourceAwsVpc() *schema.Resource {
 }
 
 func resourceAwsVpcCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Create the VPC
@@ -248,9 +249,9 @@ func resourceAwsVpcCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	var vpc *ec2.Vpc
 
@@ -307,9 +308,9 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 
 	// ARN
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		AccountID: aws.StringValue(vpc.OwnerId),
 		Resource:  fmt.Sprintf("vpc/%s", d.Id()),
 	}.String()
@@ -388,8 +389,8 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 
 	respClassiclinkDnsSupport, err := conn.DescribeVpcClassicLinkDnsSupport(describeClassiclinkDnsOpts)
 	if err != nil {
-		if isAWSErr(err, "UnsupportedOperation", "The functionality you requested is not available in this region") ||
-			isAWSErr(err, "AuthFailure", "This request has been administratively disabled") {
+		if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "The functionality you requested is not available in this region") ||
+			tfawserr.ErrMessageContains(err, "AuthFailure", "This request has been administratively disabled") {
 			log.Printf("[WARN] VPC Classic Link DNS Support is not supported in this region")
 		} else {
 			return err
@@ -427,7 +428,7 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsVpcUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	vpcid := d.Id()
 	if d.HasChange("enable_dns_hostnames") {
@@ -580,7 +581,7 @@ func resourceAwsVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsVpcDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 	vpcID := d.Id()
 	deleteVpcOpts := &ec2.DeleteVpcInput{
 		VpcId: &vpcID,
@@ -593,17 +594,17 @@ func resourceAwsVpcDelete(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		if isAWSErr(err, "InvalidVpcID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVpcID.NotFound", "") {
 			return nil
 		}
-		if isAWSErr(err, "DependencyViolation", "") {
+		if tfawserr.ErrMessageContains(err, "DependencyViolation", "") {
 			return resource.RetryableError(err)
 		}
 		return resource.NonRetryableError(fmt.Errorf("Error deleting VPC: %s", err))
 	})
 	if isResourceTimeoutError(err) {
 		_, err = conn.DeleteVpc(deleteVpcOpts)
-		if isAWSErr(err, "InvalidVpcID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVpcID.NotFound", "") {
 			return nil
 		}
 	}
@@ -668,7 +669,7 @@ func Ipv6CidrStateRefreshFunc(conn *ec2.EC2, id string, associationId string) re
 		}
 		resp, err := conn.DescribeVpcs(describeVpcOpts)
 
-		if isAWSErr(err, "InvalidVpcID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVpcID.NotFound", "") {
 			return nil, "", nil
 		}
 
@@ -809,7 +810,7 @@ func vpcDescribe(conn *ec2.EC2, vpcId string) (*ec2.Vpc, error) {
 		VpcIds: aws.StringSlice([]string{vpcId}),
 	})
 	if err != nil {
-		if !isAWSErr(err, "InvalidVpcID.NotFound", "") {
+		if !tfawserr.ErrMessageContains(err, "InvalidVpcID.NotFound", "") {
 			return nil, err
 		}
 		resp = nil
