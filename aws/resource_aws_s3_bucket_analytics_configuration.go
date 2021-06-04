@@ -12,9 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfs3 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsS3BucketAnalyticsConfiguration() *schema.Resource {
@@ -91,7 +92,7 @@ func resourceAwsS3BucketAnalyticsConfiguration() *schema.Resource {
 															"bucket_arn": {
 																Type:         schema.TypeString,
 																Required:     true,
-																ValidateFunc: validateArn,
+																ValidateFunc: ValidateArn,
 															},
 															"bucket_account_id": {
 																Type:         schema.TypeString,
@@ -127,7 +128,7 @@ func resourceAwsS3BucketAnalyticsConfiguration() *schema.Resource {
 var filterAtLeastOneOfKeys = []string{"filter.0.prefix", "filter.0.tags"}
 
 func resourceAwsS3BucketAnalyticsConfigurationPut(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
+	S3Conn := meta.(*awsprovider.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)
 	name := d.Get("name").(string)
@@ -147,7 +148,7 @@ func resourceAwsS3BucketAnalyticsConfigurationPut(d *schema.ResourceData, meta i
 	}
 
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := s3conn.PutBucketAnalyticsConfiguration(input)
+		_, err := S3Conn.PutBucketAnalyticsConfiguration(input)
 
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 			return resource.RetryableError(err)
@@ -160,7 +161,7 @@ func resourceAwsS3BucketAnalyticsConfigurationPut(d *schema.ResourceData, meta i
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = s3conn.PutBucketAnalyticsConfiguration(input)
+		_, err = S3Conn.PutBucketAnalyticsConfiguration(input)
 	}
 
 	if err != nil {
@@ -173,7 +174,7 @@ func resourceAwsS3BucketAnalyticsConfigurationPut(d *schema.ResourceData, meta i
 }
 
 func resourceAwsS3BucketAnalyticsConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*awsprovider.AWSClient).S3Conn
 
 	bucket, name, err := resourceAwsS3BucketAnalyticsConfigurationParseID(d.Id())
 	if err != nil {
@@ -223,7 +224,7 @@ func resourceAwsS3BucketAnalyticsConfigurationRead(d *schema.ResourceData, meta 
 }
 
 func resourceAwsS3BucketAnalyticsConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*awsprovider.AWSClient).S3Conn
 
 	bucket, name, err := resourceAwsS3BucketAnalyticsConfigurationParseID(d.Id())
 	if err != nil {
@@ -238,7 +239,7 @@ func resourceAwsS3BucketAnalyticsConfigurationDelete(d *schema.ResourceData, met
 	log.Printf("[DEBUG] Deleting S3 bucket analytics configuration: %s", input)
 	_, err = conn.DeleteBucketAnalyticsConfiguration(input)
 	if err != nil {
-		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
+		if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") || tfawserr.ErrMessageContains(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting S3 analytics configuration: %w", err)
