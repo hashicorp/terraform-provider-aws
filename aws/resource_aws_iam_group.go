@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsIamGroup() *schema.Resource {
@@ -52,7 +53,7 @@ func resourceAwsIamGroup() *schema.Resource {
 }
 
 func resourceAwsIamGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	IAMConn := meta.(*awsprovider.AWSClient).IAMConn
 	name := d.Get("name").(string)
 	path := d.Get("path").(string)
 
@@ -61,7 +62,7 @@ func resourceAwsIamGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		GroupName: aws.String(name),
 	}
 
-	createResp, err := iamconn.CreateGroup(request)
+	createResp, err := IAMConn.CreateGroup(request)
 	if err != nil {
 		return fmt.Errorf("Error creating IAM Group %s: %s", name, err)
 	}
@@ -71,7 +72,7 @@ func resourceAwsIamGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsIamGroupRead(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	IAMConn := meta.(*awsprovider.AWSClient).IAMConn
 
 	request := &iam.GetGroupInput{
 		GroupName: aws.String(d.Id()),
@@ -82,7 +83,7 @@ func resourceAwsIamGroupRead(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		getResp, err = iamconn.GetGroup(request)
+		getResp, err = IAMConn.GetGroup(request)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return resource.RetryableError(err)
@@ -96,7 +97,7 @@ func resourceAwsIamGroupRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		getResp, err = iamconn.GetGroup(request)
+		getResp, err = IAMConn.GetGroup(request)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
@@ -132,7 +133,7 @@ func resourceAwsIamGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsIamGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChanges("name", "path") {
-		iamconn := meta.(*AWSClient).iamconn
+		IAMConn := meta.(*awsprovider.AWSClient).IAMConn
 		on, nn := d.GetChange("name")
 		_, np := d.GetChange("path")
 
@@ -141,7 +142,7 @@ func resourceAwsIamGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			NewGroupName: aws.String(nn.(string)),
 			NewPath:      aws.String(np.(string)),
 		}
-		_, err := iamconn.UpdateGroup(request)
+		_, err := IAMConn.UpdateGroup(request)
 		if err != nil {
 			return fmt.Errorf("Error updating IAM Group %s: %s", d.Id(), err)
 		}
@@ -152,13 +153,13 @@ func resourceAwsIamGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsIamGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	IAMConn := meta.(*awsprovider.AWSClient).IAMConn
 
 	request := &iam.DeleteGroupInput{
 		GroupName: aws.String(d.Id()),
 	}
 
-	if _, err := iamconn.DeleteGroup(request); err != nil {
+	if _, err := IAMConn.DeleteGroup(request); err != nil {
 		return fmt.Errorf("Error deleting IAM Group %s: %s", d.Id(), err)
 	}
 	return nil
@@ -176,7 +177,7 @@ func deleteAwsIamGroupPolicyAttachments(conn *iam.IAM, groupName string) error {
 		return !lastPage
 	})
 
-	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 		return nil
 	}
 
@@ -192,7 +193,7 @@ func deleteAwsIamGroupPolicyAttachments(conn *iam.IAM, groupName string) error {
 
 		_, err := conn.DetachGroupPolicy(input)
 
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
 		}
 
@@ -215,7 +216,7 @@ func deleteAwsIamGroupPolicies(conn *iam.IAM, groupName string) error {
 		return !lastPage
 	})
 
-	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 		return nil
 	}
 
@@ -231,7 +232,7 @@ func deleteAwsIamGroupPolicies(conn *iam.IAM, groupName string) error {
 
 		_, err := conn.DeleteGroupPolicy(input)
 
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
 		}
 
