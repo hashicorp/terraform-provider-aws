@@ -8,8 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsRedshiftSnapshotScheduleAssociation() *schema.Resource {
@@ -48,7 +50,7 @@ func resourceAwsRedshiftSnapshotScheduleAssociation() *schema.Resource {
 }
 
 func resourceAwsRedshiftSnapshotScheduleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*awsprovider.AWSClient).RedshiftConn
 	clusterIdentifier := d.Get("cluster_identifier").(string)
 	scheduleIdentifier := d.Get("schedule_identifier").(string)
 
@@ -72,7 +74,7 @@ func resourceAwsRedshiftSnapshotScheduleAssociationCreate(d *schema.ResourceData
 }
 
 func resourceAwsRedshiftSnapshotScheduleAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*awsprovider.AWSClient).RedshiftConn
 	clusterIdentifier, scheduleIdentifier, err := resourceAwsRedshiftSnapshotScheduleAssociationParseId(d.Id())
 	if err != nil {
 		return fmt.Errorf("Error parse Redshift Cluster Snapshot Schedule Association ID %s: %s", d.Id(), err)
@@ -115,7 +117,7 @@ func resourceAwsRedshiftSnapshotScheduleAssociationRead(d *schema.ResourceData, 
 }
 
 func resourceAwsRedshiftSnapshotScheduleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*awsprovider.AWSClient).RedshiftConn
 	clusterIdentifier, scheduleIdentifier, err := resourceAwsRedshiftSnapshotScheduleAssociationParseId(d.Id())
 	if err != nil {
 		return fmt.Errorf("Error parse Redshift Cluster Snapshot Schedule Association ID %s: %s", d.Id(), err)
@@ -127,12 +129,12 @@ func resourceAwsRedshiftSnapshotScheduleAssociationDelete(d *schema.ResourceData
 		DisassociateSchedule: aws.Bool(true),
 	})
 
-	if isAWSErr(err, redshift.ErrCodeClusterNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, redshift.ErrCodeClusterNotFoundFault, "") {
 		log.Printf("[WARN] Redshift Snapshot Cluster (%s) not found, removing from state", clusterIdentifier)
 		d.SetId("")
 		return nil
 	}
-	if isAWSErr(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
 		log.Printf("[WARN] Redshift Snapshot Schedule (%s) not found, removing from state", scheduleIdentifier)
 		d.SetId("")
 		return nil
@@ -167,10 +169,10 @@ func resourceAwsRedshiftSnapshotScheduleAssociationStateRefreshFunc(clusterIdent
 			ClusterIdentifier:  aws.String(clusterIdentifier),
 			ScheduleIdentifier: aws.String(scheduleIdentifier),
 		})
-		if isAWSErr(err, redshift.ErrCodeClusterNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, redshift.ErrCodeClusterNotFoundFault, "") {
 			return 42, "destroyed", nil
 		}
-		if isAWSErr(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
 			return 42, "destroyed", nil
 		}
 		if err != nil {
