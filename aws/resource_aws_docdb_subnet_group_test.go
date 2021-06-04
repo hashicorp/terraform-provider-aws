@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSDocDBSubnetGroup_basic(t *testing.T) {
@@ -18,9 +21,9 @@ func TestAccAWSDocDBSubnetGroup_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, docdb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDocDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -49,9 +52,9 @@ func TestAccAWSDocDBSubnetGroup_disappears(t *testing.T) {
 	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, docdb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDocDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -71,9 +74,9 @@ func TestAccAWSDocDBSubnetGroup_namePrefix(t *testing.T) {
 	var v docdb.DBSubnetGroup
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, docdb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDocDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -99,9 +102,9 @@ func TestAccAWSDocDBSubnetGroup_generatedName(t *testing.T) {
 	var v docdb.DBSubnetGroup
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, docdb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDocDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -126,9 +129,9 @@ func TestAccAWSDocDBSubnetGroup_updateDescription(t *testing.T) {
 	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, docdb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDocDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -160,7 +163,7 @@ func TestAccAWSDocDBSubnetGroup_updateDescription(t *testing.T) {
 }
 
 func testAccCheckDocDBSubnetGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).docdbconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).DocDBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_docdb_subnet_group" {
@@ -179,7 +182,7 @@ func testAccCheckDocDBSubnetGroupDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			if isAWSErr(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
 				return nil
 			}
 			return err
@@ -192,7 +195,7 @@ func testAccCheckDocDBSubnetGroupDestroy(s *terraform.State) error {
 func testAccCheckAWSDocDBSubnetGroupDisappears(group *docdb.DBSubnetGroup) resource.TestCheckFunc {
 
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).docdbconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DocDBConn
 
 		params := &docdb.DeleteDBSubnetGroupInput{
 			DBSubnetGroupName: group.DBSubnetGroupName,
@@ -218,7 +221,7 @@ func testAccCheckDocDBSubnetGroupExists(n string, v *docdb.DBSubnetGroup) resour
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).docdbconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DocDBConn
 		resp, err := conn.DescribeDBSubnetGroups(
 			&docdb.DescribeDBSubnetGroupsInput{DBSubnetGroupName: aws.String(rs.Primary.ID)})
 		if err != nil {
@@ -235,7 +238,7 @@ func testAccCheckDocDBSubnetGroupExists(n string, v *docdb.DBSubnetGroup) resour
 }
 
 func testAccDocDBSubnetGroupConfig(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
@@ -276,7 +279,7 @@ resource "aws_docdb_subnet_group" "foo" {
 }
 
 func testAccDocDBSubnetGroupConfig_updatedDescription(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
@@ -318,7 +321,7 @@ resource "aws_docdb_subnet_group" "foo" {
 }
 
 func testAccDocDBSubnetGroupConfig_namePrefix() string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -354,7 +357,7 @@ resource "aws_docdb_subnet_group" "test" {
 }
 
 func testAccDocDBSubnetGroupConfig_generatedName() string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
