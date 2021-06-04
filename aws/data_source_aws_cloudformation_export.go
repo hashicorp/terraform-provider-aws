@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsCloudFormationExport() *schema.Resource {
@@ -30,10 +31,10 @@ func dataSourceAwsCloudFormationExport() *schema.Resource {
 }
 
 func dataSourceAwsCloudFormationExportRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
+	conn := meta.(*awsprovider.AWSClient).CloudFormationConn
 	var value string
 	name := d.Get("name").(string)
-	region := meta.(*AWSClient).region
+	region := meta.(*awsprovider.AWSClient).Region
 	d.SetId(fmt.Sprintf("cloudformation-exports-%s-%s", region, name))
 	input := &cloudformation.ListExportsInput{}
 	err := conn.ListExportsPages(input,
