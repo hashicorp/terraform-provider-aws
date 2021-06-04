@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSServiceCatalogConstraintDataSource_basic(t *testing.T) {
@@ -14,9 +15,9 @@ func TestAccAWSServiceCatalogConstraintDataSource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, servicecatalog.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogConstraintDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -38,7 +39,7 @@ func TestAccAWSServiceCatalogConstraintDataSource_basic(t *testing.T) {
 }
 
 func testAccAWSServiceCatalogConstraintDataSourceConfig_basic(rName, description string) string {
-	return composeConfig(testAccAWSServiceCatalogConstraintConfig_basic(rName, description), `
+	return atest.ComposeConfig(testAccAWSServiceCatalogConstraintConfig_basic(rName, description), `
 data "aws_servicecatalog_constraint" "test" {
   id = aws_servicecatalog_constraint.test.id
 }
