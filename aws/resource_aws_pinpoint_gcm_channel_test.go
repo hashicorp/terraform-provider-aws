@@ -7,8 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 /**
@@ -28,9 +31,9 @@ func TestAccAWSPinpointGCMChannel_basic(t *testing.T) {
 	apiKey := os.Getenv("GCM_API_KEY")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   atest.ErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSPinpointGCMChannelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -68,7 +71,7 @@ func testAccCheckAWSPinpointGCMChannelExists(n string, channel *pinpoint.GCMChan
 			return fmt.Errorf("No Pinpoint GCM Channel with that application ID exists")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).PinpointConn
 
 		// Check if the app exists
 		params := &pinpoint.GetGcmChannelInput{
@@ -99,7 +102,7 @@ resource "aws_pinpoint_gcm_channel" "test_gcm_channel" {
 }
 
 func testAccCheckAWSPinpointGCMChannelDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).PinpointConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_pinpoint_gcm_channel" {
@@ -112,7 +115,7 @@ func testAccCheckAWSPinpointGCMChannelDestroy(s *terraform.State) error {
 		}
 		_, err := conn.GetGcmChannel(params)
 		if err != nil {
-			if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 				continue
 			}
 			return err
