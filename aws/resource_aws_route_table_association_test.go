@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSRouteTableAssociation_Subnet_basic(t *testing.T) {
@@ -19,9 +21,9 @@ func TestAccAWSRouteTableAssociation_Subnet_basic(t *testing.T) {
 	resourceNameSubnet := "aws_subnet.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -51,9 +53,9 @@ func TestAccAWSRouteTableAssociation_Subnet_ChangeRouteTable(t *testing.T) {
 	resourceNameSubnet := "aws_subnet.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -85,9 +87,9 @@ func TestAccAWSRouteTableAssociation_Subnet_ChangeSubnet(t *testing.T) {
 	resourceNameSubnet2 := "aws_subnet.bar"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -118,9 +120,9 @@ func TestAccAWSRouteTableAssociation_Gateway_basic(t *testing.T) {
 	resourceNameGateway := "aws_internet_gateway.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -150,9 +152,9 @@ func TestAccAWSRouteTableAssociation_Gateway_ChangeRouteTable(t *testing.T) {
 	resourceNameGateway := "aws_internet_gateway.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -184,9 +186,9 @@ func TestAccAWSRouteTableAssociation_Gateway_ChangeGateway(t *testing.T) {
 	resourceNameGateway2 := "aws_vpn_gateway.bar"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -215,9 +217,9 @@ func TestAccAWSRouteTableAssociation_disappears(t *testing.T) {
 	resourceNameAssoc := "aws_route_table_association.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -233,7 +235,7 @@ func TestAccAWSRouteTableAssociation_disappears(t *testing.T) {
 }
 
 func testAccCheckRouteTableAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route_table_association" {
@@ -277,7 +279,7 @@ func testAccCheckRouteTableAssociationExists(n string, rta *ec2.RouteTableAssoci
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 		resp, err := conn.DescribeRouteTables(&ec2.DescribeRouteTablesInput{
 			RouteTableIds: []*string{aws.String(rs.Primary.Attributes["route_table_id"])},
 		})
@@ -310,7 +312,7 @@ func testAccCheckRouteTableAssociationExists(n string, rta *ec2.RouteTableAssoci
 
 func testAccCheckRouteTableAssociationDisappears(rta *ec2.RouteTableAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 		_, err := conn.DisassociateRouteTable(&ec2.DisassociateRouteTableInput{
 			AssociationId: rta.RouteTableAssociationId,
