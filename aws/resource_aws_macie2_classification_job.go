@@ -13,8 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsMacie2ClassificationJob() *schema.Resource {
@@ -365,9 +366,9 @@ func resourceAwsMacie2ClassificationJob() *schema.Resource {
 }
 
 func resourceMacie2ClassificationJobCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*awsprovider.AWSClient).Macie2Conn
 
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &macie2.CreateClassificationJobInput{
@@ -427,10 +428,10 @@ func resourceMacie2ClassificationJobCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceMacie2ClassificationJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*awsprovider.AWSClient).Macie2Conn
 
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 	input := &macie2.DescribeClassificationJobInput{
 		JobId: aws.String(d.Id()),
 	}
@@ -489,7 +490,7 @@ func resourceMacie2ClassificationJobRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceMacie2ClassificationJobUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*awsprovider.AWSClient).Macie2Conn
 
 	input := &macie2.UpdateClassificationJobInput{
 		JobId: aws.String(d.Id()),
@@ -514,7 +515,7 @@ func resourceMacie2ClassificationJobUpdate(ctx context.Context, d *schema.Resour
 }
 
 func resourceMacie2ClassificationJobDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*awsprovider.AWSClient).Macie2Conn
 
 	input := &macie2.UpdateClassificationJobInput{
 		JobId:     aws.String(d.Id()),
