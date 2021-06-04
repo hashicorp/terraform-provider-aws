@@ -14,7 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/networkfirewall/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -28,18 +30,18 @@ func init() {
 }
 
 func testSweepNetworkFirewallRuleGroups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).networkfirewallconn
+	conn := client.(*awsprovider.AWSClient).NetworkFirewallConn
 	ctx := context.Background()
 	input := &networkfirewall.ListRuleGroupsInput{MaxResults: aws.Int64(100)}
 	var sweeperErrs *multierror.Error
 
 	for {
 		resp, err := conn.ListRuleGroupsWithContext(ctx, input)
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping NetworkFirewall Rule Group sweep for %s: %s", region, err)
 			return nil
 		}
@@ -82,16 +84,16 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_rulesSourceList(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkFirewallRuleGroup_basic_rulesSourceList(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallRuleGroupExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", networkfirewall.RuleGroupTypeStateful),
@@ -120,16 +122,16 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_statefulRule(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkFirewallRuleGroup_basic_statefulRule(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallRuleGroupExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", networkfirewall.RuleGroupTypeStateful),
@@ -167,16 +169,16 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_statelessRule(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkFirewallRuleGroup_basic_statelessRule(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallRuleGroupExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("stateless-rulegroup/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("stateless-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", networkfirewall.RuleGroupTypeStateless),
@@ -210,16 +212,16 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_rules(t *testing.T) {
 	rules := `alert http any any -> any any (http_response_line; content:"403 Forbidden"; sid:1;)`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkFirewallRuleGroup_basic_rules(rName, rules),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallRuleGroupExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", networkfirewall.RuleGroupTypeStateful),
@@ -246,16 +248,16 @@ func TestAccAwsNetworkFirewallRuleGroup_statelessRuleWithCustomAction(t *testing
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkFirewallRuleGroup_statelessRuleWithCustomAction(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallRuleGroupExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("stateless-rulegroup/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("stateless-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", networkfirewall.RuleGroupTypeStateless),
@@ -298,9 +300,9 @@ func TestAccAwsNetworkFirewallRuleGroup_updateRules(t *testing.T) {
 	updatedRules := `pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; content:"NEW.example.com"; msg:"FQDN test"; sid:1;)`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -335,9 +337,9 @@ func TestAccAwsNetworkFirewallRuleGroup_updateRulesSourceList(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -350,7 +352,7 @@ func TestAccAwsNetworkFirewallRuleGroup_updateRulesSourceList(t *testing.T) {
 				Config: testAccNetworkFirewallRuleGroup_updateRulesSourceList(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallRuleGroupExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", networkfirewall.RuleGroupTypeStateful),
@@ -380,9 +382,9 @@ func TestAccAwsNetworkFirewallRuleGroup_rulesSourceAndRuleVariables(t *testing.T
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -459,9 +461,9 @@ func TestAccAwsNetworkFirewallRuleGroup_updateStatefulRule(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -505,9 +507,9 @@ func TestAccAwsNetworkFirewallRuleGroup_updateMultipleStatefulRules(t *testing.T
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -586,9 +588,9 @@ func TestAccAwsNetworkFirewallRuleGroup_statefulRule_action(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -646,9 +648,9 @@ func TestAccAwsNetworkFirewallRuleGroup_statefulRule_header(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -706,9 +708,9 @@ func TestAccAwsNetworkFirewallRuleGroup_updateStatelessRule(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -755,9 +757,9 @@ func TestAccAwsNetworkFirewallRuleGroup_tags(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -798,16 +800,16 @@ func TestAccAwsNetworkFirewallRuleGroup_disappears(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
-		ErrorCheck:   testAccErrorCheck(t, networkfirewall.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
+		ErrorCheck:   atest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkFirewallRuleGroup_basic_rulesSourceList(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallRuleGroupExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsNetworkFirewallRuleGroup(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsNetworkFirewallRuleGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -821,7 +823,7 @@ func testAccCheckAwsNetworkFirewallRuleGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).networkfirewallconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).NetworkFirewallConn
 		output, err := finder.RuleGroup(context.Background(), conn, rs.Primary.ID)
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			continue
@@ -848,7 +850,7 @@ func testAccCheckAwsNetworkFirewallRuleGroupExists(n string) resource.TestCheckF
 			return fmt.Errorf("No NetworkFirewall Rule Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).networkfirewallconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).NetworkFirewallConn
 		output, err := finder.RuleGroup(context.Background(), conn, rs.Primary.ID)
 		if err != nil {
 			return err
