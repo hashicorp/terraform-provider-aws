@@ -8,7 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsNetworkInterfaces() *schema.Resource {
@@ -31,7 +32,7 @@ func dataSourceAwsNetworkInterfaces() *schema.Resource {
 }
 
 func dataSourceAwsNetworkInterfacesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	req := &ec2.DescribeNetworkInterfacesInput{}
 
@@ -70,7 +71,7 @@ func dataSourceAwsNetworkInterfacesRead(d *schema.ResourceData, meta interface{}
 		networkInterfaces = append(networkInterfaces, aws.StringValue(networkInterface.NetworkInterfaceId))
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*awsprovider.AWSClient).Region)
 
 	if err := d.Set("ids", networkInterfaces); err != nil {
 		return fmt.Errorf("Error setting network interfaces ids: %w", err)
