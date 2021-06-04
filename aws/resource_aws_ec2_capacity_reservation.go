@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -101,7 +103,7 @@ func resourceAwsEc2CapacityReservation() *schema.Resource {
 			"outpost_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"owner_id": {
 				Type:     schema.TypeString,
@@ -128,8 +130,8 @@ func resourceAwsEc2CapacityReservation() *schema.Resource {
 }
 
 func resourceAwsEc2CapacityReservationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	opts := &ec2.CreateCapacityReservationInput{
@@ -180,16 +182,16 @@ func resourceAwsEc2CapacityReservationCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeCapacityReservations(&ec2.DescribeCapacityReservationsInput{
 		CapacityReservationIds: []*string{aws.String(d.Id())},
 	})
 
 	if err != nil {
-		if isAWSErr(err, "InvalidCapacityReservationId.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidCapacityReservationId.NotFound", "") {
 			log.Printf("[WARN] EC2 Capacity Reservation (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -244,7 +246,7 @@ func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsEc2CapacityReservationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	opts := &ec2.ModifyCapacityReservationInput{
 		CapacityReservationId: aws.String(d.Id()),
@@ -279,7 +281,7 @@ func resourceAwsEc2CapacityReservationUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsEc2CapacityReservationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	opts := &ec2.CancelCapacityReservationInput{
 		CapacityReservationId: aws.String(d.Id()),
