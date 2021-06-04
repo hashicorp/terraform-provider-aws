@@ -8,10 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -22,11 +25,11 @@ func init() {
 }
 
 func testSweepDbClusterSnapshots(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).rdsconn
+	conn := client.(*awsprovider.AWSClient).RDSConn
 	input := &rds.DescribeDBClusterSnapshotsInput{
 		// "InvalidDBClusterSnapshotStateFault: Only manual snapshots may be deleted."
 		Filters: []*rds.Filter{{
@@ -38,7 +41,7 @@ func testSweepDbClusterSnapshots(region string) error {
 
 	for {
 		output, err := conn.DescribeDBClusterSnapshots(input)
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping RDS DB Cluster Snapshots sweep for %s: %s", region, err)
 			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
@@ -54,7 +57,7 @@ func testSweepDbClusterSnapshots(region string) error {
 			_, err := conn.DeleteDBClusterSnapshot(&rds.DeleteDBClusterSnapshotInput{
 				DBClusterSnapshotIdentifier: aws.String(id),
 			})
-			if isAWSErr(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 				continue
 			}
 			if err != nil {
@@ -80,9 +83,9 @@ func TestAccAWSDBClusterSnapshot_basic(t *testing.T) {
 	resourceName := "aws_db_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDbClusterSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -91,7 +94,7 @@ func TestAccAWSDBClusterSnapshot_basic(t *testing.T) {
 					testAccCheckDbClusterSnapshotExists(resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttrSet(resourceName, "allocated_storage"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zones.#"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "db_cluster_snapshot_arn", "rds", regexp.MustCompile(fmt.Sprintf("cluster-snapshot:%s$", rName))),
+					atest.MatchAttrRegionalARN(resourceName, "db_cluster_snapshot_arn", "rds", regexp.MustCompile(fmt.Sprintf("cluster-snapshot:%s$", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -120,9 +123,9 @@ func TestAccAWSDBClusterSnapshot_Tags(t *testing.T) {
 	resourceName := "aws_db_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDbClusterSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -167,7 +170,7 @@ func TestAccAWSDBClusterSnapshot_Tags(t *testing.T) {
 }
 
 func testAccCheckDbClusterSnapshotDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_cluster_snapshot" {
@@ -180,7 +183,7 @@ func testAccCheckDbClusterSnapshotDestroy(s *terraform.State) error {
 
 		output, err := conn.DescribeDBClusterSnapshots(input)
 		if err != nil {
-			if isAWSErr(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 				continue
 			}
 			return err
@@ -205,7 +208,7 @@ func testAccCheckDbClusterSnapshotExists(resourceName string, dbClusterSnapshot 
 			return fmt.Errorf("No ID is set for %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).RDSConn
 
 		request := &rds.DescribeDBClusterSnapshotsInput{
 			DBClusterSnapshotIdentifier: aws.String(rs.Primary.ID),
