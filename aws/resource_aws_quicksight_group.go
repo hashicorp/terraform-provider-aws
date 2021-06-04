@@ -7,8 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsQuickSightGroup() *schema.Resource {
@@ -60,9 +62,9 @@ func resourceAwsQuickSightGroup() *schema.Resource {
 }
 
 func resourceAwsQuickSightGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).quicksightconn
+	conn := meta.(*awsprovider.AWSClient).QuickSightConn
 
-	awsAccountID := meta.(*AWSClient).accountid
+	awsAccountID := meta.(*awsprovider.AWSClient).AccountID
 	namespace := d.Get("namespace").(string)
 
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -90,7 +92,7 @@ func resourceAwsQuickSightGroupCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsQuickSightGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).quicksightconn
+	conn := meta.(*awsprovider.AWSClient).QuickSightConn
 
 	awsAccountID, namespace, groupName, err := resourceAwsQuickSightGroupParseID(d.Id())
 	if err != nil {
@@ -104,7 +106,7 @@ func resourceAwsQuickSightGroupRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	resp, err := conn.DescribeGroup(descOpts)
-	if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] QuickSight Group %s is already gone", d.Id())
 		d.SetId("")
 		return nil
@@ -123,7 +125,7 @@ func resourceAwsQuickSightGroupRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsQuickSightGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).quicksightconn
+	conn := meta.(*awsprovider.AWSClient).QuickSightConn
 
 	awsAccountID, namespace, groupName, err := resourceAwsQuickSightGroupParseID(d.Id())
 	if err != nil {
@@ -141,7 +143,7 @@ func resourceAwsQuickSightGroupUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	_, err = conn.UpdateGroup(updateOpts)
-	if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] QuickSight Group %s is already gone", d.Id())
 		d.SetId("")
 		return nil
@@ -154,7 +156,7 @@ func resourceAwsQuickSightGroupUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsQuickSightGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).quicksightconn
+	conn := meta.(*awsprovider.AWSClient).QuickSightConn
 
 	awsAccountID, namespace, groupName, err := resourceAwsQuickSightGroupParseID(d.Id())
 	if err != nil {
@@ -168,7 +170,7 @@ func resourceAwsQuickSightGroupDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if _, err := conn.DeleteGroup(deleteOpts); err != nil {
-		if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting QuickSight Group %s: %s", d.Id(), err)
