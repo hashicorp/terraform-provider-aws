@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccAwsGuardDutyInviteAccepter_basic(t *testing.T) {
@@ -20,11 +23,11 @@ func testAccAwsGuardDutyInviteAccepter_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			atest.PreCheck(t)
+			atest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, guardduty.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, guardduty.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsGuardDutyInviteAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -46,7 +49,7 @@ func testAccAwsGuardDutyInviteAccepter_basic(t *testing.T) {
 }
 
 func testAccCheckAwsGuardDutyInviteAccepterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).GuardDutyConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_guardduty_invite_accepter" {
@@ -59,7 +62,7 @@ func testAccCheckAwsGuardDutyInviteAccepterDestroy(s *terraform.State) error {
 
 		output, err := conn.GetMasterAccount(input)
 
-		if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 			return nil
 		}
 
@@ -88,7 +91,7 @@ func testAccCheckAwsGuardDutyInviteAccepterExists(resourceName string) resource.
 			return fmt.Errorf("Resource (%s) has empty ID", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).GuardDutyConn
 
 		input := &guardduty.GetMasterAccountInput{
 			DetectorId: aws.String(rs.Primary.ID),
@@ -109,7 +112,7 @@ func testAccCheckAwsGuardDutyInviteAccepterExists(resourceName string) resource.
 }
 
 func testAccAwsGuardDutyInviteAccepterConfig_basic(email string) string {
-	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+	return atest.ConfigProviderAlternateAccount() + fmt.Sprintf(`
 resource "aws_guardduty_detector" "master" {
   provider = "awsalternate"
 }
