@@ -8,11 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsOrganizationsPolicy() *schema.Resource {
@@ -60,8 +62,8 @@ func resourceAwsOrganizationsPolicy() *schema.Resource {
 }
 
 func resourceAwsOrganizationsPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).organizationsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).OrganizationsConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -82,7 +84,7 @@ func resourceAwsOrganizationsPolicyCreate(ctx context.Context, d *schema.Resourc
 		resp, err = conn.CreatePolicy(input)
 
 		if err != nil {
-			if isAWSErr(err, organizations.ErrCodeFinalizingOrganizationException, "") {
+			if tfawserr.ErrMessageContains(err, organizations.ErrCodeFinalizingOrganizationException, "") {
 				log.Printf("[DEBUG] Retrying creating Organizations Policy (%s): %s", name, err)
 				return resource.RetryableError(err)
 			}
@@ -106,9 +108,9 @@ func resourceAwsOrganizationsPolicyCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAwsOrganizationsPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).organizationsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).OrganizationsConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &organizations.DescribePolicyInput{
 		PolicyId: aws.String(d.Id()),
@@ -117,7 +119,7 @@ func resourceAwsOrganizationsPolicyRead(ctx context.Context, d *schema.ResourceD
 	log.Printf("[DEBUG] Reading Organizations policy: %s", input)
 	resp, err := conn.DescribePolicy(input)
 	if err != nil {
-		if isAWSErr(err, organizations.ErrCodePolicyNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, organizations.ErrCodePolicyNotFoundException, "") {
 			log.Printf("[WARN] Organizations policy does not exist, removing from state: %s", d.Id())
 			d.SetId("")
 			return nil
@@ -167,7 +169,7 @@ func resourceAwsOrganizationsPolicyRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceAwsOrganizationsPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*awsprovider.AWSClient).OrganizationsConn
 
 	input := &organizations.UpdatePolicyInput{
 		PolicyId: aws.String(d.Id()),
@@ -202,7 +204,7 @@ func resourceAwsOrganizationsPolicyUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAwsOrganizationsPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*awsprovider.AWSClient).OrganizationsConn
 
 	input := &organizations.DeletePolicyInput{
 		PolicyId: aws.String(d.Id()),
@@ -211,7 +213,7 @@ func resourceAwsOrganizationsPolicyDelete(ctx context.Context, d *schema.Resourc
 	log.Printf("[DEBUG] Deleting Organizations Policy: %s", input)
 	_, err := conn.DeletePolicy(input)
 	if err != nil {
-		if isAWSErr(err, organizations.ErrCodePolicyNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, organizations.ErrCodePolicyNotFoundException, "") {
 			return nil
 		}
 		return diag.FromErr(fmt.Errorf("error deleting Organizations policy (%s): %w", d.Id(), err))
@@ -220,7 +222,7 @@ func resourceAwsOrganizationsPolicyDelete(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAwsOrganizationsPolicyImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*awsprovider.AWSClient).OrganizationsConn
 
 	input := &organizations.DescribePolicyInput{
 		PolicyId: aws.String(d.Id()),
