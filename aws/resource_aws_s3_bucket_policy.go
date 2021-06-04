@@ -8,9 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsS3BucketPolicy() *schema.Resource {
@@ -41,7 +43,7 @@ func resourceAwsS3BucketPolicy() *schema.Resource {
 }
 
 func resourceAwsS3BucketPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
+	S3Conn := meta.(*awsprovider.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)
 	policy := d.Get("policy").(string)
@@ -54,8 +56,8 @@ func resourceAwsS3BucketPolicyPut(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := s3conn.PutBucketPolicy(params)
-		if isAWSErr(err, "MalformedPolicy", "") {
+		_, err := S3Conn.PutBucketPolicy(params)
+		if tfawserr.ErrMessageContains(err, "MalformedPolicy", "") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -64,7 +66,7 @@ func resourceAwsS3BucketPolicyPut(d *schema.ResourceData, meta interface{}) erro
 		return nil
 	})
 	if isResourceTimeoutError(err) {
-		_, err = s3conn.PutBucketPolicy(params)
+		_, err = S3Conn.PutBucketPolicy(params)
 	}
 	if err != nil {
 		return fmt.Errorf("Error putting S3 policy: %s", err)
@@ -76,10 +78,10 @@ func resourceAwsS3BucketPolicyPut(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsS3BucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
+	S3Conn := meta.(*awsprovider.AWSClient).S3Conn
 
 	log.Printf("[DEBUG] S3 bucket policy, read for bucket: %s", d.Id())
-	pol, err := s3conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
+	pol, err := S3Conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
 		Bucket: aws.String(d.Id()),
 	})
 
@@ -98,12 +100,12 @@ func resourceAwsS3BucketPolicyRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsS3BucketPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
+	S3Conn := meta.(*awsprovider.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)
 
 	log.Printf("[DEBUG] S3 bucket: %s, delete policy", bucket)
-	_, err := s3conn.DeleteBucketPolicy(&s3.DeleteBucketPolicyInput{
+	_, err := S3Conn.DeleteBucketPolicy(&s3.DeleteBucketPolicyInput{
 		Bucket: aws.String(bucket),
 	})
 
