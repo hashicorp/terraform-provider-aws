@@ -6,15 +6,16 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSDefaultVpc_basic(t *testing.T) {
 	var vpc ec2.Vpc
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDefaultVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -36,7 +37,7 @@ func TestAccAWSDefaultVpc_basic(t *testing.T) {
 						"aws_default_vpc.foo", "ipv6_association_id", ""),
 					resource.TestCheckResourceAttr(
 						"aws_default_vpc.foo", "ipv6_cidr_block", ""),
-					testAccCheckResourceAttrAccountID("aws_default_vpc.foo", "owner_id"),
+					atest.CheckAttrAccountID("aws_default_vpc.foo", "owner_id"),
 				),
 			},
 		},
