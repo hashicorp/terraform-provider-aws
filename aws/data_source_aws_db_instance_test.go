@@ -7,14 +7,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSDbInstanceDataSource_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, rds.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBInstanceDataSourceConfig(rInt),
@@ -46,9 +47,9 @@ func TestAccAWSDbInstanceDataSource_ec2Classic(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBInstanceDataSourceConfig_ec2Classic(rInt),
@@ -97,7 +98,7 @@ data "aws_db_instance" "bar" {
 }
 
 func testAccAWSDBInstanceDataSourceConfig_ec2Classic(rInt int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccEc2ClassicRegionProviderConfig(),
 		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
