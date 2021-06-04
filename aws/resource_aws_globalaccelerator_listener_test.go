@@ -8,8 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/globalaccelerator/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsGlobalAcceleratorListener_basic(t *testing.T) {
@@ -17,9 +19,9 @@ func TestAccAwsGlobalAcceleratorListener_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   atest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorListenerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -49,16 +51,16 @@ func TestAccAwsGlobalAcceleratorListener_disappears(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   atest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorListenerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalAcceleratorListener_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorListenerExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlobalAcceleratorListener(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsGlobalAcceleratorListener(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,9 +73,9 @@ func TestAccAwsGlobalAcceleratorListener_update(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   atest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorListenerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -103,7 +105,7 @@ func TestAccAwsGlobalAcceleratorListener_update(t *testing.T) {
 
 func testAccCheckGlobalAcceleratorListenerExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).globalacceleratorconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).GlobalAcceleratorConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -125,7 +127,7 @@ func testAccCheckGlobalAcceleratorListenerExists(name string) resource.TestCheck
 }
 
 func testAccCheckGlobalAcceleratorListenerDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).globalacceleratorconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).GlobalAcceleratorConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_globalaccelerator_listener" {
