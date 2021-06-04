@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEcrReplicationConfiguration() *schema.Resource {
@@ -64,7 +65,7 @@ func resourceAwsEcrReplicationConfiguration() *schema.Resource {
 }
 
 func resourceAwsEcrReplicationConfigurationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
+	conn := meta.(*awsprovider.AWSClient).ECRConn
 
 	input := ecr.PutReplicationConfigurationInput{
 		ReplicationConfiguration: expandEcrReplicationConfigurationReplicationConfiguration(d.Get("replication_configuration").([]interface{})),
@@ -75,13 +76,13 @@ func resourceAwsEcrReplicationConfigurationPut(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error creating ECR Replication Configuration: %w", err)
 	}
 
-	d.SetId(meta.(*AWSClient).accountid)
+	d.SetId(meta.(*awsprovider.AWSClient).AccountID)
 
 	return resourceAwsEcrReplicationConfigurationRead(d, meta)
 }
 
 func resourceAwsEcrReplicationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
+	conn := meta.(*awsprovider.AWSClient).ECRConn
 
 	log.Printf("[DEBUG] Reading ECR Replication Configuration %s", d.Id())
 	out, err := conn.DescribeRegistry(&ecr.DescribeRegistryInput{})
@@ -99,7 +100,7 @@ func resourceAwsEcrReplicationConfigurationRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsEcrReplicationConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
+	conn := meta.(*awsprovider.AWSClient).ECRConn
 
 	input := ecr.PutReplicationConfigurationInput{
 		ReplicationConfiguration: &ecr.ReplicationConfiguration{
