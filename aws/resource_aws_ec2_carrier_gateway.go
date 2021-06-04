@@ -9,10 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEc2CarrierGateway() *schema.Resource {
@@ -51,8 +52,8 @@ func resourceAwsEc2CarrierGateway() *schema.Resource {
 }
 
 func resourceAwsEc2CarrierGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateCarrierGatewayInput{
@@ -79,9 +80,9 @@ func resourceAwsEc2CarrierGatewayCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsEc2CarrierGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	carrierGateway, err := finder.CarrierGatewayByID(conn, d.Id())
 
@@ -102,9 +103,9 @@ func resourceAwsEc2CarrierGatewayRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		AccountID: aws.StringValue(carrierGateway.OwnerId),
 		Resource:  fmt.Sprintf("carrier-gateway/%s", d.Id()),
 	}.String()
@@ -127,7 +128,7 @@ func resourceAwsEc2CarrierGatewayRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsEc2CarrierGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -141,7 +142,7 @@ func resourceAwsEc2CarrierGatewayUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsEc2CarrierGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Deleting EC2 Carrier Gateway (%s)", d.Id())
 	_, err := conn.DeleteCarrierGateway(&ec2.DeleteCarrierGatewayInput{
