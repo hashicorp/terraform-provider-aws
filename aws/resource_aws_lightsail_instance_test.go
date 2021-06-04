@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -25,11 +27,11 @@ func init() {
 }
 
 func testSweepLightsailInstances(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).lightsailconn
+	conn := client.(*awsprovider.AWSClient).LightsailConn
 
 	input := &lightsail.GetInstancesInput{}
 	var sweeperErrs *multierror.Error
@@ -37,7 +39,7 @@ func testSweepLightsailInstances(region string) error {
 	for {
 		output, err := conn.GetInstances(input)
 
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Lightsail Instance sweep for %s: %s", region, err)
 			return nil
 		}
@@ -78,12 +80,12 @@ func TestAccAWSLightsailInstance_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(lightsail.EndpointsID, t)
 			testAccPreCheckAWSLightsail(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, lightsail.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -113,12 +115,12 @@ func TestAccAWSLightsailInstance_Name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(lightsail.EndpointsID, t)
 			testAccPreCheckAWSLightsail(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, lightsail.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -159,12 +161,12 @@ func TestAccAWSLightsailInstance_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(lightsail.EndpointsID, t)
 			testAccPreCheckAWSLightsail(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, lightsail.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -199,7 +201,7 @@ func TestAccAWSLightsailInstance_disapear(t *testing.T) {
 
 	testDestroy := func(*terraform.State) error {
 		// reach out and DELETE the Instance
-		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).LightsailConn
 		_, err := conn.DeleteInstance(&lightsail.DeleteInstanceInput{
 			InstanceName: aws.String(lightsailName),
 		})
@@ -216,12 +218,12 @@ func TestAccAWSLightsailInstance_disapear(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(lightsail.EndpointsID, t)
 			testAccPreCheckAWSLightsail(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, lightsail.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -247,7 +249,7 @@ func testAccCheckAWSLightsailInstanceExists(n string, res *lightsail.Instance) r
 			return errors.New("No LightsailInstance ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).LightsailConn
 
 		respInstance, err := conn.GetInstance(&lightsail.GetInstanceInput{
 			InstanceName: aws.String(rs.Primary.Attributes["name"]),
@@ -271,7 +273,7 @@ func testAccCheckAWSLightsailInstanceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).LightsailConn
 
 		respInstance, err := conn.GetInstance(&lightsail.GetInstanceInput{
 			InstanceName: aws.String(rs.Primary.Attributes["name"]),
@@ -296,13 +298,13 @@ func testAccCheckAWSLightsailInstanceDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAWSLightsail(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).LightsailConn
 
 	input := &lightsail.GetInstancesInput{}
 
 	_, err := conn.GetInstances(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
