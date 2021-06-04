@@ -6,8 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSPinpointSMSChannel_basic(t *testing.T) {
@@ -15,9 +18,9 @@ func TestAccAWSPinpointSMSChannel_basic(t *testing.T) {
 	resourceName := "aws_pinpoint_sms_channel.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   atest.ErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSPinpointSMSChannelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -60,9 +63,9 @@ func TestAccAWSPinpointSMSChannel_full(t *testing.T) {
 	newShortCode := "7890"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   atest.ErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSPinpointSMSChannelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -110,16 +113,16 @@ func TestAccAWSPinpointSMSChannel_disappears(t *testing.T) {
 	resourceName := "aws_pinpoint_sms_channel.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   atest.ErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSPinpointSMSChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSPinpointSMSChannelConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPinpointSMSChannelExists(resourceName, &channel),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsPinpointSMSChannel(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsPinpointSMSChannel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -138,7 +141,7 @@ func testAccCheckAWSPinpointSMSChannelExists(n string, channel *pinpoint.SMSChan
 			return fmt.Errorf("No Pinpoint SMS Channel with that application ID exists")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).PinpointConn
 
 		// Check if the app exists
 		params := &pinpoint.GetSmsChannelInput{
@@ -178,7 +181,7 @@ resource "aws_pinpoint_sms_channel" "test" {
 }
 
 func testAccCheckAWSPinpointSMSChannelDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).PinpointConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_pinpoint_sms_channel" {
@@ -191,7 +194,7 @@ func testAccCheckAWSPinpointSMSChannelDestroy(s *terraform.State) error {
 		}
 		_, err := conn.GetSmsChannel(params)
 		if err != nil {
-			if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 				continue
 			}
 			return err
