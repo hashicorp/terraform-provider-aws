@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func testResourceAwsKinesisStreamStateDataV0() map[string]interface{} {
+func testresourceAwsKinesisStreamStateDataV0() map[string]interface{} {
 	return map[string]interface{}{
 		"arn":                 "arn:aws:test:us-east-1:123456789012:test", //lintignore:AWSAT003,AWSAT005
 		"encryption_type":     "NONE",
@@ -19,8 +19,8 @@ func testResourceAwsKinesisStreamStateDataV0() map[string]interface{} {
 	}
 }
 
-func testResourceAwsKinesisStreamStateDataV1() map[string]interface{} {
-	v0 := testResourceAwsKinesisStreamStateDataV0()
+func testresourceAwsKinesisStreamStateDataV1() map[string]interface{} {
+	v0 := testresourceAwsKinesisStreamStateDataV0()
 	return map[string]interface{}{
 		"arn":                       v0["arn"],
 		"encryption_type":           v0["encryption_type"],
@@ -34,9 +34,9 @@ func testResourceAwsKinesisStreamStateDataV1() map[string]interface{} {
 	}
 }
 
-func TestResourceAwsKinesisStreamStateUpgradeV0(t *testing.T) {
-	expected := testResourceAwsKinesisStreamStateDataV1()
-	actual, err := resourceAwsKinesisStreamStateUpgradeV0(context.Background(), testResourceAwsKinesisStreamStateDataV0(), nil)
+func TestresourceAwsKinesisStreamStateUpgradeV0(t *testing.T) {
+	expected := testresourceAwsKinesisStreamStateDataV1()
+	actual, err := resourceAwsKinesisStreamStateUpgradeV0(context.Background(), testresourceAwsKinesisStreamStateDataV0(), nil)
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)
 	}
