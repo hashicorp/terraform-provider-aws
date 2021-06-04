@@ -8,14 +8,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsDirectoryServiceDirectory_NonExistent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, directoryservice.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, directoryservice.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsDirectoryServiceDirectoryConfig_NonExistent,
@@ -31,9 +32,9 @@ func TestAccDataSourceAwsDirectoryServiceDirectory_SimpleAD(t *testing.T) {
 	dataSourceName := "data.aws_directory_service_directory.test-simple-ad"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSDirectoryServiceSimpleDirectory(t) },
-		ErrorCheck: testAccErrorCheck(t, directoryservice.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckAWSDirectoryServiceSimpleDirectory(t) },
+		ErrorCheck: atest.ErrorCheck(t, directoryservice.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsDirectoryServiceDirectoryConfig_SimpleAD(alias),
@@ -63,9 +64,9 @@ func TestAccDataSourceAwsDirectoryServiceDirectory_MicrosoftAD(t *testing.T) {
 	dataSourceName := "data.aws_directory_service_directory.test-microsoft-ad"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, directoryservice.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, directoryservice.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsDirectoryServiceDirectoryConfig_MicrosoftAD(alias),
@@ -95,12 +96,12 @@ func TestAccDataSourceAwsDirectoryServiceDirectory_connector(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSDirectoryService(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck: testAccErrorCheck(t, directoryservice.EndpointsID),
-		Providers:  testAccProviders,
+		ErrorCheck: atest.ErrorCheck(t, directoryservice.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceDirectoryServiceDirectoryConfig_connector(),
@@ -119,7 +120,7 @@ data "aws_directory_service_directory" "test" {
 `
 
 func testAccDataSourceAwsDirectoryServiceDirectoryConfig_Prerequisites(adType string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 
@@ -151,7 +152,7 @@ resource "aws_subnet" "secondary" {
 }
 
 func testAccDataSourceAwsDirectoryServiceDirectoryConfig_SimpleAD(alias string) string {
-	return composeConfig(testAccDataSourceAwsDirectoryServiceDirectoryConfig_Prerequisites("simple-ad"), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccDataSourceAwsDirectoryServiceDirectoryConfig_Prerequisites("simple-ad"), fmt.Sprintf(`
 resource "aws_directory_service_directory" "test-simple-ad" {
   type        = "SimpleAD"
   size        = "Small"
@@ -176,7 +177,7 @@ data "aws_directory_service_directory" "test-simple-ad" {
 }
 
 func testAccDataSourceAwsDirectoryServiceDirectoryConfig_MicrosoftAD(alias string) string {
-	return composeConfig(testAccDataSourceAwsDirectoryServiceDirectoryConfig_Prerequisites("microsoft-ad"), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccDataSourceAwsDirectoryServiceDirectoryConfig_Prerequisites("microsoft-ad"), fmt.Sprintf(`
 resource "aws_directory_service_directory" "test-microsoft-ad" {
   type        = "MicrosoftAD"
   edition     = "Standard"
@@ -201,7 +202,7 @@ data "aws_directory_service_directory" "test-microsoft-ad" {
 }
 
 func testAccDataSourceDirectoryServiceDirectoryConfig_connector() string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(),
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(),
 		`
 resource "aws_directory_service_directory" "test" {
   name     = "corp.notexample.com"
