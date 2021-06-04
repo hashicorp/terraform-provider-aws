@@ -14,8 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -105,7 +106,7 @@ func s3ConfigurationSchema() *schema.Schema {
 				"bucket_arn": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validateArn,
+					ValidateFunc: ValidateArn,
 				},
 
 				"buffer_size": {
@@ -132,13 +133,13 @@ func s3ConfigurationSchema() *schema.Schema {
 				"kms_key_arn": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validateArn,
+					ValidateFunc: ValidateArn,
 				},
 
 				"role_arn": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validateArn,
+					ValidateFunc: ValidateArn,
 				},
 
 				"prefix": {
@@ -854,7 +855,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						"key_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 							RequiredWith: []string{"server_side_encryption.0.enabled", "server_side_encryption.0.key_type"},
 						},
 					},
@@ -873,14 +874,14 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -916,7 +917,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						"bucket_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 
 						"buffer_size": {
@@ -1165,7 +1166,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 												"role_arn": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: ValidateArn,
 												},
 												"table_name": {
 													Type:     schema.TypeString,
@@ -1191,13 +1192,13 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						"kms_key_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 
 						"prefix": {
@@ -1248,7 +1249,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 
 						"s3_backup_mode": {
@@ -1310,7 +1311,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						"domain_arn": {
 							Type:          schema.TypeString,
 							Optional:      true,
-							ValidateFunc:  validateArn,
+							ValidateFunc:  ValidateArn,
 							ConflictsWith: []string{"elasticsearch_configuration.0.cluster_endpoint"},
 						},
 
@@ -1336,7 +1337,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 
 						"s3_backup_mode": {
@@ -1380,7 +1381,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 								},
 							},
@@ -1488,7 +1489,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 
 						"s3_backup_mode": {
@@ -2466,8 +2467,8 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 		return validateError
 	}
 
-	conn := meta.(*AWSClient).firehoseconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).FirehoseConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	sn := d.Get("name").(string)
@@ -2625,7 +2626,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 		return validateError
 	}
 
-	conn := meta.(*AWSClient).firehoseconn
+	conn := meta.(*awsprovider.AWSClient).FirehoseConn
 
 	sn := d.Get("name").(string)
 	updateInput := &firehose.UpdateDestinationInput{
@@ -2755,9 +2756,9 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 }
 
 func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).firehoseconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).FirehoseConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	sn := d.Get("name").(string)
 	resp, err := conn.DescribeDeliveryStream(&firehose.DescribeDeliveryStreamInput{
@@ -2765,7 +2766,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta i
 	})
 
 	if err != nil {
-		if isAWSErr(err, firehose.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, firehose.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Kinesis Firehose Delivery Stream (%s) not found, removing from state", sn)
 			d.SetId("")
 			return nil
@@ -2800,7 +2801,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsKinesisFirehoseDeliveryStreamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).firehoseconn
+	conn := meta.(*awsprovider.AWSClient).FirehoseConn
 
 	sn := d.Get("name").(string)
 	_, err := conn.DeleteDeliveryStream(&firehose.DeleteDeliveryStreamInput{
@@ -2823,7 +2824,7 @@ func firehoseDeliveryStreamStateRefreshFunc(conn *firehose.Firehose, sn string) 
 			DeliveryStreamName: aws.String(sn),
 		})
 		if err != nil {
-			if isAWSErr(err, firehose.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, firehose.ErrCodeResourceNotFoundException, "") {
 				return &firehose.DeliveryStreamDescription{}, firehoseDeliveryStreamStatusDeleted, nil
 			}
 			return nil, "", err
