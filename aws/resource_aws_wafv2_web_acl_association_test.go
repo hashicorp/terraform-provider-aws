@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsWafv2WebACLAssociation_basic(t *testing.T) {
@@ -18,20 +21,20 @@ func TestAccAwsWafv2WebACLAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccAPIGatewayTypeEDGEPreCheck(t)
 			testAccPreCheckAWSWafv2ScopeRegional(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, wafv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafv2WebACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsWafv2WebACLAssociationConfig(testName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2WebACLAssociationExists(resourceName),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "resource_arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/restapis/.*/stages/%s", testName))),
-					testAccMatchResourceAttrRegionalARN(resourceName, "web_acl_arn", "wafv2", regexp.MustCompile(fmt.Sprintf("regional/webacl/%s/.*", testName))),
+					atest.MatchAttrRegionalARNNoAccount(resourceName, "resource_arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/restapis/.*/stages/%s", testName))),
+					atest.MatchAttrRegionalARN(resourceName, "web_acl_arn", "wafv2", regexp.MustCompile(fmt.Sprintf("regional/webacl/%s/.*", testName))),
 				),
 			},
 			{
@@ -50,19 +53,19 @@ func TestAccAwsWafv2WebACLAssociation_Disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccAPIGatewayTypeEDGEPreCheck(t)
 			testAccPreCheckAWSWafv2ScopeRegional(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, wafv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafv2WebACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsWafv2WebACLAssociationConfig(testName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2WebACLAssociationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafv2WebACLAssociation(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsWafv2WebACLAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -70,7 +73,7 @@ func TestAccAwsWafv2WebACLAssociation_Disappears(t *testing.T) {
 				Config: testAccAwsWafv2WebACLAssociationConfig(testName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2WebACLAssociationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayStage(), "aws_api_gateway_stage.test"),
+					atest.CheckDisappears(atest.Provider, resourceAwsApiGatewayStage(), "aws_api_gateway_stage.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,7 +87,7 @@ func testAccCheckAWSWafv2WebACLAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafv2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).WAFV2Conn
 		resp, err := conn.GetWebACLForResource(&wafv2.GetWebACLForResourceInput{
 			ResourceArn: aws.String(rs.Primary.Attributes["resource_arn"]),
 		})
@@ -102,7 +105,7 @@ func testAccCheckAWSWafv2WebACLAssociationDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the Web ACL Association is already destroyed
-		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
 			return nil
 		}
 
