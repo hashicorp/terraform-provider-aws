@@ -9,9 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsLambdaFunctionEventInvokeConfig() *schema.Resource {
@@ -40,7 +42,7 @@ func resourceAwsLambdaFunctionEventInvokeConfig() *schema.Resource {
 									"destination": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 								},
 							},
@@ -54,7 +56,7 @@ func resourceAwsLambdaFunctionEventInvokeConfig() *schema.Resource {
 									"destination": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 								},
 							},
@@ -90,7 +92,7 @@ func resourceAwsLambdaFunctionEventInvokeConfig() *schema.Resource {
 }
 
 func resourceAwsLambdaFunctionEventInvokeConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
 
@@ -119,12 +121,12 @@ func resourceAwsLambdaFunctionEventInvokeConfigCreate(d *schema.ResourceData, me
 		_, err := conn.PutFunctionEventInvokeConfig(input)
 
 		// InvalidParameterValueException: The destination ARN arn:PARTITION:SERVICE:REGION:ACCOUNT:RESOURCE is invalid.
-		if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "destination ARN") {
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "destination ARN") {
 			return resource.RetryableError(err)
 		}
 
 		// InvalidParameterValueException: The function's execution role does not have permissions to call Publish on arn:...
-		if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "does not have permissions") {
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "does not have permissions") {
 			return resource.RetryableError(err)
 		}
 
@@ -149,7 +151,7 @@ func resourceAwsLambdaFunctionEventInvokeConfigCreate(d *schema.ResourceData, me
 }
 
 func resourceAwsLambdaFunctionEventInvokeConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	functionName, qualifier, err := resourceAwsLambdaFunctionEventInvokeConfigParseId(d.Id())
 
@@ -167,7 +169,7 @@ func resourceAwsLambdaFunctionEventInvokeConfigRead(d *schema.ResourceData, meta
 
 	output, err := conn.GetFunctionEventInvokeConfig(input)
 
-	if isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Lambda Function Event Invoke Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -190,7 +192,7 @@ func resourceAwsLambdaFunctionEventInvokeConfigRead(d *schema.ResourceData, meta
 }
 
 func resourceAwsLambdaFunctionEventInvokeConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	functionName, qualifier, err := resourceAwsLambdaFunctionEventInvokeConfigParseId(d.Id())
 
@@ -217,12 +219,12 @@ func resourceAwsLambdaFunctionEventInvokeConfigUpdate(d *schema.ResourceData, me
 		_, err := conn.PutFunctionEventInvokeConfig(input)
 
 		// InvalidParameterValueException: The destination ARN arn:PARTITION:SERVICE:REGION:ACCOUNT:RESOURCE is invalid.
-		if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "destination ARN") {
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "destination ARN") {
 			return resource.RetryableError(err)
 		}
 
 		// InvalidParameterValueException: The function's execution role does not have permissions to call Publish on arn:...
-		if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "does not have permissions") {
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "does not have permissions") {
 			return resource.RetryableError(err)
 		}
 
@@ -245,7 +247,7 @@ func resourceAwsLambdaFunctionEventInvokeConfigUpdate(d *schema.ResourceData, me
 }
 
 func resourceAwsLambdaFunctionEventInvokeConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	functionName, qualifier, err := resourceAwsLambdaFunctionEventInvokeConfigParseId(d.Id())
 
@@ -263,7 +265,7 @@ func resourceAwsLambdaFunctionEventInvokeConfigDelete(d *schema.ResourceData, me
 
 	_, err = conn.DeleteFunctionEventInvokeConfig(input)
 
-	if isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
