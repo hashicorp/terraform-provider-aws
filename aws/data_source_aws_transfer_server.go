@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsTransferServer() *schema.Resource {
@@ -75,7 +76,7 @@ func dataSourceAwsTransferServer() *schema.Resource {
 }
 
 func dataSourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
+	conn := meta.(*awsprovider.AWSClient).TransferConn
 
 	serverID := d.Get("server_id").(string)
 
@@ -88,7 +89,7 @@ func dataSourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) e
 	d.SetId(aws.StringValue(output.ServerId))
 	d.Set("arn", output.Arn)
 	d.Set("certificate", output.Certificate)
-	d.Set("endpoint", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.server.transfer", serverID)))
+	d.Set("endpoint", meta.(*awsprovider.AWSClient).RegionalHostname(fmt.Sprintf("%s.server.transfer", serverID)))
 	d.Set("endpoint_type", output.EndpointType)
 	d.Set("identity_provider_type", output.IdentityProviderType)
 	if output.IdentityProviderDetails != nil {
