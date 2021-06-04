@@ -7,8 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsApiGatewayClientCertificate() *schema.Resource {
@@ -51,8 +53,8 @@ func resourceAwsApiGatewayClientCertificate() *schema.Resource {
 }
 
 func resourceAwsApiGatewayClientCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := apigateway.GenerateClientCertificateInput{}
@@ -74,16 +76,16 @@ func resourceAwsApiGatewayClientCertificateCreate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsApiGatewayClientCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := apigateway.GetClientCertificateInput{
 		ClientCertificateId: aws.String(d.Id()),
 	}
 	out, err := conn.GetClientCertificate(&input)
 	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] API Gateway Client Certificate %s not found, removing", d.Id())
 			d.SetId("")
 			return nil
@@ -104,9 +106,9 @@ func resourceAwsApiGatewayClientCertificateRead(d *schema.ResourceData, meta int
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "apigateway",
-		Region:    meta.(*AWSClient).region,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Resource:  fmt.Sprintf("/clientcertificates/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -120,7 +122,7 @@ func resourceAwsApiGatewayClientCertificateRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsApiGatewayClientCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	operations := make([]*apigateway.PatchOperation, 0)
 	if d.HasChange("description") {
@@ -153,7 +155,7 @@ func resourceAwsApiGatewayClientCertificateUpdate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsApiGatewayClientCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Client Certificate: %s", d.Id())
 	input := apigateway.DeleteClientCertificateInput{
 		ClientCertificateId: aws.String(d.Id()),
