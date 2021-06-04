@@ -8,10 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/qldb"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsQLDBLedger() *schema.Resource {
@@ -57,8 +59,8 @@ func resourceAwsQLDBLedger() *schema.Resource {
 }
 
 func resourceAwsQLDBLedgerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).qldbconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).QLDBConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
@@ -110,9 +112,9 @@ func resourceAwsQLDBLedgerCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).qldbconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).QLDBConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	// Refresh the QLDB state
 	input := &qldb.DescribeLedgerInput{
@@ -121,7 +123,7 @@ func resourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error {
 
 	qldbLedger, err := conn.DescribeLedger(input)
 
-	if isAWSErr(err, qldb.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] QLDB Ledger (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -167,7 +169,7 @@ func resourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsQLDBLedgerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).qldbconn
+	conn := meta.(*awsprovider.AWSClient).QLDBConn
 
 	if d.HasChange("deletion_protection") {
 		val := d.Get("deletion_protection").(bool)
@@ -195,7 +197,7 @@ func resourceAwsQLDBLedgerUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsQLDBLedgerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).qldbconn
+	conn := meta.(*awsprovider.AWSClient).QLDBConn
 	deleteLedgerOpts := &qldb.DeleteLedgerInput{
 		Name: aws.String(d.Id()),
 	}
@@ -204,7 +206,7 @@ func resourceAwsQLDBLedgerDelete(d *schema.ResourceData, meta interface{}) error
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteLedger(deleteLedgerOpts)
 
-		if isAWSErr(err, qldb.ErrCodeResourceInUseException, "") {
+		if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceInUseException, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -219,7 +221,7 @@ func resourceAwsQLDBLedgerDelete(d *schema.ResourceData, meta interface{}) error
 		_, err = conn.DeleteLedger(deleteLedgerOpts)
 	}
 
-	if isAWSErr(err, qldb.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
@@ -260,7 +262,7 @@ func waitForQLDBLedgerDeletion(conn *qldb.QLDB, ledgerName string) error {
 				Name: aws.String(ledgerName),
 			})
 
-			if isAWSErr(err, qldb.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceNotFoundException, "") {
 				return 1, "", nil
 			}
 
