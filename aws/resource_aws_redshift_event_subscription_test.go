@@ -7,10 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -21,14 +24,14 @@ func init() {
 }
 
 func testSweepRedshiftEventSubscriptions(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).redshiftconn
-	sweepResources := make([]*testSweepResource, 0)
+	conn := client.(*awsprovider.AWSClient).RedshiftConn
+	sweepResources := make([]*atest.TestSweepResource, 0)
 	var errs *multierror.Error
 
 	err = conn.DescribeEventSubscriptionsPages(&redshift.DescribeEventSubscriptionsInput{}, func(page *redshift.DescribeEventSubscriptionsOutput, lastPage bool) bool {
@@ -41,7 +44,7 @@ func testSweepRedshiftEventSubscriptions(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(eventSubscription.CustSubscriptionId))
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, atest.NewTestSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -51,11 +54,11 @@ func testSweepRedshiftEventSubscriptions(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Event Subscriptions: %w", err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = atest.TestSweepResourceOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Event Subscriptions for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if atest.SweepSkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Redshift Event Subscriptions sweep for %s: %s", region, err)
 		return nil
 	}
@@ -69,9 +72,9 @@ func TestAccAWSRedshiftEventSubscription_basicUpdate(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -110,9 +113,9 @@ func TestAccAWSRedshiftEventSubscription_withPrefix(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -144,9 +147,9 @@ func TestAccAWSRedshiftEventSubscription_withSourceIds(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-with-ids-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -192,9 +195,9 @@ func TestAccAWSRedshiftEventSubscription_categoryUpdate(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-redshift-event-subs-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -234,9 +237,9 @@ func TestAccAWSRedshiftEventSubscription_tagsUpdate(t *testing.T) {
 	resourceName := "aws_redshift_event_subscription.bar"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -288,7 +291,7 @@ func testAccCheckAWSRedshiftEventSubscriptionExists(n string, v *redshift.EventS
 			return fmt.Errorf("No Redshift Event Subscription is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).RedshiftConn
 
 		opts := redshift.DescribeEventSubscriptionsInput{
 			SubscriptionName: aws.String(rs.Primary.ID),
@@ -311,7 +314,7 @@ func testAccCheckAWSRedshiftEventSubscriptionExists(n string, v *redshift.EventS
 }
 
 func testAccCheckAWSRedshiftEventSubscriptionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).RedshiftConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_event_subscription" {
@@ -324,7 +327,7 @@ func testAccCheckAWSRedshiftEventSubscriptionDestroy(s *terraform.State) error {
 				SubscriptionName: aws.String(rs.Primary.ID),
 			})
 
-		if isAWSErr(err, redshift.ErrCodeSubscriptionNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSubscriptionNotFoundFault, "") {
 			continue
 		}
 
