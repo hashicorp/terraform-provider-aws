@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
@@ -17,9 +20,9 @@ func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
-		ErrorCheck:   testAccErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -43,9 +46,9 @@ func TestAccAWSElasticTranscoderPreset_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
-		ErrorCheck:   testAccErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -67,9 +70,9 @@ func TestAccAWSElasticTranscoderPreset_AudioCodecOptions_empty(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
-		ErrorCheck:   testAccErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -94,9 +97,9 @@ func TestAccAWSElasticTranscoderPreset_Description(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
-		ErrorCheck:   testAccErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -122,9 +125,9 @@ func TestAccAWSElasticTranscoderPreset_Full(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
-		ErrorCheck:   testAccErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -172,9 +175,9 @@ func TestAccAWSElasticTranscoderPreset_Video_FrameRate(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
-		ErrorCheck:   testAccErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -195,7 +198,7 @@ func TestAccAWSElasticTranscoderPreset_Video_FrameRate(t *testing.T) {
 
 func testAccCheckElasticTranscoderPresetExists(name string, preset *elastictranscoder.Preset) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).elastictranscoderconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ElasticTranscoderConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -221,7 +224,7 @@ func testAccCheckElasticTranscoderPresetExists(name string, preset *elastictrans
 
 func testAccCheckElasticTranscoderPresetDisappears(preset *elastictranscoder.Preset) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).elastictranscoderconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ElasticTranscoderConn
 		_, err := conn.DeletePreset(&elastictranscoder.DeletePresetInput{
 			Id: preset.Id,
 		})
@@ -231,7 +234,7 @@ func testAccCheckElasticTranscoderPresetDisappears(preset *elastictranscoder.Pre
 }
 
 func testAccCheckElasticTranscoderPresetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elastictranscoderconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ElasticTranscoderConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elastictranscoder_preset" {
@@ -248,7 +251,7 @@ func testAccCheckElasticTranscoderPresetDestroy(s *terraform.State) error {
 			}
 		}
 
-		if !isAWSErr(err, elastictranscoder.ErrCodeResourceNotFoundException, "") {
+		if !tfawserr.ErrMessageContains(err, elastictranscoder.ErrCodeResourceNotFoundException, "") {
 			return fmt.Errorf("unexpected error: %s", err)
 		}
 
