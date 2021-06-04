@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestResourceAwsDbInstanceStateUpgradeV0(t *testing.T) {
+func TestresourceAwsDbInstanceStateUpgradeV0(t *testing.T) {
 	testCases := []struct {
 		Description   string
 		InputState    map[string]interface{}
