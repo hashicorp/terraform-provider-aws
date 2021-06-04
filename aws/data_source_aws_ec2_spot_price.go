@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsEc2SpotPrice() *schema.Resource {
@@ -14,7 +15,7 @@ func dataSourceAwsEc2SpotPrice() *schema.Resource {
 		Read: dataSourceAwsEc2SpotPriceRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": dataSourceFiltersSchema(),
+			"filter": awsprovider.DataSourceFiltersSchema(),
 			"instance_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -36,7 +37,7 @@ func dataSourceAwsEc2SpotPrice() *schema.Resource {
 }
 
 func dataSourceAwsEc2SpotPriceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	now := time.Now()
 	input := &ec2.DescribeSpotPriceHistoryInput{
@@ -56,7 +57,7 @@ func dataSourceAwsEc2SpotPriceRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
+		input.Filters = awsprovider.BuildDataSourceFilters(v.(*schema.Set))
 	}
 
 	var foundSpotPrice []*ec2.SpotPrice
@@ -81,7 +82,7 @@ func dataSourceAwsEc2SpotPriceRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("spot_price", resultSpotPrice.SpotPrice)
 	d.Set("spot_price_timestamp", (*resultSpotPrice.Timestamp).Format(time.RFC3339))
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*awsprovider.AWSClient).Region)
 
 	return nil
 }
