@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsOrganizationsOrganizationalUnits() *schema.Resource {
@@ -42,7 +43,7 @@ func dataSourceAwsOrganizationsOrganizationalUnits() *schema.Resource {
 }
 
 func dataSourceAwsOrganizationsOrganizationalUnitsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*awsprovider.AWSClient).OrganizationsConn
 
 	parent_id := d.Get("parent_id").(string)
 
