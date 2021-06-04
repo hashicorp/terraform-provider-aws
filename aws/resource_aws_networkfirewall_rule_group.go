@@ -13,10 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/networkfirewall/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/networkfirewall/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsNetworkFirewallRuleGroup() *schema.Resource {
@@ -400,8 +401,8 @@ func resourceAwsNetworkFirewallRuleGroup() *schema.Resource {
 }
 
 func resourceAwsNetworkFirewallRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).networkfirewallconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).NetworkFirewallConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 
@@ -441,9 +442,9 @@ func resourceAwsNetworkFirewallRuleGroupCreate(ctx context.Context, d *schema.Re
 }
 
 func resourceAwsNetworkFirewallRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).networkfirewallconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).NetworkFirewallConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading NetworkFirewall Rule Group %s", d.Id())
 
@@ -496,7 +497,7 @@ func resourceAwsNetworkFirewallRuleGroupRead(ctx context.Context, d *schema.Reso
 }
 
 func resourceAwsNetworkFirewallRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).networkfirewallconn
+	conn := meta.(*awsprovider.AWSClient).NetworkFirewallConn
 	arn := d.Id()
 
 	log.Printf("[DEBUG] Updating NetworkFirewall Rule Group %s", arn)
@@ -539,7 +540,7 @@ func resourceAwsNetworkFirewallRuleGroupUpdate(ctx context.Context, d *schema.Re
 }
 
 func resourceAwsNetworkFirewallRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).networkfirewallconn
+	conn := meta.(*awsprovider.AWSClient).NetworkFirewallConn
 
 	log.Printf("[DEBUG] Deleting NetworkFirewall Rule Group %s", d.Id())
 
