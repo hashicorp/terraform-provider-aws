@@ -9,13 +9,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccAWSSecurityHubProductSubscription_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, securityhub.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSecurityHubAccountDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -30,11 +32,11 @@ func testAccAWSSecurityHubProductSubscription_basic(t *testing.T) {
 				// AWS product subscriptions happen automatically when enabling Security Hub.
 				// Here we attempt to remove one so we can attempt to (re-)enable it.
 				PreConfig: func() {
-					conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+					conn := atest.Provider.Meta().(*awsprovider.AWSClient).SecurityHubConn
 					productSubscriptionARN := arn.ARN{
-						AccountID: testAccGetAccountID(),
-						Partition: testAccGetPartition(),
-						Region:    testAccGetRegion(),
+						AccountID: atest.AccountID(),
+						Partition: atest.Partition(),
+						Region:    atest.Region(),
 						Resource:  "product-subscription/aws/guardduty",
 						Service:   "securityhub",
 					}.String()
@@ -75,7 +77,7 @@ func testAccCheckAWSSecurityHubProductSubscriptionExists(n string) resource.Test
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SecurityHubConn
 
 		_, productSubscriptionArn, err := resourceAwsSecurityHubProductSubscriptionParseId(rs.Primary.ID)
 
@@ -98,7 +100,7 @@ func testAccCheckAWSSecurityHubProductSubscriptionExists(n string) resource.Test
 }
 
 func testAccCheckAWSSecurityHubProductSubscriptionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SecurityHubConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_product_subscription" {
