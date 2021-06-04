@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsDbSnapshot() *schema.Resource {
@@ -123,7 +124,7 @@ func dataSourceAwsDbSnapshot() *schema.Resource {
 }
 
 func dataSourceAwsDbSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	instanceIdentifier, instanceIdentifierOk := d.GetOk("db_instance_identifier")
 	snapshotIdentifier, snapshotIdentifierOk := d.GetOk("db_snapshot_identifier")
