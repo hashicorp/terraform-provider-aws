@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsWorkspacesIpGroup_basic(t *testing.T) {
@@ -20,9 +22,9 @@ func TestAccAwsWorkspacesIpGroup_basic(t *testing.T) {
 	resourceName := "aws_workspaces_ip_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesIpGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -64,9 +66,9 @@ func TestAccAwsWorkspacesIpGroup_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesIpGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -110,16 +112,16 @@ func TestAccAwsWorkspacesIpGroup_disappears(t *testing.T) {
 	resourceName := "aws_workspaces_ip_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesIpGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsWorkspacesIpGroupConfigA(ipGroupName, ipGroupDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsWorkspacesIpGroupExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsWorkspacesIpGroup(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsWorkspacesIpGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -138,9 +140,9 @@ func TestAccAwsWorkspacesIpGroup_MultipleDirectories(t *testing.T) {
 	directoryResourceName2 := "aws_workspaces_directory.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesIpGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -163,7 +165,7 @@ func testAccCheckAwsWorkspacesIpGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).workspacesconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).WorkSpacesConn
 		resp, err := conn.DescribeIpGroups(&workspaces.DescribeIpGroupsInput{
 			GroupIds: []*string{aws.String(rs.Primary.ID)},
 		})
@@ -196,7 +198,7 @@ func testAccCheckAwsWorkspacesIpGroupExists(n string, v *workspaces.IpGroup) res
 			return fmt.Errorf("No Workpsaces IP Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).workspacesconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).WorkSpacesConn
 		resp, err := conn.DescribeIpGroups(&workspaces.DescribeIpGroupsInput{
 			GroupIds: []*string{aws.String(rs.Primary.ID)},
 		})
@@ -289,7 +291,7 @@ resource "aws_workspaces_ip_group" "test" {
 }
 
 func testAccAwsWorkspacesIpGroupConfigMultipleDirectories(name string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(name),
 		fmt.Sprintf(`
 resource "aws_workspaces_ip_group" "test" {
