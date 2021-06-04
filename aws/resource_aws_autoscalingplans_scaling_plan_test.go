@@ -14,7 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscalingplans/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -25,17 +27,17 @@ func init() {
 }
 
 func testSweepAutoScalingPlansScalingPlans(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).autoscalingplansconn
+	conn := client.(*awsprovider.AWSClient).AutoScalingPlansConn
 	input := &autoscalingplans.DescribeScalingPlansInput{}
 	var sweeperErrs *multierror.Error
 
 	for {
 		output, err := conn.DescribeScalingPlans(input)
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Auto Scaling Scaling Plans sweep for %s: %s", region, err)
 			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
@@ -77,9 +79,9 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscalingplans.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, autoscalingplans.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAutoScalingPlansScalingPlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -127,11 +129,11 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPreCheckIamServiceLinkedRole(t, "/aws-service-role/autoscaling-plans")
+			atest.PreCheck(t)
+			atest.PreCheckIamServiceLinkedRole(t, "/aws-service-role/autoscaling-plans")
 		},
-		ErrorCheck:   testAccErrorCheck(t, autoscalingplans.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, autoscalingplans.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAutoScalingPlansScalingPlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -183,11 +185,11 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPreCheckIamServiceLinkedRole(t, "/aws-service-role/autoscaling-plans")
+			atest.PreCheck(t)
+			atest.PreCheckIamServiceLinkedRole(t, "/aws-service-role/autoscaling-plans")
 		},
-		ErrorCheck:   testAccErrorCheck(t, autoscalingplans.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, autoscalingplans.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAutoScalingPlansScalingPlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -263,16 +265,16 @@ func TestAccAwsAutoScalingPlansScalingPlan_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscalingplans.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, autoscalingplans.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAutoScalingPlansScalingPlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAutoScalingPlansScalingPlanConfigBasicDynamicScaling(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutoScalingPlansScalingPlanExists(resourceName, &scalingPlan),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAutoScalingPlansScalingPlan(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsAutoScalingPlansScalingPlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -281,7 +283,7 @@ func TestAccAwsAutoScalingPlansScalingPlan_disappears(t *testing.T) {
 }
 
 func testAccCheckAutoScalingPlansScalingPlanDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).autoscalingplansconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).AutoScalingPlansConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_autoscalingplans_scaling_plan" {
@@ -308,7 +310,7 @@ func testAccCheckAutoScalingPlansScalingPlanDestroy(s *terraform.State) error {
 
 func testAccCheckAutoScalingPlansScalingPlanExists(name string, v *autoscalingplans.ScalingPlan) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).autoscalingplansconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AutoScalingPlansConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -360,7 +362,7 @@ func testAccCheckAutoScalingPlansApplicationSourceTags(scalingPlan *autoscalingp
 }
 
 func testAccAutoScalingPlansScalingPlanConfigBase(rName, tagName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
@@ -392,7 +394,7 @@ resource "aws_autoscaling_group" "test" {
 }
 
 func testAccAutoScalingPlansScalingPlanConfigBasicDynamicScaling(rName, tagName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAutoScalingPlansScalingPlanConfigBase(rName, tagName),
 		fmt.Sprintf(`
 resource "aws_autoscalingplans_scaling_plan" "test" {
@@ -425,7 +427,7 @@ resource "aws_autoscalingplans_scaling_plan" "test" {
 }
 
 func testAccAutoScalingPlansScalingPlanConfigBasicPredictiveScaling(rName, tagName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAutoScalingPlansScalingPlanConfigBase(rName, tagName),
 		fmt.Sprintf(`
 resource "aws_autoscalingplans_scaling_plan" "test" {
