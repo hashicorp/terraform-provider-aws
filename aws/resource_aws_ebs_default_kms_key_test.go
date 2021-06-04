@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSEBSDefaultKmsKey_basic(t *testing.T) {
@@ -16,9 +18,9 @@ func TestAccAWSEBSDefaultKmsKey_basic(t *testing.T) {
 	resourceNameKey := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsEbsDefaultKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -43,7 +45,7 @@ func testAccCheckAwsEbsDefaultKmsKeyDestroy(s *terraform.State) error {
 		return err
 	}
 
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	resp, err := conn.GetEbsDefaultKmsKeyId(&ec2.GetEbsDefaultKmsKeyIdInput{})
 	if err != nil {
@@ -74,7 +76,7 @@ func testAccCheckEbsDefaultKmsKey(name string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 		resp, err := conn.GetEbsDefaultKmsKeyId(&ec2.GetEbsDefaultKmsKeyIdInput{})
 		if err != nil {
@@ -92,7 +94,7 @@ func testAccCheckEbsDefaultKmsKey(name string) resource.TestCheckFunc {
 
 // testAccAwsEbsDefaultKmsKeyAwsManagedDefaultKey returns' the account's AWS-managed default CMK.
 func testAccAwsEbsDefaultKmsKeyAwsManagedDefaultKey() (*arn.ARN, error) {
-	conn := testAccProvider.Meta().(*AWSClient).kmsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).KMSConn
 
 	alias, err := findKmsAliasByName(conn, "alias/aws/ebs", nil)
 	if err != nil {
