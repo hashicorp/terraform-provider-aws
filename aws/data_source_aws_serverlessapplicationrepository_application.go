@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/serverlessapplicationrepository/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsServerlessApplicationRepositoryApplication() *schema.Resource {
@@ -15,7 +16,7 @@ func dataSourceAwsServerlessApplicationRepositoryApplication() *schema.Resource 
 			"application_id": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"semantic_version": {
 				Type:     schema.TypeString,
@@ -45,7 +46,7 @@ func dataSourceAwsServerlessApplicationRepositoryApplication() *schema.Resource 
 }
 
 func dataSourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).serverlessapplicationrepositoryconn
+	conn := meta.(*awsprovider.AWSClient).ServerlessApplicationRepositoryConn
 
 	applicationID := d.Get("application_id").(string)
 	semanticVersion := d.Get("semantic_version").(string)
