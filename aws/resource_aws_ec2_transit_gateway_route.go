@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEc2TransitGatewayRoute() *schema.Resource {
@@ -52,7 +54,7 @@ func resourceAwsEc2TransitGatewayRoute() *schema.Resource {
 }
 
 func resourceAwsEc2TransitGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	destination := d.Get("destination_cidr_block").(string)
 	transitGatewayRouteTableID := d.Get("transit_gateway_route_table_id").(string)
@@ -76,7 +78,7 @@ func resourceAwsEc2TransitGatewayRouteCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsEc2TransitGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	transitGatewayRouteTableID, destination, err := decodeEc2TransitGatewayRouteID(d.Id())
 	if err != nil {
@@ -104,7 +106,7 @@ func resourceAwsEc2TransitGatewayRouteRead(d *schema.ResourceData, meta interfac
 		transitGatewayRoute, err = ec2DescribeTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
 	}
 
-	if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 		log.Printf("[WARN] EC2 Transit Gateway Route Table (%s) not found, removing from state", transitGatewayRouteTableID)
 		d.SetId("")
 		return nil
@@ -148,7 +150,7 @@ func resourceAwsEc2TransitGatewayRouteRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsEc2TransitGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	transitGatewayRouteTableID, destination, err := decodeEc2TransitGatewayRouteID(d.Id())
 	if err != nil {
@@ -163,7 +165,7 @@ func resourceAwsEc2TransitGatewayRouteDelete(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Route (%s): %s", d.Id(), input)
 	_, err = conn.DeleteTransitGatewayRoute(input)
 
-	if isAWSErr(err, "InvalidRoute.NotFound", "") || isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidRoute.NotFound", "") || tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 		return nil
 	}
 
