@@ -5,9 +5,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func CreateTablePolicy(action string) string {
@@ -25,15 +28,15 @@ func CreateTablePolicy(action string) string {
       "Resource" : "arn:%s:glue:%s:%s:*"
     }
   ]
-}`, action, testAccGetPartition(), testAccGetRegion(), testAccGetAccountID())
+}`, action, atest.Partition(), atest.Region(), atest.AccountID())
 }
 
 func testAccAWSGlueResourcePolicy_basic(t *testing.T) {
 	resourceName := "aws_glue_resource_policy.test"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -54,16 +57,16 @@ func testAccAWSGlueResourcePolicy_basic(t *testing.T) {
 func testAccAWSGlueResourcePolicy_disappears(t *testing.T) {
 	resourceName := "aws_glue_resource_policy.test"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSGlueResourcePolicy_Required("glue:CreateTable"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSGlueResourcePolicy(resourceName, "glue:CreateTable"),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueResourcePolicy(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsGlueResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -99,9 +102,9 @@ resource "aws_glue_resource_policy" "test" {
 func testAccAWSGlueResourcePolicy_update(t *testing.T) {
 	resourceName := "aws_glue_resource_policy.test"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -136,7 +139,7 @@ func testAccAWSGlueResourcePolicy(n string, action string) resource.TestCheckFun
 			return fmt.Errorf("No policy id set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).GlueConn
 
 		policy, err := conn.GetResourcePolicy(&glue.GetResourcePolicyInput{})
 		if err != nil {
@@ -160,12 +163,12 @@ func testAccAWSGlueResourcePolicy(n string, action string) resource.TestCheckFun
 }
 
 func testAccCheckAWSGlueResourcePolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).glueconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).GlueConn
 
 	policy, err := conn.GetResourcePolicy(&glue.GetResourcePolicyInput{})
 
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "Policy not found") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "Policy not found") {
 			return nil
 		}
 		return err
