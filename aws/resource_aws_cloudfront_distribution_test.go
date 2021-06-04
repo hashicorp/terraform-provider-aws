@@ -10,9 +10,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -23,11 +26,11 @@ func init() {
 }
 
 func testSweepCloudFrontDistributions(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).cloudfrontconn
+	conn := client.(*awsprovider.AWSClient).CloudFrontConn
 
 	distributionSummaries := make([]*cloudfront.DistributionSummary, 0)
 
@@ -37,7 +40,7 @@ func testSweepCloudFrontDistributions(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping CloudFront Distribution sweep for %s: %s", region, err)
 			return nil
 		}
@@ -81,9 +84,9 @@ func TestAccAWSCloudFrontDistribution_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_distribution.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -108,9 +111,9 @@ func TestAccAWSCloudFrontDistribution_S3Origin(t *testing.T) {
 	ri := acctest.RandInt()
 	testConfig := testAccAWSCloudFrontDistributionS3Config(ri)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -144,9 +147,9 @@ func TestAccAWSCloudFrontDistribution_S3OriginWithTags(t *testing.T) {
 	postConfig := testAccAWSCloudFrontDistributionS3ConfigWithTagsUpdated(ri)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -194,9 +197,9 @@ func TestAccAWSCloudFrontDistribution_customOrigin(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -222,9 +225,9 @@ func TestAccAWSCloudFrontDistribution_originPolicyDefault(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -250,9 +253,9 @@ func TestAccAWSCloudFrontDistribution_originPolicyOrdered(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -285,9 +288,9 @@ func TestAccAWSCloudFrontDistribution_multiOrigin(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -324,9 +327,9 @@ func TestAccAWSCloudFrontDistribution_orderedCacheBehavior(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -359,9 +362,9 @@ func TestAccAWSCloudFrontDistribution_orderedCacheBehaviorCachePolicy(t *testing
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -390,9 +393,9 @@ func TestAccAWSCloudFrontDistribution_forwardedValuesToCachePolicy(t *testing.T)
 	rInt := acctest.RandInt()
 	resourceName := "aws_cloudfront_distribution.main"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -413,9 +416,9 @@ func TestAccAWSCloudFrontDistribution_forwardedValuesToCachePolicy(t *testing.T)
 
 func TestAccAWSCloudFrontDistribution_Origin_EmptyDomainName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -428,9 +431,9 @@ func TestAccAWSCloudFrontDistribution_Origin_EmptyDomainName(t *testing.T) {
 
 func TestAccAWSCloudFrontDistribution_Origin_EmptyOriginID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -447,9 +450,9 @@ func TestAccAWSCloudFrontDistribution_Origin_ConnectionAttempts(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("cloudfront", t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService("cloudfront", t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -478,9 +481,9 @@ func TestAccAWSCloudFrontDistribution_Origin_ConnectionTimeout(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("cloudfront", t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService("cloudfront", t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -509,9 +512,9 @@ func TestAccAWSCloudFrontDistribution_Origin_OriginShield(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("cloudfront", t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService("cloudfront", t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -558,9 +561,9 @@ func TestAccAWSCloudFrontDistribution_noOptionalItemsConfig(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -568,7 +571,7 @@ func TestAccAWSCloudFrontDistribution_noOptionalItemsConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "aliases.#", "0"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "cloudfront", regexp.MustCompile(`distribution/[A-Z0-9]+$`)),
+					atest.MatchAttrGlobalARN(resourceName, "arn", "cloudfront", regexp.MustCompile(`distribution/[A-Z0-9]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "custom_error_response.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.allowed_methods.#", "7"),
@@ -643,9 +646,9 @@ func TestAccAWSCloudFrontDistribution_HTTP11Config(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -672,9 +675,9 @@ func TestAccAWSCloudFrontDistribution_IsIPV6EnabledConfig(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -703,9 +706,9 @@ func TestAccAWSCloudFrontDistribution_noCustomErrorResponseConfig(t *testing.T) 
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -733,9 +736,9 @@ func TestAccAWSCloudFrontDistribution_DefaultCacheBehavior_ForwardedValues_Cooki
 	retainOnDelete := testAccAWSCloudFrontDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -777,9 +780,9 @@ func TestAccAWSCloudFrontDistribution_DefaultCacheBehavior_ForwardedValues_Heade
 	retainOnDelete := testAccAWSCloudFrontDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -821,9 +824,9 @@ func TestAccAWSCloudFrontDistribution_DefaultCacheBehavior_TrustedKeyGroups(t *t
 	retainOnDelete := testAccAWSCloudFrontDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -858,9 +861,9 @@ func TestAccAWSCloudFrontDistribution_DefaultCacheBehavior_TrustedSigners(t *tes
 	retainOnDelete := testAccAWSCloudFrontDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -895,9 +898,9 @@ func TestAccAWSCloudFrontDistribution_DefaultCacheBehavior_RealtimeLogConfigArn(
 	retainOnDelete := testAccAWSCloudFrontDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -929,9 +932,9 @@ func TestAccAWSCloudFrontDistribution_OrderedCacheBehavior_RealtimeLogConfigArn(
 	retainOnDelete := testAccAWSCloudFrontDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -960,9 +963,9 @@ func TestAccAWSCloudFrontDistribution_Enabled(t *testing.T) {
 	resourceName := "aws_cloudfront_distribution.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1002,9 +1005,9 @@ func TestAccAWSCloudFrontDistribution_RetainOnDelete(t *testing.T) {
 	resourceName := "aws_cloudfront_distribution.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1033,9 +1036,9 @@ func TestAccAWSCloudFrontDistribution_OrderedCacheBehavior_ForwardedValues_Cooki
 	retainOnDelete := testAccAWSCloudFrontDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1077,9 +1080,9 @@ func TestAccAWSCloudFrontDistribution_OrderedCacheBehavior_ForwardedValues_Heade
 	retainOnDelete := testAccAWSCloudFrontDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1119,9 +1122,9 @@ func TestAccAWSCloudFrontDistribution_ViewerCertificate_AcmCertificateArn(t *tes
 	retainOnDelete := testAccAWSCloudFrontDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:        atest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1151,9 +1154,9 @@ func TestAccAWSCloudFrontDistribution_ViewerCertificate_AcmCertificateArn_Confli
 	retainOnDelete := testAccAWSCloudFrontDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:        atest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1181,9 +1184,9 @@ func TestAccAWSCloudFrontDistribution_WaitForDeployment(t *testing.T) {
 	resourceName := "aws_cloudfront_distribution.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1225,7 +1228,7 @@ func TestAccAWSCloudFrontDistribution_WaitForDeployment(t *testing.T) {
 }
 
 func testAccCheckCloudFrontDistributionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudFrontConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_distribution" {
@@ -1238,7 +1241,7 @@ func testAccCheckCloudFrontDistributionDestroy(s *terraform.State) error {
 
 		output, err := conn.GetDistribution(input)
 
-		if isAWSErr(err, cloudfront.ErrCodeNoSuchDistribution, "") {
+		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
 			continue
 		}
 
@@ -1270,7 +1273,7 @@ func testAccCheckCloudFrontDistributionExists(resourceName string, distribution 
 			return fmt.Errorf("Resource ID not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudFrontConn
 
 		input := &cloudfront.GetDistributionInput{
 			Id: aws.String(rs.Primary.ID),
@@ -1290,7 +1293,7 @@ func testAccCheckCloudFrontDistributionExists(resourceName string, distribution 
 
 func testAccCheckCloudFrontDistributionExistsAPIOnly(distribution *cloudfront.Distribution) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudFrontConn
 
 		input := &cloudfront.GetDistributionInput{
 			Id: distribution.Id,
@@ -1354,7 +1357,7 @@ func testAccCheckCloudFrontDistributionDisabled(distribution *cloudfront.Distrib
 // This requires the CloudFront Distribution to previously be disabled and fetches latest ETag automatically.
 func testAccCheckCloudFrontDistributionDisappears(distribution *cloudfront.Distribution) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudFrontConn
 
 		getDistributionInput := &cloudfront.GetDistributionInput{
 			Id: distribution.Id,
@@ -1374,15 +1377,15 @@ func testAccCheckCloudFrontDistributionDisappears(distribution *cloudfront.Distr
 		err = resource.Retry(2*time.Minute, func() *resource.RetryError {
 			_, err = conn.DeleteDistribution(deleteDistributionInput)
 
-			if isAWSErr(err, cloudfront.ErrCodeDistributionNotDisabled, "") {
+			if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeDistributionNotDisabled, "") {
 				return resource.RetryableError(err)
 			}
 
-			if isAWSErr(err, cloudfront.ErrCodeNoSuchDistribution, "") {
+			if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
 				return nil
 			}
 
-			if isAWSErr(err, cloudfront.ErrCodePreconditionFailed, "") {
+			if tfawserr.ErrMessageContains(err, cloudfront.ErrCodePreconditionFailed, "") {
 				return resource.RetryableError(err)
 			}
 
@@ -1403,7 +1406,7 @@ func testAccCheckCloudFrontDistributionDisappears(distribution *cloudfront.Distr
 
 func testAccCheckCloudFrontDistributionWaitForDeployment(distribution *cloudfront.Distribution) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return resourceAwsCloudFrontDistributionWaitUntilDeployed(aws.StringValue(distribution.Id), testAccProvider.Meta())
+		return resourceAwsCloudFrontDistributionWaitUntilDeployed(aws.StringValue(distribution.Id), atest.Provider.Meta())
 	}
 }
 
@@ -1425,9 +1428,9 @@ func TestAccAWSCloudFrontDistribution_OriginGroups(t *testing.T) {
 	ri := acctest.RandInt()
 	testConfig := testAccAWSCloudFrontDistributionOriginGroupsConfig(ri)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1476,7 +1479,7 @@ resource "aws_s3_bucket" "s3_bucket_logs" {
 `
 
 func testAccAWSCloudFrontDistributionS3Config(rInt int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		originBucket,
 		logBucket,
 		fmt.Sprintf(`
@@ -1537,7 +1540,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 
 func testAccAWSCloudFrontDistributionS3ConfigWithTags(rInt int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		originBucket,
 		logBucket,
 		fmt.Sprintf(`
@@ -1597,7 +1600,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 
 func testAccAWSCloudFrontDistributionS3ConfigWithTagsUpdated(rInt int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		originBucket,
 		logBucket,
 		fmt.Sprintf(`
@@ -1656,7 +1659,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 
 func testAccAWSCloudFrontDistributionCustomConfig(rInt int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		logBucket,
 		fmt.Sprintf(`
 variable rand_id {
@@ -1727,7 +1730,7 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
 }
 
 func testAccAWSCloudFrontDistributionOriginRequestPolicyConfigDefault(rInt int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		logBucket,
 		fmt.Sprintf(`
 variable rand_id {
@@ -1841,7 +1844,7 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
 }
 
 func testAccAWSCloudFrontDistributionOriginRequestPolicyConfigOrdered(rInt int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		logBucket,
 		fmt.Sprintf(`
 variable rand_id {
@@ -1968,7 +1971,7 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
 }
 
 func testAccAWSCloudFrontDistributionMultiOriginConfig(rInt int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		originBucket,
 		logBucket,
 		fmt.Sprintf(`
@@ -2612,7 +2615,7 @@ resource "aws_cloudfront_cache_policy" "cache_policy" {
 }
 
 func testAccAWSCloudFrontDistributionOriginGroupsConfig(rInt int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		originBucket,
 		backupBucket,
 		fmt.Sprintf(`
@@ -3511,7 +3514,7 @@ resource "aws_cloudfront_realtime_log_config" "test" {
 }
 
 func testAccAWSCloudFrontDistributionConfigDefaultCacheBehaviorRealtimeLogConfigArn(rName string, retainOnDelete bool) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSCloudFrontDistributionConfigCacheBehaviorRealtimeLogConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
@@ -3562,7 +3565,7 @@ resource "aws_cloudfront_distribution" "test" {
 }
 
 func testAccAWSCloudFrontDistributionConfigOrderedCacheBehaviorRealtimeLogConfigArn(rName string, retainOnDelete bool) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSCloudFrontDistributionConfigCacheBehaviorRealtimeLogConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
@@ -3638,7 +3641,7 @@ origin_shield {
 }
 
 func testAccAWSCloudFrontDistributionOriginItem(rName string, rInt int, item string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		originBucket,
 		testAccAWSCloudFrontDistributionConfigCacheBehaviorRealtimeLogConfigBase(rName),
 		fmt.Sprintf(`
