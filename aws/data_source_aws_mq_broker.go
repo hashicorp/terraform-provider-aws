@@ -7,7 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/experimental/nullable"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsMqBroker() *schema.Resource {
@@ -244,8 +245,8 @@ func dataSourceAwsMqBroker() *schema.Resource {
 }
 
 func dataSourceAwsmQBrokerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mqconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).MQConn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &mq.ListBrokersInput{}
 
