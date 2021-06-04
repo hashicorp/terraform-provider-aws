@@ -8,10 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const organizationsPolicyTypeStatusDisabled = "DISABLED"
@@ -166,7 +168,7 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 }
 
 func resourceAwsOrganizationsOrganizationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*awsprovider.AWSClient).OrganizationsConn
 
 	createOpts := &organizations.CreateOrganizationInput{
 		FeatureSet: aws.String(d.Get("feature_set").(string)),
@@ -226,12 +228,12 @@ func resourceAwsOrganizationsOrganizationCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*awsprovider.AWSClient).OrganizationsConn
 
 	log.Printf("[INFO] Reading Organization: %s", d.Id())
 	org, err := conn.DescribeOrganization(&organizations.DescribeOrganizationInput{})
 
-	if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+	if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
 		log.Printf("[WARN] Organization does not exist, removing from state: %s", d.Id())
 		d.SetId("")
 		return nil
@@ -323,7 +325,7 @@ func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsOrganizationsOrganizationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*awsprovider.AWSClient).OrganizationsConn
 
 	if d.HasChange("aws_service_access_principals") {
 		oldRaw, newRaw := d.GetChange("aws_service_access_principals")
@@ -410,7 +412,7 @@ func resourceAwsOrganizationsOrganizationUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsOrganizationsOrganizationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*awsprovider.AWSClient).OrganizationsConn
 
 	log.Printf("[INFO] Deleting Organization: %s", d.Id())
 
