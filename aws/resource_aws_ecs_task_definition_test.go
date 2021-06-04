@@ -2312,9 +2312,11 @@ TASK_DEFINITION
     }
   }
 
-  depends_on   = [aws_iam_role_policy_attachment.test,
-  				  aws_iam_role_policy_attachment.test2,
-				  aws_iam_role_policy_attachment.test3]
+  depends_on = [
+    aws_iam_role_policy_attachment.test,
+    aws_iam_role_policy_attachment.test2,
+    aws_iam_role_policy_attachment.test3
+  ]
 }
 `, tdName)
 }
