@@ -9,15 +9,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSMacieS3BucketAssociation_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMacie(t) },
-		ErrorCheck:   testAccErrorCheck(t, macie.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMacie(t) },
+		ErrorCheck:   atest.ErrorCheck(t, macie.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSMacieS3BucketAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -44,9 +46,9 @@ func TestAccAWSMacieS3BucketAssociation_accountIdAndPrefix(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMacie(t) },
-		ErrorCheck:   testAccErrorCheck(t, macie.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMacie(t) },
+		ErrorCheck:   atest.ErrorCheck(t, macie.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSMacieS3BucketAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -70,7 +72,7 @@ func TestAccAWSMacieS3BucketAssociation_accountIdAndPrefix(t *testing.T) {
 }
 
 func testAccCheckAWSMacieS3BucketAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).macieconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).MacieConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie_s3_bucket_association" {
@@ -107,7 +109,7 @@ func testAccCheckAWSMacieS3BucketAssociationDestroy(s *terraform.State) error {
 
 func testAccCheckAWSMacieS3BucketAssociationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).macieconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).MacieConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -144,13 +146,13 @@ func testAccCheckAWSMacieS3BucketAssociationExists(name string) resource.TestChe
 }
 
 func testAccPreCheckAWSMacie(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).macieconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).MacieConn
 
 	input := &macie.ListS3ResourcesInput{}
 
 	_, err := conn.ListS3Resources(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
