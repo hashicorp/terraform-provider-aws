@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsCloudFrontOriginRequestPolicy() *schema.Resource {
@@ -109,7 +110,7 @@ func dataSourceAwsCloudFrontOriginRequestPolicy() *schema.Resource {
 }
 
 func dataSourceAwsCloudFrontOriginRequestPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*awsprovider.AWSClient).CloudFrontConn
 
 	if d.Get("id").(string) == "" {
 		if err := dataSourceAwsCloudFrontOriginRequestPolicyFindByName(d, conn); err != nil {
