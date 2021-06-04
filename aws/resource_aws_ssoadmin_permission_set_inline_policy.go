@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSsoAdminPermissionSetInlinePolicy() *schema.Resource {
@@ -31,21 +32,21 @@ func resourceAwsSsoAdminPermissionSetInlinePolicy() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"permission_set_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 		},
 	}
 }
 
 func resourceAwsSsoAdminPermissionSetInlinePolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	conn := meta.(*awsprovider.AWSClient).SSOAdminConn
 
 	instanceArn := d.Get("instance_arn").(string)
 	permissionSetArn := d.Get("permission_set_arn").(string)
@@ -72,7 +73,7 @@ func resourceAwsSsoAdminPermissionSetInlinePolicyPut(d *schema.ResourceData, met
 }
 
 func resourceAwsSsoAdminPermissionSetInlinePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	conn := meta.(*awsprovider.AWSClient).SSOAdminConn
 
 	permissionSetArn, instanceArn, err := parseSsoAdminResourceID(d.Id())
 	if err != nil {
@@ -108,7 +109,7 @@ func resourceAwsSsoAdminPermissionSetInlinePolicyRead(d *schema.ResourceData, me
 }
 
 func resourceAwsSsoAdminPermissionSetInlinePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	conn := meta.(*awsprovider.AWSClient).SSOAdminConn
 
 	permissionSetArn, instanceArn, err := parseSsoAdminResourceID(d.Id())
 	if err != nil {
