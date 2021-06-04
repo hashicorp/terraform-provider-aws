@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -24,18 +26,18 @@ func init() {
 }
 
 func testSweepCloudWatchEventArchives(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).cloudwatcheventsconn
+	conn := client.(*awsprovider.AWSClient).CloudWatchEventsConn
 
 	input := &events.ListArchivesInput{}
 
 	for {
 		output, err := conn.ListArchives(input)
 		if err != nil {
-			if testSweepSkipSweepError(err) {
+			if atest.SweepSkipSweepError(err) {
 				log.Printf("[WARN] Skipping CloudWatch Events archive sweep for %s: %s", region, err)
 				return nil
 			}
@@ -77,9 +79,9 @@ func TestAccAWSCloudWatchEventArchive_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_archive.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchevents.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventArchiveDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -88,7 +90,7 @@ func TestAccAWSCloudWatchEventArchive_basic(t *testing.T) {
 					testAccCheckCloudWatchEventArchiveExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", archiveName),
 					resource.TestCheckResourceAttr(resourceName, "retention_days", "0"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("archive/%s", archiveName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("archive/%s", archiveName)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "event_pattern", ""),
 				),
@@ -108,9 +110,9 @@ func TestAccAWSCloudWatchEventArchive_update(t *testing.T) {
 	archiveName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchevents.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventArchiveDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -124,7 +126,7 @@ func TestAccAWSCloudWatchEventArchive_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventArchiveExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "retention_days", "7"),
-					testAccCheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"company.team.service\"]}"),
+					atest.CheckAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"company.team.service\"]}"),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 				),
 			},
@@ -138,16 +140,16 @@ func TestAccAWSCloudWatchEventArchive_disappears(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_archive.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchevents.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventArchiveDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudWatchEventArchiveConfig(archiveName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventArchiveExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchEventArchive(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCloudWatchEventArchive(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -156,7 +158,7 @@ func TestAccAWSCloudWatchEventArchive_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSCloudWatchEventArchiveDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchEventsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_event_archive" {
@@ -184,7 +186,7 @@ func testAccCheckCloudWatchEventArchiveExists(n string, v *events.DescribeArchiv
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchEventsConn
 		params := events.DescribeArchiveInput{
 			ArchiveName: aws.String(rs.Primary.ID),
 		}
@@ -210,9 +212,9 @@ func TestAccAWSCloudWatchEventArchive_retentionSetOnCreation(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_archive.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchevents.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventArchiveDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -221,7 +223,7 @@ func TestAccAWSCloudWatchEventArchive_retentionSetOnCreation(t *testing.T) {
 					testAccCheckCloudWatchEventArchiveExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", archiveName),
 					resource.TestCheckResourceAttr(resourceName, "retention_days", "1"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("archive/%s", archiveName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("archive/%s", archiveName)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "event_pattern", ""),
 				),
