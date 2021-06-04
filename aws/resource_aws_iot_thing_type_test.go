@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -22,14 +24,14 @@ func init() {
 }
 
 func testSweepIotThingTypes(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).iotconn
-	sweepResources := make([]*testSweepResource, 0)
+	conn := client.(*awsprovider.AWSClient).IoTConn
+	sweepResources := make([]*atest.TestSweepResource, 0)
 	var errs *multierror.Error
 
 	input := &iot.ListThingTypesInput{}
@@ -45,7 +47,7 @@ func testSweepIotThingTypes(region string) error {
 
 			d.SetId(aws.StringValue(thingTypes.ThingTypeName))
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, atest.NewTestSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -55,11 +57,11 @@ func testSweepIotThingTypes(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing IoT Thing Type for %s: %w", region, err))
 	}
 
-	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := atest.TestSweepResourceOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Thing Type for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if atest.SweepSkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping IoT Thing Type sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -71,9 +73,9 @@ func TestAccAWSIotThingType_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iot.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSIotThingTypeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -96,9 +98,9 @@ func TestAccAWSIotThingType_full(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iot.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSIotThingTypeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -126,7 +128,7 @@ func TestAccAWSIotThingType_full(t *testing.T) {
 }
 
 func testAccCheckAWSIotThingTypeDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iotconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).IoTConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_thing_type" {
