@@ -13,6 +13,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecr/waiter"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEcrRepositoryPolicy() *schema.Resource {
@@ -46,7 +47,7 @@ func resourceAwsEcrRepositoryPolicy() *schema.Resource {
 }
 
 func resourceAwsEcrRepositoryPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
+	conn := meta.(*awsprovider.AWSClient).ECRConn
 
 	input := ecr.SetRepositoryPolicyInput{
 		RepositoryName: aws.String(d.Get("repository").(string)),
@@ -61,7 +62,7 @@ func resourceAwsEcrRepositoryPolicyPut(d *schema.ResourceData, meta interface{})
 	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		out, err = conn.SetRepositoryPolicy(&input)
 
-		if isAWSErr(err, ecr.ErrCodeInvalidParameterException, "Invalid repository policy provided") {
+		if tfawserr.ErrMessageContains(err, ecr.ErrCodeInvalidParameterException, "Invalid repository policy provided") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -84,7 +85,7 @@ func resourceAwsEcrRepositoryPolicyPut(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsEcrRepositoryPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
+	conn := meta.(*awsprovider.AWSClient).ECRConn
 
 	input := &ecr.GetRepositoryPolicyInput{
 		RepositoryName: aws.String(d.Id()),
@@ -146,15 +147,15 @@ func resourceAwsEcrRepositoryPolicyRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsEcrRepositoryPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
+	conn := meta.(*awsprovider.AWSClient).ECRConn
 
 	_, err := conn.DeleteRepositoryPolicy(&ecr.DeleteRepositoryPolicyInput{
 		RepositoryName: aws.String(d.Id()),
 		RegistryId:     aws.String(d.Get("registry_id").(string)),
 	})
 	if err != nil {
-		if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") ||
-			isAWSErr(err, ecr.ErrCodeRepositoryPolicyNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") ||
+			tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryPolicyNotFoundException, "") {
 			return nil
 		}
 		return err
