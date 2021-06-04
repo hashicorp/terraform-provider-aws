@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSVpcEndpointConnectionNotification_basic(t *testing.T) {
@@ -17,9 +19,9 @@ func TestAccAWSVpcEndpointConnectionNotification_basic(t *testing.T) {
 	resourceName := "aws_vpc_endpoint_connection_notification.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointConnectionNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,7 +52,7 @@ func TestAccAWSVpcEndpointConnectionNotification_basic(t *testing.T) {
 }
 
 func testAccCheckVpcEndpointConnectionNotificationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_endpoint_connection_notification" {
@@ -88,7 +90,7 @@ func testAccCheckVpcEndpointConnectionNotificationExists(n string) resource.Test
 			return fmt.Errorf("No VPC Endpoint connection notification ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 		resp, err := conn.DescribeVpcEndpointConnectionNotifications(&ec2.DescribeVpcEndpointConnectionNotificationsInput{
 			ConnectionNotificationId: aws.String(rs.Primary.ID),
@@ -105,7 +107,7 @@ func testAccCheckVpcEndpointConnectionNotificationExists(n string) resource.Test
 }
 
 func testAccVpcEndpointConnectionNotificationBasicConfig(lbName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_vpc" "nlb_test" {
@@ -198,7 +200,7 @@ resource "aws_vpc_endpoint_connection_notification" "test" {
 }
 
 func testAccVpcEndpointConnectionNotificationModifiedConfig(lbName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_vpc" "nlb_test" {
