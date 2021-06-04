@@ -19,7 +19,7 @@ provider:
   - 'aws/*_aws_partition*'
   - 'aws/*_aws_region*'
   - 'aws/internal/flatmap/**/*'
-  - 'aws/internal/keyvaluetags/**/*'
+  - 'aws/keyvaluetags/**/*'
   - 'aws/internal/naming/**/*'
   - 'aws/provider.go'
   - 'aws/utils.go'
@@ -585,7 +585,7 @@ service/opsworks:
   - '**/*_opsworks_*'
   - '**/opsworks_*'
 service/organizations:
-  - 'aws/internal/service/organizations/**/*'
+  - 'aws/service/organizations/**/*'
   - '**/*_organizations_*'
   - '**/organizations_*'
 service/outposts:
@@ -758,7 +758,7 @@ service/storagegateway:
   - '**/*_storagegateway_*'
   - '**/storagegateway_*'
 service/sts:
-  - 'aws/internal/service/sts/**/*'
+  - 'aws/service/sts/**/*'
   - 'aws/*_aws_caller_identity*'
   - 'website/**/caller_identity*'
 service/swf:
