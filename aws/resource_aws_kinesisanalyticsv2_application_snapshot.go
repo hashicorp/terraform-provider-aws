@@ -15,6 +15,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsKinesisAnalyticsV2ApplicationSnapshot() *schema.Resource {
@@ -62,7 +63,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationSnapshot() *schema.Resource {
 }
 
 func resourceAwsKinesisAnalyticsV2ApplicationSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisanalyticsv2conn
+	conn := meta.(*awsprovider.AWSClient).KinesisAnalyticsV2Conn
 	applicationName := d.Get("application_name").(string)
 	snapshotName := d.Get("snapshot_name").(string)
 
@@ -91,7 +92,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationSnapshotCreate(d *schema.ResourceDa
 }
 
 func resourceAwsKinesisAnalyticsV2ApplicationSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisanalyticsv2conn
+	conn := meta.(*awsprovider.AWSClient).KinesisAnalyticsV2Conn
 
 	applicationName, snapshotName, err := tfkinesisanalyticsv2.ApplicationSnapshotParseID(d.Id())
 
@@ -120,7 +121,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationSnapshotRead(d *schema.ResourceData
 }
 
 func resourceAwsKinesisAnalyticsV2ApplicationSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisanalyticsv2conn
+	conn := meta.(*awsprovider.AWSClient).KinesisAnalyticsV2Conn
 
 	applicationName, snapshotName, err := tfkinesisanalyticsv2.ApplicationSnapshotParseID(d.Id())
 
