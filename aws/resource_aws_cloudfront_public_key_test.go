@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSCloudFrontPublicKey_basic(t *testing.T) {
@@ -17,9 +20,9 @@ func TestAccAWSCloudFrontPublicKey_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_public_key.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -45,16 +48,16 @@ func TestAccAWSCloudFrontPublicKey_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_public_key.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFrontPublicKeyConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontPublicKeyExistence(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFrontPublicKey(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCloudFrontPublicKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,9 +70,9 @@ func TestAccAWSCloudFrontPublicKey_namePrefix(t *testing.T) {
 	resourceName := "aws_cloudfront_public_key.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -96,9 +99,9 @@ func TestAccAWSCloudFrontPublicKey_update(t *testing.T) {
 	resourceName := "aws_cloudfront_public_key.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -134,7 +137,7 @@ func testAccCheckCloudFrontPublicKeyExistence(r string) resource.TestCheckFunc {
 			return fmt.Errorf("No Id is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudFrontConn
 
 		params := &cloudfront.GetPublicKeyInput{
 			Id: aws.String(rs.Primary.ID),
@@ -149,7 +152,7 @@ func testAccCheckCloudFrontPublicKeyExistence(r string) resource.TestCheckFunc {
 }
 
 func testAccCheckCloudFrontPublicKeyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudFrontConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_public_key" {
@@ -161,7 +164,7 @@ func testAccCheckCloudFrontPublicKeyDestroy(s *terraform.State) error {
 		}
 
 		_, err := conn.GetPublicKey(params)
-		if isAWSErr(err, cloudfront.ErrCodeNoSuchPublicKey, "") {
+		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchPublicKey, "") {
 			continue
 		}
 		if err != nil {
