@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSTransferSshKey_basic(t *testing.T) {
@@ -16,9 +19,9 @@ func TestAccAWSTransferSshKey_basic(t *testing.T) {
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   atest.ErrorCheck(t, transfer.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSTransferSshKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -51,7 +54,7 @@ func testAccCheckAWSTransferSshKeyExists(n string, res *transfer.SshPublicKey) r
 			return fmt.Errorf("No Transfer Ssh Public Key ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).transferconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).TransferConn
 		serverID, userName, sshKeyID, err := decodeTransferSshKeyId(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error parsing Transfer SSH Public Key ID: %s", err)
@@ -78,7 +81,7 @@ func testAccCheckAWSTransferSshKeyExists(n string, res *transfer.SshPublicKey) r
 }
 
 func testAccCheckAWSTransferSshKeyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).transferconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).TransferConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_transfer_ssh_key" {
@@ -94,7 +97,7 @@ func testAccCheckAWSTransferSshKeyDestroy(s *terraform.State) error {
 			ServerId: aws.String(serverID),
 		})
 
-		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, transfer.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 
