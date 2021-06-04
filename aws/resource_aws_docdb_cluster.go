@@ -9,11 +9,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDocDBCluster() *schema.Resource {
@@ -217,7 +219,7 @@ func resourceAwsDocDBCluster() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"cluster_resource_id": {
@@ -260,8 +262,8 @@ func resourceAwsDocDBClusterImport(
 }
 
 func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).docdbconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DocDBConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Some API calls (e.g. RestoreDBClusterFromSnapshot do not support all
@@ -344,7 +346,7 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.RestoreDBClusterFromSnapshot(&opts)
 			if err != nil {
-				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -429,7 +431,7 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 			var err error
 			resp, err = conn.CreateDBCluster(createOpts)
 			if err != nil {
-				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -488,9 +490,9 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsDocDBClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).docdbconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DocDBConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &docdb.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(d.Id()),
@@ -499,7 +501,7 @@ func resourceAwsDocDBClusterRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] Describing DocDB Cluster: %s", input)
 	resp, err := conn.DescribeDBClusters(input)
 
-	if isAWSErr(err, docdb.ErrCodeDBClusterNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBClusterNotFoundFault, "") {
 		log.Printf("[WARN] DocDB Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -595,7 +597,7 @@ func resourceAwsDocDBClusterRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsDocDBClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).docdbconn
+	conn := meta.(*awsprovider.AWSClient).DocDBConn
 	requestUpdate := false
 
 	req := &docdb.ModifyDBClusterInput{
@@ -656,15 +658,15 @@ func resourceAwsDocDBClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 			_, err := conn.ModifyDBCluster(req)
 			if err != nil {
-				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 					return resource.RetryableError(err)
 				}
 
-				if isAWSErr(err, docdb.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
+				if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
 					return resource.RetryableError(err)
 				}
 
-				if isAWSErr(err, docdb.ErrCodeInvalidDBClusterStateFault, "DB cluster is not available for modification") {
+				if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "DB cluster is not available for modification") {
 					return resource.RetryableError(err)
 				}
 
@@ -699,7 +701,7 @@ func resourceAwsDocDBClusterUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsDocDBClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).docdbconn
+	conn := meta.(*awsprovider.AWSClient).DocDBConn
 	log.Printf("[DEBUG] Destroying DocDB Cluster (%s)", d.Id())
 
 	deleteOpts := docdb.DeleteDBClusterInput{
@@ -722,10 +724,10 @@ func resourceAwsDocDBClusterDelete(d *schema.ResourceData, meta interface{}) err
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteDBCluster(&deleteOpts)
 		if err != nil {
-			if isAWSErr(err, docdb.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
+			if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, docdb.ErrCodeDBClusterNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBClusterNotFoundFault, "") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -763,7 +765,7 @@ func resourceAwsDocDBClusterStateRefreshFunc(conn *docdb.DocDB, dbClusterIdentif
 			DBClusterIdentifier: aws.String(dbClusterIdentifier),
 		})
 
-		if isAWSErr(err, docdb.ErrCodeDBClusterNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBClusterNotFoundFault, "") {
 			return 42, "destroyed", nil
 		}
 
