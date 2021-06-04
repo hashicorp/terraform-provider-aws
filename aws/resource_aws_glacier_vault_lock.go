@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glacier"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGlacierVaultLock() *schema.Resource {
@@ -52,7 +54,7 @@ func resourceAwsGlacierVaultLock() *schema.Resource {
 }
 
 func resourceAwsGlacierVaultLockCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glacierconn
+	conn := meta.(*awsprovider.AWSClient).GlacierConn
 	vaultName := d.Get("vault_name").(string)
 
 	input := &glacier.InitiateVaultLockInput{
@@ -93,7 +95,7 @@ func resourceAwsGlacierVaultLockCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsGlacierVaultLockRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glacierconn
+	conn := meta.(*awsprovider.AWSClient).GlacierConn
 
 	input := &glacier.GetVaultLockInput{
 		AccountId: aws.String("-"),
@@ -103,7 +105,7 @@ func resourceAwsGlacierVaultLockRead(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] Reading Glacier Vault Lock (%s): %s", d.Id(), input)
 	output, err := conn.GetVaultLock(input)
 
-	if isAWSErr(err, glacier.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Glacier Vault Lock (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -127,7 +129,7 @@ func resourceAwsGlacierVaultLockRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsGlacierVaultLockDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glacierconn
+	conn := meta.(*awsprovider.AWSClient).GlacierConn
 
 	input := &glacier.AbortVaultLockInput{
 		VaultName: aws.String(d.Id()),
@@ -136,7 +138,7 @@ func resourceAwsGlacierVaultLockDelete(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Aborting Glacier Vault Lock (%s): %s", d.Id(), input)
 	_, err := conn.AbortVaultLock(input)
 
-	if isAWSErr(err, glacier.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
@@ -157,7 +159,7 @@ func glacierVaultLockRefreshFunc(conn *glacier.Glacier, vaultName string) resour
 		log.Printf("[DEBUG] Reading Glacier Vault Lock (%s): %s", vaultName, input)
 		output, err := conn.GetVaultLock(input)
 
-		if isAWSErr(err, glacier.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
 			return nil, "", nil
 		}
 
