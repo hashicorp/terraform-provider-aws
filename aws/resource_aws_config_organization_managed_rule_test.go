@@ -6,9 +6,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccConfigOrganizationManagedRule_basic(t *testing.T) {
@@ -17,16 +20,16 @@ func testAccConfigOrganizationManagedRule_basic(t *testing.T) {
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigOrganizationManagedRuleConfigRuleIdentifier(rName, "IAM_PASSWORD_POLICY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigOrganizationManagedRuleExists(resourceName, &rule),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("organization-config-rule/%s-.+", rName))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("organization-config-rule/%s-.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_parameters", ""),
@@ -54,16 +57,16 @@ func testAccConfigOrganizationManagedRule_disappears(t *testing.T) {
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigOrganizationManagedRuleConfigRuleIdentifier(rName, "IAM_PASSWORD_POLICY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigOrganizationManagedRuleExists(resourceName, &rule),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsConfigOrganizationManagedRule(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsConfigOrganizationManagedRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -75,9 +78,9 @@ func testAccConfigOrganizationManagedRule_errorHandling(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -94,9 +97,9 @@ func testAccConfigOrganizationManagedRule_Description(t *testing.T) {
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -128,9 +131,9 @@ func testAccConfigOrganizationManagedRule_ExcludedAccounts(t *testing.T) {
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -165,9 +168,9 @@ func testAccConfigOrganizationManagedRule_InputParameters(t *testing.T) {
 	inputParameters2 := `{"tag1Key":"Department", "tag2Key":"Owner"}`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -199,9 +202,9 @@ func testAccConfigOrganizationManagedRule_MaximumExecutionFrequency(t *testing.T
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -233,9 +236,9 @@ func testAccConfigOrganizationManagedRule_ResourceIdScope(t *testing.T) {
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -267,9 +270,9 @@ func testAccConfigOrganizationManagedRule_ResourceTypesScope(t *testing.T) {
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -301,9 +304,9 @@ func testAccConfigOrganizationManagedRule_RuleIdentifier(t *testing.T) {
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -335,9 +338,9 @@ func testAccConfigOrganizationManagedRule_TagKeyScope(t *testing.T) {
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -369,9 +372,9 @@ func testAccConfigOrganizationManagedRule_TagValueScope(t *testing.T) {
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigOrganizationManagedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -404,7 +407,7 @@ func testAccCheckConfigOrganizationManagedRuleExists(resourceName string, ocr *c
 			return fmt.Errorf("Not Found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).configconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ConfigConn
 
 		rule, err := configDescribeOrganizationConfigRule(conn, rs.Primary.ID)
 
@@ -423,7 +426,7 @@ func testAccCheckConfigOrganizationManagedRuleExists(resourceName string, ocr *c
 }
 
 func testAccCheckConfigOrganizationManagedRuleDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).configconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ConfigConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_organization_managed_rule" {
@@ -432,7 +435,7 @@ func testAccCheckConfigOrganizationManagedRuleDestroy(s *terraform.State) error 
 
 		rule, err := configDescribeOrganizationConfigRule(conn, rs.Primary.ID)
 
-		if isAWSErr(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException, "") {
+		if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException, "") {
 			continue
 		}
 
