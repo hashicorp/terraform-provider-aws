@@ -14,7 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsAmi() *schema.Resource {
@@ -26,7 +27,7 @@ func dataSourceAwsAmi() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": dataSourceFiltersSchema(),
+			"filter": awsprovider.DataSourceFiltersSchema(),
 			"executable_users": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -200,7 +201,7 @@ func dataSourceAwsAmi() *schema.Resource {
 
 // dataSourceAwsAmiDescriptionRead performs the AMI lookup.
 func dataSourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	params := &ec2.DescribeImagesInput{
 		Owners: expandStringList(d.Get("owners").([]interface{})),
@@ -210,7 +211,7 @@ func dataSourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 		params.ExecutableUsers = expandStringList(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("filter"); ok {
-		params.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
+		params.Filters = awsprovider.BuildDataSourceFilters(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Reading AMI: %s", params)
@@ -261,7 +262,7 @@ func dataSourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 
 // populate the numerous fields that the image description returns.
 func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image, meta interface{}) error {
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	// Simple attributes first
 	d.SetId(aws.StringValue(image.ImageId))
@@ -318,8 +319,8 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image, meta int
 	}
 
 	imageArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Resource:  fmt.Sprintf("image/%s", d.Id()),
 		Service:   ec2.ServiceName,
 	}.String()
