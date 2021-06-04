@@ -6,7 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsSubnetIDs() *schema.Resource {
@@ -33,12 +34,12 @@ func dataSourceAwsSubnetIDs() *schema.Resource {
 }
 
 func dataSourceAwsSubnetIDsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	req := &ec2.DescribeSubnetsInput{}
 
 	if vpc, vpcOk := d.GetOk("vpc_id"); vpcOk {
-		req.Filters = buildEC2AttributeFilterList(
+		req.Filters = BuildEC2AttributeFilterList(
 			map[string]string{
 				"vpc-id": vpc.(string),
 			},
