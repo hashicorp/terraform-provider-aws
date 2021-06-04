@@ -8,23 +8,24 @@ import (
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAwsImageBuilderImageDataSource_Arn_Aws(t *testing.T) {
 	dataSourceName := "data.aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderImageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsImageBuilderImageDataSourceConfigArnAws(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccMatchResourceAttrRegionalARNAccountID(dataSourceName, "arn", "imagebuilder", "aws", regexp.MustCompile(`image/amazon-linux-2-x86/x.x.x`)),
-					testAccMatchResourceAttrRegionalARNAccountID(dataSourceName, "build_version_arn", "imagebuilder", "aws", regexp.MustCompile(`image/amazon-linux-2-x86/\d+\.\d+\.\d+/\d+`)),
-					testAccCheckResourceAttrRfc3339(dataSourceName, "date_created"),
+					atest.MatchAttrRegionalARNAccountID(dataSourceName, "arn", "imagebuilder", "aws", regexp.MustCompile(`image/amazon-linux-2-x86/x.x.x`)),
+					atest.MatchAttrRegionalARNAccountID(dataSourceName, "build_version_arn", "imagebuilder", "aws", regexp.MustCompile(`image/amazon-linux-2-x86/\d+\.\d+\.\d+/\d+`)),
+					atest.CheckAttrRfc3339(dataSourceName, "date_created"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "distribution_configuration_arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "enhanced_image_metadata_enabled", "true"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "image_recipe_arn"),
@@ -49,9 +50,9 @@ func TestAccAwsImageBuilderImageDataSource_Arn_Self(t *testing.T) {
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderImageDestroy,
 		Steps: []resource.TestStep{
 			{
