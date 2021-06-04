@@ -7,8 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // WAF requires UpdateIPSet operations be split into batches of 1000 Updates
@@ -60,7 +62,7 @@ func resourceAwsWafIPSet() *schema.Resource {
 }
 
 func resourceAwsWafIPSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*awsprovider.AWSClient).WAFConn
 
 	wr := newWafRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -88,7 +90,7 @@ func resourceAwsWafIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsWafIPSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*awsprovider.AWSClient).WAFConn
 
 	params := &waf.GetIPSetInput{
 		IPSetId: aws.String(d.Id()),
@@ -96,7 +98,7 @@ func resourceAwsWafIPSetRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetIPSet(params)
 	if err != nil {
-		if isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
 			log.Printf("[WARN] WAF IPSet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -120,9 +122,9 @@ func resourceAwsWafIPSetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resp.IPSet.Name)
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "waf",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("ipset/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
@@ -131,7 +133,7 @@ func resourceAwsWafIPSetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsWafIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*awsprovider.AWSClient).WAFConn
 
 	if d.HasChange("ip_set_descriptors") {
 		o, n := d.GetChange("ip_set_descriptors")
@@ -147,7 +149,7 @@ func resourceAwsWafIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsWafIPSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*awsprovider.AWSClient).WAFConn
 
 	oldDescriptors := d.Get("ip_set_descriptors").(*schema.Set).List()
 
