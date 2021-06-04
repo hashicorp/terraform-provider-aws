@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
@@ -17,9 +18,9 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 	pcxResourceName := "aws_vpc_peering_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,11 +110,11 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 2)
+			atest.PreCheck(t)
+			atest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -146,7 +147,7 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 							AllowEgressFromLocalClassicLinkToRemoteVpc: aws.Bool(false),
 							AllowEgressFromLocalVpcToRemoteClassicLink: aws.Bool(false),
 						},
-						testAccAwsRegionProviderFunc(testAccGetAlternateRegion(), &providers),
+						atest.RegionProviderFunc(atest.AlternateRegion(), &providers),
 					),
 				),
 			},
@@ -188,7 +189,7 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 							AllowEgressFromLocalClassicLinkToRemoteVpc: aws.Bool(false),
 							AllowEgressFromLocalVpcToRemoteClassicLink: aws.Bool(false),
 						},
-						testAccAwsRegionProviderFunc(testAccGetAlternateRegion(), &providers),
+						atest.RegionProviderFunc(atest.AlternateRegion(), &providers),
 					),
 				),
 			},
@@ -205,11 +206,11 @@ func TestAccAWSVpcPeeringConnectionOptions_sameRegionDifferentAccount(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			atest.PreCheck(t)
+			atest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -291,7 +292,7 @@ resource "aws_vpc_peering_connection_options" "test" {
 }
 
 func testAccVpcPeeringConnectionOptionsConfig_differentRegion_sameAccount(rName string, dnsResolution, dnsResolutionPeer bool) string {
-	return composeConfig(testAccAlternateRegionProviderConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(atest.ConfigProviderAlternateRegion(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
@@ -357,11 +358,11 @@ resource "aws_vpc_peering_connection_options" "peer" {
     allow_remote_vpc_dns_resolution = %[4]t
   }
 }
-`, rName, testAccGetAlternateRegion(), dnsResolution, dnsResolutionPeer))
+`, rName, atest.AlternateRegion(), dnsResolution, dnsResolutionPeer))
 }
 
 func testAccVpcPeeringConnectionOptionsConfig_sameRegion_differentAccount(rName string) string {
-	return composeConfig(testAccAlternateAccountProviderConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(atest.ConfigProviderAlternateAccount(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
