@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsDelegationSet() *schema.Resource {
@@ -32,7 +33,7 @@ func dataSourceAwsDelegationSet() *schema.Resource {
 }
 
 func dataSourceAwsDelegationSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*awsprovider.AWSClient).Route53Conn
 
 	dSetID := d.Get("id").(string)
 
