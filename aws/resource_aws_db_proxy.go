@@ -7,10 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDbProxy() *schema.Resource {
@@ -61,7 +63,7 @@ func resourceAwsDbProxy() *schema.Resource {
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
@@ -99,7 +101,7 @@ func resourceAwsDbProxy() *schema.Resource {
 						"secret_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -117,8 +119,8 @@ func resourceAwsDbProxy() *schema.Resource {
 }
 
 func resourceAwsDbProxyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	params := rds.CreateDBProxyInput{
@@ -177,7 +179,7 @@ func resourceAwsDbProxyRefreshFunc(conn *rds.RDS, proxyName string) resource.Sta
 		})
 
 		if err != nil {
-			if isAWSErr(err, rds.ErrCodeDBProxyNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBProxyNotFoundFault, "") {
 				return 42, "", nil
 			}
 			return 42, "", err
@@ -246,9 +248,9 @@ func flattenDbProxyAuths(userAuthConfigs []*rds.UserAuthConfigInfo) []interface{
 }
 
 func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	params := rds.DescribeDBProxiesInput{
 		DBProxyName: aws.String(d.Id()),
@@ -256,7 +258,7 @@ func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.DescribeDBProxies(&params)
 	if err != nil {
-		if isAWSErr(err, rds.ErrCodeDBProxyNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBProxyNotFoundFault, "") {
 			log.Printf("[WARN] DB Proxy (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -314,7 +316,7 @@ func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsDbProxyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	if d.HasChanges(
 		"auth",
@@ -380,7 +382,7 @@ func resourceAwsDbProxyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsDbProxyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	params := rds.DeleteDBProxyInput{
 		DBProxyName: aws.String(d.Id()),
