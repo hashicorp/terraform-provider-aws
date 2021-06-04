@@ -13,9 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/waiter"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGlueDevEndpoint() *schema.Resource {
@@ -94,7 +95,7 @@ func resourceAwsGlueDevEndpoint() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"security_configuration": {
 				Type:     schema.TypeString,
@@ -161,8 +162,8 @@ func resourceAwsGlueDevEndpoint() *schema.Resource {
 }
 
 func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 
@@ -261,9 +262,9 @@ func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsGlueDevEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	request := &glue.GetDevEndpointInput{
 		EndpointName: aws.String(d.Id()),
@@ -287,10 +288,10 @@ func resourceAwsGlueDevEndpointRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	endpointARN := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "glue",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("devEndpoint/%s", d.Id()),
 	}.String()
 
@@ -407,7 +408,7 @@ func resourceAwsGlueDevEndpointRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	input := &glue.UpdateDevEndpointInput{
 		EndpointName: aws.String(d.Get("name").(string)),
@@ -483,7 +484,7 @@ func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 			_, err := conn.UpdateDevEndpoint(input)
 			if err != nil {
-				if isAWSErr(err, glue.ErrCodeInvalidInputException, "another concurrent update operation") {
+				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "another concurrent update operation") {
 					return resource.RetryableError(err)
 				}
 
@@ -512,7 +513,7 @@ func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsDevEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	deleteOpts := &glue.DeleteDevEndpointInput{
 		EndpointName: aws.String(d.Id()),
