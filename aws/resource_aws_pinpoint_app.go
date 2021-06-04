@@ -6,10 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsPinpointApp() *schema.Resource {
@@ -146,8 +148,8 @@ func resourceAwsPinpointApp() *schema.Resource {
 }
 
 func resourceAwsPinpointAppCreate(d *schema.ResourceData, meta interface{}) error {
-	pinpointconn := meta.(*AWSClient).pinpointconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	PinpointConn := meta.(*awsprovider.AWSClient).PinpointConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
@@ -172,7 +174,7 @@ func resourceAwsPinpointAppCreate(d *schema.ResourceData, meta interface{}) erro
 		req.CreateApplicationRequest.Tags = tags.IgnoreAws().PinpointTags()
 	}
 
-	output, err := pinpointconn.CreateApp(req)
+	output, err := PinpointConn.CreateApp(req)
 	if err != nil {
 		return fmt.Errorf("error creating Pinpoint app: %s", err)
 	}
@@ -184,7 +186,7 @@ func resourceAwsPinpointAppCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsPinpointAppUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*awsprovider.AWSClient).PinpointConn
 
 	appSettings := &pinpoint.WriteApplicationSettingsRequest{}
 
@@ -229,9 +231,9 @@ func resourceAwsPinpointAppUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsPinpointAppRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).PinpointConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading Pinpoint App Attributes for %s", d.Id())
 
@@ -239,7 +241,7 @@ func resourceAwsPinpointAppRead(d *schema.ResourceData, meta interface{}) error 
 		ApplicationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Pinpoint App (%s) not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
@@ -252,7 +254,7 @@ func resourceAwsPinpointAppRead(d *schema.ResourceData, meta interface{}) error 
 		ApplicationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Pinpoint App (%s) not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
@@ -297,14 +299,14 @@ func resourceAwsPinpointAppRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsPinpointAppDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*awsprovider.AWSClient).PinpointConn
 
 	log.Printf("[DEBUG] Pinpoint Delete App: %s", d.Id())
 	_, err := conn.DeleteApp(&pinpoint.DeleteAppInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
