@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsRouteTableAssociation() *schema.Resource {
@@ -48,7 +49,7 @@ func resourceAwsRouteTableAssociation() *schema.Resource {
 }
 
 func resourceAwsRouteTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	associationOpts := ec2.AssociateRouteTableInput{
 		RouteTableId: aws.String(d.Get("route_table_id").(string)),
@@ -98,7 +99,7 @@ func resourceAwsRouteTableAssociationCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	// Get the routing table that this association belongs to
 	rtID := d.Get("route_table_id").(string)
@@ -138,7 +139,7 @@ func resourceAwsRouteTableAssociationRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsRouteTableAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	log.Printf(
 		"[INFO] Creating route table association: %s => %s",
@@ -169,7 +170,7 @@ func resourceAwsRouteTableAssociationUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Deleting route table association: %s", d.Id())
 	_, err := conn.DisassociateRouteTable(&ec2.DisassociateRouteTableInput{
@@ -198,10 +199,10 @@ func resourceAwsRouteTableAssociationImport(d *schema.ResourceData, meta interfa
 
 	log.Printf("[DEBUG] Importing route table association, target: %s, route table: %s", targetID, routeTableID)
 
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	input := &ec2.DescribeRouteTablesInput{}
-	input.Filters = buildEC2AttributeFilterList(
+	input.Filters = BuildEC2AttributeFilterList(
 		map[string]string{
 			"association.route-table-id": routeTableID,
 		},
