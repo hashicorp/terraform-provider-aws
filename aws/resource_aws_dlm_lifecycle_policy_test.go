@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dlm"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSDlmLifecyclePolicy_basic(t *testing.T) {
@@ -17,16 +20,16 @@ func TestAccAWSDlmLifecyclePolicy_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDlm(t) },
-		ErrorCheck:   testAccErrorCheck(t, dlm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDlm(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dlm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: dlmLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dlmLifecyclePolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkDlmLifecyclePolicyExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "dlm", regexp.MustCompile(`policy/.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "dlm", regexp.MustCompile(`policy/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-basic"),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
@@ -54,9 +57,9 @@ func TestAccAWSDlmLifecyclePolicy_Full(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDlm(t) },
-		ErrorCheck:   testAccErrorCheck(t, dlm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDlm(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dlm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: dlmLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -104,9 +107,9 @@ func TestAccAWSDlmLifecyclePolicy_Tags(t *testing.T) {
 	resourceName := "aws_dlm_lifecycle_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDlm(t) },
-		ErrorCheck:   testAccErrorCheck(t, dlm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDlm(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dlm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: dlmLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -144,7 +147,7 @@ func TestAccAWSDlmLifecyclePolicy_Tags(t *testing.T) {
 }
 
 func dlmLifecyclePolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).dlmconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).DLMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dlm_lifecycle_policy" {
@@ -157,7 +160,7 @@ func dlmLifecyclePolicyDestroy(s *terraform.State) error {
 
 		out, err := conn.GetLifecyclePolicy(&input)
 
-		if isAWSErr(err, dlm.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, dlm.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 
@@ -180,7 +183,7 @@ func checkDlmLifecyclePolicyExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dlmconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DLMConn
 
 		input := dlm.GetLifecyclePolicyInput{
 			PolicyId: aws.String(rs.Primary.ID),
@@ -197,13 +200,13 @@ func checkDlmLifecyclePolicyExists(name string) resource.TestCheckFunc {
 }
 
 func testAccPreCheckAWSDlm(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).dlmconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).DLMConn
 
 	input := &dlm.GetLifecyclePoliciesInput{}
 
 	_, err := conn.GetLifecyclePolicies(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
