@@ -8,10 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsNeptuneClusterInstance() *schema.Resource {
@@ -191,8 +193,8 @@ func resourceAwsNeptuneClusterInstance() *schema.Resource {
 }
 
 func resourceAwsNeptuneClusterInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).NeptuneConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := &neptune.CreateDBInstanceInput{
@@ -246,7 +248,7 @@ func resourceAwsNeptuneClusterInstanceCreate(d *schema.ResourceData, meta interf
 		var err error
 		resp, err = conn.CreateDBInstance(createOpts)
 		if err != nil {
-			if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -281,7 +283,7 @@ func resourceAwsNeptuneClusterInstanceCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsNeptuneClusterInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	db, err := resourceAwsNeptuneInstanceRetrieve(d.Id(), meta.(*AWSClient).neptuneconn)
+	db, err := resourceAwsNeptuneInstanceRetrieve(d.Id(), meta.(*awsprovider.AWSClient).NeptuneConn)
 	if err != nil {
 		return fmt.Errorf("Error on retrieving Neptune Cluster Instance (%s): %s", d.Id(), err)
 	}
@@ -296,9 +298,9 @@ func resourceAwsNeptuneClusterInstanceRead(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Cluster identifier is missing from instance (%s)", d.Id())
 	}
 
-	conn := meta.(*AWSClient).neptuneconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).NeptuneConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeDBClusters(&neptune.DescribeDBClustersInput{
 		DBClusterIdentifier: db.DBClusterIdentifier,
@@ -377,7 +379,7 @@ func resourceAwsNeptuneClusterInstanceRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsNeptuneClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*awsprovider.AWSClient).NeptuneConn
 	requestUpdate := false
 
 	req := &neptune.ModifyDBInstanceInput{
@@ -421,7 +423,7 @@ func resourceAwsNeptuneClusterInstanceUpdate(d *schema.ResourceData, meta interf
 		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.ModifyDBInstance(req)
 			if err != nil {
-				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -464,7 +466,7 @@ func resourceAwsNeptuneClusterInstanceUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsNeptuneClusterInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*awsprovider.AWSClient).NeptuneConn
 
 	log.Printf("[DEBUG] Neptune Cluster Instance destroy: %v", d.Id())
 
@@ -472,7 +474,7 @@ func resourceAwsNeptuneClusterInstanceDelete(d *schema.ResourceData, meta interf
 
 	log.Printf("[DEBUG] Neptune Cluster Instance destroy configuration: %s", opts)
 	if _, err := conn.DeleteDBInstance(&opts); err != nil {
-		if isAWSErr(err, neptune.ErrCodeDBInstanceNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBInstanceNotFoundFault, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Neptune cluster instance %q: %s", d.Id(), err)
@@ -542,7 +544,7 @@ func resourceAwsNeptuneInstanceRetrieve(id string, conn *neptune.Neptune) (*nept
 
 	resp, err := conn.DescribeDBInstances(&opts)
 	if err != nil {
-		if isAWSErr(err, neptune.ErrCodeDBInstanceNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBInstanceNotFoundFault, "") {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("Error retrieving Neptune Instances: %s", err)
