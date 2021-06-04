@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsSnsTopic() *schema.Resource {
@@ -28,7 +29,7 @@ func dataSourceAwsSnsTopic() *schema.Resource {
 }
 
 func dataSourceAwsSnsTopicsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).snsconn
+	conn := meta.(*awsprovider.AWSClient).SNSConn
 
 	resourceArn := ""
 	name := d.Get("name").(string)
