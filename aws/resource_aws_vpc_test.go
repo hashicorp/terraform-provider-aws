@@ -13,7 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // add sweeper to delete known test vpcs
@@ -37,14 +39,14 @@ func init() {
 }
 
 func testSweepVPCs(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).ec2conn
-	sweepResources := make([]*testSweepResource, 0)
+	conn := client.(*awsprovider.AWSClient).EC2Conn
+	sweepResources := make([]*atest.TestSweepResource, 0)
 	var errs *multierror.Error
 
 	input := &ec2.DescribeVpcsInput{}
@@ -70,7 +72,7 @@ func testSweepVPCs(region string) error {
 			d := r.Data(nil)
 			d.SetId(id)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, atest.NewTestSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -80,11 +82,11 @@ func testSweepVPCs(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing EC2 VPCs for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = atest.TestSweepResourceOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 VPCs for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if atest.SweepSkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping EC2 VPCs sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -97,9 +99,9 @@ func TestAccAWSVpc_basic(t *testing.T) {
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -107,7 +109,7 @@ func TestAccAWSVpc_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists(resourceName, &vpc),
 					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc/vpc-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc/vpc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
 					resource.TestMatchResourceAttr(resourceName, "default_route_table_id", regexp.MustCompile(`^rtb-.+`)),
@@ -117,7 +119,7 @@ func TestAccAWSVpc_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
 					resource.TestMatchResourceAttr(resourceName, "main_route_table_id", regexp.MustCompile(`^rtb-.+`)),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					atest.CheckAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 			{
@@ -134,9 +136,9 @@ func TestAccAWSVpc_disappears(t *testing.T) {
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -157,14 +159,14 @@ func TestAccAWSVpc_defaultTags_providerOnly(t *testing.T) {
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesInternal(&providers),
 		CheckDestroy:      testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+				Config: atest.ComposeConfig(
+					atest.ConfigProviderDefaultTags_Tags1("providerkey1", "providervalue1"),
 					testAccVpcConfig,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -180,8 +182,8 @@ func TestAccAWSVpc_defaultTags_providerOnly(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags2("providerkey1", "providervalue1", "providerkey2", "providervalue2"),
+				Config: atest.ComposeConfig(
+					atest.ConfigProviderDefaultTags_Tags2("providerkey1", "providervalue1", "providerkey2", "providervalue2"),
 					testAccVpcConfig,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -193,8 +195,8 @@ func TestAccAWSVpc_defaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("providerkey1", "value1"),
+				Config: atest.ComposeConfig(
+					atest.ConfigProviderDefaultTags_Tags1("providerkey1", "value1"),
 					testAccVpcConfig,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -214,9 +216,9 @@ func TestAccAWSVpc_defaultTags_updateToProviderOnly(t *testing.T) {
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesInternal(&providers),
 		CheckDestroy:      testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -230,8 +232,8 @@ func TestAccAWSVpc_defaultTags_updateToProviderOnly(t *testing.T) {
 				),
 			},
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("key1", "value1"),
+				Config: atest.ComposeConfig(
+					atest.ConfigProviderDefaultTags_Tags1("key1", "value1"),
 					testAccVpcConfig,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -256,14 +258,14 @@ func TestAccAWSVpc_defaultTags_updateToResourceOnly(t *testing.T) {
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesInternal(&providers),
 		CheckDestroy:      testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("key1", "value1"),
+				Config: atest.ComposeConfig(
+					atest.ConfigProviderDefaultTags_Tags1("key1", "value1"),
 					testAccVpcConfig,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -298,14 +300,14 @@ func TestAccAWSVpc_defaultTags_providerAndResource_nonOverlappingTag(t *testing.
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesInternal(&providers),
 		CheckDestroy:      testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+				Config: atest.ComposeConfig(
+					atest.ConfigProviderDefaultTags_Tags1("providerkey1", "providervalue1"),
 					testAccAWSVPCConfigTags1("resourcekey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -323,8 +325,8 @@ func TestAccAWSVpc_defaultTags_providerAndResource_nonOverlappingTag(t *testing.
 				ImportStateVerify: true,
 			},
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+				Config: atest.ComposeConfig(
+					atest.ConfigProviderDefaultTags_Tags1("providerkey1", "providervalue1"),
 					testAccAWSVPCConfigTags2("resourcekey1", "resourcevalue1", "resourcekey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -339,8 +341,8 @@ func TestAccAWSVpc_defaultTags_providerAndResource_nonOverlappingTag(t *testing.
 				),
 			},
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("providerkey2", "providervalue2"),
+				Config: atest.ComposeConfig(
+					atest.ConfigProviderDefaultTags_Tags1("providerkey2", "providervalue2"),
 					testAccAWSVPCConfigTags1("resourcekey3", "resourcevalue3"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -362,14 +364,14 @@ func TestAccAWSVpc_defaultTags_providerAndResource_overlappingTag(t *testing.T) 
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesInternal(&providers),
 		CheckDestroy:      testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
+				Config: atest.ComposeConfig(
+					atest.ConfigProviderDefaultTags_Tags1("overlapkey1", "providervalue1"),
 					testAccAWSVPCConfigTags1("overlapkey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -385,8 +387,8 @@ func TestAccAWSVpc_defaultTags_providerAndResource_overlappingTag(t *testing.T) 
 				ImportStateVerify: true,
 			},
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags2("overlapkey1", "providervalue1", "overlapkey2", "providervalue2"),
+				Config: atest.ComposeConfig(
+					atest.ConfigProviderDefaultTags_Tags2("overlapkey1", "providervalue1", "overlapkey2", "providervalue2"),
 					testAccAWSVPCConfigTags2("overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -400,8 +402,8 @@ func TestAccAWSVpc_defaultTags_providerAndResource_overlappingTag(t *testing.T) 
 				),
 			},
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
+				Config: atest.ComposeConfig(
+					atest.ConfigProviderDefaultTags_Tags1("overlapkey1", "providervalue1"),
 					testAccAWSVPCConfigTags1("overlapkey1", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -420,14 +422,14 @@ func TestAccAWSVpc_defaultTags_providerAndResource_duplicateTag(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
-					testAccAWSProviderConfigDefaultTags_Tags1("overlapkey", "overlapvalue"),
+				Config: atest.ComposeConfig(
+					atest.ConfigProviderDefaultTags_Tags1("overlapkey", "overlapvalue"),
 					testAccAWSVPCConfigTags1("overlapkey", "overlapvalue"),
 				),
 				PlanOnly:    true,
@@ -449,9 +451,9 @@ func TestAccAWSVpc_DynamicResourceTagsMergedWithLocals_IgnoreChanges(t *testing.
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesInternal(&providers),
 		CheckDestroy:      testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -505,9 +507,9 @@ func TestAccAWSVpc_DynamicResourceTags_IgnoreChanges(t *testing.T) {
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesInternal(&providers),
 		CheckDestroy:      testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -551,9 +553,9 @@ func TestAccAWSVpc_defaultAndIgnoreTags(t *testing.T) {
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesInternal(&providers),
 		CheckDestroy:      testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -565,15 +567,15 @@ func TestAccAWSVpc_defaultAndIgnoreTags(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: composeConfig(
-					testAccProviderConfigDefaultAndIgnoreTagsKeyPrefixes1("defaultkey1", "defaultvalue1", "defaultkey"),
+				Config: atest.ComposeConfig(
+					atest.ConfigProviderDefaultAndIgnoreTagsKeyPrefixes1("defaultkey1", "defaultvalue1", "defaultkey"),
 					testAccAWSVPCConfigTags1("key1", "value1"),
 				),
 				PlanOnly: true,
 			},
 			{
-				Config: composeConfig(
-					testAccProviderConfigDefaultAndIgnoreTagsKeys1("defaultkey1", "defaultvalue1"),
+				Config: atest.ComposeConfig(
+					atest.ConfigProviderDefaultAndIgnoreTagsKeys1("defaultkey1", "defaultvalue1"),
 					testAccAWSVPCConfigTags1("key1", "value1"),
 				),
 				PlanOnly: true,
@@ -588,9 +590,9 @@ func TestAccAWSVpc_ignoreTags(t *testing.T) {
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesInternal(&providers),
 		CheckDestroy:      testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -602,11 +604,11 @@ func TestAccAWSVpc_ignoreTags(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config:   testAccProviderConfigIgnoreTagsKeyPrefixes1("ignorekey") + testAccAWSVPCConfigTags1("key1", "value1"),
+				Config:   atest.ConfigProviderIgnoreTagsKeyPrefixes1("ignorekey") + testAccAWSVPCConfigTags1("key1", "value1"),
 				PlanOnly: true,
 			},
 			{
-				Config:   testAccProviderConfigIgnoreTagsKeys1("ignorekey1") + testAccAWSVPCConfigTags1("key1", "value1"),
+				Config:   atest.ConfigProviderIgnoreTagsKeys1("ignorekey1") + testAccAWSVPCConfigTags1("key1", "value1"),
 				PlanOnly: true,
 			},
 		},
@@ -618,9 +620,9 @@ func TestAccAWSVpc_AssignGeneratedIpv6CidrBlock(t *testing.T) {
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -671,9 +673,9 @@ func TestAccAWSVpc_Tenancy(t *testing.T) {
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -713,9 +715,9 @@ func TestAccAWSVpc_tags(t *testing.T) {
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -757,9 +759,9 @@ func TestAccAWSVpc_update(t *testing.T) {
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -782,7 +784,7 @@ func TestAccAWSVpc_update(t *testing.T) {
 }
 
 func testAccCheckVpcDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc" {
@@ -817,7 +819,7 @@ func testAccCheckVpcDestroy(s *terraform.State) error {
 
 func testAccCheckVpcUpdateTags(vpc *ec2.Vpc, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 		return keyvaluetags.Ec2UpdateTags(conn, aws.StringValue(vpc.VpcId), oldTags, newTags)
 	}
@@ -864,7 +866,7 @@ func testAccCheckVpcExists(n string, vpc *ec2.Vpc) resource.TestCheckFunc {
 			return fmt.Errorf("No VPC ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 		DescribeVpcOpts := &ec2.DescribeVpcsInput{
 			VpcIds: []*string{aws.String(rs.Primary.ID)},
 		}
@@ -884,7 +886,7 @@ func testAccCheckVpcExists(n string, vpc *ec2.Vpc) resource.TestCheckFunc {
 
 func testAccCheckVpcDisappears(vpc *ec2.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 		input := &ec2.DeleteVpcInput{
 			VpcId: vpc.VpcId,
@@ -902,9 +904,9 @@ func TestAccAWSVpc_bothDnsOptionsSet(t *testing.T) {
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -930,9 +932,9 @@ func TestAccAWSVpc_DisabledDnsSupport(t *testing.T) {
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -956,9 +958,9 @@ func TestAccAWSVpc_classiclinkOptionSet(t *testing.T) {
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -982,9 +984,9 @@ func TestAccAWSVpc_classiclinkDnsSupportOptionSet(t *testing.T) {
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
