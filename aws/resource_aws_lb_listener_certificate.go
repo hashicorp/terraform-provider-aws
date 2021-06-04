@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfelbv2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elbv2"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsLbListenerCertificate() *schema.Resource {
@@ -26,20 +28,20 @@ func resourceAwsLbListenerCertificate() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"certificate_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 		},
 	}
 }
 
 func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*awsprovider.AWSClient).ELBV2Conn
 
 	listenerArn := d.Get("listener_arn").(string)
 	certificateArn := d.Get("certificate_arn").(string)
@@ -59,7 +61,7 @@ func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interfa
 		_, err := conn.AddListenerCertificates(params)
 
 		// Retry for IAM Server Certificate eventual consistency
-		if isAWSErr(err, elbv2.ErrCodeCertificateNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeCertificateNotFoundException, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -84,7 +86,7 @@ func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsLbListenerCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*awsprovider.AWSClient).ELBV2Conn
 
 	listenerArn, certificateArn, err := tfelbv2.ListenerCertificateParseID(d.Id())
 	if err != nil {
@@ -130,7 +132,7 @@ func resourceAwsLbListenerCertificateRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsLbListenerCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*awsprovider.AWSClient).ELBV2Conn
 
 	certificateArn := d.Get("certificate_arn").(string)
 	listenerArn := d.Get("listener_arn").(string)
@@ -148,10 +150,10 @@ func resourceAwsLbListenerCertificateDelete(d *schema.ResourceData, meta interfa
 
 	_, err := conn.RemoveListenerCertificates(params)
 	if err != nil {
-		if isAWSErr(err, elbv2.ErrCodeCertificateNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeCertificateNotFoundException, "") {
 			return nil
 		}
-		if isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeListenerNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error removing LB Listener Certificate: %w", err)
