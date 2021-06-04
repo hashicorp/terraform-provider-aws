@@ -13,10 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appmesh/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appmesh/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsAppmeshGatewayRoute() *schema.Resource {
@@ -299,8 +300,8 @@ func resourceAwsAppmeshGatewayRoute() *schema.Resource {
 }
 
 func resourceAwsAppmeshGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).AppMeshConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &appmesh.CreateGatewayRouteInput{
@@ -327,9 +328,9 @@ func resourceAwsAppmeshGatewayRouteCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsAppmeshGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).AppMeshConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	var gatewayRoute *appmesh.GatewayRouteData
 
@@ -418,7 +419,7 @@ func resourceAwsAppmeshGatewayRouteRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsAppmeshGatewayRouteUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*awsprovider.AWSClient).AppMeshConn
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateGatewayRouteInput{
@@ -452,7 +453,7 @@ func resourceAwsAppmeshGatewayRouteUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsAppmeshGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*awsprovider.AWSClient).AppMeshConn
 
 	log.Printf("[DEBUG] Deleting App Mesh gateway route (%s)", d.Id())
 	_, err := conn.DeleteGatewayRoute(&appmesh.DeleteGatewayRouteInput{
@@ -461,7 +462,7 @@ func resourceAwsAppmeshGatewayRouteDelete(d *schema.ResourceData, meta interface
 		VirtualGatewayName: aws.String(d.Get("virtual_gateway_name").(string)),
 	})
 
-	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
@@ -483,7 +484,7 @@ func resourceAwsAppmeshGatewayRouteImport(d *schema.ResourceData, meta interface
 	name := parts[2]
 	log.Printf("[DEBUG] Importing App Mesh gateway route %s from mesh %s/virtual gateway %s ", name, mesh, vgName)
 
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*awsprovider.AWSClient).AppMeshConn
 
 	gatewayRoute, err := finder.GatewayRoute(conn, mesh, vgName, name, "")
 
