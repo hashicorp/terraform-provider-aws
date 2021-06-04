@@ -7,27 +7,29 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSEcrReplicationConfiguration_basic(t *testing.T) {
 	resourceName := "aws_ecr_replication_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrReplicationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrReplicationConfiguration(testAccGetAlternateRegion()),
+				Config: testAccAWSEcrReplicationConfiguration(atest.AlternateRegion()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrReplicationConfigurationExists(resourceName),
-					testAccCheckResourceAttrAccountID(resourceName, "registry_id"),
+					atest.CheckAttrAccountID(resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.0.region", testAccGetAlternateRegion()),
-					testAccCheckResourceAttrAccountID(resourceName, "replication_configuration.0.rule.0.destination.0.registry_id"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.0.region", atest.AlternateRegion()),
+					atest.CheckAttrAccountID(resourceName, "replication_configuration.0.rule.0.destination.0.registry_id"),
 				),
 			},
 			{
@@ -46,7 +48,7 @@ func testAccCheckAWSEcrReplicationConfigurationExists(name string) resource.Test
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ecrconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ECRConn
 		out, err := conn.DescribeRegistry(&ecr.DescribeRegistryInput{})
 		if err != nil {
 			return fmt.Errorf("ECR replication rules not found: %w", err)
@@ -61,7 +63,7 @@ func testAccCheckAWSEcrReplicationConfigurationExists(name string) resource.Test
 }
 
 func testAccCheckAWSEcrReplicationConfigurationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ecrconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ECRConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecr_replication_configuration" {
