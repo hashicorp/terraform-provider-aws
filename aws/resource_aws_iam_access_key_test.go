@@ -13,7 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/vault/helper/pgpkeys"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSAccessKey_basic(t *testing.T) {
@@ -21,9 +23,9 @@ func TestAccAWSAccessKey_basic(t *testing.T) {
 	rName := fmt.Sprintf("test-user-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAccessKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -31,7 +33,7 @@ func TestAccAWSAccessKey_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAccessKeyExists("aws_iam_access_key.a_key", &conf),
 					testAccCheckAWSAccessKeyAttributes(&conf, "Active"),
-					testAccCheckResourceAttrRfc3339("aws_iam_access_key.a_key", "create_date"),
+					atest.CheckAttrRfc3339("aws_iam_access_key.a_key", "create_date"),
 					resource.TestCheckResourceAttrSet("aws_iam_access_key.a_key", "secret"),
 				),
 			},
@@ -50,9 +52,9 @@ func TestAccAWSAccessKey_encrypted(t *testing.T) {
 	rName := fmt.Sprintf("test-user-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAccessKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -84,9 +86,9 @@ func TestAccAWSAccessKey_Status(t *testing.T) {
 	rName := fmt.Sprintf("test-user-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAccessKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -121,7 +123,7 @@ func TestAccAWSAccessKey_Status(t *testing.T) {
 }
 
 func testAccCheckAWSAccessKeyDestroy(s *terraform.State) error {
-	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+	IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_access_key" {
@@ -129,7 +131,7 @@ func testAccCheckAWSAccessKeyDestroy(s *terraform.State) error {
 		}
 
 		// Try to get access key
-		resp, err := iamconn.ListAccessKeys(&iam.ListAccessKeysInput{
+		resp, err := IAMConn.ListAccessKeys(&iam.ListAccessKeysInput{
 			UserName: aws.String(rs.Primary.ID),
 		})
 		if err == nil {
@@ -163,10 +165,10 @@ func testAccCheckAWSAccessKeyExists(n string, res *iam.AccessKeyMetadata) resour
 			return fmt.Errorf("No Role name is set")
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 		name := rs.Primary.Attributes["user"]
 
-		resp, err := iamconn.ListAccessKeys(&iam.ListAccessKeysInput{
+		resp, err := IAMConn.ListAccessKeys(&iam.ListAccessKeysInput{
 			UserName: aws.String(name),
 		})
 		if err != nil {
