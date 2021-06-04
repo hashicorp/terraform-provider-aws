@@ -8,11 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEc2TransitGateway() *schema.Resource {
@@ -116,8 +118,8 @@ func resourceAwsEc2TransitGateway() *schema.Resource {
 }
 
 func resourceAwsEc2TransitGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateTransitGatewayInput{
@@ -155,13 +157,13 @@ func resourceAwsEc2TransitGatewayCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsEc2TransitGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	transitGateway, err := ec2DescribeTransitGateway(conn, d.Id())
 
-	if isAWSErr(err, "InvalidTransitGatewayID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayID.NotFound", "") {
 		log.Printf("[WARN] EC2 Transit Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -215,7 +217,7 @@ func resourceAwsEc2TransitGatewayRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsEc2TransitGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	modifyTransitGatewayInput := &ec2.ModifyTransitGatewayInput{}
 	transitGatewayModified := false
@@ -271,7 +273,7 @@ func resourceAwsEc2TransitGatewayUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsEc2TransitGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	input := &ec2.DeleteTransitGatewayInput{
 		TransitGatewayId: aws.String(d.Id()),
@@ -281,19 +283,19 @@ func resourceAwsEc2TransitGatewayDelete(d *schema.ResourceData, meta interface{}
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteTransitGateway(input)
 
-		if isAWSErr(err, "IncorrectState", "has non-deleted Transit Gateway Attachments") {
+		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Transit Gateway Attachments") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, "IncorrectState", "has non-deleted DirectConnect Gateway Attachments") {
+		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted DirectConnect Gateway Attachments") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, "IncorrectState", "has non-deleted VPN Attachments") {
+		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted VPN Attachments") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, "IncorrectState", "has non-deleted Transit Gateway Cross Region Peering Attachments") {
+		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Transit Gateway Cross Region Peering Attachments") {
 			return resource.RetryableError(err)
 		}
 
@@ -308,7 +310,7 @@ func resourceAwsEc2TransitGatewayDelete(d *schema.ResourceData, meta interface{}
 		_, err = conn.DeleteTransitGateway(input)
 	}
 
-	if isAWSErr(err, "InvalidTransitGatewayID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayID.NotFound", "") {
 		return nil
 	}
 
