@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSEbsSnapshotCopy_basic(t *testing.T) {
@@ -17,9 +20,9 @@ func TestAccAWSEbsSnapshotCopy_basic(t *testing.T) {
 	resourceName := "aws_ebs_snapshot_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEbsSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -27,7 +30,7 @@ func TestAccAWSEbsSnapshotCopy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEbsSnapshotCopyExists(resourceName, &snapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
+					atest.MatchAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
 				),
 			},
 		},
@@ -39,9 +42,9 @@ func TestAccAWSEbsSnapshotCopy_tags(t *testing.T) {
 	resourceName := "aws_ebs_snapshot_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEbsSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -78,9 +81,9 @@ func TestAccAWSEbsSnapshotCopy_withDescription(t *testing.T) {
 	resourceName := "aws_ebs_snapshot_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEbsSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -101,11 +104,11 @@ func TestAccAWSEbsSnapshotCopy_withRegions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 2)
+			atest.PreCheck(t)
+			atest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckEbsSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -125,9 +128,9 @@ func TestAccAWSEbsSnapshotCopy_withKms(t *testing.T) {
 	resourceName := "aws_ebs_snapshot_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEbsSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -146,16 +149,16 @@ func TestAccAWSEbsSnapshotCopy_disappears(t *testing.T) {
 	resourceName := "aws_ebs_snapshot_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEbsSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsSnapshotCopyConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEbsSnapshotCopyExists(resourceName, &snapshot),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEbsSnapshotCopy(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsEbsSnapshotCopy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -164,7 +167,7 @@ func TestAccAWSEbsSnapshotCopy_disappears(t *testing.T) {
 }
 
 func testAccCheckEbsSnapshotCopyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ebs_snapshot_copy" {
@@ -175,7 +178,7 @@ func testAccCheckEbsSnapshotCopyDestroy(s *terraform.State) error {
 			SnapshotIds: []*string{aws.String(rs.Primary.ID)},
 		})
 
-		if isAWSErr(err, "InvalidSnapshot.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidSnapshot.NotFound", "") {
 			continue
 		}
 
@@ -204,7 +207,7 @@ func testAccCheckEbsSnapshotCopyExists(n string, v *ec2.Snapshot) resource.TestC
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 		input := &ec2.DescribeSnapshotsInput{
 			SnapshotIds: []*string{aws.String(rs.Primary.ID)},
@@ -377,7 +380,7 @@ resource "aws_ebs_snapshot_copy" "test" {
 }
 `
 
-var testAccAwsEbsSnapshotCopyConfigWithRegions = testAccAlternateRegionProviderConfig() + `
+var testAccAwsEbsSnapshotCopyConfigWithRegions = atest.ConfigProviderAlternateRegion() + `
 data "aws_availability_zones" "alternate_available" {
   provider = "awsalternate"
   state    = "available"
