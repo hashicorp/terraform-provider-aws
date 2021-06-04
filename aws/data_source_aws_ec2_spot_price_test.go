@@ -7,22 +7,24 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsEc2SpotPriceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_spot_price.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEc2SpotPrice(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsEc2SpotPrice(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEc2SpotPriceDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "spot_price", regexp.MustCompile(`^\d+\.\d+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "spot_price_timestamp", regexp.MustCompile(rfc3339RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "spot_price_timestamp", regexp.MustCompile(atest.RFC3339RegexPattern)),
 				),
 			},
 		},
@@ -33,16 +35,16 @@ func TestAccAwsEc2SpotPriceDataSource_Filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_spot_price.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEc2SpotPrice(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAwsEc2SpotPrice(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEc2SpotPriceDataSourceFilterConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "spot_price", regexp.MustCompile(`^\d+\.\d+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "spot_price_timestamp", regexp.MustCompile(rfc3339RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "spot_price_timestamp", regexp.MustCompile(atest.RFC3339RegexPattern)),
 				),
 			},
 		},
@@ -50,7 +52,7 @@ func TestAccAwsEc2SpotPriceDataSource_Filter(t *testing.T) {
 }
 
 func testAccPreCheckAwsEc2SpotPrice(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	input := &ec2.DescribeSpotPriceHistoryInput{
 		MaxResults: aws.Int64(5),
@@ -58,7 +60,7 @@ func testAccPreCheckAwsEc2SpotPrice(t *testing.T) {
 
 	_, err := conn.DescribeSpotPriceHistory(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -68,7 +70,7 @@ func testAccPreCheckAwsEc2SpotPrice(t *testing.T) {
 }
 
 func testAccAwsEc2SpotPriceDataSourceConfig() string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), `
 data "aws_region" "current" {}
 
 data "aws_ec2_instance_type_offering" "test" {
@@ -92,7 +94,7 @@ data "aws_ec2_spot_price" "test" {
 }
 
 func testAccAwsEc2SpotPriceDataSourceFilterConfig() string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), `
 data "aws_region" "current" {}
 
 data "aws_ec2_instance_type_offering" "test" {
