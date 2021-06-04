@@ -12,9 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	tfservicecatalog "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // add sweeper to delete known test servicecat principal portfolio associations
@@ -27,14 +29,14 @@ func init() {
 }
 
 func testSweepServiceCatalogPrincipalPortfolioAssociations(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).scconn
-	sweepResources := make([]*testSweepResource, 0)
+	conn := client.(*awsprovider.AWSClient).ServiceCatalogConn
+	sweepResources := make([]*atest.TestSweepResource, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.ListPortfoliosInput{}
@@ -67,7 +69,7 @@ func testSweepServiceCatalogPrincipalPortfolioAssociations(region string) error 
 					d := r.Data(nil)
 					d.SetId(tfservicecatalog.PrincipalPortfolioAssociationID(tfservicecatalog.AcceptLanguageEnglish, aws.StringValue(principal.PrincipalARN), aws.StringValue(detail.Id)))
 
-					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+					sweepResources = append(sweepResources, atest.NewTestSweepResource(r, d, client))
 				}
 
 				return !lastPage
@@ -86,11 +88,11 @@ func testSweepServiceCatalogPrincipalPortfolioAssociations(region string) error 
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Principal Portfolio Associations for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = atest.TestSweepResourceOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Principal Portfolio Associations for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if atest.SweepSkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Principal Portfolio Associations sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -103,9 +105,9 @@ func TestAccAWSServiceCatalogPrincipalPortfolioAssociation_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, servicecatalog.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogPrincipalPortfolioAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -130,16 +132,16 @@ func TestAccAWSServiceCatalogPrincipalPortfolioAssociation_disappears(t *testing
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, servicecatalog.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogPrincipalPortfolioAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSServiceCatalogPrincipalPortfolioAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogPrincipalPortfolioAssociationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogPrincipalPortfolioAssociation(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsServiceCatalogPrincipalPortfolioAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -148,7 +150,7 @@ func TestAccAWSServiceCatalogPrincipalPortfolioAssociation_disappears(t *testing
 }
 
 func testAccCheckAwsServiceCatalogPrincipalPortfolioAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).scconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ServiceCatalogConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_principal_portfolio_association" {
@@ -189,7 +191,7 @@ func testAccCheckAwsServiceCatalogPrincipalPortfolioAssociationExists(resourceNa
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).scconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ServiceCatalogConn
 
 		_, err = waiter.PrincipalPortfolioAssociationReady(conn, acceptLanguage, principalARN, portfolioID)
 
@@ -229,7 +231,7 @@ resource "aws_servicecatalog_portfolio" "test" {
 }
 
 func testAccAWSServiceCatalogPrincipalPortfolioAssociationConfig_basic(rName string) string {
-	return composeConfig(testAccAWSServiceCatalogPrincipalPortfolioAssociationConfig_base(rName), `
+	return atest.ComposeConfig(testAccAWSServiceCatalogPrincipalPortfolioAssociationConfig_base(rName), `
 resource "aws_servicecatalog_principal_portfolio_association" "test" {
   portfolio_id  = aws_servicecatalog_portfolio.test.id
   principal_arn = aws_iam_role.test.arn
