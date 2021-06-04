@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSEbsVolumeDataSource_basic(t *testing.T) {
@@ -14,9 +15,9 @@ func TestAccAWSEbsVolumeDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsEbsVolumeDataSourceConfig,
@@ -39,9 +40,9 @@ func TestAccAWSEbsVolumeDataSource_multipleFilters(t *testing.T) {
 	dataSourceName := "data.aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsEbsVolumeDataSourceConfigWithMultipleFilters,
