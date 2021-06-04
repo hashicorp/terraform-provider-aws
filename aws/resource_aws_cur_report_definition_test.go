@@ -9,7 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/costandusagereportservice/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsCurReportDefinition_basic(t *testing.T) {
@@ -19,9 +21,9 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, costandusagereportservice.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccPreCheckCur(t) },
+		ErrorCheck:        atest.ErrorCheck(t, costandusagereportservice.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -55,9 +57,9 @@ func TestAccAwsCurReportDefinition_textOrCsv(t *testing.T) {
 	reportVersioning := "CREATE_NEW_REPORT"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, costandusagereportservice.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccPreCheckCur(t) },
+		ErrorCheck:        atest.ErrorCheck(t, costandusagereportservice.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -94,9 +96,9 @@ func TestAccAwsCurReportDefinition_parquet(t *testing.T) {
 	reportVersioning := "CREATE_NEW_REPORT"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, costandusagereportservice.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccPreCheckCur(t) },
+		ErrorCheck:        atest.ErrorCheck(t, costandusagereportservice.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -132,9 +134,9 @@ func TestAccAwsCurReportDefinition_athena(t *testing.T) {
 	reportVersioning := "OVERWRITE_REPORT"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, costandusagereportservice.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccPreCheckCur(t) },
+		ErrorCheck:        atest.ErrorCheck(t, costandusagereportservice.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -171,9 +173,9 @@ func TestAccAwsCurReportDefinition_refresh(t *testing.T) {
 	reportVersioning := "CREATE_NEW_REPORT"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, costandusagereportservice.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccPreCheckCur(t) },
+		ErrorCheck:        atest.ErrorCheck(t, costandusagereportservice.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -210,9 +212,9 @@ func TestAccAwsCurReportDefinition_overwrite(t *testing.T) {
 	reportVersioning := "OVERWRITE_REPORT"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, costandusagereportservice.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccPreCheckCur(t) },
+		ErrorCheck:        atest.ErrorCheck(t, costandusagereportservice.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -237,7 +239,7 @@ func TestAccAwsCurReportDefinition_overwrite(t *testing.T) {
 }
 
 func testAccCheckAwsCurReportDefinitionDestroy(s *terraform.State) error {
-	conn := testAccProviderCur.Meta().(*AWSClient).costandusagereportconn
+	conn := testAccProviderCur.Meta().(*awsprovider.AWSClient).CURConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cur_report_definition" {
@@ -261,7 +263,7 @@ func testAccCheckAwsCurReportDefinitionDestroy(s *terraform.State) error {
 
 func testAccCheckAwsCurReportDefinitionExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProviderCur.Meta().(*AWSClient).costandusagereportconn
+		conn := testAccProviderCur.Meta().(*awsprovider.AWSClient).CURConn
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -282,7 +284,7 @@ func testAccCheckAwsCurReportDefinitionExists(resourceName string) resource.Test
 }
 
 func testAccAwsCurReportDefinitionConfig_basic(reportName string, bucketName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccCurRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -352,7 +354,7 @@ func testAccAwsCurReportDefinitionConfig_additional(reportName string, bucketNam
 		artifactsStr = ""
 	}
 
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccCurRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
