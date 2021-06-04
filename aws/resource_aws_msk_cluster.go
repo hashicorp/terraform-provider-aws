@@ -9,12 +9,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/msk/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsMskCluster() *schema.Resource {
@@ -145,7 +147,7 @@ func resourceAwsMskCluster() *schema.Resource {
 										ForceNew: true,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
-											ValidateFunc: validateArn,
+											ValidateFunc: ValidateArn,
 										},
 									},
 								},
@@ -170,7 +172,7 @@ func resourceAwsMskCluster() *schema.Resource {
 						"arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"revision": {
 							Type:         schema.TypeInt,
@@ -197,7 +199,7 @@ func resourceAwsMskCluster() *schema.Resource {
 							Optional:     true,
 							Computed:     true,
 							ForceNew:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"encryption_in_transit": {
 							Type:             schema.TypeList,
@@ -376,8 +378,8 @@ func resourceAwsMskCluster() *schema.Resource {
 }
 
 func resourceAwsMskClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).KafkaConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &kafka.CreateClusterInput{
@@ -451,15 +453,15 @@ func waitForMskClusterCreation(conn *kafka.Kafka, arn string) error {
 }
 
 func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).KafkaConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	out, err := conn.DescribeCluster(&kafka.DescribeClusterInput{
 		ClusterArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, kafka.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] MSK Cluster (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -531,7 +533,7 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
+	conn := meta.(*awsprovider.AWSClient).KafkaConn
 
 	if d.HasChange("broker_node_group_info.0.ebs_volume_size") {
 		input := &kafka.UpdateBrokerStorageInput{
@@ -700,14 +702,14 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsMskClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
+	conn := meta.(*awsprovider.AWSClient).KafkaConn
 
 	log.Printf("[DEBUG] Deleting MSK cluster: %q", d.Id())
 	_, err := conn.DeleteCluster(&kafka.DeleteClusterInput{
 		ClusterArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, kafka.ErrCodeNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("failed deleting MSK cluster %q: %s", d.Id(), err)
@@ -1220,7 +1222,7 @@ func resourceAwsMskClusterDeleteWaiter(conn *kafka.Kafka, arn string) error {
 		_, err := conn.DescribeCluster(input)
 
 		if err != nil {
-			if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, kafka.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -1230,7 +1232,7 @@ func resourceAwsMskClusterDeleteWaiter(conn *kafka.Kafka, arn string) error {
 	})
 	if isResourceTimeoutError(err) {
 		_, err = conn.DescribeCluster(input)
-		if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, kafka.ErrCodeNotFoundException, "") {
 			return nil
 		}
 	}
