@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsPinpointEventStream() *schema.Resource {
@@ -32,19 +33,19 @@ func resourceAwsPinpointEventStream() *schema.Resource {
 			"destination_stream_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 		},
 	}
 }
 
 func resourceAwsPinpointEventStreamUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*awsprovider.AWSClient).PinpointConn
 
 	applicationId := d.Get("application_id").(string)
 
@@ -87,7 +88,7 @@ func resourceAwsPinpointEventStreamUpsert(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsPinpointEventStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*awsprovider.AWSClient).PinpointConn
 
 	log.Printf("[INFO] Reading Pinpoint Event Stream for application %s", d.Id())
 
@@ -95,7 +96,7 @@ func resourceAwsPinpointEventStreamRead(d *schema.ResourceData, meta interface{}
 		ApplicationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Pinpoint Event Stream for application %s not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
@@ -113,14 +114,14 @@ func resourceAwsPinpointEventStreamRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsPinpointEventStreamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*awsprovider.AWSClient).PinpointConn
 
 	log.Printf("[DEBUG] Pinpoint Delete Event Stream: %s", d.Id())
 	_, err := conn.DeleteEventStream(&pinpoint.DeleteEventStreamInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
