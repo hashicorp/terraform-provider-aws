@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsStorageGatewayCache() *schema.Resource {
@@ -30,14 +31,14 @@ func resourceAwsStorageGatewayCache() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 		},
 	}
 }
 
 func resourceAwsStorageGatewayCacheCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*awsprovider.AWSClient).StorageGatewayConn
 
 	diskID := d.Get("disk_id").(string)
 	gatewayARN := d.Get("gateway_arn").(string)
@@ -87,7 +88,7 @@ func resourceAwsStorageGatewayCacheCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsStorageGatewayCacheRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*awsprovider.AWSClient).StorageGatewayConn
 
 	gatewayARN, diskID, err := decodeStorageGatewayCacheID(d.Id())
 	if err != nil {
@@ -101,7 +102,7 @@ func resourceAwsStorageGatewayCacheRead(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Reading Storage Gateway cache: %s", input)
 	output, err := conn.DescribeCache(input)
 	if err != nil {
-		if isAWSErrStorageGatewayGatewayNotFound(err) {
+		if storageGatewayNotFound(err) {
 			log.Printf("[WARN] Storage Gateway cache %q not found - removing from state", d.Id())
 			d.SetId("")
 			return nil
