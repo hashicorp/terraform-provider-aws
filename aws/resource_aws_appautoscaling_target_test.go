@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
@@ -19,9 +21,9 @@ func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
 	randClusterName := fmt.Sprintf("cluster-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -59,16 +61,16 @@ func TestAccAWSAppautoScalingTarget_disappears(t *testing.T) {
 	resourceName := "aws_appautoscaling_target.bar"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAppautoscalingTargetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppautoscalingTargetExists(resourceName, &target),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppautoscalingTarget(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsAppautoscalingTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -81,9 +83,9 @@ func TestAccAWSAppautoScalingTarget_spotFleetRequest(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,9 +111,9 @@ func TestAccAWSAppautoScalingTarget_emrCluster(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -140,9 +142,9 @@ func TestAccAWSAppautoScalingTarget_multipleTargets(t *testing.T) {
 	tableName := fmt.Sprintf("tf_acc_test_table_%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -174,16 +176,16 @@ func TestAccAWSAppautoScalingTarget_optionalRoleArn(t *testing.T) {
 	tableName := fmt.Sprintf("tf_acc_test_table_%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAppautoscalingTarget_optionalRoleArn(tableName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppautoscalingTargetExists("aws_appautoscaling_target.read", &readTarget),
-					testAccCheckResourceAttrGlobalARN("aws_appautoscaling_target.read", "role_arn", "iam",
+					atest.CheckAttrGlobalARN("aws_appautoscaling_target.read", "role_arn", "iam",
 						"role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable"),
 				),
 			},
@@ -192,7 +194,7 @@ func TestAccAWSAppautoScalingTarget_optionalRoleArn(t *testing.T) {
 }
 
 func testAccCheckAWSAppautoscalingTargetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).appautoscalingconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ApplicationAutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appautoscaling_target" {
@@ -238,7 +240,7 @@ func testAccCheckAWSAppautoscalingTargetExists(n string, target *applicationauto
 			return fmt.Errorf("No Application AutoScaling Target ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).appautoscalingconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ApplicationAutoScalingConn
 
 		namespace := rs.Primary.Attributes["service_namespace"]
 		dimension := rs.Primary.Attributes["scalable_dimension"]
