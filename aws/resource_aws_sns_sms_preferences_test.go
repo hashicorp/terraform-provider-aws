@@ -9,6 +9,8 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // The preferences are account-wide, so the tests must be serialized
@@ -32,9 +34,9 @@ func testAccAWSSNSSMSPreferences_empty(t *testing.T) {
 	resourceName := "aws_sns_sms_preferences.test_pref"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -56,9 +58,9 @@ func testAccAWSSNSSMSPreferences_defaultSMSType(t *testing.T) {
 	resourceName := "aws_sns_sms_preferences.test_pref"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -80,9 +82,9 @@ func testAccAWSSNSSMSPreferences_almostAll(t *testing.T) {
 	resourceName := "aws_sns_sms_preferences.test_pref"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -102,9 +104,9 @@ func testAccAWSSNSSMSPreferences_deliveryRole(t *testing.T) {
 	iamRoleName := "aws_iam_role.test_smsdelivery_role"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -124,7 +126,7 @@ func testAccCheckAWSSNSSMSPrefsDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).snsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SNSConn
 		attrs, err := conn.GetSMSAttributes(&sns.GetSMSAttributesInput{})
 		if err != nil {
 			return fmt.Errorf("error getting SMS attributes: %s", err)
