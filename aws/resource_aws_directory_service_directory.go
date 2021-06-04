@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDirectoryServiceDirectory() *schema.Resource {
@@ -235,8 +236,8 @@ func buildConnectSettings(d *schema.ResourceData) (connectSettings *directoryser
 	return connectSettings, nil
 }
 
-func createDirectoryConnector(dsconn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+func createDirectoryConnector(DirectoryConn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := directoryservice.ConnectDirectoryInput{
@@ -264,7 +265,7 @@ func createDirectoryConnector(dsconn *directoryservice.DirectoryService, d *sche
 	}
 
 	log.Printf("[DEBUG] Creating Directory Connector: %s", input)
-	out, err := dsconn.ConnectDirectory(&input)
+	out, err := DirectoryConn.ConnectDirectory(&input)
 	if err != nil {
 		return "", err
 	}
@@ -273,8 +274,8 @@ func createDirectoryConnector(dsconn *directoryservice.DirectoryService, d *sche
 	return *out.DirectoryId, nil
 }
 
-func createSimpleDirectoryService(dsconn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+func createSimpleDirectoryService(DirectoryConn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := directoryservice.CreateDirectoryInput{
@@ -302,7 +303,7 @@ func createSimpleDirectoryService(dsconn *directoryservice.DirectoryService, d *
 	}
 
 	log.Printf("[DEBUG] Creating Simple Directory Service: %s", input)
-	out, err := dsconn.CreateDirectory(&input)
+	out, err := DirectoryConn.CreateDirectory(&input)
 	if err != nil {
 		return "", err
 	}
@@ -311,8 +312,8 @@ func createSimpleDirectoryService(dsconn *directoryservice.DirectoryService, d *
 	return *out.DirectoryId, nil
 }
 
-func createActiveDirectoryService(dsconn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+func createActiveDirectoryService(DirectoryConn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := directoryservice.CreateMicrosoftADInput{
@@ -337,7 +338,7 @@ func createActiveDirectoryService(dsconn *directoryservice.DirectoryService, d *
 	}
 
 	log.Printf("[DEBUG] Creating Microsoft AD Directory Service: %s", input)
-	out, err := dsconn.CreateMicrosoftAD(&input)
+	out, err := DirectoryConn.CreateMicrosoftAD(&input)
 	if err != nil {
 		return "", err
 	}
@@ -346,17 +347,17 @@ func createActiveDirectoryService(dsconn *directoryservice.DirectoryService, d *
 	return *out.DirectoryId, nil
 }
 
-func enableDirectoryServiceSso(dsconn *directoryservice.DirectoryService, d *schema.ResourceData) error {
+func enableDirectoryServiceSso(DirectoryConn *directoryservice.DirectoryService, d *schema.ResourceData) error {
 	if v, ok := d.GetOk("enable_sso"); ok && v.(bool) {
 		log.Printf("[DEBUG] Enabling SSO for DS directory %q", d.Id())
-		if _, err := dsconn.EnableSso(&directoryservice.EnableSsoInput{
+		if _, err := DirectoryConn.EnableSso(&directoryservice.EnableSsoInput{
 			DirectoryId: aws.String(d.Id()),
 		}); err != nil {
 			return fmt.Errorf("Error Enabling SSO for DS directory %s: %s", d.Id(), err)
 		}
 	} else {
 		log.Printf("[DEBUG] Disabling SSO for DS directory %q", d.Id())
-		if _, err := dsconn.DisableSso(&directoryservice.DisableSsoInput{
+		if _, err := DirectoryConn.DisableSso(&directoryservice.DisableSsoInput{
 			DirectoryId: aws.String(d.Id()),
 		}); err != nil {
 			return fmt.Errorf("Error Disabling SSO for DS directory %s: %s", d.Id(), err)
@@ -367,18 +368,18 @@ func enableDirectoryServiceSso(dsconn *directoryservice.DirectoryService, d *sch
 }
 
 func resourceAwsDirectoryServiceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
-	dsconn := meta.(*AWSClient).dsconn
+	DirectoryConn := meta.(*awsprovider.AWSClient).DirectoryConn
 
 	var directoryId string
 	var err error
 	directoryType := d.Get("type").(string)
 
 	if directoryType == directoryservice.DirectoryTypeAdconnector {
-		directoryId, err = createDirectoryConnector(dsconn, d, meta)
+		directoryId, err = createDirectoryConnector(DirectoryConn, d, meta)
 	} else if directoryType == directoryservice.DirectoryTypeMicrosoftAd {
-		directoryId, err = createActiveDirectoryService(dsconn, d, meta)
+		directoryId, err = createActiveDirectoryService(DirectoryConn, d, meta)
 	} else if directoryType == directoryservice.DirectoryTypeSimpleAd {
-		directoryId, err = createSimpleDirectoryService(dsconn, d, meta)
+		directoryId, err = createSimpleDirectoryService(DirectoryConn, d, meta)
 	}
 
 	if err != nil {
@@ -397,7 +398,7 @@ func resourceAwsDirectoryServiceDirectoryCreate(d *schema.ResourceData, meta int
 		},
 		Target: []string{directoryservice.DirectoryStageActive},
 		Refresh: func() (interface{}, string, error) {
-			resp, err := dsconn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
+			resp, err := DirectoryConn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
 				DirectoryIds: []*string{aws.String(d.Id())},
 			})
 			if err != nil {
@@ -426,7 +427,7 @@ func resourceAwsDirectoryServiceDirectoryCreate(d *schema.ResourceData, meta int
 
 		log.Printf("[DEBUG] Assigning alias %q to DS directory %q",
 			v.(string), d.Id())
-		out, err := dsconn.CreateAlias(&input)
+		out, err := DirectoryConn.CreateAlias(&input)
 		if err != nil {
 			return err
 		}
@@ -435,7 +436,7 @@ func resourceAwsDirectoryServiceDirectoryCreate(d *schema.ResourceData, meta int
 	}
 
 	if d.HasChange("enable_sso") {
-		if err := enableDirectoryServiceSso(dsconn, d); err != nil {
+		if err := enableDirectoryServiceSso(DirectoryConn, d); err != nil {
 			return err
 		}
 	}
@@ -444,10 +445,10 @@ func resourceAwsDirectoryServiceDirectoryCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsDirectoryServiceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	dsconn := meta.(*AWSClient).dsconn
+	DirectoryConn := meta.(*awsprovider.AWSClient).DirectoryConn
 
 	if d.HasChange("enable_sso") {
-		if err := enableDirectoryServiceSso(dsconn, d); err != nil {
+		if err := enableDirectoryServiceSso(DirectoryConn, d); err != nil {
 			return err
 		}
 	}
@@ -455,7 +456,7 @@ func resourceAwsDirectoryServiceDirectoryUpdate(d *schema.ResourceData, meta int
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.DirectoryserviceUpdateTags(dsconn, d.Id(), o, n); err != nil {
+		if err := keyvaluetags.DirectoryserviceUpdateTags(DirectoryConn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Directory Service Directory (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -464,14 +465,14 @@ func resourceAwsDirectoryServiceDirectoryUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
-	dsconn := meta.(*AWSClient).dsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	DirectoryConn := meta.(*awsprovider.AWSClient).DirectoryConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := directoryservice.DescribeDirectoriesInput{
 		DirectoryIds: []*string{aws.String(d.Id())},
 	}
-	out, err := dsconn.DescribeDirectories(&input)
+	out, err := DirectoryConn.DescribeDirectories(&input)
 	if err != nil {
 		return err
 
@@ -517,7 +518,7 @@ func resourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta inter
 		d.Set("security_group_id", dir.VpcSettings.SecurityGroupId)
 	}
 
-	tags, err := keyvaluetags.DirectoryserviceListTags(dsconn, d.Id())
+	tags, err := keyvaluetags.DirectoryserviceListTags(DirectoryConn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Directory Service Directory (%s): %s", d.Id(), err)
@@ -538,7 +539,7 @@ func resourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsDirectoryServiceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dsconn
+	conn := meta.(*awsprovider.AWSClient).DirectoryConn
 
 	input := &directoryservice.DeleteDirectoryInput{
 		DirectoryId: aws.String(d.Id()),
@@ -575,7 +576,7 @@ func waitForDirectoryServiceDirectoryDeletion(conn *directoryservice.DirectorySe
 				DirectoryIds: []*string{aws.String(directoryID)},
 			})
 			if err != nil {
-				if isAWSErr(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
+				if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
 					return 42, directoryservice.DirectoryStageDeleted, nil
 				}
 				return nil, "error", err
