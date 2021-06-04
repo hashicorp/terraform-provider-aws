@@ -12,7 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -23,11 +25,11 @@ func init() {
 }
 
 func testSweepSagemakerFeatureGroups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).sagemakerconn
+	conn := client.(*awsprovider.AWSClient).SageMakerConn
 
 	err = conn.ListFeatureGroupsPages(&sagemaker.ListFeatureGroupsInput{}, func(page *sagemaker.ListFeatureGroupsOutput, lastPage bool) bool {
 		for _, group := range page.FeatureGroupSummaries {
@@ -47,7 +49,7 @@ func testSweepSagemakerFeatureGroups(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker Feature Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -65,9 +67,9 @@ func TestAccAWSSagemakerFeatureGroup_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_feature_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -82,7 +84,7 @@ func TestAccAWSSagemakerFeatureGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("feature-group/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("feature-group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.#", "0"),
 				),
 			},
@@ -101,9 +103,9 @@ func TestAccAWSSagemakerFeatureGroup_description(t *testing.T) {
 	resourceName := "aws_sagemaker_feature_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -129,9 +131,9 @@ func TestAccAWSSagemakerFeatureGroup_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_feature_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -177,9 +179,9 @@ func TestAccAWSSagemakerFeatureGroup_multipleFeatures(t *testing.T) {
 	resourceName := "aws_sagemaker_feature_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -209,9 +211,9 @@ func TestAccAWSSagemakerFeatureGroup_onlineConfigSecurityConfig(t *testing.T) {
 	resourceName := "aws_sagemaker_feature_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -240,9 +242,9 @@ func TestAccAWSSagemakerFeatureGroup_offlineConfig_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_feature_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -272,9 +274,9 @@ func TestAccAWSSagemakerFeatureGroup_offlineConfig_createCatalog(t *testing.T) {
 	resourceName := "aws_sagemaker_feature_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -308,9 +310,9 @@ func TestAccAWSSagemakerFeatureGroup_offlineConfig_providedCatalog(t *testing.T)
 	glueTableResourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -343,16 +345,16 @@ func TestAccAWSSagemakerFeatureGroup_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_feature_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSagemakerFeatureGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerFeatureGroupExists(resourceName, &featureGroup),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerFeatureGroup(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSagemakerFeatureGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -361,7 +363,7 @@ func TestAccAWSSagemakerFeatureGroup_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerFeatureGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SageMakerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_feature_group" {
@@ -397,7 +399,7 @@ func testAccCheckAWSSagemakerFeatureGroupExists(n string, codeRepo *sagemaker.De
 			return fmt.Errorf("No sagmaker Feature Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SageMakerConn
 		resp, err := finder.FeatureGroupByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
