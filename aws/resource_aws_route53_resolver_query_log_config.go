@@ -6,11 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53resolver/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53resolver/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsRoute53ResolverQueryLogConfig() *schema.Resource {
@@ -33,7 +35,7 @@ func resourceAwsRoute53ResolverQueryLogConfig() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"name": {
@@ -62,8 +64,8 @@ func resourceAwsRoute53ResolverQueryLogConfig() *schema.Resource {
 }
 
 func resourceAwsRoute53ResolverQueryLogConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).Route53ResolverConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &route53resolver.CreateResolverQueryLogConfigInput{
@@ -94,13 +96,13 @@ func resourceAwsRoute53ResolverQueryLogConfigCreate(d *schema.ResourceData, meta
 }
 
 func resourceAwsRoute53ResolverQueryLogConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).Route53ResolverConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	queryLogConfig, err := finder.ResolverQueryLogConfigByID(conn, d.Id())
 
-	if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Route53 Resolver Query Log Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -143,7 +145,7 @@ func resourceAwsRoute53ResolverQueryLogConfigRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsRoute53ResolverQueryLogConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*awsprovider.AWSClient).Route53ResolverConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -156,14 +158,14 @@ func resourceAwsRoute53ResolverQueryLogConfigUpdate(d *schema.ResourceData, meta
 }
 
 func resourceAwsRoute53ResolverQueryLogConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*awsprovider.AWSClient).Route53ResolverConn
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Query Log Config (%s)", d.Id())
 	_, err := conn.DeleteResolverQueryLogConfig(&route53resolver.DeleteResolverQueryLogConfigInput{
 		ResolverQueryLogConfigId: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
