@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsBackupVault_basic(t *testing.T) {
@@ -17,9 +19,9 @@ func TestAccAwsBackupVault_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   atest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -43,9 +45,9 @@ func TestAccAwsBackupVault_withKmsKey(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   atest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -70,9 +72,9 @@ func TestAccAwsBackupVault_withTags(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   atest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -119,16 +121,16 @@ func TestAccAwsBackupVault_disappears(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   atest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupVaultConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupVaultExists(resourceName, &vault),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsBackupVault(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsBackupVault(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -137,7 +139,7 @@ func TestAccAwsBackupVault_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsBackupVaultDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).backupconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).BackupConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_backup_vault" {
 			continue
@@ -166,7 +168,7 @@ func testAccCheckAwsBackupVaultExists(name string, vault *backup.DescribeBackupV
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).backupconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).BackupConn
 		params := &backup.DescribeBackupVaultInput{
 			BackupVaultName: aws.String(rs.Primary.ID),
 		}
@@ -182,13 +184,13 @@ func testAccCheckAwsBackupVaultExists(name string, vault *backup.DescribeBackupV
 }
 
 func testAccPreCheckAWSBackup(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).backupconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).BackupConn
 
 	input := &backup.ListBackupVaultsInput{}
 
 	_, err := conn.ListBackupVaults(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
