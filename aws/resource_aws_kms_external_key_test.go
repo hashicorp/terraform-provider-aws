@@ -11,7 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSKmsExternalKey_basic(t *testing.T) {
@@ -19,16 +21,16 @@ func TestAccAWSKmsExternalKey_basic(t *testing.T) {
 	resourceName := "aws_kms_external_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSKmsExternalKeyConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsExternalKeyExists(resourceName, &key1),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexp.MustCompile(`key/.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "kms", regexp.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", "30"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "expiration_model", ""),
@@ -58,9 +60,9 @@ func TestAccAWSKmsExternalKey_disappears(t *testing.T) {
 	resourceName := "aws_kms_external_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -80,9 +82,9 @@ func TestAccAWSKmsExternalKey_DeletionWindowInDays(t *testing.T) {
 	resourceName := "aws_kms_external_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -118,9 +120,9 @@ func TestAccAWSKmsExternalKey_Description(t *testing.T) {
 	resourceName := "aws_kms_external_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -156,9 +158,9 @@ func TestAccAWSKmsExternalKey_Enabled(t *testing.T) {
 	resourceName := "aws_kms_external_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -202,9 +204,9 @@ func TestAccAWSKmsExternalKey_KeyMaterialBase64(t *testing.T) {
 	resourceName := "aws_kms_external_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -244,9 +246,9 @@ func TestAccAWSKmsExternalKey_Policy(t *testing.T) {
 	resourceName := "aws_kms_external_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -282,9 +284,9 @@ func TestAccAWSKmsExternalKey_Tags(t *testing.T) {
 	resourceName := "aws_kms_external_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -334,9 +336,9 @@ func TestAccAWSKmsExternalKey_ValidTo(t *testing.T) {
 	validTo2 := time.Now().UTC().Add(2 * time.Hour).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -398,7 +400,7 @@ func testAccCheckAWSKmsExternalKeyHasPolicy(name string, expectedPolicyText stri
 			return fmt.Errorf("No KMS Key ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kmsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).KMSConn
 
 		out, err := conn.GetKeyPolicy(&kms.GetKeyPolicyInput{
 			KeyId:      aws.String(rs.Primary.ID),
@@ -424,7 +426,7 @@ func testAccCheckAWSKmsExternalKeyHasPolicy(name string, expectedPolicyText stri
 }
 
 func testAccCheckAWSKmsExternalKeyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).kmsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).KMSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kms_external_key" {
@@ -460,7 +462,7 @@ func testAccCheckAWSKmsExternalKeyExists(name string, key *kms.KeyMetadata) reso
 			return fmt.Errorf("No KMS Key ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kmsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).KMSConn
 
 		o, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
 			return conn.DescribeKey(&kms.DescribeKeyInput{
@@ -480,7 +482,7 @@ func testAccCheckAWSKmsExternalKeyExists(name string, key *kms.KeyMetadata) reso
 
 func testAccCheckAWSKmsExternalKeyDisappears(key *kms.KeyMetadata) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).kmsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).KMSConn
 
 		input := &kms.ScheduleKeyDeletionInput{
 			KeyId:               key.KeyId,
