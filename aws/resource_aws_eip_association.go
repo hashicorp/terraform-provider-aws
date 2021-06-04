@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEipAssociation() *schema.Resource {
@@ -68,7 +69,7 @@ func resourceAwsEipAssociation() *schema.Resource {
 }
 
 func resourceAwsEipAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	request := &ec2.AssociateAddressInput{}
 
@@ -127,8 +128,8 @@ func resourceAwsEipAssociationCreate(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] EIP Assoc Response: %s", resp)
 
-	supportedPlatforms := meta.(*AWSClient).supportedplatforms
-	if len(supportedPlatforms) > 0 && !hasEc2Classic(supportedPlatforms) && resp.AssociationId == nil {
+	supportedPlatforms := meta.(*awsprovider.AWSClient).SupportedPlatforms
+	if len(supportedPlatforms) > 0 && !awsprovider.HasEC2Classic(supportedPlatforms) && resp.AssociationId == nil {
 		// We expect no association ID in EC2 Classic
 		// but still error out if ID is missing and we _know_ it's NOT EC2 Classic
 		return fmt.Errorf("Received no EIP Association ID in account that doesn't support EC2 Classic (%q): %s",
@@ -150,9 +151,9 @@ func resourceAwsEipAssociationCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsEipAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
-	request, err := describeAddressesById(d.Id(), meta.(*AWSClient).supportedplatforms)
+	request, err := describeAddressesById(d.Id(), meta.(*awsprovider.AWSClient).SupportedPlatforms)
 	if err != nil {
 		return err
 	}
@@ -201,14 +202,14 @@ func resourceAwsEipAssociationRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsEipAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	var opts *ec2.DisassociateAddressInput
 	// We assume EC2 Classic if ID is a valid IPv4 address
 	ip := net.ParseIP(d.Id())
 	if ip != nil {
-		supportedPlatforms := meta.(*AWSClient).supportedplatforms
-		if len(supportedPlatforms) > 0 && !hasEc2Classic(supportedPlatforms) {
+		supportedPlatforms := meta.(*awsprovider.AWSClient).SupportedPlatforms
+		if len(supportedPlatforms) > 0 && !awsprovider.HasEC2Classic(supportedPlatforms) {
 			return fmt.Errorf("Received IPv4 address as ID in account that doesn't support EC2 Classic (%q)",
 				supportedPlatforms)
 		}
@@ -224,7 +225,7 @@ func resourceAwsEipAssociationDelete(d *schema.ResourceData, meta interface{}) e
 
 	_, err := conn.DisassociateAddress(opts)
 	if err != nil {
-		if isAWSErr(err, "InvalidAssociationID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidAssociationID.NotFound", "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting Elastic IP association: %s", err)
@@ -257,7 +258,7 @@ func describeAddressesById(id string, supportedPlatforms []string) (*ec2.Describ
 	// We assume EC2 Classic if ID is a valid IPv4 address
 	ip := net.ParseIP(id)
 	if ip != nil {
-		if len(supportedPlatforms) > 0 && !hasEc2Classic(supportedPlatforms) {
+		if len(supportedPlatforms) > 0 && !awsprovider.HasEC2Classic(supportedPlatforms) {
 			return nil, fmt.Errorf("Received IPv4 address as ID in account that doesn't support EC2 Classic (%q)",
 				supportedPlatforms)
 		}
