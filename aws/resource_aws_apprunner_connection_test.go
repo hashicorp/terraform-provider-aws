@@ -14,7 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apprunner/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -26,14 +28,14 @@ func init() {
 }
 
 func testSweepAppRunnerConnections(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).apprunnerconn
-	sweepResources := make([]*testSweepResource, 0)
+	conn := client.(*awsprovider.AWSClient).AppRunnerConn
+	sweepResources := make([]*atest.TestSweepResource, 0)
 	ctx := context.Background()
 
 	var errs *multierror.Error
@@ -59,7 +61,7 @@ func testSweepAppRunnerConnections(region string) error {
 			d.SetId(name)
 			d.Set("arn", c.ConnectionArn)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, atest.NewTestSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -69,11 +71,11 @@ func testSweepAppRunnerConnections(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing App Runner Connections: %w", err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = atest.TestSweepResourceOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping App Runner Connections for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping App Runner Connections sweep for %s: %s", region, err)
 		return nil // In case we have completed some pages, but had errors
 	}
@@ -86,16 +88,16 @@ func TestAccAwsAppRunnerConnection_basic(t *testing.T) {
 	resourceName := "aws_apprunner_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apprunner.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppRunnerConnection_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerConnectionExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`connection/%s/.+`, rName))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`connection/%s/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", apprunner.ProviderTypeGithub),
 					resource.TestCheckResourceAttr(resourceName, "status", apprunner.ConnectionStatusPendingHandshake),
@@ -116,16 +118,16 @@ func TestAccAwsAppRunnerConnection_disappears(t *testing.T) {
 	resourceName := "aws_apprunner_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apprunner.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppRunnerConnection_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerConnectionExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppRunnerConnection(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsAppRunnerConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -138,9 +140,9 @@ func TestAccAwsAppRunnerConnection_tags(t *testing.T) {
 	resourceName := "aws_apprunner_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apprunner.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -190,7 +192,7 @@ func testAccCheckAwsAppRunnerConnectionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apprunnerconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AppRunnerConn
 
 		connection, err := finder.ConnectionSummaryByName(context.Background(), conn, rs.Primary.ID)
 
@@ -221,7 +223,7 @@ func testAccCheckAwsAppRunnerConnectionExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No App Runner Connection ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apprunnerconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AppRunnerConn
 
 		connection, err := finder.ConnectionSummaryByName(context.Background(), conn, rs.Primary.ID)
 
