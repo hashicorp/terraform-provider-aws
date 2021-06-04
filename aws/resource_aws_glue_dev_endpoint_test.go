@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -31,11 +33,11 @@ func init() {
 }
 
 func testSweepGlueDevEndpoint(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).glueconn
+	conn := client.(*awsprovider.AWSClient).GlueConn
 
 	input := &glue.GetDevEndpointsInput{}
 	err = conn.GetDevEndpointsPages(input, func(page *glue.GetDevEndpointsOutput, lastPage bool) bool {
@@ -61,7 +63,7 @@ func testSweepGlueDevEndpoint(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Glue Dev Endpoint sweep for %s: %s", region, err)
 			return nil
 		}
@@ -78,16 +80,16 @@ func TestAccGlueDevEndpoint_Basic(t *testing.T) {
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlueDevEndpointConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("devEndpoint/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("devEndpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
@@ -112,9 +114,9 @@ func TestAccGlueDevEndpoint_Arguments(t *testing.T) {
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -160,9 +162,9 @@ func TestAccGlueDevEndpoint_ExtraJarsS3Path(t *testing.T) {
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -197,9 +199,9 @@ func TestAccGlueDevEndpoint_ExtraPythonLibsS3Path(t *testing.T) {
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -232,9 +234,9 @@ func TestAccGlueDevEndpoint_GlueVersion(t *testing.T) {
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -271,9 +273,9 @@ func TestAccGlueDevEndpoint_NumberOfNodes(t *testing.T) {
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -310,9 +312,9 @@ func TestAccGlueDevEndpoint_NumberOfWorkers(t *testing.T) {
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -349,9 +351,9 @@ func TestAccGlueDevEndpoint_PublicKey(t *testing.T) {
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -384,9 +386,9 @@ func TestAccGlueDevEndpoint_PublicKeys(t *testing.T) {
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -426,9 +428,9 @@ func TestAccGlueDevEndpoint_SecurityConfiguration(t *testing.T) {
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -455,9 +457,9 @@ func TestAccGlueDevEndpoint_SubnetID_SecurityGroupIDs(t *testing.T) {
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -486,9 +488,9 @@ func TestAccGlueDevEndpoint_Tags(t *testing.T) {
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -532,9 +534,9 @@ func TestAccGlueDevEndpoint_WorkerType(t *testing.T) {
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -574,16 +576,16 @@ func TestAccGlueDevEndpoint_disappears(t *testing.T) {
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlueDevEndpointConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueDevEndpoint(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsGlueDevEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -602,7 +604,7 @@ func testAccCheckAWSGlueDevEndpointExists(resourceName string, endpoint *glue.De
 			return fmt.Errorf("no ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).GlueConn
 		output, err := conn.GetDevEndpoint(&glue.GetDevEndpointInput{
 			EndpointName: aws.String(rs.Primary.ID),
 		})
@@ -627,7 +629,7 @@ func testAccCheckAWSGlueDevEndpointDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).GlueConn
 		output, err := conn.GetDevEndpoint(&glue.GetDevEndpointInput{
 			EndpointName: aws.String(rs.Primary.ID),
 		})
@@ -831,7 +833,7 @@ resource "aws_glue_security_configuration" "test" {
 }
 
 func testAccGlueDevEndpointConfig_SubnetID_SecurityGroupIDs(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), testAccGlueDevEndpointConfig_Base(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), testAccGlueDevEndpointConfig_Base(rName), fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
   name               = %[1]q
   role_arn           = aws_iam_role.test.arn
