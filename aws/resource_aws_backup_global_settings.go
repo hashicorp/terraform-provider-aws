@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsBackupGlobalSettings() *schema.Resource {
@@ -29,7 +30,7 @@ func resourceAwsBackupGlobalSettings() *schema.Resource {
 }
 
 func resourceAwsBackupGlobalSettingsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*awsprovider.AWSClient).BackupConn
 
 	input := &backup.UpdateGlobalSettingsInput{
 		GlobalSettings: expandStringMap(d.Get("global_settings").(map[string]interface{})),
@@ -37,16 +38,16 @@ func resourceAwsBackupGlobalSettingsUpdate(d *schema.ResourceData, meta interfac
 
 	_, err := conn.UpdateGlobalSettings(input)
 	if err != nil {
-		return fmt.Errorf("error setting Backup Global Settings (%s): %w", meta.(*AWSClient).accountid, err)
+		return fmt.Errorf("error setting Backup Global Settings (%s): %w", meta.(*awsprovider.AWSClient).AccountID, err)
 	}
 
-	d.SetId(meta.(*AWSClient).accountid)
+	d.SetId(meta.(*awsprovider.AWSClient).AccountID)
 
 	return resourceAwsBackupGlobalSettingsRead(d, meta)
 }
 
 func resourceAwsBackupGlobalSettingsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*awsprovider.AWSClient).BackupConn
 
 	resp, err := conn.DescribeGlobalSettings(&backup.DescribeGlobalSettingsInput{})
 	if err != nil {
