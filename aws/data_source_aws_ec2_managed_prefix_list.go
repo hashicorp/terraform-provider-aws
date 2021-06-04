@@ -7,7 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsEc2ManagedPrefixList() *schema.Resource {
@@ -38,7 +39,7 @@ func dataSourceAwsEc2ManagedPrefixList() *schema.Resource {
 					},
 				},
 			},
-			"filter": dataSourceFiltersSchema(),
+			"filter": awsprovider.DataSourceFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -67,13 +68,13 @@ func dataSourceAwsEc2ManagedPrefixList() *schema.Resource {
 }
 
 func dataSourceAwsEc2ManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).ec2conn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := ec2.DescribeManagedPrefixListsInput{}
 
 	if filters, ok := d.GetOk("filter"); ok {
-		input.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
+		input.Filters = awsprovider.BuildDataSourceFilters(filters.(*schema.Set))
 	}
 
 	if prefixListId, ok := d.GetOk("id"); ok {
