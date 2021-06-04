@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSOpsworksHAProxyLayer_basic(t *testing.T) {
@@ -15,9 +16,9 @@ func TestAccAWSOpsworksHAProxyLayer_basic(t *testing.T) {
 	stackName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_haproxy_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(opsworks.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, opsworks.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksHAProxyLayerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -36,9 +37,9 @@ func TestAccAWSOpsworksHAProxyLayer_tags(t *testing.T) {
 	stackName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_haproxy_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(opsworks.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, opsworks.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksHAProxyLayerDestroy,
 		Steps: []resource.TestStep{
 			{
