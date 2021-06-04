@@ -9,15 +9,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSAutoscalingLifecycleHook_basic(t *testing.T) {
 	resourceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAutoscalingLifecycleHookDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -44,9 +46,9 @@ func TestAccAWSAutoscalingLifecycleHook_omitDefaultResult(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAutoscalingLifecycleHookDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -73,7 +75,7 @@ func testAccCheckLifecycleHookExists(n string) resource.TestCheckFunc {
 }
 
 func checkLifecycleHookExistsByName(asgName, hookName string) error {
-	conn := testAccProvider.Meta().(*AWSClient).autoscalingconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).AutoScalingConn
 	params := &autoscaling.DescribeLifecycleHooksInput{
 		AutoScalingGroupName: aws.String(asgName),
 		LifecycleHookNames:   []*string{aws.String(hookName)},
@@ -90,7 +92,7 @@ func checkLifecycleHookExistsByName(asgName, hookName string) error {
 }
 
 func testAccCheckAWSAutoscalingLifecycleHookDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).autoscalingconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).AutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_autoscaling_group" {
