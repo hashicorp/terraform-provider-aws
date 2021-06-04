@@ -18,11 +18,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfelasticache "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsElasticacheReplicationGroup() *schema.Resource {
@@ -168,7 +169,7 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 			"notification_topic_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"number_cache_clusters": {
 				Type:         schema.TypeInt,
@@ -237,7 +238,7 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(
-						validateArn,
+						ValidateArn,
 						validation.StringDoesNotContainAny(","),
 					),
 				},
@@ -312,8 +313,8 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 }
 
 func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &elasticache.CreateReplicationGroupInput{
@@ -440,9 +441,9 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	rgp, err := finder.ReplicationGroupByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -545,10 +546,10 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 		}
 
 		arn := arn.ARN{
-			Partition: meta.(*AWSClient).partition,
+			Partition: meta.(*awsprovider.AWSClient).Partition,
 			Service:   "elasticache",
-			Region:    meta.(*AWSClient).region,
-			AccountID: meta.(*AWSClient).accountid,
+			Region:    meta.(*awsprovider.AWSClient).Region,
+			AccountID: meta.(*awsprovider.AWSClient).AccountID,
 			Resource:  fmt.Sprintf("cluster:%s", aws.StringValue(c.CacheClusterId)),
 		}.String()
 
@@ -574,7 +575,7 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
 
 	if d.HasChanges("cluster_mode.0.num_node_groups", "cluster_mode.0.replicas_per_node_group") {
 		err := elasticacheReplicationGroupModifyShardConfiguration(conn, d)
@@ -682,10 +683,10 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 		for _, cluster := range clusters {
 
 			arn := arn.ARN{
-				Partition: meta.(*AWSClient).partition,
+				Partition: meta.(*awsprovider.AWSClient).Partition,
 				Service:   "elasticache",
-				Region:    meta.(*AWSClient).region,
-				AccountID: meta.(*AWSClient).accountid,
+				Region:    meta.(*awsprovider.AWSClient).Region,
+				AccountID: meta.(*awsprovider.AWSClient).AccountID,
 				Resource:  fmt.Sprintf("cluster:%s", cluster),
 			}.String()
 
@@ -700,10 +701,10 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsElasticacheReplicationGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
 
 	if globalReplicationGroupID, ok := d.GetOk("global_replication_group_id"); ok {
-		err := disassociateElasticacheReplicationGroup(conn, globalReplicationGroupID.(string), d.Id(), meta.(*AWSClient).region)
+		err := disassociateElasticacheReplicationGroup(conn, globalReplicationGroupID.(string), d.Id(), meta.(*awsprovider.AWSClient).Region)
 		if err != nil {
 			return fmt.Errorf("error disassociating ElastiCache Replication Group (%s) from Global Replication Group (%s): %w", d.Id(), globalReplicationGroupID, err)
 		}
@@ -772,12 +773,12 @@ func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elastica
 	// 10 minutes should give any creating/deleting cache clusters or snapshots time to complete
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteReplicationGroup(input)
-		if isAWSErr(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
 			return nil
 		}
 		// Cache Cluster is creating/deleting or Replication Group is snapshotting
 		// InvalidReplicationGroupState: Cache cluster tf-acc-test-uqhe-003 is not in a valid state to be deleted
-		if isAWSErr(err, elasticache.ErrCodeInvalidReplicationGroupStateFault, "") {
+		if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidReplicationGroupStateFault, "") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -789,7 +790,7 @@ func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elastica
 		_, err = conn.DeleteReplicationGroup(input)
 	}
 
-	if isAWSErr(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
 		return nil
 	}
 	if err != nil {
