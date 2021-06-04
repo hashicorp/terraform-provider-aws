@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsIamAccountPasswordPolicy() *schema.Resource {
@@ -75,7 +76,7 @@ func resourceAwsIamAccountPasswordPolicy() *schema.Resource {
 }
 
 func resourceAwsIamAccountPasswordPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	IAMConn := meta.(*awsprovider.AWSClient).IAMConn
 
 	input := &iam.UpdateAccountPasswordPolicyInput{}
 
@@ -108,7 +109,7 @@ func resourceAwsIamAccountPasswordPolicyUpdate(d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Updating IAM account password policy: %s", input)
-	_, err := iamconn.UpdateAccountPasswordPolicy(input)
+	_, err := IAMConn.UpdateAccountPasswordPolicy(input)
 	if err != nil {
 		return fmt.Errorf("Error updating IAM Password Policy: %s", err)
 	}
@@ -120,10 +121,10 @@ func resourceAwsIamAccountPasswordPolicyUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsIamAccountPasswordPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	IAMConn := meta.(*awsprovider.AWSClient).IAMConn
 
 	input := &iam.GetAccountPasswordPolicyInput{}
-	resp, err := iamconn.GetAccountPasswordPolicy(input)
+	resp, err := IAMConn.GetAccountPasswordPolicy(input)
 	if err != nil {
 		awsErr, ok := err.(awserr.Error)
 		if ok && awsErr.Code() == "NoSuchEntity" {
@@ -153,11 +154,11 @@ func resourceAwsIamAccountPasswordPolicyRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsIamAccountPasswordPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	IAMConn := meta.(*awsprovider.AWSClient).IAMConn
 
 	log.Println("[DEBUG] Deleting IAM account password policy")
 	input := &iam.DeleteAccountPasswordPolicyInput{}
-	if _, err := iamconn.DeleteAccountPasswordPolicy(input); err != nil {
+	if _, err := IAMConn.DeleteAccountPasswordPolicy(input); err != nil {
 		return fmt.Errorf("Error deleting IAM Password Policy: %s", err)
 	}
 	log.Println("[DEBUG] Deleted IAM account password policy")
