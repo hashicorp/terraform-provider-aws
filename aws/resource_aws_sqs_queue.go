@@ -139,20 +139,16 @@ func resourceAwsSqsQueue() *schema.Resource {
 				Optional: true,
 			},
 			"deduplication_scope": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice(
-					[]string{"messageGroup", "queue"},
-					false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(tfsqs.DeduplicationScope_Values(), false),
 			},
 			"fifo_throughput_limit": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice(
-					[]string{"perQueue", "perMessageGroupId"},
-					false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(tfsqs.FifoThroughputLimit_Values(), false),
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
