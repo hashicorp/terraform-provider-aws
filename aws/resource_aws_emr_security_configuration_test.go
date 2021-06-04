@@ -6,24 +6,27 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSEmrSecurityConfiguration_basic(t *testing.T) {
 	resourceName := "aws_emr_security_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, emr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEmrSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmrSecurityConfigurationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmrSecurityConfigurationExists(resourceName),
-					testAccCheckResourceAttrRfc3339(resourceName, "creation_date"),
+					atest.CheckAttrRfc3339(resourceName, "creation_date"),
 				),
 			},
 			{
@@ -36,7 +39,7 @@ func TestAccAWSEmrSecurityConfiguration_basic(t *testing.T) {
 }
 
 func testAccCheckEmrSecurityConfigurationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).emrconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EMRConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_emr_security_configuration" {
 			continue
@@ -47,7 +50,7 @@ func testAccCheckEmrSecurityConfigurationDestroy(s *terraform.State) error {
 			Name: aws.String(rs.Primary.ID),
 		})
 
-		if isAWSErr(err, "InvalidRequestException", "does not exist") {
+		if tfawserr.ErrMessageContains(err, "InvalidRequestException", "does not exist") {
 			return nil
 		}
 
@@ -76,7 +79,7 @@ func testAccCheckEmrSecurityConfigurationExists(n string) resource.TestCheckFunc
 			return fmt.Errorf("No EMR Security Configuration ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).emrconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EMRConn
 		resp, err := conn.DescribeSecurityConfiguration(&emr.DescribeSecurityConfigurationInput{
 			Name: aws.String(rs.Primary.ID),
 		})
