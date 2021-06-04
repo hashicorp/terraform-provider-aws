@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
@@ -114,7 +115,7 @@ func resourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validateArn,
+								ValidateFunc: ValidateArn,
 							},
 						},
 						"region": {
@@ -140,8 +141,8 @@ func resourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
 }
 
 func resourceAwsImageBuilderDistributionConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ImageBuilderConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateDistributionConfigurationInput{
@@ -180,9 +181,9 @@ func resourceAwsImageBuilderDistributionConfigurationCreate(d *schema.ResourceDa
 }
 
 func resourceAwsImageBuilderDistributionConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ImageBuilderConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetDistributionConfigurationInput{
 		DistributionConfigurationArn: aws.String(d.Id()),
@@ -227,7 +228,7 @@ func resourceAwsImageBuilderDistributionConfigurationRead(d *schema.ResourceData
 }
 
 func resourceAwsImageBuilderDistributionConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
+	conn := meta.(*awsprovider.AWSClient).ImageBuilderConn
 
 	if d.HasChanges("description", "distribution") {
 		input := &imagebuilder.UpdateDistributionConfigurationInput{
@@ -262,7 +263,7 @@ func resourceAwsImageBuilderDistributionConfigurationUpdate(d *schema.ResourceDa
 }
 
 func resourceAwsImageBuilderDistributionConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
+	conn := meta.(*awsprovider.AWSClient).ImageBuilderConn
 
 	input := &imagebuilder.DeleteDistributionConfigurationInput{
 		DistributionConfigurationArn: aws.String(d.Id()),
