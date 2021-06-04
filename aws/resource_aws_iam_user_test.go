@@ -10,11 +10,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/pquerna/otp/totp"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -25,11 +28,11 @@ func init() {
 }
 
 func testSweepIamUsers(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).iamconn
+	conn := client.(*awsprovider.AWSClient).IAMConn
 	prefixes := []string{
 		"test-user",
 		"test_user",
@@ -51,7 +54,7 @@ func testSweepIamUsers(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping IAM User sweep for %s: %s", region, err)
 		return nil
 	}
@@ -75,7 +78,7 @@ func testSweepIamUsers(region string) error {
 		}
 		listUserPoliciesOutput, err := conn.ListUserPolicies(listUserPoliciesInput)
 
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
 		}
 		if err != nil {
@@ -94,7 +97,7 @@ func testSweepIamUsers(region string) error {
 			}
 
 			if _, err := conn.DeleteUserPolicy(input); err != nil {
-				if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+				if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 					continue
 				}
 				sweeperErr := fmt.Errorf("error deleting IAM User (%s) inline policy %q: %s", username, *inlinePolicyName, err)
@@ -109,7 +112,7 @@ func testSweepIamUsers(region string) error {
 		}
 		listAttachedUserPoliciesOutput, err := conn.ListAttachedUserPolicies(listAttachedUserPoliciesInput)
 
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
 		}
 		if err != nil {
@@ -180,7 +183,7 @@ func testSweepIamUsers(region string) error {
 
 		_, err = conn.DeleteUser(input)
 
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
 		}
 		if err != nil {
@@ -204,9 +207,9 @@ func TestAccAWSUser_basic(t *testing.T) {
 	resourceName := "aws_iam_user.user"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -241,9 +244,9 @@ func TestAccAWSUser_disappears(t *testing.T) {
 	resourceName := "aws_iam_user.user"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -265,9 +268,9 @@ func TestAccAWSUser_ForceDestroy_AccessKey(t *testing.T) {
 	resourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -295,9 +298,9 @@ func TestAccAWSUser_ForceDestroy_LoginProfile(t *testing.T) {
 	resourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -325,9 +328,9 @@ func TestAccAWSUser_ForceDestroy_MFADevice(t *testing.T) {
 	resourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -355,9 +358,9 @@ func TestAccAWSUser_ForceDestroy_SSHKey(t *testing.T) {
 	resourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -385,9 +388,9 @@ func TestAccAWSUser_ForceDestroy_SigningCertificate(t *testing.T) {
 	resourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -417,9 +420,9 @@ func TestAccAWSUser_nameChange(t *testing.T) {
 	resourceName := "aws_iam_user.user"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -454,9 +457,9 @@ func TestAccAWSUser_pathChange(t *testing.T) {
 	resourceName := "aws_iam_user.user"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -488,13 +491,13 @@ func TestAccAWSUser_permissionsBoundary(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_user.user"
 
-	permissionsBoundary1 := fmt.Sprintf("arn:%s:iam::aws:policy/AdministratorAccess", testAccGetPartition())
-	permissionsBoundary2 := fmt.Sprintf("arn:%s:iam::aws:policy/ReadOnlyAccess", testAccGetPartition())
+	permissionsBoundary1 := fmt.Sprintf("arn:%s:iam::aws:policy/AdministratorAccess", atest.Partition())
+	permissionsBoundary2 := fmt.Sprintf("arn:%s:iam::aws:policy/ReadOnlyAccess", atest.Partition())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			// Test creation
@@ -567,9 +570,9 @@ func TestAccAWSUser_tags(t *testing.T) {
 	resourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -601,7 +604,7 @@ func TestAccAWSUser_tags(t *testing.T) {
 }
 
 func testAccCheckAWSUserDestroy(s *terraform.State) error {
-	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+	IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_user" {
@@ -609,7 +612,7 @@ func testAccCheckAWSUserDestroy(s *terraform.State) error {
 		}
 
 		// Try to get user
-		_, err := iamconn.GetUser(&iam.GetUserInput{
+		_, err := IAMConn.GetUser(&iam.GetUserInput{
 			UserName: aws.String(rs.Primary.ID),
 		})
 		if err == nil {
@@ -617,7 +620,7 @@ func testAccCheckAWSUserDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error is what we want
-		if !isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if !tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			return err
 		}
 	}
@@ -636,9 +639,9 @@ func testAccCheckAWSUserExists(n string, res *iam.GetUserOutput) resource.TestCh
 			return fmt.Errorf("No User name is set")
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
-		resp, err := iamconn.GetUser(&iam.GetUserInput{
+		resp, err := IAMConn.GetUser(&iam.GetUserInput{
 			UserName: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
@@ -667,11 +670,11 @@ func testAccCheckAWSUserAttributes(user *iam.GetUserOutput, name string, path st
 
 func testAccCheckAWSUserDisappears(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 		userName := aws.StringValue(getUserOutput.User.UserName)
 
-		_, err := iamconn.DeleteUser(&iam.DeleteUserInput{
+		_, err := IAMConn.DeleteUser(&iam.DeleteUserInput{
 			UserName: aws.String(userName),
 		})
 		if err != nil {
@@ -700,13 +703,13 @@ func testAccCheckAWSUserPermissionsBoundary(getUserOutput *iam.GetUserOutput, ex
 
 func testAccCheckAWSUserCreatesAccessKey(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 		input := &iam.CreateAccessKeyInput{
 			UserName: getUserOutput.User.UserName,
 		}
 
-		if _, err := iamconn.CreateAccessKey(input); err != nil {
+		if _, err := IAMConn.CreateAccessKey(input); err != nil {
 			return fmt.Errorf("error creating IAM User (%s) Access Key: %s", aws.StringValue(getUserOutput.User.UserName), err)
 		}
 
@@ -716,7 +719,7 @@ func testAccCheckAWSUserCreatesAccessKey(getUserOutput *iam.GetUserOutput) resou
 
 func testAccCheckAWSUserCreatesLoginProfile(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 		password, err := generateIAMPassword(32)
 		if err != nil {
 			return err
@@ -726,7 +729,7 @@ func testAccCheckAWSUserCreatesLoginProfile(getUserOutput *iam.GetUserOutput) re
 			UserName: getUserOutput.User.UserName,
 		}
 
-		if _, err := iamconn.CreateLoginProfile(input); err != nil {
+		if _, err := IAMConn.CreateLoginProfile(input); err != nil {
 			return fmt.Errorf("error creating IAM User (%s) Login Profile: %s", aws.StringValue(getUserOutput.User.UserName), err)
 		}
 
@@ -736,14 +739,14 @@ func testAccCheckAWSUserCreatesLoginProfile(getUserOutput *iam.GetUserOutput) re
 
 func testAccCheckAWSUserCreatesMFADevice(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 		createVirtualMFADeviceInput := &iam.CreateVirtualMFADeviceInput{
 			Path:                 getUserOutput.User.Path,
 			VirtualMFADeviceName: getUserOutput.User.UserName,
 		}
 
-		createVirtualMFADeviceOutput, err := iamconn.CreateVirtualMFADevice(createVirtualMFADeviceInput)
+		createVirtualMFADeviceOutput, err := IAMConn.CreateVirtualMFADevice(createVirtualMFADeviceInput)
 		if err != nil {
 			return fmt.Errorf("error creating IAM User (%s) Virtual MFA Device: %s", aws.StringValue(getUserOutput.User.UserName), err)
 		}
@@ -765,7 +768,7 @@ func testAccCheckAWSUserCreatesMFADevice(getUserOutput *iam.GetUserOutput) resou
 			UserName:            getUserOutput.User.UserName,
 		}
 
-		if _, err := iamconn.EnableMFADevice(enableVirtualMFADeviceInput); err != nil {
+		if _, err := IAMConn.EnableMFADevice(enableVirtualMFADeviceInput); err != nil {
 			return fmt.Errorf("error enabling IAM User (%s) Virtual MFA Device: %s", aws.StringValue(getUserOutput.User.UserName), err)
 		}
 
@@ -781,14 +784,14 @@ func testAccCheckAWSUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource
 			return fmt.Errorf("error reading SSH fixture: %s", err)
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 		input := &iam.UploadSSHPublicKeyInput{
 			UserName:         getUserOutput.User.UserName,
 			SSHPublicKeyBody: aws.String(string(sshKey)),
 		}
 
-		_, err = iamconn.UploadSSHPublicKey(input)
+		_, err = IAMConn.UploadSSHPublicKey(input)
 		if err != nil {
 			return fmt.Errorf("error uploading IAM User (%s) SSH key: %s", *getUserOutput.User.UserName, err)
 		}
@@ -799,7 +802,7 @@ func testAccCheckAWSUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource
 
 func testAccCheckAWSUserUploadSigningCertificate(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 		signingCertificate, err := os.ReadFile("./test-fixtures/iam-ssl-unix-line-endings.pem")
 		if err != nil {
@@ -810,7 +813,7 @@ func testAccCheckAWSUserUploadSigningCertificate(getUserOutput *iam.GetUserOutpu
 			UserName:        getUserOutput.User.UserName,
 		}
 
-		if _, err := iamconn.UploadSigningCertificate(input); err != nil {
+		if _, err := IAMConn.UploadSigningCertificate(input); err != nil {
 			return fmt.Errorf("error uploading IAM User (%s) Signing Certificate : %s", aws.StringValue(getUserOutput.User.UserName), err)
 		}
 
