@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // add sweeper to delete known test servicecat tag options
@@ -24,14 +26,14 @@ func init() {
 }
 
 func testSweepServiceCatalogTagOptions(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).scconn
-	sweepResources := make([]*testSweepResource, 0)
+	conn := client.(*awsprovider.AWSClient).ServiceCatalogConn
+	sweepResources := make([]*atest.TestSweepResource, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.ListTagOptionsInput{}
@@ -52,7 +54,7 @@ func testSweepServiceCatalogTagOptions(region string) error {
 			d := r.Data(nil)
 			d.SetId(id)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, atest.NewTestSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -62,11 +64,11 @@ func testSweepServiceCatalogTagOptions(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Tag Options for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = atest.TestSweepResourceOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Tag Options for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if atest.SweepSkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Tag Options sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -79,9 +81,9 @@ func TestAccAWSServiceCatalogTagOption_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, servicecatalog.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogTagOptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -108,16 +110,16 @@ func TestAccAWSServiceCatalogTagOption_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, servicecatalog.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogTagOptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSServiceCatalogTagOptionConfig_basic(rName, "värde", "active = true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogTagOptionExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogTagOption(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsServiceCatalogTagOption(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -134,9 +136,9 @@ func TestAccAWSServiceCatalogTagOption_update(t *testing.T) {
 	// be included or it will throw servicecatalog.ErrCodeDuplicateResourceException, "already exists"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, servicecatalog.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogTagOptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -193,9 +195,9 @@ func TestAccAWSServiceCatalogTagOption_notActive(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, servicecatalog.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogTagOptionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -212,7 +214,7 @@ func TestAccAWSServiceCatalogTagOption_notActive(t *testing.T) {
 }
 
 func testAccCheckAwsServiceCatalogTagOptionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).scconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ServiceCatalogConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_tag_option" {
@@ -249,7 +251,7 @@ func testAccCheckAwsServiceCatalogTagOptionExists(resourceName string) resource.
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).scconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ServiceCatalogConn
 
 		input := &servicecatalog.DescribeTagOptionInput{
 			Id: aws.String(rs.Primary.ID),
