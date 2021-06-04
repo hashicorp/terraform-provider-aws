@@ -6,7 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsSecretsManagerSecretVersion() *schema.Resource {
@@ -52,7 +54,7 @@ func dataSourceAwsSecretsManagerSecretVersion() *schema.Resource {
 }
 
 func dataSourceAwsSecretsManagerSecretVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*awsprovider.AWSClient).SecretsManagerConn
 	secretID := d.Get("secret_id").(string)
 	var version string
 
@@ -73,10 +75,10 @@ func dataSourceAwsSecretsManagerSecretVersionRead(d *schema.ResourceData, meta i
 	log.Printf("[DEBUG] Reading Secrets Manager Secret Version: %s", input)
 	output, err := conn.GetSecretValue(input)
 	if err != nil {
-		if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
 			return fmt.Errorf("Secrets Manager Secret %q Version %q not found", secretID, version)
 		}
-		if isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "You can’t perform this operation on the secret because it was deleted") {
+		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "You can’t perform this operation on the secret because it was deleted") {
 			return fmt.Errorf("Secrets Manager Secret %q Version %q not found", secretID, version)
 		}
 		return fmt.Errorf("error reading Secrets Manager Secret Version: %w", err)
