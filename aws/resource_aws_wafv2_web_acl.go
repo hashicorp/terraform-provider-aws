@@ -13,7 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -143,8 +144,8 @@ func resourceAwsWafv2WebACL() *schema.Resource {
 }
 
 func resourceAwsWafv2WebACLCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).WAFV2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	var resp *wafv2.CreateWebACLOutput
 
@@ -168,7 +169,7 @@ func resourceAwsWafv2WebACLCreate(d *schema.ResourceData, meta interface{}) erro
 		var err error
 		resp, err = conn.CreateWebACL(params)
 		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
+			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -194,9 +195,9 @@ func resourceAwsWafv2WebACLCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).WAFV2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	params := &wafv2.GetWebACLInput{
 		Id:    aws.String(d.Id()),
@@ -206,7 +207,7 @@ func resourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) error 
 
 	resp, err := conn.GetWebACL(params)
 	if err != nil {
-		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
 			log.Printf("[WARN] WAFv2 WebACL (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -257,7 +258,7 @@ func resourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
+	conn := meta.(*awsprovider.AWSClient).WAFV2Conn
 
 	if d.HasChanges("default_action", "description", "rule", "visibility_config") {
 		u := &wafv2.UpdateWebACLInput{
@@ -277,7 +278,7 @@ func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) erro
 		err := resource.Retry(Wafv2WebACLUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateWebACL(u)
 			if err != nil {
-				if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
+				if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -290,7 +291,7 @@ func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFOptimisticLockException, "") {
+			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFOptimisticLockException, "") {
 				return fmt.Errorf("Error updating WAFv2 WebACL, resource has changed since last refresh please run a new plan before applying again: %w", err)
 			}
 			return fmt.Errorf("Error updating WAFv2 WebACL: %w", err)
@@ -308,7 +309,7 @@ func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsWafv2WebACLDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
+	conn := meta.(*awsprovider.AWSClient).WAFV2Conn
 
 	log.Printf("[INFO] Deleting WAFv2 WebACL %s", d.Id())
 
@@ -470,7 +471,7 @@ func wafv2RuleGroupReferenceStatementSchema() *schema.Schema {
 				"arn": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validateArn,
+					ValidateFunc: ValidateArn,
 				},
 				"excluded_rule": wafv2ExcludedRuleSchema(),
 			},
