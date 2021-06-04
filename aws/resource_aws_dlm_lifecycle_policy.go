@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dlm"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDlmLifecyclePolicy() *schema.Resource {
@@ -37,7 +39,7 @@ func resourceAwsDlmLifecyclePolicy() *schema.Resource {
 				// TODO: Make this not required and if it's not provided then use the default service role, creating it if necessary
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"policy_details": {
 				Type:     schema.TypeList,
@@ -146,8 +148,8 @@ func resourceAwsDlmLifecyclePolicy() *schema.Resource {
 }
 
 func resourceAwsDlmLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dlmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DLMConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := dlm.CreateLifecyclePolicyInput{
@@ -173,16 +175,16 @@ func resourceAwsDlmLifecyclePolicyCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDlmLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dlmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DLMConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading DLM lifecycle policy: %s", d.Id())
 	out, err := conn.GetLifecyclePolicy(&dlm.GetLifecyclePolicyInput{
 		PolicyId: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, dlm.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, dlm.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] DLM Lifecycle Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -215,7 +217,7 @@ func resourceAwsDlmLifecyclePolicyRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsDlmLifecyclePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dlmconn
+	conn := meta.(*awsprovider.AWSClient).DLMConn
 
 	input := dlm.UpdateLifecyclePolicyInput{
 		PolicyId: aws.String(d.Id()),
@@ -258,7 +260,7 @@ func resourceAwsDlmLifecyclePolicyUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDlmLifecyclePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dlmconn
+	conn := meta.(*awsprovider.AWSClient).DLMConn
 
 	log.Printf("[INFO] Deleting DLM lifecycle policy: %s", d.Id())
 	_, err := conn.DeleteLifecyclePolicy(&dlm.DeleteLifecyclePolicyInput{
