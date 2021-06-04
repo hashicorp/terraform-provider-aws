@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsDxGateway() *schema.Resource {
@@ -31,7 +32,7 @@ func dataSourceAwsDxGateway() *schema.Resource {
 }
 
 func dataSourceAwsDxGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 	name := d.Get("name").(string)
 
 	gateways := make([]*directconnect.Gateway, 0)
