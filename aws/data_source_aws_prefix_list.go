@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsPrefixList() *schema.Resource {
@@ -28,19 +29,19 @@ func dataSourceAwsPrefixList() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": dataSourceFiltersSchema(),
+			"filter": awsprovider.DataSourceFiltersSchema(),
 		},
 	}
 }
 
 func dataSourceAwsPrefixListRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	filters, filtersOk := d.GetOk("filter")
 
 	req := &ec2.DescribePrefixListsInput{}
 	if filtersOk {
-		req.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
+		req.Filters = awsprovider.BuildDataSourceFilters(filters.(*schema.Set))
 	}
 	if prefixListID := d.Get("prefix_list_id"); prefixListID != "" {
 		req.PrefixListIds = aws.StringSlice([]string{prefixListID.(string)})
