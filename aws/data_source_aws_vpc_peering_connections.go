@@ -6,7 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsVpcPeeringConnections() *schema.Resource {
@@ -27,7 +28,7 @@ func dataSourceAwsVpcPeeringConnections() *schema.Resource {
 }
 
 func dataSourceAwsVpcPeeringConnectionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	req := &ec2.DescribeVpcPeeringConnectionsInput{}
 
@@ -55,7 +56,7 @@ func dataSourceAwsVpcPeeringConnectionsRead(d *schema.ResourceData, meta interfa
 		ids = append(ids, aws.StringValue(pcx.VpcPeeringConnectionId))
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*awsprovider.AWSClient).Region)
 
 	err = d.Set("ids", ids)
 	if err != nil {
