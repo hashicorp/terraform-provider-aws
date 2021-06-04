@@ -9,7 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSDBProxyTarget_Instance(t *testing.T) {
@@ -18,9 +20,9 @@ func TestAccAWSDBProxyTarget_Instance(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,9 +52,9 @@ func TestAccAWSDBProxyTarget_Cluster(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -82,16 +84,16 @@ func TestAccAWSDBProxyTarget_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBProxyTargetConfig_Instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyTargetExists(resourceName, &dbProxyTarget),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDbProxyTarget(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsDbProxyTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -100,7 +102,7 @@ func TestAccAWSDBProxyTarget_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSDBProxyTargetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_proxy_target" {
@@ -150,7 +152,7 @@ func testAccCheckAWSDBProxyTargetExists(n string, v *rds.DBProxyTarget) resource
 			return fmt.Errorf("No DB Proxy ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).RDSConn
 
 		dbProxyName, targetGroupName, targetType, rdsResourceId, err := resourceAwsDbProxyTargetParseID(rs.Primary.ID)
 
