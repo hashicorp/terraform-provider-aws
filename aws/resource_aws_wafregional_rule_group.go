@@ -8,8 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsWafRegionalRuleGroup() *schema.Resource {
@@ -81,10 +83,10 @@ func resourceAwsWafRegionalRuleGroup() *schema.Resource {
 }
 
 func resourceAwsWafRegionalRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
-	region := meta.(*AWSClient).region
+	region := meta.(*awsprovider.AWSClient).Region
 
 	wr := newWafRegionalRetryer(conn, region)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -120,9 +122,9 @@ func resourceAwsWafRegionalRuleGroupCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsWafRegionalRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	params := &waf.GetRuleGroupInput{
 		RuleGroupId: aws.String(d.Id()),
@@ -130,7 +132,7 @@ func resourceAwsWafRegionalRuleGroupRead(d *schema.ResourceData, meta interface{
 
 	resp, err := conn.GetRuleGroup(params)
 	if err != nil {
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			log.Printf("[WARN] WAF Regional Rule Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -147,9 +149,9 @@ func resourceAwsWafRegionalRuleGroupRead(d *schema.ResourceData, meta interface{
 	}
 
 	arn := arn.ARN{
-		AccountID: meta.(*AWSClient).accountid,
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Resource:  fmt.Sprintf("rulegroup/%s", d.Id()),
 		Service:   "waf-regional",
 	}.String()
@@ -178,8 +180,8 @@ func resourceAwsWafRegionalRuleGroupRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsWafRegionalRuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	region := meta.(*awsprovider.AWSClient).Region
 
 	if d.HasChange("activated_rule") {
 		o, n := d.GetChange("activated_rule")
@@ -203,8 +205,8 @@ func resourceAwsWafRegionalRuleGroupUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsWafRegionalRuleGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	region := meta.(*awsprovider.AWSClient).Region
 
 	oldRules := d.Get("activated_rule").(*schema.Set).List()
 	err := deleteWafRegionalRuleGroup(d.Id(), oldRules, conn, region)
