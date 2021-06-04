@@ -9,11 +9,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsBackupPlan() *schema.Resource {
@@ -114,7 +116,7 @@ func resourceAwsBackupPlan() *schema.Resource {
 									"destination_vault_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 								},
 							},
@@ -161,8 +163,8 @@ func resourceAwsBackupPlan() *schema.Resource {
 }
 
 func resourceAwsBackupPlanCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).BackupConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &backup.CreateBackupPlanInput{
@@ -186,14 +188,14 @@ func resourceAwsBackupPlanCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsBackupPlanRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).BackupConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.GetBackupPlan(&backup.GetBackupPlanInput{
 		BackupPlanId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Backup Plan (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -235,7 +237,7 @@ func resourceAwsBackupPlanRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsBackupPlanUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*awsprovider.AWSClient).BackupConn
 
 	if d.HasChanges("rule", "advanced_backup_setting") {
 		input := &backup.UpdateBackupPlanInput{
@@ -265,7 +267,7 @@ func resourceAwsBackupPlanUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsBackupPlanDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*awsprovider.AWSClient).BackupConn
 
 	input := &backup.DeleteBackupPlanInput{
 		BackupPlanId: aws.String(d.Id()),
@@ -275,11 +277,11 @@ func resourceAwsBackupPlanDelete(d *schema.ResourceData, meta interface{}) error
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteBackupPlan(input)
 
-		if isAWSErr(err, backup.ErrCodeInvalidRequestException, "Related backup plan selections must be deleted prior to backup") {
+		if tfawserr.ErrMessageContains(err, backup.ErrCodeInvalidRequestException, "Related backup plan selections must be deleted prior to backup") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 
