@@ -8,11 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCognitoUserPool() *schema.Resource {
@@ -169,7 +171,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						"source_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -202,52 +204,52 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						"create_auth_challenge": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"custom_message": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"define_auth_challenge": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"post_authentication": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"post_confirmation": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"pre_authentication": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"pre_sign_up": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"pre_token_generation": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"user_migration": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"verify_auth_challenge_response": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -388,7 +390,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						"sns_caller_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -510,8 +512,8 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 }
 
 func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &cognitoidentityprovider.CreateUserPoolInput{
@@ -689,11 +691,11 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateUserPool(params)
-		if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
+		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
 			log.Printf("[DEBUG] Received %s, retrying CreateUserPool", err)
 			return resource.RetryableError(err)
 		}
-		if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
+		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
 			log.Printf("[DEBUG] Received %s, retrying CreateUserPool", err)
 			return resource.RetryableError(err)
 		}
@@ -732,11 +734,11 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.SetUserPoolMfaConfig(input)
 
-			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
+			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
 				return resource.RetryableError(err)
 			}
 
-			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
+			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
 				return resource.RetryableError(err)
 			}
 
@@ -760,9 +762,9 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	params := &cognitoidentityprovider.DescribeUserPoolInput{
 		UserPoolId: aws.String(d.Id()),
@@ -770,7 +772,7 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 
 	resp, err := conn.DescribeUserPool(params)
 
-	if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Cognito User Pool (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -788,7 +790,7 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.Set("arn", resp.UserPool.Arn)
-	d.Set("endpoint", fmt.Sprintf("%s/%s", meta.(*AWSClient).RegionalHostname("cognito-idp"), d.Id()))
+	d.Set("endpoint", fmt.Sprintf("%s/%s", meta.(*awsprovider.AWSClient).RegionalHostname("cognito-idp"), d.Id()))
 	d.Set("auto_verified_attributes", flattenStringSet(resp.UserPool.AutoVerifiedAttributes))
 
 	if resp.UserPool.EmailVerificationSubject != nil {
@@ -875,7 +877,7 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 
 	output, err := conn.GetUserPoolMfaConfig(input)
 
-	if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Cognito User Pool (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -895,8 +897,8 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Multi-Factor Authentication updates
@@ -930,11 +932,11 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.SetUserPoolMfaConfig(input)
 
-			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
+			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
 				return resource.RetryableError(err)
 			}
 
-			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
+			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
 				return resource.RetryableError(err)
 			}
 
@@ -1132,15 +1134,15 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			var err error
 			_, err = conn.UpdateUserPool(params)
-			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
+			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
 				log.Printf("[DEBUG] Received %s, retrying UpdateUserPool", err)
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
+			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
 				log.Printf("[DEBUG] Received %s, retrying UpdateUserPool", err)
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidParameterException, "Please use TemporaryPasswordValidityDays in PasswordPolicy instead of UnusedAccountValidityDays") {
+			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidParameterException, "Please use TemporaryPasswordValidityDays in PasswordPolicy instead of UnusedAccountValidityDays") {
 				log.Printf("[DEBUG] Received %s, retrying UpdateUserPool without UnusedAccountValidityDays", err)
 				params.AdminCreateUserConfig.UnusedAccountValidityDays = nil
 				return resource.RetryableError(err)
@@ -1178,7 +1180,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsCognitoUserPoolDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	params := &cognitoidentityprovider.DeleteUserPoolInput{
 		UserPoolId: aws.String(d.Id()),
