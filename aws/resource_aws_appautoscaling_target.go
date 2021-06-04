@@ -8,9 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsAppautoscalingTarget() *schema.Resource {
@@ -57,7 +59,7 @@ func resourceAwsAppautoscalingTarget() *schema.Resource {
 }
 
 func resourceAwsAppautoscalingTargetPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appautoscalingconn
+	conn := meta.(*awsprovider.AWSClient).ApplicationAutoScalingConn
 
 	var targetOpts applicationautoscaling.RegisterScalableTargetInput
 
@@ -77,10 +79,10 @@ func resourceAwsAppautoscalingTargetPut(d *schema.ResourceData, meta interface{}
 		_, err = conn.RegisterScalableTarget(&targetOpts)
 
 		if err != nil {
-			if isAWSErr(err, applicationautoscaling.ErrCodeValidationException, "Unable to assume IAM role") {
+			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeValidationException, "Unable to assume IAM role") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, applicationautoscaling.ErrCodeValidationException, "ECS service doesn't exist") {
+			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeValidationException, "ECS service doesn't exist") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -105,7 +107,7 @@ func resourceAwsAppautoscalingTargetPut(d *schema.ResourceData, meta interface{}
 func resourceAwsAppautoscalingTargetRead(d *schema.ResourceData, meta interface{}) error {
 	var t *applicationautoscaling.ScalableTarget
 
-	conn := meta.(*AWSClient).appautoscalingconn
+	conn := meta.(*awsprovider.AWSClient).ApplicationAutoScalingConn
 
 	namespace := d.Get("service_namespace").(string)
 	dimension := d.Get("scalable_dimension").(string)
@@ -145,7 +147,7 @@ func resourceAwsAppautoscalingTargetRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsAppautoscalingTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appautoscalingconn
+	conn := meta.(*awsprovider.AWSClient).ApplicationAutoScalingConn
 
 	input := &applicationautoscaling.DeregisterScalableTargetInput{
 		ResourceId:        aws.String(d.Get("resource_id").(string)),
@@ -155,7 +157,7 @@ func resourceAwsAppautoscalingTargetDelete(d *schema.ResourceData, meta interfac
 
 	_, err := conn.DeregisterScalableTarget(input)
 
-	if isAWSErr(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
 		return nil
 	}
 
