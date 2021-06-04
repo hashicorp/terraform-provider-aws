@@ -7,10 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
@@ -21,11 +24,11 @@ func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			atest.PreCheck(t)
+			atest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ram.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsRamResourceShareAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -33,10 +36,10 @@ func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRamResourceShareAccepterExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "share_arn", principalAssociationResourceName, "resource_share_arn"),
-					testAccMatchResourceAttrRegionalARNAccountID(resourceName, "invitation_arn", "ram", `\d{12}`, regexp.MustCompile(fmt.Sprintf("resource-share-invitation/%s$", uuidRegexPattern))),
+					atest.MatchAttrRegionalARNAccountID(resourceName, "invitation_arn", "ram", `\d{12}`, regexp.MustCompile(fmt.Sprintf("resource-share-invitation/%s$", uuidRegexPattern))),
 					resource.TestMatchResourceAttr(resourceName, "share_id", regexp.MustCompile(fmt.Sprintf(`^rs-%s$`, uuidRegexPattern))),
 					resource.TestCheckResourceAttr(resourceName, "status", ram.ResourceShareStatusActive),
-					testAccCheckResourceAttrAccountID(resourceName, "receiver_account_id"),
+					atest.CheckAttrAccountID(resourceName, "receiver_account_id"),
 					resource.TestMatchResourceAttr(resourceName, "sender_account_id", regexp.MustCompile(`\d{12}`)),
 					resource.TestCheckResourceAttr(resourceName, "share_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "resources.%", "0"),
@@ -59,18 +62,18 @@ func TestAccAwsRamResourceShareAccepter_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			atest.PreCheck(t)
+			atest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ram.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsRamResourceShareAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsRamResourceShareAccepterBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRamResourceShareAccepterExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRamResourceShareAccepter(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsRamResourceShareAccepter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -79,7 +82,7 @@ func TestAccAwsRamResourceShareAccepter_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsRamResourceShareAccepterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ramconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).RAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ram_resource_share_accepter" {
@@ -93,7 +96,7 @@ func testAccCheckAwsRamResourceShareAccepterDestroy(s *terraform.State) error {
 
 		output, err := conn.GetResourceShares(input)
 		if err != nil {
-			if isAWSErr(err, ram.ErrCodeUnknownResourceException, "") {
+			if tfawserr.ErrMessageContains(err, ram.ErrCodeUnknownResourceException, "") {
 				return nil
 			}
 			return fmt.Errorf("Error deleting RAM resource share: %s", err)
@@ -115,7 +118,7 @@ func testAccCheckAwsRamResourceShareAccepterExists(name string) resource.TestChe
 			return fmt.Errorf("RAM resource share invitation not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ramconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).RAMConn
 
 		input := &ram.GetResourceSharesInput{
 			ResourceShareArns: []*string{aws.String(rs.Primary.Attributes["share_arn"])},
@@ -132,7 +135,7 @@ func testAccCheckAwsRamResourceShareAccepterExists(name string) resource.TestChe
 }
 
 func testAccAwsRamResourceShareAccepterBasic(rName string) string {
-	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+	return atest.ConfigProviderAlternateAccount() + fmt.Sprintf(`
 resource "aws_ram_resource_share_accepter" "test" {
   share_arn = aws_ram_principal_association.test.resource_share_arn
 }
