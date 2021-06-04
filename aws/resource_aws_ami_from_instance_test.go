@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSAMIFromInstance_basic(t *testing.T) {
@@ -18,22 +20,22 @@ func TestAccAWSAMIFromInstance_basic(t *testing.T) {
 	resourceName := "aws_ami_from_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAMIFromInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAMIFromInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAMIFromInstanceExists(resourceName, &image),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
+					atest.MatchAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "Testing Terraform aws_ami_from_instance resource"),
 					resource.TestCheckResourceAttr(resourceName, "usage_operation", "RunInstances"),
 					resource.TestCheckResourceAttr(resourceName, "platform_details", "Linux/UNIX"),
 					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),
 					resource.TestCheckResourceAttr(resourceName, "hypervisor", "xen"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					atest.CheckAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -47,9 +49,9 @@ func TestAccAWSAMIFromInstance_tags(t *testing.T) {
 	resourceName := "aws_ami_from_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAMIFromInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -87,16 +89,16 @@ func TestAccAWSAMIFromInstance_disappears(t *testing.T) {
 	resourceName := "aws_ami_from_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAMIFromInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAMIFromInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAMIFromInstanceExists(resourceName, &image),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAmiFromInstance(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsAmiFromInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -115,7 +117,7 @@ func testAccCheckAWSAMIFromInstanceExists(resourceName string, image *ec2.Image)
 			return fmt.Errorf("No ID set for %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 		input := &ec2.DescribeImagesInput{
 			ImageIds: []*string{aws.String(rs.Primary.ID)},
@@ -136,7 +138,7 @@ func testAccCheckAWSAMIFromInstanceExists(resourceName string, image *ec2.Image)
 }
 
 func testAccCheckAWSAMIFromInstanceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ami_from_instance" {
@@ -161,7 +163,7 @@ func testAccCheckAWSAMIFromInstanceDestroy(s *terraform.State) error {
 }
 
 func testAccAWSAMIFromInstanceConfigBase(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -177,7 +179,7 @@ resource "aws_instance" "test" {
 }
 
 func testAccAWSAMIFromInstanceConfig(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAMIFromInstanceConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_ami_from_instance" "test" {
@@ -189,7 +191,7 @@ resource "aws_ami_from_instance" "test" {
 }
 
 func testAccAWSAMIFromInstanceConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAMIFromInstanceConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_ami_from_instance" "test" {
@@ -205,7 +207,7 @@ resource "aws_ami_from_instance" "test" {
 }
 
 func testAccAWSAMIFromInstanceConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAMIFromInstanceConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_ami_from_instance" "test" {
