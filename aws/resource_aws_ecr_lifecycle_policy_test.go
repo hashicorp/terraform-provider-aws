@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSEcrLifecyclePolicy_basic(t *testing.T) {
@@ -17,9 +20,9 @@ func TestAccAWSEcrLifecyclePolicy_basic(t *testing.T) {
 	resourceName := "aws_ecr_lifecycle_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -38,7 +41,7 @@ func TestAccAWSEcrLifecyclePolicy_basic(t *testing.T) {
 }
 
 func testAccCheckAWSEcrLifecyclePolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ecrconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ECRConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecr_lifecycle_policy" {
@@ -51,10 +54,10 @@ func testAccCheckAWSEcrLifecyclePolicyDestroy(s *terraform.State) error {
 
 		_, err := conn.GetLifecyclePolicy(input)
 		if err != nil {
-			if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
 				return nil
 			}
-			if isAWSErr(err, ecr.ErrCodeLifecyclePolicyNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, ecr.ErrCodeLifecyclePolicyNotFoundException, "") {
 				return nil
 			}
 			return err
@@ -71,7 +74,7 @@ func testAccCheckAWSEcrLifecyclePolicyExists(name string) resource.TestCheckFunc
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ecrconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ECRConn
 
 		input := &ecr.GetLifecyclePolicyInput{
 			RepositoryName: aws.String(rs.Primary.ID),
