@@ -7,10 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsConfigConfigurationAggregator() *schema.Resource {
@@ -102,7 +104,7 @@ func resourceAwsConfigConfigurationAggregator() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -114,8 +116,8 @@ func resourceAwsConfigConfigurationAggregator() *schema.Resource {
 }
 
 func resourceAwsConfigConfigurationAggregatorPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ConfigConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &configservice.PutConfigurationAggregatorInput{
@@ -152,9 +154,9 @@ func resourceAwsConfigConfigurationAggregatorPut(d *schema.ResourceData, meta in
 }
 
 func resourceAwsConfigConfigurationAggregatorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ConfigConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	req := &configservice.DescribeConfigurationAggregatorsInput{
 		ConfigurationAggregatorNames: []*string{aws.String(d.Id())},
@@ -162,7 +164,7 @@ func resourceAwsConfigConfigurationAggregatorRead(d *schema.ResourceData, meta i
 
 	res, err := conn.DescribeConfigurationAggregators(req)
 	if err != nil {
-		if isAWSErr(err, configservice.ErrCodeNoSuchConfigurationAggregatorException, "") {
+		if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigurationAggregatorException, "") {
 			log.Printf("[WARN] No such configuration aggregator (%s), removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -210,14 +212,14 @@ func resourceAwsConfigConfigurationAggregatorRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsConfigConfigurationAggregatorDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*awsprovider.AWSClient).ConfigConn
 
 	req := &configservice.DeleteConfigurationAggregatorInput{
 		ConfigurationAggregatorName: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteConfigurationAggregator(req)
 
-	if isAWSErr(err, configservice.ErrCodeNoSuchConfigurationAggregatorException, "") {
+	if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigurationAggregatorException, "") {
 		return nil
 	}
 
