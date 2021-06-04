@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsEcrAuthorizationToken() *schema.Resource {
@@ -48,7 +49,7 @@ func dataSourceAwsEcrAuthorizationToken() *schema.Resource {
 }
 
 func dataSourceAwsEcrAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
+	conn := meta.(*awsprovider.AWSClient).ECRConn
 	params := &ecr.GetAuthorizationTokenInput{}
 	if v, ok := d.GetOk("registry_id"); ok {
 		params.RegistryIds = []*string{aws.String(v.(string))}
@@ -74,7 +75,7 @@ func dataSourceAwsEcrAuthorizationTokenRead(d *schema.ResourceData, meta interfa
 	}
 	userName := basicAuthorization[0]
 	password := basicAuthorization[1]
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*awsprovider.AWSClient).Region)
 	d.Set("authorization_token", authorizationToken)
 	d.Set("proxy_endpoint", proxyEndpoint)
 	d.Set("expires_at", expiresAt)
