@@ -8,9 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSAppsyncApiKey_basic(t *testing.T) {
@@ -20,9 +23,9 @@ func TestAccAWSAppsyncApiKey_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appsync.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncApiKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -49,9 +52,9 @@ func TestAccAWSAppsyncApiKey_Description(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appsync.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncApiKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -85,9 +88,9 @@ func TestAccAWSAppsyncApiKey_Expires(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appsync.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncApiKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -114,7 +117,7 @@ func TestAccAWSAppsyncApiKey_Expires(t *testing.T) {
 }
 
 func testAccCheckAwsAppsyncApiKeyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).appsyncconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).AppSyncConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_api_key" {
 			continue
@@ -127,7 +130,7 @@ func testAccCheckAwsAppsyncApiKeyDestroy(s *terraform.State) error {
 
 		apiKey, err := getAppsyncApiKey(apiID, keyID, conn)
 		if err == nil {
-			if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return err
@@ -156,7 +159,7 @@ func testAccCheckAwsAppsyncApiKeyExists(resourceName string, apiKey *appsync.Api
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).appsyncconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AppSyncConn
 		key, err := getAppsyncApiKey(apiID, keyID, conn)
 		if err != nil {
 			return err
