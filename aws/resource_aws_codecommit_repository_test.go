@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSCodeCommitRepository_basic(t *testing.T) {
@@ -17,9 +19,9 @@ func TestAccAWSCodeCommitRepository_basic(t *testing.T) {
 	resourceName := "aws_codecommit_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codecommit.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, codecommit.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -42,9 +44,9 @@ func TestAccAWSCodeCommitRepository_withChanges(t *testing.T) {
 	resourceName := "aws_codecommit_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codecommit.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, codecommit.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -77,9 +79,9 @@ func TestAccAWSCodeCommitRepository_create_default_branch(t *testing.T) {
 	resourceName := "aws_codecommit_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codecommit.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, codecommit.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -105,9 +107,9 @@ func TestAccAWSCodeCommitRepository_create_and_update_default_branch(t *testing.
 	resourceName := "aws_codecommit_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codecommit.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, codecommit.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -140,9 +142,9 @@ func TestAccAWSCodeCommitRepository_tags(t *testing.T) {
 	resourceName := "aws_codecommit_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, codecommit.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, codecommit.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -190,8 +192,8 @@ func testAccCheckCodeCommitRepositoryExists(name string) resource.TestCheckFunc 
 			return fmt.Errorf("No ID is set")
 		}
 
-		codecommitconn := testAccProvider.Meta().(*AWSClient).codecommitconn
-		out, err := codecommitconn.GetRepository(&codecommit.GetRepositoryInput{
+		CodeCommitConn := atest.Provider.Meta().(*awsprovider.AWSClient).CodeCommitConn
+		out, err := CodeCommitConn.GetRepository(&codecommit.GetRepositoryInput{
 			RepositoryName: aws.String(rs.Primary.ID),
 		})
 
@@ -213,7 +215,7 @@ func testAccCheckCodeCommitRepositoryExists(name string) resource.TestCheckFunc 
 }
 
 func testAccCheckCodeCommitRepositoryDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).codecommitconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CodeCommitConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codecommit_repository" {
