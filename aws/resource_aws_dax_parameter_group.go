@@ -5,7 +5,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDaxParameterGroup() *schema.Resource {
@@ -52,7 +54,7 @@ func resourceAwsDaxParameterGroup() *schema.Resource {
 }
 
 func resourceAwsDaxParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).daxconn
+	conn := meta.(*awsprovider.AWSClient).DAXConn
 
 	input := &dax.CreateParameterGroupInput{
 		ParameterGroupName: aws.String(d.Get("name").(string)),
@@ -75,13 +77,13 @@ func resourceAwsDaxParameterGroupCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsDaxParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).daxconn
+	conn := meta.(*awsprovider.AWSClient).DAXConn
 
 	resp, err := conn.DescribeParameterGroups(&dax.DescribeParameterGroupsInput{
 		ParameterGroupNames: []*string{aws.String(d.Id())},
 	})
 	if err != nil {
-		if isAWSErr(err, dax.ErrCodeParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, dax.ErrCodeParameterGroupNotFoundFault, "") {
 			log.Printf("[WARN] DAX ParameterGroup %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -101,7 +103,7 @@ func resourceAwsDaxParameterGroupRead(d *schema.ResourceData, meta interface{}) 
 		ParameterGroupName: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, dax.ErrCodeParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, dax.ErrCodeParameterGroupNotFoundFault, "") {
 			log.Printf("[WARN] DAX ParameterGroup %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -121,7 +123,7 @@ func resourceAwsDaxParameterGroupRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsDaxParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).daxconn
+	conn := meta.(*awsprovider.AWSClient).DAXConn
 
 	input := &dax.UpdateParameterGroupInput{
 		ParameterGroupName: aws.String(d.Id()),
@@ -142,7 +144,7 @@ func resourceAwsDaxParameterGroupUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsDaxParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).daxconn
+	conn := meta.(*awsprovider.AWSClient).DAXConn
 
 	input := &dax.DeleteParameterGroupInput{
 		ParameterGroupName: aws.String(d.Id()),
@@ -150,7 +152,7 @@ func resourceAwsDaxParameterGroupDelete(d *schema.ResourceData, meta interface{}
 
 	_, err := conn.DeleteParameterGroup(input)
 	if err != nil {
-		if isAWSErr(err, dax.ErrCodeParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, dax.ErrCodeParameterGroupNotFoundFault, "") {
 			return nil
 		}
 		return err
