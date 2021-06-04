@@ -8,8 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsAppsyncFunction() *schema.Resource {
@@ -77,7 +79,7 @@ func resourceAwsAppsyncFunction() *schema.Resource {
 }
 
 func resourceAwsAppsyncFunctionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
+	conn := meta.(*awsprovider.AWSClient).AppSyncConn
 
 	apiID := d.Get("api_id").(string)
 
@@ -108,7 +110,7 @@ func resourceAwsAppsyncFunctionCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsAppsyncFunctionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
+	conn := meta.(*awsprovider.AWSClient).AppSyncConn
 
 	apiID, functionID, err := decodeAppsyncFunctionID(d.Id())
 	if err != nil {
@@ -121,7 +123,7 @@ func resourceAwsAppsyncFunctionRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	resp, err := conn.GetFunction(input)
-	if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] No such entity found for Appsync Function (%s)", d.Id())
 		d.SetId("")
 		return nil
@@ -144,7 +146,7 @@ func resourceAwsAppsyncFunctionRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsAppsyncFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
+	conn := meta.(*awsprovider.AWSClient).AppSyncConn
 
 	apiID, functionID, err := decodeAppsyncFunctionID(d.Id())
 	if err != nil {
@@ -169,7 +171,7 @@ func resourceAwsAppsyncFunctionUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	_, err = conn.UpdateFunction(input)
-	if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] No such entity found for Appsync Function (%s)", d.Id())
 		d.SetId("")
 		return nil
@@ -182,7 +184,7 @@ func resourceAwsAppsyncFunctionUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsAppsyncFunctionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
+	conn := meta.(*awsprovider.AWSClient).AppSyncConn
 
 	apiID, functionID, err := decodeAppsyncFunctionID(d.Id())
 	if err != nil {
@@ -195,7 +197,7 @@ func resourceAwsAppsyncFunctionDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	_, err = conn.DeleteFunction(input)
-	if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
