@@ -38,5 +38,5 @@ POLICY
 
 	/* Failing cases */
 
-	fmt.Sprintf("%s.amazonaws.com", "test") // want "prefer \\(\\*AWSClient\\).PartitionHostname\\(\\) or \\(\\*AWSClient\\).RegionalHostname\\(\\)"
+	fmt.Sprintf("%s.amazonaws.com", "test") // want "prefer \\(\\*awsprovider.AWSClient\\).PartitionHostname\\(\\) or \\(\\*awsprovider.AWSClient\\).RegionalHostname\\(\\)"
 }
