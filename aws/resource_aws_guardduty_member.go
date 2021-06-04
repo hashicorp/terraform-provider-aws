@@ -8,8 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGuardDutyMember() *schema.Resource {
@@ -67,7 +69,7 @@ func resourceAwsGuardDutyMember() *schema.Resource {
 }
 
 func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
 	accountID := d.Get("account_id").(string)
 	detectorID := d.Get("detector_id").(string)
 
@@ -113,7 +115,7 @@ func resourceAwsGuardDutyMemberCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsGuardDutyMemberRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
 
 	accountID, detectorID, err := decodeGuardDutyMemberID(d.Id())
 	if err != nil {
@@ -128,7 +130,7 @@ func resourceAwsGuardDutyMemberRead(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Reading GuardDuty Member: %s", input)
 	gmo, err := conn.GetMembers(&input)
 	if err != nil {
-		if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 			log.Printf("[WARN] GuardDuty detector %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -160,7 +162,7 @@ func resourceAwsGuardDutyMemberRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsGuardDutyMemberUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
 
 	accountID, detectorID, err := decodeGuardDutyMemberID(d.Id())
 	if err != nil {
@@ -208,7 +210,7 @@ func resourceAwsGuardDutyMemberUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsGuardDutyMemberDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
 
 	accountID, detectorID, err := decodeGuardDutyMemberID(d.Id())
 	if err != nil {
