@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSKmsSecretsDataSource_basic(t *testing.T) {
@@ -20,9 +22,9 @@ func TestAccAWSKmsSecretsDataSource_basic(t *testing.T) {
 
 	// Run a resource test to setup our KMS key
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, kms.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, kms.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsKmsSecretsDataSourceKey,
@@ -39,7 +41,7 @@ func TestAccAWSKmsSecretsDataSource_basic(t *testing.T) {
 
 func testAccDataSourceAwsKmsSecretsEncrypt(key *kms.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		kmsconn := testAccProvider.Meta().(*AWSClient).kmsconn
+		KMSConn := atest.Provider.Meta().(*awsprovider.AWSClient).KMSConn
 
 		input := &kms.EncryptInput{
 			KeyId:     key.Arn,
@@ -49,7 +51,7 @@ func testAccDataSourceAwsKmsSecretsEncrypt(key *kms.KeyMetadata, plaintext strin
 			},
 		}
 
-		resp, err := kmsconn.Encrypt(input)
+		resp, err := KMSConn.Encrypt(input)
 		if err != nil {
 			return fmt.Errorf("failed encrypting string: %s", err)
 		}
@@ -65,9 +67,9 @@ func testAccDataSourceAwsKmsSecretsDecrypt(t *testing.T, plaintext string, encry
 		dataSourceName := "data.aws_kms_secrets.test"
 
 		resource.Test(t, resource.TestCase{
-			PreCheck:   func() { testAccPreCheck(t) },
-			ErrorCheck: testAccErrorCheck(t, kms.EndpointsID),
-			Providers:  testAccProviders,
+			PreCheck:   func() { atest.PreCheck(t) },
+			ErrorCheck: atest.ErrorCheck(t, kms.EndpointsID),
+			Providers:  atest.Providers,
 			Steps: []resource.TestStep{
 				{
 					Config: testAccCheckAwsKmsSecretsDataSourceSecret(*encryptedPayload),
