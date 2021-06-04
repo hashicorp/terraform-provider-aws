@@ -46,7 +46,7 @@ func TestBuildEC2AttributeFilterList(t *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		result := buildEC2AttributeFilterList(testCase.Attrs)
+		result := BuildEC2AttributeFilterList(testCase.Attrs)
 
 		if !reflect.DeepEqual(result, testCase.Expected) {
 			t.Errorf(
