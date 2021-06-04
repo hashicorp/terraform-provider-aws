@@ -17,9 +17,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elbv2/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsLbbListenerRule() *schema.Resource {
@@ -41,7 +42,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"priority": {
 				Type:         schema.TypeInt,
@@ -71,7 +72,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							DiffSuppressFunc: suppressIfActionTypeNot(elbv2.ActionTypeEnumForward),
-							ValidateFunc:     validateArn,
+							ValidateFunc:     ValidateArn,
 						},
 
 						"forward": {
@@ -91,7 +92,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 												"arn": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: ValidateArn,
 												},
 												"weight": {
 													Type:         schema.TypeInt,
@@ -251,7 +252,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 									"user_pool_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 									"user_pool_client_id": {
 										Type:     schema.TypeString,
@@ -475,9 +476,9 @@ func suppressIfActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
 }
 
 func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbv2conn
+	ELBConn := meta.(*awsprovider.AWSClient).ELBV2Conn
 	listenerArn := d.Get("listener_arn").(string)
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &elbv2.CreateRuleInput{
@@ -503,7 +504,7 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 	if v, ok := d.GetOk("priority"); ok {
 		var err error
 		params.Priority = aws.Int64(int64(v.(int)))
-		resp, err = elbconn.CreateRule(params)
+		resp, err = ELBConn.CreateRule(params)
 		if err != nil {
 			return fmt.Errorf("Error creating LB Listener Rule: %w", err)
 		}
@@ -511,14 +512,14 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 		var priority int64
 		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 			var err error
-			priority, err = highestListenerRulePriority(elbconn, listenerArn)
+			priority, err = highestListenerRulePriority(ELBConn, listenerArn)
 			if err != nil {
 				return resource.NonRetryableError(err)
 			}
 			params.Priority = aws.Int64(priority + 1)
-			resp, err = elbconn.CreateRule(params)
+			resp, err = ELBConn.CreateRule(params)
 			if err != nil {
-				if isAWSErr(err, elbv2.ErrCodePriorityInUseException, "") {
+				if tfawserr.ErrMessageContains(err, elbv2.ErrCodePriorityInUseException, "") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -526,12 +527,12 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 			return nil
 		})
 		if isResourceTimeoutError(err) {
-			priority, err = highestListenerRulePriority(elbconn, listenerArn)
+			priority, err = highestListenerRulePriority(ELBConn, listenerArn)
 			if err != nil {
 				return fmt.Errorf("Error getting highest listener rule priority: %w", err)
 			}
 			params.Priority = aws.Int64(priority + 1)
-			resp, err = elbconn.CreateRule(params)
+			resp, err = ELBConn.CreateRule(params)
 		}
 		if err != nil {
 			return fmt.Errorf("Error creating LB Listener Rule: %w", err)
@@ -548,9 +549,9 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	ELBConn := meta.(*awsprovider.AWSClient).ELBV2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	var resp *elbv2.DescribeRulesOutput
 	var req = &elbv2.DescribeRulesInput{
@@ -559,9 +560,9 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
-		resp, err = elbconn.DescribeRules(req)
+		resp, err = ELBConn.DescribeRules(req)
 		if err != nil {
-			if d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeRuleNotFoundException, "") {
+			if d.IsNewResource() && tfawserr.ErrMessageContains(err, elbv2.ErrCodeRuleNotFoundException, "") {
 				return resource.RetryableError(err)
 			} else {
 				return resource.NonRetryableError(err)
@@ -570,10 +571,10 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 		return nil
 	})
 	if isResourceTimeoutError(err) {
-		resp, err = elbconn.DescribeRules(req)
+		resp, err = ELBConn.DescribeRules(req)
 	}
 	if err != nil {
-		if isAWSErr(err, elbv2.ErrCodeRuleNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeRuleNotFoundException, "") {
 			log.Printf("[WARN] DescribeRules - removing %s from state", d.Id())
 			d.SetId("")
 			return nil
@@ -589,7 +590,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("arn", rule.RuleArn)
 
-	tags, err := keyvaluetags.Elbv2ListTags(elbconn, d.Id())
+	tags, err := keyvaluetags.Elbv2ListTags(ELBConn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
@@ -789,7 +790,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbv2conn
+	ELBConn := meta.(*awsprovider.AWSClient).ELBV2Conn
 
 	if d.HasChange("priority") {
 		params := &elbv2.SetRulePrioritiesInput{
@@ -801,7 +802,7 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 			},
 		}
 
-		_, err := elbconn.SetRulePriorities(params)
+		_, err := ELBConn.SetRulePriorities(params)
 		if err != nil {
 			return err
 		}
@@ -831,7 +832,7 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if requestUpdate {
-		resp, err := elbconn.ModifyRule(params)
+		resp, err := ELBConn.ModifyRule(params)
 		if err != nil {
 			return fmt.Errorf("Error modifying LB Listener Rule: %w", err)
 		}
@@ -845,7 +846,7 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 		o, n := d.GetChange("tags_all")
 
 		err := resource.Retry(waiter.LoadBalancerTagPropagationTimeout, func() *resource.RetryError {
-			err := keyvaluetags.Elbv2UpdateTags(elbconn, d.Id(), o, n)
+			err := keyvaluetags.Elbv2UpdateTags(ELBConn, d.Id(), o, n)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
 				log.Printf("[DEBUG] Retrying tagging of LB Listener Rule (%s) after error: %s", d.Id(), err)
@@ -860,7 +861,7 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 		})
 
 		if tfresource.TimedOut(err) {
-			err = keyvaluetags.Elbv2UpdateTags(elbconn, d.Id(), o, n)
+			err = keyvaluetags.Elbv2UpdateTags(ELBConn, d.Id(), o, n)
 		}
 
 		if err != nil {
@@ -872,12 +873,12 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsLbListenerRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbv2conn
+	ELBConn := meta.(*awsprovider.AWSClient).ELBV2Conn
 
-	_, err := elbconn.DeleteRule(&elbv2.DeleteRuleInput{
+	_, err := ELBConn.DeleteRule(&elbv2.DeleteRuleInput{
 		RuleArn: aws.String(d.Id()),
 	})
-	if err != nil && !isAWSErr(err, elbv2.ErrCodeRuleNotFoundException, "") {
+	if err != nil && !tfawserr.ErrMessageContains(err, elbv2.ErrCodeRuleNotFoundException, "") {
 		return fmt.Errorf("Error deleting LB Listener Rule: %w", err)
 	}
 	return nil
