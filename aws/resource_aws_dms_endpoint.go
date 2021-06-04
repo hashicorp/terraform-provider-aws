@@ -10,10 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDmsEndpoint() *schema.Resource {
@@ -32,7 +34,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"database_name": {
 				Type:     schema.TypeString,
@@ -78,7 +80,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 						"service_access_role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 							// API returns this error with ModifyEndpoint:
 							// InvalidParameterCombinationException: Elasticsearch endpoint cant be modified.
 							ForceNew: true,
@@ -183,12 +185,12 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 						"service_access_role_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"stream_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -198,7 +200,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				Computed:     true,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"mongodb_settings": {
 				Type:     schema.TypeList,
@@ -341,8 +343,8 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 }
 
 func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DMSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &dms.CreateEndpointInput{
@@ -443,7 +445,7 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateEndpoint(request)
-		if isAWSErr(err, "AccessDeniedFault", "") {
+		if tfawserr.ErrMessageContains(err, "AccessDeniedFault", "") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -465,9 +467,9 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsDmsEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DMSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	response, err := conn.DescribeEndpoints(&dms.DescribeEndpointsInput{
 		Filters: []*dms.Filter{
@@ -512,7 +514,7 @@ func resourceAwsDmsEndpointRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
+	conn := meta.(*awsprovider.AWSClient).DMSConn
 
 	request := &dms.ModifyEndpointInput{
 		EndpointArn: aws.String(d.Get("endpoint_arn").(string)),
@@ -703,7 +705,7 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsDmsEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
+	conn := meta.(*awsprovider.AWSClient).DMSConn
 
 	request := &dms.DeleteEndpointInput{
 		EndpointArn: aws.String(d.Get("endpoint_arn").(string)),
