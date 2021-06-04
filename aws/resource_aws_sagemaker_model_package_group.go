@@ -7,11 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSagemakerModelPackageGroup() *schema.Resource {
@@ -54,8 +56,8 @@ func resourceAwsSagemakerModelPackageGroup() *schema.Resource {
 }
 
 func resourceAwsSagemakerModelPackageGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("model_package_group_name").(string)
@@ -86,13 +88,13 @@ func resourceAwsSagemakerModelPackageGroupCreate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsSagemakerModelPackageGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	mpg, err := finder.ModelPackageGroupByName(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, "ValidationException", "does not exist") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find Sagemaker Model Package Group (%s); removing from state", d.Id())
 			return nil
@@ -127,7 +129,7 @@ func resourceAwsSagemakerModelPackageGroupRead(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsSagemakerModelPackageGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -141,21 +143,21 @@ func resourceAwsSagemakerModelPackageGroupUpdate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsSagemakerModelPackageGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteModelPackageGroupInput{
 		ModelPackageGroupName: aws.String(d.Id()),
 	}
 
 	if _, err := conn.DeleteModelPackageGroup(input); err != nil {
-		if isAWSErr(err, "ValidationException", "does not exist") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
 			return nil
 		}
 		return fmt.Errorf("error deleting SageMaker Model Package Group (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waiter.ModelPackageGroupDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, "ValidationException", "does not exist") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
 			return nil
 		}
 		return fmt.Errorf("error waiting for SageMaker Model Package Group (%s) to delete: %w", d.Id(), err)
