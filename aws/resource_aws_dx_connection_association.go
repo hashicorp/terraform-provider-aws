@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDxConnectionAssociation() *schema.Resource {
@@ -32,7 +34,7 @@ func resourceAwsDxConnectionAssociation() *schema.Resource {
 }
 
 func resourceAwsDxConnectionAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	input := &directconnect.AssociateConnectionWithLagInput{
 		ConnectionId: aws.String(d.Get("connection_id").(string)),
@@ -48,7 +50,7 @@ func resourceAwsDxConnectionAssociationCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsDxConnectionAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	input := &directconnect.DescribeConnectionsInput{
 		ConnectionId: aws.String(d.Id()),
@@ -74,7 +76,7 @@ func resourceAwsDxConnectionAssociationRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsDxConnectionAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	input := &directconnect.DisassociateConnectionFromLagInput{
 		ConnectionId: aws.String(d.Id()),
@@ -84,7 +86,7 @@ func resourceAwsDxConnectionAssociationDelete(d *schema.ResourceData, meta inter
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.DisassociateConnectionFromLag(input)
 		if err != nil {
-			if isAWSErr(err, directconnect.ErrCodeClientException, "is in a transitioning state.") {
+			if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "is in a transitioning state.") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
