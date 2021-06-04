@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/eks/token"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsEksClusterAuth() *schema.Resource {
@@ -29,7 +30,7 @@ func dataSourceAwsEksClusterAuth() *schema.Resource {
 }
 
 func dataSourceAwsEksClusterAuthRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).stsconn
+	conn := meta.(*awsprovider.AWSClient).STSConn
 	name := d.Get("name").(string)
 	generator, err := token.NewGenerator(false, false)
 	if err != nil {
