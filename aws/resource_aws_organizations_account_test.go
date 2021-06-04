@@ -6,20 +6,23 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccAwsOrganizationsAccount_basic(t *testing.T) {
-	TestAccSkip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
+	atest.Skip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
 
 	var account organizations.Account
 
 	orgsEmailDomain, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 
 	if !ok {
-		TestAccSkip(t, "'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
+		atest.Skip(t, "'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
 	}
 
 	rInt := acctest.RandInt()
@@ -27,9 +30,9 @@ func testAccAwsOrganizationsAccount_basic(t *testing.T) {
 	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsAccountDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -38,7 +41,7 @@ func testAccAwsOrganizationsAccount_basic(t *testing.T) {
 					testAccCheckAwsOrganizationsAccountExists("aws_organizations_account.test", &account),
 					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "arn"),
 					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "joined_method"),
-					testAccCheckResourceAttrRfc3339("aws_organizations_account.test", "joined_timestamp"),
+					atest.CheckAttrRfc3339("aws_organizations_account.test", "joined_timestamp"),
 					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "parent_id"),
 					resource.TestCheckResourceAttr("aws_organizations_account.test", "name", name),
 					resource.TestCheckResourceAttr("aws_organizations_account.test", "email", email),
@@ -56,14 +59,14 @@ func testAccAwsOrganizationsAccount_basic(t *testing.T) {
 }
 
 func testAccAwsOrganizationsAccount_ParentId(t *testing.T) {
-	TestAccSkip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
+	atest.Skip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
 
 	var account organizations.Account
 
 	orgsEmailDomain, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 
 	if !ok {
-		TestAccSkip(t, "'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
+		atest.Skip(t, "'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
 	}
 
 	rInt := acctest.RandInt()
@@ -74,9 +77,9 @@ func testAccAwsOrganizationsAccount_ParentId(t *testing.T) {
 	parentIdResourceName2 := "aws_organizations_organizational_unit.test2"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsAccountDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -103,14 +106,14 @@ func testAccAwsOrganizationsAccount_ParentId(t *testing.T) {
 }
 
 func testAccAwsOrganizationsAccount_Tags(t *testing.T) {
-	TestAccSkip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
+	atest.Skip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
 
 	var account organizations.Account
 
 	orgsEmailDomain, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 
 	if !ok {
-		TestAccSkip(t, "'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
+		atest.Skip(t, "'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
 	}
 
 	rInt := acctest.RandInt()
@@ -119,9 +122,9 @@ func testAccAwsOrganizationsAccount_Tags(t *testing.T) {
 	resourceName := "aws_organizations_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsAccountDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -158,7 +161,7 @@ func testAccAwsOrganizationsAccount_Tags(t *testing.T) {
 }
 
 func testAccCheckAwsOrganizationsAccountDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).OrganizationsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_organizations_account" {
@@ -171,7 +174,7 @@ func testAccCheckAwsOrganizationsAccountDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeAccount(params)
 
-		if isAWSErr(err, organizations.ErrCodeAccountNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, organizations.ErrCodeAccountNotFoundException, "") {
 			return nil
 		}
 
@@ -195,7 +198,7 @@ func testAccCheckAwsOrganizationsAccountExists(n string, a *organizations.Accoun
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).OrganizationsConn
 		params := &organizations.DescribeAccountInput{
 			AccountId: &rs.Primary.ID,
 		}
