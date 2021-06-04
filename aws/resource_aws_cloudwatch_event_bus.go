@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCloudWatchEventBus() *schema.Resource {
@@ -46,8 +48,8 @@ func resourceAwsCloudWatchEventBus() *schema.Resource {
 }
 
 func resourceAwsCloudWatchEventBusCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CloudWatchEventsConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	eventBusName := d.Get("name").(string)
@@ -78,9 +80,9 @@ func resourceAwsCloudWatchEventBusCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsCloudWatchEventBusRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CloudWatchEventsConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &events.DescribeEventBusInput{
 		Name: aws.String(d.Id()),
@@ -88,7 +90,7 @@ func resourceAwsCloudWatchEventBusRead(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[DEBUG] Reading CloudWatch Events event bus (%s)", d.Id())
 	output, err := conn.DescribeEventBus(input)
-	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] CloudWatch Events event bus (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -121,7 +123,7 @@ func resourceAwsCloudWatchEventBusRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsCloudWatchEventBusUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchEventsConn
 
 	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
@@ -136,12 +138,12 @@ func resourceAwsCloudWatchEventBusUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsCloudWatchEventBusDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchEventsConn
 	log.Printf("[INFO] Deleting CloudWatch Events event bus (%s)", d.Id())
 	_, err := conn.DeleteEventBus(&events.DeleteEventBusInput{
 		Name: aws.String(d.Id()),
 	})
-	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] CloudWatch Events event bus (%s) not found", d.Id())
 		return nil
 	}
