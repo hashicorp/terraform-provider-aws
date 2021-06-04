@@ -8,9 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -21,11 +24,11 @@ func init() {
 }
 
 func testSweepVpcDhcpOptions(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).ec2conn
+	conn := client.(*awsprovider.AWSClient).EC2Conn
 
 	input := &ec2.DescribeDhcpOptionsInput{}
 
@@ -40,7 +43,7 @@ func testSweepVpcDhcpOptions(region string) error {
 						continue
 					}
 
-					if aws.StringValue(dhcpConfiguration.Values[0].Value) == resourceAwsEc2RegionalPrivateDnsSuffix(region) {
+					if aws.StringValue(dhcpConfiguration.Values[0].Value) == awsprovider.EC2RegionalPrivateDnsSuffix(region) {
 						defaultDomainNameFound = true
 					}
 				} else if aws.StringValue(dhcpConfiguration.Key) == "domain-name-servers" {
@@ -71,7 +74,7 @@ func testSweepVpcDhcpOptions(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 DHCP Option sweep for %s: %s", region, err)
 		return nil
 	}
@@ -89,16 +92,16 @@ func TestAccAWSDHCPOptions_basic(t *testing.T) {
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDHCPOptionsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(resourceName, &d),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`dhcp-options/dopt-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`dhcp-options/dopt-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", fmt.Sprintf("service.%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers.0", "127.0.0.1"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers.1", "10.0.0.2"),
@@ -106,7 +109,7 @@ func TestAccAWSDHCPOptions_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "netbios_name_servers.0", "127.0.0.1"),
 					resource.TestCheckResourceAttr(resourceName, "netbios_node_type", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					atest.CheckAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 			{
@@ -124,9 +127,9 @@ func TestAccAWSDHCPOptions_deleteOptions(t *testing.T) {
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -147,9 +150,9 @@ func TestAccAWSDHCPOptions_tags(t *testing.T) {
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -192,16 +195,16 @@ func TestAccAWSDHCPOptions_disappears(t *testing.T) {
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDHCPOptionsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(resourceName, &d),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsVpcDhcpOptions(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsVpcDhcpOptions(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -210,7 +213,7 @@ func TestAccAWSDHCPOptions_disappears(t *testing.T) {
 }
 
 func testAccCheckDHCPOptionsDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_dhcp_options" {
@@ -223,7 +226,7 @@ func testAccCheckDHCPOptionsDestroy(s *terraform.State) error {
 				aws.String(rs.Primary.ID),
 			},
 		})
-		if isAWSErr(err, "InvalidDhcpOptionID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidDhcpOptionID.NotFound", "") {
 			continue
 		}
 		if err == nil {
@@ -234,7 +237,7 @@ func testAccCheckDHCPOptionsDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		if !isAWSErr(err, "InvalidDhcpOptionID.NotFound", "") {
+		if !tfawserr.ErrMessageContains(err, "InvalidDhcpOptionID.NotFound", "") {
 			return err
 		}
 	}
@@ -253,7 +256,7 @@ func testAccCheckDHCPOptionsExists(n string, d *ec2.DhcpOptions) resource.TestCh
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 		resp, err := conn.DescribeDhcpOptions(&ec2.DescribeDhcpOptionsInput{
 			DhcpOptionsIds: []*string{
 				aws.String(rs.Primary.ID),
@@ -283,7 +286,7 @@ func testAccCheckDHCPOptionsDelete(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 		_, err := conn.DeleteDhcpOptions(&ec2.DeleteDhcpOptionsInput{
 			DhcpOptionsId: aws.String(rs.Primary.ID),
 		})
