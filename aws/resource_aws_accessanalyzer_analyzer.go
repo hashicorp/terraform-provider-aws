@@ -12,7 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -66,8 +67,8 @@ func resourceAwsAccessAnalyzerAnalyzer() *schema.Resource {
 }
 
 func resourceAwsAccessAnalyzerAnalyzerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).accessanalyzerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).AccessAnalyzerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	analyzerName := d.Get("analyzer_name").(string)
 
@@ -82,7 +83,7 @@ func resourceAwsAccessAnalyzerAnalyzerCreate(d *schema.ResourceData, meta interf
 	err := resource.Retry(accessAnalyzerOrganizationCreationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateAnalyzer(input)
 
-		if isAWSErr(err, accessanalyzer.ErrCodeValidationException, "You must create an organization") {
+		if tfawserr.ErrMessageContains(err, accessanalyzer.ErrCodeValidationException, "You must create an organization") {
 			return resource.RetryableError(err)
 		}
 
@@ -107,9 +108,9 @@ func resourceAwsAccessAnalyzerAnalyzerCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsAccessAnalyzerAnalyzerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).accessanalyzerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).AccessAnalyzerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &accessanalyzer.GetAnalyzerInput{
 		AnalyzerName: aws.String(d.Id()),
@@ -151,7 +152,7 @@ func resourceAwsAccessAnalyzerAnalyzerRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsAccessAnalyzerAnalyzerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).accessanalyzerconn
+	conn := meta.(*awsprovider.AWSClient).AccessAnalyzerConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -164,7 +165,7 @@ func resourceAwsAccessAnalyzerAnalyzerUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsAccessAnalyzerAnalyzerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).accessanalyzerconn
+	conn := meta.(*awsprovider.AWSClient).AccessAnalyzerConn
 
 	input := &accessanalyzer.DeleteAnalyzerInput{
 		AnalyzerName: aws.String(d.Id()),
@@ -173,7 +174,7 @@ func resourceAwsAccessAnalyzerAnalyzerDelete(d *schema.ResourceData, meta interf
 
 	_, err := conn.DeleteAnalyzer(input)
 
-	if isAWSErr(err, accessanalyzer.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, accessanalyzer.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
