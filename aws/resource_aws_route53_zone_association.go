@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsRoute53ZoneAssociation() *schema.Resource {
@@ -51,9 +52,9 @@ func resourceAwsRoute53ZoneAssociation() *schema.Resource {
 }
 
 func resourceAwsRoute53ZoneAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*awsprovider.AWSClient).Route53Conn
 
-	vpcRegion := meta.(*AWSClient).region
+	vpcRegion := meta.(*awsprovider.AWSClient).Region
 	vpcID := d.Get("vpc_id").(string)
 	zoneID := d.Get("zone_id").(string)
 
@@ -97,7 +98,7 @@ func resourceAwsRoute53ZoneAssociationCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsRoute53ZoneAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*awsprovider.AWSClient).Route53Conn
 
 	zoneID, vpcID, vpcRegion, err := resourceAwsRoute53ZoneAssociationParseId(d.Id())
 
@@ -111,12 +112,12 @@ func resourceAwsRoute53ZoneAssociationRead(d *schema.ResourceData, meta interfac
 	}
 
 	if vpcRegion == "" {
-		vpcRegion = meta.(*AWSClient).region
+		vpcRegion = meta.(*awsprovider.AWSClient).Region
 	}
 
 	hostedZoneSummary, err := route53GetZoneAssociation(conn, zoneID, vpcID, vpcRegion)
 
-	if isAWSErr(err, "AccessDenied", "is not owned by you") && !d.IsNewResource() {
+	if tfawserr.ErrMessageContains(err, "AccessDenied", "is not owned by you") && !d.IsNewResource() {
 		log.Printf("[WARN] Route 53 Zone Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -145,7 +146,7 @@ func resourceAwsRoute53ZoneAssociationRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsRoute53ZoneAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*awsprovider.AWSClient).Route53Conn
 
 	zoneID, vpcID, vpcRegion, err := resourceAwsRoute53ZoneAssociationParseId(d.Id())
 
@@ -159,7 +160,7 @@ func resourceAwsRoute53ZoneAssociationDelete(d *schema.ResourceData, meta interf
 	}
 
 	if vpcRegion == "" {
-		vpcRegion = meta.(*AWSClient).region
+		vpcRegion = meta.(*awsprovider.AWSClient).Region
 	}
 
 	input := &route53.DisassociateVPCFromHostedZoneInput{
@@ -208,7 +209,7 @@ func resourceAwsRoute53ZoneAssociationRefreshFunc(conn *route53.Route53, changeI
 			Id: aws.String(changeId),
 		}
 		result, state, err := resourceAwsGoRoute53Wait(conn, changeRequest)
-		if isAWSErr(err, "AccessDenied", "") {
+		if tfawserr.ErrMessageContains(err, "AccessDenied", "") {
 			log.Printf("[WARN] AccessDenied when trying to get Route 53 change progress for %s - ignoring due to likely cross account issue", id)
 			return true, route53.ChangeStatusInsync, nil
 		}
