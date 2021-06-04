@@ -9,10 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGuardDutyIpset() *schema.Resource {
@@ -71,8 +73,8 @@ func resourceAwsGuardDutyIpset() *schema.Resource {
 }
 
 func resourceAwsGuardDutyIpsetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	detectorID := d.Get("detector_id").(string)
@@ -111,9 +113,9 @@ func resourceAwsGuardDutyIpsetCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsGuardDutyIpsetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	ipSetId, detectorId, err := decodeGuardDutyIpsetID(d.Id())
 	if err != nil {
@@ -126,7 +128,7 @@ func resourceAwsGuardDutyIpsetRead(d *schema.ResourceData, meta interface{}) err
 
 	resp, err := conn.GetIPSet(input)
 	if err != nil {
-		if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 			log.Printf("[WARN] GuardDuty IpSet %q not found, removing from state", ipSetId)
 			d.SetId("")
 			return nil
@@ -135,10 +137,10 @@ func resourceAwsGuardDutyIpsetRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Service:   "guardduty",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("detector/%s/ipset/%s", detectorId, ipSetId),
 	}.String()
 	d.Set("arn", arn)
@@ -164,7 +166,7 @@ func resourceAwsGuardDutyIpsetRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsGuardDutyIpsetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
 
 	ipSetId, detectorId, err := decodeGuardDutyIpsetID(d.Id())
 	if err != nil {
@@ -205,7 +207,7 @@ func resourceAwsGuardDutyIpsetUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsGuardDutyIpsetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
 
 	ipSetId, detectorId, err := decodeGuardDutyIpsetID(d.Id())
 	if err != nil {
