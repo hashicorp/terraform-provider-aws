@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSAPIGatewayV2Deployment_basic(t *testing.T) {
@@ -18,9 +21,9 @@ func TestAccAWSAPIGatewayV2Deployment_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2DeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -56,9 +59,9 @@ func TestAccAWSAPIGatewayV2Deployment_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2DeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -80,9 +83,9 @@ func TestAccAWSAPIGatewayV2Deployment_Triggers(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2DeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -127,7 +130,7 @@ func TestAccAWSAPIGatewayV2Deployment_Triggers(t *testing.T) {
 }
 
 func testAccCheckAWSAPIGatewayV2DeploymentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_deployment" {
@@ -138,7 +141,7 @@ func testAccCheckAWSAPIGatewayV2DeploymentDestroy(s *terraform.State) error {
 			ApiId:        aws.String(rs.Primary.Attributes["api_id"]),
 			DeploymentId: aws.String(rs.Primary.ID),
 		})
-		if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 			continue
 		}
 		if err != nil {
@@ -153,7 +156,7 @@ func testAccCheckAWSAPIGatewayV2DeploymentDestroy(s *terraform.State) error {
 
 func testAccCheckAWSAPIGatewayV2DeploymentDisappears(apiId *string, v *apigatewayv2.GetDeploymentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayV2Conn
 
 		_, err := conn.DeleteDeployment(&apigatewayv2.DeleteDeploymentInput{
 			ApiId:        apiId,
@@ -175,7 +178,7 @@ func testAccCheckAWSAPIGatewayV2DeploymentExists(n string, vApiId *string, v *ap
 			return fmt.Errorf("No API Gateway v2 deployment ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayV2Conn
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
 		resp, err := conn.GetDeployment(&apigatewayv2.GetDeploymentInput{
