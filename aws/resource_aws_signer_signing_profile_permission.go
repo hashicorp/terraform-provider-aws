@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSignerSigningProfilePermission() *schema.Resource {
@@ -75,12 +76,12 @@ func resourceAwsSignerSigningProfilePermission() *schema.Resource {
 }
 
 func resourceAwsSignerSigningProfilePermissionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).signerconn
+	conn := meta.(*awsprovider.AWSClient).SignerConn
 
 	profileName := d.Get("profile_name").(string)
 
-	awsMutexKV.Lock(profileName)
-	defer awsMutexKV.Unlock(profileName)
+	awsprovider.MutexKV.Lock(profileName)
+	defer awsprovider.MutexKV.Unlock(profileName)
 
 	listProfilePermissionsInput := &signer.ListProfilePermissionsInput{
 		ProfileName: aws.String(profileName),
@@ -89,7 +90,7 @@ func resourceAwsSignerSigningProfilePermissionCreate(d *schema.ResourceData, met
 	var revisionId string
 	getProfilePermissionsOutput, err := conn.ListProfilePermissions(listProfilePermissionsInput)
 	if err != nil {
-		if isAWSErr(err, signer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, signer.ErrCodeResourceNotFoundException, "") {
 			revisionId = ""
 		} else {
 			return err
@@ -119,7 +120,7 @@ func resourceAwsSignerSigningProfilePermissionCreate(d *schema.ResourceData, met
 		var err error
 		_, err = conn.AddProfilePermission(addProfilePermissionInput)
 
-		if isAWSErr(err, signer.ErrCodeConflictException, "") || isAWSErr(err, signer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, signer.ErrCodeConflictException, "") || tfawserr.ErrMessageContains(err, signer.ErrCodeResourceNotFoundException, "") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -140,7 +141,7 @@ func resourceAwsSignerSigningProfilePermissionCreate(d *schema.ResourceData, met
 		// IAM is eventually consistent :/
 		err := resourceAwsSignerSigningProfilePermissionRead(d, meta)
 		if err != nil {
-			if isAWSErr(err, signer.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, signer.ErrCodeResourceNotFoundException, "") {
 				return resource.RetryableError(
 					fmt.Errorf("error reading newly created Signer signing profile permission for %s, retrying: %s",
 						*addProfilePermissionInput.ProfileName, err))
@@ -165,7 +166,7 @@ func resourceAwsSignerSigningProfilePermissionCreate(d *schema.ResourceData, met
 }
 
 func resourceAwsSignerSigningProfilePermissionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).signerconn
+	conn := meta.(*awsprovider.AWSClient).SignerConn
 
 	listProfilePermissionsInput := &signer.ListProfilePermissionsInput{
 		ProfileName: aws.String(d.Get("profile_name").(string)),
@@ -178,7 +179,7 @@ func resourceAwsSignerSigningProfilePermissionRead(d *schema.ResourceData, meta 
 		var err error
 		listProfilePermissionsOutput, err = conn.ListProfilePermissions(listProfilePermissionsInput)
 		if err != nil {
-			if isAWSErr(err, signer.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, signer.ErrCodeResourceNotFoundException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -190,7 +191,7 @@ func resourceAwsSignerSigningProfilePermissionRead(d *schema.ResourceData, meta 
 		listProfilePermissionsOutput, err = conn.ListProfilePermissions(listProfilePermissionsInput)
 	}
 
-	if !d.IsNewResource() && isAWSErr(err, signer.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, signer.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] No Signer Signing Profile Permissions found (%s), removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -239,12 +240,12 @@ func getProfilePermission(permissions []*signer.Permission, statementId string) 
 }
 
 func resourceAwsSignerSigningProfilePermissionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).signerconn
+	conn := meta.(*awsprovider.AWSClient).SignerConn
 
 	profileName := d.Get("profile_name").(string)
 
-	awsMutexKV.Lock(profileName)
-	defer awsMutexKV.Unlock(profileName)
+	awsprovider.MutexKV.Lock(profileName)
+	defer awsprovider.MutexKV.Unlock(profileName)
 
 	listProfilePermissionsInput := &signer.ListProfilePermissionsInput{
 		ProfileName: aws.String(profileName),
@@ -252,7 +253,7 @@ func resourceAwsSignerSigningProfilePermissionDelete(d *schema.ResourceData, met
 
 	listProfilePermissionsOutput, err := conn.ListProfilePermissions(listProfilePermissionsInput)
 	if err != nil {
-		if isAWSErr(err, signer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, signer.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] No Signer signing profile permission found for: %v", listProfilePermissionsInput)
 			return nil
 		}
@@ -290,7 +291,7 @@ func resourceAwsSignerSigningProfilePermissionDelete(d *schema.ResourceData, met
 
 	resp, err := conn.ListProfilePermissions(params)
 
-	if isAWSErr(err, signer.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, signer.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
