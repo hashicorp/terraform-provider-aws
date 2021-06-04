@@ -2235,6 +2235,8 @@ TASK_DEFINITION
 
 func testAccAWSEcsTaskDefinitionWithFsxVolume(tdName string) string {
 	return testAccAwsFsxWindowsFileSystemConfigSubnetIds1() + fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_secretsmanager_secret" "test" {
   name                    = %[1]q
   recovery_window_in_days = 0
@@ -2242,11 +2244,45 @@ resource "aws_secretsmanager_secret" "test" {
 
 resource "aws_secretsmanager_secret_version" "test" {
   secret_id     = aws_secretsmanager_secret.test.id
-  secret_string = jsonencode({ username : "admin", password : "${aws_directory_service_directory.test.password}" })
+  secret_string = jsonencode({ username : "admin", password : aws_directory_service_directory.test.password })
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ecs-tasks.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+})
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "test2" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/SecretsManagerReadWrite"
+}
+
+resource "aws_iam_role_policy_attachment" "test3" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonFSxReadOnlyAccess"
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
+  family             = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
 
   container_definitions = <<TASK_DEFINITION
 [
@@ -2275,6 +2311,10 @@ TASK_DEFINITION
       }
     }
   }
+
+  depends_on   = [aws_iam_role_policy_attachment.test,
+  				  aws_iam_role_policy_attachment.test2,
+				  aws_iam_role_policy_attachment.test3]
 }
 `, tdName)
 }
