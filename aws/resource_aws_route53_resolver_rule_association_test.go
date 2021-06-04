@@ -8,10 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -22,11 +25,11 @@ func init() {
 }
 
 func testSweepRoute53ResolverRuleAssociations(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).route53resolverconn
+	conn := client.(*awsprovider.AWSClient).Route53ResolverConn
 
 	var errors error
 	err = conn.ListResolverRuleAssociationsPages(&route53resolver.ListResolverRuleAssociationsInput{}, func(page *route53resolver.ListResolverRuleAssociationsOutput, lastPage bool) bool {
@@ -42,10 +45,10 @@ func testSweepRoute53ResolverRuleAssociations(region string) error {
 				ResolverRuleId: resolverRuleAssociation.ResolverRuleId,
 				VPCId:          resolverRuleAssociation.VPCId,
 			})
-			if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 				continue
 			}
-			if testSweepSkipSweepError(err) {
+			if atest.SweepSkipSweepError(err) {
 				log.Printf("[INFO] Skipping Route53 Resolver rule association %q: %s", id, err)
 				continue
 			}
@@ -66,7 +69,7 @@ func testSweepRoute53ResolverRuleAssociations(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Route53 Resolver rule association sweep for %s: %s", region, err)
 			return nil
 		}
@@ -84,9 +87,9 @@ func TestAccAWSRoute53ResolverRuleAssociation_basic(t *testing.T) {
 	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53resolver.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -108,7 +111,7 @@ func TestAccAWSRoute53ResolverRuleAssociation_basic(t *testing.T) {
 }
 
 func testAccCheckRoute53ResolverRuleAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).Route53ResolverConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_rule_association" {
 			continue
@@ -119,7 +122,7 @@ func testAccCheckRoute53ResolverRuleAssociationDestroy(s *terraform.State) error
 			ResolverRuleAssociationId: aws.String(rs.Primary.ID),
 		})
 		// Verify the error is what we want
-		if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 		if err != nil {
@@ -141,7 +144,7 @@ func testAccCheckRoute53ResolverRuleAssociationExists(n string, assn *route53res
 			return fmt.Errorf("No Route 53 Resolver rule association ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).Route53ResolverConn
 		resp, err := conn.GetResolverRuleAssociation(&route53resolver.GetResolverRuleAssociationInput{
 			ResolverRuleAssociationId: aws.String(rs.Primary.ID),
 		})
