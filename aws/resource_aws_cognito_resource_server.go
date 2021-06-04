@@ -7,8 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCognitoResourceServer() *schema.Resource {
@@ -70,7 +72,7 @@ func resourceAwsCognitoResourceServer() *schema.Resource {
 }
 
 func resourceAwsCognitoResourceServerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	identifier := d.Get("identifier").(string)
 	userPoolID := d.Get("user_pool_id").(string)
@@ -100,7 +102,7 @@ func resourceAwsCognitoResourceServerCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsCognitoResourceServerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	userPoolID, identifier, err := decodeCognitoResourceServerID(d.Id())
 	if err != nil {
@@ -117,7 +119,7 @@ func resourceAwsCognitoResourceServerRead(d *schema.ResourceData, meta interface
 	resp, err := conn.DescribeResourceServer(params)
 
 	if err != nil {
-		if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Cognito Resource Server %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -153,7 +155,7 @@ func resourceAwsCognitoResourceServerRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCognitoResourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	userPoolID, identifier, err := decodeCognitoResourceServerID(d.Id())
 	if err != nil {
@@ -178,7 +180,7 @@ func resourceAwsCognitoResourceServerUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsCognitoResourceServerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	userPoolID, identifier, err := decodeCognitoResourceServerID(d.Id())
 	if err != nil {
@@ -195,7 +197,7 @@ func resourceAwsCognitoResourceServerDelete(d *schema.ResourceData, meta interfa
 	_, err = conn.DeleteResourceServer(params)
 
 	if err != nil {
-		if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting Resource Server: %s", err)
