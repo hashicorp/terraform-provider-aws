@@ -8,8 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsWafRegionalWebAclAssociation() *schema.Resource {
@@ -37,7 +39,7 @@ func resourceAwsWafRegionalWebAclAssociation() *schema.Resource {
 }
 
 func resourceAwsWafRegionalWebAclAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
 
 	log.Printf(
 		"[INFO] Creating WAF Regional Web ACL association: %s => %s",
@@ -55,7 +57,7 @@ func resourceAwsWafRegionalWebAclAssociationCreate(d *schema.ResourceData, meta 
 	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err = conn.AssociateWebACL(params)
 		if err != nil {
-			if isAWSErr(err, wafregional.ErrCodeWAFUnavailableEntityException, "") {
+			if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFUnavailableEntityException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -76,7 +78,7 @@ func resourceAwsWafRegionalWebAclAssociationCreate(d *schema.ResourceData, meta 
 }
 
 func resourceAwsWafRegionalWebAclAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
 
 	resourceArn := resourceAwsWafRegionalWebAclAssociationParseId(d.Id())
 
@@ -86,7 +88,7 @@ func resourceAwsWafRegionalWebAclAssociationRead(d *schema.ResourceData, meta in
 
 	output, err := conn.GetWebACLForResource(input)
 
-	if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 		log.Printf("[WARN] WAF Regional Web ACL for resource (%s) not found, removing from state", resourceArn)
 		d.SetId("")
 		return nil
@@ -109,7 +111,7 @@ func resourceAwsWafRegionalWebAclAssociationRead(d *schema.ResourceData, meta in
 }
 
 func resourceAwsWafRegionalWebAclAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
 
 	resourceArn := resourceAwsWafRegionalWebAclAssociationParseId(d.Id())
 
