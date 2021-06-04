@@ -8,9 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsRedshiftSnapshotSchedule() *schema.Resource {
@@ -67,8 +69,8 @@ func resourceAwsRedshiftSnapshotSchedule() *schema.Resource {
 }
 
 func resourceAwsRedshiftSnapshotScheduleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RedshiftConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var identifier string
@@ -101,9 +103,9 @@ func resourceAwsRedshiftSnapshotScheduleCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsRedshiftSnapshotScheduleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RedshiftConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	descOpts := &redshift.DescribeSnapshotSchedulesInput{
 		ScheduleIdentifier: aws.String(d.Id()),
@@ -139,10 +141,10 @@ func resourceAwsRedshiftSnapshotScheduleRead(d *schema.ResourceData, meta interf
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "redshift",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("snapshotschedule:%s", d.Id()),
 	}.String()
 
@@ -152,7 +154,7 @@ func resourceAwsRedshiftSnapshotScheduleRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsRedshiftSnapshotScheduleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*awsprovider.AWSClient).RedshiftConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -168,7 +170,7 @@ func resourceAwsRedshiftSnapshotScheduleUpdate(d *schema.ResourceData, meta inte
 			ScheduleDefinitions: expandStringSet(d.Get("definitions").(*schema.Set)),
 		}
 		_, err := conn.ModifySnapshotSchedule(modifyOpts)
-		if isAWSErr(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
 			log.Printf("[WARN] Redshift Snapshot Schedule (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -182,7 +184,7 @@ func resourceAwsRedshiftSnapshotScheduleUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsRedshiftSnapshotScheduleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*awsprovider.AWSClient).RedshiftConn
 
 	if d.Get("force_destroy").(bool) {
 		if err := resourceAwsRedshiftSnapshotScheduleDeleteAllAssociatedClusters(conn, d.Id()); err != nil {
@@ -193,7 +195,7 @@ func resourceAwsRedshiftSnapshotScheduleDelete(d *schema.ResourceData, meta inte
 	_, err := conn.DeleteSnapshotSchedule(&redshift.DeleteSnapshotScheduleInput{
 		ScheduleIdentifier: aws.String(d.Id()),
 	})
-	if isAWSErr(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
 		return nil
 	}
 	if err != nil {
@@ -208,7 +210,7 @@ func resourceAwsRedshiftSnapshotScheduleDeleteAllAssociatedClusters(conn *redshi
 	resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
 		ScheduleIdentifier: aws.String(scheduleIdentifier),
 	})
-	if isAWSErr(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
 		return nil
 	}
 	if err != nil {
@@ -228,11 +230,11 @@ func resourceAwsRedshiftSnapshotScheduleDeleteAllAssociatedClusters(conn *redshi
 			DisassociateSchedule: aws.Bool(true),
 		})
 
-		if isAWSErr(err, redshift.ErrCodeClusterNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, redshift.ErrCodeClusterNotFoundFault, "") {
 			log.Printf("[WARN] Redshift Snapshot Cluster (%s) not found, removing from state", aws.StringValue(associatedCluster.ClusterIdentifier))
 			continue
 		}
-		if isAWSErr(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
 			log.Printf("[WARN] Redshift Snapshot Schedule (%s) not found, removing from state", scheduleIdentifier)
 			continue
 		}
