@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSLBSSLNegotiationPolicy_basic(t *testing.T) {
@@ -22,9 +24,9 @@ func TestAccAWSLBSSLNegotiationPolicy_basic(t *testing.T) {
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLBSSLNegotiationPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -48,9 +50,9 @@ func TestAccAWSLBSSLNegotiationPolicy_disappears(t *testing.T) {
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLBSSLNegotiationPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -67,7 +69,7 @@ func TestAccAWSLBSSLNegotiationPolicy_disappears(t *testing.T) {
 }
 
 func testAccCheckLBSSLNegotiationPolicyDestroy(s *terraform.State) error {
-	elbconn := testAccProvider.Meta().(*AWSClient).elbconn
+	ELBConn := atest.Provider.Meta().(*awsprovider.AWSClient).ELBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elb" && rs.Type != "aws_lb_ssl_negotiation_policy" {
@@ -76,7 +78,7 @@ func testAccCheckLBSSLNegotiationPolicyDestroy(s *terraform.State) error {
 
 		// Check that the ELB is destroyed
 		if rs.Type == "aws_elb" {
-			describe, err := elbconn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
+			describe, err := ELBConn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
 				LoadBalancerNames: []*string{aws.String(rs.Primary.ID)},
 			})
 
@@ -103,7 +105,7 @@ func testAccCheckLBSSLNegotiationPolicyDestroy(s *terraform.State) error {
 				return err
 			}
 
-			_, err = elbconn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
+			_, err = ELBConn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
 				LoadBalancerName: aws.String(elbName),
 				PolicyNames:      []*string{aws.String(policyName)},
 			})
@@ -133,14 +135,14 @@ func testAccCheckLBSSLNegotiationPolicy(elbResource string, policyResource strin
 			return fmt.Errorf("Not found: %s", policyResource)
 		}
 
-		elbconn := testAccProvider.Meta().(*AWSClient).elbconn
+		ELBConn := atest.Provider.Meta().(*awsprovider.AWSClient).ELBConn
 
 		elbName, _, policyName, err := resourceAwsLBSSLNegotiationPolicyParseId(policy.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		resp, err := elbconn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
+		resp, err := ELBConn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
 			LoadBalancerName: aws.String(elbName),
 			PolicyNames:      []*string{aws.String(policyName)},
 		})
