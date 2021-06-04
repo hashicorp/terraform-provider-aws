@@ -13,7 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/waf/lister"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -24,14 +26,14 @@ func init() {
 }
 
 func testSweepWafWebAcls(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).wafconn
-	sweepResources := make([]*testSweepResource, 0)
+	conn := client.(*awsprovider.AWSClient).WAFConn
+	sweepResources := make([]*atest.TestSweepResource, 0)
 	var errs *multierror.Error
 	input := &waf.ListWebACLsInput{}
 
@@ -66,7 +68,7 @@ func testSweepWafWebAcls(region string) error {
 				continue
 			}
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, atest.NewTestSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -76,11 +78,11 @@ func testSweepWafWebAcls(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing WAF Web ACLs: %w", err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = atest.TestSweepResourceOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Web ACL for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if atest.SweepSkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping WAF Web ACL sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -94,9 +96,9 @@ func TestAccAWSWafWebAcl_basic(t *testing.T) {
 	resourceName := "aws_waf_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   atest.ErrorCheck(t, waf.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,7 +111,7 @@ func TestAccAWSWafWebAcl_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`webacl/.+`)),
+					atest.MatchAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`webacl/.+`)),
 				),
 			},
 			{
@@ -128,9 +130,9 @@ func TestAccAWSWafWebAcl_changeNameForceNew(t *testing.T) {
 	resourceName := "aws_waf_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   atest.ErrorCheck(t, waf.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -172,9 +174,9 @@ func TestAccAWSWafWebAcl_DefaultAction(t *testing.T) {
 	resourceName := "aws_waf_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   atest.ErrorCheck(t, waf.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -208,9 +210,9 @@ func TestAccAWSWafWebAcl_Rules(t *testing.T) {
 	resourceName := "aws_waf_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   atest.ErrorCheck(t, waf.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
 			// Test creating with rule
@@ -254,12 +256,12 @@ func TestAccAWSWafWebAcl_LoggingConfiguration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSWaf(t)
 			testAccPreCheckWafLoggingConfiguration(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, waf.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ErrorCheck:        atest.ErrorCheck(t, waf.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -305,16 +307,16 @@ func TestAccAWSWafWebAcl_disappears(t *testing.T) {
 	resourceName := "aws_waf_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   atest.ErrorCheck(t, waf.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafWebAclConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafWebAclExists(resourceName, &webACL),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafWebAcl(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsWafWebAcl(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -328,9 +330,9 @@ func TestAccAWSWafWebAcl_Tags(t *testing.T) {
 	resourceName := "aws_waf_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   atest.ErrorCheck(t, waf.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -388,7 +390,7 @@ func testAccCheckAWSWafWebAclDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).WAFConn
 		resp, err := conn.GetWebACL(
 			&waf.GetWebACLInput{
 				WebACLId: aws.String(rs.Primary.ID),
@@ -421,7 +423,7 @@ func testAccCheckAWSWafWebAclExists(n string, v *waf.WebACL) resource.TestCheckF
 			return fmt.Errorf("No WebACL ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).WAFConn
 		resp, err := conn.GetWebACL(&waf.GetWebACLInput{
 			WebACLId: aws.String(rs.Primary.ID),
 		})
@@ -593,7 +595,7 @@ resource "aws_waf_web_acl" "test" {
 }
 
 func testAccAWSWafWebAclConfig_Logging(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccWafLoggingConfigurationRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_waf_web_acl" "test" {
@@ -660,7 +662,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 
 func testAccAWSWafWebAclConfig_LoggingRemoved(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccWafLoggingConfigurationRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_waf_web_acl" "test" {
@@ -675,7 +677,7 @@ resource "aws_waf_web_acl" "test" {
 }
 
 func testAccAWSWafWebAclConfig_LoggingUpdate(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccWafLoggingConfigurationRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_waf_web_acl" "test" {
