@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cognitoidentityprovider/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCognitoUserPoolDomain() *schema.Resource {
@@ -32,7 +34,7 @@ func resourceAwsCognitoUserPoolDomain() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"user_pool_id": {
 				Type:     schema.TypeString,
@@ -60,7 +62,7 @@ func resourceAwsCognitoUserPoolDomain() *schema.Resource {
 }
 
 func resourceAwsCognitoUserPoolDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	domain := d.Get("domain").(string)
 
@@ -96,14 +98,14 @@ func resourceAwsCognitoUserPoolDomainCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsCognitoUserPoolDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
 	log.Printf("[DEBUG] Reading Cognito User Pool Domain: %s", d.Id())
 
 	domain, err := conn.DescribeUserPoolDomain(&cognitoidentityprovider.DescribeUserPoolDomainInput{
 		Domain: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Cognito User Pool Domain %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -134,7 +136,7 @@ func resourceAwsCognitoUserPoolDomainRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCognitoUserPoolDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
 	log.Printf("[DEBUG] Deleting Cognito User Pool Domain: %s", d.Id())
 
 	_, err := conn.DeleteUserPoolDomain(&cognitoidentityprovider.DeleteUserPoolDomainInput{
@@ -146,7 +148,7 @@ func resourceAwsCognitoUserPoolDomainDelete(d *schema.ResourceData, meta interfa
 	}
 
 	if _, err := waiter.UserPoolDomainDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error waiting for User Pool Domain (%s) deletion: %w", d.Id(), err)
