@@ -8,10 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -22,16 +25,16 @@ func init() {
 }
 
 func testSweepMskClusters(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).kafkaconn
+	conn := client.(*awsprovider.AWSClient).KafkaConn
 
 	out, err := conn.ListClusters(&kafka.ListClustersInput{})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] skipping msk cluster domain sweep for %s: %s", region, err)
 			return nil
 		}
@@ -83,16 +86,16 @@ func TestAccAWSMskCluster_basic(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMskClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMskClusterExists(resourceName, &cluster),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexp.MustCompile(`cluster/.+$`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "kafka", regexp.MustCompile(`cluster/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.az_distribution", kafka.BrokerAZDistributionDefault),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.ebs_volume_size", "10"),
@@ -107,7 +110,7 @@ func TestAccAWSMskCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cluster_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "encryption_info.0.encryption_at_rest_kms_key_arn", "kms", regexp.MustCompile(`key/.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "encryption_info.0.encryption_at_rest_kms_key_arn", "kms", regexp.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.client_broker", "TLS"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "true"),
@@ -119,8 +122,8 @@ func TestAccAWSMskCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
-					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers_tls"),
-					testCheckResourceAttrIsSortedCsv(resourceName, "zookeeper_connect_string"),
+					atest.CheckSortedCSV(resourceName, "bootstrap_brokers_tls"),
+					atest.CheckSortedCSV(resourceName, "zookeeper_connect_string"),
 				),
 			},
 			{
@@ -141,9 +144,9 @@ func TestAccAWSMskCluster_BrokerNodeGroupInfo_EbsVolumeSize(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -182,9 +185,9 @@ func TestAccAWSMskCluster_BrokerNodeGroupInfo_InstanceType(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -224,9 +227,9 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Scram(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -239,7 +242,7 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Scram(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", mskClusterBoostrapBrokersSaslScramRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
-					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers_sasl_scram"),
+					atest.CheckSortedCSV(resourceName, "bootstrap_brokers_sasl_scram"),
 				),
 			},
 			{
@@ -261,7 +264,7 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Scram(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
-					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers_tls"),
+					atest.CheckSortedCSV(resourceName, "bootstrap_brokers_tls"),
 				),
 			},
 			{
@@ -282,9 +285,9 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Iam(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -297,7 +300,7 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Iam(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", mskClusterBoostrapBrokersSaslIamRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
-					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers_sasl_iam"),
+					atest.CheckSortedCSV(resourceName, "bootstrap_brokers_sasl_iam"),
 				),
 			},
 			{
@@ -319,7 +322,7 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Iam(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
-					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers_tls"),
+					atest.CheckSortedCSV(resourceName, "bootstrap_brokers_tls"),
 				),
 			},
 			{
@@ -335,16 +338,16 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Iam(t *testing.T) {
 }
 
 func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *testing.T) {
-	TestAccSkip(t, "Requires the aws_acmpca_certificate_authority resource to support importing the root CA certificate")
+	atest.Skip(t, "Requires the aws_acmpca_certificate_authority resource to support importing the root CA certificate")
 
 	var cluster1 kafka.ClusterInfo
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -377,9 +380,9 @@ func TestAccAWSMskCluster_ConfigurationInfo_Revision(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -419,9 +422,9 @@ func TestAccAWSMskCluster_EncryptionInfo_EncryptionAtRestKmsKeyArn(t *testing.T)
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -449,9 +452,9 @@ func TestAccAWSMskCluster_EncryptionInfo_EncryptionInTransit_ClientBroker(t *tes
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -464,7 +467,7 @@ func TestAccAWSMskCluster_EncryptionInfo_EncryptionInTransit_ClientBroker(t *tes
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers", mskClusterBoostrapBrokersRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
-					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers"),
+					atest.CheckSortedCSV(resourceName, "bootstrap_brokers"),
 				),
 			},
 			{
@@ -485,9 +488,9 @@ func TestAccAWSMskCluster_EncryptionInfo_EncryptionInTransit_InCluster(t *testin
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -517,9 +520,9 @@ func TestAccAWSMskCluster_EnhancedMonitoring(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -555,9 +558,9 @@ func TestAccAWSMskCluster_NumberOfBrokerNodes(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -573,7 +576,7 @@ func TestAccAWSMskCluster_NumberOfBrokerNodes(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.client_subnets.1", "aws_subnet.example_subnet_az2", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.client_subnets.2", "aws_subnet.example_subnet_az3", "id"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "3"),
-					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers_tls"),
+					atest.CheckSortedCSV(resourceName, "bootstrap_brokers_tls"),
 				),
 			},
 			{
@@ -598,7 +601,7 @@ func TestAccAWSMskCluster_NumberOfBrokerNodes(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.client_subnets.1", "aws_subnet.example_subnet_az2", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.client_subnets.2", "aws_subnet.example_subnet_az3", "id"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "6"),
-					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers_tls"),
+					atest.CheckSortedCSV(resourceName, "bootstrap_brokers_tls"),
 				),
 			},
 		},
@@ -611,9 +614,9 @@ func TestAccAWSMskCluster_OpenMonitoring(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -659,9 +662,9 @@ func TestAccAWSMskCluster_LoggingInfo(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -711,9 +714,9 @@ func TestAccAWSMskCluster_KafkaVersionUpgrade(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -749,9 +752,9 @@ func TestAccAWSMskCluster_KafkaVersionDowngrade(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -762,8 +765,8 @@ func TestAccAWSMskCluster_KafkaVersionDowngrade(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers", mskClusterBoostrapBrokersRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
-					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers"),
-					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers_tls"),
+					atest.CheckSortedCSV(resourceName, "bootstrap_brokers"),
+					atest.CheckSortedCSV(resourceName, "bootstrap_brokers_tls"),
 				),
 			},
 			{
@@ -783,8 +786,8 @@ func TestAccAWSMskCluster_KafkaVersionDowngrade(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers", mskClusterBoostrapBrokersRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
-					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers"),
-					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers_tls"),
+					atest.CheckSortedCSV(resourceName, "bootstrap_brokers"),
+					atest.CheckSortedCSV(resourceName, "bootstrap_brokers_tls"),
 				),
 			},
 		},
@@ -799,9 +802,9 @@ func TestAccAWSMskCluster_KafkaVersionUpgradeWithConfigurationInfo(t *testing.T)
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -844,9 +847,9 @@ func TestAccAWSMskCluster_Tags(t *testing.T) {
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -884,14 +887,14 @@ func testAccCheckMskClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kafkaconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).KafkaConn
 		opts := &kafka.DescribeClusterInput{
 			ClusterArn: aws.String(rs.Primary.ID),
 		}
 
 		_, err := conn.DescribeCluster(opts)
 		if err != nil {
-			if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, kafka.ErrCodeNotFoundException, "") {
 				continue
 			}
 			return err
@@ -911,7 +914,7 @@ func testAccCheckMskClusterExists(n string, cluster *kafka.ClusterInfo) resource
 			return fmt.Errorf("No Cluster arn is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kafkaconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).KafkaConn
 		resp, err := conn.DescribeCluster(&kafka.DescribeClusterInput{
 			ClusterArn: aws.String(rs.Primary.ID),
 		})
@@ -946,7 +949,7 @@ func testAccCheckMskClusterRecreated(i, j *kafka.ClusterInfo) resource.TestCheck
 
 func testAccLoadMskTags(cluster *kafka.ClusterInfo, td *kafka.ListTagsForResourceOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).kafkaconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).KafkaConn
 
 		tagOut, err := conn.ListTagsForResource(&kafka.ListTagsForResourceInput{
 			ResourceArn: cluster.ClusterArn,
@@ -982,13 +985,13 @@ func testAccCheckMskClusterTags(td *kafka.ListTagsForResourceOutput, key string,
 }
 
 func testAccPreCheckAWSMsk(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).kafkaconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).KafkaConn
 
 	input := &kafka.ListClustersInput{}
 
 	_, err := conn.ListClusters(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -998,7 +1001,7 @@ func testAccPreCheckAWSMsk(t *testing.T) {
 }
 
 func testAccMskClusterBaseConfig(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "example_vpc" {
   cidr_block = "192.168.0.0/22"
 
@@ -1044,7 +1047,7 @@ resource "aws_security_group" "example_sg" {
 }
 
 func testAccMskClusterConfig_basic(rName string) string {
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1061,7 +1064,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccMskClusterConfigBrokerNodeGroupInfoEbsVolumeSize(rName string, ebsVolumeSize int) string {
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1078,7 +1081,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccMskClusterConfigBrokerNodeGroupInfoInstanceType(rName string, t string) string {
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1095,7 +1098,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccMskClusterConfigClientAuthenticationTlsCertificateAuthorityArns(rName string) string {
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
@@ -1135,7 +1138,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccMskClusterConfigClientAuthenticationSaslScram(rName string, enabled bool) string {
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1158,7 +1161,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccMskClusterConfigClientAuthenticationSaslIam(rName string, enabled bool) string {
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1181,7 +1184,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccMskClusterConfigConfigurationInfoRevision1(rName string) string {
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_configuration" "test" {
   kafka_versions = ["2.7.1"]
   name           = "%[1]s-1"
@@ -1212,7 +1215,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccMskClusterConfigConfigurationInfoRevision2(rName string) string {
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_configuration" "test" {
   kafka_versions = ["2.7.1"]
   name           = "%[1]s-1"
@@ -1252,7 +1255,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccMskClusterConfigEncryptionInfoEncryptionAtRestKmsKeyArn(rName string) string {
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_kms_key" "example_key" {
   description = %[1]q
 
@@ -1282,7 +1285,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccMskClusterConfigEncryptionInfoEncryptionInTransitClientBroker(rName, clientBroker string) string {
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1305,7 +1308,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccMskClusterConfigEncryptionInfoEncryptionInTransitInCluster(rName string, inCluster bool) string {
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1328,7 +1331,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccMskClusterConfigEnhancedMonitoring(rName, enhancedMonitoring string) string {
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   enhanced_monitoring    = %[2]q
@@ -1347,7 +1350,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccMskClusterConfigNumberOfBrokerNodes(rName string, brokerCount int) string {
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1365,7 +1368,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccMskClusterConfigOpenMonitoring(rName string, jmxExporterEnabled bool, nodeExporterEnabled bool) string {
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1408,7 +1411,7 @@ func testAccMskClusterConfigLoggingInfo(rName string, cloudwatchLogsEnabled bool
 		s3Bucket = "aws_s3_bucket.bucket.id"
 	}
 
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
@@ -1496,7 +1499,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccMskClusterConfigKafkaVersion(rName string, kafkaVersion string) string {
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = %[2]q
@@ -1519,7 +1522,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccMskClusterConfigKafkaVersionWithConfigurationInfo(rName string, kafkaVersion string, configResourceName string) string {
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_configuration" "config1" {
   kafka_versions    = ["2.7.1"]
   name              = "%[1]s-1"
@@ -1563,7 +1566,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccMskClusterConfigTags1(rName string) string {
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1584,7 +1587,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccMskClusterConfigTags2(rName string) string {
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
