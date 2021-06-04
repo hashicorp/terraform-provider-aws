@@ -6,8 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fms"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccAwsFmsAdminAccount_basic(t *testing.T) {
@@ -15,18 +18,18 @@ func testAccAwsFmsAdminAccount_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckFmsAdmin(t)
-			testAccOrganizationsAccountPreCheck(t)
+			atest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, fms.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ErrorCheck:        atest.ErrorCheck(t, fms.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckFmsAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFmsAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceAttrAccountID(resourceName, "account_id"),
+					atest.CheckAttrAccountID(resourceName, "account_id"),
 				),
 			},
 		},
@@ -34,7 +37,7 @@ func testAccAwsFmsAdminAccount_basic(t *testing.T) {
 }
 
 func testAccCheckFmsAdminAccountDestroy(s *terraform.State) error {
-	conn := testAccProviderFmsAdmin.Meta().(*AWSClient).fmsconn
+	conn := testAccProviderFmsAdmin.Meta().(*awsprovider.AWSClient).FMSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_fms_admin_account" {
@@ -43,7 +46,7 @@ func testAccCheckFmsAdminAccountDestroy(s *terraform.State) error {
 
 		output, err := conn.GetAdminAccount(&fms.GetAdminAccountInput{})
 
-		if isAWSErr(err, fms.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, fms.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 
@@ -62,7 +65,7 @@ func testAccCheckFmsAdminAccountDestroy(s *terraform.State) error {
 }
 
 func testAccFmsAdminAccountConfig_basic() string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccFmsAdminRegionProviderConfig(),
 		`
 data "aws_partition" "current" {}
