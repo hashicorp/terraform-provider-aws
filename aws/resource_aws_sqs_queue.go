@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -467,10 +468,19 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsSqsQueueDelete(d *schema.ResourceData, meta interface{}) error {
 	sqsconn := meta.(*AWSClient).sqsconn
 
-	log.Printf("[DEBUG] SQS Delete Queue: %s", d.Id())
+	log.Printf("[DEBUG] Deleting SQS Queue: %s", d.Id())
 	_, err := sqsconn.DeleteQueue(&sqs.DeleteQueueInput{
 		QueueUrl: aws.String(d.Id()),
 	})
+
+	if tfawserr.ErrCodeEquals(err, sqs.ErrCodeQueueDoesNotExist) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting SQS Queue (%s): %w", d.Id(), err)
+	}
+
 	return err
 }
 

@@ -44,32 +44,34 @@ func testSweepSqsQueues(region string) error {
 	input := &sqs.ListQueuesInput{}
 	var sweeperErrs *multierror.Error
 
-	output, err := conn.ListQueues(input)
+	err = conn.ListQueuesPages(input, func(page *sqs.ListQueuesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, queueUrl := range page.QueueUrls {
+			r := resourceAwsSqsQueue()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(queueUrl))
+			err = r.Delete(d, client)
+
+			if err != nil {
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
 	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping SQS Queues sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
+		log.Printf("[WARN] Skipping SQS Queue sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
+
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SQS Queues: %w", err))
-		return sweeperErrs
-	}
-
-	for _, queueUrl := range output.QueueUrls {
-		url := aws.StringValue(queueUrl)
-
-		log.Printf("[INFO] Deleting SQS Queue: %s", url)
-		_, err := conn.DeleteQueue(&sqs.DeleteQueueInput{
-			QueueUrl: aws.String(url),
-		})
-		if isAWSErr(err, sqs.ErrCodeQueueDoesNotExist, "") {
-			continue
-		}
-		if err != nil {
-			sweeperErr := fmt.Errorf("error deleting SQS Queue (%s): %w", url, err)
-			log.Printf("[ERROR] %s", sweeperErr)
-			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			continue
-		}
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing SQS Queues: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
