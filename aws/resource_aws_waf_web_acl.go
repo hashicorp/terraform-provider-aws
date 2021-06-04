@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsWafWebAcl() *schema.Resource {
@@ -148,8 +149,8 @@ func resourceAwsWafWebAcl() *schema.Resource {
 }
 
 func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).WAFConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	wr := newWafRetryer(conn)
@@ -176,9 +177,9 @@ func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error 
 	d.SetId(aws.StringValue(resp.WebACL.WebACLId))
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "waf",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("webacl/%s", d.Id()),
 	}.String()
 
@@ -215,9 +216,9 @@ func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).WAFConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	params := &waf.GetWebACLInput{
 		WebACLId: aws.String(d.Id()),
@@ -296,7 +297,7 @@ func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsWafWebAclUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*awsprovider.AWSClient).WAFConn
 
 	if d.HasChanges("default_action", "rules") {
 		o, n := d.GetChange("rules")
@@ -352,7 +353,7 @@ func resourceAwsWafWebAclUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsWafWebAclDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*awsprovider.AWSClient).WAFConn
 
 	// First, need to delete all rules
 	rules := d.Get("rules").(*schema.Set).List()
