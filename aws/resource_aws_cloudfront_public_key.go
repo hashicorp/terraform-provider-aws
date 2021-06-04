@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCloudFrontPublicKey() *schema.Resource {
@@ -59,7 +61,7 @@ func resourceAwsCloudFrontPublicKey() *schema.Resource {
 }
 
 func resourceAwsCloudFrontPublicKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*awsprovider.AWSClient).CloudFrontConn
 
 	if v, ok := d.GetOk("name"); ok {
 		d.Set("name", v.(string))
@@ -85,14 +87,14 @@ func resourceAwsCloudFrontPublicKeyCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCloudFrontPublicKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*awsprovider.AWSClient).CloudFrontConn
 	request := &cloudfront.GetPublicKeyInput{
 		Id: aws.String(d.Id()),
 	}
 
 	output, err := conn.GetPublicKey(request)
 	if err != nil {
-		if isAWSErr(err, cloudfront.ErrCodeNoSuchPublicKey, "") {
+		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchPublicKey, "") {
 			log.Printf("[WARN] No PublicKey found: %s, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -117,7 +119,7 @@ func resourceAwsCloudFrontPublicKeyRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsCloudFrontPublicKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*awsprovider.AWSClient).CloudFrontConn
 
 	request := &cloudfront.UpdatePublicKeyInput{
 		Id:              aws.String(d.Id()),
@@ -134,7 +136,7 @@ func resourceAwsCloudFrontPublicKeyUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCloudFrontPublicKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*awsprovider.AWSClient).CloudFrontConn
 
 	request := &cloudfront.DeletePublicKeyInput{
 		Id:      aws.String(d.Id()),
@@ -143,7 +145,7 @@ func resourceAwsCloudFrontPublicKeyDelete(d *schema.ResourceData, meta interface
 
 	_, err := conn.DeletePublicKey(request)
 	if err != nil {
-		if isAWSErr(err, cloudfront.ErrCodeNoSuchPublicKey, "") {
+		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchPublicKey, "") {
 			return nil
 		}
 		return err
