@@ -6,7 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsEc2LocalGatewayVirtualInterfaceGroup() *schema.Resource {
@@ -36,8 +37,8 @@ func dataSourceAwsEc2LocalGatewayVirtualInterfaceGroup() *schema.Resource {
 }
 
 func dataSourceAwsEc2LocalGatewayVirtualInterfaceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeLocalGatewayVirtualInterfaceGroupsInput{}
 
@@ -45,7 +46,7 @@ func dataSourceAwsEc2LocalGatewayVirtualInterfaceGroupRead(d *schema.ResourceDat
 		input.LocalGatewayVirtualInterfaceGroupIds = []*string{aws.String(v.(string))}
 	}
 
-	input.Filters = buildEC2AttributeFilterList(
+	input.Filters = BuildEC2AttributeFilterList(
 		map[string]string{
 			"local-gateway-id": d.Get("local_gateway_id").(string),
 		},
