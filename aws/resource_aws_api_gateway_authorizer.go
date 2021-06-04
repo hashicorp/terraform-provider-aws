@@ -8,8 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const defaultAuthorizerTTL = 300
@@ -67,7 +69,7 @@ func resourceAwsApiGatewayAuthorizer() *schema.Resource {
 			"authorizer_credentials": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"authorizer_result_ttl_in_seconds": {
 				Type:         schema.TypeInt,
@@ -84,7 +86,7 @@ func resourceAwsApiGatewayAuthorizer() *schema.Resource {
 				Optional: true, // provider_arns is required for authorizer COGNITO_USER_POOLS.
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: ValidateArn,
 				},
 			},
 		},
@@ -92,7 +94,7 @@ func resourceAwsApiGatewayAuthorizer() *schema.Resource {
 }
 
 func resourceAwsApiGatewayAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 	var postCreateOps []*apigateway.PatchOperation
 
 	input := apigateway.CreateAuthorizerInput{
@@ -158,7 +160,7 @@ func resourceAwsApiGatewayAuthorizerCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsApiGatewayAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	log.Printf("[INFO] Reading API Gateway Authorizer %s", d.Id())
 	input := apigateway.GetAuthorizerInput{
@@ -168,7 +170,7 @@ func resourceAwsApiGatewayAuthorizerRead(d *schema.ResourceData, meta interface{
 
 	authorizer, err := conn.GetAuthorizer(&input)
 	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] No API Gateway Authorizer found: %s", input)
 			d.SetId("")
 			return nil
@@ -196,7 +198,7 @@ func resourceAwsApiGatewayAuthorizerRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsApiGatewayAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	input := apigateway.UpdateAuthorizerInput{
 		AuthorizerId: aws.String(d.Id()),
@@ -289,7 +291,7 @@ func resourceAwsApiGatewayAuthorizerUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsApiGatewayAuthorizerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 	input := apigateway.DeleteAuthorizerInput{
 		AuthorizerId: aws.String(d.Id()),
 		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
