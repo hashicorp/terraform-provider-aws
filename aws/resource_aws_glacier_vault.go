@@ -8,10 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glacier"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGlacierVault() *schema.Resource {
@@ -75,7 +77,7 @@ func resourceAwsGlacierVault() *schema.Resource {
 						"sns_topic": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -91,8 +93,8 @@ func resourceAwsGlacierVault() *schema.Resource {
 }
 
 func resourceAwsGlacierVaultCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glacierconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GlacierConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &glacier.CreateVaultInput{
@@ -128,7 +130,7 @@ func resourceAwsGlacierVaultCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsGlacierVaultUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glacierconn
+	conn := meta.(*awsprovider.AWSClient).GlacierConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -153,16 +155,16 @@ func resourceAwsGlacierVaultUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsGlacierVaultRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glacierconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GlacierConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &glacier.DescribeVaultInput{
 		VaultName: aws.String(d.Id()),
 	}
 
 	out, err := conn.DescribeVault(input)
-	if isAWSErr(err, glacier.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Glaier Vault (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -171,11 +173,11 @@ func resourceAwsGlacierVaultRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error reading Glacier Vault: %w", err)
 	}
 
-	awsClient := meta.(*AWSClient)
+	awsClient := meta.(*awsprovider.AWSClient)
 	d.Set("name", out.VaultName)
 	d.Set("arn", out.VaultARN)
 
-	location, err := buildGlacierVaultLocation(awsClient.accountid, d.Id())
+	location, err := buildGlacierVaultLocation(awsClient.AccountID, d.Id())
 	if err != nil {
 		return err
 	}
@@ -203,7 +205,7 @@ func resourceAwsGlacierVaultRead(d *schema.ResourceData, meta interface{}) error
 		VaultName: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, glacier.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
 		d.Set("access_policy", "")
 	} else if err != nil {
 		return fmt.Errorf("error getting access policy for Glacier Vault (%s): %w", d.Id(), err)
@@ -216,7 +218,7 @@ func resourceAwsGlacierVaultRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	notifications, err := getGlacierVaultNotification(conn, d.Id())
-	if isAWSErr(err, glacier.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
 		d.Set("notification", []map[string]interface{}{})
 	} else if pol != nil {
 		d.Set("notification", notifications)
@@ -228,7 +230,7 @@ func resourceAwsGlacierVaultRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsGlacierVaultDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glacierconn
+	conn := meta.(*awsprovider.AWSClient).GlacierConn
 
 	log.Printf("[DEBUG] Glacier Delete Vault: %s", d.Id())
 	_, err := conn.DeleteVault(&glacier.DeleteVaultInput{
