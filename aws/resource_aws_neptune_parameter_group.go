@@ -8,10 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // We can only modify 20 parameters at a time, so walk them until
@@ -85,8 +87,8 @@ func resourceAwsNeptuneParameterGroup() *schema.Resource {
 }
 
 func resourceAwsNeptuneParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).NeptuneConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := neptune.CreateDBParameterGroupInput{
@@ -110,9 +112,9 @@ func resourceAwsNeptuneParameterGroupCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsNeptuneParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).NeptuneConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	describeOpts := neptune.DescribeDBParameterGroupsInput{
 		DBParameterGroupName: aws.String(d.Id()),
@@ -120,7 +122,7 @@ func resourceAwsNeptuneParameterGroupRead(d *schema.ResourceData, meta interface
 
 	describeResp, err := conn.DescribeDBParameterGroups(&describeOpts)
 	if err != nil {
-		if isAWSErr(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
 			log.Printf("[WARN] Neptune Parameter Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -184,7 +186,7 @@ func resourceAwsNeptuneParameterGroupRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsNeptuneParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*awsprovider.AWSClient).NeptuneConn
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -222,7 +224,7 @@ func resourceAwsNeptuneParameterGroupUpdate(d *schema.ResourceData, meta interfa
 			err := resource.Retry(30*time.Second, func() *resource.RetryError {
 				_, err := conn.ResetDBParameterGroup(&resetOpts)
 				if err != nil {
-					if isAWSErr(err, "InvalidDBParameterGroupState", " has pending changes") {
+					if tfawserr.ErrMessageContains(err, "InvalidDBParameterGroupState", " has pending changes") {
 						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)
@@ -269,7 +271,7 @@ func resourceAwsNeptuneParameterGroupUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsNeptuneParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*awsprovider.AWSClient).NeptuneConn
 
 	deleteOpts := neptune.DeleteDBParameterGroupInput{
 		DBParameterGroupName: aws.String(d.Id()),
@@ -277,10 +279,10 @@ func resourceAwsNeptuneParameterGroupDelete(d *schema.ResourceData, meta interfa
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteDBParameterGroup(&deleteOpts)
 		if err != nil {
-			if isAWSErr(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
 				return nil
 			}
-			if isAWSErr(err, neptune.ErrCodeInvalidDBParameterGroupStateFault, "") {
+			if tfawserr.ErrMessageContains(err, neptune.ErrCodeInvalidDBParameterGroupStateFault, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -292,7 +294,7 @@ func resourceAwsNeptuneParameterGroupDelete(d *schema.ResourceData, meta interfa
 		_, err = conn.DeleteDBParameterGroup(&deleteOpts)
 	}
 
-	if isAWSErr(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
 		return nil
 	}
 
