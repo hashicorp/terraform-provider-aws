@@ -10,10 +10,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -24,12 +27,12 @@ func init() {
 }
 
 func testSweepEc2VpcPeeringConnections(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).ec2conn
+	conn := client.(*awsprovider.AWSClient).EC2Conn
 	input := &ec2.DescribeVpcPeeringConnectionsInput{}
 
 	err = conn.DescribeVpcPeeringConnectionsPages(input, func(page *ec2.DescribeVpcPeeringConnectionsOutput, lastPage bool) bool {
@@ -58,7 +61,7 @@ func testSweepEc2VpcPeeringConnections(region string) error {
 
 			_, err := conn.DeleteVpcPeeringConnection(input)
 
-			if isAWSErr(err, "InvalidVpcPeeringConnectionID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidVpcPeeringConnectionID.NotFound", "") {
 				continue
 			}
 
@@ -75,7 +78,7 @@ func testSweepEc2VpcPeeringConnections(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 VPC Peering Connection sweep for %s: %s", region, err)
 		return nil
 	}
@@ -93,9 +96,9 @@ func TestAccAWSVPCPeeringConnection_basic(t *testing.T) {
 	resourceName := "aws_vpc_peering_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -124,7 +127,7 @@ func TestAccAWSVPCPeeringConnection_plan(t *testing.T) {
 
 	// reach out and DELETE the VPC Peering connection outside of Terraform
 	testDestroy := func(*terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 		log.Printf("[DEBUG] Test deleting the VPC Peering Connection.")
 		_, err := conn.DeleteVpcPeeringConnection(
 			&ec2.DeleteVpcPeeringConnectionInput{
@@ -135,9 +138,9 @@ func TestAccAWSVPCPeeringConnection_plan(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -161,9 +164,9 @@ func TestAccAWSVPCPeeringConnection_tags(t *testing.T) {
 	resourceName := "aws_vpc_peering_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -209,7 +212,7 @@ func TestAccAWSVPCPeeringConnection_options(t *testing.T) {
 	resourceName := "aws_vpc_peering_connection.test"
 
 	testAccepterChange := func(*terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 		log.Printf("[DEBUG] Test change to the VPC Peering Connection Options.")
 
 		_, err := conn.ModifyVpcPeeringConnectionOptions(
@@ -224,9 +227,9 @@ func TestAccAWSVPCPeeringConnection_options(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -381,9 +384,9 @@ func TestAccAWSVPCPeeringConnection_failedState(t *testing.T) {
 	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandString(17))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -395,7 +398,7 @@ func TestAccAWSVPCPeeringConnection_failedState(t *testing.T) {
 }
 
 func testAccCheckAWSVpcPeeringConnectionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_peering_connection" {
@@ -439,7 +442,7 @@ func testAccCheckAWSVpcPeeringConnectionDestroy(s *terraform.State) error {
 }
 
 func testAccCheckAWSVpcPeeringConnectionExists(n string, connection *ec2.VpcPeeringConnection) resource.TestCheckFunc {
-	return testAccCheckAWSVpcPeeringConnectionExistsWithProvider(n, connection, func() *schema.Provider { return testAccProvider })
+	return testAccCheckAWSVpcPeeringConnectionExistsWithProvider(n, connection, func() *schema.Provider { return atest.Provider })
 }
 
 func testAccCheckAWSVpcPeeringConnectionExistsWithProvider(n string, connection *ec2.VpcPeeringConnection, providerF func() *schema.Provider) resource.TestCheckFunc {
@@ -453,7 +456,7 @@ func testAccCheckAWSVpcPeeringConnectionExistsWithProvider(n string, connection 
 			return fmt.Errorf("No VPC Peering Connection ID is set.")
 		}
 
-		conn := providerF().Meta().(*AWSClient).ec2conn
+		conn := providerF().Meta().(*awsprovider.AWSClient).EC2Conn
 		resp, err := conn.DescribeVpcPeeringConnections(
 			&ec2.DescribeVpcPeeringConnectionsInput{
 				VpcPeeringConnectionIds: []*string{aws.String(rs.Primary.ID)},
@@ -472,7 +475,7 @@ func testAccCheckAWSVpcPeeringConnectionExistsWithProvider(n string, connection 
 }
 
 func testAccCheckAWSVpcPeeringConnectionOptions(n, block string, options *ec2.VpcPeeringConnectionOptionsDescription) resource.TestCheckFunc {
-	return testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(n, block, options, func() *schema.Provider { return testAccProvider })
+	return testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(n, block, options, func() *schema.Provider { return atest.Provider })
 }
 
 func testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(n, block string, options *ec2.VpcPeeringConnectionOptionsDescription, providerF func() *schema.Provider) resource.TestCheckFunc {
@@ -486,7 +489,7 @@ func testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(n, block string, opt
 			return fmt.Errorf("No VPC Peering Connection ID is set.")
 		}
 
-		conn := providerF().Meta().(*AWSClient).ec2conn
+		conn := providerF().Meta().(*awsprovider.AWSClient).EC2Conn
 		resp, err := conn.DescribeVpcPeeringConnections(
 			&ec2.DescribeVpcPeeringConnectionsInput{
 				VpcPeeringConnectionIds: []*string{aws.String(rs.Primary.ID)},
@@ -517,11 +520,11 @@ func TestAccAWSVPCPeeringConnection_peerRegionAutoAccept(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 2)
+			atest.PreCheck(t)
+			atest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -540,11 +543,11 @@ func TestAccAWSVPCPeeringConnection_region(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 2)
+			atest.PreCheck(t)
+			atest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -572,9 +575,9 @@ func TestAccAWSVPCPeeringConnection_accept(t *testing.T) {
 	resourceName := "aws_vpc_peering_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -637,9 +640,9 @@ func TestAccAWSVPCPeeringConnection_optionsNoAutoAccept(t *testing.T) {
 	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandString(17))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -806,7 +809,7 @@ resource "aws_vpc_peering_connection" "test" {
 }
 
 func testAccVpcPeeringConfig_region_autoAccept(rName string, autoAccept bool) string {
-	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
+	return atest.ConfigProviderAlternateRegion() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -835,7 +838,7 @@ resource "aws_vpc_peering_connection" "test" {
     Name = %[1]q
   }
 }
-`, rName, autoAccept, testAccGetAlternateRegion())
+`, rName, autoAccept, atest.AlternateRegion())
 }
 
 func testAccVpcPeeringConfig_autoAccept(rName string, autoAccept bool) string {
