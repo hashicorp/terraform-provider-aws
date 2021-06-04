@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -25,14 +27,14 @@ func init() {
 }
 
 func testSweepDynamoDbTables(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).dynamodbconn
-	sweepResources := make([]*testSweepResource, 0)
+	conn := client.(*awsprovider.AWSClient).DynamoDBConn
+	sweepResources := make([]*atest.TestSweepResource, 0)
 	var errs *multierror.Error
 	var g multierror.Group
 	var mutex = &sync.Mutex{}
@@ -67,7 +69,7 @@ func testSweepDynamoDbTables(region string) error {
 
 				mutex.Lock()
 				defer mutex.Unlock()
-				sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+				sweepResources = append(sweepResources, atest.NewTestSweepResource(r, d, client))
 
 				return nil
 			})
@@ -84,11 +86,11 @@ func testSweepDynamoDbTables(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading DynamoDB Tables: %w", err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = atest.TestSweepResourceOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DynamoDB Tables for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if atest.SweepSkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping DynamoDB Tables sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -392,9 +394,9 @@ func TestAccAWSDynamoDbTable_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -427,16 +429,16 @@ func TestAccAWSDynamoDbTable_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDynamoDbConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table1),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDynamoDbTable(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsDynamoDbTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -450,16 +452,16 @@ func TestAccAWSDynamoDbTable_disappears_payPerRequestWithGSI(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDynamoDbBilling_payPerRequestWithGSI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table1),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDynamoDbTable(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsDynamoDbTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -484,9 +486,9 @@ func TestAccAWSDynamoDbTable_extended(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -558,9 +560,9 @@ func TestAccAWSDynamoDbTable_enablePitr(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -593,9 +595,9 @@ func TestAccAWSDynamoDbTable_BillingMode_payPerRequestToProvisioned(t *testing.T
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -627,9 +629,9 @@ func TestAccAWSDynamoDbTable_BillingMode_provisionedToPayPerRequest(t *testing.T
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -661,9 +663,9 @@ func TestAccAWSDynamoDbTable_BillingMode_GSI_payPerRequestToProvisioned(t *testi
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -695,9 +697,9 @@ func TestAccAWSDynamoDbTable_BillingMode_GSI_provisionedToPayPerRequest(t *testi
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -729,9 +731,9 @@ func TestAccAWSDynamoDbTable_streamSpecification(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -740,7 +742,7 @@ func TestAccAWSDynamoDbTable_streamSpecification(t *testing.T) {
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
+					atest.MatchAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -755,7 +757,7 @@ func TestAccAWSDynamoDbTable_streamSpecification(t *testing.T) {
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", ""),
-					testAccMatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
+					atest.MatchAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -765,9 +767,9 @@ func TestAccAWSDynamoDbTable_streamSpecification(t *testing.T) {
 
 func TestAccAWSDynamoDbTable_streamSpecificationValidation(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -784,9 +786,9 @@ func TestAccAWSDynamoDbTable_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -813,9 +815,9 @@ func TestAccAWSDynamoDbTable_gsiUpdateCapacity(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -877,9 +879,9 @@ func TestAccAWSDynamoDbTable_gsiUpdateOtherAttributes(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -967,9 +969,9 @@ func TestAccAWSDynamoDbTable_lsiNonKeyAttributes(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1002,9 +1004,9 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1095,9 +1097,9 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 	reorderedAttributes := fmt.Sprintf("%q, %q", "RandomAttribute", "AnotherAttribute")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1139,9 +1141,9 @@ func TestAccAWSDynamoDbTable_Ttl_enabled(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1169,9 +1171,9 @@ func TestAccAWSDynamoDbTable_Ttl_disabled(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1205,9 +1207,9 @@ func TestAccAWSDynamoDbTable_attributeUpdate(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1249,9 +1251,9 @@ func TestAccAWSDynamoDbTable_lsiUpdate(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1279,9 +1281,9 @@ func TestAccAWSDynamoDbTable_attributeUpdateValidation(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1308,9 +1310,9 @@ func TestAccAWSDynamoDbTable_encryption(t *testing.T) {
 	kmsAliasDatasourceName := "data.aws_kms_alias.dynamodb"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1367,11 +1369,11 @@ func TestAccAWSDynamoDbTable_Replica_multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 3)
+			atest.PreCheck(t)
+			atest.PreCheckMultipleRegion(t, 3)
 		},
-		ErrorCheck:        testAccErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3),
+		ErrorCheck:        atest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesMultipleRegion(&providers, 3),
 		CheckDestroy:      testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1413,11 +1415,11 @@ func TestAccAWSDynamoDbTable_Replica_single(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 2)
+			atest.PreCheck(t)
+			atest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        testAccErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3), // 3 due to shared test configuration
+		ErrorCheck:        atest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesMultipleRegion(&providers, 3), // 3 due to shared test configuration
 		CheckDestroy:      testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1463,11 +1465,11 @@ func TestAccAWSDynamoDbTable_Replica_singleWithCMK(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 2)
+			atest.PreCheck(t)
+			atest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        testAccErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3), // 3 due to shared test configuration
+		ErrorCheck:        atest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesMultipleRegion(&providers, 3), // 3 due to shared test configuration
 		CheckDestroy:      testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1485,7 +1487,7 @@ func TestAccAWSDynamoDbTable_Replica_singleWithCMK(t *testing.T) {
 }
 
 func testAccCheckAWSDynamoDbTableDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).DynamoDBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dynamodb_table" {
@@ -1526,7 +1528,7 @@ func testAccCheckInitialAWSDynamoDbTableExists(n string, table *dynamodb.Describ
 			return fmt.Errorf("No DynamoDB table name specified!")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DynamoDBConn
 
 		params := &dynamodb.DescribeTableInput{
 			TableName: aws.String(rs.Primary.ID),
@@ -2367,8 +2369,8 @@ resource "aws_dynamodb_table" "test" {
 }
 
 func testAccAWSDynamoDbTableConfigReplica0(rName string) string {
-	return composeConfig(
-		testAccMultipleRegionProviderConfig(3), // Prevent "Provider configuration not present" errors
+	return atest.ComposeConfig(
+		atest.ConfigProviderMultipleRegion(3), // Prevent "Provider configuration not present" errors
 		fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name             = %[1]q
@@ -2386,8 +2388,8 @@ resource "aws_dynamodb_table" "test" {
 }
 
 func testAccAWSDynamoDbTableConfigReplica1(rName string) string {
-	return composeConfig(
-		testAccMultipleRegionProviderConfig(3), // Prevent "Provider configuration not present" errors
+	return atest.ComposeConfig(
+		atest.ConfigProviderMultipleRegion(3), // Prevent "Provider configuration not present" errors
 		fmt.Sprintf(`
 data "aws_region" "alternate" {
   provider = "awsalternate"
@@ -2413,8 +2415,8 @@ resource "aws_dynamodb_table" "test" {
 }
 
 func testAccAWSDynamoDbTableConfigReplicaWithCMK(rName string) string {
-	return composeConfig(
-		testAccMultipleRegionProviderConfig(3), // Prevent "Provider configuration not present" errors
+	return atest.ComposeConfig(
+		atest.ConfigProviderMultipleRegion(3), // Prevent "Provider configuration not present" errors
 		fmt.Sprintf(`
 data "aws_region" "alternate" {
   provider = "awsalternate"
@@ -2461,8 +2463,8 @@ resource "aws_dynamodb_table" "test" {
 }
 
 func testAccAWSDynamoDbTableConfigReplica2(rName string) string {
-	return composeConfig(
-		testAccMultipleRegionProviderConfig(3),
+	return atest.ComposeConfig(
+		atest.ConfigProviderMultipleRegion(3),
 		fmt.Sprintf(`
 data "aws_region" "alternate" {
   provider = "awsalternate"
