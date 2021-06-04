@@ -7,10 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -21,11 +24,11 @@ func init() {
 }
 
 func testSweepIamSamlProvider(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).iamconn
+	conn := client.(*awsprovider.AWSClient).IAMConn
 
 	var sweeperErrs *multierror.Error
 
@@ -47,7 +50,7 @@ func testSweepIamSamlProvider(region string) error {
 		}
 	}
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping IAM SAML Provider sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -64,16 +67,16 @@ func TestAccAWSIAMSamlProvider_basic(t *testing.T) {
 	resourceName := "aws_iam_saml_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMSamlProviderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIAMSamlProviderConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMSamlProviderExists(resourceName),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("saml-provider/%s", rName)),
+					atest.CheckAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("saml-provider/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "saml_metadata_document"),
 					resource.TestCheckResourceAttrSet(resourceName, "valid_until"),
@@ -102,9 +105,9 @@ func TestAccAWSIAMSamlProvider_tags(t *testing.T) {
 	resourceName := "aws_iam_saml_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMSamlProviderDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -146,16 +149,16 @@ func TestAccAWSIAMSamlProvider_disappears(t *testing.T) {
 	resourceName := "aws_iam_saml_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMSamlProviderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIAMSamlProviderConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMSamlProviderExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsIamSamlProvider(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsIamSamlProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -164,7 +167,7 @@ func TestAccAWSIAMSamlProvider_disappears(t *testing.T) {
 }
 
 func testAccCheckIAMSamlProviderDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iamconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_saml_provider" {
@@ -176,7 +179,7 @@ func testAccCheckIAMSamlProviderDestroy(s *terraform.State) error {
 		}
 		out, err := conn.GetSAMLProvider(input)
 
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
 		}
 
@@ -203,7 +206,7 @@ func testAccCheckIAMSamlProviderExists(id string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iamconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 		_, err := conn.GetSAMLProvider(&iam.GetSAMLProviderInput{
 			SAMLProviderArn: aws.String(rs.Primary.ID),
 		})
