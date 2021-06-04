@@ -6,7 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsIotThingPrincipalAttachment() *schema.Resource {
@@ -31,7 +33,7 @@ func resourceAwsIotThingPrincipalAttachment() *schema.Resource {
 }
 
 func resourceAwsIotThingPrincipalAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*awsprovider.AWSClient).IoTConn
 
 	principal := d.Get("principal").(string)
 	thing := d.Get("thing").(string)
@@ -53,7 +55,7 @@ func getIoTThingPricipalAttachment(conn *iot.IoT, thing, principal string) (bool
 	out, err := conn.ListThingPrincipals(&iot.ListThingPrincipalsInput{
 		ThingName: aws.String(thing),
 	})
-	if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
 		return false, nil
 	} else if err != nil {
 		return false, err
@@ -69,7 +71,7 @@ func getIoTThingPricipalAttachment(conn *iot.IoT, thing, principal string) (bool
 }
 
 func resourceAwsIotThingPrincipalAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*awsprovider.AWSClient).IoTConn
 
 	principal := d.Get("principal").(string)
 	thing := d.Get("thing").(string)
@@ -89,7 +91,7 @@ func resourceAwsIotThingPrincipalAttachmentRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsIotThingPrincipalAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*awsprovider.AWSClient).IoTConn
 
 	principal := d.Get("principal").(string)
 	thing := d.Get("thing").(string)
@@ -99,7 +101,7 @@ func resourceAwsIotThingPrincipalAttachmentDelete(d *schema.ResourceData, meta i
 		ThingName: aws.String(thing),
 	})
 
-	if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] IoT Principal %s or Thing %s not found, removing from state", principal, thing)
 	} else if err != nil {
 		return fmt.Errorf("error detaching principal %s from thing %s: %s", principal, thing, err)
