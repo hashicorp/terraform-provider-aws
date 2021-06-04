@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // See http://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html
@@ -57,7 +58,7 @@ func dataSourceAwsCloudTrailServiceAccount() *schema.Resource {
 }
 
 func dataSourceAwsCloudTrailServiceAccountRead(d *schema.ResourceData, meta interface{}) error {
-	region := meta.(*AWSClient).region
+	region := meta.(*awsprovider.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)
 	}
@@ -65,7 +66,7 @@ func dataSourceAwsCloudTrailServiceAccountRead(d *schema.ResourceData, meta inte
 	if accid, ok := cloudTrailServiceAccountPerRegionMap[region]; ok {
 		d.SetId(accid)
 		arn := arn.ARN{
-			Partition: meta.(*AWSClient).partition,
+			Partition: meta.(*awsprovider.AWSClient).Partition,
 			Service:   "iam",
 			AccountID: accid,
 			Resource:  "root",
