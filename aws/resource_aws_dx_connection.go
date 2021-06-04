@@ -8,9 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDxConnection() *schema.Resource {
@@ -65,8 +67,8 @@ func resourceAwsDxConnection() *schema.Resource {
 }
 
 func resourceAwsDxConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &directconnect.CreateConnectionInput{
@@ -91,9 +93,9 @@ func resourceAwsDxConnectionCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsDxConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeConnections(&directconnect.DescribeConnectionsInput{
 		ConnectionId: aws.String(d.Id()),
@@ -126,10 +128,10 @@ func resourceAwsDxConnectionRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Service:   "directconnect",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("dxcon/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -161,7 +163,7 @@ func resourceAwsDxConnectionRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsDxConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
@@ -176,7 +178,7 @@ func resourceAwsDxConnectionUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsDxConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	log.Printf("[DEBUG] Deleting Direct Connect connection: %s", d.Id())
 	_, err := conn.DeleteConnection(&directconnect.DeleteConnectionInput{
@@ -222,5 +224,5 @@ func dxConnectionRefreshStateFunc(conn *directconnect.DirectConnect, connId stri
 }
 
 func isNoSuchDxConnectionErr(err error) bool {
-	return isAWSErr(err, "DirectConnectClientException", "Could not find Connection with ID")
+	return tfawserr.ErrMessageContains(err, "DirectConnectClientException", "Could not find Connection with ID")
 }
