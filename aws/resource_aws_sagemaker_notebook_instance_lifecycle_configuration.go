@@ -6,9 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSagemakerNotebookInstanceLifeCycleConfiguration() *schema.Resource {
@@ -50,7 +52,7 @@ func resourceAwsSagemakerNotebookInstanceLifeCycleConfiguration() *schema.Resour
 }
 
 func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -86,7 +88,7 @@ func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationCreate(d *schema.
 }
 
 func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	request := &sagemaker.DescribeNotebookInstanceLifecycleConfigInput{
 		NotebookInstanceLifecycleConfigName: aws.String(d.Id()),
@@ -94,7 +96,7 @@ func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationRead(d *schema.Re
 
 	lifecycleConfig, err := conn.DescribeNotebookInstanceLifecycleConfig(request)
 	if err != nil {
-		if isAWSErr(err, "ValidationException", "") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "") {
 			log.Printf("[INFO] unable to find the SageMaker notebook instance lifecycle configuration (%s); therefore it is removed from the state", d.Id())
 			d.SetId("")
 			return nil
@@ -126,7 +128,7 @@ func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationRead(d *schema.Re
 }
 
 func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	updateOpts := &sagemaker.UpdateNotebookInstanceLifecycleConfigInput{
 		NotebookInstanceLifecycleConfigName: aws.String(d.Get("name").(string)),
@@ -150,7 +152,7 @@ func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationUpdate(d *schema.
 }
 
 func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	deleteOpts := &sagemaker.DeleteNotebookInstanceLifecycleConfigInput{
 		NotebookInstanceLifecycleConfigName: aws.String(d.Id()),
@@ -160,7 +162,7 @@ func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationDelete(d *schema.
 	_, err := conn.DeleteNotebookInstanceLifecycleConfig(deleteOpts)
 	if err != nil {
 
-		if isAWSErr(err, "ValidationException", "") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "") {
 			return nil
 		}
 
