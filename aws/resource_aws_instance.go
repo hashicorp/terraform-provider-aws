@@ -20,12 +20,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	tfiam "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsInstance() *schema.Resource {
@@ -613,8 +614,8 @@ func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool
 }
 
 func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	instanceOpts, err := buildAwsInstanceOpts(d, meta)
@@ -672,12 +673,12 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		runResp, err = conn.RunInstances(runOpts)
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
 		// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-		if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
+		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
 			log.Print("[DEBUG] Invalid IAM Instance Profile referenced, retrying...")
 			return resource.RetryableError(err)
 		}
 		// IAM roles can also take time to propagate in AWS:
-		if isAWSErr(err, "InvalidParameterValue", " has no associated IAM Roles") {
+		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", " has no associated IAM Roles") {
 			log.Print("[DEBUG] IAM Instance Profile appears to have no IAM roles, retrying...")
 			return resource.RetryableError(err)
 		}
@@ -692,7 +693,7 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	// Warn if the AWS Error involves group ids, to help identify situation
 	// where a user uses group ids in security_groups for the Default VPC.
 	//   See https://github.com/hashicorp/terraform/issues/3798
-	if isAWSErr(err, "InvalidParameterValue", "groupId is invalid") {
+	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "groupId is invalid") {
 		return fmt.Errorf("Error launching instance, possible mismatch of Security Group IDs and Names. See AWS Instance docs here: %s.\n\n\tAWS Error: %w", "https://terraform.io/docs/providers/aws/r/instance.html", err)
 	}
 	if err != nil {
@@ -783,15 +784,15 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	instance, err := resourceAwsInstanceFindByID(conn, d.Id())
 	if err != nil {
 		// If the instance was not found, return nil so that we can show
 		// that the instance is gone.
-		if isAWSErr(err, "InvalidInstanceID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
 			d.SetId("")
 			return nil
 		}
@@ -1001,10 +1002,10 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	// ARN
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Service:   ec2.ServiceName,
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("instance/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
@@ -1049,7 +1050,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US)
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362
-		if err != nil && !isAWSErr(err, "UnsupportedOperation", "") {
+		if err != nil && !tfawserr.ErrMessageContains(err, "UnsupportedOperation", "") {
 			return fmt.Errorf("error getting EC2 Instance (%s) Credit Specifications: %s", d.Id(), err)
 		}
 
@@ -1077,7 +1078,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") && !d.IsNewResource() {
 		o, n := d.GetChange("tags_all")
@@ -1151,7 +1152,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 						err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 							_, err := conn.ReplaceIamInstanceProfileAssociation(input)
 							if err != nil {
-								if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
+								if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
 									return resource.RetryableError(err)
 								}
 								return resource.NonRetryableError(err)
@@ -1207,7 +1208,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				// Tolerate InvalidParameterCombination error in Classic, otherwise
 				// return the error
-				if !isAWSErr(err, "InvalidParameterCombination", "") {
+				if !tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "") {
 					return err
 				}
 				log.Printf("[WARN] Attempted to modify SourceDestCheck on non VPC instance: %s", err)
@@ -1604,7 +1605,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	err := resourceAwsInstanceDisableAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))
 
@@ -1650,7 +1651,7 @@ func InstanceStateRefreshFunc(conn *ec2.EC2, instanceID string, failStates []str
 	return func() (interface{}, string, error) {
 		instance, err := resourceAwsInstanceFindByID(conn, instanceID)
 		if err != nil {
-			if !isAWSErr(err, "InvalidInstanceID.NotFound", "") {
+			if !tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
 				log.Printf("Error on InstanceStateRefresh: %s", err)
 				return nil, "", err
 			}
@@ -1681,7 +1682,7 @@ func MetadataOptionsRefreshFunc(conn *ec2.EC2, instanceID string) resource.State
 	return func() (interface{}, string, error) {
 		instance, err := resourceAwsInstanceFindByID(conn, instanceID)
 		if err != nil {
-			if !isAWSErr(err, "InvalidInstanceID.NotFound", "") {
+			if !tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
 				log.Printf("Error on InstanceStateRefresh: %s", err)
 				return nil, "", err
 			}
@@ -1705,7 +1706,7 @@ func RootBlockDeviceDeleteOnTerminationRefreshFunc(conn *ec2.EC2, instanceID str
 	return func() (interface{}, string, error) {
 		instance, err := resourceAwsInstanceFindByID(conn, instanceID)
 		if err != nil {
-			if !isAWSErr(err, "InvalidInstanceID.NotFound", "") {
+			if !tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
 				log.Printf("Error on InstanceStateRefresh: %s", err)
 				return nil, "", err
 			}
@@ -1737,7 +1738,7 @@ func VolumeStateRefreshFunc(conn *ec2.EC2, volumeID, failState string) resource.
 			VolumeIds: []*string{aws.String(volumeID)},
 		})
 		if err != nil {
-			if isAWSErr(err, "InvalidVolumeID.NotFound", "does not exist") {
+			if tfawserr.ErrMessageContains(err, "InvalidVolumeID.NotFound", "does not exist") {
 				return nil, "", nil
 			}
 			log.Printf("Error on VolumeStateRefresh: %s", err)
@@ -1819,7 +1820,7 @@ func associateInstanceProfile(d *schema.ResourceData, conn *ec2.EC2) error {
 	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.AssociateIamInstanceProfile(input)
 		if err != nil {
-			if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
+			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -2375,7 +2376,7 @@ type awsInstanceOpts struct {
 }
 
 func buildAwsInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOpts, error) {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	instanceType := d.Get("instance_type").(string)
 	opts := &awsInstanceOpts{
@@ -2554,7 +2555,7 @@ func awsTerminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error
 		InstanceIds: []*string{aws.String(id)},
 	}
 	if _, err := conn.TerminateInstances(req); err != nil {
-		if isAWSErr(err, "InvalidInstanceID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
 			return nil
 		}
 		return err
@@ -2624,7 +2625,7 @@ func getAwsInstanceVolumeIds(conn *ec2.EC2, instanceId string) ([]string, error)
 	volumeIds := []string{}
 
 	resp, err := conn.DescribeVolumes(&ec2.DescribeVolumesInput{
-		Filters: buildEC2AttributeFilterList(map[string]string{
+		Filters: BuildEC2AttributeFilterList(map[string]string{
 			"attachment.instance-id": instanceId,
 		}),
 	})
