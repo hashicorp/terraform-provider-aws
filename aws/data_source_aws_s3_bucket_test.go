@@ -7,17 +7,18 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceS3Bucket_basic(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
-	region := testAccGetRegion()
+	region := atest.Region()
 	hostedZoneID, _ := HostedZoneIDForRegion(region)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, s3.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDataSourceS3BucketConfig_basic(bucketName),
@@ -37,12 +38,12 @@ func TestAccDataSourceS3Bucket_basic(t *testing.T) {
 
 func TestAccDataSourceS3Bucket_website(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
-	region := testAccGetRegion()
+	region := atest.Region()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, s3.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDataSourceS3BucketWebsiteConfig(bucketName),
