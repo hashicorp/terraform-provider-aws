@@ -7,7 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsNatGateway() *schema.Resource {
@@ -58,8 +59,8 @@ func dataSourceAwsNatGateway() *schema.Resource {
 }
 
 func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeNatGatewaysInput{}
 
@@ -68,7 +69,7 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if vpc_id, ok := d.GetOk("vpc_id"); ok {
-		req.Filter = append(req.Filter, buildEC2AttributeFilterList(
+		req.Filter = append(req.Filter, BuildEC2AttributeFilterList(
 			map[string]string{
 				"vpc-id": vpc_id.(string),
 			},
@@ -76,7 +77,7 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if state, ok := d.GetOk("state"); ok {
-		req.Filter = append(req.Filter, buildEC2AttributeFilterList(
+		req.Filter = append(req.Filter, BuildEC2AttributeFilterList(
 			map[string]string{
 				"state": state.(string),
 			},
@@ -84,7 +85,7 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if subnet_id, ok := d.GetOk("subnet_id"); ok {
-		req.Filter = append(req.Filter, buildEC2AttributeFilterList(
+		req.Filter = append(req.Filter, BuildEC2AttributeFilterList(
 			map[string]string{
 				"subnet-id": subnet_id.(string),
 			},
