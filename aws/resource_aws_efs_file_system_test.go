@@ -8,10 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -26,11 +29,11 @@ func init() {
 }
 
 func testSweepEfsFileSystems(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).efsconn
+	conn := client.(*awsprovider.AWSClient).EFSConn
 	var sweeperErrs *multierror.Error
 
 	input := &efs.DescribeFileSystemsInput{}
@@ -86,16 +89,16 @@ func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEFSFileSystemConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticfilesystem", regexp.MustCompile(`file-system/fs-.+`)),
-					testAccMatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexp.MustCompile(`fs-[^.]+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "elasticfilesystem", regexp.MustCompile(`file-system/fs-.+`)),
+					atest.MatchAttrRegionalHostname(resourceName, "dns_name", "efs", regexp.MustCompile(`fs-[^.]+`)),
 					resource.TestCheckResourceAttr(resourceName, "performance_mode", "generalPurpose"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_mode", efs.ThroughputModeBursting),
 					testAccCheckEfsFileSystem(resourceName, &desc),
@@ -105,7 +108,7 @@ func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "size_in_bytes.0.value"),
 					resource.TestCheckResourceAttrSet(resourceName, "size_in_bytes.0.value_in_ia"),
 					resource.TestCheckResourceAttrSet(resourceName, "size_in_bytes.0.value_in_standard"),
-					testAccMatchResourceAttrAccountID(resourceName, "owner_id"),
+					atest.MatchAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 			{
@@ -132,9 +135,9 @@ func TestAccAWSEFSFileSystem_availabilityZoneName(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -161,9 +164,9 @@ func TestAccAWSEFSFileSystem_tags(t *testing.T) {
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -217,9 +220,9 @@ func TestAccAWSEFSFileSystem_pagedTags(t *testing.T) {
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -246,9 +249,9 @@ func TestAccAWSEFSFileSystem_kmsKey(t *testing.T) {
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -273,9 +276,9 @@ func TestAccAWSEFSFileSystem_kmsConfigurationWithoutEncryption(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -291,9 +294,9 @@ func TestAccAWSEFSFileSystem_ProvisionedThroughputInMibps(t *testing.T) {
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -327,9 +330,9 @@ func TestAccAWSEFSFileSystem_ThroughputMode(t *testing.T) {
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -363,9 +366,9 @@ func TestAccAWSEFSFileSystem_lifecyclePolicy(t *testing.T) {
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -410,9 +413,9 @@ func TestAccAWSEFSFileSystem_lifecyclePolicy_update(t *testing.T) {
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -443,9 +446,9 @@ func TestAccAWSEFSFileSystem_lifecyclePolicy_removal(t *testing.T) {
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -478,16 +481,16 @@ func TestAccAWSEFSFileSystem_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEFSFileSystemConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystem(resourceName, &desc),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEfsFileSystem(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsEfsFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -496,7 +499,7 @@ func TestAccAWSEFSFileSystem_disappears(t *testing.T) {
 }
 
 func testAccCheckEfsFileSystemDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).efsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EFSConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_efs_file_system" {
 			continue
@@ -506,7 +509,7 @@ func testAccCheckEfsFileSystemDestroy(s *terraform.State) error {
 			FileSystemId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
-			if isAWSErr(err, efs.ErrCodeFileSystemNotFound, "") {
+			if tfawserr.ErrMessageContains(err, efs.ErrCodeFileSystemNotFound, "") {
 				// gone
 				return nil
 			}
@@ -531,7 +534,7 @@ func testAccCheckEfsFileSystem(resourceID string, fDesc *efs.FileSystemDescripti
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).efsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EFSConn
 		fs, err := conn.DescribeFileSystems(&efs.DescribeFileSystemsInput{
 			FileSystemId: aws.String(rs.Primary.ID),
 		})
@@ -561,7 +564,7 @@ func testAccCheckEfsCreationToken(resourceID string, expectedToken string) resou
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).efsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EFSConn
 		resp, err := conn.DescribeFileSystems(&efs.DescribeFileSystemsInput{
 			FileSystemId: aws.String(rs.Primary.ID),
 		})
@@ -587,7 +590,7 @@ func testAccCheckEfsFileSystemPerformanceMode(resourceID string, expectedMode st
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).efsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EFSConn
 		resp, err := conn.DescribeFileSystems(&efs.DescribeFileSystemsInput{
 			FileSystemId: aws.String(rs.Primary.ID),
 		})
@@ -617,7 +620,7 @@ func testAccCheckEfsFileSystemLifecyclePolicy(resourceID string, expectedVal str
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).efsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EFSConn
 		resp, err := conn.DescribeFileSystems(&efs.DescribeFileSystemsInput{
 			FileSystemId: aws.String(rs.Primary.ID),
 		})
