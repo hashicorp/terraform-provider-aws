@@ -6,10 +6,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsOpsworksPermission() *schema.Resource {
@@ -60,7 +62,7 @@ func resourceAwsOpsworksPermissionDelete(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsOpsworksPermissionRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*awsprovider.AWSClient).OpsWorksConn
 
 	req := &opsworks.DescribePermissionsInput{
 		IamUserArn: aws.String(d.Get("user_arn").(string)),
@@ -107,7 +109,7 @@ func resourceAwsOpsworksPermissionRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsOpsworksSetPermission(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*awsprovider.AWSClient).OpsWorksConn
 
 	req := &opsworks.SetPermissionInput{
 		AllowSudo:  aws.Bool(d.Get("allow_sudo").(bool)),
@@ -124,7 +126,7 @@ func resourceAwsOpsworksSetPermission(d *schema.ResourceData, meta interface{}) 
 		_, err := client.SetPermission(req)
 		if err != nil {
 
-			if isAWSErr(err, opsworks.ErrCodeResourceNotFoundException, "Unable to find user with ARN") {
+			if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "Unable to find user with ARN") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
