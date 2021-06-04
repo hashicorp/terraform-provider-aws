@@ -9,9 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -25,11 +28,11 @@ func init() {
 }
 
 func testSweepGameliftFleets(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).gameliftconn
+	conn := client.(*awsprovider.AWSClient).GameLiftConn
 
 	return testAccGameliftListFleets(conn, nil, region, func(fleetIds []*string) error {
 		if len(fleetIds) == 0 {
@@ -54,7 +57,7 @@ func testSweepGameliftFleets(region string) error {
 				})
 				if err != nil {
 					msg := fmt.Sprintf("Cannot delete fleet %s that is in status of ", *attr.FleetId)
-					if isAWSErr(err, gamelift.ErrCodeInvalidRequestException, msg) {
+					if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, msg) {
 						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)
@@ -81,7 +84,7 @@ func testAccGameliftListFleets(conn *gamelift.GameLift, nextToken *string, regio
 		NextToken: nextToken,
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Gamelift Fleet sweep for %s: %s", region, err)
 			return nil
 		}
@@ -240,7 +243,7 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 
 	desc := fmt.Sprintf("Updated description %s", acctest.RandString(8))
 
-	region := testAccGetRegion()
+	region := atest.Region()
 	g, err := testAccAWSGameliftSampleGame(region)
 
 	if isResourceNotFoundError(err) {
@@ -262,12 +265,12 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(gamelift.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(gamelift.EndpointsID, t)
 			testAccPreCheckAWSGamelift(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, gamelift.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, gamelift.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGameliftFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -275,7 +278,7 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "build_id"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", fleetName),
@@ -295,7 +298,7 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "build_id"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", uFleetName),
 					resource.TestCheckResourceAttr(resourceName, "description", desc),
@@ -322,7 +325,7 @@ func TestAccAWSGameliftFleet_tags(t *testing.T) {
 	fleetName := acctest.RandomWithPrefix("tf-acc-fleet")
 	buildName := acctest.RandomWithPrefix("tf-acc-build")
 
-	region := testAccGetRegion()
+	region := atest.Region()
 	g, err := testAccAWSGameliftSampleGame(region)
 
 	if isResourceNotFoundError(err) {
@@ -344,12 +347,12 @@ func TestAccAWSGameliftFleet_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(gamelift.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(gamelift.EndpointsID, t)
 			testAccPreCheckAWSGamelift(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, gamelift.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, gamelift.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGameliftFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -389,7 +392,7 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 
 	desc := fmt.Sprintf("Terraform Acceptance Test %s", acctest.RandString(8))
 
-	region := testAccGetRegion()
+	region := atest.Region()
 	g, err := testAccAWSGameliftSampleGame(region)
 
 	if isResourceNotFoundError(err) {
@@ -414,12 +417,12 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(gamelift.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(gamelift.EndpointsID, t)
 			testAccPreCheckAWSGamelift(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, gamelift.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, gamelift.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGameliftFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -427,7 +430,7 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "build_id"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "fleet_type", "ON_DEMAND"),
 					resource.TestCheckResourceAttr(resourceName, "name", fleetName),
 					resource.TestCheckResourceAttr(resourceName, "description", desc),
@@ -466,7 +469,7 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "build_id"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "fleet_type", "ON_DEMAND"),
 					resource.TestCheckResourceAttr(resourceName, "name", fleetName),
 					resource.TestCheckResourceAttr(resourceName, "description", desc),
@@ -510,7 +513,7 @@ func TestAccAWSGameliftFleet_disappears(t *testing.T) {
 	fleetName := acctest.RandomWithPrefix("tf-acc-fleet")
 	buildName := acctest.RandomWithPrefix("tf-acc-build")
 
-	region := testAccGetRegion()
+	region := atest.Region()
 	g, err := testAccAWSGameliftSampleGame(region)
 
 	if isResourceNotFoundError(err) {
@@ -532,12 +535,12 @@ func TestAccAWSGameliftFleet_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(gamelift.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(gamelift.EndpointsID, t)
 			testAccPreCheckAWSGamelift(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, gamelift.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, gamelift.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGameliftFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -563,7 +566,7 @@ func testAccCheckAWSGameliftFleetExists(n string, res *gamelift.FleetAttributes)
 			return fmt.Errorf("No Gamelift Fleet ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).gameliftconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).GameLiftConn
 
 		out, err := conn.DescribeFleetAttributes(&gamelift.DescribeFleetAttributesInput{
 			FleetIds: aws.StringSlice([]string{rs.Primary.ID}),
@@ -593,14 +596,14 @@ func testAccCheckAWSGameliftFleetExists(n string, res *gamelift.FleetAttributes)
 
 func testAccCheckAWSGameliftFleetDisappears(res *gamelift.FleetAttributes) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).gameliftconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).GameLiftConn
 
 		input := &gamelift.DeleteFleetInput{FleetId: res.FleetId}
 		err := resource.Retry(60*time.Minute, func() *resource.RetryError {
 			_, err := conn.DeleteFleet(input)
 			if err != nil {
 				msg := fmt.Sprintf("Cannot delete fleet %s that is in status of ", *res.FleetId)
-				if isAWSErr(err, gamelift.ErrCodeInvalidRequestException, msg) {
+				if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, msg) {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -619,7 +622,7 @@ func testAccCheckAWSGameliftFleetDisappears(res *gamelift.FleetAttributes) resou
 }
 
 func testAccCheckAWSGameliftFleetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).gameliftconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).GameLiftConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_gamelift_fleet" {
