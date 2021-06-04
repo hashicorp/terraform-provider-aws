@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSLakeFormationResourceDataSource_basic(t *testing.T) {
@@ -15,9 +16,9 @@ func TestAccAWSLakeFormationResourceDataSource_basic(t *testing.T) {
 	resourceName := "aws_lakeformation_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
-		ErrorCheck:        testAccErrorCheck(t, lakeformation.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); atest.PreCheckPartitionService(lakeformation.EndpointsID, t) },
+		ErrorCheck:        atest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSLakeFormationResourceDestroy,
 		Steps: []resource.TestStep{
 			{
