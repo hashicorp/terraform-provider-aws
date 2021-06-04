@@ -12,7 +12,7 @@ build: fmtcheck
 	go install
 
 gen:
-	rm -f aws/internal/keyvaluetags/*_gen.go
+	rm -f aws/keyvaluetags/*_gen.go
 	rm -f aws/internal/service/**/lister/*_gen.go
 	go generate ./...
 
@@ -38,7 +38,7 @@ testacc: fmtcheck
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG_NAME) $(filter-out ./awsproviderlint/go% ./awsproviderlint/README.md ./awsproviderlint/vendor, $(wildcard ./awsproviderlint/*))
+	gofmt -s -w ./$(PKG_NAME) ./provider ./atest $(filter-out ./awsproviderlint/go% ./awsproviderlint/README.md ./awsproviderlint/vendor, $(wildcard ./awsproviderlint/*))
 
 # Currently required by tf-deploy compile
 fmtcheck:
