@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDbSnapshot() *schema.Resource {
@@ -115,8 +117,8 @@ func resourceAwsDbSnapshot() *schema.Resource {
 }
 
 func resourceAwsDbSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	dBInstanceIdentifier := d.Get("db_instance_identifier").(string)
 
@@ -151,16 +153,16 @@ func resourceAwsDbSnapshotCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsDbSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	params := &rds.DescribeDBSnapshotsInput{
 		DBSnapshotIdentifier: aws.String(d.Id()),
 	}
 	resp, err := conn.DescribeDBSnapshots(params)
 
-	if isAWSErr(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
 		log.Printf("[WARN] AWS DB Snapshot (%s) is already gone", d.Id())
 		d.SetId("")
 		return nil
@@ -213,13 +215,13 @@ func resourceAwsDbSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsDbSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	params := &rds.DeleteDBSnapshotInput{
 		DBSnapshotIdentifier: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteDBSnapshot(params)
-	if isAWSErr(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
 		return nil
 	}
 
@@ -231,7 +233,7 @@ func resourceAwsDbSnapshotDelete(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsDbSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -247,7 +249,7 @@ func resourceAwsDbSnapshotUpdate(d *schema.ResourceData, meta interface{}) error
 func resourceAwsDbSnapshotStateRefreshFunc(
 	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		conn := meta.(*AWSClient).rdsconn
+		conn := meta.(*awsprovider.AWSClient).RDSConn
 
 		opts := &rds.DescribeDBSnapshotsInput{
 			DBSnapshotIdentifier: aws.String(d.Id()),
@@ -256,7 +258,7 @@ func resourceAwsDbSnapshotStateRefreshFunc(
 		log.Printf("[DEBUG] DB Snapshot describe configuration: %#v", opts)
 
 		resp, err := conn.DescribeDBSnapshots(opts)
-		if isAWSErr(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
 			return nil, "", nil
 		}
 		if err != nil {
