@@ -13,7 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -24,11 +26,11 @@ func init() {
 }
 
 func testSweepSagemakerApps(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).sagemakerconn
+	conn := client.(*awsprovider.AWSClient).SageMakerConn
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListAppsPages(&sagemaker.ListAppsInput{}, func(page *sagemaker.ListAppsOutput, lastPage bool) bool {
@@ -57,7 +59,7 @@ func testSweepSagemakerApps(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker domain sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -75,9 +77,9 @@ func testAccAWSSagemakerApp_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -87,7 +89,7 @@ func testAccAWSSagemakerApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_id", "aws_sagemaker_domain.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "user_profile_name", "aws_sagemaker_user_profile.test", "user_profile_name"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`app/.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`app/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_spec.0.sagemaker_image_arn"),
 					resource.TestCheckResourceAttr(resourceName, "resource_spec.0.instance_type", "system"),
@@ -109,9 +111,9 @@ func testAccAWSSagemakerApp_resourceSpec(t *testing.T) {
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -139,9 +141,9 @@ func testAccAWSSagemakerApp_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -184,16 +186,16 @@ func testAccAWSSagemakerApp_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSagemakerAppBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerAppExists(resourceName, &app),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerApp(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSagemakerApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -202,7 +204,7 @@ func testAccAWSSagemakerApp_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerAppDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SageMakerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_app" {
@@ -244,7 +246,7 @@ func testAccCheckAWSSagemakerAppExists(n string, app *sagemaker.DescribeAppOutpu
 			return fmt.Errorf("No sagmaker domain ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SageMakerConn
 		domainID := rs.Primary.Attributes["domain_id"]
 		userProfileName := rs.Primary.Attributes["user_profile_name"]
 		appType := rs.Primary.Attributes["app_type"]
