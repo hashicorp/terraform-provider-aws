@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediastore"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSMediaStoreContainerPolicy_basic(t *testing.T) {
@@ -16,9 +19,9 @@ func TestAccAWSMediaStoreContainerPolicy_basic(t *testing.T) {
 	resourceName := "aws_media_store_container_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaStore(t) },
-		ErrorCheck:   testAccErrorCheck(t, mediastore.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMediaStore(t) },
+		ErrorCheck:   atest.ErrorCheck(t, mediastore.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMediaStoreContainerPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -47,7 +50,7 @@ func TestAccAWSMediaStoreContainerPolicy_basic(t *testing.T) {
 }
 
 func testAccCheckAwsMediaStoreContainerPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).mediastoreconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).MediaStoreConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_media_store_container_policy" {
@@ -60,13 +63,13 @@ func testAccCheckAwsMediaStoreContainerPolicyDestroy(s *terraform.State) error {
 
 		_, err := conn.GetContainerPolicy(input)
 		if err != nil {
-			if isAWSErr(err, mediastore.ErrCodeContainerNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
 				return nil
 			}
-			if isAWSErr(err, mediastore.ErrCodePolicyNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, mediastore.ErrCodePolicyNotFoundException, "") {
 				return nil
 			}
-			if isAWSErr(err, mediastore.ErrCodeContainerInUseException, "Container must be ACTIVE in order to perform this operation") {
+			if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerInUseException, "Container must be ACTIVE in order to perform this operation") {
 				return nil
 			}
 			return err
@@ -84,7 +87,7 @@ func testAccCheckAwsMediaStoreContainerPolicyExists(name string) resource.TestCh
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).mediastoreconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).MediaStoreConn
 
 		input := &mediastore.GetContainerPolicyInput{
 			ContainerName: aws.String(rs.Primary.ID),
