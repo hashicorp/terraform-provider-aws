@@ -8,9 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsWafRegionalRateBasedRule() *schema.Resource {
@@ -79,10 +81,10 @@ func resourceAwsWafRegionalRateBasedRule() *schema.Resource {
 }
 
 func resourceAwsWafRegionalRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
-	region := meta.(*AWSClient).region
+	region := meta.(*awsprovider.AWSClient).Region
 
 	wr := newWafRegionalRetryer(conn, region)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -119,16 +121,16 @@ func resourceAwsWafRegionalRateBasedRuleCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsWafRegionalRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	params := &waf.GetRateBasedRuleInput{
 		RuleId: aws.String(d.Id()),
 	}
 
 	resp, err := conn.GetRateBasedRule(params)
-	if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 		log.Printf("[WARN] WAF Regional Rate Based Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -148,9 +150,9 @@ func resourceAwsWafRegionalRateBasedRuleRead(d *schema.ResourceData, meta interf
 	}
 
 	arn := arn.ARN{
-		AccountID: meta.(*AWSClient).accountid,
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Resource:  fmt.Sprintf("ratebasedrule/%s", d.Id()),
 		Service:   "waf-regional",
 	}.String()
@@ -182,8 +184,8 @@ func resourceAwsWafRegionalRateBasedRuleRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsWafRegionalRateBasedRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	region := meta.(*awsprovider.AWSClient).Region
 
 	if d.HasChanges("predicate", "rate_limit") {
 		o, n := d.GetChange("predicate")
@@ -191,7 +193,7 @@ func resourceAwsWafRegionalRateBasedRuleUpdate(d *schema.ResourceData, meta inte
 		rateLimit := d.Get("rate_limit")
 
 		err := updateWafRateBasedRuleResourceWR(d.Id(), oldP, newP, rateLimit, conn, region)
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			log.Printf("[WARN] WAF Regional Rate Based Rule (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -213,8 +215,8 @@ func resourceAwsWafRegionalRateBasedRuleUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsWafRegionalRateBasedRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	region := meta.(*awsprovider.AWSClient).Region
 
 	oldPredicates := d.Get("predicate").(*schema.Set).List()
 	if len(oldPredicates) > 0 {
@@ -222,7 +224,7 @@ func resourceAwsWafRegionalRateBasedRuleDelete(d *schema.ResourceData, meta inte
 		rateLimit := d.Get("rate_limit")
 
 		err := updateWafRateBasedRuleResourceWR(d.Id(), oldPredicates, noPredicates, rateLimit, conn, region)
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			return nil
 		}
 		if err != nil {
@@ -239,7 +241,7 @@ func resourceAwsWafRegionalRateBasedRuleDelete(d *schema.ResourceData, meta inte
 		log.Printf("[INFO] Deleting WAF Regional Rate Based Rule")
 		return conn.DeleteRateBasedRule(req)
 	})
-	if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 		return nil
 	}
 	if err != nil {
