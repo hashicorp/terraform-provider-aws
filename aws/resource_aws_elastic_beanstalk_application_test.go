@@ -7,10 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -22,15 +25,15 @@ func init() {
 }
 
 func testSweepElasticBeanstalkApplications(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	beanstalkconn := client.(*AWSClient).elasticbeanstalkconn
+	beanstalkconn := client.(*awsprovider.AWSClient).ElasticBeanstalkConn
 
 	resp, err := beanstalkconn.DescribeApplications(&elasticbeanstalk.DescribeApplicationsInput{})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Elastic Beanstalk Application sweep for %s: %s", region, err)
 			return nil
 		}
@@ -50,7 +53,7 @@ func testSweepElasticBeanstalkApplications(region string) error {
 				ApplicationName: bsa.ApplicationName,
 			})
 		if err != nil {
-			if isAWSErr(err, "InvalidConfiguration.NotFound", "") || isAWSErr(err, "ValidationError", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidConfiguration.NotFound", "") || tfawserr.ErrMessageContains(err, "ValidationError", "") {
 				log.Printf("[DEBUG] beanstalk application %q not found", applicationName)
 				continue
 			}
@@ -68,9 +71,9 @@ func TestAccAWSBeanstalkApp_basic(t *testing.T) {
 	resourceName := "aws_elastic_beanstalk_application.tftest"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBeanstalkAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -93,9 +96,9 @@ func TestAccAWSBeanstalkApp_appversionlifecycle(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBeanstalkAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -154,9 +157,9 @@ func TestAccAWSBeanstalkApp_tags(t *testing.T) {
 	resourceName := "aws_elastic_beanstalk_application.tftest"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBeanstalkAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -206,7 +209,7 @@ func TestAccAWSBeanstalkApp_tags(t *testing.T) {
 }
 
 func testAccCheckBeanstalkAppDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elasticbeanstalkconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ElasticBeanstalkConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elastic_beanstalk_application" {
@@ -225,7 +228,7 @@ func testAccCheckBeanstalkAppDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		if !isAWSErr(err, "InvalidBeanstalkAppID.NotFound", "") {
+		if !tfawserr.ErrMessageContains(err, "InvalidBeanstalkAppID.NotFound", "") {
 			return err
 		}
 	}
@@ -244,7 +247,7 @@ func testAccCheckBeanstalkAppExists(n string, app *elasticbeanstalk.ApplicationD
 			return fmt.Errorf("Elastic Beanstalk app ID is not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).elasticbeanstalkconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ElasticBeanstalkConn
 		DescribeBeanstalkAppOpts := &elasticbeanstalk.DescribeApplicationsInput{
 			ApplicationNames: []*string{aws.String(rs.Primary.ID)},
 		}
