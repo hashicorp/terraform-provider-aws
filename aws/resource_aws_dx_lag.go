@@ -8,9 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDxLag() *schema.Resource {
@@ -65,8 +67,8 @@ func resourceAwsDxLag() *schema.Resource {
 }
 
 func resourceAwsDxLagCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &directconnect.CreateLagInput{
@@ -103,9 +105,9 @@ func resourceAwsDxLagCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeLags(&directconnect.DescribeLagsInput{
 		LagId: aws.String(d.Id()),
@@ -139,10 +141,10 @@ func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Service:   "directconnect",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("dxlag/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -173,7 +175,7 @@ func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsDxLagUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	if d.HasChange("name") {
 		req := &directconnect.UpdateLagInput{
@@ -201,7 +203,7 @@ func resourceAwsDxLagUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsDxLagDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	if d.Get("force_destroy").(bool) {
 		resp, err := conn.DescribeLags(&directconnect.DescribeLagsInput{
@@ -273,5 +275,5 @@ func dxLagRefreshStateFunc(conn *directconnect.DirectConnect, lagId string) reso
 }
 
 func isNoSuchDxLagErr(err error) bool {
-	return isAWSErr(err, "DirectConnectClientException", "Could not find Lag with ID")
+	return tfawserr.ErrMessageContains(err, "DirectConnectClientException", "Could not find Lag with ID")
 }
