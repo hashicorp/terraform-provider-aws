@@ -12,11 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	tfevents "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -81,7 +82,7 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 			"role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"is_enabled": {
 				Type:     schema.TypeBool,
@@ -101,8 +102,8 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 }
 
 func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CloudWatchEventsConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
@@ -123,7 +124,7 @@ func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface
 	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		out, err = conn.PutRule(input)
 
-		if isAWSErr(err, "ValidationException", "cannot be assumed by principal") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "cannot be assumed by principal") {
 			log.Printf("[DEBUG] Retrying update of CloudWatch Events Rule %q", aws.StringValue(input.Name))
 			return resource.RetryableError(err)
 		}
@@ -151,9 +152,9 @@ func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CloudWatchEventsConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	out, err := finder.RuleByID(conn, d.Id())
 	if tfawserr.ErrCodeEquals(err, events.ErrCodeResourceNotFoundException) {
@@ -210,7 +211,7 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchEventsConn
 	_, ruleName, err := tfevents.RuleParseID(d.Id())
 	if err != nil {
 		return err
@@ -225,7 +226,7 @@ func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface
 	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutRule(input)
 
-		if isAWSErr(err, "ValidationException", "cannot be assumed by principal") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "cannot be assumed by principal") {
 			log.Printf("[DEBUG] Retrying update of CloudWatch Events Rule %q", aws.StringValue(input.Name))
 			return resource.RetryableError(err)
 		}
@@ -255,7 +256,7 @@ func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCloudWatchEventRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchEventsConn
 	busName, ruleName, err := tfevents.RuleParseID(d.Id())
 	if err != nil {
 		return err
@@ -268,7 +269,7 @@ func resourceAwsCloudWatchEventRuleDelete(d *schema.ResourceData, meta interface
 	err = resource.Retry(cloudWatchEventRuleDeleteRetryTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteRule(input)
 
-		if isAWSErr(err, "ValidationException", "Rule can't be deleted since it has targets") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "Rule can't be deleted since it has targets") {
 			return resource.RetryableError(err)
 		}
 
