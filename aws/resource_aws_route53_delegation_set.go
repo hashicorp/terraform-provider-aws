@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsRoute53DelegationSet() *schema.Resource {
@@ -37,7 +38,7 @@ func resourceAwsRoute53DelegationSet() *schema.Resource {
 }
 
 func resourceAwsRoute53DelegationSetCreate(d *schema.ResourceData, meta interface{}) error {
-	r53 := meta.(*AWSClient).r53conn
+	r53 := meta.(*awsprovider.AWSClient).Route53Conn
 
 	callerRef := resource.UniqueId()
 	if v, ok := d.GetOk("reference_name"); ok {
@@ -63,7 +64,7 @@ func resourceAwsRoute53DelegationSetCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsRoute53DelegationSetRead(d *schema.ResourceData, meta interface{}) error {
-	r53 := meta.(*AWSClient).r53conn
+	r53 := meta.(*awsprovider.AWSClient).Route53Conn
 
 	input := &route53.GetReusableDelegationSetInput{
 		Id: aws.String(cleanDelegationSetId(d.Id())),
@@ -84,7 +85,7 @@ func resourceAwsRoute53DelegationSetRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsRoute53DelegationSetDelete(d *schema.ResourceData, meta interface{}) error {
-	r53 := meta.(*AWSClient).r53conn
+	r53 := meta.(*awsprovider.AWSClient).Route53Conn
 
 	input := &route53.DeleteReusableDelegationSetInput{
 		Id: aws.String(cleanDelegationSetId(d.Id())),
