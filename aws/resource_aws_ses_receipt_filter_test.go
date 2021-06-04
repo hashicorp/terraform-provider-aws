@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSSESReceiptFilter_basic(t *testing.T) {
@@ -16,16 +18,20 @@ func TestAccAWSSESReceiptFilter_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t); testAccPreCheckSESReceiptRule(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck: func() {
+			atest.PreCheck(t)
+			testAccPreCheckAWSSES(t)
+			testAccPreCheckSESReceiptRule(t)
+		},
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESReceiptFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSESReceiptFilterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptFilterExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-filter/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-filter/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cidr", "10.10.10.10"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy", "Block"),
@@ -45,16 +51,20 @@ func TestAccAWSSESReceiptFilter_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t); testAccPreCheckSESReceiptRule(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck: func() {
+			atest.PreCheck(t)
+			testAccPreCheckAWSSES(t)
+			testAccPreCheckSESReceiptRule(t)
+		},
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESReceiptFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSESReceiptFilterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptFilterExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesReceiptFilter(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSesReceiptFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -63,7 +73,7 @@ func TestAccAWSSESReceiptFilter_disappears(t *testing.T) {
 }
 
 func testAccCheckSESReceiptFilterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_receipt_filter" {
@@ -97,7 +107,7 @@ func testAccCheckAwsSESReceiptFilterExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("SES receipt filter ID not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sesconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SESConn
 
 		response, err := conn.ListReceiptFilters(&ses.ListReceiptFiltersInput{})
 		if err != nil {
