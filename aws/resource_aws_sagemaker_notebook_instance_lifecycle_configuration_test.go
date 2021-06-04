@@ -8,9 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const SagemakerNotebookInstanceLifecycleConfigurationResourcePrefix = "tf-acc-test"
@@ -26,11 +29,11 @@ func init() {
 }
 
 func testSweepSagemakerNotebookInstanceLifecycleConfiguration(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).sagemakerconn
+	conn := client.(*awsprovider.AWSClient).SageMakerConn
 
 	input := &sagemaker.ListNotebookInstanceLifecycleConfigsInput{}
 	err = conn.ListNotebookInstanceLifecycleConfigsPages(input, func(page *sagemaker.ListNotebookInstanceLifecycleConfigsOutput, lastPage bool) bool {
@@ -56,7 +59,7 @@ func testSweepSagemakerNotebookInstanceLifecycleConfiguration(region string) err
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping SageMaker Notebook Instance Lifecycle Configuration sweep for %s: %s", region, err)
 			return nil
 		}
@@ -72,9 +75,9 @@ func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_basic(t *testing.
 	resourceName := "aws_sagemaker_notebook_instance_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -85,7 +88,7 @@ func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_basic(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "on_create"),
 					resource.TestCheckNoResourceAttr(resourceName, "on_start"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("notebook-instance-lifecycle-config/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("notebook-instance-lifecycle-config/%s", rName)),
 				),
 			},
 			{
@@ -103,9 +106,9 @@ func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_Update(t *testing
 	resourceName := "aws_sagemaker_notebook_instance_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -145,7 +148,7 @@ func testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationExists(resour
 			return fmt.Errorf("no ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SageMakerConn
 		output, err := conn.DescribeNotebookInstanceLifecycleConfig(&sagemaker.DescribeNotebookInstanceLifecycleConfigInput{
 			NotebookInstanceLifecycleConfigName: aws.String(rs.Primary.ID),
 		})
@@ -170,13 +173,13 @@ func testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationDestroy(s *te
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SageMakerConn
 		lifecycleConfig, err := conn.DescribeNotebookInstanceLifecycleConfig(&sagemaker.DescribeNotebookInstanceLifecycleConfigInput{
 			NotebookInstanceLifecycleConfigName: aws.String(rs.Primary.ID),
 		})
 
 		if err != nil {
-			if isAWSErr(err, "ValidationException", "") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "") {
 				continue
 			}
 			return err
