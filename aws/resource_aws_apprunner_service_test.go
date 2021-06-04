@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -24,14 +26,14 @@ func init() {
 }
 
 func testSweepAppRunnerServices(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).apprunnerconn
-	sweepResources := make([]*testSweepResource, 0)
+	conn := client.(*awsprovider.AWSClient).AppRunnerConn
+	sweepResources := make([]*atest.TestSweepResource, 0)
 	ctx := context.Background()
 	var errs *multierror.Error
 
@@ -55,7 +57,7 @@ func testSweepAppRunnerServices(region string) error {
 			d := r.Data(nil)
 			d.SetId(arn)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, atest.NewTestSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -65,11 +67,11 @@ func testSweepAppRunnerServices(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing App Runner Services: %w", err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = atest.TestSweepResourceOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping App Runner Services for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping App Runner Services sweep for %s: %s", region, err)
 		return nil // In case we have completed some pages, but had errors
 	}
@@ -82,9 +84,9 @@ func TestAccAwsAppRunnerService_ImageRepository_basic(t *testing.T) {
 	resourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apprunner.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -92,8 +94,8 @@ func TestAccAwsAppRunnerService_ImageRepository_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "service_name", rName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`service/%s/.+`, rName))),
-					testAccMatchResourceAttrRegionalARN(resourceName, "auto_scaling_configuration_arn", "apprunner", regexp.MustCompile(`autoscalingconfiguration/DefaultConfiguration/1/.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`service/%s/.+`, rName))),
+					atest.MatchAttrRegionalARN(resourceName, "auto_scaling_configuration_arn", "apprunner", regexp.MustCompile(`autoscalingconfiguration/DefaultConfiguration/1/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.protocol", apprunner.HealthCheckProtocolTcp),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.path", "/"),
@@ -134,9 +136,9 @@ func TestAccAwsAppRunnerService_ImageRepository_AutoScalingConfiguration(t *test
 	autoScalingResourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apprunner.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -167,9 +169,9 @@ func TestAccAwsAppRunnerService_ImageRepository_EncryptionConfiguration(t *testi
 	kmsResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apprunner.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -202,9 +204,9 @@ func TestAccAwsAppRunnerService_ImageRepository_HealthCheckConfiguration(t *test
 	resourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apprunner.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -252,9 +254,9 @@ func TestAccAwsAppRunnerService_ImageRepository_InstanceConfiguration(t *testing
 	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apprunner.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -306,9 +308,9 @@ func TestAccAwsAppRunnerService_ImageRepository_RuntimeEnvironmentVars(t *testin
 	resourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apprunner.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -336,16 +338,16 @@ func TestAccAwsAppRunnerService_disappears(t *testing.T) {
 	resourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apprunner.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppRunnerService_imageRepository(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerServiceExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppRunnerService(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsAppRunnerService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -358,9 +360,9 @@ func TestAccAwsAppRunnerService_tags(t *testing.T) {
 	resourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apprunner.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -403,7 +405,7 @@ func testAccCheckAwsAppRunnerServiceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apprunnerconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AppRunnerConn
 
 		input := &apprunner.DescribeServiceInput{
 			ServiceArn: aws.String(rs.Primary.ID),
@@ -438,7 +440,7 @@ func testAccCheckAwsAppRunnerServiceExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No App Runner Service ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apprunnerconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AppRunnerConn
 
 		input := &apprunner.DescribeServiceInput{
 			ServiceArn: aws.String(rs.Primary.ID),
@@ -459,14 +461,14 @@ func testAccCheckAwsAppRunnerServiceExists(n string) resource.TestCheckFunc {
 }
 
 func testAccPreCheckAppRunner(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).apprunnerconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).AppRunnerConn
 	ctx := context.Background()
 
 	input := &apprunner.ListServicesInput{}
 
 	_, err := conn.ListServicesWithContext(ctx, input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -643,7 +645,7 @@ EOF
 }
 
 func testAccAppRunnerService_imageRepository_instanceConfiguration(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAppRunnerIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_apprunner_service" "test" {
@@ -670,7 +672,7 @@ resource "aws_apprunner_service" "test" {
 }
 
 func testAccAppRunnerService_imageRepository_updateInstanceConfiguration(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAppRunnerIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_apprunner_service" "test" {
