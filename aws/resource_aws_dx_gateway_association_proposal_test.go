@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -21,19 +23,19 @@ func init() {
 }
 
 func testSweepDirectConnectGatewayAssociationProposals(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).dxconn
+	conn := client.(*awsprovider.AWSClient).DirectConnectConn
 	input := &directconnect.DescribeDirectConnectGatewayAssociationProposalsInput{}
 
 	for {
 		output, err := conn.DescribeDirectConnectGatewayAssociationProposals(input)
 
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Direct Connect Gateway sweep for %s: %s", region, err)
 			return nil
 		}
@@ -88,11 +90,11 @@ func TestAccAwsDxGatewayAssociationProposal_basicVpnGateway(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			atest.PreCheck(t)
+			atest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationProposalDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -101,7 +103,7 @@ func TestAccAwsDxGatewayAssociationProposal_basicVpnGateway(t *testing.T) {
 					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal1),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
-					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
+					atest.CheckAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "virtualPrivateGateway"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
 				),
@@ -127,11 +129,11 @@ func TestAccAwsDxGatewayAssociationProposal_basicTransitGateway(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			atest.PreCheck(t)
+			atest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationProposalDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -140,7 +142,7 @@ func TestAccAwsDxGatewayAssociationProposal_basicTransitGateway(t *testing.T) {
 					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal1),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameTgw, "id"),
-					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
+					atest.CheckAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "transitGateway"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
@@ -166,11 +168,11 @@ func TestAccAwsDxGatewayAssociationProposal_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			atest.PreCheck(t)
+			atest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationProposalDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -194,11 +196,11 @@ func TestAccAwsDxGatewayAssociationProposal_AllowedPrefixes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			atest.PreCheck(t)
+			atest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationProposalDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -227,7 +229,7 @@ func TestAccAwsDxGatewayAssociationProposal_AllowedPrefixes(t *testing.T) {
 }
 
 func testAccCheckAwsDxGatewayAssociationProposalDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).dxconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).DirectConnectConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dx_gateway_association_proposal" {
@@ -257,7 +259,7 @@ func testAccCheckAwsDxGatewayAssociationProposalExists(resourceName string, gate
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dxconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DirectConnectConn
 
 		proposal, err := describeDirectConnectGatewayAssociationProposal(conn, rs.Primary.ID)
 
@@ -277,7 +279,7 @@ func testAccCheckAwsDxGatewayAssociationProposalExists(resourceName string, gate
 
 func testAccCheckAwsDxGatewayAssociationProposalDisappears(proposal *directconnect.GatewayAssociationProposal) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).dxconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DirectConnectConn
 
 		input := &directconnect.DeleteDirectConnectGatewayAssociationProposalInput{
 			ProposalId: proposal.ProposalId,
@@ -300,7 +302,7 @@ func testAccCheckAwsDxGatewayAssociationProposalRecreated(i, j *directconnect.Ga
 }
 
 func testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName string, rBgpAsn int) string {
-	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+	return atest.ConfigProviderAlternateAccount() + fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   provider = "awsalternate"
 
@@ -337,7 +339,7 @@ resource "aws_dx_gateway_association_proposal" "test" {
 }
 
 func testAccDxGatewayAssociationProposalConfig_basicTransitGateway(rName string, rBgpAsn int) string {
-	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+	return atest.ConfigProviderAlternateAccount() + fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   provider = "awsalternate"
 
