@@ -12,8 +12,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsVpcEndpointService() *schema.Resource {
@@ -60,7 +61,7 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: ValidateArn,
 				},
 				Set: schema.HashString,
 			},
@@ -74,7 +75,7 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: ValidateArn,
 				},
 				Set: schema.HashString,
 			},
@@ -128,8 +129,8 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 }
 
 func resourceAwsVpcEndpointServiceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &ec2.CreateVpcEndpointServiceConfigurationInput{
@@ -179,9 +180,9 @@ func resourceAwsVpcEndpointServiceCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	svcCfgRaw, state, err := vpcEndpointServiceStateRefresh(conn, d.Id())()
 	if err != nil && state != ec2.ServiceStateFailed {
@@ -200,10 +201,10 @@ func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{})
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpc-endpoint-service/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -296,7 +297,7 @@ func flattenPrivateDnsNameConfiguration(privateDnsNameConfiguration *ec2.Private
 }
 
 func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChanges("acceptance_required", "gateway_load_balancer_arns", "network_load_balancer_arns", "private_dns_name") {
 		modifyCfgReq := &ec2.ModifyVpcEndpointServiceConfigurationInput{
@@ -353,7 +354,7 @@ func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsVpcEndpointServiceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	input := &ec2.DeleteVpcEndpointServiceConfigurationsInput{
 		ServiceIds: aws.StringSlice([]string{d.Id()}),
@@ -391,7 +392,7 @@ func vpcEndpointServiceStateRefresh(conn *ec2.EC2, svcId string) resource.StateR
 			ServiceIds: aws.StringSlice([]string{svcId}),
 		})
 		if err != nil {
-			if isAWSErr(err, "InvalidVpcEndpointServiceId.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidVpcEndpointServiceId.NotFound", "") {
 				return false, ec2.ServiceStateDeleted, nil
 			}
 
