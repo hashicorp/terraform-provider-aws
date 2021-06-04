@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfevents "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCloudWatchEventTarget() *schema.Resource {
@@ -63,7 +64,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 			"arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"input": {
@@ -83,7 +84,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 			"role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"run_command_targets": {
@@ -186,7 +187,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 						"task_definition_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -302,7 +303,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 						"arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -312,7 +313,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 }
 
 func resourceAwsCloudWatchEventTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchEventsConn
 
 	rule := d.Get("rule").(string)
 
@@ -349,7 +350,7 @@ func resourceAwsCloudWatchEventTargetCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchEventsConn
 
 	busName := d.Get("event_bus_name").(string)
 
@@ -433,7 +434,7 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCloudWatchEventTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchEventsConn
 
 	input := buildPutTargetInputStruct(d)
 
@@ -447,7 +448,7 @@ func resourceAwsCloudWatchEventTargetUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsCloudWatchEventTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchEventsConn
 
 	input := &events.RemoveTargetsInput{
 		Ids:  []*string{aws.String(d.Get("target_id").(string))},
