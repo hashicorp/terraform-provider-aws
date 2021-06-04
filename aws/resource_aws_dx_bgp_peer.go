@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDxBgpPeer() *schema.Resource {
@@ -75,7 +77,7 @@ func resourceAwsDxBgpPeer() *schema.Resource {
 }
 
 func resourceAwsDxBgpPeerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	vifId := d.Get("virtual_interface_id").(string)
 	addrFamily := d.Get("address_family").(string)
@@ -128,7 +130,7 @@ func resourceAwsDxBgpPeerCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsDxBgpPeerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	vifId := d.Get("virtual_interface_id").(string)
 	addrFamily := d.Get("address_family").(string)
@@ -156,7 +158,7 @@ func resourceAwsDxBgpPeerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsDxBgpPeerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	vifId := d.Get("virtual_interface_id").(string)
 	addrFamily := d.Get("address_family").(string)
@@ -170,7 +172,7 @@ func resourceAwsDxBgpPeerDelete(d *schema.ResourceData, meta interface{}) error 
 	})
 	if err != nil {
 		// This is the error returned if the BGP peering has already gone.
-		if isAWSErr(err, "DirectConnectClientException", "The last BGP Peer on a Virtual Interface cannot be deleted") {
+		if tfawserr.ErrMessageContains(err, "DirectConnectClientException", "The last BGP Peer on a Virtual Interface cannot be deleted") {
 			return nil
 		}
 		return err
