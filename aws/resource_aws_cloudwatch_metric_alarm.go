@@ -7,10 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatch/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
@@ -169,7 +171,7 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.Any(
-						validateArn,
+						ValidateArn,
 						validateEC2AutomateARN,
 					),
 				},
@@ -198,7 +200,7 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.Any(
-						validateArn,
+						ValidateArn,
 						validateEC2AutomateARN,
 					),
 				},
@@ -210,7 +212,7 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.Any(
-						validateArn,
+						ValidateArn,
 						validateEC2AutomateARN,
 					),
 				},
@@ -247,7 +249,7 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 	}
 }
 
-func validateResourceAwsCloudWatchMetricAlarm(d *schema.ResourceData) error {
+func validateresourceAwsCloudWatchMetricAlarm(d *schema.ResourceData) error {
 	_, metricNameOk := d.GetOk("metric_name")
 	_, statisticOk := d.GetOk("statistic")
 	_, extendedStatisticOk := d.GetOk("extended_statistic")
@@ -273,9 +275,9 @@ func validateResourceAwsCloudWatchMetricAlarm(d *schema.ResourceData) error {
 }
 
 func resourceAwsCloudWatchMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchConn
 
-	err := validateResourceAwsCloudWatchMetricAlarm(d)
+	err := validateresourceAwsCloudWatchMetricAlarm(d)
 	if err != nil {
 		return err
 	}
@@ -293,9 +295,9 @@ func resourceAwsCloudWatchMetricAlarmCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsCloudWatchMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CloudWatchConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	resp, err := finder.MetricAlarmByName(conn, d.Id())
 	if err != nil {
@@ -370,7 +372,7 @@ func resourceAwsCloudWatchMetricAlarmRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCloudWatchMetricAlarmUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchConn
 	params := getAwsCloudWatchPutMetricAlarmInput(d, meta)
 
 	log.Printf("[DEBUG] Updating CloudWatch Metric Alarm: %#v", params)
@@ -393,7 +395,7 @@ func resourceAwsCloudWatchMetricAlarmUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsCloudWatchMetricAlarmDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchConn
 	params := cloudwatch.DeleteAlarmsInput{
 		AlarmNames: []*string{aws.String(d.Id())},
 	}
@@ -401,7 +403,7 @@ func resourceAwsCloudWatchMetricAlarmDelete(d *schema.ResourceData, meta interfa
 	log.Printf("[INFO] Deleting CloudWatch Metric Alarm: %s", d.Id())
 
 	if _, err := conn.DeleteAlarms(&params); err != nil {
-		if isAWSErr(err, cloudwatch.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, cloudwatch.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting CloudWatch Metric Alarm: %w", err)
@@ -412,7 +414,7 @@ func resourceAwsCloudWatchMetricAlarmDelete(d *schema.ResourceData, meta interfa
 }
 
 func getAwsCloudWatchPutMetricAlarmInput(d *schema.ResourceData, meta interface{}) cloudwatch.PutMetricAlarmInput {
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	params := cloudwatch.PutMetricAlarmInput{
