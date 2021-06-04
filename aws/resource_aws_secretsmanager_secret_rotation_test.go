@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsSecretsManagerSecretRotation_basic(t *testing.T) {
@@ -18,9 +21,9 @@ func TestAccAwsSecretsManagerSecretRotation_basic(t *testing.T) {
 	lambdaFunctionResourceName := "aws_lambda_function.test1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		ErrorCheck:   testAccErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck:   atest.ErrorCheck(t, secretsmanager.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretRotationDestroy,
 		Steps: []resource.TestStep{
 			// Test creating secret rotation resource
@@ -58,7 +61,7 @@ func TestAccAwsSecretsManagerSecretRotation_basic(t *testing.T) {
 }
 
 func testAccCheckAwsSecretsManagerSecretRotationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).secretsmanagerconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SecretsManagerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_secretsmanager_secret_rotation" {
@@ -72,7 +75,7 @@ func testAccCheckAwsSecretsManagerSecretRotationDestroy(s *terraform.State) erro
 		output, err := conn.DescribeSecret(input)
 
 		if err != nil {
-			if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
 				continue
 			}
 			return err
@@ -93,7 +96,7 @@ func testAccCheckAwsSecretsManagerSecretRotationExists(resourceName string, secr
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).secretsmanagerconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SecretsManagerConn
 		input := &secretsmanager.DescribeSecretInput{
 			SecretId: aws.String(rs.Primary.ID),
 		}
