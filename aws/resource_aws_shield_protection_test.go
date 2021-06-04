@@ -8,9 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/shield"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSShieldProtection_GlobalAccelerator(t *testing.T) {
@@ -19,12 +22,12 @@ func TestAccAWSShieldProtection_GlobalAccelerator(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(shield.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, shield.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,12 +53,12 @@ func TestAccAWSShieldProtection_ElasticIPAddress(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(shield.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, shield.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -81,19 +84,19 @@ func TestAccAWSShieldProtection_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(shield.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, shield.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccShieldProtectionElasticIPAddressConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSShieldProtectionExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsShieldProtection(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsShieldProtection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -107,12 +110,12 @@ func TestAccAWSShieldProtection_Alb(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(shield.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, shield.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -138,12 +141,12 @@ func TestAccAWSShieldProtection_Elb(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(shield.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, shield.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -169,13 +172,13 @@ func TestAccAWSShieldProtection_Cloudfront(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
-			testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(shield.EndpointsID, t)
+			atest.PreCheckPartitionService(cloudfront.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, shield.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -201,13 +204,13 @@ func TestAccAWSShieldProtection_Cloudfront_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
-			testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(shield.EndpointsID, t)
+			atest.PreCheckPartitionService(cloudfront.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, shield.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -253,12 +256,12 @@ func TestAccAWSShieldProtection_Route53(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(shield.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID, "route53"),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, shield.EndpointsID, "route53"),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -277,7 +280,7 @@ func TestAccAWSShieldProtection_Route53(t *testing.T) {
 }
 
 func testAccCheckAWSShieldProtectionDestroy(s *terraform.State) error {
-	shieldconn := testAccProvider.Meta().(*AWSClient).shieldconn
+	ShieldConn := atest.Provider.Meta().(*awsprovider.AWSClient).ShieldConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_shield_protection" {
@@ -288,9 +291,9 @@ func testAccCheckAWSShieldProtectionDestroy(s *terraform.State) error {
 			ProtectionId: aws.String(rs.Primary.ID),
 		}
 
-		resp, err := shieldconn.DescribeProtection(input)
+		resp, err := ShieldConn.DescribeProtection(input)
 
-		if isAWSErr(err, shield.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, shield.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 
@@ -313,7 +316,7 @@ func testAccCheckAWSShieldProtectionExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).shieldconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ShieldConn
 
 		input := &shield.DescribeProtectionInput{
 			ProtectionId: aws.String(rs.Primary.ID),
@@ -330,13 +333,13 @@ func testAccCheckAWSShieldProtectionExists(name string) resource.TestCheckFunc {
 }
 
 func testAccPreCheckAWSShield(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).shieldconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ShieldConn
 
 	input := &shield.ListProtectionsInput{}
 
 	_, err := conn.ListProtections(input)
 
-	if testAccPreCheckSkipError(err) || isAWSErr(err, shield.ErrCodeResourceNotFoundException, "subscription does not exist") {
+	if atest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, shield.ErrCodeResourceNotFoundException, "subscription does not exist") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
