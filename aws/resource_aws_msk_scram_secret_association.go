@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/msk/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -32,14 +33,14 @@ func resourceAwsMskScramSecretAssociation() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"secret_arn_list": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: ValidateArn,
 				},
 			},
 		},
@@ -47,7 +48,7 @@ func resourceAwsMskScramSecretAssociation() *schema.Resource {
 }
 
 func resourceAwsMskScramSecretAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
+	conn := meta.(*awsprovider.AWSClient).KafkaConn
 
 	clusterArn := d.Get("cluster_arn").(string)
 	secretArnList := expandStringSet(d.Get("secret_arn_list").(*schema.Set))
@@ -67,7 +68,7 @@ func resourceAwsMskScramSecretAssociationCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsMskScramSecretAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
+	conn := meta.(*awsprovider.AWSClient).KafkaConn
 
 	secretArnList, err := finder.ScramSecrets(conn, d.Id())
 
@@ -89,7 +90,7 @@ func resourceAwsMskScramSecretAssociationRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsMskScramSecretAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
+	conn := meta.(*awsprovider.AWSClient).KafkaConn
 
 	o, n := d.GetChange("secret_arn_list")
 	oldSet, newSet := o.(*schema.Set), n.(*schema.Set)
@@ -124,7 +125,7 @@ func resourceAwsMskScramSecretAssociationUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsMskScramSecretAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
+	conn := meta.(*awsprovider.AWSClient).KafkaConn
 
 	secretArnList, err := finder.ScramSecrets(conn, d.Id())
 
