@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsCodeArtifactRepositoryEndpoint() *schema.Resource {
@@ -43,8 +44,8 @@ func dataSourceAwsCodeArtifactRepositoryEndpoint() *schema.Resource {
 }
 
 func dataSourceAwsCodeArtifactRepositoryEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
-	domainOwner := meta.(*AWSClient).accountid
+	conn := meta.(*awsprovider.AWSClient).CodeArtifactConn
+	domainOwner := meta.(*awsprovider.AWSClient).AccountID
 	domain := d.Get("domain").(string)
 	repo := d.Get("repository").(string)
 	format := d.Get("format").(string)
