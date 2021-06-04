@@ -6,18 +6,21 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediastore"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSMediaStoreContainer_basic(t *testing.T) {
 	resourceName := "aws_media_store_container.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaStore(t) },
-		ErrorCheck:   testAccErrorCheck(t, mediastore.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMediaStore(t) },
+		ErrorCheck:   atest.ErrorCheck(t, mediastore.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMediaStoreContainerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -40,9 +43,9 @@ func TestAccAWSMediaStoreContainer_tags(t *testing.T) {
 	resourceName := "aws_media_store_container.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaStore(t) },
-		ErrorCheck:   testAccErrorCheck(t, mediastore.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMediaStore(t) },
+		ErrorCheck:   atest.ErrorCheck(t, mediastore.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsMediaStoreContainerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -82,7 +85,7 @@ func TestAccAWSMediaStoreContainer_tags(t *testing.T) {
 }
 
 func testAccCheckAwsMediaStoreContainerDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).mediastoreconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).MediaStoreConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_media_store_container" {
@@ -95,7 +98,7 @@ func testAccCheckAwsMediaStoreContainerDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeContainer(input)
 		if err != nil {
-			if isAWSErr(err, mediastore.ErrCodeContainerNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
 				return nil
 			}
 			return err
@@ -115,7 +118,7 @@ func testAccCheckAwsMediaStoreContainerExists(name string) resource.TestCheckFun
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).mediastoreconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).MediaStoreConn
 
 		input := &mediastore.DescribeContainerInput{
 			ContainerName: aws.String(rs.Primary.ID),
@@ -128,13 +131,13 @@ func testAccCheckAwsMediaStoreContainerExists(name string) resource.TestCheckFun
 }
 
 func testAccPreCheckAWSMediaStore(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).mediastoreconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).MediaStoreConn
 
 	input := &mediastore.ListContainersInput{}
 
 	_, err := conn.ListContainers(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
