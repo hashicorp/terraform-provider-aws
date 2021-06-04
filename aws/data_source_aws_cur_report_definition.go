@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/costandusagereportservice/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsCurReportDefinition() *schema.Resource {
@@ -66,7 +67,7 @@ func dataSourceAwsCurReportDefinition() *schema.Resource {
 }
 
 func dataSourceAwsCurReportDefinitionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).costandusagereportconn
+	conn := meta.(*awsprovider.AWSClient).CURConn
 
 	reportName := d.Get("report_name").(string)
 
