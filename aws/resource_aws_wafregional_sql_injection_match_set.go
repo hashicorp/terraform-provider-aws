@@ -9,8 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsWafRegionalSqlInjectionMatchSet() *schema.Resource {
@@ -68,8 +70,8 @@ func resourceAwsWafRegionalSqlInjectionMatchSet() *schema.Resource {
 }
 
 func resourceAwsWafRegionalSqlInjectionMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	region := meta.(*awsprovider.AWSClient).Region
 
 	log.Printf("[INFO] Creating Regional WAF SQL Injection Match Set: %s", d.Get("name").(string))
 
@@ -92,14 +94,14 @@ func resourceAwsWafRegionalSqlInjectionMatchSetCreate(d *schema.ResourceData, me
 }
 
 func resourceAwsWafRegionalSqlInjectionMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
 	log.Printf("[INFO] Reading Regional WAF SQL Injection Match Set: %s", d.Get("name").(string))
 	params := &waf.GetSqlInjectionMatchSetInput{
 		SqlInjectionMatchSetId: aws.String(d.Id()),
 	}
 
 	resp, err := conn.GetSqlInjectionMatchSet(params)
-	if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 		log.Printf("[WARN] Regional WAF SQL Injection Match Set (%s) not found, error code (404)", d.Id())
 		d.SetId("")
 		return nil
@@ -115,15 +117,15 @@ func resourceAwsWafRegionalSqlInjectionMatchSetRead(d *schema.ResourceData, meta
 }
 
 func resourceAwsWafRegionalSqlInjectionMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	region := meta.(*awsprovider.AWSClient).Region
 
 	if d.HasChange("sql_injection_match_tuple") {
 		o, n := d.GetChange("sql_injection_match_tuple")
 		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
 
 		err := updateSqlInjectionMatchSetResourceWR(d.Id(), oldT, newT, conn, region)
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			log.Printf("[WARN] Regional WAF SQL Injection Match Set (%s) not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
@@ -137,15 +139,15 @@ func resourceAwsWafRegionalSqlInjectionMatchSetUpdate(d *schema.ResourceData, me
 }
 
 func resourceAwsWafRegionalSqlInjectionMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	region := meta.(*awsprovider.AWSClient).Region
 
 	oldTuples := d.Get("sql_injection_match_tuple").(*schema.Set).List()
 
 	if len(oldTuples) > 0 {
 		noTuples := []interface{}{}
 		err := updateSqlInjectionMatchSetResourceWR(d.Id(), oldTuples, noTuples, conn, region)
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			return nil
 		}
 		if err != nil {
@@ -162,7 +164,7 @@ func resourceAwsWafRegionalSqlInjectionMatchSetDelete(d *schema.ResourceData, me
 
 		return conn.DeleteSqlInjectionMatchSet(req)
 	})
-	if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 		return nil
 	}
 	if err != nil {
