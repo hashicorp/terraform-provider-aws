@@ -8,13 +8,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsPricingProduct_ec2(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckPricing(t) },
-		ErrorCheck:        testAccErrorCheck(t, pricing.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccPreCheckPricing(t) },
+		ErrorCheck:        atest.ErrorCheck(t, pricing.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsPricingProductConfigEc2(),
@@ -29,9 +30,9 @@ func TestAccDataSourceAwsPricingProduct_ec2(t *testing.T) {
 
 func TestAccDataSourceAwsPricingProduct_redshift(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckPricing(t) },
-		ErrorCheck:        testAccErrorCheck(t, pricing.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccPreCheckPricing(t) },
+		ErrorCheck:        atest.ErrorCheck(t, pricing.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsPricingProductConfigRedshift(),
@@ -45,7 +46,7 @@ func TestAccDataSourceAwsPricingProduct_redshift(t *testing.T) {
 }
 
 func testAccDataSourceAwsPricingProductConfigEc2() string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccPricingRegionProviderConfig(),
 		`
 data "aws_ec2_instance_type_offering" "available" {
@@ -96,7 +97,7 @@ data "aws_pricing_product" "test" {
 }
 
 func testAccDataSourceAwsPricingProductConfigRedshift() string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccPricingRegionProviderConfig(),
 		`
 data "aws_redshift_orderable_cluster" "test" {
