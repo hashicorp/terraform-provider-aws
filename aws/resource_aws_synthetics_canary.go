@@ -10,14 +10,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/synthetics"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/synthetics/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/synthetics/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const awsMutexCanary = `aws_synthetics_canary`
@@ -52,7 +54,7 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 			"execution_role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"failure_retention_period": {
 				Type:         schema.TypeInt,
@@ -223,8 +225,8 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 }
 
 func resourceAwsSyntheticsCanaryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).syntheticsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SyntheticsConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &synthetics.CreateCanaryInput{
@@ -332,13 +334,13 @@ func resourceAwsSyntheticsCanaryCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).syntheticsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SyntheticsConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	resp, err := finder.CanaryByName(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, synthetics.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, synthetics.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Synthetics Canary (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -359,10 +361,10 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("success_retention_period", canary.SuccessRetentionPeriodInDays)
 
 	canaryArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   synthetics.ServiceName,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("canary:%s", aws.StringValue(canary.Name)),
 	}.String()
 
@@ -399,7 +401,7 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSyntheticsCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).syntheticsconn
+	conn := meta.(*awsprovider.AWSClient).SyntheticsConn
 
 	if d.HasChangesExcept("tags", "tags_all", "start_canary") {
 		input := &synthetics.UpdateCanaryInput{
@@ -503,7 +505,7 @@ func resourceAwsSyntheticsCanaryUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsSyntheticsCanaryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).syntheticsconn
+	conn := meta.(*awsprovider.AWSClient).SyntheticsConn
 
 	if status := d.Get("status"); status.(string) == synthetics.CanaryStateRunning {
 		if err := syntheticsStopCanary(d.Id(), conn); err != nil {
@@ -517,14 +519,14 @@ func resourceAwsSyntheticsCanaryDelete(d *schema.ResourceData, meta interface{})
 
 	_, err := conn.DeleteCanary(input)
 	if err != nil {
-		if isAWSErr(err, synthetics.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, synthetics.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Synthetics Canary: %w", err)
 	}
 
 	if _, err := waiter.CanaryDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, synthetics.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, synthetics.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error waiting for Synthetics Canary (%s) deletion: %w", d.Id(), err)
@@ -539,8 +541,8 @@ func expandAwsSyntheticsCanaryCode(d *schema.ResourceData) (*synthetics.CanaryCo
 	}
 
 	if v, ok := d.GetOk("zip_file"); ok {
-		awsMutexKV.Lock(awsMutexCanary)
-		defer awsMutexKV.Unlock(awsMutexCanary)
+		awsprovider.MutexKV.Lock(awsMutexCanary)
+		defer awsprovider.MutexKV.Unlock(awsMutexCanary)
 		file, err := loadFileContent(v.(string))
 		if err != nil {
 			return nil, fmt.Errorf("unable to load %q: %w", v.(string), err)
