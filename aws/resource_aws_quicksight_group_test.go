@@ -8,9 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSQuickSightGroup_basic(t *testing.T) {
@@ -20,9 +23,9 @@ func TestAccAWSQuickSightGroup_basic(t *testing.T) {
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, quicksight.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, quicksight.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckQuickSightGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -30,7 +33,7 @@ func TestAccAWSQuickSightGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "group_name", rName1),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("group/default/%s", rName1)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("group/default/%s", rName1)),
 				),
 			},
 			{
@@ -38,7 +41,7 @@ func TestAccAWSQuickSightGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "group_name", rName2),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("group/default/%s", rName2)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("group/default/%s", rName2)),
 				),
 			},
 			{
@@ -56,9 +59,9 @@ func TestAccAWSQuickSightGroup_withDescription(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, quicksight.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, quicksight.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckQuickSightGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -90,9 +93,9 @@ func TestAccAWSQuickSightGroup_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, quicksight.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, quicksight.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckQuickSightGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -119,7 +122,7 @@ func testAccCheckQuickSightGroupExists(resourceName string, group *quicksight.Gr
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).quicksightconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).QuickSightConn
 
 		input := &quicksight.DescribeGroupInput{
 			AwsAccountId: aws.String(awsAccountID),
@@ -144,7 +147,7 @@ func testAccCheckQuickSightGroupExists(resourceName string, group *quicksight.Gr
 }
 
 func testAccCheckQuickSightGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).quicksightconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).QuickSightConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_quicksight_group" {
 			continue
@@ -160,7 +163,7 @@ func testAccCheckQuickSightGroupDestroy(s *terraform.State) error {
 			Namespace:    aws.String(namespace),
 			GroupName:    aws.String(groupName),
 		})
-		if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 
@@ -176,7 +179,7 @@ func testAccCheckQuickSightGroupDestroy(s *terraform.State) error {
 
 func testAccCheckQuickSightGroupDisappears(v *quicksight.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).quicksightconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).QuickSightConn
 
 		arn, err := arn.Parse(aws.StringValue(v.Arn))
 		if err != nil {
