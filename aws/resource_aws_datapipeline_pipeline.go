@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datapipeline"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDataPipelinePipeline() *schema.Resource {
@@ -44,8 +46,8 @@ func resourceAwsDataPipelinePipeline() *schema.Resource {
 }
 
 func resourceAwsDataPipelinePipelineCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datapipelineconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DataPipelineConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	uniqueID := resource.UniqueId()
@@ -72,12 +74,12 @@ func resourceAwsDataPipelinePipelineCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsDataPipelinePipelineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datapipelineconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DataPipelineConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	v, err := resourceAwsDataPipelinePipelineRetrieve(d.Id(), conn)
-	if isAWSErr(err, datapipeline.ErrCodePipelineNotFoundException, "") || isAWSErr(err, datapipeline.ErrCodePipelineDeletedException, "") || v == nil {
+	if tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineNotFoundException, "") || tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineDeletedException, "") || v == nil {
 		log.Printf("[WARN] DataPipeline (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -103,7 +105,7 @@ func resourceAwsDataPipelinePipelineRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDataPipelinePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datapipelineconn
+	conn := meta.(*awsprovider.AWSClient).DataPipelineConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -117,14 +119,14 @@ func resourceAwsDataPipelinePipelineUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsDataPipelinePipelineDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datapipelineconn
+	conn := meta.(*awsprovider.AWSClient).DataPipelineConn
 
 	opts := datapipeline.DeletePipelineInput{
 		PipelineId: aws.String(d.Id()),
 	}
 
 	_, err := conn.DeletePipeline(&opts)
-	if isAWSErr(err, datapipeline.ErrCodePipelineNotFoundException, "") || isAWSErr(err, datapipeline.ErrCodePipelineDeletedException, "") {
+	if tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineNotFoundException, "") || tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineDeletedException, "") {
 		return nil
 	}
 	if err != nil {
@@ -166,7 +168,7 @@ func waitForDataPipelineDeletion(conn *datapipeline.DataPipeline, pipelineID str
 	}
 	return resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribePipelines(params)
-		if isAWSErr(err, datapipeline.ErrCodePipelineNotFoundException, "") || isAWSErr(err, datapipeline.ErrCodePipelineDeletedException, "") {
+		if tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineNotFoundException, "") || tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineDeletedException, "") {
 			return nil
 		}
 		if err != nil {
