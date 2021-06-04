@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsLexBot() *schema.Resource {
@@ -87,7 +88,7 @@ func dataSourceAwsLexBot() *schema.Resource {
 }
 
 func dataSourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*awsprovider.AWSClient).LexModelBuildingConn
 
 	botName := d.Get("name").(string)
 	resp, err := conn.GetBot(&lexmodelbuildingservice.GetBotInput{
@@ -99,10 +100,10 @@ func dataSourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Service:   "lex",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("bot:%s", d.Get("name").(string)),
 	}
 	d.Set("arn", arn.String())
