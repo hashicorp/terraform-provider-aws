@@ -15,9 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/lister"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -28,11 +30,11 @@ func init() {
 }
 
 func testSweepCloudWatchEventTargets(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).cloudwatcheventsconn
+	conn := client.(*awsprovider.AWSClient).CloudWatchEventsConn
 
 	var sweeperErrs *multierror.Error
 	var rulesCount, targetsCount int
@@ -80,7 +82,7 @@ func testSweepCloudWatchEventTargets(region string) error {
 				return !lastPage
 			})
 
-			if testSweepSkipSweepError(err) {
+			if atest.SweepSkipSweepError(err) {
 				log.Printf("[WARN] Skipping CloudWatch Events target sweeper for %q: %s", region, err)
 				return false
 			}
@@ -92,7 +94,7 @@ func testSweepCloudWatchEventTargets(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudWatch Events rule target sweeper for %q: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -118,9 +120,9 @@ func TestAccAWSCloudWatchEventTarget_basic(t *testing.T) {
 	targetID2 := acctest.RandomWithPrefix("tf-acc-test-target")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, events.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -186,9 +188,9 @@ func TestAccAWSCloudWatchEventTarget_EventBusName(t *testing.T) {
 	targetID2 := acctest.RandomWithPrefix("tf-acc-test-target")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, events.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -228,9 +230,9 @@ func TestAccAWSCloudWatchEventTarget_GeneratedTargetId(t *testing.T) {
 	snsTopicName := acctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, events.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -263,9 +265,9 @@ func TestAccAWSCloudWatchEventTarget_RetryPolicy_DeadLetterConfig(t *testing.T) 
 	targetID := acctest.RandomWithPrefix("tf-acc-cw-target-full")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, events.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -275,7 +277,7 @@ func TestAccAWSCloudWatchEventTarget_RetryPolicy_DeadLetterConfig(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", kinesisStreamResourceName, "arn"),
-					testAccCheckResourceAttrEquivalentJSON(resourceName, "input", `{"source": ["aws.cloudtrail"]}`),
+					atest.CheckAttrEquivalentJSON(resourceName, "input", `{"source": ["aws.cloudtrail"]}`),
 					resource.TestCheckResourceAttr(resourceName, "input_path", ""),
 					resource.TestCheckResourceAttr(resourceName, "retry_policy.0.maximum_event_age_in_seconds", "60"),
 					resource.TestCheckResourceAttr(resourceName, "retry_policy.0.maximum_retry_attempts", "5"),
@@ -296,9 +298,9 @@ func TestAccAWSCloudWatchEventTarget_full(t *testing.T) {
 	targetID := acctest.RandomWithPrefix("tf-acc-cw-target-full")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, events.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -308,7 +310,7 @@ func TestAccAWSCloudWatchEventTarget_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", kinesisStreamResourceName, "arn"),
-					testAccCheckResourceAttrEquivalentJSON(resourceName, "input", `{"source": ["aws.cloudtrail"]}`),
+					atest.CheckAttrEquivalentJSON(resourceName, "input", `{"source": ["aws.cloudtrail"]}`),
 					resource.TestCheckResourceAttr(resourceName, "input_path", ""),
 				),
 			},
@@ -332,16 +334,16 @@ func TestAccAWSCloudWatchEventTarget_disappears(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, events.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudWatchEventTargetConfig(ruleName, snsTopicName, targetID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchEventTarget(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCloudWatchEventTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -355,9 +357,9 @@ func TestAccAWSCloudWatchEventTarget_ssmDocument(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf_ssm_Document")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, events.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -387,9 +389,9 @@ func TestAccAWSCloudWatchEventTarget_http(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf_http_target")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, events.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -423,9 +425,9 @@ func TestAccAWSCloudWatchEventTarget_ecs(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf_ecs_target")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, events.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -457,9 +459,9 @@ func TestAccAWSCloudWatchEventTarget_ecsWithBlankTaskCount(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf_ecs_target")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, events.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -487,9 +489,9 @@ func TestAccAWSCloudWatchEventTarget_batch(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf_batch_target")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, events.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -517,9 +519,9 @@ func TestAccAWSCloudWatchEventTarget_kinesis(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf_kinesis_target")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, events.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -545,9 +547,9 @@ func TestAccAWSCloudWatchEventTarget_sqs(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf_sqs_target")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, events.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -611,9 +613,9 @@ func TestAccAWSCloudWatchEventTarget_input_transformer(t *testing.T) {
 `)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, events.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -647,9 +649,9 @@ func TestAccAWSCloudWatchEventTarget_inputTransformerJsonString(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, events.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -679,9 +681,9 @@ func TestAccAWSCloudWatchEventTarget_PartnerEventBus(t *testing.T) {
 	snsTopicResourceName := "aws_sns_topic.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, events.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -711,7 +713,7 @@ func testAccCheckCloudWatchEventTargetExists(n string, rule *events.Target) reso
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchEventsConn
 		t, err := finder.Target(conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
 		if err != nil {
 			return fmt.Errorf("Event Target not found: %w", err)
@@ -724,7 +726,7 @@ func testAccCheckCloudWatchEventTargetExists(n string, rule *events.Target) reso
 }
 
 func testAccCheckAWSCloudWatchEventTargetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchEventsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_event_target" {
@@ -1624,7 +1626,7 @@ func testAccAWSCloudWatchEventTargetConfigInputTransformer(rName string, inputPa
 		fmt.Fprintf(&inputTemplates, "  \"%[1]s\": <%[1]s>,\n", inputPath)
 	}
 
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSCloudWatchEventTargetConfigLambdaBase(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_event_target" "test" {
@@ -1657,7 +1659,7 @@ resource "aws_cloudwatch_event_rule" "schedule" {
 }
 
 func testAccAWSCloudWatchEventTargetConfigInputTransformerJsonString(name string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSCloudWatchEventTargetConfigLambdaBase(name),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_event_target" "test" {
