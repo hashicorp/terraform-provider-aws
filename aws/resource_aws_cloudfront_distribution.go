@@ -8,10 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCloudFrontDistribution() *schema.Resource {
@@ -185,7 +187,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						"realtime_log_config_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"smooth_streaming": {
 							Type:     schema.TypeBool,
@@ -381,7 +383,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						"realtime_log_config_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"smooth_streaming": {
 							Type:     schema.TypeBool,
@@ -587,7 +589,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 									"origin_shield_region": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(awsRegionRegexp, "must be a valid AWS Region Code"),
+										ValidateFunc: validation.StringMatch(awsprovider.RegionRegexp, "must be a valid AWS Region Code"),
 									},
 								},
 							},
@@ -797,8 +799,8 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 }
 
 func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CloudFrontConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &cloudfront.CreateDistributionWithTagsInput{
@@ -816,7 +818,7 @@ func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interf
 
 		// ACM and IAM certificate eventual consistency
 		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
-		if isAWSErr(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
+		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -849,9 +851,9 @@ func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CloudFrontConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	params := &cloudfront.GetDistributionInput{
 		Id: aws.String(d.Id()),
@@ -907,7 +909,7 @@ func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsCloudFrontDistributionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*awsprovider.AWSClient).CloudFrontConn
 	params := &cloudfront.UpdateDistributionInput{
 		Id:                 aws.String(d.Id()),
 		DistributionConfig: expandDistributionConfig(d),
@@ -920,7 +922,7 @@ func resourceAwsCloudFrontDistributionUpdate(d *schema.ResourceData, meta interf
 
 		// ACM and IAM certificate eventual consistency
 		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
-		if isAWSErr(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
+		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -958,7 +960,7 @@ func resourceAwsCloudFrontDistributionUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsCloudFrontDistributionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*awsprovider.AWSClient).CloudFrontConn
 
 	if d.Get("retain_on_delete").(bool) {
 		// Check if we need to disable first
@@ -1008,12 +1010,12 @@ func resourceAwsCloudFrontDistributionDelete(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG] Deleting CloudFront Distribution: %s", d.Id())
 	_, err := conn.DeleteDistribution(deleteDistributionInput)
 
-	if err == nil || isAWSErr(err, cloudfront.ErrCodeNoSuchDistribution, "") {
+	if err == nil || tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
 		return nil
 	}
 
 	// Refresh our ETag if it is out of date and attempt deletion again.
-	if isAWSErr(err, cloudfront.ErrCodeInvalidIfMatchVersion, "") {
+	if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeInvalidIfMatchVersion, "") {
 		getDistributionInput := &cloudfront.GetDistributionInput{
 			Id: aws.String(d.Id()),
 		}
@@ -1038,7 +1040,7 @@ func resourceAwsCloudFrontDistributionDelete(d *schema.ResourceData, meta interf
 	// Disable distribution if it is not yet disabled and attempt deletion again.
 	// Here we update via the deployed configuration to ensure we are not submitting an out of date
 	// configuration from the Terraform configuration, should other changes have occurred manually.
-	if isAWSErr(err, cloudfront.ErrCodeDistributionNotDisabled, "") {
+	if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeDistributionNotDisabled, "") {
 		getDistributionInput := &cloudfront.GetDistributionInput{
 			Id: aws.String(d.Id()),
 		}
@@ -1082,19 +1084,19 @@ func resourceAwsCloudFrontDistributionDelete(d *schema.ResourceData, meta interf
 		// CloudFront has eventual consistency issues even for "deployed" state.
 		// Occasionally the DeleteDistribution call will return this error as well, in which retries will succeed:
 		//   * PreconditionFailed: The request failed because it didn't meet the preconditions in one or more request-header fields
-		if isAWSErr(err, cloudfront.ErrCodeDistributionNotDisabled, "") || isAWSErr(err, cloudfront.ErrCodePreconditionFailed, "") {
+		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeDistributionNotDisabled, "") || tfawserr.ErrMessageContains(err, cloudfront.ErrCodePreconditionFailed, "") {
 			err = resource.Retry(2*time.Minute, func() *resource.RetryError {
 				_, err := conn.DeleteDistribution(deleteDistributionInput)
 
-				if isAWSErr(err, cloudfront.ErrCodeDistributionNotDisabled, "") {
+				if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeDistributionNotDisabled, "") {
 					return resource.RetryableError(err)
 				}
 
-				if isAWSErr(err, cloudfront.ErrCodeNoSuchDistribution, "") {
+				if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
 					return nil
 				}
 
-				if isAWSErr(err, cloudfront.ErrCodePreconditionFailed, "") {
+				if tfawserr.ErrMessageContains(err, cloudfront.ErrCodePreconditionFailed, "") {
 					return resource.RetryableError(err)
 				}
 
@@ -1112,7 +1114,7 @@ func resourceAwsCloudFrontDistributionDelete(d *schema.ResourceData, meta interf
 		}
 	}
 
-	if isAWSErr(err, cloudfront.ErrCodeNoSuchDistribution, "") {
+	if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
 		return nil
 	}
 
@@ -1143,7 +1145,7 @@ func resourceAwsCloudFrontDistributionWaitUntilDeployed(id string, meta interfac
 // The refresh function for resourceAwsCloudFrontWebDistributionWaitUntilDeployed.
 func resourceAwsCloudFrontWebDistributionStateRefreshFunc(id string, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		conn := meta.(*AWSClient).cloudfrontconn
+		conn := meta.(*awsprovider.AWSClient).CloudFrontConn
 		params := &cloudfront.GetDistributionInput{
 			Id: aws.String(id),
 		}
