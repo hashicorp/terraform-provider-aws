@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -20,11 +23,11 @@ func init() {
 }
 
 func testSweepAppmeshVirtualServices(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).appmeshconn
+	conn := client.(*awsprovider.AWSClient).AppMeshConn
 
 	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
 		if page == nil {
@@ -68,7 +71,7 @@ func testSweepAppmeshVirtualServices(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Appmesh Virtual Service sweep for %s: %s", region, err)
 			return nil
 		}
@@ -87,9 +90,9 @@ func testAccAwsAppmeshVirtualService_virtualNode(t *testing.T) {
 	vsName := fmt.Sprintf("tf-acc-test-%d.mesh.local", acctest.RandInt())
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appmesh.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appmesh.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -98,15 +101,15 @@ func testAccAwsAppmeshVirtualService_virtualNode(t *testing.T) {
 					testAccCheckAppmeshVirtualServiceExists(resourceName, &vs),
 					resource.TestCheckResourceAttr(resourceName, "name", vsName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					atest.CheckAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_node.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_node.0.virtual_node_name", vnName1),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualService/%s", meshName, vsName)),
+					atest.CheckAttrAccountID(resourceName, "resource_owner"),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualService/%s", meshName, vsName)),
 				),
 			},
 			{
@@ -115,7 +118,7 @@ func testAccAwsAppmeshVirtualService_virtualNode(t *testing.T) {
 					testAccCheckAppmeshVirtualServiceExists(resourceName, &vs),
 					resource.TestCheckResourceAttr(resourceName, "name", vsName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					atest.CheckAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_node.#", "1"),
@@ -141,9 +144,9 @@ func testAccAwsAppmeshVirtualService_virtualRouter(t *testing.T) {
 	vsName := fmt.Sprintf("tf-acc-test-%d.mesh.local", acctest.RandInt())
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appmesh.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appmesh.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -152,15 +155,15 @@ func testAccAwsAppmeshVirtualService_virtualRouter(t *testing.T) {
 					testAccCheckAppmeshVirtualServiceExists(resourceName, &vs),
 					resource.TestCheckResourceAttr(resourceName, "name", vsName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					atest.CheckAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_router.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_router.0.virtual_router_name", vrName1),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualService/%s", meshName, vsName))),
+					atest.CheckAttrAccountID(resourceName, "resource_owner"),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualService/%s", meshName, vsName))),
 			},
 			{
 				Config: testAccAppmeshVirtualServiceConfig_virtualRouter(meshName, vrName1, vrName2, vsName, "aws_appmesh_virtual_router.bar"),
@@ -168,7 +171,7 @@ func testAccAwsAppmeshVirtualService_virtualRouter(t *testing.T) {
 					testAccCheckAppmeshVirtualServiceExists(resourceName, &vs),
 					resource.TestCheckResourceAttr(resourceName, "name", vsName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					atest.CheckAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_router.#", "1"),
@@ -188,9 +191,9 @@ func testAccAwsAppmeshVirtualService_tags(t *testing.T) {
 	vsName := fmt.Sprintf("tf-acc-test-%d.mesh.local", acctest.RandInt())
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appmesh.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appmesh.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -236,7 +239,7 @@ func testAccAwsAppmeshVirtualService_tags(t *testing.T) {
 }
 
 func testAccCheckAppmeshVirtualServiceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).appmeshconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).AppMeshConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appmesh_virtual_service" {
@@ -247,7 +250,7 @@ func testAccCheckAppmeshVirtualServiceDestroy(s *terraform.State) error {
 			MeshName:           aws.String(rs.Primary.Attributes["mesh_name"]),
 			VirtualServiceName: aws.String(rs.Primary.Attributes["name"]),
 		})
-		if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
 			continue
 		}
 		if err != nil {
@@ -261,7 +264,7 @@ func testAccCheckAppmeshVirtualServiceDestroy(s *terraform.State) error {
 
 func testAccCheckAppmeshVirtualServiceExists(name string, v *appmesh.VirtualServiceData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).appmeshconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AppMeshConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
