@@ -9,11 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsLaunchConfiguration() *schema.Resource {
@@ -333,8 +335,8 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 }
 
 func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*AWSClient).autoscalingconn
-	ec2conn := meta.(*AWSClient).ec2conn
+	AutoScalingConn := meta.(*awsprovider.AWSClient).AutoScalingConn
+	EC2Conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	createLaunchConfigurationOpts := autoscaling.CreateLaunchConfigurationInput{
 		LaunchConfigurationName: aws.String(d.Get("name").(string)),
@@ -392,7 +394,7 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 	var blockDevices []*autoscaling.BlockDeviceMapping
 
 	// We'll use this to detect if we're declaring it incorrectly as an ebs_block_device.
-	rootDeviceName, err := fetchRootDeviceName(d.Get("image_id").(string), ec2conn)
+	rootDeviceName, err := fetchRootDeviceName(d.Get("image_id").(string), EC2Conn)
 	if err != nil {
 		return err
 	}
@@ -482,7 +484,7 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
-			if dn, err := fetchRootDeviceName(d.Get("image_id").(string), ec2conn); err == nil {
+			if dn, err := fetchRootDeviceName(d.Get("image_id").(string), EC2Conn); err == nil {
 				if dn == nil {
 					return fmt.Errorf(
 						"Expected to find a Root Device name for AMI (%s), but got none",
@@ -517,12 +519,12 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 	// IAM profiles can take ~10 seconds to propagate in AWS:
 	// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
 	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
-		_, err := autoscalingconn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
+		_, err := AutoScalingConn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
 		if err != nil {
-			if isAWSErr(err, "ValidationError", "Invalid IamInstanceProfile") {
+			if tfawserr.ErrMessageContains(err, "ValidationError", "Invalid IamInstanceProfile") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "ValidationError", "You are not authorized to perform this operation") {
+			if tfawserr.ErrMessageContains(err, "ValidationError", "You are not authorized to perform this operation") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -530,7 +532,7 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 		return nil
 	})
 	if isResourceTimeoutError(err) {
-		_, err = autoscalingconn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
+		_, err = AutoScalingConn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
 	}
 	if err != nil {
 		return fmt.Errorf("Error creating launch configuration: %s", err)
@@ -542,15 +544,15 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*AWSClient).autoscalingconn
-	ec2conn := meta.(*AWSClient).ec2conn
+	AutoScalingConn := meta.(*awsprovider.AWSClient).AutoScalingConn
+	EC2Conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	describeOpts := autoscaling.DescribeLaunchConfigurationsInput{
 		LaunchConfigurationNames: []*string{aws.String(d.Id())},
 	}
 
 	log.Printf("[DEBUG] launch configuration describe configuration: %s", describeOpts)
-	describConfs, err := autoscalingconn.DescribeLaunchConfigurations(&describeOpts)
+	describConfs, err := AutoScalingConn.DescribeLaunchConfigurations(&describeOpts)
 	if err != nil {
 		return fmt.Errorf("Error retrieving launch configuration: %s", err)
 	}
@@ -602,7 +604,7 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error setting metadata_options: %s", err)
 	}
 
-	if err := readLCBlockDevices(d, lc, ec2conn); err != nil {
+	if err := readLCBlockDevices(d, lc, EC2Conn); err != nil {
 		return err
 	}
 
@@ -610,7 +612,7 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsLaunchConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*AWSClient).autoscalingconn
+	AutoScalingConn := meta.(*awsprovider.AWSClient).AutoScalingConn
 	input := &autoscaling.DeleteLaunchConfigurationInput{
 		LaunchConfigurationName: aws.String(d.Id()),
 	}
@@ -618,13 +620,13 @@ func resourceAwsLaunchConfigurationDelete(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] Deleting Autoscaling Launch Configuration: %s", d.Id())
 	// Retry for Autoscaling eventual consistency
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := autoscalingconn.DeleteLaunchConfiguration(input)
+		_, err := AutoScalingConn.DeleteLaunchConfiguration(input)
 
-		if isAWSErr(err, autoscaling.ErrCodeResourceInUseFault, "") {
+		if tfawserr.ErrMessageContains(err, autoscaling.ErrCodeResourceInUseFault, "") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, "InvalidConfiguration.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidConfiguration.NotFound", "") {
 			return nil
 		}
 
@@ -636,7 +638,7 @@ func resourceAwsLaunchConfigurationDelete(d *schema.ResourceData, meta interface
 	})
 
 	if isResourceTimeoutError(err) {
-		_, err = autoscalingconn.DeleteLaunchConfiguration(input)
+		_, err = AutoScalingConn.DeleteLaunchConfiguration(input)
 	}
 
 	if err != nil {
@@ -646,8 +648,8 @@ func resourceAwsLaunchConfigurationDelete(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func readLCBlockDevices(d *schema.ResourceData, lc *autoscaling.LaunchConfiguration, ec2conn *ec2.EC2) error {
-	ibds, err := readBlockDevicesFromLaunchConfiguration(d, lc, ec2conn)
+func readLCBlockDevices(d *schema.ResourceData, lc *autoscaling.LaunchConfiguration, EC2Conn *ec2.EC2) error {
+	ibds, err := readBlockDevicesFromLaunchConfiguration(d, lc, EC2Conn)
 	if err != nil {
 		return err
 	}
@@ -709,7 +711,7 @@ func flattenLaunchConfigInstanceMetadataOptions(opts *autoscaling.InstanceMetada
 	return []interface{}{m}
 }
 
-func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autoscaling.LaunchConfiguration, ec2conn *ec2.EC2) (
+func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autoscaling.LaunchConfiguration, EC2Conn *ec2.EC2) (
 	map[string]interface{}, error) {
 	blockDevices := make(map[string]interface{})
 	blockDevices["ebs"] = make([]map[string]interface{}, 0)
@@ -718,7 +720,7 @@ func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autosca
 	if len(lc.BlockDeviceMappings) == 0 {
 		return nil, nil
 	}
-	rootDeviceName, err := fetchRootDeviceName(d.Get("image_id").(string), ec2conn)
+	rootDeviceName, err := fetchRootDeviceName(d.Get("image_id").(string), EC2Conn)
 	if err != nil {
 		return nil, err
 	}
