@@ -12,10 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appmesh/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appmesh/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsAppmeshVirtualGateway() *schema.Resource {
@@ -203,7 +204,7 @@ func resourceAwsAppmeshVirtualGateway() *schema.Resource {
 																									Required: true,
 																									Elem: &schema.Schema{
 																										Type:         schema.TypeString,
-																										ValidateFunc: validateArn,
+																										ValidateFunc: ValidateArn,
 																									},
 																									Set: schema.HashString,
 																								},
@@ -457,7 +458,7 @@ func resourceAwsAppmeshVirtualGateway() *schema.Resource {
 																		"certificate_arn": {
 																			Type:         schema.TypeString,
 																			Required:     true,
-																			ValidateFunc: validateArn,
+																			ValidateFunc: ValidateArn,
 																		},
 																	},
 																},
@@ -686,8 +687,8 @@ func resourceAwsAppmeshVirtualGateway() *schema.Resource {
 }
 
 func resourceAwsAppmeshVirtualGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).AppMeshConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &appmesh.CreateVirtualGatewayInput{
@@ -713,9 +714,9 @@ func resourceAwsAppmeshVirtualGatewayCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsAppmeshVirtualGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).AppMeshConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	var virtualGateway *appmesh.VirtualGatewayData
 
@@ -803,7 +804,7 @@ func resourceAwsAppmeshVirtualGatewayRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsAppmeshVirtualGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*awsprovider.AWSClient).AppMeshConn
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateVirtualGatewayInput{
@@ -836,7 +837,7 @@ func resourceAwsAppmeshVirtualGatewayUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsAppmeshVirtualGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*awsprovider.AWSClient).AppMeshConn
 
 	log.Printf("[DEBUG] Deleting App Mesh virtual gateway (%s)", d.Id())
 	_, err := conn.DeleteVirtualGateway(&appmesh.DeleteVirtualGatewayInput{
@@ -844,7 +845,7 @@ func resourceAwsAppmeshVirtualGatewayDelete(d *schema.ResourceData, meta interfa
 		VirtualGatewayName: aws.String(d.Get("name").(string)),
 	})
 
-	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
@@ -865,7 +866,7 @@ func resourceAwsAppmeshVirtualGatewayImport(d *schema.ResourceData, meta interfa
 	name := parts[1]
 	log.Printf("[DEBUG] Importing App Mesh virtual gateway %s from mesh %s", name, mesh)
 
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*awsprovider.AWSClient).AppMeshConn
 
 	virtualGateway, err := finder.VirtualGateway(conn, mesh, name, "")
 
