@@ -7,14 +7,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsSubnetIDs_basic(t *testing.T) {
 	rInt := acctest.RandIntRange(0, 256)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -36,9 +37,9 @@ func TestAccDataSourceAwsSubnetIDs_filter(t *testing.T) {
 	rName := "data.aws_subnet_ids.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -52,7 +53,7 @@ func TestAccDataSourceAwsSubnetIDs_filter(t *testing.T) {
 }
 
 func testAccDataSourceAwsSubnetIDsConfigWithDataSource(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.%[1]d.0.0/16"
 
@@ -109,7 +110,7 @@ data "aws_subnet_ids" "private" {
 }
 
 func testAccDataSourceAwsSubnetIDsConfig(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.%[1]d.0.0/16"
 
@@ -154,7 +155,7 @@ resource "aws_subnet" "test_private_b" {
 }
 
 func testAccDataSourceAwsSubnetIDs_filter(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.%[1]d.0.0/16"
 
