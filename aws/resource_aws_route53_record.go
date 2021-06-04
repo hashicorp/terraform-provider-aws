@@ -12,10 +12,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 var r53NoRecordsFound = errors.New("No matching records found")
@@ -262,7 +264,7 @@ func resourceAwsRoute53RecordUpdate(d *schema.ResourceData, meta interface{}) er
 
 	// Otherwise we delete the existing record and create a new record within
 	// a transactional change
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*awsprovider.AWSClient).Route53Conn
 	zone := cleanZoneID(d.Get("zone_id").(string))
 
 	var err error
@@ -389,7 +391,7 @@ func resourceAwsRoute53RecordUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsRoute53RecordCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*awsprovider.AWSClient).Route53Conn
 	zone := cleanZoneID(d.Get("zone_id").(string))
 
 	var err error
@@ -471,7 +473,7 @@ func changeRoute53RecordSet(conn *route53.Route53, input *route53.ChangeResource
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
 		out, err = conn.ChangeResourceRecordSets(input)
-		if isAWSErr(err, route53.ErrCodeNoSuchHostedZone, "") {
+		if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchHostedZone, "") {
 			log.Print("[DEBUG] Hosted Zone not found, retrying...")
 			return resource.RetryableError(err)
 		}
@@ -619,14 +621,14 @@ func resourceAwsRoute53RecordRead(d *schema.ResourceData, meta interface{}) erro
 // If there are other errors, it returns nil a nil recordset and passes on the
 // error.
 func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceRecordSet, error) {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*awsprovider.AWSClient).Route53Conn
 	// Scan for a
 	zone := cleanZoneID(d.Get("zone_id").(string))
 
 	// get expanded name
 	zoneRecord, err := conn.GetHostedZone(&route53.GetHostedZoneInput{Id: aws.String(zone)})
 	if err != nil {
-		if isAWSErr(err, route53.ErrCodeNoSuchHostedZone, "") {
+		if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchHostedZone, "") {
 			return nil, r53NoHostedZoneFound
 		}
 
@@ -721,7 +723,7 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 }
 
 func resourceAwsRoute53RecordDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*awsprovider.AWSClient).Route53Conn
 	// Get the records
 	rec, err := findRecord(d, meta)
 	if err != nil {
@@ -768,7 +770,7 @@ func resourceAwsRoute53RecordDelete(d *schema.ResourceData, meta interface{}) er
 
 func deleteRoute53RecordSet(conn *route53.Route53, input *route53.ChangeResourceRecordSetsInput) (interface{}, error) {
 	out, err := conn.ChangeResourceRecordSets(input)
-	if isAWSErr(err, route53.ErrCodeInvalidChangeBatch, "") {
+	if tfawserr.ErrMessageContains(err, route53.ErrCodeInvalidChangeBatch, "") {
 		return out, nil
 	}
 
