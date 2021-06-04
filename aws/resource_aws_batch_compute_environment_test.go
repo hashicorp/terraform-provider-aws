@@ -15,9 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/batch/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -31,14 +33,14 @@ func init() {
 }
 
 func testSweepBatchComputeEnvironments(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).batchconn
-	iamconn := client.(*AWSClient).iamconn
+	conn := client.(*awsprovider.AWSClient).BatchConn
+	IAMConn := client.(*awsprovider.AWSClient).IAMConn
 
 	var sweeperErrs *multierror.Error
 
@@ -79,11 +81,11 @@ func testSweepBatchComputeEnvironments(region string) error {
 					continue
 				}
 
-				servicePrincipal := fmt.Sprintf("%s.%s", batch.EndpointsID, testAccGetPartitionDNSSuffix())
+				servicePrincipal := fmt.Sprintf("%s.%s", batch.EndpointsID, atest.PartitionDNSSuffix())
 				serviceRoleName := strings.TrimPrefix(serviceRoleARN.Resource, "role/")
 				serviceRolePolicyARN := arn.ARN{
 					AccountID: "aws",
-					Partition: testAccGetPartition(),
+					Partition: atest.Partition(),
 					Resource:  "policy/service-role/AWSBatchServiceRole",
 					Service:   iam.ServiceName,
 				}.String()
@@ -93,7 +95,7 @@ func testSweepBatchComputeEnvironments(region string) error {
 					RoleName:                 aws.String(serviceRoleName),
 				}
 
-				_, err = iamconn.CreateRole(iamCreateRoleInput)
+				_, err = IAMConn.CreateRole(iamCreateRoleInput)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error creating IAM Role (%s) for INVALID Batch Compute Environment (%s): %w", serviceRoleName, name, err)
@@ -106,7 +108,7 @@ func testSweepBatchComputeEnvironments(region string) error {
 					RoleName: aws.String(serviceRoleName),
 				}
 
-				err = iamconn.WaitUntilRoleExists(iamGetRoleInput)
+				err = IAMConn.WaitUntilRoleExists(iamGetRoleInput)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error waiting for IAM Role (%s) creation for INVALID Batch Compute Environment (%s): %w", serviceRoleName, name, err)
@@ -120,7 +122,7 @@ func testSweepBatchComputeEnvironments(region string) error {
 					RoleName:  aws.String(serviceRoleName),
 				}
 
-				_, err = iamconn.AttachRolePolicy(iamAttachRolePolicyInput)
+				_, err = IAMConn.AttachRolePolicy(iamAttachRolePolicyInput)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error attaching Batch IAM Policy (%s) to IAM Role (%s) for INVALID Batch Compute Environment (%s): %w", serviceRolePolicyARN, serviceRoleName, name, err)
@@ -143,7 +145,7 @@ func testSweepBatchComputeEnvironments(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Batch Compute Environment sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -161,16 +163,16 @@ func TestAccAWSBatchComputeEnvironment_basic(t *testing.T) {
 	serviceRoleResourceName := "aws_iam_role.batch_service"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "0"),
@@ -193,16 +195,16 @@ func TestAccAWSBatchComputeEnvironment_disappears(t *testing.T) {
 	resourceName := "aws_batch_compute_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsBatchComputeEnvironment(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsBatchComputeEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -216,9 +218,9 @@ func TestAccAWSBatchComputeEnvironment_NameGenerated(t *testing.T) {
 	resourceName := "aws_batch_compute_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -244,9 +246,9 @@ func TestAccAWSBatchComputeEnvironment_NamePrefix(t *testing.T) {
 	resourceName := "aws_batch_compute_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -276,16 +278,16 @@ func TestAccAWSBatchComputeEnvironment_createEc2(t *testing.T) {
 	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigEC2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -337,16 +339,16 @@ func TestAccAWSBatchComputeEnvironment_createEc2_DesiredVcpus_Ec2KeyPair_ImageId
 	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigEC2WithDesiredVcpusEc2KeyPairImageIdAndComputeResourcesTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -398,16 +400,16 @@ func TestAccAWSBatchComputeEnvironment_createSpot(t *testing.T) {
 	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigSpot(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -458,16 +460,16 @@ func TestAccAWSBatchComputeEnvironment_createSpot_AllocationStrategy_BidPercenta
 	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigSpotWithAllocationStrategyAndBidPercentage(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -516,16 +518,16 @@ func TestAccAWSBatchComputeEnvironment_createFargate(t *testing.T) {
 	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigFargate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -573,16 +575,16 @@ func TestAccAWSBatchComputeEnvironment_createFargateSpot(t *testing.T) {
 	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigFargateSpot(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -628,16 +630,16 @@ func TestAccAWSBatchComputeEnvironment_updateState(t *testing.T) {
 	serviceRoleResourceName := "aws_iam_role.batch_service"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigState(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "0"),
@@ -654,7 +656,7 @@ func TestAccAWSBatchComputeEnvironment_updateState(t *testing.T) {
 				Config: testAccAWSBatchComputeEnvironmentConfigState(rName, "disabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "0"),
@@ -686,16 +688,16 @@ func TestAccAWSBatchComputeEnvironment_updateServiceRole(t *testing.T) {
 	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigFargate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -729,7 +731,7 @@ func TestAccAWSBatchComputeEnvironment_updateServiceRole(t *testing.T) {
 				Config: testAccAWSBatchComputeEnvironmentConfigFargateUpdatedServiceRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -777,19 +779,19 @@ func TestAccAWSBatchComputeEnvironment_defaultServiceRole(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSBatch(t)
-			testAccPreCheckIamServiceLinkedRole(t, "/aws-service-role/batch")
+			atest.PreCheckIamServiceLinkedRole(t, "/aws-service-role/batch")
 		},
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigFargateDefaultServiceRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -811,7 +813,7 @@ func TestAccAWSBatchComputeEnvironment_defaultServiceRole(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.type", "FARGATE"),
 					resource.TestCheckResourceAttrSet(resourceName, "ecs_cluster_arn"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "service_role", "iam", regexp.MustCompile(`role/aws-service-role/batch`)),
+					atest.MatchAttrGlobalARN(resourceName, "service_role", "iam", regexp.MustCompile(`role/aws-service-role/batch`)),
 					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 					resource.TestCheckResourceAttrSet(resourceName, "status_reason"),
@@ -838,16 +840,16 @@ func TestAccAWSBatchComputeEnvironment_ComputeResources_MinVcpus(t *testing.T) {
 	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigComputeResourcesMaxVcpusMinVcpus(rName, 4, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -882,7 +884,7 @@ func TestAccAWSBatchComputeEnvironment_ComputeResources_MinVcpus(t *testing.T) {
 				Config: testAccAWSBatchComputeEnvironmentConfigComputeResourcesMaxVcpusMinVcpus(rName, 4, 4),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -917,7 +919,7 @@ func TestAccAWSBatchComputeEnvironment_ComputeResources_MinVcpus(t *testing.T) {
 				Config: testAccAWSBatchComputeEnvironmentConfigComputeResourcesMaxVcpusMinVcpus(rName, 4, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -967,16 +969,16 @@ func TestAccAWSBatchComputeEnvironment_ComputeResources_MaxVcpus(t *testing.T) {
 	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigComputeResourcesMaxVcpusMinVcpus(rName, 4, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -1011,7 +1013,7 @@ func TestAccAWSBatchComputeEnvironment_ComputeResources_MaxVcpus(t *testing.T) {
 				Config: testAccAWSBatchComputeEnvironmentConfigComputeResourcesMaxVcpusMinVcpus(rName, 8, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -1046,7 +1048,7 @@ func TestAccAWSBatchComputeEnvironment_ComputeResources_MaxVcpus(t *testing.T) {
 				Config: testAccAWSBatchComputeEnvironmentConfigComputeResourcesMaxVcpusMinVcpus(rName, 2, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -1098,16 +1100,16 @@ func TestAccAWSBatchComputeEnvironment_launchTemplate(t *testing.T) {
 	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigLaunchTemplate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -1162,16 +1164,16 @@ func TestAccAWSBatchComputeEnvironment_UpdateLaunchTemplate(t *testing.T) {
 	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBatchComputeEnvironmentUpdateLaunchTemplateInExistingComputeEnvironment(rName, "$Default"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -1209,7 +1211,7 @@ func TestAccAWSBatchComputeEnvironment_UpdateLaunchTemplate(t *testing.T) {
 				Config: testAccAWSBatchComputeEnvironmentUpdateLaunchTemplateInExistingComputeEnvironment(rName, "$Latest"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -1264,16 +1266,16 @@ func TestAccAWSBatchComputeEnvironment_UpdateSecurityGroupsAndSubnets_Fargate(t 
 	subnetResourceName2 := "aws_subnet.test_2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigFargate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -1307,7 +1309,7 @@ func TestAccAWSBatchComputeEnvironment_UpdateSecurityGroupsAndSubnets_Fargate(t 
 				Config: testAccAWSBatchComputeEnvironmentConfigFargateUpdatedSecurityGroupsAndSubnets(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -1353,9 +1355,9 @@ func TestAccAWSBatchComputeEnvironment_Tags(t *testing.T) {
 	resourceName := "aws_batch_compute_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1399,16 +1401,16 @@ func TestAccAWSBatchComputeEnvironment_createUnmanagedWithComputeResources(t *te
 	serviceRoleResourceName := "aws_iam_role.batch_service"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigUnmanagedWithComputeResources(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
@@ -1432,9 +1434,9 @@ func TestAccAWSBatchComputeEnvironment_createEc2WithoutComputeResources(t *testi
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1449,9 +1451,9 @@ func TestAccAWSBatchComputeEnvironment_createSpotWithoutIamFleetRole(t *testing.
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1463,7 +1465,7 @@ func TestAccAWSBatchComputeEnvironment_createSpotWithoutIamFleetRole(t *testing.
 }
 
 func testAccCheckBatchComputeEnvironmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).batchconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).BatchConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_batch_compute_environment" {
@@ -1496,7 +1498,7 @@ func testAccCheckAwsBatchComputeEnvironmentExists(n string, v *batch.ComputeEnvi
 			return fmt.Errorf("No Batch Compute Environment ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).batchconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).BatchConn
 
 		computeEnvironment, err := finder.ComputeEnvironmentDetailByName(conn, rs.Primary.ID)
 
@@ -1511,13 +1513,13 @@ func testAccCheckAwsBatchComputeEnvironmentExists(n string, v *batch.ComputeEnvi
 }
 
 func testAccPreCheckAWSBatch(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).batchconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).BatchConn
 
 	input := &batch.DescribeComputeEnvironmentsInput{}
 
 	_, err := conn.DescribeComputeEnvironments(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -1630,7 +1632,7 @@ resource "aws_subnet" "test" {
 }
 
 func testAccAWSBatchComputeEnvironmentConfigBasic(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
@@ -1644,7 +1646,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccAWSBatchComputeEnvironmentConfigNameGenerated(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		`
 resource "aws_batch_compute_environment" "test" {
@@ -1656,7 +1658,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccAWSBatchComputeEnvironmentConfigNamePrefix(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
@@ -1670,7 +1672,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccAWSBatchComputeEnvironmentConfigEC2(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
@@ -1699,7 +1701,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccAWSBatchComputeEnvironmentConfigEC2WithDesiredVcpusEc2KeyPairImageIdAndComputeResourcesTags(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		fmt.Sprintf(`
@@ -1743,7 +1745,7 @@ resource "aws_key_pair" "test" {
 }
 
 func testAccAWSBatchComputeEnvironmentConfigFargate(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
@@ -1768,7 +1770,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccAWSBatchComputeEnvironmentConfigFargateDefaultServiceRole(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
@@ -1791,7 +1793,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccAWSBatchComputeEnvironmentConfigFargateUpdatedServiceRole(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
@@ -1838,7 +1840,7 @@ resource "aws_iam_role_policy_attachment" "batch_service_2" {
 }
 
 func testAccAWSBatchComputeEnvironmentConfigFargateSpot(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
@@ -1863,7 +1865,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccAWSBatchComputeEnvironmentConfigSpot(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
@@ -1894,7 +1896,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccAWSBatchComputeEnvironmentConfigSpotWithAllocationStrategyAndBidPercentage(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
@@ -1927,7 +1929,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccAWSBatchComputeEnvironmentConfigState(rName string, state string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
@@ -1942,7 +1944,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccAWSBatchComputeEnvironmentConfigComputeResourcesMaxVcpusMinVcpus(rName string, maxVcpus int, minVcpus int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
@@ -1970,7 +1972,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccAWSBatchComputeEnvironmentConfigFargateUpdatedSecurityGroupsAndSubnets(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
@@ -2023,7 +2025,7 @@ resource "aws_subnet" "test_2" {
 }
 
 func testAccAWSBatchComputeEnvironmentConfigEC2WithoutComputeResources(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
@@ -2037,7 +2039,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccAWSBatchComputeEnvironmentConfigUnmanagedWithComputeResources(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
@@ -2067,7 +2069,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccAWSBatchComputeEnvironmentConfigSpotWithoutIamFleetRole(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
@@ -2097,7 +2099,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccAWSBatchComputeEnvironmentConfigLaunchTemplate(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
@@ -2137,7 +2139,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccAWSBatchComputeEnvironmentUpdateLaunchTemplateInExistingComputeEnvironment(rName string, version string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
@@ -2178,7 +2180,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccAWSBatchComputeEnvironmentConfigTags1(rName string, tagKey1, tagValue1 string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
@@ -2196,7 +2198,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccAWSBatchComputeEnvironmentConfigTags2(rName string, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
