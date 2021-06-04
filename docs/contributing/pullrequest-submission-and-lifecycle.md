@@ -170,10 +170,10 @@ The below are style-based items that _may_ be noted during review and are recomm
   // Direct Connect Virtual Interface ARN.
   // See https://docs.aws.amazon.com/directconnect/latest/UserGuide/security_iam_service-with-iam.html#security_iam_service-with-iam-id-based-policies-resources.
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Service:   "directconnect",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
