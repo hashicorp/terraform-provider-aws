@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSLambdaCodeSigningConfig_basic(t *testing.T) {
@@ -18,9 +20,9 @@ func TestAccAWSLambdaCodeSigningConfig_basic(t *testing.T) {
 	var conf lambda.GetCodeSigningConfigOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCodeSigningConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -48,9 +50,9 @@ func TestAccAWSLambdaCodeSigningConfig_UpdatePolicy(t *testing.T) {
 	var conf lambda.GetCodeSigningConfigOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCodeSigningConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -84,9 +86,9 @@ func TestAccAWSLambdaCodeSigningConfig_UpdatePublishers(t *testing.T) {
 	var conf lambda.GetCodeSigningConfigOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCodeSigningConfigDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -196,7 +198,7 @@ func testAccCheckAwsCodeSigningConfigExists(n string, mapping *lambda.GetCodeSig
 			return fmt.Errorf("Code Signing Config ID not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).LambdaConn
 
 		params := &lambda.GetCodeSigningConfigInput{
 			CodeSigningConfigArn: aws.String(rs.Primary.ID),
@@ -214,7 +216,7 @@ func testAccCheckAwsCodeSigningConfigExists(n string, mapping *lambda.GetCodeSig
 }
 
 func testAccCheckCodeSigningConfigDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).LambdaConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_code_signing_config" {
