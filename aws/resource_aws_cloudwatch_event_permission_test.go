@@ -11,10 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	tfevents "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -25,15 +28,15 @@ func init() {
 }
 
 func testSweepCloudWatchEventPermissions(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).cloudwatcheventsconn
+	conn := client.(*awsprovider.AWSClient).CloudWatchEventsConn
 
 	output, err := conn.DescribeEventBus(&events.DescribeEventBusInput{})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping CloudWatch Event Permission sweep for %s: %s", region, err)
 			return nil
 		}
@@ -75,9 +78,9 @@ func TestAccAWSCloudWatchEventPermission_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchevents.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -147,9 +150,9 @@ func TestAccAWSCloudWatchEventPermission_EventBusName(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchevents.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -178,9 +181,9 @@ func TestAccAWSCloudWatchEventPermission_Action(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchevents.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -220,9 +223,9 @@ func TestAccAWSCloudWatchEventPermission_Condition(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchevents.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -263,9 +266,9 @@ func TestAccAWSCloudWatchEventPermission_Multiple(t *testing.T) {
 	resourceName2 := "aws_cloudwatch_event_permission.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchevents.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -297,16 +300,16 @@ func TestAccAWSCloudWatchEventPermission_Disappears(t *testing.T) {
 	statementID := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchevents.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsCloudWatchEventPermissionResourceConfigBasic(principal, statementID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventPermissionExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchEventPermission(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCloudWatchEventPermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -316,7 +319,7 @@ func TestAccAWSCloudWatchEventPermission_Disappears(t *testing.T) {
 
 func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchEventsConn
 		rs, ok := s.RootModule().Resources[pr]
 		if !ok {
 			return fmt.Errorf("Not found: %s", pr)
@@ -354,7 +357,7 @@ func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFu
 }
 
 func testAccCheckCloudWatchEventPermissionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchEventsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_event_permission" {
@@ -370,7 +373,7 @@ func testAccCheckCloudWatchEventPermissionDestroy(s *terraform.State) error {
 		}
 		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 			debo, err := conn.DescribeEventBus(input)
-			if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			if err != nil {
