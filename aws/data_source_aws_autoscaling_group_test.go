@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAwsAutoScalingGroupDataSource_basic(t *testing.T) {
@@ -15,9 +16,9 @@ func TestAccAwsAutoScalingGroupDataSource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, autoscaling.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAutoScalingGroupDataResourceConfig(rName),
@@ -48,9 +49,9 @@ func TestAccAwsAutoScalingGroupDataSource_launchTemplate(t *testing.T) {
 	resourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, autoscaling.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAutoScalingGroupDataResourceConfig_launchTemplate(),
@@ -81,7 +82,7 @@ func TestAccAwsAutoScalingGroupDataSource_launchTemplate(t *testing.T) {
 
 // Lookup based on AutoScalingGroupName
 func testAccAutoScalingGroupDataResourceConfig(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		testAccAvailableAZsNoOptInConfig(),
 		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
@@ -123,7 +124,7 @@ resource "aws_launch_configuration" "data_source_aws_autoscaling_group_test" {
 }
 
 func testAccAutoScalingGroupDataResourceConfig_launchTemplate() string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		testAccAvailableAZsNoOptInConfig(),
 		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
