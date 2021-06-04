@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
@@ -19,9 +21,9 @@ func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
 
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, emr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,9 +52,9 @@ func TestAccAWSEMRInstanceGroup_BidPrice(t *testing.T) {
 
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, emr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -102,9 +104,9 @@ func TestAccAWSEMRInstanceGroup_ConfigurationsJson(t *testing.T) {
 
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, emr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -145,9 +147,9 @@ func TestAccAWSEMRInstanceGroup_AutoScalingPolicy(t *testing.T) {
 
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, emr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -190,9 +192,9 @@ func TestAccAWSEMRInstanceGroup_InstanceCount(t *testing.T) {
 
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, emr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -223,9 +225,9 @@ func TestAccAWSEMRInstanceGroup_disappears_EmrCluster(t *testing.T) {
 	resourceName := "aws_emr_instance_group.task"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, emr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -247,9 +249,9 @@ func TestAccAWSEMRInstanceGroup_EbsConfig_EbsOptimized(t *testing.T) {
 
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, emr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -280,7 +282,7 @@ func TestAccAWSEMRInstanceGroup_EbsConfig_EbsOptimized(t *testing.T) {
 }
 
 func testAccCheckAWSEmrInstanceGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).emrconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EMRConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_emr_cluster" {
@@ -320,8 +322,8 @@ func testAccCheckAWSEmrInstanceGroupExists(name string, ig *emr.InstanceGroup) r
 			return fmt.Errorf("No task group id set")
 		}
 
-		meta := testAccProvider.Meta()
-		conn := meta.(*AWSClient).emrconn
+		meta := atest.Provider.Meta()
+		conn := meta.(*awsprovider.AWSClient).EMRConn
 		group, err := fetchEMRInstanceGroup(conn, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("EMR error: %v", err)
