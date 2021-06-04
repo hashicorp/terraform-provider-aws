@@ -13,12 +13,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSpotInstanceRequest() *schema.Resource {
@@ -127,8 +128,8 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 }
 
 func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	instanceOpts, err := buildAwsInstanceOpts(d, meta)
@@ -200,12 +201,12 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 		resp, err = conn.RequestSpotInstances(spotOpts)
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
 		// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-		if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
+		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
 			log.Printf("[DEBUG] Invalid IAM Instance Profile referenced, retrying...")
 			return resource.RetryableError(err)
 		}
 		// IAM roles can also take time to propagate in AWS:
-		if isAWSErr(err, "InvalidParameterValue", " has no associated IAM Roles") {
+		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", " has no associated IAM Roles") {
 			log.Printf("[DEBUG] IAM Instance Profile appears to have no IAM roles, retrying...")
 			return resource.RetryableError(err)
 		}
@@ -254,9 +255,9 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 
 // Update spot state, etc
 func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	var request *ec2.SpotInstanceRequest
 
@@ -354,13 +355,13 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 }
 
 func readInstance(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	instance, err := resourceAwsInstanceFindByID(conn, d.Get("spot_instance_id").(string))
 	if err != nil {
 		// If the instance was not found, return nil so that we can show
 		// that the instance is gone.
-		if isAWSErr(err, "InvalidInstanceID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
 			return fmt.Errorf("no instance found")
 		}
 
@@ -437,7 +438,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsSpotInstanceRequestUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -451,7 +452,7 @@ func resourceAwsSpotInstanceRequestUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsSpotInstanceRequestDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Cancelling spot request: %s", d.Id())
 	_, err := conn.CancelSpotInstanceRequests(&ec2.CancelSpotInstanceRequestsInput{
@@ -483,7 +484,7 @@ func SpotInstanceStateRefreshFunc(
 		})
 
 		if err != nil {
-			if isAWSErr(err, "InvalidSpotInstanceRequestID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidSpotInstanceRequestID.NotFound", "") {
 				// Set this to nil as if we didn't find anything.
 				resp = nil
 			} else {
