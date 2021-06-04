@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -24,11 +26,11 @@ func init() {
 }
 
 func testSweepTimestreamWriteTables(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).timestreamwriteconn
+	conn := client.(*awsprovider.AWSClient).TimeStreamWriteConn
 	ctx := context.Background()
 
 	var sweeperErrs *multierror.Error
@@ -69,7 +71,7 @@ func testSweepTimestreamWriteTables(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Timestream Table sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -87,16 +89,16 @@ func TestAccAWSTimestreamWriteTable_basic(t *testing.T) {
 	dbResourceName := "aws_timestreamwrite_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
-		ErrorCheck:   testAccErrorCheck(t, timestreamwrite.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
+		ErrorCheck:   atest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSTimestreamWriteTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSTimestreamWriteTableConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTimestreamWriteTableExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "timestream", fmt.Sprintf("database/%[1]s/table/%[1]s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "timestream", fmt.Sprintf("database/%[1]s/table/%[1]s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "database_name", dbResourceName, "database_name"),
 					resource.TestCheckResourceAttr(resourceName, "retention_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "table_name", rName),
@@ -117,16 +119,16 @@ func TestAccAWSTimestreamWriteTable_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
-		ErrorCheck:   testAccErrorCheck(t, timestreamwrite.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
+		ErrorCheck:   atest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSTimestreamWriteTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSTimestreamWriteTableConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTimestreamWriteTableExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsTimestreamWriteTable(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsTimestreamWriteTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -139,9 +141,9 @@ func TestAccAWSTimestreamWriteTable_RetentionProperties(t *testing.T) {
 	resourceName := "aws_timestreamwrite_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
-		ErrorCheck:   testAccErrorCheck(t, timestreamwrite.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
+		ErrorCheck:   atest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSTimestreamWriteTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -188,9 +190,9 @@ func TestAccAWSTimestreamWriteTable_Tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
-		ErrorCheck:   testAccErrorCheck(t, timestreamwrite.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
+		ErrorCheck:   atest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSTimestreamWriteTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -235,7 +237,7 @@ func TestAccAWSTimestreamWriteTable_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSTimestreamWriteTableDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).timestreamwriteconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).TimeStreamWriteConn
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -289,7 +291,7 @@ func testAccCheckAWSTimestreamWriteTableExists(n string) resource.TestCheckFunc 
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).timestreamwriteconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).TimeStreamWriteConn
 
 		input := &timestreamwrite.DescribeTableInput{
 			DatabaseName: aws.String(dbName),
@@ -319,7 +321,7 @@ resource "aws_timestreamwrite_database" "test" {
 }
 
 func testAccAWSTimestreamWriteTableConfigBasic(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSTimestreamWriteTableBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_timestreamwrite_table" "test" {
@@ -330,7 +332,7 @@ resource "aws_timestreamwrite_table" "test" {
 }
 
 func testAccAWSTimestreamWriteTableConfigRetentionProperties(rName string, magneticStoreDays, memoryStoreHours int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSTimestreamWriteTableBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_timestreamwrite_table" "test" {
@@ -346,7 +348,7 @@ resource "aws_timestreamwrite_table" "test" {
 }
 
 func testAccAWSTimestreamWriteTableConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSTimestreamWriteTableBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_timestreamwrite_table" "test" {
@@ -361,7 +363,7 @@ resource "aws_timestreamwrite_table" "test" {
 }
 
 func testAccAWSTimestreamWriteTableConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSTimestreamWriteTableBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_timestreamwrite_table" "test" {
