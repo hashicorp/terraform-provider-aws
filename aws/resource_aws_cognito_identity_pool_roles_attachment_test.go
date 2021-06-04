@@ -8,9 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
@@ -19,9 +22,9 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
 	updatedName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -54,9 +57,9 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 	name := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,16 +112,16 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_disappears(t *testing.T) {
 	name := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCognitoIdentityPoolRolesAttachmentConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoIdentityPoolRolesAttachmentExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCognitoIdentityPoolRolesAttachment(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCognitoIdentityPoolRolesAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -130,9 +133,9 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithAmbiguousRoleR
 	name := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -147,9 +150,9 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithRulesTypeError
 	name := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -164,9 +167,9 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithTokenTypeError
 	name := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -188,7 +191,7 @@ func testAccCheckAWSCognitoIdentityPoolRolesAttachmentExists(n string) resource.
 			return errors.New("No Cognito Identity Pool Roles Attachment ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cognitoconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CognitoIdentityConn
 
 		_, err := conn.GetIdentityPoolRoles(&cognitoidentity.GetIdentityPoolRolesInput{
 			IdentityPoolId: aws.String(rs.Primary.Attributes["identity_pool_id"]),
@@ -199,7 +202,7 @@ func testAccCheckAWSCognitoIdentityPoolRolesAttachmentExists(n string) resource.
 }
 
 func testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cognitoconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CognitoIdentityConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_identity_pool_roles_attachment" {
@@ -211,7 +214,7 @@ func testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy(s *terraform.State
 		})
 
 		if err != nil {
-			if isAWSErr(err, cognitoidentity.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, cognitoidentity.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return err
