@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestCleanZoneID(t *testing.T) {
@@ -81,9 +83,9 @@ func TestAccAWSRoute53Zone_basic(t *testing.T) {
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -114,9 +116,9 @@ func TestAccAWSRoute53Zone_disappears(t *testing.T) {
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -135,9 +137,9 @@ func TestAccAWSRoute53Zone_multiple(t *testing.T) {
 	var zone0, zone1, zone2, zone3, zone4 route53.GetHostedZoneOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -167,9 +169,9 @@ func TestAccAWSRoute53Zone_Comment(t *testing.T) {
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -205,9 +207,9 @@ func TestAccAWSRoute53Zone_DelegationSetID(t *testing.T) {
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -235,9 +237,9 @@ func TestAccAWSRoute53Zone_ForceDestroy(t *testing.T) {
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -261,9 +263,9 @@ func TestAccAWSRoute53Zone_ForceDestroy_TrailingPeriod(t *testing.T) {
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -287,9 +289,9 @@ func TestAccAWSRoute53Zone_Tags(t *testing.T) {
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -336,9 +338,9 @@ func TestAccAWSRoute53Zone_VPC_Single(t *testing.T) {
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -369,9 +371,9 @@ func TestAccAWSRoute53Zone_VPC_Multiple(t *testing.T) {
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -403,9 +405,9 @@ func TestAccAWSRoute53Zone_VPC_Updates(t *testing.T) {
 	zoneName := fmt.Sprintf("%s.terraformtest.com", rName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -438,11 +440,11 @@ func TestAccAWSRoute53Zone_VPC_Updates(t *testing.T) {
 }
 
 func testAccCheckRoute53ZoneDestroy(s *terraform.State) error {
-	return testAccCheckRoute53ZoneDestroyWithProvider(s, testAccProvider)
+	return testAccCheckRoute53ZoneDestroyWithProvider(s, atest.Provider)
 }
 
 func testAccCheckRoute53ZoneDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*AWSClient).r53conn
+	conn := provider.Meta().(*awsprovider.AWSClient).Route53Conn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_zone" {
 			continue
@@ -457,13 +459,13 @@ func testAccCheckRoute53ZoneDestroyWithProvider(s *terraform.State, provider *sc
 }
 
 func testAccCreateRandomRoute53RecordsInZoneId(zone *route53.GetHostedZoneOutput, recordsCount int) resource.TestCheckFunc {
-	return testAccCreateRandomRoute53RecordsInZoneIdWithProvider(func() *schema.Provider { return testAccProvider }, zone, recordsCount)
+	return testAccCreateRandomRoute53RecordsInZoneIdWithProvider(func() *schema.Provider { return atest.Provider }, zone, recordsCount)
 }
 
 func testAccCreateRandomRoute53RecordsInZoneIdWithProvider(providerF func() *schema.Provider, zone *route53.GetHostedZoneOutput, recordsCount int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		provider := providerF()
-		conn := provider.Meta().(*AWSClient).r53conn
+		conn := provider.Meta().(*awsprovider.AWSClient).Route53Conn
 
 		var changes []*route53.Change
 		if recordsCount > 100 {
@@ -502,7 +504,7 @@ func testAccCreateRandomRoute53RecordsInZoneIdWithProvider(providerF func() *sch
 }
 
 func testAccCheckRoute53ZoneExists(n string, zone *route53.GetHostedZoneOutput) resource.TestCheckFunc {
-	return testAccCheckRoute53ZoneExistsWithProvider(n, zone, func() *schema.Provider { return testAccProvider })
+	return testAccCheckRoute53ZoneExistsWithProvider(n, zone, func() *schema.Provider { return atest.Provider })
 }
 
 func testAccCheckRoute53ZoneExistsWithProvider(n string, zone *route53.GetHostedZoneOutput, providerF func() *schema.Provider) resource.TestCheckFunc {
@@ -517,7 +519,7 @@ func testAccCheckRoute53ZoneExistsWithProvider(n string, zone *route53.GetHosted
 		}
 
 		provider := providerF()
-		conn := provider.Meta().(*AWSClient).r53conn
+		conn := provider.Meta().(*awsprovider.AWSClient).Route53Conn
 		resp, err := conn.GetHostedZone(&route53.GetHostedZoneInput{Id: aws.String(rs.Primary.ID)})
 		if err != nil {
 			return fmt.Errorf("Hosted zone err: %v", err)
@@ -551,7 +553,7 @@ func testAccCheckRoute53ZoneExistsWithProvider(n string, zone *route53.GetHosted
 
 func testAccCheckRoute53ZoneDisappears(zone *route53.GetHostedZoneOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).r53conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).Route53Conn
 
 		input := &route53.DeleteHostedZoneInput{
 			Id: zone.HostedZone.Id,
