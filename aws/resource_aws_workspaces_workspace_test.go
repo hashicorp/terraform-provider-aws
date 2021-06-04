@@ -13,7 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/workspaces/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -24,11 +26,11 @@ func init() {
 }
 
 func testSweepWorkspacesWorkspace(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).workspacesconn
+	conn := client.(*awsprovider.AWSClient).WorkSpacesConn
 
 	var errors error
 	input := &workspaces.DescribeWorkspacesInput{}
@@ -42,7 +44,7 @@ func testSweepWorkspacesWorkspace(region string) error {
 		}
 		return true
 	})
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping workspaces sweep for %s: %s", region, err)
 		return errors // In case we have completed some pages, but had errors
 	}
@@ -63,13 +65,13 @@ func TestAccAwsWorkspacesWorkspace_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -111,13 +113,13 @@ func TestAccAwsWorkspacesWorkspace_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -163,13 +165,13 @@ func TestAccAwsWorkspacesWorkspace_workspaceProperties(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -228,13 +230,13 @@ func TestAccAwsWorkspacesWorkspace_workspaceProperties_runningModeAlwaysOn(t *te
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -262,9 +264,9 @@ func TestAccAwsWorkspacesWorkspace_validateRootVolumeSize(t *testing.T) {
 	rName := acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -279,9 +281,9 @@ func TestAccAwsWorkspacesWorkspace_validateUserVolumeSize(t *testing.T) {
 	rName := acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -300,13 +302,13 @@ func TestAccAwsWorkspacesWorkspace_recreate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -334,13 +336,13 @@ func TestAccAwsWorkspacesWorkspace_timeout(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -355,7 +357,7 @@ func TestAccAwsWorkspacesWorkspace_timeout(t *testing.T) {
 }
 
 func testAccCheckAwsWorkspacesWorkspaceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).workspacesconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).WorkSpacesConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_workspaces_workspace" {
@@ -389,7 +391,7 @@ func testAccCheckAwsWorkspacesWorkspaceExists(n string, v *workspaces.Workspace)
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).workspacesconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).WorkSpacesConn
 
 		output, err := conn.DescribeWorkspaces(&workspaces.DescribeWorkspacesInput{
 			WorkspaceIds: []*string{aws.String(rs.Primary.ID)},
@@ -408,7 +410,7 @@ func testAccCheckAwsWorkspacesWorkspaceExists(n string, v *workspaces.Workspace)
 }
 
 func testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
@@ -426,7 +428,7 @@ resource "aws_workspaces_directory" "test" {
 }
 
 func testAccWorkspacesWorkspaceConfig(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
@@ -445,7 +447,7 @@ resource "aws_workspaces_workspace" "test" {
 }
 
 func testAccWorkspacesWorkspaceConfig_TagsA(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
@@ -465,7 +467,7 @@ resource "aws_workspaces_workspace" "test" {
 }
 
 func testAccWorkspacesWorkspaceConfig_TagsB(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
@@ -485,7 +487,7 @@ resource "aws_workspaces_workspace" "test" {
 }
 
 func testAccWorkspacesWorkspaceConfig_TagsC(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
@@ -504,7 +506,7 @@ resource "aws_workspaces_workspace" "test" {
 }
 
 func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesA(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
@@ -529,7 +531,7 @@ resource "aws_workspaces_workspace" "test" {
 }
 
 func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesB(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
@@ -553,7 +555,7 @@ resource "aws_workspaces_workspace" "test" {
 }
 
 func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesC(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
@@ -575,7 +577,7 @@ resource "aws_workspaces_workspace" "test" {
 }
 
 func testAccWorkspacesWorkspaceConfig_validateRootVolumeSize(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
@@ -599,7 +601,7 @@ resource "aws_workspaces_workspace" "test" {
 }
 
 func testAccWorkspacesWorkspaceConfig_validateUserVolumeSize(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
@@ -623,7 +625,7 @@ resource "aws_workspaces_workspace" "test" {
 }
 
 func testAccWorkspacesWorkspaceConfig_timeout(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
