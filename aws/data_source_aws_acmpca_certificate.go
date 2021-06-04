@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsAcmpcaCertificate() *schema.Resource {
@@ -17,12 +18,12 @@ func dataSourceAwsAcmpcaCertificate() *schema.Resource {
 			"arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"certificate_authority_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"certificate": {
 				Type:     schema.TypeString,
@@ -37,7 +38,7 @@ func dataSourceAwsAcmpcaCertificate() *schema.Resource {
 }
 
 func dataSourceAwsAcmpcaCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).acmpcaconn
+	conn := meta.(*awsprovider.AWSClient).ACMPCAConn
 	certificateArn := d.Get("arn").(string)
 
 	getCertificateInput := &acmpca.GetCertificateInput{
