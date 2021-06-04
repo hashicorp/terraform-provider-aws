@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSIAMGroupPolicyAttachment_basic(t *testing.T) {
@@ -22,9 +24,9 @@ func TestAccAWSIAMGroupPolicyAttachment_basic(t *testing.T) {
 	policyName3 := fmt.Sprintf("tf-acc-policy-gpa-basic-3-%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGroupPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -78,7 +80,7 @@ func testAccCheckAWSGroupPolicyAttachmentExists(n string, c int, out *iam.ListAt
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iamconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 		group := rs.Primary.Attributes["group"]
 
 		attachedPolicies, err := conn.ListAttachedGroupPolicies(&iam.ListAttachedGroupPoliciesInput{
