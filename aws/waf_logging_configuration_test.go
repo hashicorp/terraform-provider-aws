@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // WAF Logging Configurations can only be enabled with destinations in specific regions,
@@ -32,7 +34,7 @@ var testAccProviderWafLoggingConfigurationConfigure sync.Once
 
 // testAccPreCheckWafLoggingConfiguration verifies AWS credentials and that WAF Logging Configurations is supported
 func testAccPreCheckWafLoggingConfiguration(t *testing.T) {
-	testAccPartitionHasServicePreCheck(waf.EndpointsID, t)
+	atest.PreCheckPartitionService(waf.EndpointsID, t)
 
 	region := testAccGetWafLoggingConfigurationRegion()
 
@@ -43,7 +45,7 @@ func testAccPreCheckWafLoggingConfiguration(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderWafLoggingConfigurationConfigure.Do(func() {
-		testAccProviderWafLoggingConfiguration = Provider()
+		testAccProviderWafLoggingConfiguration = awsprovider.Provider()
 
 		config := map[string]interface{}{
 			"region": region,
@@ -66,7 +68,7 @@ func testAccPreCheckWafLoggingConfiguration(t *testing.T) {
 // Testing WAF Logging Configurations assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
 func testAccWafLoggingConfigurationRegionProviderConfig() string {
-	return testAccRegionalProviderConfig(testAccGetWafLoggingConfigurationRegion())
+	return atest.ConfigProviderRegional(testAccGetWafLoggingConfigurationRegion())
 }
 
 // testAccGetWafLoggingConfigurationRegion returns the WAF Logging Configurations region for testing
@@ -78,7 +80,7 @@ func testAccGetWafLoggingConfigurationRegion() string {
 	// AWS Commercial: https://docs.aws.amazon.com/waf/latest/developerguide/classic-logging.html
 	// AWS GovCloud (US) - not available yet: https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-waf.html
 	// AWS China - not available yet
-	switch testAccGetPartition() {
+	switch atest.Partition() {
 	case endpoints.AwsPartitionID:
 		testAccWafLoggingConfigurationRegion = endpoints.UsEast1RegionID
 	}
