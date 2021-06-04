@@ -52,7 +52,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			continue
 		}
 
-		pass.Reportf(callExpr.Pos(), "%s: prefer (*AWSClient).PartitionHostname() or (*AWSClient).RegionalHostname()", analyzerName)
+		pass.Reportf(callExpr.Pos(), "%s: prefer (*awsprovider.AWSClient).PartitionHostname() or (*awsprovider.AWSClient).RegionalHostname()", analyzerName)
 	}
 
 	return nil, nil
