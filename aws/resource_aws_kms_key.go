@@ -8,13 +8,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsKmsKey() *schema.Resource {
@@ -99,8 +101,8 @@ func resourceAwsKmsKey() *schema.Resource {
 }
 
 func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).KMSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Allow aws to chose default values if we don't pass them
@@ -126,7 +128,7 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateKey(req)
-		if isAWSErr(err, kms.ErrCodeMalformedPolicyDocumentException, "") {
+		if tfawserr.ErrMessageContains(err, kms.ErrCodeMalformedPolicyDocumentException, "") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -160,9 +162,9 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).KMSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	req := &kms.DescribeKeyInput{
 		KeyId: aws.String(d.Id()),
@@ -230,7 +232,7 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		tags, err = keyvaluetags.KmsListTags(conn, d.Id())
 
-		if d.IsNewResource() && isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+		if d.IsNewResource() && tfawserr.ErrMessageContains(err, kms.ErrCodeNotFoundException, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -264,7 +266,7 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsKmsKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*awsprovider.AWSClient).KMSConn
 
 	if d.HasChange("is_enabled") && d.Get("is_enabled").(bool) {
 		// Enable before any attributes will be modified
@@ -480,7 +482,7 @@ func handleKeyRotation(conn *kms.KMS, shouldEnableRotation bool, keyId *string) 
 }
 
 func resourceAwsKmsKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*awsprovider.AWSClient).KMSConn
 	keyId := d.Get("key_id").(string)
 
 	req := &kms.ScheduleKeyDeletionInput{
@@ -491,7 +493,7 @@ func resourceAwsKmsKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 	_, err := conn.ScheduleKeyDeletion(req)
 
-	if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, kms.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
@@ -501,7 +503,7 @@ func resourceAwsKmsKeyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = waiter.KeyStatePendingDeletion(conn, d.Id())
 
-	if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, kms.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
