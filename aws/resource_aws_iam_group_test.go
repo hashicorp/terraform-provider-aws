@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -27,13 +29,13 @@ func init() {
 }
 
 func testSweepIamGroups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).iamconn
+	conn := client.(*awsprovider.AWSClient).IAMConn
 	input := &iam.ListGroupsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -129,7 +131,7 @@ func testSweepIamGroups(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping IAM Group sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -150,9 +152,9 @@ func TestAccAWSIAMGroup_basic(t *testing.T) {
 	groupName2 := fmt.Sprintf("tf-acc-group-basic-2-%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -186,9 +188,9 @@ func TestAccAWSIAMGroup_nameChange(t *testing.T) {
 	groupName2 := fmt.Sprintf("tf-acc-group-basic-2-%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -210,7 +212,7 @@ func TestAccAWSIAMGroup_nameChange(t *testing.T) {
 }
 
 func testAccCheckAWSGroupDestroy(s *terraform.State) error {
-	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+	IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_group" {
@@ -218,7 +220,7 @@ func testAccCheckAWSGroupDestroy(s *terraform.State) error {
 		}
 
 		// Try to get group
-		_, err := iamconn.GetGroup(&iam.GetGroupInput{
+		_, err := IAMConn.GetGroup(&iam.GetGroupInput{
 			GroupName: aws.String(rs.Primary.ID),
 		})
 		if err == nil {
@@ -249,9 +251,9 @@ func testAccCheckAWSGroupExists(n string, res *iam.GetGroupOutput) resource.Test
 			return errors.New("No Group name is set")
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
-		resp, err := iamconn.GetGroup(&iam.GetGroupInput{
+		resp, err := IAMConn.GetGroup(&iam.GetGroupInput{
 			GroupName: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
