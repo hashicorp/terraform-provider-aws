@@ -8,10 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisvideo"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsKinesisVideoStream() *schema.Resource {
@@ -90,8 +92,8 @@ func resourceAwsKinesisVideoStream() *schema.Resource {
 }
 
 func resourceAwsKinesisVideoStreamCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisvideoconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).KinesisVideoConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := &kinesisvideo.CreateStreamInput{
@@ -140,16 +142,16 @@ func resourceAwsKinesisVideoStreamCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsKinesisVideoStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisvideoconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).KinesisVideoConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	descOpts := &kinesisvideo.DescribeStreamInput{
 		StreamARN: aws.String(d.Id()),
 	}
 
 	resp, err := conn.DescribeStream(descOpts)
-	if isAWSErr(err, kinesisvideo.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, kinesisvideo.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Kinesis Video Stream (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -190,7 +192,7 @@ func resourceAwsKinesisVideoStreamRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsKinesisVideoStreamUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisvideoconn
+	conn := meta.(*awsprovider.AWSClient).KinesisVideoConn
 
 	updateOpts := &kinesisvideo.UpdateStreamInput{
 		StreamARN:      aws.String(d.Id()),
@@ -206,7 +208,7 @@ func resourceAwsKinesisVideoStreamUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if _, err := conn.UpdateStream(updateOpts); err != nil {
-		if isAWSErr(err, kinesisvideo.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, kinesisvideo.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Kinesis Video Stream (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -239,13 +241,13 @@ func resourceAwsKinesisVideoStreamUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsKinesisVideoStreamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisvideoconn
+	conn := meta.(*awsprovider.AWSClient).KinesisVideoConn
 
 	if _, err := conn.DeleteStream(&kinesisvideo.DeleteStreamInput{
 		StreamARN:      aws.String(d.Id()),
 		CurrentVersion: aws.String(d.Get("version").(string)),
 	}); err != nil {
-		if isAWSErr(err, kinesisvideo.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, kinesisvideo.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting Kinesis Video Stream (%s): %s", d.Id(), err)
@@ -274,7 +276,7 @@ func kinesisVideoStreamStateRefresh(conn *kinesisvideo.KinesisVideo, arn string)
 		resp, err := conn.DescribeStream(&kinesisvideo.DescribeStreamInput{
 			StreamARN: aws.String(arn),
 		})
-		if isAWSErr(err, kinesisvideo.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, kinesisvideo.ErrCodeResourceNotFoundException, "") {
 			return emptyResp, "DELETED", nil
 		}
 		if err != nil {
