@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSRoute53VpcAssociationAuthorization_basic(t *testing.T) {
@@ -17,11 +20,11 @@ func TestAccAWSRoute53VpcAssociationAuthorization_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			atest.PreCheck(t)
+			atest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, route53.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckRoute53VPCAssociationAuthorizationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -46,18 +49,18 @@ func TestAccAWSRoute53VpcAssociationAuthorization_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			atest.PreCheck(t)
+			atest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, route53.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckRoute53VPCAssociationAuthorizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53VPCAssociationAuthorizationConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53VPCAssociationAuthorizationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53VPCAssociationAuthorization(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsRoute53VPCAssociationAuthorization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -66,7 +69,7 @@ func TestAccAWSRoute53VpcAssociationAuthorization_disappears(t *testing.T) {
 }
 
 func testAccCheckRoute53VPCAssociationAuthorizationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).r53conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).Route53Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_vpc_association_authorization" {
@@ -83,7 +86,7 @@ func testAccCheckRoute53VPCAssociationAuthorizationDestroy(s *terraform.State) e
 		}
 
 		res, err := conn.ListVPCAssociationAuthorizations(&req)
-		if isAWSErr(err, route53.ErrCodeNoSuchHostedZone, "") {
+		if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchHostedZone, "") {
 			return nil
 		}
 		if err != nil {
@@ -115,7 +118,7 @@ func testAccCheckRoute53VPCAssociationAuthorizationExists(n string) resource.Tes
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).r53conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).Route53Conn
 
 		req := route53.ListVPCAssociationAuthorizationsInput{
 			HostedZoneId: aws.String(zone_id),
@@ -137,7 +140,7 @@ func testAccCheckRoute53VPCAssociationAuthorizationExists(n string) resource.Tes
 }
 
 func testAccRoute53VPCAssociationAuthorizationConfig() string {
-	return testAccAlternateAccountProviderConfig() + `
+	return atest.ConfigProviderAlternateAccount() + `
 resource "aws_vpc" "test" {
   cidr_block           = "10.6.0.0/16"
   enable_dns_hostnames = true
