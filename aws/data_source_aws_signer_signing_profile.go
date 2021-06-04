@@ -6,7 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/signer"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsSignerSigningProfile() *schema.Resource {
@@ -84,8 +85,8 @@ func dataSourceAwsSignerSigningProfile() *schema.Resource {
 }
 
 func dataSourceAwsSignerSigningProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).signerconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SignerConn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	profileName := d.Get("name").(string)
 	signingProfileOutput, err := conn.GetSigningProfile(&signer.GetSigningProfileInput{
