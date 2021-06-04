@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCognitoIdentityPoolRolesAttachment() *schema.Resource {
@@ -68,7 +70,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachment() *schema.Resource {
 									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 									"value": {
 										Type:         schema.TypeString,
@@ -96,7 +98,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachment() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: ValidateArn,
 				},
 			},
 		},
@@ -104,7 +106,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachment() *schema.Resource {
 }
 
 func resourceAwsCognitoIdentityPoolRolesAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityConn
 
 	// Validates role keys to be either authenticated or unauthenticated,
 	// since ValidateFunc validates only the value not the key.
@@ -139,14 +141,14 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentCreate(d *schema.ResourceData,
 }
 
 func resourceAwsCognitoIdentityPoolRolesAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityConn
 	log.Printf("[DEBUG] Reading Cognito Identity Pool Roles Association: %s", d.Id())
 
 	ip, err := conn.GetIdentityPoolRoles(&cognitoidentity.GetIdentityPoolRolesInput{
 		IdentityPoolId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, cognitoidentity.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, cognitoidentity.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Cognito Identity Pool Roles Association %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -168,7 +170,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentRead(d *schema.ResourceData, m
 }
 
 func resourceAwsCognitoIdentityPoolRolesAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityConn
 
 	// Validates role keys to be either authenticated or unauthenticated,
 	// since ValidateFunc validates only the value not the key.
@@ -211,7 +213,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentUpdate(d *schema.ResourceData,
 }
 
 func resourceAwsCognitoIdentityPoolRolesAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityConn
 	log.Printf("[DEBUG] Deleting Cognito Identity Pool Roles Association: %s", d.Id())
 
 	_, err := conn.SetIdentityPoolRoles(&cognitoidentity.SetIdentityPoolRolesInput{
