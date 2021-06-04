@@ -10,8 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	tfroute53 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsRoute53KeySigningKey_basic(t *testing.T) {
@@ -21,9 +23,9 @@ func TestAccAwsRoute53KeySigningKey_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
-		ErrorCheck:        testAccErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
+		ErrorCheck:        atest.ErrorCheck(t, route53.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53KeySigningKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -60,16 +62,16 @@ func TestAccAwsRoute53KeySigningKey_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
-		ErrorCheck:        testAccErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
+		ErrorCheck:        atest.ErrorCheck(t, route53.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53KeySigningKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsRoute53KeySigningKeyConfig_Name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsRoute53KeySigningKeyExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53KeySigningKey(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsRoute53KeySigningKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,9 +84,9 @@ func TestAccAwsRoute53KeySigningKey_Status(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
-		ErrorCheck:        testAccErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
+		ErrorCheck:        atest.ErrorCheck(t, route53.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53KeySigningKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -118,7 +120,7 @@ func TestAccAwsRoute53KeySigningKey_Status(t *testing.T) {
 }
 
 func testAccCheckAwsRoute53KeySigningKeyDestroy(s *terraform.State) error {
-	conn := testAccProviderRoute53KeySigningKey.Meta().(*AWSClient).r53conn
+	conn := testAccProviderRoute53KeySigningKey.Meta().(*awsprovider.AWSClient).Route53Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_key_signing_key" {
@@ -159,7 +161,7 @@ func testAccAwsRoute53KeySigningKeyExists(resourceName string) resource.TestChec
 			return fmt.Errorf("resource %s has not set its id", resourceName)
 		}
 
-		conn := testAccProviderRoute53KeySigningKey.Meta().(*AWSClient).r53conn
+		conn := testAccProviderRoute53KeySigningKey.Meta().(*awsprovider.AWSClient).Route53Conn
 
 		keySigningKey, err := finder.KeySigningKeyByResourceID(conn, rs.Primary.ID)
 
@@ -176,7 +178,7 @@ func testAccAwsRoute53KeySigningKeyExists(resourceName string) resource.TestChec
 }
 
 func testAccAwsRoute53KeySigningKeyConfig_Base(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccRoute53KeySigningKeyRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
@@ -218,7 +220,7 @@ resource "aws_route53_zone" "test" {
 }
 
 func testAccAwsRoute53KeySigningKeyConfig_Name(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsRoute53KeySigningKeyConfig_Base(rName),
 		fmt.Sprintf(`
 resource "aws_route53_key_signing_key" "test" {
@@ -230,7 +232,7 @@ resource "aws_route53_key_signing_key" "test" {
 }
 
 func testAccAwsRoute53KeySigningKeyConfig_Status(rName string, status string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsRoute53KeySigningKeyConfig_Base(rName),
 		fmt.Sprintf(`
 resource "aws_route53_key_signing_key" "test" {
