@@ -9,10 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsWafv2RuleGroup() *schema.Resource {
@@ -116,8 +118,8 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 }
 
 func resourceAwsWafv2RuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).WAFV2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	var resp *wafv2.CreateRuleGroupOutput
 
@@ -141,7 +143,7 @@ func resourceAwsWafv2RuleGroupCreate(d *schema.ResourceData, meta interface{}) e
 		var err error
 		resp, err = conn.CreateRuleGroup(params)
 		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
+			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -167,9 +169,9 @@ func resourceAwsWafv2RuleGroupCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsWafv2RuleGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).WAFV2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	params := &wafv2.GetRuleGroupInput{
 		Id:    aws.String(d.Id()),
@@ -179,7 +181,7 @@ func resourceAwsWafv2RuleGroupRead(d *schema.ResourceData, meta interface{}) err
 
 	resp, err := conn.GetRuleGroup(params)
 	if err != nil {
-		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
 			log.Printf("[WARN] WAFv2 RuleGroup (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -226,7 +228,7 @@ func resourceAwsWafv2RuleGroupRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
+	conn := meta.(*awsprovider.AWSClient).WAFV2Conn
 
 	log.Printf("[INFO] Updating WAFv2 RuleGroup %s", d.Id())
 
@@ -246,7 +248,7 @@ func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.UpdateRuleGroup(u)
 		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
+			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -273,7 +275,7 @@ func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsWafv2RuleGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
+	conn := meta.(*awsprovider.AWSClient).WAFV2Conn
 
 	log.Printf("[INFO] Deleting WAFv2 RuleGroup %s", d.Id())
 
@@ -287,10 +289,10 @@ func resourceAwsWafv2RuleGroupDelete(d *schema.ResourceData, meta interface{}) e
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteRuleGroup(r)
 		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFAssociatedItemException, "") {
+			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFAssociatedItemException, "") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
+			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
