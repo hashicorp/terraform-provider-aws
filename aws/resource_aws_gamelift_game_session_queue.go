@@ -6,9 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGameliftGameSessionQueue() *schema.Resource {
@@ -70,8 +72,8 @@ func resourceAwsGameliftGameSessionQueue() *schema.Resource {
 }
 
 func resourceAwsGameliftGameSessionQueueCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GameLiftConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := gamelift.CreateGameSessionQueueInput{
@@ -93,9 +95,9 @@ func resourceAwsGameliftGameSessionQueueCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsGameliftGameSessionQueueRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GameLiftConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Describing Gamelift Session Queues: %s", d.Id())
 	limit := int64(1)
@@ -104,7 +106,7 @@ func resourceAwsGameliftGameSessionQueueRead(d *schema.ResourceData, meta interf
 		Limit: &limit,
 	})
 	if err != nil {
-		if isAWSErr(err, gamelift.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, gamelift.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Gamelift Session Queues (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -181,7 +183,7 @@ func flattenGameliftPlayerLatencyPolicies(playerLatencyPolicies []*gamelift.Play
 }
 
 func resourceAwsGameliftGameSessionQueueUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
+	conn := meta.(*awsprovider.AWSClient).GameLiftConn
 
 	log.Printf("[INFO] Updating Gamelift Session Queue: %s", d.Id())
 
@@ -210,12 +212,12 @@ func resourceAwsGameliftGameSessionQueueUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsGameliftGameSessionQueueDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
+	conn := meta.(*awsprovider.AWSClient).GameLiftConn
 	log.Printf("[INFO] Deleting Gamelift Session Queue: %s", d.Id())
 	_, err := conn.DeleteGameSessionQueue(&gamelift.DeleteGameSessionQueueInput{
 		Name: aws.String(d.Id()),
 	})
-	if isAWSErr(err, gamelift.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, gamelift.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
