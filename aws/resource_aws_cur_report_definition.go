@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/costandusagereportservice/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCurReportDefinition() *schema.Resource {
@@ -116,7 +117,7 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 }
 
 func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).costandusagereportconn
+	conn := meta.(*awsprovider.AWSClient).CURConn
 
 	additionalArtifacts := expandStringSet(d.Get("additional_artifacts").(*schema.Set))
 	compression := aws.String(d.Get("compression").(string))
@@ -171,7 +172,7 @@ func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCurReportDefinitionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).costandusagereportconn
+	conn := meta.(*awsprovider.AWSClient).CURConn
 
 	reportDefinition, err := finder.ReportDefinitionByName(conn, d.Id())
 
@@ -205,7 +206,7 @@ func resourceAwsCurReportDefinitionRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsCurReportDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).costandusagereportconn
+	conn := meta.(*awsprovider.AWSClient).CURConn
 
 	_, err := conn.DeleteReportDefinition(&costandusagereportservice.DeleteReportDefinitionInput{
 		ReportName: aws.String(d.Id()),
