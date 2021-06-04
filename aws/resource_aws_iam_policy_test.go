@@ -8,10 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -27,13 +30,13 @@ func init() {
 }
 
 func testSweepIamPolicies(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).iamconn
+	conn := client.(*awsprovider.AWSClient).IAMConn
 	input := &iam.ListPoliciesInput{
 		Scope: aws.String(iam.PolicyScopeTypeLocal),
 	}
@@ -62,12 +65,12 @@ func testSweepIamPolicies(region string) error {
 
 			// Treat this sweeper as best effort for now. There are a lot of edge cases
 			// with lingering aws_iam_role resources in the HashiCorp testing accounts.
-			if isAWSErr(err, iam.ErrCodeDeleteConflictException, "") {
+			if tfawserr.ErrMessageContains(err, iam.ErrCodeDeleteConflictException, "") {
 				log.Printf("[WARN] Ignoring IAM Policy (%s) deletion error: %s", arn, err)
 				continue
 			}
 
-			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 				continue
 			}
 
@@ -82,7 +85,7 @@ func testSweepIamPolicies(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping IAM Policy sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -112,16 +115,16 @@ func TestAccAWSIAMPolicy_basic(t *testing.T) {
 }
 `
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIAMPolicyConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIAMPolicyExists(resourceName, &out),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("policy/%s", rName)),
+					atest.CheckAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("policy/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
@@ -145,9 +148,9 @@ func TestAccAWSIAMPolicy_description(t *testing.T) {
 	resourceName := "aws_iam_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -172,9 +175,9 @@ func TestAccAWSIAMPolicy_tags(t *testing.T) {
 	resourceName := "aws_iam_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -217,16 +220,16 @@ func TestAccAWSIAMPolicy_disappears(t *testing.T) {
 	resourceName := "aws_iam_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIAMPolicyConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIAMPolicyExists(resourceName, &out),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsIamPolicy(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsIamPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -240,9 +243,9 @@ func TestAccAWSIAMPolicy_namePrefix(t *testing.T) {
 	resourceName := "aws_iam_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -268,9 +271,9 @@ func TestAccAWSIAMPolicy_path(t *testing.T) {
 	resourceName := "aws_iam_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -297,9 +300,9 @@ func TestAccAWSIAMPolicy_policy(t *testing.T) {
 	policy2 := "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"ec2:*\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -340,9 +343,9 @@ func testAccCheckAWSIAMPolicyExists(resource string, res *iam.GetPolicyOutput) r
 			return fmt.Errorf("No Policy name is set")
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
-		resp, err := iamconn.GetPolicy(&iam.GetPolicyInput{
+		resp, err := IAMConn.GetPolicy(&iam.GetPolicyInput{
 			PolicyArn: aws.String(rs.Primary.Attributes["arn"]),
 		})
 		if err != nil {
@@ -356,18 +359,18 @@ func testAccCheckAWSIAMPolicyExists(resource string, res *iam.GetPolicyOutput) r
 }
 
 func testAccCheckAWSIAMPolicyDestroy(s *terraform.State) error {
-	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+	IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_policy" {
 			continue
 		}
 
-		_, err := iamconn.GetPolicy(&iam.GetPolicyInput{
+		_, err := IAMConn.GetPolicy(&iam.GetPolicyInput{
 			PolicyArn: aws.String(rs.Primary.ID),
 		})
 
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
 		}
 
