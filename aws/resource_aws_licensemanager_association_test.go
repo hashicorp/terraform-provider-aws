@@ -7,6 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSLicenseManagerAssociation_basic(t *testing.T) {
@@ -14,9 +16,9 @@ func TestAccAWSLicenseManagerAssociation_basic(t *testing.T) {
 	resourceName := "aws_licensemanager_association.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, licensemanager.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, licensemanager.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLicenseManagerAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -38,7 +40,7 @@ func TestAccAWSLicenseManagerAssociation_basic(t *testing.T) {
 
 func testAccCheckLicenseManagerAssociationExists(resourceName string, licenseSpecification *licensemanager.LicenseSpecification) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).licensemanagerconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).LicenseManagerConn
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -69,7 +71,7 @@ func testAccCheckLicenseManagerAssociationExists(resourceName string, licenseSpe
 }
 
 func testAccCheckLicenseManagerAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).licensemanagerconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).LicenseManagerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_licensemanager_association" {
