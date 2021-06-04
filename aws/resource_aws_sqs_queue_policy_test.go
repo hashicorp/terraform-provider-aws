@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
@@ -16,9 +17,9 @@ func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sqs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -52,9 +53,9 @@ func TestAccAWSSQSQueuePolicy_disappears_queue(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sqs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -62,7 +63,7 @@ func TestAccAWSSQSQueuePolicy_disappears_queue(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists("aws_sqs_queue.test", &queueAttributes),
 					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSqsQueue(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSqsQueue(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -76,9 +77,9 @@ func TestAccAWSSQSQueuePolicy_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sqs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -86,7 +87,7 @@ func TestAccAWSSQSQueuePolicy_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists("aws_sqs_queue.test", &queueAttributes),
 					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSqsQueuePolicy(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSqsQueuePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
