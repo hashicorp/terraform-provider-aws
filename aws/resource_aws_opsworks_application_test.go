@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSOpsworksApplication_basic(t *testing.T) {
@@ -19,9 +22,9 @@ func TestAccAWSOpsworksApplication_basic(t *testing.T) {
 	resourceName := "aws_opsworks_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(opsworks.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, opsworks.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -99,7 +102,7 @@ func testAccCheckAWSOpsworksApplicationExists(
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).opsworksconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).OpsWorksConn
 
 		params := &opsworks.DescribeAppsInput{
 			AppIds: []*string{&rs.Primary.ID},
@@ -230,7 +233,7 @@ func testAccCheckAWSOpsworksUpdateAppAttributes(
 }
 
 func testAccCheckAwsOpsworksApplicationDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*AWSClient).opsworksconn
+	client := atest.Provider.Meta().(*awsprovider.AWSClient).OpsWorksConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_opsworks_application" {
@@ -250,7 +253,7 @@ func testAccCheckAwsOpsworksApplicationDestroy(s *terraform.State) error {
 			}
 		}
 
-		if !isAWSErr(err, opsworks.ErrCodeResourceNotFoundException, "") {
+		if !tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
 			return err
 		}
 	}
