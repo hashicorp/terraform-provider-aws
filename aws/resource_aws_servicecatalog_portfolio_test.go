@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSServiceCatalogPortfolio_basic(t *testing.T) {
@@ -18,16 +20,16 @@ func TestAccAWSServiceCatalogPortfolio_basic(t *testing.T) {
 	var dpo servicecatalog.DescribePortfolioOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, servicecatalog.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolio(resourceName, &dpo),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexp.MustCompile(`portfolio/.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "catalog", regexp.MustCompile(`portfolio/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", "test-2"),
@@ -50,9 +52,9 @@ func TestAccAWSServiceCatalogPortfolio_Disappears(t *testing.T) {
 	var dpo servicecatalog.DescribePortfolioOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, servicecatalog.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -73,9 +75,9 @@ func TestAccAWSServiceCatalogPortfolio_Tags(t *testing.T) {
 	var dpo servicecatalog.DescribePortfolioOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, servicecatalog.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -117,7 +119,7 @@ func TestAccAWSServiceCatalogPortfolio_Tags(t *testing.T) {
 
 func testAccCheckPortfolio(pr string, dpo *servicecatalog.DescribePortfolioOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).scconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ServiceCatalogConn
 		rs, ok := s.RootModule().Resources[pr]
 		if !ok {
 			return fmt.Errorf("Not found: %s", pr)
@@ -142,7 +144,7 @@ func testAccCheckPortfolio(pr string, dpo *servicecatalog.DescribePortfolioOutpu
 
 func testAccCheckServiceCatlaogPortfolioDisappears(dpo *servicecatalog.DescribePortfolioOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).scconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ServiceCatalogConn
 
 		input := servicecatalog.DeletePortfolioInput{}
 		input.Id = dpo.PortfolioDetail.Id
@@ -153,7 +155,7 @@ func testAccCheckServiceCatlaogPortfolioDisappears(dpo *servicecatalog.DescribeP
 }
 
 func testAccCheckServiceCatlaogPortfolioDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).scconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ServiceCatalogConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_portfolio" {
