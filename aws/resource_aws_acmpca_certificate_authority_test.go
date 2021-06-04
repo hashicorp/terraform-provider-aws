@@ -8,10 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -22,15 +25,15 @@ func init() {
 }
 
 func testSweepAcmpcaCertificateAuthorities(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).acmpcaconn
+	conn := client.(*awsprovider.AWSClient).ACMPCAConn
 
 	certificateAuthorities, err := listAcmpcaCertificateAuthorities(conn)
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping ACM PCA Certificate Authorities sweep for %s: %s", region, err)
 			return nil
 		}
@@ -52,7 +55,7 @@ func testSweepAcmpcaCertificateAuthorities(region string) error {
 				CertificateAuthorityArn: aws.String(arn),
 				Status:                  aws.String(acmpca.CertificateAuthorityStatusDisabled),
 			})
-			if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, acmpca.ErrCodeResourceNotFoundException, "") {
 				continue
 			}
 			if err != nil {
@@ -68,7 +71,7 @@ func testSweepAcmpcaCertificateAuthorities(region string) error {
 			CertificateAuthorityArn:     aws.String(arn),
 			PermanentDeletionTimeInDays: aws.Int64(int64(7)),
 		})
-		if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, acmpca.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 		if err != nil {
@@ -87,16 +90,16 @@ func TestAccAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, acmpca.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Required,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.0.key_algorithm", "RSA_4096"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.0.signing_algorithm", "SHA512WITHRSA"),
@@ -106,8 +109,8 @@ func TestAccAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "certificate_chain", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_signing_request"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					testAccCheckResourceAttrRfc3339(resourceName, "not_after"),
-					testAccCheckResourceAttrRfc3339(resourceName, "not_before"),
+					atest.CheckAttrRfc3339(resourceName, "not_after"),
+					atest.CheckAttrRfc3339(resourceName, "not_before"),
 					resource.TestCheckResourceAttr(resourceName, "permanent_deletion_time_in_days", "30"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
@@ -132,16 +135,16 @@ func TestAccAwsAcmpcaCertificateAuthority_disappears(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, acmpca.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Required,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAcmpcaCertificateAuthority(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsAcmpcaCertificateAuthority(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -155,9 +158,9 @@ func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, acmpca.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -205,9 +208,9 @@ func TestAccAwsAcmpcaCertificateAuthority_DeleteFromActiveState(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, acmpca.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -231,9 +234,9 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 	resourceName := "aws_acmpca_certificate_authority.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, acmpca.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			// Test creating revocation configuration on resource creation
@@ -317,9 +320,9 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 	resourceName := "aws_acmpca_certificate_authority.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, acmpca.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			// Test creating revocation configuration on resource creation
@@ -387,9 +390,9 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 	resourceName := "aws_acmpca_certificate_authority.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, acmpca.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			// Test creating revocation configuration on resource creation
@@ -447,9 +450,9 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 	resourceName := "aws_acmpca_certificate_authority.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, acmpca.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			// Test creating revocation configuration on resource creation
@@ -496,9 +499,9 @@ func TestAccAwsAcmpcaCertificateAuthority_Tags(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, acmpca.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -547,7 +550,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Tags(t *testing.T) {
 }
 
 func testAccCheckAwsAcmpcaCertificateAuthorityDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).acmpcaconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ACMPCAConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_acmpca_certificate_authority" {
@@ -561,7 +564,7 @@ func testAccCheckAwsAcmpcaCertificateAuthorityDestroy(s *terraform.State) error 
 		output, err := conn.DescribeCertificateAuthority(input)
 
 		if err != nil {
-			if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, acmpca.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return err
@@ -582,7 +585,7 @@ func testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName string, certif
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).acmpcaconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ACMPCAConn
 		input := &acmpca.DescribeCertificateAuthorityInput{
 			CertificateAuthorityArn: aws.String(rs.Primary.ID),
 		}
@@ -605,7 +608,7 @@ func testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName string, certif
 
 func testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).acmpcaconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ACMPCAConn
 
 		arn := aws.StringValue(certificateAuthority.Arn)
 
@@ -621,7 +624,7 @@ func testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(certificateAuthority *a
 			Csr:                     []byte(aws.StringValue(getCsrResp.Csr)),
 			IdempotencyToken:        aws.String(resource.UniqueId()),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
-			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/RootCACertificate/V1", testAccGetPartition())),
+			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/RootCACertificate/V1", atest.Partition())),
 			Validity: &acmpca.Validity{
 				Type:  aws.String(acmpca.ValidityPeriodTypeYears),
 				Value: aws.Int64(10),
@@ -662,7 +665,7 @@ func testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(certificateAuthority *a
 
 func testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).acmpcaconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ACMPCAConn
 
 		_, err := conn.UpdateCertificateAuthority(&acmpca.UpdateCertificateAuthorityInput{
 			CertificateAuthorityArn: certificateAuthority.Arn,
