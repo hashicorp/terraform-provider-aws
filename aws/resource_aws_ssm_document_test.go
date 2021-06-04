@@ -10,15 +10,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSSSMDocument_basic(t *testing.T) {
 	name := acctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -26,8 +28,8 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "document_format", "JSON"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ssm", fmt.Sprintf("document/%s", name)),
-					testAccCheckResourceAttrRfc3339(resourceName, "created_date"),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "ssm", fmt.Sprintf("document/%s", name)),
+					atest.CheckAttrRfc3339(resourceName, "created_date"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "document_version"),
 					resource.TestCheckResourceAttr(resourceName, "version_name", ""),
@@ -48,9 +50,9 @@ func TestAccAWSSSMDocument_Name(t *testing.T) {
 	resourceName := "aws_ssm_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -80,9 +82,9 @@ func TestAccAWSSSMDocument_target_type(t *testing.T) {
 	name := acctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -112,9 +114,9 @@ func TestAccAWSSSMDocument_VersionName(t *testing.T) {
 	name := acctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -144,9 +146,9 @@ func TestAccAWSSSMDocument_update(t *testing.T) {
 	name := acctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -179,9 +181,9 @@ func TestAccAWSSSMDocument_permission_public(t *testing.T) {
 	name := acctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -206,9 +208,9 @@ func TestAccAWSSSMDocument_permission_private(t *testing.T) {
 	resourceName := "aws_ssm_document.test"
 	ids := "123456789012"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -232,9 +234,9 @@ func TestAccAWSSSMDocument_permission_batching(t *testing.T) {
 	resourceName := "aws_ssm_document.test"
 	ids := "123456789012,123456789013,123456789014,123456789015,123456789016,123456789017,123456789018,123456789019,123456789020,123456789021,123456789022,123456789023,123456789024,123456789025,123456789026,123456789027,123456789028,123456789029,123456789030,123456789031,123456789032"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -260,9 +262,9 @@ func TestAccAWSSSMDocument_permission_change(t *testing.T) {
 	idsRemove := "123456789012"
 	idsAdd := "123456789012,123456789014"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -302,9 +304,9 @@ func TestAccAWSSSMDocument_params(t *testing.T) {
 	name := acctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -332,9 +334,9 @@ func TestAccAWSSSMDocument_automation(t *testing.T) {
 	name := acctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -360,9 +362,9 @@ func TestAccAWSSSMDocument_package(t *testing.T) {
 	resourceName := "aws_ssm_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -394,9 +396,9 @@ func TestAccAWSSSMDocument_SchemaVersion_1(t *testing.T) {
 	resourceName := "aws_ssm_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -426,9 +428,9 @@ func TestAccAWSSSMDocument_session(t *testing.T) {
 	name := acctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -473,9 +475,9 @@ mainSteps:
       - Get-Process
 `
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -508,9 +510,9 @@ func TestAccAWSSSMDocument_Tags(t *testing.T) {
 	resourceName := "aws_ssm_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -551,16 +553,16 @@ func TestAccAWSSSMDocument_disappears(t *testing.T) {
 	name := acctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSSMDocumentBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSsmDocument(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSsmDocument(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -619,7 +621,7 @@ func testAccCheckAWSSSMDocumentExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No SSM Document ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ssmconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SSMConn
 
 		_, err := conn.DescribeDocument(&ssm.DescribeDocumentInput{
 			Name: aws.String(rs.Primary.ID),
@@ -630,7 +632,7 @@ func testAccCheckAWSSSMDocumentExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckAWSSSMDocumentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ssmconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SSMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_document" {
@@ -932,7 +934,7 @@ DOC
 }
 
 func testAccAWSSSMDocumentTypeAutomationConfig(rName string) string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_iam_instance_profile" "ssm_profile" {
   name = "ssm_profile-%[1]s"
   role = aws_iam_role.ssm_role.name
