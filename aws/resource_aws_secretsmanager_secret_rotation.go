@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/secretsmanager/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSecretsManagerSecretRotation() *schema.Resource {
@@ -57,7 +58,7 @@ func resourceAwsSecretsManagerSecretRotation() *schema.Resource {
 }
 
 func resourceAwsSecretsManagerSecretRotationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*awsprovider.AWSClient).SecretsManagerConn
 	secretID := d.Get("secret_id").(string)
 
 	if v, ok := d.GetOk("rotation_lambda_arn"); ok && v.(string) != "" {
@@ -72,7 +73,7 @@ func resourceAwsSecretsManagerSecretRotationCreate(d *schema.ResourceData, meta 
 			output, err := conn.RotateSecret(input)
 			if err != nil {
 				// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-				if isAWSErr(err, "AccessDeniedException", "") {
+				if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -96,7 +97,7 @@ func resourceAwsSecretsManagerSecretRotationCreate(d *schema.ResourceData, meta 
 }
 
 func resourceAwsSecretsManagerSecretRotationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*awsprovider.AWSClient).SecretsManagerConn
 
 	input := &secretsmanager.DescribeSecretInput{
 		SecretId: aws.String(d.Id()),
@@ -155,7 +156,7 @@ func resourceAwsSecretsManagerSecretRotationRead(d *schema.ResourceData, meta in
 }
 
 func resourceAwsSecretsManagerSecretRotationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*awsprovider.AWSClient).SecretsManagerConn
 	secretID := d.Get("secret_id").(string)
 
 	if d.HasChanges("rotation_lambda_arn", "rotation_rules") {
@@ -171,7 +172,7 @@ func resourceAwsSecretsManagerSecretRotationUpdate(d *schema.ResourceData, meta 
 				_, err := conn.RotateSecret(input)
 				if err != nil {
 					// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-					if isAWSErr(err, "AccessDeniedException", "") {
+					if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
 						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)
@@ -203,7 +204,7 @@ func resourceAwsSecretsManagerSecretRotationUpdate(d *schema.ResourceData, meta 
 }
 
 func resourceAwsSecretsManagerSecretRotationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*awsprovider.AWSClient).SecretsManagerConn
 	secretID := d.Get("secret_id").(string)
 
 	input := &secretsmanager.CancelRotateSecretInput{
