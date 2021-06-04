@@ -11,15 +11,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSAthenaDatabase_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	dbName := acctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, athena.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -36,9 +38,9 @@ func TestAccAWSAthenaDatabase_encryption(t *testing.T) {
 	rInt := acctest.RandInt()
 	dbName := acctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, athena.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -56,9 +58,9 @@ func TestAccAWSAthenaDatabase_nameStartsWithUnderscore(t *testing.T) {
 	rInt := acctest.RandInt()
 	dbName := "_" + acctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, athena.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -76,9 +78,9 @@ func TestAccAWSAthenaDatabase_nameCantHaveUppercase(t *testing.T) {
 	rInt := acctest.RandInt()
 	dbName := "A" + acctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, athena.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -93,9 +95,9 @@ func TestAccAWSAthenaDatabase_destroyFailsIfTablesExist(t *testing.T) {
 	rInt := acctest.RandInt()
 	dbName := acctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, athena.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -115,9 +117,9 @@ func TestAccAWSAthenaDatabase_forceDestroyAlwaysSucceeds(t *testing.T) {
 	rInt := acctest.RandInt()
 	dbName := acctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, athena.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -134,8 +136,8 @@ func TestAccAWSAthenaDatabase_forceDestroyAlwaysSucceeds(t *testing.T) {
 // StartQueryExecution requires OutputLocation but terraform destroy deleted S3 bucket as well.
 // So temporary S3 bucket as OutputLocation is created to confirm whether the database is actually deleted.
 func testAccCheckAWSAthenaDatabaseDestroy(s *terraform.State) error {
-	athenaconn := testAccProvider.Meta().(*AWSClient).athenaconn
-	s3conn := testAccProvider.Meta().(*AWSClient).s3conn
+	AthenaConn := atest.Provider.Meta().(*awsprovider.AWSClient).AthenaConn
+	S3Conn := atest.Provider.Meta().(*awsprovider.AWSClient).S3Conn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_athena_database" {
 			continue
@@ -143,7 +145,7 @@ func testAccCheckAWSAthenaDatabaseDestroy(s *terraform.State) error {
 
 		rInt := acctest.RandInt()
 		bucketName := fmt.Sprintf("tf-test-athena-db-%d", rInt)
-		_, err := s3conn.CreateBucket(&s3.CreateBucketInput{
+		_, err := S3Conn.CreateBucket(&s3.CreateBucketInput{
 			Bucket: aws.String(bucketName),
 		})
 		if err != nil {
@@ -157,12 +159,12 @@ func testAccCheckAWSAthenaDatabaseDestroy(s *terraform.State) error {
 			},
 		}
 
-		resp, err := athenaconn.StartQueryExecution(input)
+		resp, err := AthenaConn.StartQueryExecution(input)
 		if err != nil {
 			return err
 		}
 
-		ers, err := queryExecutionResult(*resp.QueryExecutionId, athenaconn)
+		ers, err := queryExecutionResult(*resp.QueryExecutionId, AthenaConn)
 		if err != nil {
 			return err
 		}
@@ -179,7 +181,7 @@ func testAccCheckAWSAthenaDatabaseDestroy(s *terraform.State) error {
 			return fmt.Errorf("[DELETE ERROR] Athena failed to drop database: %s", dbName)
 		}
 
-		loresp, err := s3conn.ListObjectsV2(
+		loresp, err := S3Conn.ListObjectsV2(
 			&s3.ListObjectsV2Input{
 				Bucket: aws.String(bucketName),
 			},
@@ -198,7 +200,7 @@ func testAccCheckAWSAthenaDatabaseDestroy(s *terraform.State) error {
 			}
 		}
 
-		_, err = s3conn.DeleteObjects(&s3.DeleteObjectsInput{
+		_, err = S3Conn.DeleteObjects(&s3.DeleteObjectsInput{
 			Bucket: aws.String(bucketName),
 			Delete: &s3.Delete{
 				Objects: objectsToDelete,
@@ -208,7 +210,7 @@ func testAccCheckAWSAthenaDatabaseDestroy(s *terraform.State) error {
 			return fmt.Errorf("[DELETE ERROR] S3 Bucket delete Objects err: %s", err)
 		}
 
-		_, err = s3conn.DeleteBucket(&s3.DeleteBucketInput{
+		_, err = S3Conn.DeleteBucket(&s3.DeleteBucketInput{
 			Bucket: aws.String(bucketName),
 		})
 		if err != nil {
@@ -236,7 +238,7 @@ func testAccAWSAthenaDatabaseCreateTables(dbName string) resource.TestCheckFunc 
 			return err
 		}
 
-		athenaconn := testAccProvider.Meta().(*AWSClient).athenaconn
+		AthenaConn := atest.Provider.Meta().(*awsprovider.AWSClient).AthenaConn
 
 		input := &athena.StartQueryExecutionInput{
 			QueryExecutionContext: &athena.QueryExecutionContext{
@@ -249,12 +251,12 @@ func testAccAWSAthenaDatabaseCreateTables(dbName string) resource.TestCheckFunc 
 			},
 		}
 
-		resp, err := athenaconn.StartQueryExecution(input)
+		resp, err := AthenaConn.StartQueryExecution(input)
 		if err != nil {
 			return err
 		}
 
-		_, err = queryExecutionResult(*resp.QueryExecutionId, athenaconn)
+		_, err = queryExecutionResult(*resp.QueryExecutionId, AthenaConn)
 		return err
 	}
 }
@@ -266,7 +268,7 @@ func testAccAWSAthenaDatabaseDestroyTables(dbName string) resource.TestCheckFunc
 			return err
 		}
 
-		athenaconn := testAccProvider.Meta().(*AWSClient).athenaconn
+		AthenaConn := atest.Provider.Meta().(*awsprovider.AWSClient).AthenaConn
 
 		input := &athena.StartQueryExecutionInput{
 			QueryExecutionContext: &athena.QueryExecutionContext{
@@ -278,12 +280,12 @@ func testAccAWSAthenaDatabaseDestroyTables(dbName string) resource.TestCheckFunc
 			},
 		}
 
-		resp, err := athenaconn.StartQueryExecution(input)
+		resp, err := AthenaConn.StartQueryExecution(input)
 		if err != nil {
 			return err
 		}
 
-		_, err = queryExecutionResult(*resp.QueryExecutionId, athenaconn)
+		_, err = queryExecutionResult(*resp.QueryExecutionId, AthenaConn)
 		return err
 	}
 }
@@ -295,7 +297,7 @@ func testAccCheckAWSAthenaDatabaseDropFails(dbName string) resource.TestCheckFun
 			return err
 		}
 
-		athenaconn := testAccProvider.Meta().(*AWSClient).athenaconn
+		AthenaConn := atest.Provider.Meta().(*awsprovider.AWSClient).AthenaConn
 
 		input := &athena.StartQueryExecutionInput{
 			QueryExecutionContext: &athena.QueryExecutionContext{
@@ -307,12 +309,12 @@ func testAccCheckAWSAthenaDatabaseDropFails(dbName string) resource.TestCheckFun
 			},
 		}
 
-		resp, err := athenaconn.StartQueryExecution(input)
+		resp, err := AthenaConn.StartQueryExecution(input)
 		if err != nil {
 			return err
 		}
 
-		_, err = queryExecutionResult(*resp.QueryExecutionId, athenaconn)
+		_, err = queryExecutionResult(*resp.QueryExecutionId, AthenaConn)
 		if err == nil {
 			return fmt.Errorf("drop database unexpectedly succeeded for a database with tables")
 		}
