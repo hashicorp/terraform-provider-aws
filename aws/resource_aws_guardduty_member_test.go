@@ -6,8 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccAwsGuardDutyMember_basic(t *testing.T) {
@@ -16,9 +19,9 @@ func testAccAwsGuardDutyMember_basic(t *testing.T) {
 	email := "required@example.com"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, guardduty.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -45,9 +48,9 @@ func testAccAwsGuardDutyMember_invite_disassociate(t *testing.T) {
 	accountID, email := testAccAWSGuardDutyMemberFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, guardduty.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -84,9 +87,9 @@ func testAccAwsGuardDutyMember_invite_onUpdate(t *testing.T) {
 	accountID, email := testAccAWSGuardDutyMemberFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, guardduty.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -124,9 +127,9 @@ func testAccAwsGuardDutyMember_invitationMessage(t *testing.T) {
 	invitationMessage := "inviting"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, guardduty.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsGuardDutyMemberDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -156,7 +159,7 @@ func testAccAwsGuardDutyMember_invitationMessage(t *testing.T) {
 }
 
 func testAccCheckAwsGuardDutyMemberDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).GuardDutyConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_guardduty_member" {
@@ -175,7 +178,7 @@ func testAccCheckAwsGuardDutyMemberDestroy(s *terraform.State) error {
 
 		gmo, err := conn.GetMembers(input)
 		if err != nil {
-			if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+			if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 				return nil
 			}
 			return err
@@ -208,7 +211,7 @@ func testAccCheckAwsGuardDutyMemberExists(name string) resource.TestCheckFunc {
 			DetectorId: aws.String(detectorID),
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).GuardDutyConn
 		gmo, err := conn.GetMembers(input)
 		if err != nil {
 			return err
