@@ -14,6 +14,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsNetworkInterfaceSGAttachment() *schema.Resource {
@@ -38,13 +39,13 @@ func resourceAwsNetworkInterfaceSGAttachment() *schema.Resource {
 
 func resourceAwsNetworkInterfaceSGAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	mk := "network_interface_sg_attachment_" + d.Get("network_interface_id").(string)
-	awsMutexKV.Lock(mk)
-	defer awsMutexKV.Unlock(mk)
+	awsprovider.MutexKV.Lock(mk)
+	defer awsprovider.MutexKV.Unlock(mk)
 
 	sgID := d.Get("security_group_id").(string)
 	interfaceID := d.Get("network_interface_id").(string)
 
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	iface, err := finder.NetworkInterfaceByID(conn, interfaceID)
 
@@ -88,7 +89,7 @@ func resourceAwsNetworkInterfaceSGAttachmentRead(d *schema.ResourceData, meta in
 
 	log.Printf("[DEBUG] Checking association of security group %s to network interface ID %s", sgID, interfaceID)
 
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	var groupIdentifier *ec2.GroupIdentifier
 
@@ -146,19 +147,19 @@ func resourceAwsNetworkInterfaceSGAttachmentRead(d *schema.ResourceData, meta in
 
 func resourceAwsNetworkInterfaceSGAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	mk := "network_interface_sg_attachment_" + d.Get("network_interface_id").(string)
-	awsMutexKV.Lock(mk)
-	defer awsMutexKV.Unlock(mk)
+	awsprovider.MutexKV.Lock(mk)
+	defer awsprovider.MutexKV.Unlock(mk)
 
 	sgID := d.Get("security_group_id").(string)
 	interfaceID := d.Get("network_interface_id").(string)
 
 	log.Printf("[DEBUG] Removing security group %s from interface ID %s", sgID, interfaceID)
 
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	iface, err := finder.NetworkInterfaceByID(conn, interfaceID)
 
-	if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
 		return nil
 	}
 
@@ -190,7 +191,7 @@ func delSGFromENI(conn *ec2.EC2, sgID string, iface *ec2.NetworkInterface) error
 
 	_, err := conn.ModifyNetworkInterfaceAttribute(params)
 
-	if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidNetworkInterfaceID.NotFound", "") {
 		return nil
 	}
 
