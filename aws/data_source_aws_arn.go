@@ -15,7 +15,7 @@ func dataSourceAwsArn() *schema.Resource {
 			"arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"partition": {
 				Type:     schema.TypeString,
