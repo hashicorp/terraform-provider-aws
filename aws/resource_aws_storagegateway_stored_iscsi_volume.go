@@ -7,10 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsStorageGatewayStoredIscsiVolume() *schema.Resource {
@@ -37,7 +39,7 @@ func resourceAwsStorageGatewayStoredIscsiVolume() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"target_name": {
 				Type:     schema.TypeString,
@@ -58,7 +60,7 @@ func resourceAwsStorageGatewayStoredIscsiVolume() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 				RequiredWith: []string{"kms_encrypted"},
 			},
 			// Poor API naming: this accepts the IP address of the network interface
@@ -117,8 +119,8 @@ func resourceAwsStorageGatewayStoredIscsiVolume() *schema.Resource {
 }
 
 func resourceAwsStorageGatewayStoredIscsiVolumeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).StorageGatewayConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &storagegateway.CreateStorediSCSIVolumeInput{
@@ -160,7 +162,7 @@ func resourceAwsStorageGatewayStoredIscsiVolumeCreate(d *schema.ResourceData, me
 }
 
 func resourceAwsStorageGatewayStoredIscsiVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*awsprovider.AWSClient).StorageGatewayConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -173,9 +175,9 @@ func resourceAwsStorageGatewayStoredIscsiVolumeUpdate(d *schema.ResourceData, me
 }
 
 func resourceAwsStorageGatewayStoredIscsiVolumeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).StorageGatewayConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &storagegateway.DescribeStorediSCSIVolumesInput{
 		VolumeARNs: []*string{aws.String(d.Id())},
@@ -185,7 +187,7 @@ func resourceAwsStorageGatewayStoredIscsiVolumeRead(d *schema.ResourceData, meta
 	output, err := conn.DescribeStorediSCSIVolumes(input)
 
 	if err != nil {
-		if isAWSErr(err, storagegateway.ErrorCodeVolumeNotFound, "") || isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
+		if tfawserr.ErrMessageContains(err, storagegateway.ErrorCodeVolumeNotFound, "") || tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
 			log.Printf("[WARN] Storage Gateway Stored iSCSI volume %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -249,7 +251,7 @@ func resourceAwsStorageGatewayStoredIscsiVolumeRead(d *schema.ResourceData, meta
 }
 
 func resourceAwsStorageGatewayStoredIscsiVolumeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*awsprovider.AWSClient).StorageGatewayConn
 
 	input := &storagegateway.DeleteVolumeInput{
 		VolumeARN: aws.String(d.Id()),
@@ -259,12 +261,12 @@ func resourceAwsStorageGatewayStoredIscsiVolumeDelete(d *schema.ResourceData, me
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteVolume(input)
 		if err != nil {
-			if isAWSErr(err, storagegateway.ErrorCodeVolumeNotFound, "") {
+			if tfawserr.ErrMessageContains(err, storagegateway.ErrorCodeVolumeNotFound, "") {
 				return nil
 			}
 			// InvalidGatewayRequestException: The specified gateway is not connected.
 			// Can occur during concurrent DeleteVolume operations
-			if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway is not connected") {
+			if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway is not connected") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -274,7 +276,7 @@ func resourceAwsStorageGatewayStoredIscsiVolumeDelete(d *schema.ResourceData, me
 	if isResourceTimeoutError(err) {
 		_, err = conn.DeleteVolume(input)
 	}
-	if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
+	if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
 		return nil
 	}
 	if err != nil {
