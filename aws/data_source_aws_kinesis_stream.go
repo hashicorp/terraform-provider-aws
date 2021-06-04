@@ -4,7 +4,8 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsKinesisStream() *schema.Resource {
@@ -64,8 +65,8 @@ func dataSourceAwsKinesisStream() *schema.Resource {
 }
 
 func dataSourceAwsKinesisStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).KinesisConn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	sn := d.Get("name").(string)
 
