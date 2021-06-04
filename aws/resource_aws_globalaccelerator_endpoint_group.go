@@ -15,6 +15,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/globalaccelerator/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/globalaccelerator/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
@@ -106,7 +107,7 @@ func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"port_override": {
@@ -148,8 +149,8 @@ func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
 }
 
 func resourceAwsGlobalAcceleratorEndpointGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).globalacceleratorconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*awsprovider.AWSClient).GlobalAcceleratorConn
+	region := meta.(*awsprovider.AWSClient).Region
 
 	opts := &globalaccelerator.CreateEndpointGroupInput{
 		EndpointGroupRegion: aws.String(region),
@@ -216,7 +217,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupCreate(d *schema.ResourceData, met
 }
 
 func resourceAwsGlobalAcceleratorEndpointGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).globalacceleratorconn
+	conn := meta.(*awsprovider.AWSClient).GlobalAcceleratorConn
 
 	endpointGroup, err := finder.EndpointGroupByARN(conn, d.Id())
 
@@ -256,7 +257,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupRead(d *schema.ResourceData, meta 
 }
 
 func resourceAwsGlobalAcceleratorEndpointGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).globalacceleratorconn
+	conn := meta.(*awsprovider.AWSClient).GlobalAcceleratorConn
 
 	opts := &globalaccelerator.UpdateEndpointGroupInput{
 		EndpointGroupArn: aws.String(d.Id()),
@@ -320,7 +321,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupUpdate(d *schema.ResourceData, met
 }
 
 func resourceAwsGlobalAcceleratorEndpointGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).globalacceleratorconn
+	conn := meta.(*awsprovider.AWSClient).GlobalAcceleratorConn
 
 	input := &globalaccelerator.DeleteEndpointGroupInput{
 		EndpointGroupArn: aws.String(d.Id()),
