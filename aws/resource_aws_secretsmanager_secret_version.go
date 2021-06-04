@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/secretsmanager/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSecretsManagerSecretVersion() *schema.Resource {
@@ -64,7 +65,7 @@ func resourceAwsSecretsManagerSecretVersion() *schema.Resource {
 }
 
 func resourceAwsSecretsManagerSecretVersionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*awsprovider.AWSClient).SecretsManagerConn
 	secretID := d.Get("secret_id").(string)
 
 	input := &secretsmanager.PutSecretValueInput{
@@ -106,7 +107,7 @@ func resourceAwsSecretsManagerSecretVersionCreate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsSecretsManagerSecretVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*awsprovider.AWSClient).SecretsManagerConn
 
 	secretID, versionID, err := decodeSecretsManagerSecretVersionID(d.Id())
 	if err != nil {
@@ -178,7 +179,7 @@ func resourceAwsSecretsManagerSecretVersionRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsSecretsManagerSecretVersionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*awsprovider.AWSClient).SecretsManagerConn
 
 	secretID, versionID, err := decodeSecretsManagerSecretVersionID(d.Id())
 	if err != nil {
@@ -227,7 +228,7 @@ func resourceAwsSecretsManagerSecretVersionUpdate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsSecretsManagerSecretVersionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*awsprovider.AWSClient).SecretsManagerConn
 
 	secretID, versionID, err := decodeSecretsManagerSecretVersionID(d.Id())
 	if err != nil {
@@ -249,10 +250,10 @@ func resourceAwsSecretsManagerSecretVersionDelete(d *schema.ResourceData, meta i
 			log.Printf("[DEBUG] Updating Secrets Manager Secret Version Stage: %s", input)
 			_, err := conn.UpdateSecretVersionStage(input)
 			if err != nil {
-				if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+				if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
 					return nil
 				}
-				if isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "You can’t perform this operation on the secret because it was deleted") {
+				if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "You can’t perform this operation on the secret because it was deleted") {
 					return nil
 				}
 				return fmt.Errorf("error updating Secrets Manager Secret %q Version Stage %q: %s", secretID, stage.(string), err)
