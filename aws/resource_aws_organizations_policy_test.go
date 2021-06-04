@@ -7,9 +7,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccAwsOrganizationsPolicy_basic(t *testing.T) {
@@ -20,16 +23,16 @@ func testAccAwsOrganizationsPolicy_basic(t *testing.T) {
 	resourceName := "aws_organizations_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsOrganizationsPolicyConfig_Required(rName, content1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsPolicyExists(resourceName, &policy),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile("policy/o-.+/service_control_policy/p-.+$")),
+					atest.MatchAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile("policy/o-.+/service_control_policy/p-.+$")),
 					resource.TestCheckResourceAttr(resourceName, "content", content1),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -63,9 +66,9 @@ func testAccAwsOrganizationsPolicy_concurrent(t *testing.T) {
 	resourceName5 := "aws_organizations_policy.test5"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -88,9 +91,9 @@ func testAccAwsOrganizationsPolicy_description(t *testing.T) {
 	resourceName := "aws_organizations_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -122,9 +125,9 @@ func testAccAwsOrganizationsPolicy_tags(t *testing.T) {
 	resourceName := "aws_organizations_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -175,16 +178,16 @@ func testAccAwsOrganizationsPolicy_disappears(t *testing.T) {
 	resourceName := "aws_organizations_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsOrganizationsPolicyConfig_Description(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsPolicyExists(resourceName, &p),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsOrganizationsPolicy(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsOrganizationsPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -200,9 +203,9 @@ func testAccAwsOrganizationsPolicy_type_AI_OPT_OUT(t *testing.T) {
 	AiOptOutPolicyContent := `{ "services": { "rekognition": { "opt_out_policy": { "@@assign": "optOut" } }, "lex": { "opt_out_policy": { "@@assign": "optIn" } } } }`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -294,12 +297,12 @@ func testAccAwsOrganizationsPolicy_type_Backup(t *testing.T) {
          }
       }
    }
-}`, testAccGetAlternateRegion(), testAccGetRegion(), testAccGetPartition())
+}`, atest.AlternateRegion(), atest.Region(), atest.Partition())
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -325,9 +328,9 @@ func testAccAwsOrganizationsPolicy_type_SCP(t *testing.T) {
 	serviceControlPolicyContent := `{"Version": "2012-10-17", "Statement": { "Effect": "Allow", "Action": "*", "Resource": "*"}}`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -360,9 +363,9 @@ func testAccAwsOrganizationsPolicy_type_Tag(t *testing.T) {
 	tagPolicyContent := `{ "tags": { "Product": { "tag_key": { "@@assign": "Product" }, "enforced_for": { "@@assign": [ "ec2:instance" ] } } } }`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -387,9 +390,9 @@ func testAccAwsOrganizationsPolicy_ImportAwsManagedPolicy(t *testing.T) {
 	resourceID := "p-FullAWSAccess"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:   atest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOrganizationsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -407,7 +410,7 @@ func testAccAwsOrganizationsPolicy_ImportAwsManagedPolicy(t *testing.T) {
 }
 
 func testAccCheckAwsOrganizationsPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).OrganizationsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_organizations_policy" {
@@ -420,11 +423,11 @@ func testAccCheckAwsOrganizationsPolicyDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribePolicy(input)
 
-		if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+		if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
 			continue
 		}
 
-		if isAWSErr(err, organizations.ErrCodePolicyNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, organizations.ErrCodePolicyNotFoundException, "") {
 			continue
 		}
 
@@ -448,7 +451,7 @@ func testAccCheckAwsOrganizationsPolicyExists(resourceName string, policy *organ
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).OrganizationsConn
 		input := &organizations.DescribePolicyInput{
 			PolicyId: &rs.Primary.ID,
 		}
