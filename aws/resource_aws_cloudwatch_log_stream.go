@@ -9,8 +9,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCloudWatchLogStream() *schema.Resource {
@@ -45,7 +47,7 @@ func resourceAwsCloudWatchLogStream() *schema.Resource {
 }
 
 func resourceAwsCloudWatchLogStreamCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchLogsConn
 
 	log.Printf("[DEBUG] Creating CloudWatch Log Stream: %s", d.Get("name").(string))
 	_, err := conn.CreateLogStream(&cloudwatchlogs.CreateLogStreamInput{
@@ -62,7 +64,7 @@ func resourceAwsCloudWatchLogStreamCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCloudWatchLogStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchLogsConn
 
 	group := d.Get("log_group_name").(string)
 
@@ -85,7 +87,7 @@ func resourceAwsCloudWatchLogStreamRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if err != nil {
-		if !isAWSErr(err, cloudwatchlogs.ErrCodeResourceNotFoundException, "") {
+		if !tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeResourceNotFoundException, "") {
 			return err
 		}
 
@@ -106,7 +108,7 @@ func resourceAwsCloudWatchLogStreamRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsCloudWatchLogStreamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchLogsConn
 
 	log.Printf("[INFO] Deleting CloudWatch Log Stream: %s", d.Id())
 	params := &cloudwatchlogs.DeleteLogStreamInput{
