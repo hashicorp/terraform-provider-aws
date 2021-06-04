@@ -7,10 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloud9"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCloud9EnvironmentEc2() *schema.Resource {
@@ -48,7 +50,7 @@ func resourceAwsCloud9EnvironmentEc2() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"subnet_id": {
 				Type:     schema.TypeString,
@@ -72,8 +74,8 @@ func resourceAwsCloud9EnvironmentEc2() *schema.Resource {
 }
 
 func resourceAwsCloud9EnvironmentEc2Create(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloud9conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).Cloud9Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &cloud9.CreateEnvironmentEC2Input{
@@ -102,7 +104,7 @@ func resourceAwsCloud9EnvironmentEc2Create(d *schema.ResourceData, meta interfac
 		out, err = conn.CreateEnvironmentEC2(params)
 		if err != nil {
 			// NotFoundException: User arn:aws:iam::*******:user/****** does not exist.
-			if isAWSErr(err, cloud9.ErrCodeNotFoundException, "User") {
+			if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "User") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -153,9 +155,9 @@ func resourceAwsCloud9EnvironmentEc2Create(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsCloud9EnvironmentEc2Read(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloud9conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).Cloud9Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading Cloud9 Environment EC2 %s", d.Id())
 
@@ -163,7 +165,7 @@ func resourceAwsCloud9EnvironmentEc2Read(d *schema.ResourceData, meta interface{
 		EnvironmentIds: []*string{aws.String(d.Id())},
 	})
 	if err != nil {
-		if isAWSErr(err, cloud9.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Cloud9 Environment EC2 (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -207,7 +209,7 @@ func resourceAwsCloud9EnvironmentEc2Read(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsCloud9EnvironmentEc2Update(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloud9conn
+	conn := meta.(*awsprovider.AWSClient).Cloud9Conn
 
 	input := cloud9.UpdateEnvironmentInput{
 		Description:   aws.String(d.Get("description").(string)),
@@ -237,7 +239,7 @@ func resourceAwsCloud9EnvironmentEc2Update(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsCloud9EnvironmentEc2Delete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloud9conn
+	conn := meta.(*awsprovider.AWSClient).Cloud9Conn
 
 	_, err := conn.DeleteEnvironment(&cloud9.DeleteEnvironmentInput{
 		EnvironmentId: aws.String(d.Id()),
@@ -253,11 +255,11 @@ func resourceAwsCloud9EnvironmentEc2Delete(d *schema.ResourceData, meta interfac
 	err = resource.Retry(20*time.Minute, func() *resource.RetryError { // Deleting instances can take a long time
 		out, err = conn.DescribeEnvironments(input)
 		if err != nil {
-			if isAWSErr(err, cloud9.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			// :'-(
-			if isAWSErr(err, "AccessDeniedException", "is not authorized to access this resource") {
+			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to access this resource") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -269,10 +271,10 @@ func resourceAwsCloud9EnvironmentEc2Delete(d *schema.ResourceData, meta interfac
 	})
 	if isResourceTimeoutError(err) {
 		out, err = conn.DescribeEnvironments(input)
-		if isAWSErr(err, cloud9.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "") {
 			return nil
 		}
-		if isAWSErr(err, "AccessDeniedException", "is not authorized to access this resource") {
+		if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to access this resource") {
 			return nil
 		}
 	}
