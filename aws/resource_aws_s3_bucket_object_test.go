@@ -20,7 +20,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -31,17 +33,17 @@ func init() {
 }
 
 func testSweepS3BucketObjects(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).s3connUriCleaningDisabled
+	conn := client.(*awsprovider.AWSClient).S3ConnUriCleaningDisabled
 	input := &s3.ListBucketsInput{}
 
 	output, err := conn.ListBuckets(input)
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping S3 Bucket Objects sweep for %s: %s", region, err)
 		return nil
 	}
@@ -108,9 +110,9 @@ func TestAccAWSS3BucketObject_noNameNoKey(t *testing.T) {
 	keyError := regexp.MustCompile(`key must not be empty`)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -133,9 +135,9 @@ func TestAccAWSS3BucketObject_empty(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -159,9 +161,9 @@ func TestAccAWSS3BucketObject_source(t *testing.T) {
 	defer os.Remove(source)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -181,9 +183,9 @@ func TestAccAWSS3BucketObject_content(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -206,9 +208,9 @@ func TestAccAWSS3BucketObject_etagEncryption(t *testing.T) {
 	defer os.Remove(source)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -230,9 +232,9 @@ func TestAccAWSS3BucketObject_contentBase64(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -256,9 +258,9 @@ func TestAccAWSS3BucketObject_withContentCharacteristics(t *testing.T) {
 	defer os.Remove(source)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -282,9 +284,9 @@ func TestAccAWSS3BucketObject_NonVersioned(t *testing.T) {
 	resourceName := "aws_s3_bucket_object.object"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAssumeRoleARNPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckAssumeRoleARN(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -310,9 +312,9 @@ func TestAccAWSS3BucketObject_updates(t *testing.T) {
 	defer os.Remove(sourceInitial)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -361,9 +363,9 @@ func TestAccAWSS3BucketObject_updateSameFile(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -399,9 +401,9 @@ func TestAccAWSS3BucketObject_updatesWithVersioning(t *testing.T) {
 	defer os.Remove(sourceInitial)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -437,9 +439,9 @@ func TestAccAWSS3BucketObject_updatesWithVersioningViaAccessPoint(t *testing.T) 
 	defer os.Remove(sourceInitial)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -473,9 +475,9 @@ func TestAccAWSS3BucketObject_kms(t *testing.T) {
 	defer os.Remove(source)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -500,9 +502,9 @@ func TestAccAWSS3BucketObject_sse(t *testing.T) {
 	defer os.Remove(source)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -524,9 +526,9 @@ func TestAccAWSS3BucketObject_acl(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -568,9 +570,9 @@ func TestAccAWSS3BucketObject_metadata(t *testing.T) {
 	resourceName := "aws_s3_bucket_object.object"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -608,9 +610,9 @@ func TestAccAWSS3BucketObject_storageClass(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -665,9 +667,9 @@ func TestAccAWSS3BucketObject_tags(t *testing.T) {
 	key := "test-key"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -730,9 +732,9 @@ func TestAccAWSS3BucketObject_tagsLeadingSingleSlash(t *testing.T) {
 	key := "/test-key"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -795,9 +797,9 @@ func TestAccAWSS3BucketObject_tagsLeadingMultipleSlashes(t *testing.T) {
 	key := "/////test-key"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -860,9 +862,9 @@ func TestAccAWSS3BucketObject_tagsMultipleSlashes(t *testing.T) {
 	key := "first//second///third//"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -924,9 +926,9 @@ func TestAccAWSS3BucketObject_ObjectLockLegalHoldStartWithNone(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -972,9 +974,9 @@ func TestAccAWSS3BucketObject_ObjectLockLegalHoldStartWithOn(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1009,9 +1011,9 @@ func TestAccAWSS3BucketObject_ObjectLockRetentionStartWithNone(t *testing.T) {
 	retainUntilDate := time.Now().UTC().AddDate(0, 0, 10).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1060,9 +1062,9 @@ func TestAccAWSS3BucketObject_ObjectLockRetentionStartWithSet(t *testing.T) {
 	retainUntilDate3 := time.Now().UTC().AddDate(0, 0, 10).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1118,9 +1120,9 @@ func TestAccAWSS3BucketObject_objectBucketKeyEnabled(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1141,9 +1143,9 @@ func TestAccAWSS3BucketObject_bucketBucketKeyEnabled(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1164,9 +1166,9 @@ func TestAccAWSS3BucketObject_defaultBucketSSE(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1188,15 +1190,15 @@ func TestAccAWSS3BucketObject_ignoreTags(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesInternal(&providers),
 		CheckDestroy:      testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
-				Config: composeConfig(
-					testAccProviderConfigIgnoreTagsKeyPrefixes1("ignorekey"),
+				Config: atest.ComposeConfig(
+					atest.ConfigProviderIgnoreTagsKeyPrefixes1("ignorekey"),
 					testAccAWSS3BucketObjectConfig_withNoTags(rName, key, "stuff")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj),
@@ -1210,8 +1212,8 @@ func TestAccAWSS3BucketObject_ignoreTags(t *testing.T) {
 			},
 			{
 				PreConfig: func() {},
-				Config: composeConfig(
-					testAccProviderConfigIgnoreTagsKeyPrefixes1("ignorekey"),
+				Config: atest.ComposeConfig(
+					atest.ConfigProviderIgnoreTagsKeyPrefixes1("ignorekey"),
 					testAccAWSS3BucketObjectConfig_withTags(rName, key, "stuff")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj),
@@ -1267,14 +1269,14 @@ func testAccCheckAWSS3BucketObjectVersionIdEquals(first, second *s3.GetObjectOut
 }
 
 func testAccCheckAWSS3BucketObjectDestroy(s *terraform.State) error {
-	s3conn := testAccProvider.Meta().(*AWSClient).s3conn
+	S3Conn := atest.Provider.Meta().(*awsprovider.AWSClient).S3Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_bucket_object" {
 			continue
 		}
 
-		_, err := s3conn.HeadObject(
+		_, err := S3Conn.HeadObject(
 			&s3.HeadObjectInput{
 				Bucket:  aws.String(rs.Primary.Attributes["bucket"]),
 				Key:     aws.String(rs.Primary.Attributes["key"]),
@@ -1298,7 +1300,7 @@ func testAccCheckAWSS3BucketObjectExists(n string, obj *s3.GetObjectOutput) reso
 			return fmt.Errorf("No S3 Bucket Object ID is set")
 		}
 
-		s3conn := testAccProvider.Meta().(*AWSClient).s3conn
+		S3Conn := atest.Provider.Meta().(*awsprovider.AWSClient).S3Conn
 
 		input := &s3.GetObjectInput{
 			Bucket:  aws.String(rs.Primary.Attributes["bucket"]),
@@ -1310,7 +1312,7 @@ func testAccCheckAWSS3BucketObjectExists(n string, obj *s3.GetObjectOutput) reso
 
 		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 			var err error
-			out, err = s3conn.GetObject(input)
+			out, err = S3Conn.GetObject(input)
 			if awsErr, ok := err.(awserr.Error); ok {
 				if awsErr.Code() == "NoSuchKey" {
 					return resource.RetryableError(
@@ -1325,7 +1327,7 @@ func testAccCheckAWSS3BucketObjectExists(n string, obj *s3.GetObjectOutput) reso
 			return nil
 		})
 		if isResourceTimeoutError(err) {
-			out, err = s3conn.GetObject(input)
+			out, err = S3Conn.GetObject(input)
 		}
 
 		if err != nil {
@@ -1357,9 +1359,9 @@ func testAccCheckAWSS3BucketObjectBody(obj *s3.GetObjectOutput, want string) res
 func testAccCheckAWSS3BucketObjectAcl(n string, expectedPerms []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		s3conn := testAccProvider.Meta().(*AWSClient).s3conn
+		S3Conn := atest.Provider.Meta().(*awsprovider.AWSClient).S3Conn
 
-		out, err := s3conn.GetObjectAcl(&s3.GetObjectAclInput{
+		out, err := S3Conn.GetObjectAcl(&s3.GetObjectAclInput{
 			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
 			Key:    aws.String(rs.Primary.Attributes["key"]),
 		})
@@ -1385,9 +1387,9 @@ func testAccCheckAWSS3BucketObjectAcl(n string, expectedPerms []string) resource
 func testAccCheckAWSS3BucketObjectStorageClass(n, expectedClass string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		s3conn := testAccProvider.Meta().(*AWSClient).s3conn
+		S3Conn := atest.Provider.Meta().(*awsprovider.AWSClient).S3Conn
 
-		out, err := s3conn.HeadObject(&s3.HeadObjectInput{
+		out, err := S3Conn.HeadObject(&s3.HeadObjectInput{
 			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
 			Key:    aws.String(rs.Primary.Attributes["key"]),
 		})
@@ -1415,9 +1417,9 @@ func testAccCheckAWSS3BucketObjectStorageClass(n, expectedClass string) resource
 func testAccCheckAWSS3BucketObjectSSE(n, expectedSSE string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		s3conn := testAccProvider.Meta().(*AWSClient).s3conn
+		S3Conn := atest.Provider.Meta().(*awsprovider.AWSClient).S3Conn
 
-		out, err := s3conn.HeadObject(&s3.HeadObjectInput{
+		out, err := S3Conn.HeadObject(&s3.HeadObjectInput{
 			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
 			Key:    aws.String(rs.Primary.Attributes["key"]),
 		})
@@ -1459,7 +1461,7 @@ func testAccAWSS3BucketObjectCreateTempFile(t *testing.T, data string) string {
 func testAccCheckAWSS3BucketObjectUpdateTags(n string, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).S3Conn
 
 		return keyvaluetags.S3ObjectUpdateTags(conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], oldTags, newTags)
 	}
@@ -1468,7 +1470,7 @@ func testAccCheckAWSS3BucketObjectUpdateTags(n string, oldTags, newTags map[stri
 func testAccCheckAWSS3BucketObjectCheckTags(n string, expectedTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).S3Conn
 
 		got, err := keyvaluetags.S3ObjectListTags(conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"])
 		if err != nil {
@@ -1893,7 +1895,7 @@ func testAccAWSS3BucketObjectConfig_NonVersioned(randInt int, source string) str
   ]
 }`
 
-	return testAccProviderConfigAssumeRolePolicy(policy) + fmt.Sprintf(`
+	return atest.ConfigProviderAssumeRolePolicy(policy) + fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket_3" {
   bucket = "tf-object-test-bucket-%[1]d"
 }
