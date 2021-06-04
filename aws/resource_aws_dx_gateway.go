@@ -8,8 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDxGateway() *schema.Resource {
@@ -47,7 +49,7 @@ func resourceAwsDxGateway() *schema.Resource {
 }
 
 func resourceAwsDxGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	req := &directconnect.CreateDirectConnectGatewayInput{
 		DirectConnectGatewayName: aws.String(d.Get("name").(string)),
@@ -85,7 +87,7 @@ func resourceAwsDxGatewayCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsDxGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	dxGwRaw, state, err := dxGatewayStateRefresh(conn, d.Id())()
 	if err != nil {
@@ -106,13 +108,13 @@ func resourceAwsDxGatewayRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsDxGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	_, err := conn.DeleteDirectConnectGateway(&directconnect.DeleteDirectConnectGatewayInput{
 		DirectConnectGatewayId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, "DirectConnectClientException", "does not exist") {
+		if tfawserr.ErrMessageContains(err, "DirectConnectClientException", "does not exist") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting Direct Connect gateway: %s", err)
