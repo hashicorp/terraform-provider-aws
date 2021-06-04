@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func QueueAttributesByURL(conn *sqs.SQS, url string) (map[string]*string, error) {
+func QueueAttributesByURL(conn *sqs.SQS, url string) (map[string]string, error) {
 	input := &sqs.GetQueueAttributesInput{
 		AttributeNames: aws.StringSlice([]string{sqs.QueueAttributeNameAll}),
 		QueueUrl:       aws.String(url),
@@ -33,5 +33,5 @@ func QueueAttributesByURL(conn *sqs.SQS, url string) (map[string]*string, error)
 		}
 	}
 
-	return output.Attributes, nil
+	return aws.StringValueMap(output.Attributes), nil
 }

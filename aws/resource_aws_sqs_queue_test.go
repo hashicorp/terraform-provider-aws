@@ -79,7 +79,7 @@ func testSweepSqsQueues(region string) error {
 }
 
 func TestAccAWSSQSQueue_basic(t *testing.T) {
-	var queueAttributes map[string]*string
+	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.queue"
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
 
@@ -135,7 +135,7 @@ func TestAccAWSSQSQueue_basic(t *testing.T) {
 }
 
 func TestAccAWSSQSQueue_disappears(t *testing.T) {
-	var queueAttributes map[string]*string
+	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.queue"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -158,7 +158,7 @@ func TestAccAWSSQSQueue_disappears(t *testing.T) {
 }
 
 func TestAccAWSSQSQueue_tags(t *testing.T) {
-	var queueAttributes map[string]*string
+	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.queue"
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
 
@@ -216,7 +216,7 @@ func TestAccAWSSQSQueue_tags(t *testing.T) {
 }
 
 func TestAccAWSSQSQueue_Name_Generated(t *testing.T) {
-	var queueAttributes map[string]*string
+	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -249,7 +249,7 @@ func TestAccAWSSQSQueue_Name_Generated(t *testing.T) {
 }
 
 func TestAccAWSSQSQueue_Name_Generated_FIFOQueue(t *testing.T) {
-	var queueAttributes map[string]*string
+	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -282,7 +282,7 @@ func TestAccAWSSQSQueue_Name_Generated_FIFOQueue(t *testing.T) {
 }
 
 func TestAccAWSSQSQueue_NamePrefix(t *testing.T) {
-	var queueAttributes map[string]*string
+	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 	rName := "tf-acc-test-prefix-"
 
@@ -316,7 +316,7 @@ func TestAccAWSSQSQueue_NamePrefix(t *testing.T) {
 }
 
 func TestAccAWSSQSQueue_NamePrefix_FIFOQueue(t *testing.T) {
-	var queueAttributes map[string]*string
+	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 	rName := "tf-acc-test-prefix-"
 
@@ -350,7 +350,7 @@ func TestAccAWSSQSQueue_NamePrefix_FIFOQueue(t *testing.T) {
 }
 
 func TestAccAWSSQSQueue_policy(t *testing.T) {
-	var queueAttributes map[string]*string
+	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test-email-events"
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
 	topicName := fmt.Sprintf("sns-topic-%s", acctest.RandString(10))
@@ -378,7 +378,7 @@ func TestAccAWSSQSQueue_policy(t *testing.T) {
 }
 
 func TestAccAWSSQSQueue_queueDeletedRecently(t *testing.T) {
-	var queueAttributes map[string]*string
+	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.queue"
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
 
@@ -416,7 +416,7 @@ func TestAccAWSSQSQueue_queueDeletedRecently(t *testing.T) {
 }
 
 func TestAccAWSSQSQueue_redrivePolicy(t *testing.T) {
-	var queueAttributes map[string]*string
+	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.my_dead_letter_queue"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -447,7 +447,7 @@ func TestAccAWSSQSQueue_redrivePolicy(t *testing.T) {
 
 // Tests formatting and compacting of Policy, Redrive json
 func TestAccAWSSQSQueue_Policybasic(t *testing.T) {
-	var queueAttributes map[string]*string
+	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test-email-events"
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
 	topicName := fmt.Sprintf("sns-topic-%s", acctest.RandString(10))
@@ -479,7 +479,7 @@ func TestAccAWSSQSQueue_Policybasic(t *testing.T) {
 }
 
 func TestAccAWSSQSQueue_FIFO(t *testing.T) {
-	var queueAttributes map[string]*string
+	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.queue"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -522,7 +522,7 @@ func TestAccAWSSQSQueue_FIFOExpectNameError(t *testing.T) {
 }
 
 func TestAccAWSSQSQueue_FIFOWithContentBasedDeduplication(t *testing.T) {
-	var queueAttributes map[string]*string
+	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.queue"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -549,7 +549,7 @@ func TestAccAWSSQSQueue_FIFOWithContentBasedDeduplication(t *testing.T) {
 }
 
 func TestAccAWSSQSQueue_FIFOWithHighThroughputMode(t *testing.T) {
-	var queueAttributes map[string]*string
+	var queueAttributes map[string]string
 
 	resourceName := "aws_sqs_queue.queue"
 	queueName := acctest.RandString(10)
@@ -567,7 +567,6 @@ func TestAccAWSSQSQueue_FIFOWithHighThroughputMode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
 					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", "queue"),
 					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", "perQueue"),
-					testAccCheckAWSSQSFIFOQueueHighThroughputAttributes(&queueAttributes, "queue", "perQueue"),
 				),
 			},
 			{
@@ -581,13 +580,7 @@ func TestAccAWSSQSQueue_FIFOWithHighThroughputMode(t *testing.T) {
 					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", "messageGroup"),
 					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", "perMessageGroupId"),
-					testAccCheckAWSSQSFIFOQueueHighThroughputAttributes(&queueAttributes, "messageGroup", "perMessageGroupId"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -609,7 +602,7 @@ func TestAccAWSSQSQueue_ExpectContentBasedDeduplicationError(t *testing.T) {
 }
 
 func TestAccAWSSQSQueue_Encryption(t *testing.T) {
-	var queueAttributes map[string]*string
+	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.queue"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -634,7 +627,7 @@ func TestAccAWSSQSQueue_Encryption(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSQSQueuePolicyAttribute(queueAttributes *map[string]*string, topicName, queueName string) resource.TestCheckFunc {
+func testAccCheckAWSSQSQueuePolicyAttribute(queueAttributes *map[string]string, topicName, queueName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		accountID := testAccProvider.Meta().(*AWSClient).accountid
 
@@ -642,9 +635,9 @@ func testAccCheckAWSSQSQueuePolicyAttribute(queueAttributes *map[string]*string,
 		expectedPolicyText := fmt.Sprintf(expectedPolicyFormat, testAccGetPartition(), testAccGetRegion(), accountID, topicName, queueName)
 
 		var actualPolicyText string
-		for key, valuePointer := range *queueAttributes {
-			if key == "Policy" {
-				actualPolicyText = aws.StringValue(valuePointer)
+		for key, value := range *queueAttributes {
+			if key == sqs.QueueAttributeNamePolicy {
+				actualPolicyText = value
 				break
 			}
 		}
@@ -662,7 +655,7 @@ func testAccCheckAWSSQSQueuePolicyAttribute(queueAttributes *map[string]*string,
 	}
 }
 
-func testAccCheckAWSSQSQueueExists(resourceName string, v *map[string]*string) resource.TestCheckFunc {
+func testAccCheckAWSSQSQueueExists(resourceName string, v *map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

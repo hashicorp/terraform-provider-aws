@@ -1,11 +1,16 @@
 package sqs
 
 const (
+	ErrCodeInvalidAction = "InvalidAction"
+)
+
+const (
 	FifoQueueNameSuffix = ".fifo"
 )
 
 const (
 	DefaultQueueDelaySeconds                  = 0
+	DefaultQueueKmsDataKeyReusePeriodSeconds  = 300
 	DefaultQueueMaximumMessageSize            = 262144
 	DefaultQueueMessageRetentionPeriod        = 345600
 	DefaultQueueReceiveMessageWaitTimeSeconds = 0

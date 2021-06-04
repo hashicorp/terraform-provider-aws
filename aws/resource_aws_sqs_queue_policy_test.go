@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
-	var queueAttributes map[string]*string
+	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue_policy.test"
 	queueResourceName := "aws_sqs_queue.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -47,7 +47,7 @@ func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 }
 
 func TestAccAWSSQSQueuePolicy_disappears_queue(t *testing.T) {
-	var queueAttributes map[string]*string
+	var queueAttributes map[string]string
 	queueResourceName := "aws_sqs_queue.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -70,7 +70,7 @@ func TestAccAWSSQSQueuePolicy_disappears_queue(t *testing.T) {
 }
 
 func TestAccAWSSQSQueuePolicy_disappears(t *testing.T) {
-	var queueAttributes map[string]*string
+	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue_policy.test"
 	queueResourceName := "aws_sqs_queue.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
