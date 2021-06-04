@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestDecodeStorageGatewayWorkingStorageID(t *testing.T) {
@@ -74,9 +76,9 @@ func TestAccAWSStorageGatewayWorkingStorage_basic(t *testing.T) {
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, storagegateway.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, storagegateway.EndpointsID),
+		Providers:  atest.Providers,
 		// Storage Gateway API does not support removing working storages,
 		// but we want to ensure other resources are removed.
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
@@ -105,7 +107,7 @@ func testAccCheckAWSStorageGatewayWorkingStorageExists(resourceName string) reso
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).StorageGatewayConn
 
 		gatewayARN, diskID, err := decodeStorageGatewayWorkingStorageID(rs.Primary.ID)
 		if err != nil {
