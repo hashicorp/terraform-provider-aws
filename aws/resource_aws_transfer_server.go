@@ -12,11 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tftransfer "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsTransferServer() *schema.Resource {
@@ -38,7 +39,7 @@ func resourceAwsTransferServer() *schema.Resource {
 			"certificate": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"endpoint": {
@@ -118,13 +119,13 @@ func resourceAwsTransferServer() *schema.Resource {
 			"invocation_role": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"logging_role": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"protocols": {
@@ -165,8 +166,8 @@ func resourceAwsTransferServer() *schema.Resource {
 
 func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) error {
 	updateAfterCreate := false
-	conn := meta.(*AWSClient).transferconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).TransferConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &transfer.CreateServerInput{}
@@ -268,9 +269,9 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).TransferConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.ServerByID(conn, d.Id())
 
@@ -286,7 +287,7 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("arn", output.Arn)
 	d.Set("certificate", output.Certificate)
-	d.Set("endpoint", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.server.transfer", d.Id())))
+	d.Set("endpoint", meta.(*awsprovider.AWSClient).RegionalHostname(fmt.Sprintf("%s.server.transfer", d.Id())))
 	if output.EndpointDetails != nil {
 		if err := d.Set("endpoint_details", []interface{}{flattenTransferEndpointDetails(output.EndpointDetails)}); err != nil {
 			return fmt.Errorf("error setting endpoint_details: %w", err)
@@ -326,7 +327,7 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
+	conn := meta.(*awsprovider.AWSClient).TransferConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		stopFlag := false
@@ -415,7 +416,7 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsTransferServerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
+	conn := meta.(*awsprovider.AWSClient).TransferConn
 
 	if d.Get("force_destroy").(bool) {
 		input := &transfer.ListUsersInput{
