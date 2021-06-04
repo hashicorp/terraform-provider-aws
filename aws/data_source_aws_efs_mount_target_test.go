@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsEfsMountTarget_basic(t *testing.T) {
@@ -15,9 +16,9 @@ func TestAccDataSourceAwsEfsMountTarget_basic(t *testing.T) {
 	resourceName := "aws_efs_mount_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, efs.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEfsMountTargetConfigByMountTargetId(rName),
@@ -45,9 +46,9 @@ func TestAccDataSourceAwsEfsMountTarget_byAccessPointID(t *testing.T) {
 	resourceName := "aws_efs_mount_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, efs.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEFSMountTargetConfigByAccessPointId(rName),
@@ -75,9 +76,9 @@ func TestAccDataSourceAwsEfsMountTarget_byFileSystemID(t *testing.T) {
 	resourceName := "aws_efs_mount_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, efs.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEFSMountTargetConfigByFileSystemId(rName),
@@ -100,7 +101,7 @@ func TestAccDataSourceAwsEfsMountTarget_byFileSystemID(t *testing.T) {
 }
 
 func testAccAwsEfsMountTargetDataSourceBaseConfig(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
 
@@ -135,7 +136,7 @@ resource "aws_subnet" "test" {
 }
 
 func testAccAwsEfsMountTargetConfigByMountTargetId(rName string) string {
-	return composeConfig(testAccAwsEfsMountTargetDataSourceBaseConfig(rName), `
+	return atest.ComposeConfig(testAccAwsEfsMountTargetDataSourceBaseConfig(rName), `
 data "aws_efs_mount_target" "test" {
   mount_target_id = aws_efs_mount_target.test.id
 }
@@ -143,7 +144,7 @@ data "aws_efs_mount_target" "test" {
 }
 
 func testAccAWSEFSMountTargetConfigByAccessPointId(rName string) string {
-	return composeConfig(testAccAwsEfsMountTargetDataSourceBaseConfig(rName), `
+	return atest.ComposeConfig(testAccAwsEfsMountTargetDataSourceBaseConfig(rName), `
 resource "aws_efs_access_point" "test" {
   file_system_id = aws_efs_file_system.test.id
 }
@@ -155,7 +156,7 @@ data "aws_efs_mount_target" "test" {
 }
 
 func testAccAWSEFSMountTargetConfigByFileSystemId(rName string) string {
-	return composeConfig(testAccAwsEfsMountTargetDataSourceBaseConfig(rName), `
+	return atest.ComposeConfig(testAccAwsEfsMountTargetDataSourceBaseConfig(rName), `
 data "aws_efs_mount_target" "test" {
   file_system_id = aws_efs_file_system.test.id
 
