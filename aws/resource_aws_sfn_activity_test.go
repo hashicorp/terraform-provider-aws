@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSSfnActivity_basic(t *testing.T) {
@@ -18,9 +20,9 @@ func TestAccAWSSfnActivity_basic(t *testing.T) {
 	resourceName := "aws_sfn_activity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sfn.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sfn.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSfnActivityDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -45,9 +47,9 @@ func TestAccAWSSfnActivity_Tags(t *testing.T) {
 	resourceName := "aws_sfn_activity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sfn.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sfn.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSfnActivityDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -95,7 +97,7 @@ func testAccCheckAWSSfnActivityExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Step Function ID set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sfnconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SFNConn
 
 		_, err := conn.DescribeActivity(&sfn.DescribeActivityInput{
 			ActivityArn: aws.String(rs.Primary.ID),
@@ -106,7 +108,7 @@ func testAccCheckAWSSfnActivityExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckAWSSfnActivityDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sfnconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SFNConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sfn_activity" {
