@@ -6,8 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSPinpointBaiduChannel_basic(t *testing.T) {
@@ -19,9 +22,9 @@ func TestAccAWSPinpointBaiduChannel_basic(t *testing.T) {
 	secretKey := "456"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   atest.ErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSPinpointBaiduChannelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -63,7 +66,7 @@ func testAccCheckAWSPinpointBaiduChannelExists(n string, channel *pinpoint.Baidu
 			return fmt.Errorf("No Pinpoint Baidu channel with that Application ID exists")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).PinpointConn
 
 		// Check if the Baidu Channel exists
 		params := &pinpoint.GetBaiduChannelInput{
@@ -96,7 +99,7 @@ resource "aws_pinpoint_baidu_channel" "channel" {
 }
 
 func testAccCheckAWSPinpointBaiduChannelDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).PinpointConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_pinpoint_baidu_channel" {
@@ -109,7 +112,7 @@ func testAccCheckAWSPinpointBaiduChannelDestroy(s *terraform.State) error {
 		}
 		_, err := conn.GetBaiduChannel(params)
 		if err != nil {
-			if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 				continue
 			}
 			return err
