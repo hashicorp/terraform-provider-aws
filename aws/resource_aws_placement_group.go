@@ -8,10 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsPlacementGroup() *schema.Resource {
@@ -57,8 +59,8 @@ func resourceAwsPlacementGroup() *schema.Resource {
 }
 
 func resourceAwsPlacementGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -86,7 +88,7 @@ func resourceAwsPlacementGroupCreate(d *schema.ResourceData, meta interface{}) e
 			if err != nil {
 				// Fix timing issue where describe is called prior to
 				// create being effectively processed by AWS
-				if isAWSErr(err, "InvalidPlacementGroup.Unknown", "") {
+				if tfawserr.ErrMessageContains(err, "InvalidPlacementGroup.Unknown", "") {
 					return out, "pending", nil
 				}
 				return out, "", err
@@ -114,16 +116,16 @@ func resourceAwsPlacementGroupCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsPlacementGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := ec2.DescribePlacementGroupsInput{
 		GroupNames: []*string{aws.String(d.Id())},
 	}
 	out, err := conn.DescribePlacementGroups(&input)
 	if err != nil {
-		if isAWSErr(err, "InvalidPlacementGroup.Unknown", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidPlacementGroup.Unknown", "") {
 			log.Printf("[WARN] Placement Group %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -150,10 +152,10 @@ func resourceAwsPlacementGroupRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("placement-group/%s", d.Id()),
 	}.String()
 
@@ -163,7 +165,7 @@ func resourceAwsPlacementGroupRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsPlacementGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -178,7 +180,7 @@ func resourceAwsPlacementGroupUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsPlacementGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	log.Printf("[DEBUG] Deleting EC2 Placement Group %q", d.Id())
 	_, err := conn.DeletePlacementGroup(&ec2.DeletePlacementGroupInput{
@@ -199,7 +201,7 @@ func resourceAwsPlacementGroupDelete(d *schema.ResourceData, meta interface{}) e
 			})
 
 			if err != nil {
-				if isAWSErr(err, "InvalidPlacementGroup.Unknown", "") {
+				if tfawserr.ErrMessageContains(err, "InvalidPlacementGroup.Unknown", "") {
 					return out, ec2.PlacementGroupStateDeleted, nil
 				}
 				return out, "", err
