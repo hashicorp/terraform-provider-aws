@@ -24,9 +24,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/experimental/nullable"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscaling/waiter"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -639,7 +640,7 @@ func generatePutLifecycleHookInputs(asgName string, cfgs []interface{}) []autosc
 }
 
 func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*awsprovider.AWSClient).AutoScalingConn
 
 	var asgName string
 	if v, ok := d.GetOk("name"); ok {
@@ -772,7 +773,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 		_, err := conn.CreateAutoScalingGroup(&createOpts)
 
 		// ValidationError: You must use a valid fully-formed launch template. Value (tf-acc-test-6643732652421074386) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
-		if isAWSErr(err, "ValidationError", "Invalid IAM Instance Profile") {
+		if tfawserr.ErrMessageContains(err, "ValidationError", "Invalid IAM Instance Profile") {
 			return resource.RetryableError(err)
 		}
 
@@ -839,8 +840,8 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 
 // TODO: wrap all top-level error returns
 func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).AutoScalingConn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	g, err := getAwsAutoscalingGroup(d.Id(), conn)
 	if err != nil {
@@ -1030,7 +1031,7 @@ func waitUntilAutoscalingGroupLoadBalancerTargetGroupsAdded(conn *autoscaling.Au
 }
 
 func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*awsprovider.AWSClient).AutoScalingConn
 	shouldWaitForCapacity := false
 	shouldRefreshInstances := false
 
@@ -1365,7 +1366,7 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*awsprovider.AWSClient).AutoScalingConn
 
 	// Read the Auto Scaling Group first. If it doesn't exist, we're done.
 	// We need the group in order to check if there are instances attached.
@@ -1419,7 +1420,7 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 	})
 	if isResourceTimeoutError(err) {
 		_, err = conn.DeleteAutoScalingGroup(&deleteopts)
-		if isAWSErr(err, "InvalidGroup.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidGroup.NotFound", "") {
 			return nil
 		}
 	}
@@ -1449,7 +1450,7 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAutoScalingGroupWarmPoolDelete(g *autoscaling.Group, d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*awsprovider.AWSClient).AutoScalingConn
 
 	if g.WarmPoolConfiguration == nil {
 		// No warm pool configured. Skipping deletion.
@@ -1557,7 +1558,7 @@ func getAwsAutoscalingGroupWarmPool(asgName string, conn *autoscaling.AutoScalin
 }
 
 func resourceAwsAutoscalingGroupWarmPoolDrain(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*awsprovider.AWSClient).AutoScalingConn
 
 	if d.Get("force_delete").(bool) || d.Get("force_delete_warm_pool").(bool) {
 		log.Printf("[DEBUG] Skipping Warm pool drain, force delete was set.")
@@ -1640,7 +1641,7 @@ func getAwsAutoscalingGroup(asgName string, conn *autoscaling.AutoScaling) (*aut
 }
 
 func resourceAwsAutoscalingGroupDrain(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).autoscalingconn
+	conn := meta.(*awsprovider.AWSClient).AutoScalingConn
 
 	if d.Get("force_delete").(bool) {
 		log.Printf("[DEBUG] Skipping Auto Scaling Group drain, force_delete was set.")
@@ -1811,12 +1812,12 @@ func updateASGMetricsCollection(d *schema.ResourceData, conn *autoscaling.AutoSc
 // Nested like: lbName -> instanceId -> instanceState
 func getELBInstanceStates(g *autoscaling.Group, meta interface{}) (map[string]map[string]string, error) {
 	lbInstanceStates := make(map[string]map[string]string)
-	elbconn := meta.(*AWSClient).elbconn
+	ELBConn := meta.(*awsprovider.AWSClient).ELBConn
 
 	for _, lbName := range g.LoadBalancerNames {
 		lbInstanceStates[aws.StringValue(lbName)] = make(map[string]string)
 		opts := &elb.DescribeInstanceHealthInput{LoadBalancerName: lbName}
-		r, err := elbconn.DescribeInstanceHealth(opts)
+		r, err := ELBConn.DescribeInstanceHealth(opts)
 		if err != nil {
 			return nil, err
 		}
@@ -1840,12 +1841,12 @@ func getELBInstanceStates(g *autoscaling.Group, meta interface{}) (map[string]ma
 // Nested like: targetGroupARN -> instanceId -> instanceState
 func getTargetGroupInstanceStates(g *autoscaling.Group, meta interface{}) (map[string]map[string]string, error) {
 	targetInstanceStates := make(map[string]map[string]string)
-	elbv2conn := meta.(*AWSClient).elbv2conn
+	ELBV2Conn := meta.(*awsprovider.AWSClient).ELBV2Conn
 
 	for _, targetGroupARN := range g.TargetGroupARNs {
 		targetInstanceStates[aws.StringValue(targetGroupARN)] = make(map[string]string)
 		opts := &elbv2.DescribeTargetHealthInput{TargetGroupArn: targetGroupARN}
-		r, err := elbv2conn.DescribeTargetHealth(opts)
+		r, err := ELBV2Conn.DescribeTargetHealth(opts)
 		if err != nil {
 			return nil, err
 		}
