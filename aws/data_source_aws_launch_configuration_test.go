@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSLaunchConfigurationDataSource_basic(t *testing.T) {
@@ -16,9 +17,9 @@ func TestAccAWSLaunchConfigurationDataSource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, autoscaling.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationDataSourceConfig_basic(rName),
@@ -32,7 +33,7 @@ func TestAccAWSLaunchConfigurationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "root_block_device.#", resourceName, "root_block_device.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_block_device.#", resourceName, "ebs_block_device.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ephemeral_block_device.#", resourceName, "ephemeral_block_device.#"),
-					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "autoscaling", regexp.MustCompile(`launchConfiguration:.+`)),
+					atest.MatchAttrRegionalARN(datasourceName, "arn", "autoscaling", regexp.MustCompile(`launchConfiguration:.+`)),
 				),
 			},
 		},
@@ -44,9 +45,9 @@ func TestAccAWSLaunchConfigurationDataSource_securityGroups(t *testing.T) {
 	rName := "data.aws_launch_configuration.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, autoscaling.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationDataSourceConfig_securityGroups(rInt),
@@ -64,9 +65,9 @@ func TestAccAWSLaunchConfigurationDataSource_ebsNoDevice(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, autoscaling.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationDataSourceConfigEbsNoDevice(rName),
@@ -87,9 +88,9 @@ func TestAccAWSLaunchConfigurationDataSource_metadataOptions(t *testing.T) {
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -106,7 +107,7 @@ func TestAccAWSLaunchConfigurationDataSource_metadataOptions(t *testing.T) {
 }
 
 func testAccLaunchConfigurationDataSourceConfig_basic(rName string) string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name                        = %[1]q
   image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -168,7 +169,7 @@ data "aws_launch_configuration" "foo" {
 }
 
 func testAccLaunchConfigurationDataSourceConfig_metadataOptions(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
@@ -189,7 +190,7 @@ data "aws_launch_configuration" "test" {
 }
 
 func testAccLaunchConfigurationDataSourceConfigEbsNoDevice(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
