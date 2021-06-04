@@ -8,8 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGlueConnection() *schema.Resource {
@@ -94,12 +96,12 @@ func resourceAwsGlueConnection() *schema.Resource {
 }
 
 func resourceAwsGlueConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 	var catalogID string
 	if v, ok := d.GetOkExists("catalog_id"); ok {
 		catalogID = v.(string)
 	} else {
-		catalogID = meta.(*AWSClient).accountid
+		catalogID = meta.(*awsprovider.AWSClient).AccountID
 	}
 	name := d.Get("name").(string)
 
@@ -120,7 +122,7 @@ func resourceAwsGlueConnectionCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsGlueConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	catalogID, connectionName, err := decodeGlueConnectionID(d.Id())
 	if err != nil {
@@ -135,7 +137,7 @@ func resourceAwsGlueConnectionRead(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG] Reading Glue Connection: %s", input)
 	output, err := conn.GetConnection(input)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Connection (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -151,10 +153,10 @@ func resourceAwsGlueConnectionRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	connectionArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "glue",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("connection/%s", connectionName),
 	}.String()
 	d.Set("arn", connectionArn)
@@ -177,7 +179,7 @@ func resourceAwsGlueConnectionRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsGlueConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	catalogID, connectionName, err := decodeGlueConnectionID(d.Id())
 	if err != nil {
@@ -200,7 +202,7 @@ func resourceAwsGlueConnectionUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsGlueConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	catalogID, connectionName, err := decodeGlueConnectionID(d.Id())
 	if err != nil {
@@ -232,7 +234,7 @@ func deleteGlueConnection(conn *glue.Glue, catalogID, connectionName string) err
 
 	_, err := conn.DeleteConnection(input)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
 		return err
