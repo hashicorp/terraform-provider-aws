@@ -8,8 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -47,7 +49,7 @@ func resourceAwsEc2LocalGatewayRoute() *schema.Resource {
 }
 
 func resourceAwsEc2LocalGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	destination := d.Get("destination_cidr_block").(string)
 	localGatewayRouteTableID := d.Get("local_gateway_route_table_id").(string)
@@ -70,7 +72,7 @@ func resourceAwsEc2LocalGatewayRouteCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsEc2LocalGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	localGatewayRouteTableID, destination, err := decodeEc2LocalGatewayRouteID(d.Id())
 	if err != nil {
@@ -97,7 +99,7 @@ func resourceAwsEc2LocalGatewayRouteRead(d *schema.ResourceData, meta interface{
 		localGatewayRoute, err = getEc2LocalGatewayRoute(conn, localGatewayRouteTableID, destination)
 	}
 
-	if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 		log.Printf("[WARN] EC2 Local Gateway Route Table (%s) not found, removing from state", localGatewayRouteTableID)
 		d.SetId("")
 		return nil
@@ -134,7 +136,7 @@ func resourceAwsEc2LocalGatewayRouteRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsEc2LocalGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	localGatewayRouteTableID, destination, err := decodeEc2LocalGatewayRouteID(d.Id())
 	if err != nil {
@@ -149,7 +151,7 @@ func resourceAwsEc2LocalGatewayRouteDelete(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] Deleting EC2 Local Gateway Route (%s): %s", d.Id(), input)
 	_, err = conn.DeleteLocalGatewayRoute(input)
 
-	if isAWSErr(err, "InvalidRoute.NotFound", "") || isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidRoute.NotFound", "") || tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 		return nil
 	}
 
