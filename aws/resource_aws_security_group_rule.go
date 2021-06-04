@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSecurityGroupRule() *schema.Resource {
@@ -149,11 +150,11 @@ func resourceAwsSecurityGroupRule() *schema.Resource {
 }
 
 func resourceAwsSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 	sg_id := d.Get("security_group_id").(string)
 
-	awsMutexKV.Lock(sg_id)
-	defer awsMutexKV.Unlock(sg_id)
+	awsprovider.MutexKV.Lock(sg_id)
+	defer awsprovider.MutexKV.Unlock(sg_id)
 
 	sg, err := findResourceSecurityGroup(conn, sg_id)
 	if err != nil {
@@ -281,7 +282,7 @@ information and instructions for recovery. Error message: %s`, sg_id, awsErr.Mes
 }
 
 func resourceAwsSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 	sg_id := d.Get("security_group_id").(string)
 	sg, err := findResourceSecurityGroup(conn, sg_id)
 	if _, notFound := err.(securityGroupNotFound); notFound {
@@ -345,7 +346,7 @@ func resourceAwsSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSecurityGroupRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("description") {
 		if err := resourceSecurityGroupRuleDescriptionUpdate(conn, d); err != nil {
@@ -357,11 +358,11 @@ func resourceAwsSecurityGroupRuleUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsSecurityGroupRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 	sg_id := d.Get("security_group_id").(string)
 
-	awsMutexKV.Lock(sg_id)
-	defer awsMutexKV.Unlock(sg_id)
+	awsprovider.MutexKV.Lock(sg_id)
+	defer awsprovider.MutexKV.Unlock(sg_id)
 
 	sg, err := findResourceSecurityGroup(conn, sg_id)
 	if err != nil {
@@ -899,8 +900,8 @@ func validateAwsSecurityGroupRule(d *schema.ResourceData) error {
 func resourceSecurityGroupRuleDescriptionUpdate(conn *ec2.EC2, d *schema.ResourceData) error {
 	sg_id := d.Get("security_group_id").(string)
 
-	awsMutexKV.Lock(sg_id)
-	defer awsMutexKV.Unlock(sg_id)
+	awsprovider.MutexKV.Lock(sg_id)
+	defer awsprovider.MutexKV.Unlock(sg_id)
 
 	sg, err := findResourceSecurityGroup(conn, sg_id)
 	if err != nil {
