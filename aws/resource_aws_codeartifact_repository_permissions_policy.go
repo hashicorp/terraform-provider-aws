@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCodeArtifactRepositoryPermissionsPolicy() *schema.Resource {
@@ -57,7 +59,7 @@ func resourceAwsCodeArtifactRepositoryPermissionsPolicy() *schema.Resource {
 }
 
 func resourceAwsCodeArtifactRepositoryPermissionsPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
+	conn := meta.(*awsprovider.AWSClient).CodeArtifactConn
 	log.Print("[DEBUG] Creating CodeArtifact Repository Permissions Policy")
 
 	params := &codeartifact.PutRepositoryPermissionsPolicyInput{
@@ -85,7 +87,7 @@ func resourceAwsCodeArtifactRepositoryPermissionsPolicyPut(d *schema.ResourceDat
 }
 
 func resourceAwsCodeArtifactRepositoryPermissionsPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
+	conn := meta.(*awsprovider.AWSClient).CodeArtifactConn
 	log.Printf("[DEBUG] Reading CodeArtifact Repository Permissions Policy: %s", d.Id())
 
 	domainOwner, domainName, repoName, err := decodeCodeArtifactRepositoryID(d.Id())
@@ -99,7 +101,7 @@ func resourceAwsCodeArtifactRepositoryPermissionsPolicyRead(d *schema.ResourceDa
 		Repository:  aws.String(repoName),
 	})
 	if err != nil {
-		if isAWSErr(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] CodeArtifact Repository Permissions Policy %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -118,7 +120,7 @@ func resourceAwsCodeArtifactRepositoryPermissionsPolicyRead(d *schema.ResourceDa
 }
 
 func resourceAwsCodeArtifactRepositoryPermissionsPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
+	conn := meta.(*awsprovider.AWSClient).CodeArtifactConn
 	log.Printf("[DEBUG] Deleting CodeArtifact Repository Permissions Policy: %s", d.Id())
 
 	domainOwner, domainName, repoName, err := decodeCodeArtifactRepositoryID(d.Id())
@@ -134,7 +136,7 @@ func resourceAwsCodeArtifactRepositoryPermissionsPolicyDelete(d *schema.Resource
 
 	_, err = conn.DeleteRepositoryPermissionsPolicy(input)
 
-	if isAWSErr(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
