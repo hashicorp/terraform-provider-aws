@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -20,18 +23,18 @@ func init() {
 }
 
 func testSweepPinpointApps(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).pinpointconn
+	conn := client.(*awsprovider.AWSClient).PinpointConn
 
 	input := &pinpoint.GetAppsInput{}
 
 	for {
 		output, err := conn.GetApps(input)
 		if err != nil {
-			if testSweepSkipSweepError(err) {
+			if atest.SweepSkipSweepError(err) {
 				log.Printf("[WARN] Skipping Pinpoint app sweep for %s: %s", region, err)
 				return nil
 			}
@@ -69,9 +72,9 @@ func TestAccAWSPinpointApp_basic(t *testing.T) {
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   atest.ErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSPinpointAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -95,9 +98,9 @@ func TestAccAWSPinpointApp_CampaignHookLambda(t *testing.T) {
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   atest.ErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSPinpointAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -123,9 +126,9 @@ func TestAccAWSPinpointApp_Limits(t *testing.T) {
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   atest.ErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSPinpointAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -151,9 +154,9 @@ func TestAccAWSPinpointApp_QuietTime(t *testing.T) {
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   atest.ErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSPinpointAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -179,9 +182,9 @@ func TestAccAWSPinpointApp_Tags(t *testing.T) {
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   atest.ErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsRamResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -219,13 +222,13 @@ func TestAccAWSPinpointApp_Tags(t *testing.T) {
 }
 
 func testAccPreCheckAWSPinpointApp(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).PinpointConn
 
 	input := &pinpoint.GetAppsInput{}
 
 	_, err := conn.GetApps(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -245,7 +248,7 @@ func testAccCheckAWSPinpointAppExists(n string, application *pinpoint.Applicatio
 			return fmt.Errorf("No Pinpoint app with that ID exists")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).PinpointConn
 
 		// Check if the app exists
 		params := &pinpoint.GetAppInput{
@@ -379,7 +382,7 @@ resource "aws_pinpoint_app" "test" {
 }
 
 func testAccCheckAWSPinpointAppDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).PinpointConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_pinpoint_app" {
@@ -392,7 +395,7 @@ func testAccCheckAWSPinpointAppDestroy(s *terraform.State) error {
 		}
 		_, err := conn.GetApp(params)
 		if err != nil {
-			if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 				continue
 			}
 			return err
