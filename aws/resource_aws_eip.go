@@ -13,8 +13,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -126,8 +127,8 @@ func resourceAwsEip() *schema.Resource {
 }
 
 func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
-	ec2conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	EC2Conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// By default, we're not in a VPC
@@ -141,16 +142,16 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		supportedPlatforms := meta.(*AWSClient).supportedplatforms
-		if domainOpt != ec2.DomainTypeVpc && len(supportedPlatforms) > 0 && hasEc2Classic(supportedPlatforms) {
+		supportedPlatforms := meta.(*awsprovider.AWSClient).SupportedPlatforms
+		if domainOpt != ec2.DomainTypeVpc && len(supportedPlatforms) > 0 && awsprovider.HasEC2Classic(supportedPlatforms) {
 			return fmt.Errorf("tags cannot be set for a standard-domain EIP - must be a VPC-domain EIP")
 		}
 		allocOpts.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeElasticIp)
 	}
 
 	if v, ok := d.GetOk("address"); ok {
-		supportedPlatforms := meta.(*AWSClient).supportedplatforms
-		if domainOpt != ec2.DomainTypeVpc && len(supportedPlatforms) > 0 && hasEc2Classic(supportedPlatforms) {
+		supportedPlatforms := meta.(*awsprovider.AWSClient).SupportedPlatforms
+		if domainOpt != ec2.DomainTypeVpc && len(supportedPlatforms) > 0 && awsprovider.HasEC2Classic(supportedPlatforms) {
 			return fmt.Errorf("error, address to recover cannot be set for a standard-domain EIP - must be a VPC-domain EIP")
 		}
 		allocOpts.Address = aws.String(v.(string))
@@ -169,7 +170,7 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] EIP create configuration: %#v", allocOpts)
-	allocResp, err := ec2conn.AllocateAddress(allocOpts)
+	allocResp, err := EC2Conn.AllocateAddress(allocOpts)
 	if err != nil {
 		return fmt.Errorf("Error creating EIP: %s", err)
 	}
@@ -194,9 +195,9 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
-	ec2conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	EC2Conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	domain := resourceAwsEipDomain(d)
 	id := d.Id()
@@ -218,7 +219,7 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 
 	if d.IsNewResource() {
 		err := resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
-			describeAddresses, err = ec2conn.DescribeAddresses(req)
+			describeAddresses, err = EC2Conn.DescribeAddresses(req)
 			if err != nil {
 				awsErr, ok := err.(awserr.Error)
 				if ok && (awsErr.Code() == "InvalidAllocationID.NotFound" ||
@@ -231,13 +232,13 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		})
 		if isResourceTimeoutError(err) {
-			describeAddresses, err = ec2conn.DescribeAddresses(req)
+			describeAddresses, err = EC2Conn.DescribeAddresses(req)
 		}
 		if err != nil {
 			return fmt.Errorf("Error retrieving EIP: %s", err)
 		}
 	} else {
-		describeAddresses, err = ec2conn.DescribeAddresses(req)
+		describeAddresses, err = EC2Conn.DescribeAddresses(req)
 		if err != nil {
 			awsErr, ok := err.(awserr.Error)
 			if ok && (awsErr.Code() == "InvalidAllocationID.NotFound" ||
@@ -279,15 +280,15 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("network_interface", "")
 	}
 
-	region := *ec2conn.Config.Region
+	region := *EC2Conn.Config.Region
 	d.Set("private_ip", address.PrivateIpAddress)
 	if address.PrivateIpAddress != nil {
-		d.Set("private_dns", fmt.Sprintf("ip-%s.%s", resourceAwsEc2DashIP(*address.PrivateIpAddress), resourceAwsEc2RegionalPrivateDnsSuffix(region)))
+		d.Set("private_dns", fmt.Sprintf("ip-%s.%s", awsprovider.EC2DashIP(*address.PrivateIpAddress), awsprovider.EC2RegionalPrivateDnsSuffix(region)))
 	}
 
 	d.Set("public_ip", address.PublicIp)
 	if address.PublicIp != nil {
-		d.Set("public_dns", meta.(*AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s", resourceAwsEc2DashIP(*address.PublicIp), resourceAwsEc2RegionalPublicDnsSuffix(region))))
+		d.Set("public_dns", meta.(*awsprovider.AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s", awsprovider.EC2DashIP(*address.PublicIp), resourceAwsEc2RegionalPublicDnsSuffix(region))))
 	}
 
 	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
@@ -326,7 +327,7 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
-	ec2conn := meta.(*AWSClient).ec2conn
+	EC2Conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	domain := resourceAwsEipDomain(d)
 
@@ -382,9 +383,9 @@ func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] EIP associate configuration: %s (domain: %s)", assocOpts, domain)
 
 		err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
-			_, err := ec2conn.AssociateAddress(assocOpts)
+			_, err := EC2Conn.AssociateAddress(assocOpts)
 			if err != nil {
-				if isAWSErr(err, "InvalidAllocationID.NotFound", "") {
+				if tfawserr.ErrMessageContains(err, "InvalidAllocationID.NotFound", "") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -392,7 +393,7 @@ func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		})
 		if isResourceTimeoutError(err) {
-			_, err = ec2conn.AssociateAddress(assocOpts)
+			_, err = EC2Conn.AssociateAddress(assocOpts)
 		}
 		if err != nil {
 			// Prevent saving instance if association failed
@@ -403,7 +404,7 @@ func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if assocOpts.AllocationId == nil {
-			if err := waitForEc2AddressAssociationClassic(ec2conn, aws.StringValue(assocOpts.PublicIp), aws.StringValue(assocOpts.InstanceId)); err != nil {
+			if err := waitForEc2AddressAssociationClassic(EC2Conn, aws.StringValue(assocOpts.PublicIp), aws.StringValue(assocOpts.InstanceId)); err != nil {
 				return fmt.Errorf("error waiting for EC2 Address (%s) to associate with EC2-Classic Instance (%s): %w", aws.StringValue(assocOpts.PublicIp), aws.StringValue(assocOpts.InstanceId), err)
 			}
 		}
@@ -414,7 +415,7 @@ func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("tags cannot be set for a standard-domain EIP - must be a VPC-domain EIP")
 		}
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.Ec2UpdateTags(ec2conn, d.Id(), o, n); err != nil {
+		if err := keyvaluetags.Ec2UpdateTags(EC2Conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EIP (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -423,7 +424,7 @@ func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsEipDelete(d *schema.ResourceData, meta interface{}) error {
-	ec2conn := meta.(*AWSClient).ec2conn
+	EC2Conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if err := resourceAwsEipRead(d, meta); err != nil {
 		return err
@@ -459,7 +460,7 @@ func resourceAwsEipDelete(d *schema.ResourceData, meta interface{}) error {
 
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		var err error
-		_, err = ec2conn.ReleaseAddress(input)
+		_, err = EC2Conn.ReleaseAddress(input)
 
 		if err == nil {
 			return nil
@@ -471,7 +472,7 @@ func resourceAwsEipDelete(d *schema.ResourceData, meta interface{}) error {
 		return resource.RetryableError(err)
 	})
 	if isResourceTimeoutError(err) {
-		_, err = ec2conn.ReleaseAddress(input)
+		_, err = EC2Conn.ReleaseAddress(input)
 	}
 	if err != nil {
 		return fmt.Errorf("Error releasing EIP address: %s", err)
@@ -492,7 +493,7 @@ func resourceAwsEipDomain(d *schema.ResourceData) string {
 }
 
 func disassociateEip(d *schema.ResourceData, meta interface{}) error {
-	ec2conn := meta.(*AWSClient).ec2conn
+	EC2Conn := meta.(*awsprovider.AWSClient).EC2Conn
 	log.Printf("[DEBUG] Disassociating EIP: %s", d.Id())
 	var err error
 	switch resourceAwsEipDomain(d) {
@@ -503,11 +504,11 @@ func disassociateEip(d *schema.ResourceData, meta interface{}) error {
 			// Hence this disassociation can be skipped.
 			return nil
 		}
-		_, err = ec2conn.DisassociateAddress(&ec2.DisassociateAddressInput{
+		_, err = EC2Conn.DisassociateAddress(&ec2.DisassociateAddressInput{
 			AssociationId: aws.String(associationID),
 		})
 	case ec2.DomainTypeStandard:
-		_, err = ec2conn.DisassociateAddress(&ec2.DisassociateAddressInput{
+		_, err = EC2Conn.DisassociateAddress(&ec2.DisassociateAddressInput{
 			PublicIp: aws.String(d.Get("public_ip").(string)),
 		})
 	}
