@@ -9,11 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSagemakerDomain() *schema.Resource {
@@ -62,7 +64,7 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"app_network_access_type": {
 				Type:         schema.TypeString,
@@ -86,7 +88,7 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 						"execution_role": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"sharing_settings": {
 							Type:     schema.TypeList,
@@ -104,7 +106,7 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 									"s3_kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 									"s3_output_path": {
 										Type:     schema.TypeString,
@@ -134,7 +136,7 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 												"sagemaker_image_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: ValidateArn,
 												},
 											},
 										},
@@ -163,7 +165,7 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 												"sagemaker_image_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: ValidateArn,
 												},
 											},
 										},
@@ -192,7 +194,7 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 												"sagemaker_image_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: ValidateArn,
 												},
 											},
 										},
@@ -245,8 +247,8 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 }
 
 func resourceAwsSagemakerDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &sagemaker.CreateDomainInput{
@@ -288,13 +290,13 @@ func resourceAwsSagemakerDomainCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSagemakerDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	domain, err := finder.DomainByName(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker domain (%s), removing from state", d.Id())
 			return nil
@@ -342,7 +344,7 @@ func resourceAwsSagemakerDomainRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsSagemakerDomainUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	if d.HasChange("default_user_settings") {
 		input := &sagemaker.UpdateDomainInput{
@@ -373,7 +375,7 @@ func resourceAwsSagemakerDomainUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSagemakerDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteDomainInput{
 		DomainId: aws.String(d.Id()),
@@ -383,13 +385,13 @@ func resourceAwsSagemakerDomainDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if _, err := conn.DeleteDomain(input); err != nil {
-		if !isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
 			return fmt.Errorf("error deleting SageMaker domain (%s): %w", d.Id(), err)
 		}
 	}
 
 	if _, err := waiter.DomainDeleted(conn, d.Id()); err != nil {
-		if !isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
 			return fmt.Errorf("error waiting for SageMaker domain (%s) to delete: %w", d.Id(), err)
 		}
 	}
