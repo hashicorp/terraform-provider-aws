@@ -5,9 +5,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSEc2LocalGatewayRoute_basic(t *testing.T) {
@@ -18,9 +21,9 @@ func TestAccAWSEc2LocalGatewayRoute_basic(t *testing.T) {
 	resourceName := "aws_ec2_local_gateway_route.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2LocalGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -47,16 +50,16 @@ func TestAccAWSEc2LocalGatewayRoute_disappears(t *testing.T) {
 	resourceName := "aws_ec2_local_gateway_route.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2LocalGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEc2LocalGatewayRouteConfigDestinationCidrBlock(destinationCidrBlock),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2LocalGatewayRouteExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2LocalGatewayRoute(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsEc2LocalGatewayRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -81,7 +84,7 @@ func testAccCheckAWSEc2LocalGatewayRouteExists(resourceName string) resource.Tes
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 		route, err := getEc2LocalGatewayRoute(conn, localGatewayRouteTableID, destination)
 
@@ -98,7 +101,7 @@ func testAccCheckAWSEc2LocalGatewayRouteExists(resourceName string) resource.Tes
 }
 
 func testAccCheckAWSEc2LocalGatewayRouteDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_local_gateway_route" {
@@ -113,7 +116,7 @@ func testAccCheckAWSEc2LocalGatewayRouteDestroy(s *terraform.State) error {
 
 		route, err := getEc2LocalGatewayRoute(conn, localGatewayRouteTableID, destination)
 
-		if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 			continue
 		}
 
