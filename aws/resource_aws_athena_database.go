@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsAthenaDatabase() *schema.Resource {
@@ -90,7 +91,7 @@ func expandAthenaResultConfiguration(bucket string, encryptionConfigurationList 
 }
 
 func resourceAwsAthenaDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).athenaconn
+	conn := meta.(*awsprovider.AWSClient).AthenaConn
 
 	input := &athena.StartQueryExecutionInput{
 		QueryString:         aws.String(fmt.Sprintf("create database `%s`;", d.Get("name").(string))),
@@ -110,7 +111,7 @@ func resourceAwsAthenaDatabaseCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsAthenaDatabaseRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).athenaconn
+	conn := meta.(*awsprovider.AWSClient).AthenaConn
 
 	input := &athena.StartQueryExecutionInput{
 		QueryString:         aws.String("show databases;"),
@@ -133,7 +134,7 @@ func resourceAwsAthenaDatabaseUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsAthenaDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).athenaconn
+	conn := meta.(*awsprovider.AWSClient).AthenaConn
 
 	name := d.Get("name").(string)
 
