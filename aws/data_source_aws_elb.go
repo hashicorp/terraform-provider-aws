@@ -8,7 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsElb() *schema.Resource {
@@ -196,8 +197,8 @@ func dataSourceAwsElb() *schema.Resource {
 }
 
 func dataSourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elbconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ELBConn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	lbName := d.Get("name").(string)
 
@@ -216,16 +217,16 @@ func dataSourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(resp.LoadBalancerDescriptions[0].LoadBalancerName))
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Service:   "elasticloadbalancing",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("loadbalancer/%s", aws.StringValue(resp.LoadBalancerDescriptions[0].LoadBalancerName)),
 	}
 	d.Set("arn", arn.String())
 
 	lb := resp.LoadBalancerDescriptions[0]
-	ec2conn := meta.(*AWSClient).ec2conn
+	EC2Conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	describeAttrsOpts := &elb.DescribeLoadBalancerAttributesInput{
 		LoadBalancerName: aws.String(d.Id()),
@@ -261,7 +262,7 @@ func dataSourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 		var elbVpc string
 		if lb.VPCId != nil {
 			elbVpc = aws.StringValue(lb.VPCId)
-			sgId, err := sourceSGIdByName(ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), elbVpc)
+			sgId, err := sourceSGIdByName(EC2Conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), elbVpc)
 			if err != nil {
 				return fmt.Errorf("error looking up ELB Security Group ID: %w", err)
 			} else {
