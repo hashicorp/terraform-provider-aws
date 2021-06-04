@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEc2TransitGatewayRouteTablePropagation() *schema.Resource {
@@ -48,7 +49,7 @@ func resourceAwsEc2TransitGatewayRouteTablePropagation() *schema.Resource {
 }
 
 func resourceAwsEc2TransitGatewayRouteTablePropagationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	transitGatewayAttachmentID := d.Get("transit_gateway_attachment_id").(string)
 	transitGatewayRouteTableID := d.Get("transit_gateway_route_table_id").(string)
@@ -73,7 +74,7 @@ func resourceAwsEc2TransitGatewayRouteTablePropagationCreate(d *schema.ResourceD
 }
 
 func resourceAwsEc2TransitGatewayRouteTablePropagationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	transitGatewayRouteTableID, transitGatewayAttachmentID, err := decodeEc2TransitGatewayRouteTablePropagationID(d.Id())
 	if err != nil {
@@ -111,7 +112,7 @@ func resourceAwsEc2TransitGatewayRouteTablePropagationRead(d *schema.ResourceDat
 }
 
 func resourceAwsEc2TransitGatewayRouteTablePropagationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	transitGatewayRouteTableID, transitGatewayAttachmentID, err := decodeEc2TransitGatewayRouteTablePropagationID(d.Id())
 	if err != nil {
@@ -126,7 +127,7 @@ func resourceAwsEc2TransitGatewayRouteTablePropagationDelete(d *schema.ResourceD
 	log.Printf("[DEBUG] Disabling EC2 Transit Gateway Route Table (%s) Propagation (%s): %s", transitGatewayRouteTableID, transitGatewayAttachmentID, input)
 	_, err = conn.DisableTransitGatewayRouteTablePropagation(input)
 
-	if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 		return nil
 	}
 
