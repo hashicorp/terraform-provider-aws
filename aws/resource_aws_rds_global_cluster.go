@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -109,7 +110,7 @@ func resourceAwsRDSGlobalCluster() *schema.Resource {
 }
 
 func resourceAwsRDSGlobalClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	input := &rds.CreateGlobalClusterInput{
 		GlobalClusterIdentifier: aws.String(d.Get("global_cluster_identifier").(string)),
@@ -161,11 +162,11 @@ func resourceAwsRDSGlobalClusterCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsRDSGlobalClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	globalCluster, err := rdsDescribeGlobalCluster(conn, d.Id())
 
-	if isAWSErr(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
 		log.Printf("[WARN] RDS Global Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -205,7 +206,7 @@ func resourceAwsRDSGlobalClusterRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsRDSGlobalClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	input := &rds.ModifyGlobalClusterInput{
 		DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
@@ -221,7 +222,7 @@ func resourceAwsRDSGlobalClusterUpdate(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Updating RDS Global Cluster (%s): %s", d.Id(), input)
 	_, err := conn.ModifyGlobalCluster(input)
 
-	if isAWSErr(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
 		return nil
 	}
 
@@ -250,7 +251,7 @@ func resourceAwsRDSGlobalClusterGetIdByArn(conn *rds.RDS, arn string) string {
 }
 
 func resourceAwsRDSGlobalClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	if d.Get("force_destroy").(bool) {
 		for _, globalClusterMemberRaw := range d.Get("global_cluster_members").(*schema.Set).List() {
@@ -298,7 +299,7 @@ func resourceAwsRDSGlobalClusterDelete(d *schema.ResourceData, meta interface{})
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteGlobalCluster(input)
 
-		if isAWSErr(err, rds.ErrCodeInvalidGlobalClusterStateFault, "is not empty") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidGlobalClusterStateFault, "is not empty") {
 			return resource.RetryableError(err)
 		}
 
@@ -313,7 +314,7 @@ func resourceAwsRDSGlobalClusterDelete(d *schema.ResourceData, meta interface{})
 		_, err = conn.DeleteGlobalCluster(input)
 	}
 
-	if isAWSErr(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
 		return nil
 	}
 
@@ -418,7 +419,7 @@ func rdsGlobalClusterRefreshFunc(conn *rds.RDS, globalClusterID string) resource
 	return func() (interface{}, string, error) {
 		globalCluster, err := rdsDescribeGlobalCluster(conn, globalClusterID)
 
-		if isAWSErr(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
 			return nil, "deleted", nil
 		}
 
@@ -529,10 +530,10 @@ func resourceAwsRDSGlobalClusterUpgradeMajorEngineVersion(clusterId string, engi
 	err := resource.Retry(waiter.RdsClusterInitiateUpgradeTimeout, func() *resource.RetryError {
 		_, err := conn.ModifyGlobalCluster(input)
 		if err != nil {
-			if isAWSErr(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
 				return resource.NonRetryableError(err)
 			}
-			if isAWSErr(err, "InvalidParameterValue", "ModifyGlobalCluster only supports Major Version Upgrades. To patch the members of your global cluster to a newer minor version you need to call ModifyDbCluster in each one of them.") {
+			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "ModifyGlobalCluster only supports Major Version Upgrades. To patch the members of your global cluster to a newer minor version you need to call ModifyDbCluster in each one of them.") {
 				return resource.NonRetryableError(err)
 			}
 
@@ -559,15 +560,15 @@ func resourceAwsRDSGlobalClusterUpgradeMinorEngineVersion(clusterMembers *schema
 			err := resource.Retry(waiter.RdsClusterInitiateUpgradeTimeout, func() *resource.RetryError {
 				_, err := conn.ModifyDBCluster(modInput)
 				if err != nil {
-					if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+					if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 						return resource.RetryableError(err)
 					}
 
-					if isAWSErr(err, rds.ErrCodeInvalidDBClusterStateFault, "Cannot modify engine version without a primary instance in DB cluster") {
+					if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "Cannot modify engine version without a primary instance in DB cluster") {
 						return resource.NonRetryableError(err)
 					}
 
-					if isAWSErr(err, rds.ErrCodeInvalidDBClusterStateFault, "") {
+					if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "") {
 						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)
@@ -591,7 +592,7 @@ func resourceAwsRDSGlobalClusterUpgradeMinorEngineVersion(clusterMembers *schema
 func resourceAwsRDSGlobalClusterUpgradeEngineVersion(d *schema.ResourceData, conn *rds.RDS) error {
 	log.Printf("[DEBUG] Upgrading RDS Global Cluster (%s) engine version: %s", d.Id(), d.Get("engine_version"))
 	err := resourceAwsRDSGlobalClusterUpgradeMajorEngineVersion(d.Id(), d.Get("engine_version").(string), conn)
-	if isAWSErr(err, "InvalidParameterValue", "ModifyGlobalCluster only supports Major Version Upgrades. To patch the members of your global cluster to a newer minor version you need to call ModifyDbCluster in each one of them.") {
+	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "ModifyGlobalCluster only supports Major Version Upgrades. To patch the members of your global cluster to a newer minor version you need to call ModifyDbCluster in each one of them.") {
 		err = resourceAwsRDSGlobalClusterUpgradeMinorEngineVersion(d.Get("global_cluster_members").(*schema.Set), d.Get("engine_version").(string), conn)
 		if err != nil {
 			return err
