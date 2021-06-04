@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
@@ -19,9 +21,9 @@ func TestAccAWSRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
 	clusterResourceName := "aws_redshift_cluster.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftSnapshotScheduleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -47,7 +49,7 @@ func testAccCheckAWSRedshiftSnapshotScheduleAssociationDestroy(s *terraform.Stat
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).RedshiftConn
 		clusterIdentifier, scheduleIdentifier, err := resourceAwsRedshiftSnapshotScheduleAssociationParseId(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -88,7 +90,7 @@ func testAccCheckAWSRedshiftSnapshotScheduleAssociationExists(n string) resource
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).RedshiftConn
 		resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
 			ScheduleIdentifier: aws.String(scheduleIdentifier),
 			ClusterIdentifier:  aws.String(clusterIdentifier),
