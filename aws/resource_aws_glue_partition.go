@@ -7,10 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfglue "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGluePartition() *schema.Resource {
@@ -198,8 +200,8 @@ func resourceAwsGluePartition() *schema.Resource {
 }
 
 func resourceAwsGluePartitionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	catalogID := createAwsGlueCatalogID(d, meta.(*AWSClient).accountid)
+	conn := meta.(*awsprovider.AWSClient).GlueConn
+	catalogID := createAwsGlueCatalogID(d, meta.(*awsprovider.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
 	tableName := d.Get("table_name").(string)
 	values := d.Get("partition_values").([]interface{})
@@ -223,12 +225,12 @@ func resourceAwsGluePartitionCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsGluePartitionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Reading Glue Partition: %s", d.Id())
 	partition, err := finder.PartitionByValues(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Partition (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -265,7 +267,7 @@ func resourceAwsGluePartitionRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsGluePartitionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	catalogID, dbName, tableName, values, err := tfglue.ReadAwsGluePartitionID(d.Id())
 	if err != nil {
@@ -289,7 +291,7 @@ func resourceAwsGluePartitionUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsGluePartitionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	catalogID, dbName, tableName, values, tableErr := tfglue.ReadAwsGluePartitionID(d.Id())
 	if tableErr != nil {
