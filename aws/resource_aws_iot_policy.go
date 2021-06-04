@@ -6,7 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsIotPolicy() *schema.Resource {
@@ -44,7 +46,7 @@ func resourceAwsIotPolicy() *schema.Resource {
 
 func resourceAwsIotPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*awsprovider.AWSClient).IoTConn
 
 	out, err := conn.CreatePolicy(&iot.CreatePolicyInput{
 		PolicyName:     aws.String(d.Get("name").(string)),
@@ -61,13 +63,13 @@ func resourceAwsIotPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsIotPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*awsprovider.AWSClient).IoTConn
 
 	out, err := conn.GetPolicy(&iot.GetPolicyInput{
 		PolicyName: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] IoT Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -86,7 +88,7 @@ func resourceAwsIotPolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsIotPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*awsprovider.AWSClient).IoTConn
 
 	if d.HasChange("policy") {
 		_, err := conn.CreatePolicyVersion(&iot.CreatePolicyVersionInput{
@@ -105,7 +107,7 @@ func resourceAwsIotPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 
 func resourceAwsIotPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*awsprovider.AWSClient).IoTConn
 
 	out, err := conn.ListPolicyVersions(&iot.ListPolicyVersionsInput{
 		PolicyName: aws.String(d.Id()),
@@ -123,7 +125,7 @@ func resourceAwsIotPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 				PolicyVersionId: ver.VersionId,
 			})
 
-			if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
 				continue
 			}
 
@@ -138,7 +140,7 @@ func resourceAwsIotPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 		PolicyName: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
