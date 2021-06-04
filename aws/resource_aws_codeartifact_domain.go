@@ -9,8 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCodeArtifactDomain() *schema.Resource {
@@ -38,7 +40,7 @@ func resourceAwsCodeArtifactDomain() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"owner": {
 				Type:     schema.TypeString,
@@ -65,8 +67,8 @@ func resourceAwsCodeArtifactDomain() *schema.Resource {
 }
 
 func resourceAwsCodeArtifactDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CodeArtifactConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	log.Print("[DEBUG] Creating CodeArtifact Domain")
 
@@ -90,9 +92,9 @@ func resourceAwsCodeArtifactDomainCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsCodeArtifactDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CodeArtifactConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading CodeArtifact Domain: %s", d.Id())
 
@@ -106,7 +108,7 @@ func resourceAwsCodeArtifactDomainRead(d *schema.ResourceData, meta interface{})
 		DomainOwner: aws.String(domainOwner),
 	})
 	if err != nil {
-		if isAWSErr(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] CodeArtifact Domain %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -144,7 +146,7 @@ func resourceAwsCodeArtifactDomainRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsCodeArtifactDomainUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
+	conn := meta.(*awsprovider.AWSClient).CodeArtifactConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -157,7 +159,7 @@ func resourceAwsCodeArtifactDomainUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsCodeArtifactDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
+	conn := meta.(*awsprovider.AWSClient).CodeArtifactConn
 	log.Printf("[DEBUG] Deleting CodeArtifact Domain: %s", d.Id())
 
 	domainOwner, domainName, err := decodeCodeArtifactDomainID(d.Id())
@@ -172,7 +174,7 @@ func resourceAwsCodeArtifactDomainDelete(d *schema.ResourceData, meta interface{
 
 	_, err = conn.DeleteDomain(input)
 
-	if isAWSErr(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
