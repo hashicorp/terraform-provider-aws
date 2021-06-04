@@ -7,7 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsWafRegionalByteMatchSet() *schema.Resource {
@@ -68,8 +70,8 @@ func resourceAwsWafRegionalByteMatchSet() *schema.Resource {
 }
 
 func resourceAwsWafRegionalByteMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	region := meta.(*awsprovider.AWSClient).Region
 
 	log.Printf("[INFO] Creating ByteMatchSet: %s", d.Get("name").(string))
 
@@ -93,7 +95,7 @@ func resourceAwsWafRegionalByteMatchSetCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsWafRegionalByteMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
 
 	log.Printf("[INFO] Reading ByteMatchSet: %s", d.Get("name").(string))
 
@@ -103,7 +105,7 @@ func resourceAwsWafRegionalByteMatchSetRead(d *schema.ResourceData, meta interfa
 
 	resp, err := conn.GetByteMatchSet(params)
 
-	if isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
+	if tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
 		log.Printf("[WARN] WAF Regional Byte Set Match (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -150,8 +152,8 @@ func flattenWafByteMatchTuplesWR(in []*waf.ByteMatchTuple) []interface{} {
 }
 
 func resourceAwsWafRegionalByteMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	region := meta.(*awsprovider.AWSClient).Region
 	log.Printf("[INFO] Updating ByteMatchSet: %s", d.Get("name").(string))
 
 	if d.HasChange("byte_match_tuples") {
@@ -167,8 +169,8 @@ func resourceAwsWafRegionalByteMatchSetUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsWafRegionalByteMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	region := meta.(*awsprovider.AWSClient).Region
 
 	log.Printf("[INFO] Deleting ByteMatchSet: %s", d.Get("name").(string))
 
