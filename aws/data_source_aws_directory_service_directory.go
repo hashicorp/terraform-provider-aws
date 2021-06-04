@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsDirectoryServiceDirectory() *schema.Resource {
@@ -128,15 +130,15 @@ func dataSourceAwsDirectoryServiceDirectory() *schema.Resource {
 }
 
 func dataSourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dsconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DirectoryConn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	directoryID := d.Get("directory_id").(string)
 	out, err := conn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
 		DirectoryIds: []*string{aws.String(directoryID)},
 	})
 	if err != nil {
-		if isAWSErr(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
 			return fmt.Errorf("DirectoryService Directory (%s) not found", directoryID)
 		}
 		return fmt.Errorf("error reading DirectoryService Directory: %w", err)
