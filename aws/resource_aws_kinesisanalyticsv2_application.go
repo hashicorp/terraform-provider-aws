@@ -15,10 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
@@ -76,7 +77,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 															"bucket_arn": {
 																Type:         schema.TypeString,
 																Required:     true,
-																ValidateFunc: validateArn,
+																ValidateFunc: ValidateArn,
 															},
 
 															"file_key": {
@@ -373,7 +374,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 																		"resource_arn": {
 																			Type:         schema.TypeString,
 																			Required:     true,
-																			ValidateFunc: validateArn,
+																			ValidateFunc: ValidateArn,
 																		},
 																	},
 																},
@@ -511,7 +512,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 															"resource_arn": {
 																Type:         schema.TypeString,
 																Required:     true,
-																ValidateFunc: validateArn,
+																ValidateFunc: ValidateArn,
 															},
 														},
 													},
@@ -530,7 +531,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 															"resource_arn": {
 																Type:         schema.TypeString,
 																Required:     true,
-																ValidateFunc: validateArn,
+																ValidateFunc: ValidateArn,
 															},
 														},
 													},
@@ -582,7 +583,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 															"resource_arn": {
 																Type:         schema.TypeString,
 																Required:     true,
-																ValidateFunc: validateArn,
+																ValidateFunc: ValidateArn,
 															},
 														},
 													},
@@ -597,7 +598,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 															"resource_arn": {
 																Type:         schema.TypeString,
 																Required:     true,
-																ValidateFunc: validateArn,
+																ValidateFunc: ValidateArn,
 															},
 														},
 													},
@@ -612,7 +613,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 															"resource_arn": {
 																Type:         schema.TypeString,
 																Required:     true,
-																ValidateFunc: validateArn,
+																ValidateFunc: ValidateArn,
 															},
 														},
 													},
@@ -759,7 +760,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 															"bucket_arn": {
 																Type:         schema.TypeString,
 																Required:     true,
-																ValidateFunc: validateArn,
+																ValidateFunc: ValidateArn,
 															},
 
 															"file_key": {
@@ -847,7 +848,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 						"log_stream_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -895,7 +896,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 			"service_execution_role": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"start_application": {
@@ -921,8 +922,8 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 }
 
 func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisanalyticsv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).KinesisAnalyticsV2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	applicationName := d.Get("name").(string)
@@ -965,9 +966,9 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 }
 
 func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisanalyticsv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).KinesisAnalyticsV2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	application, err := finder.ApplicationDetailByName(conn, d.Get("name").(string))
 
@@ -1021,7 +1022,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisanalyticsv2conn
+	conn := meta.(*awsprovider.AWSClient).KinesisAnalyticsV2Conn
 	applicationName := d.Get("name").(string)
 
 	if d.HasChanges("application_configuration", "cloudwatch_logging_options", "service_execution_role") {
@@ -1506,7 +1507,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 }
 
 func resourceAwsKinesisAnalyticsV2ApplicationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisanalyticsv2conn
+	conn := meta.(*awsprovider.AWSClient).KinesisAnalyticsV2Conn
 
 	createTimestamp, err := time.Parse(time.RFC3339, d.Get("create_timestamp").(string))
 	if err != nil {
