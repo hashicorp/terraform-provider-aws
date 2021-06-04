@@ -171,7 +171,7 @@ func wafv2IpSetReferenceStatementSchema() *schema.Schema {
 				"arn": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validateArn,
+					ValidateFunc: ValidateArn,
 				},
 				"ip_set_forwarded_ip_config": {
 					Type:     schema.TypeList,
@@ -215,7 +215,7 @@ func wafv2RegexPatternSetReferenceStatementSchema() *schema.Schema {
 				"arn": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validateArn,
+					ValidateFunc: ValidateArn,
 				},
 				"field_to_match":      wafv2FieldToMatchSchema(),
 				"text_transformation": wafv2TextTransformationSchema(),
