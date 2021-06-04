@@ -8,9 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSCodeStarConnectionsConnection_Basic(t *testing.T) {
@@ -19,17 +22,20 @@ func TestAccAWSCodeStarConnectionsConnection_Basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck: func() {
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(codestarconnections.EndpointsID, t)
+		},
+		ErrorCheck:   atest.ErrorCheck(t, codestarconnections.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodeStarConnectionsConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeStarConnectionsConnectionConfigBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCodeStarConnectionsConnectionExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("connection/.+")),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("connection/.+")),
+					atest.MatchAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("connection/.+")),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("connection/.+")),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", codestarconnections.ProviderTypeBitbucket),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", codestarconnections.ConnectionStatusPending),
@@ -50,18 +56,21 @@ func TestAccAWSCodeStarConnectionsConnection_HostArn(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck: func() {
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(codestarconnections.EndpointsID, t)
+		},
+		ErrorCheck:   atest.ErrorCheck(t, codestarconnections.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodeStarConnectionsConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeStarConnectionsConnectionConfigHostArn(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCodeStarConnectionsConnectionExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("connection/.+")),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("connection/.+")),
-					testAccMatchResourceAttrRegionalARN(resourceName, "host_arn", "codestar-connections", regexp.MustCompile("host/.+")),
+					atest.MatchAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("connection/.+")),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("connection/.+")),
+					atest.MatchAttrRegionalARN(resourceName, "host_arn", "codestar-connections", regexp.MustCompile("host/.+")),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", codestarconnections.ProviderTypeGitHubEnterpriseServer),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", codestarconnections.ConnectionStatusPending),
@@ -82,16 +91,19 @@ func TestAccAWSCodeStarConnectionsConnection_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck: func() {
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(codestarconnections.EndpointsID, t)
+		},
+		ErrorCheck:   atest.ErrorCheck(t, codestarconnections.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodeStarConnectionsConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeStarConnectionsConnectionConfigBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCodeStarConnectionsConnectionExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodeStarConnectionsConnection(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCodeStarConnectionsConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -105,9 +117,12 @@ func TestAccAWSCodeStarConnectionsConnection_Tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck: func() {
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(codestarconnections.EndpointsID, t)
+		},
+		ErrorCheck:   atest.ErrorCheck(t, codestarconnections.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodeStarConnectionsConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -155,7 +170,7 @@ func testAccCheckAWSCodeStarConnectionsConnectionExists(n string, v *codestarcon
 			return errors.New("No CodeStar connection ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).codestarconnectionsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CodeStarConnectionsConn
 
 		resp, err := conn.GetConnection(&codestarconnections.GetConnectionInput{
 			ConnectionArn: aws.String(rs.Primary.ID),
@@ -171,7 +186,7 @@ func testAccCheckAWSCodeStarConnectionsConnectionExists(n string, v *codestarcon
 }
 
 func testAccCheckAWSCodeStarConnectionsConnectionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).codestarconnectionsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CodeStarConnectionsConn
 
 	for _, rs := range s.RootModule().Resources {
 		switch rs.Type {
@@ -180,7 +195,7 @@ func testAccCheckAWSCodeStarConnectionsConnectionDestroy(s *terraform.State) err
 				ConnectionArn: aws.String(rs.Primary.ID),
 			})
 
-			if err != nil && !isAWSErr(err, codestarconnections.ErrCodeResourceNotFoundException, "") {
+			if err != nil && !tfawserr.ErrMessageContains(err, codestarconnections.ErrCodeResourceNotFoundException, "") {
 				return err
 			}
 		}
