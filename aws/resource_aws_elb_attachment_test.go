@@ -8,6 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSELBAttachment_basic(t *testing.T) {
@@ -15,9 +17,9 @@ func TestAccAWSELBAttachment_basic(t *testing.T) {
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -58,7 +60,7 @@ func TestAccAWSELBAttachment_drift(t *testing.T) {
 	resourceName := "aws_elb.test"
 
 	deregInstance := func() {
-		conn := testAccProvider.Meta().(*AWSClient).elbconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ELBConn
 
 		deRegisterInstancesOpts := elb.DeregisterInstancesFromLoadBalancerInput{
 			LoadBalancerName: conf.LoadBalancerName,
@@ -75,9 +77,9 @@ func TestAccAWSELBAttachment_drift(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -111,7 +113,7 @@ func testAccAWSELBAttachmentCheckInstanceCount(conf *elb.LoadBalancerDescription
 
 // add one attachment
 func testAccAWSELBAttachmentConfig1() string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+	return atest.ComposeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -146,7 +148,7 @@ resource "aws_elb_attachment" "foo1" {
 
 // add a second attachment
 func testAccAWSELBAttachmentConfig2() string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+	return atest.ComposeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -191,7 +193,7 @@ resource "aws_elb_attachment" "foo2" {
 
 // swap attachments between resources
 func testAccAWSELBAttachmentConfig3() string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+	return atest.ComposeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 data "aws_availability_zones" "available" {
   state = "available"
 
