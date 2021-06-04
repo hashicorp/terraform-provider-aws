@@ -3,6 +3,7 @@ package aws
 import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // See http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/billing-getting-started.html#step-2
@@ -24,7 +25,7 @@ func dataSourceAwsBillingServiceAccount() *schema.Resource {
 func dataSourceAwsBillingServiceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(billingAccountId)
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "iam",
 		AccountID: billingAccountId,
 		Resource:  "root",
