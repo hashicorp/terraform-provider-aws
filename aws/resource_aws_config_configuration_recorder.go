@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsConfigConfigurationRecorder() *schema.Resource {
@@ -32,7 +34,7 @@ func resourceAwsConfigConfigurationRecorder() *schema.Resource {
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"recording_group": {
 				Type:     schema.TypeList,
@@ -64,7 +66,7 @@ func resourceAwsConfigConfigurationRecorder() *schema.Resource {
 }
 
 func resourceAwsConfigConfigurationRecorderPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*awsprovider.AWSClient).ConfigConn
 
 	name := d.Get("name").(string)
 	recorder := configservice.ConfigurationRecorder{
@@ -90,14 +92,14 @@ func resourceAwsConfigConfigurationRecorderPut(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsConfigConfigurationRecorderRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*awsprovider.AWSClient).ConfigConn
 
 	input := configservice.DescribeConfigurationRecordersInput{
 		ConfigurationRecorderNames: []*string{aws.String(d.Id())},
 	}
 	out, err := conn.DescribeConfigurationRecorders(&input)
 	if err != nil {
-		if isAWSErr(err, configservice.ErrCodeNoSuchConfigurationRecorderException, "") {
+		if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigurationRecorderException, "") {
 			log.Printf("[WARN] Configuration Recorder %q is gone (NoSuchConfigurationRecorderException)", d.Id())
 			d.SetId("")
 			return nil
@@ -134,13 +136,13 @@ func resourceAwsConfigConfigurationRecorderRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsConfigConfigurationRecorderDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*awsprovider.AWSClient).ConfigConn
 	input := configservice.DeleteConfigurationRecorderInput{
 		ConfigurationRecorderName: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteConfigurationRecorder(&input)
 	if err != nil {
-		if !isAWSErr(err, configservice.ErrCodeNoSuchConfigurationRecorderException, "") {
+		if !tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigurationRecorderException, "") {
 			return fmt.Errorf("Deleting Configuration Recorder failed: %s", err)
 		}
 	}
