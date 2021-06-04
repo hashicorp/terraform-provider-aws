@@ -6,8 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSDirectoryServiceLogSubscription_basic(t *testing.T) {
@@ -15,9 +18,9 @@ func TestAccAWSDirectoryServiceLogSubscription_basic(t *testing.T) {
 	logGroupName := "ad-service-log-subscription-test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDirectoryService(t) },
-		ErrorCheck:   testAccErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDirectoryService(t) },
+		ErrorCheck:   atest.ErrorCheck(t, directoryservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsDirectoryServiceLogSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			// test create
@@ -41,18 +44,18 @@ func TestAccAWSDirectoryServiceLogSubscription_basic(t *testing.T) {
 }
 
 func testAccCheckAwsDirectoryServiceLogSubscriptionDestroy(s *terraform.State) error {
-	dsconn := testAccProvider.Meta().(*AWSClient).dsconn
+	DirectoryConn := atest.Provider.Meta().(*awsprovider.AWSClient).DirectoryConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_directory_service_log_subscription" {
 			continue
 		}
 
-		res, err := dsconn.ListLogSubscriptions(&directoryservice.ListLogSubscriptionsInput{
+		res, err := DirectoryConn.ListLogSubscriptions(&directoryservice.ListLogSubscriptionsInput{
 			DirectoryId: aws.String(rs.Primary.ID),
 		})
 
-		if isAWSErr(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
 			continue
 		}
 
@@ -79,9 +82,9 @@ func testAccCheckAwsDirectoryServiceLogSubscriptionExists(name string, logGroupN
 			return fmt.Errorf("No ID is set")
 		}
 
-		dsconn := testAccProvider.Meta().(*AWSClient).dsconn
+		DirectoryConn := atest.Provider.Meta().(*awsprovider.AWSClient).DirectoryConn
 
-		res, err := dsconn.ListLogSubscriptions(&directoryservice.ListLogSubscriptionsInput{
+		res, err := DirectoryConn.ListLogSubscriptions(&directoryservice.ListLogSubscriptionsInput{
 			DirectoryId: aws.String(rs.Primary.ID),
 		})
 
