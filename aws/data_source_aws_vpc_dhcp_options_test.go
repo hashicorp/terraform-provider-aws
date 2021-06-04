@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsVpcDhcpOptions_basic(t *testing.T) {
@@ -15,9 +16,9 @@ func TestAccDataSourceAwsVpcDhcpOptions_basic(t *testing.T) {
 	datasourceName := "data.aws_vpc_dhcp_options.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsVpcDhcpOptionsConfig_Missing,
@@ -52,9 +53,9 @@ func TestAccDataSourceAwsVpcDhcpOptions_Filter(t *testing.T) {
 	datasourceName := "data.aws_vpc_dhcp_options.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcDhcpOptionsConfig_Filter(rInt, 1),
