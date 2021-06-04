@@ -8,9 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDataSyncLocationFsxWindowsFileSystem() *schema.Resource {
@@ -45,7 +47,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystem() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"password": {
 				Type:         schema.TypeString,
@@ -74,7 +76,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystem() *schema.Resource {
 				MaxItems: 5,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: ValidateArn,
 				},
 			},
 			"subdirectory": {
@@ -101,8 +103,8 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystem() *schema.Resource {
 }
 
 func resourceAwsDataSyncLocationFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DataSyncConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	fsxArn := d.Get("fsx_filesystem_arn").(string)
 
@@ -134,9 +136,9 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemCreate(d *schema.ResourceDat
 }
 
 func resourceAwsDataSyncLocationFsxWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DataSyncConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &datasync.DescribeLocationFsxWindowsInput{
 		LocationArn: aws.String(d.Id()),
@@ -145,7 +147,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemRead(d *schema.ResourceData,
 	log.Printf("[DEBUG] Reading DataSync Location Fsx Windows: %#v", input)
 	output, err := conn.DescribeLocationFsxWindows(input)
 
-	if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 		log.Printf("[WARN] DataSync Location Fsx Windows %q not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -196,7 +198,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemRead(d *schema.ResourceData,
 }
 
 func resourceAwsDataSyncLocationFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
+	conn := meta.(*awsprovider.AWSClient).DataSyncConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -210,7 +212,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemUpdate(d *schema.ResourceDat
 }
 
 func resourceAwsDataSyncLocationFsxWindowsFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
+	conn := meta.(*awsprovider.AWSClient).DataSyncConn
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
@@ -219,7 +221,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemDelete(d *schema.ResourceDat
 	log.Printf("[DEBUG] Deleting DataSync Location Fsx Windows File System: %#v", input)
 	_, err := conn.DeleteLocation(input)
 
-	if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 		return nil
 	}
 
