@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSEFSFileSystemPolicy_basic(t *testing.T) {
@@ -17,9 +20,9 @@ func TestAccAWSEFSFileSystemPolicy_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -51,16 +54,16 @@ func TestAccAWSEFSFileSystemPolicy_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsFileSystemPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEFSFileSystemPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystemPolicy(resourceName, &desc),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEfsFileSystemPolicy(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsEfsFileSystemPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,7 +72,7 @@ func TestAccAWSEFSFileSystemPolicy_disappears(t *testing.T) {
 }
 
 func testAccCheckEfsFileSystemPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).efsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EFSConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_efs_file_system_policy" {
 			continue
@@ -79,8 +82,8 @@ func testAccCheckEfsFileSystemPolicyDestroy(s *terraform.State) error {
 			FileSystemId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
-			if isAWSErr(err, efs.ErrCodeFileSystemNotFound, "") ||
-				isAWSErr(err, efs.ErrCodePolicyNotFound, "") {
+			if tfawserr.ErrMessageContains(err, efs.ErrCodeFileSystemNotFound, "") ||
+				tfawserr.ErrMessageContains(err, efs.ErrCodePolicyNotFound, "") {
 				return nil
 			}
 			return fmt.Errorf("error describing EFS file system policy in tests: %s", err)
@@ -104,7 +107,7 @@ func testAccCheckEfsFileSystemPolicy(resourceID string, efsFsPolicy *efs.Describ
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).efsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EFSConn
 		fs, err := conn.DescribeFileSystemPolicy(&efs.DescribeFileSystemPolicyInput{
 			FileSystemId: aws.String(rs.Primary.ID),
 		})
