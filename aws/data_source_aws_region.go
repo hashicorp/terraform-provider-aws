@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsRegion() *schema.Resource {
@@ -34,7 +35,7 @@ func dataSourceAwsRegion() *schema.Resource {
 }
 
 func dataSourceAwsRegionRead(d *schema.ResourceData, meta interface{}) error {
-	providerRegion := meta.(*AWSClient).region
+	providerRegion := meta.(*awsprovider.AWSClient).Region
 
 	var region *endpoints.Region
 
