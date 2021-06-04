@@ -9,11 +9,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsFsxLustreFileSystem() *schema.Resource {
@@ -128,7 +130,7 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"per_unit_storage_throughput": {
 				Type:     schema.TypeInt,
@@ -206,8 +208,8 @@ func resourceFsxLustreFileSystemSchemaCustomizeDiff(_ context.Context, d *schema
 }
 
 func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fsxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).FSxConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateFileSystemInput{
@@ -291,7 +293,7 @@ func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsFsxLustreFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fsxconn
+	conn := meta.(*awsprovider.AWSClient).FSxConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -350,13 +352,13 @@ func resourceAwsFsxLustreFileSystemUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsFsxLustreFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fsxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).FSxConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	filesystem, err := describeFsxFileSystem(conn, d.Id())
 
-	if isAWSErr(err, fsx.ErrCodeFileSystemNotFound, "") {
+	if tfawserr.ErrMessageContains(err, fsx.ErrCodeFileSystemNotFound, "") {
 		log.Printf("[WARN] FSx File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -439,7 +441,7 @@ func resourceAwsFsxLustreFileSystemRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsFsxLustreFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fsxconn
+	conn := meta.(*awsprovider.AWSClient).FSxConn
 
 	request := &fsx.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),
@@ -447,7 +449,7 @@ func resourceAwsFsxLustreFileSystemDelete(d *schema.ResourceData, meta interface
 
 	_, err := conn.DeleteFileSystem(request)
 
-	if isAWSErr(err, fsx.ErrCodeFileSystemNotFound, "") {
+	if tfawserr.ErrMessageContains(err, fsx.ErrCodeFileSystemNotFound, "") {
 		return nil
 	}
 
