@@ -8,11 +8,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directoryservice/lister"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -28,13 +31,13 @@ func init() {
 }
 
 func testSweepDirectoryServiceDirectories(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).dsconn
+	conn := client.(*awsprovider.AWSClient).DirectoryConn
 
 	var sweeperErrs *multierror.Error
 
@@ -65,7 +68,7 @@ func testSweepDirectoryServiceDirectories(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Directory Service Directory sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -85,12 +88,12 @@ func TestAccAWSDirectoryServiceDirectory_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSDirectoryService(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, directoryservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -118,12 +121,12 @@ func TestAccAWSDirectoryServiceDirectory_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSDirectoryService(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, directoryservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -170,9 +173,9 @@ func TestAccAWSDirectoryServiceDirectory_microsoft(t *testing.T) {
 	resourceName := "aws_directory_service_directory.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDirectoryService(t) },
-		ErrorCheck:   testAccErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDirectoryService(t) },
+		ErrorCheck:   atest.ErrorCheck(t, directoryservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -199,9 +202,9 @@ func TestAccAWSDirectoryServiceDirectory_microsoftStandard(t *testing.T) {
 	resourceName := "aws_directory_service_directory.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDirectoryService(t) },
-		ErrorCheck:   testAccErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDirectoryService(t) },
+		ErrorCheck:   atest.ErrorCheck(t, directoryservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -229,12 +232,12 @@ func TestAccAWSDirectoryServiceDirectory_connector(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSDirectoryService(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, directoryservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -264,12 +267,12 @@ func TestAccAWSDirectoryServiceDirectory_withAliasAndSso(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSDirectoryService(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, directoryservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -309,7 +312,7 @@ func TestAccAWSDirectoryServiceDirectory_withAliasAndSso(t *testing.T) {
 }
 
 func testAccCheckDirectoryServiceDirectoryDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).dsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).DirectoryConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_directory_service_directory" {
@@ -321,7 +324,7 @@ func testAccCheckDirectoryServiceDirectoryDestroy(s *terraform.State) error {
 		}
 		out, err := conn.DescribeDirectories(&input)
 
-		if isAWSErr(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
 			continue
 		}
 
@@ -343,19 +346,19 @@ func TestAccAWSDirectoryServiceDirectory_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSDirectoryService(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, directoryservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryServiceDirectoryConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDirectoryServiceDirectory(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsDirectoryServiceDirectory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -374,7 +377,7 @@ func testAccCheckServiceDirectoryExists(name string, ds *directoryservice.Direct
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DirectoryConn
 		out, err := conn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
 			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
 		})
@@ -409,7 +412,7 @@ func testAccCheckServiceDirectoryAlias(name, alias string) resource.TestCheckFun
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DirectoryConn
 		out, err := conn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
 			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
 		})
@@ -438,7 +441,7 @@ func testAccCheckServiceDirectorySso(name string, ssoEnabled bool) resource.Test
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DirectoryConn
 		out, err := conn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
 			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
 		})
@@ -457,13 +460,13 @@ func testAccCheckServiceDirectorySso(name string, ssoEnabled bool) resource.Test
 }
 
 func testAccPreCheckAWSDirectoryService(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).dsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).DirectoryConn
 
 	input := &directoryservice.DescribeDirectoriesInput{}
 
 	_, err := conn.DescribeDirectories(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -476,7 +479,7 @@ func testAccPreCheckAWSDirectoryService(t *testing.T) {
 // and we do not have a good read-only way to determine this situation. Here we
 // opt to perform a creation that will fail so we can determine Simple AD support.
 func testAccPreCheckAWSDirectoryServiceSimpleDirectory(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).dsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).DirectoryConn
 
 	input := &directoryservice.CreateDirectoryInput{
 		Name:     aws.String("corp.example.com"),
@@ -486,11 +489,11 @@ func testAccPreCheckAWSDirectoryServiceSimpleDirectory(t *testing.T) {
 
 	_, err := conn.CreateDirectory(input)
 
-	if isAWSErr(err, directoryservice.ErrCodeClientException, "Simple AD directory creation is currently not supported in this region") {
+	if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeClientException, "Simple AD directory creation is currently not supported in this region") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
-	if err != nil && !isAWSErr(err, directoryservice.ErrCodeInvalidParameterException, "VpcSettings must be specified") {
+	if err != nil && !tfawserr.ErrMessageContains(err, directoryservice.ErrCodeInvalidParameterException, "VpcSettings must be specified") {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
