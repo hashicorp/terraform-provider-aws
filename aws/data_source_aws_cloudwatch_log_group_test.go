@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSCloudwatchLogGroupDataSource_basic(t *testing.T) {
@@ -14,9 +15,9 @@ func TestAccAWSCloudwatchLogGroupDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSCloudwatchLogGroupDataSourceConfig(rName),
@@ -36,9 +37,9 @@ func TestAccAWSCloudwatchLogGroupDataSource_tags(t *testing.T) {
 	resourceName := "data.aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSCloudwatchLogGroupDataSourceConfigTags(rName),
@@ -61,9 +62,9 @@ func TestAccAWSCloudwatchLogGroupDataSource_kms(t *testing.T) {
 	resourceName := "data.aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSCloudwatchLogGroupDataSourceConfigKMS(rName),
@@ -84,9 +85,9 @@ func TestAccAWSCloudwatchLogGroupDataSource_retention(t *testing.T) {
 	resourceName := "data.aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSCloudwatchLogGroupDataSourceConfigRetention(rName),
