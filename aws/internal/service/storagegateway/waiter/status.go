@@ -20,6 +20,8 @@ const (
 	NfsFileShareStatusUnknown            = "Unknown"
 	SmbFileShareStatusNotFound           = "NotFound"
 	SmbFileShareStatusUnknown            = "Unknown"
+	FsxFileSystemStatusNotFound          = "NotFound"
+	FsxFileSystemStatusUnknown           = "Unknown"
 )
 
 func StorageGatewayGatewayStatus(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
@@ -49,6 +51,8 @@ func StorageGatewayGatewayJoinDomainStatus(conn *storagegateway.StorageGateway, 
 		}
 
 		output, err := conn.DescribeSMBSettings(input)
+
+		log.Printf("[DEBUG] Storage Gateway Gateway Join Domain Status: %s", *output.ActiveDirectoryStatus)
 
 		if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway is not connected") {
 			return output, storagegateway.ActiveDirectoryStatusUnknownError, nil
@@ -126,5 +130,30 @@ func SMBFileShareStatus(conn *storagegateway.StorageGateway, arn string) resourc
 		}
 
 		return output, aws.StringValue(output.FileShareStatus), nil
+	}
+}
+
+func FsxFileSystemStatus(conn *storagegateway.StorageGateway, fileSystemArn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &storagegateway.DescribeFileSystemAssociationsInput{
+			FileSystemAssociationARNList: []*string{aws.String(fileSystemArn)},
+		}
+
+		log.Printf("[DEBUG] Reading Storage Gateway FSx File System: %s", input)
+		output, err := conn.DescribeFileSystemAssociations(input)
+		if err != nil {
+			if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file system association was not found.") {
+				return nil, FsxFileSystemStatusNotFound, nil
+			}
+			return nil, FsxFileSystemStatusUnknown, fmt.Errorf("error reading Storage Gateway FSx File System: %w", err)
+		}
+
+		if output == nil || len(output.FileSystemAssociationInfoList) == 0 || output.FileSystemAssociationInfoList[0] == nil {
+			return nil, FsxFileSystemStatusNotFound, nil
+		}
+
+		filesystem := output.FileSystemAssociationInfoList[0]
+
+		return filesystem, aws.StringValue(filesystem.FileSystemAssociationStatus), nil
 	}
 }
