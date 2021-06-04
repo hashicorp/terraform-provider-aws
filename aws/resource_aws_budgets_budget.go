@@ -9,9 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/budgets"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsBudgetsBudget() *schema.Resource {
@@ -173,7 +175,7 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validateArn,
+								ValidateFunc: ValidateArn,
 							},
 						},
 					},
@@ -206,12 +208,12 @@ func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) er
 		budget.BudgetName = aws.String(resource.UniqueId())
 	}
 
-	conn := meta.(*AWSClient).budgetconn
+	conn := meta.(*awsprovider.AWSClient).BudgetsConn
 	var accountID string
 	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	} else {
-		accountID = meta.(*AWSClient).accountid
+		accountID = meta.(*awsprovider.AWSClient).AccountID
 	}
 
 	_, err = conn.CreateBudget(&budgets.CreateBudgetInput{
@@ -237,7 +239,7 @@ func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsBudgetsBudgetNotificationsCreate(notifications []*budgets.Notification, subscribers [][]*budgets.Subscriber, budgetName string, accountID string, meta interface{}) error {
-	conn := meta.(*AWSClient).budgetconn
+	conn := meta.(*awsprovider.AWSClient).BudgetsConn
 
 	for i, notification := range notifications {
 		subscribers := subscribers[i]
@@ -303,12 +305,12 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	conn := meta.(*AWSClient).budgetconn
+	conn := meta.(*awsprovider.AWSClient).BudgetsConn
 	describeBudgetOutput, err := conn.DescribeBudget(&budgets.DescribeBudgetInput{
 		BudgetName: aws.String(budgetName),
 		AccountId:  aws.String(accountID),
 	})
-	if isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, budgets.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Budget %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -351,9 +353,9 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("time_unit", budget.TimeUnit)
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "budgetservice",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("budget/%s", aws.StringValue(budget.BudgetName)),
 	}
 	d.Set("arn", arn.String())
@@ -362,7 +364,7 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsBudgetsBudgetNotificationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).budgetconn
+	conn := meta.(*awsprovider.AWSClient).BudgetsConn
 
 	accountID, budgetName, err := decodeBudgetsBudgetID(d.Id())
 
@@ -438,7 +440,7 @@ func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	conn := meta.(*AWSClient).budgetconn
+	conn := meta.(*awsprovider.AWSClient).BudgetsConn
 	budget, err := expandBudgetsBudgetUnmarshal(d)
 	if err != nil {
 		return fmt.Errorf("could not create budget: %v", err)
@@ -461,7 +463,7 @@ func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) er
 	return resourceAwsBudgetsBudgetRead(d, meta)
 }
 func resourceAwsBudgetsBudgetNotificationsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).budgetconn
+	conn := meta.(*awsprovider.AWSClient).BudgetsConn
 	accountID, budgetName, err := decodeBudgetsBudgetID(d.Id())
 
 	if err != nil {
@@ -506,13 +508,13 @@ func resourceAwsBudgetsBudgetDelete(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	conn := meta.(*AWSClient).budgetconn
+	conn := meta.(*awsprovider.AWSClient).BudgetsConn
 	_, err = conn.DeleteBudget(&budgets.DeleteBudgetInput{
 		BudgetName: aws.String(budgetName),
 		AccountId:  aws.String(accountID),
 	})
 	if err != nil {
-		if isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, budgets.ErrCodeNotFoundException, "") {
 			log.Printf("[INFO] budget %s could not be found. skipping delete.", d.Id())
 			return nil
 		}
