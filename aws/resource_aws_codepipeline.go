@@ -10,13 +10,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -178,8 +180,8 @@ func resourceAwsCodePipeline() *schema.Resource {
 }
 
 func resourceAwsCodePipelineCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codepipelineconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CodePipelineConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	pipeline, err := expandAwsCodePipeline(d)
@@ -197,7 +199,7 @@ func resourceAwsCodePipelineCreate(d *schema.ResourceData, meta interface{}) err
 
 		resp, err = conn.CreatePipeline(params)
 
-		if isAWSErr(err, codepipeline.ErrCodeInvalidStructureException, "not authorized") {
+		if tfawserr.ErrMessageContains(err, codepipeline.ErrCodeInvalidStructureException, "not authorized") {
 			return resource.RetryableError(err)
 		}
 
@@ -497,15 +499,15 @@ func flattenAwsCodePipelineActionsInputArtifacts(artifacts []*codepipeline.Input
 }
 
 func resourceAwsCodePipelineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codepipelineconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CodePipelineConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.GetPipeline(&codepipeline.GetPipelineInput{
 		Name: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, codepipeline.ErrCodePipelineNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, codepipeline.ErrCodePipelineNotFoundException, "") {
 		log.Printf("[WARN] CodePipeline (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -558,7 +560,7 @@ func resourceAwsCodePipelineRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsCodePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codepipelineconn
+	conn := meta.(*awsprovider.AWSClient).CodePipelineConn
 
 	pipeline, err := expandAwsCodePipeline(d)
 	if err != nil {
@@ -586,13 +588,13 @@ func resourceAwsCodePipelineUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsCodePipelineDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codepipelineconn
+	conn := meta.(*awsprovider.AWSClient).CodePipelineConn
 
 	_, err := conn.DeletePipeline(&codepipeline.DeletePipelineInput{
 		Name: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, codepipeline.ErrCodePipelineNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, codepipeline.ErrCodePipelineNotFoundException, "") {
 		return nil
 	}
 
