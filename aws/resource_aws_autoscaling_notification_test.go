@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSASGNotification_basic(t *testing.T) {
@@ -18,9 +20,9 @@ func TestAccAWSASGNotification_basic(t *testing.T) {
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckASGNDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -40,9 +42,9 @@ func TestAccAWSASGNotification_update(t *testing.T) {
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckASGNDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -70,9 +72,9 @@ func TestAccAWSASGNotification_Pagination(t *testing.T) {
 	resourceName := "aws_autoscaling_notification.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckASGNDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -119,7 +121,7 @@ func testAccCheckASGNotificationExists(n string, groups []string, asgn *autoscal
 			return fmt.Errorf("No ASG Notification ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).autoscalingconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AutoScalingConn
 		opts := &autoscaling.DescribeNotificationConfigurationsInput{
 			AutoScalingGroupNames: aws.StringSlice(groups),
 			MaxRecords:            aws.Int64(100),
@@ -143,7 +145,7 @@ func testAccCheckASGNDestroy(s *terraform.State) error {
 		}
 
 		groups := []*string{aws.String("foobar1-terraform-test")}
-		conn := testAccProvider.Meta().(*AWSClient).autoscalingconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AutoScalingConn
 		opts := &autoscaling.DescribeNotificationConfigurationsInput{
 			AutoScalingGroupNames: groups,
 		}
@@ -327,7 +329,7 @@ resource "aws_autoscaling_notification" "example" {
 }
 
 func testAccASGNotificationConfig_pagination() string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+	return atest.ComposeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_sns_topic" "user_updates" {
   name = "user-updates-topic"
 }
