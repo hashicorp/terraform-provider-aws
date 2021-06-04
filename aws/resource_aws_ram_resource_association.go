@@ -8,8 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsRamResourceAssociation() *schema.Resource {
@@ -39,7 +41,7 @@ func resourceAwsRamResourceAssociation() *schema.Resource {
 }
 
 func resourceAwsRamResourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ramconn
+	conn := meta.(*awsprovider.AWSClient).RAMConn
 	resourceARN := d.Get("resource_arn").(string)
 	resourceShareARN := d.Get("resource_share_arn").(string)
 
@@ -65,7 +67,7 @@ func resourceAwsRamResourceAssociationCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsRamResourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ramconn
+	conn := meta.(*awsprovider.AWSClient).RAMConn
 
 	resourceShareARN, resourceARN, err := decodeRamResourceAssociationID(d.Id())
 	if err != nil {
@@ -97,7 +99,7 @@ func resourceAwsRamResourceAssociationRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsRamResourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ramconn
+	conn := meta.(*awsprovider.AWSClient).RAMConn
 
 	resourceShareARN, resourceARN, err := decodeRamResourceAssociationID(d.Id())
 	if err != nil {
@@ -112,7 +114,7 @@ func resourceAwsRamResourceAssociationDelete(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG] Disassociating RAM Resource Share: %s", input)
 	_, err = conn.DisassociateResourceShare(input)
 
-	if isAWSErr(err, ram.ErrCodeUnknownResourceException, "") {
+	if tfawserr.ErrMessageContains(err, ram.ErrCodeUnknownResourceException, "") {
 		return nil
 	}
 
@@ -147,7 +149,7 @@ func getRamResourceShareAssociation(conn *ram.RAM, resourceShareARN, resourceARN
 
 	output, err := conn.GetResourceShareAssociations(input)
 
-	if isAWSErr(err, ram.ErrCodeUnknownResourceException, "") {
+	if tfawserr.ErrMessageContains(err, ram.ErrCodeUnknownResourceException, "") {
 		return nil, nil
 	}
 
