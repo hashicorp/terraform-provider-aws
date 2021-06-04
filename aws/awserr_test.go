@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 )
 
 func TestIsAwsErr(t *testing.T) {
@@ -170,7 +171,7 @@ func TestIsAwsErr(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
-			got := isAWSErr(testCase.Err, testCase.Code, testCase.Message)
+			got := tfawserr.ErrMessageContains(testCase.Err, testCase.Code, testCase.Message)
 
 			if got != testCase.Expected {
 				t.Errorf("got %t, expected %t", got, testCase.Expected)
