@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/codebuild/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/codebuild/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCodeBuildReportGroup() *schema.Resource {
@@ -70,7 +71,7 @@ func resourceAwsCodeBuildReportGroup() *schema.Resource {
 									"encryption_key": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 									"packaging": {
 										Type:         schema.TypeString,
@@ -106,8 +107,8 @@ func resourceAwsCodeBuildReportGroup() *schema.Resource {
 }
 
 func resourceAwsCodeBuildReportGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codebuildconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CodeBuildConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	createOpts := &codebuild.CreateReportGroupInput{
 		Name:         aws.String(d.Get("name").(string)),
@@ -127,9 +128,9 @@ func resourceAwsCodeBuildReportGroupCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsCodeBuildReportGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codebuildconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CodeBuildConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	reportGroup, err := finder.ReportGroupByArn(conn, d.Id())
 	if err != nil {
@@ -169,8 +170,8 @@ func resourceAwsCodeBuildReportGroupRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsCodeBuildReportGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codebuildconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CodeBuildConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &codebuild.UpdateReportGroupInput{
@@ -194,7 +195,7 @@ func resourceAwsCodeBuildReportGroupUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsCodeBuildReportGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codebuildconn
+	conn := meta.(*awsprovider.AWSClient).CodeBuildConn
 
 	deleteOpts := &codebuild.DeleteReportGroupInput{
 		Arn:           aws.String(d.Id()),
