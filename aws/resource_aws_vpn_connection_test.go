@@ -10,9 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 type TunnelOptions struct {
@@ -43,17 +46,17 @@ func init() {
 }
 
 func testSweepEc2VpnConnections(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).ec2conn
+	conn := client.(*awsprovider.AWSClient).EC2Conn
 	input := &ec2.DescribeVpnConnectionsInput{}
 
 	// DescribeVpnConnections does not currently have any form of pagination
 	output, err := conn.DescribeVpnConnections(input)
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 VPN Connection sweep for %s: %s", region, err)
 		return nil
 	}
@@ -76,7 +79,7 @@ func testSweepEc2VpnConnections(region string) error {
 
 		_, err := conn.DeleteVpnConnection(input)
 
-		if isAWSErr(err, "InvalidVpnConnectionID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVpnConnectionID.NotFound", "") {
 			continue
 		}
 
@@ -99,9 +102,9 @@ func TestAccAWSVpnConnection_basic(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -110,7 +113,7 @@ func TestAccAWSVpnConnection_basic(t *testing.T) {
 					testAccAwsVpnConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_attachment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_acceleration", "false"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpn-connection/vpn-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpn-connection/vpn-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -138,11 +141,11 @@ func TestAccAWSVpnConnection_TransitGatewayID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -169,9 +172,9 @@ func TestAccAWSVpnConnection_Tunnel1InsideCidr(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -198,9 +201,9 @@ func TestAccAWSVpnConnection_Tunnel1InsideIpv6Cidr(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -227,9 +230,9 @@ func TestAccAWSVpnConnection_Tunnel1PresharedKey(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -297,9 +300,9 @@ func TestAccAWSVpnConnection_tunnelOptions(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
 			// Checking CIDR blocks
@@ -450,9 +453,9 @@ func TestAccAWSVpnConnection_tunnelOptionsLesser(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -479,9 +482,9 @@ func TestAccAWSVpnConnection_withoutStaticRoutes(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -508,9 +511,9 @@ func TestAccAWSVpnConnection_withEnableAcceleration(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -536,9 +539,9 @@ func TestAccAWSVpnConnection_withIpv6(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -563,9 +566,9 @@ func TestAccAWSVpnConnection_tags(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -609,9 +612,9 @@ func TestAccAWSVpnConnection_specifyIpv4(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -633,9 +636,9 @@ func TestAccAWSVpnConnection_specifyIpv6(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -657,16 +660,16 @@ func TestAccAWSVpnConnection_disappears(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsVpnConnectionConfig(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAwsVpnConnectionExists(resourceName, &vpn),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsVpnConnection(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsVpnConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -675,7 +678,7 @@ func TestAccAWSVpnConnection_disappears(t *testing.T) {
 }
 
 func testAccAwsVpnConnectionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpn_connection" {
 			continue
@@ -729,9 +732,9 @@ func testAccAwsVpnConnectionExists(vpnConnectionResource string, vpnConnection *
 			return fmt.Errorf("Not found: %s", vpnConnectionResource)
 		}
 
-		ec2conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		EC2Conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
-		resp, err := ec2conn.DescribeVpnConnections(&ec2.DescribeVpnConnectionsInput{
+		resp, err := EC2Conn.DescribeVpnConnections(&ec2.DescribeVpnConnectionsInput{
 			VpnConnectionIds: []*string{aws.String(connection.Primary.ID)},
 		})
 
