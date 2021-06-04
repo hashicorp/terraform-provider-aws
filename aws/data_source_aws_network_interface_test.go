@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsNetworkInterface_basic(t *testing.T) {
@@ -15,9 +16,9 @@ func TestAccDataSourceAwsNetworkInterface_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsNetworkInterfaceConfigBasic(rName),
@@ -43,9 +44,9 @@ func TestAccDataSourceAwsNetworkInterface_filters(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsNetworkInterfaceConfigFilters(rName),
@@ -68,9 +69,9 @@ func TestAccDataSourceAwsNetworkInterface_CarrierIPAssociation(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsNetworkInterfaceConfigCarrierIPAssociation(rName),
@@ -80,7 +81,7 @@ func TestAccDataSourceAwsNetworkInterface_CarrierIPAssociation(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "association.0.association_id", eipAssociationResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "association.0.carrier_ip", eipResourceName, "carrier_ip"),
 					resource.TestCheckResourceAttr(datasourceName, "association.0.customer_owned_ip", ""),
-					testAccCheckResourceAttrAccountID(datasourceName, "association.0.ip_owner_id"),
+					atest.CheckAttrAccountID(datasourceName, "association.0.ip_owner_id"),
 					resource.TestCheckResourceAttr(datasourceName, "association.0.public_dns_name", ""),
 					resource.TestCheckResourceAttr(datasourceName, "association.0.public_ip", ""),
 					resource.TestCheckResourceAttr(datasourceName, "attachment.#", "0"),
@@ -90,7 +91,7 @@ func TestAccDataSourceAwsNetworkInterface_CarrierIPAssociation(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "ipv6_addresses.#", "0"),
 					resource.TestCheckResourceAttrSet(datasourceName, "mac_address"),
 					resource.TestCheckResourceAttr(datasourceName, "outpost_arn", ""),
-					testAccCheckResourceAttrAccountID(datasourceName, "owner_id"),
+					atest.CheckAttrAccountID(datasourceName, "owner_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name", resourceName, "private_dns_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "private_ip", resourceName, "private_ip"),
 					resource.TestCheckResourceAttrPair(datasourceName, "private_ips.#", resourceName, "private_ips.#"),
@@ -116,9 +117,9 @@ func TestAccDataSourceAwsNetworkInterface_PublicIPAssociation(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsNetworkInterfaceConfigPublicIPAssociation(rName),
@@ -128,7 +129,7 @@ func TestAccDataSourceAwsNetworkInterface_PublicIPAssociation(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "association.0.association_id", eipAssociationResourceName, "id"),
 					resource.TestCheckResourceAttr(datasourceName, "association.0.carrier_ip", ""),
 					resource.TestCheckResourceAttr(datasourceName, "association.0.customer_owned_ip", ""),
-					testAccCheckResourceAttrAccountID(datasourceName, "association.0.ip_owner_id"),
+					atest.CheckAttrAccountID(datasourceName, "association.0.ip_owner_id"),
 					// Public DNS name is not set by the EC2 API.
 					resource.TestCheckResourceAttr(datasourceName, "association.0.public_dns_name", ""),
 					resource.TestCheckResourceAttrPair(datasourceName, "association.0.public_ip", eipResourceName, "public_ip"),
@@ -139,7 +140,7 @@ func TestAccDataSourceAwsNetworkInterface_PublicIPAssociation(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "ipv6_addresses.#", "0"),
 					resource.TestCheckResourceAttrSet(datasourceName, "mac_address"),
 					resource.TestCheckResourceAttr(datasourceName, "outpost_arn", ""),
-					testAccCheckResourceAttrAccountID(datasourceName, "owner_id"),
+					atest.CheckAttrAccountID(datasourceName, "owner_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name", resourceName, "private_dns_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "private_ip", resourceName, "private_ip"),
 					resource.TestCheckResourceAttrPair(datasourceName, "private_ips.#", resourceName, "private_ips.#"),
@@ -156,7 +157,7 @@ func TestAccDataSourceAwsNetworkInterface_PublicIPAssociation(t *testing.T) {
 }
 
 func testAccDataSourceAwsNetworkInterfaceConfigBase(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAvailableAZsNoOptInConfig(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -195,7 +196,7 @@ resource "aws_network_interface" "test" {
 }
 
 func testAccDataSourceAwsNetworkInterfaceConfigBasic(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccDataSourceAwsNetworkInterfaceConfigBase(rName),
 		`
 data "aws_network_interface" "test" {
@@ -205,7 +206,7 @@ data "aws_network_interface" "test" {
 }
 
 func testAccDataSourceAwsNetworkInterfaceConfigCarrierIPAssociation(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAvailableAZsWavelengthZonesDefaultExcludeConfig(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -274,7 +275,7 @@ data "aws_network_interface" "test" {
 }
 
 func testAccDataSourceAwsNetworkInterfaceConfigPublicIPAssociation(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccDataSourceAwsNetworkInterfaceConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
@@ -305,7 +306,7 @@ data "aws_network_interface" "test" {
 }
 
 func testAccDataSourceAwsNetworkInterfaceConfigFilters(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccDataSourceAwsNetworkInterfaceConfigBase(rName),
 		`
 data "aws_network_interface" "test" {
