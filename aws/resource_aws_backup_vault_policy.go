@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsBackupVaultPolicy() *schema.Resource {
@@ -41,7 +43,7 @@ func resourceAwsBackupVaultPolicy() *schema.Resource {
 }
 
 func resourceAwsBackupVaultPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*awsprovider.AWSClient).BackupConn
 
 	input := &backup.PutBackupVaultAccessPolicyInput{
 		BackupVaultName: aws.String(d.Get("backup_vault_name").(string)),
@@ -59,14 +61,14 @@ func resourceAwsBackupVaultPolicyPut(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsBackupVaultPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*awsprovider.AWSClient).BackupConn
 
 	input := &backup.GetBackupVaultAccessPolicyInput{
 		BackupVaultName: aws.String(d.Id()),
 	}
 
 	resp, err := conn.GetBackupVaultAccessPolicy(input)
-	if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Backup Vault Policy %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -83,7 +85,7 @@ func resourceAwsBackupVaultPolicyRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsBackupVaultPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*awsprovider.AWSClient).BackupConn
 
 	input := &backup.DeleteBackupVaultAccessPolicyInput{
 		BackupVaultName: aws.String(d.Id()),
@@ -91,7 +93,7 @@ func resourceAwsBackupVaultPolicyDelete(d *schema.ResourceData, meta interface{}
 
 	_, err := conn.DeleteBackupVaultAccessPolicy(input)
 	if err != nil {
-		if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Backup Vault Policy (%s): %w", d.Id(), err)
