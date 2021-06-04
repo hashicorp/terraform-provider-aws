@@ -8,20 +8,21 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSDataSourceElasticBeanstalkHostedZone_basic(t *testing.T) {
 	dataSourceName := "data.aws_elastic_beanstalk_hosted_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsElasticBeanstalkHostedZoneDataSource_currentRegion,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsElasticBeanstalkHostedZone(dataSourceName, testAccGetRegion()),
+					testAccCheckAwsElasticBeanstalkHostedZone(dataSourceName, atest.Region()),
 				),
 			},
 		},
@@ -32,9 +33,9 @@ func TestAccAWSDataSourceElasticBeanstalkHostedZone_Region(t *testing.T) {
 	dataSourceName := "data.aws_elastic_beanstalk_hosted_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsElasticBeanstalkHostedZoneDataSource_byRegion("ap-southeast-2"), //lintignore:AWSAT003 // passes in GovCloud
