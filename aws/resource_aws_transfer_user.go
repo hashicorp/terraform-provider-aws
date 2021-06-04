@@ -7,11 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tftransfer "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsTransferUser() *schema.Resource {
@@ -73,7 +75,7 @@ func resourceAwsTransferUser() *schema.Resource {
 			"role": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"server_id": {
@@ -100,8 +102,8 @@ func resourceAwsTransferUser() *schema.Resource {
 }
 
 func resourceAwsTransferUserCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).TransferConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	userName := d.Get("user_name").(string)
 	serverID := d.Get("server_id").(string)
@@ -145,9 +147,9 @@ func resourceAwsTransferUserCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsTransferUserRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).TransferConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	serverID, userName, err := tftransfer.UserParseResourceID(d.Id())
 	if err != nil {
@@ -163,7 +165,7 @@ func resourceAwsTransferUserRead(d *schema.ResourceData, meta interface{}) error
 
 	resp, err := conn.DescribeUser(descOpts)
 	if err != nil {
-		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, transfer.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Transfer User (%s) for Server (%s) not found, removing from state", userName, serverID)
 			d.SetId("")
 			return nil
@@ -197,7 +199,7 @@ func resourceAwsTransferUserRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsTransferUserUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
+	conn := meta.(*awsprovider.AWSClient).TransferConn
 	updateFlag := false
 	serverID, userName, err := tftransfer.UserParseResourceID(d.Id())
 	if err != nil {
@@ -237,7 +239,7 @@ func resourceAwsTransferUserUpdate(d *schema.ResourceData, meta interface{}) err
 	if updateFlag {
 		_, err := conn.UpdateUser(updateOpts)
 		if err != nil {
-			if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, transfer.ErrCodeResourceNotFoundException, "") {
 				log.Printf("[WARN] Transfer User (%s) for Server (%s) not found, removing from state", userName, serverID)
 				d.SetId("")
 				return nil
@@ -257,7 +259,7 @@ func resourceAwsTransferUserUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsTransferUserDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).transferconn
+	conn := meta.(*awsprovider.AWSClient).TransferConn
 	serverID, userName, err := tftransfer.UserParseResourceID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing Transfer User ID: %s", err)
@@ -272,7 +274,7 @@ func resourceAwsTransferUserDelete(d *schema.ResourceData, meta interface{}) err
 
 	_, err = conn.DeleteUser(delOpts)
 	if err != nil {
-		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, transfer.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Transfer User (%s) for Server(%s): %s", userName, serverID, err)
@@ -294,7 +296,7 @@ func waitForTransferUserDeletion(conn *transfer.Transfer, serverID, userName str
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeUser(params)
 
-		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, transfer.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 
@@ -308,7 +310,7 @@ func waitForTransferUserDeletion(conn *transfer.Transfer, serverID, userName str
 	if isResourceTimeoutError(err) {
 		_, err = conn.DescribeUser(params)
 	}
-	if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, transfer.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
