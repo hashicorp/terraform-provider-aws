@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccAwsOrganizationsDelegatedAdministrator_basic(t *testing.T) {
@@ -20,11 +22,11 @@ func testAccAwsOrganizationsDelegatedAdministrator_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			atest.PreCheck(t)
+			atest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, organizations.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsOrganizationsDelegatedAdministratorDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -33,8 +35,8 @@ func testAccAwsOrganizationsDelegatedAdministrator_basic(t *testing.T) {
 					testAccCheckAwsOrganizationsDelegatedAdministratorExists(resourceName, &organization),
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceIdentity, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "service_principal", servicePrincipal),
-					testAccCheckResourceAttrRfc3339(resourceName, "delegation_enabled_date"),
-					testAccCheckResourceAttrRfc3339(resourceName, "joined_timestamp"),
+					atest.CheckAttrRfc3339(resourceName, "delegation_enabled_date"),
+					atest.CheckAttrRfc3339(resourceName, "joined_timestamp"),
 				),
 			},
 			{
@@ -54,18 +56,18 @@ func testAccAwsOrganizationsDelegatedAdministrator_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			atest.PreCheck(t)
+			atest.PreCheckAlternateAccount(t)
 		},
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsOrganizationsDelegatedAdministratorDestroy,
-		ErrorCheck:        testAccErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:        atest.ErrorCheck(t, organizations.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsOrganizationsDelegatedAdministratorConfig(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsDelegatedAdministratorExists(resourceName, &organization),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsOrganizationsDelegatedAdministrator(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsOrganizationsDelegatedAdministrator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -74,7 +76,7 @@ func testAccAwsOrganizationsDelegatedAdministrator_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsOrganizationsDelegatedAdministratorDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).OrganizationsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_organizations_delegated_administrator" {
@@ -127,7 +129,7 @@ func testAccCheckAwsOrganizationsDelegatedAdministratorExists(n string, org *org
 		if err != nil {
 			return err
 		}
-		conn := testAccProvider.Meta().(*AWSClient).organizationsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).OrganizationsConn
 		input := &organizations.ListDelegatedAdministratorsInput{
 			ServicePrincipal: aws.String(servicePrincipal),
 		}
@@ -160,7 +162,7 @@ func testAccCheckAwsOrganizationsDelegatedAdministratorExists(n string, org *org
 }
 
 func testAccAwsOrganizationsDelegatedAdministratorConfig(servicePrincipal string) string {
-	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+	return atest.ConfigProviderAlternateAccount() + fmt.Sprintf(`
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"
 }
