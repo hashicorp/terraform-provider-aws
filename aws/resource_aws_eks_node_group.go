@@ -9,12 +9,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	tfeks "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/eks"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEksNodeGroup() *schema.Resource {
@@ -254,8 +256,8 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 }
 
 func resourceAwsEksNodeGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EKSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("cluster_name").(string)
@@ -339,9 +341,9 @@ func resourceAwsEksNodeGroupCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsEksNodeGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EKSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	clusterName, nodeGroupName, err := tfeks.NodeGroupParseResourceID(d.Id())
 
@@ -356,7 +358,7 @@ func resourceAwsEksNodeGroupRead(d *schema.ResourceData, meta interface{}) error
 
 	output, err := conn.DescribeNodegroup(input)
 
-	if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, eks.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] EKS Node Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -435,7 +437,7 @@ func resourceAwsEksNodeGroupRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsEksNodeGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
+	conn := meta.(*awsprovider.AWSClient).EKSConn
 
 	clusterName, nodeGroupName, err := tfeks.NodeGroupParseResourceID(d.Id())
 
@@ -543,7 +545,7 @@ func resourceAwsEksNodeGroupUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsEksNodeGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
+	conn := meta.(*awsprovider.AWSClient).EKSConn
 
 	clusterName, nodeGroupName, err := tfeks.NodeGroupParseResourceID(d.Id())
 
@@ -558,7 +560,7 @@ func resourceAwsEksNodeGroupDelete(d *schema.ResourceData, meta interface{}) err
 
 	_, err = conn.DeleteNodegroup(input)
 
-	if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, eks.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
@@ -942,7 +944,7 @@ func waitForEksNodeGroupDeletion(conn *eks.EKS, clusterName string, nodeGroupNam
 
 	_, err := stateConf.WaitForState()
 
-	if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, eks.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
