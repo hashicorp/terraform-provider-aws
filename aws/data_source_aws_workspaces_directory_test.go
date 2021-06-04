@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsWorkspacesDirectory_basic(t *testing.T) {
@@ -17,13 +18,13 @@ func TestAccDataSourceAwsWorkspacesDirectory_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:  testAccProviders,
+		ErrorCheck: atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsWorkspacesDirectoryConfig(rName),
@@ -66,7 +67,7 @@ func TestAccDataSourceAwsWorkspacesDirectory_basic(t *testing.T) {
 }
 
 func testAccDataSourceAwsWorkspacesDirectoryConfig(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
