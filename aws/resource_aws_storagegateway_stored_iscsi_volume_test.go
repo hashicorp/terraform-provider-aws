@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSStorageGatewayStoredIscsiVolume_basic(t *testing.T) {
@@ -18,9 +21,9 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_basic(t *testing.T) {
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, storagegateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayStoredIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -29,14 +32,14 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_basic(t *testing.T) {
 					testAccCheckAWSStorageGatewayStoredIscsiVolumeExists(resourceName, &storedIscsiVolume),
 					resource.TestCheckResourceAttr(resourceName, "preserve_existing_data", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "disk_id", "data.aws_storagegateway_local_disk.test", "id"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "chap_enabled", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", "aws_storagegateway_gateway.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "lun_number", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", "aws_instance.test", "private_ip"),
 					resource.TestMatchResourceAttr(resourceName, "network_interface_port", regexp.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_id", ""),
-					testAccMatchResourceAttrRegionalARN(resourceName, "target_arn", "storagegateway", regexp.MustCompile(fmt.Sprintf(`gateway/sgw-.+/target/iqn.1997-05.com.amazon:%s`, rName))),
+					atest.MatchAttrRegionalARN(resourceName, "target_arn", "storagegateway", regexp.MustCompile(fmt.Sprintf(`gateway/sgw-.+/target/iqn.1997-05.com.amazon:%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "target_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "volume_id", regexp.MustCompile(`^vol-+`)),
 					resource.TestCheckResourceAttr(resourceName, "volume_size_in_bytes", "10737418240"),
@@ -60,9 +63,9 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_kms(t *testing.T) {
 	keyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, storagegateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayStoredIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -88,16 +91,16 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_tags(t *testing.T) {
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, storagegateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayStoredIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSStorageGatewayStoredIscsiVolumeConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayStoredIscsiVolumeExists(resourceName, &storedIscsiVolume),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -111,7 +114,7 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_tags(t *testing.T) {
 				Config: testAccAWSStorageGatewayStoredIscsiVolumeConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayStoredIscsiVolumeExists(resourceName, &storedIscsiVolume),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -121,7 +124,7 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_tags(t *testing.T) {
 				Config: testAccAWSStorageGatewayStoredIscsiVolumeConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayStoredIscsiVolumeExists(resourceName, &storedIscsiVolume),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -136,23 +139,23 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_snapshotId(t *testing.T) {
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, storagegateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayStoredIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSStorageGatewayStoredIscsiVolumeConfigSnapshotId(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayStoredIscsiVolumeExists(resourceName, &storedIscsiVolume),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "chap_enabled", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", "aws_storagegateway_gateway.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "lun_number", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", "aws_instance.test", "private_ip"),
 					resource.TestMatchResourceAttr(resourceName, "network_interface_port", regexp.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "snapshot_id", "aws_ebs_snapshot.test", "id"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "target_arn", "storagegateway", regexp.MustCompile(fmt.Sprintf(`gateway/sgw-.+/target/iqn.1997-05.com.amazon:%s`, rName))),
+					atest.MatchAttrRegionalARN(resourceName, "target_arn", "storagegateway", regexp.MustCompile(fmt.Sprintf(`gateway/sgw-.+/target/iqn.1997-05.com.amazon:%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "target_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "volume_id", regexp.MustCompile(`^vol-+`)),
 					resource.TestCheckResourceAttr(resourceName, "volume_size_in_bytes", "10737418240"),
@@ -173,16 +176,16 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_disappears(t *testing.T) {
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, storagegateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayStoredIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSStorageGatewayStoredIscsiVolumeConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayStoredIscsiVolumeExists(resourceName, &storedIscsiVolume),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsStorageGatewayStoredIscsiVolume(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsStorageGatewayStoredIscsiVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -197,7 +200,7 @@ func testAccCheckAWSStorageGatewayStoredIscsiVolumeExists(resourceName string, s
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).StorageGatewayConn
 
 		input := &storagegateway.DescribeStorediSCSIVolumesInput{
 			VolumeARNs: []*string{aws.String(rs.Primary.ID)},
@@ -220,7 +223,7 @@ func testAccCheckAWSStorageGatewayStoredIscsiVolumeExists(resourceName string, s
 }
 
 func testAccCheckAWSStorageGatewayStoredIscsiVolumeDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).StorageGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_storagegateway_stored_iscsi_volume" {
@@ -234,13 +237,13 @@ func testAccCheckAWSStorageGatewayStoredIscsiVolumeDestroy(s *terraform.State) e
 		output, err := conn.DescribeStorediSCSIVolumes(input)
 
 		if err != nil {
-			if isAWSErrStorageGatewayGatewayNotFound(err) {
+			if storageGatewayNotFound(err) {
 				return nil
 			}
-			if isAWSErr(err, storagegateway.ErrorCodeVolumeNotFound, "") {
+			if tfawserr.ErrMessageContains(err, storagegateway.ErrorCodeVolumeNotFound, "") {
 				return nil
 			}
-			if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
+			if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
 				return nil
 			}
 			return err
