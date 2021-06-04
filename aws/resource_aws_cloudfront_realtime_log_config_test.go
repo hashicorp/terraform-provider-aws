@@ -8,11 +8,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudfront/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -23,18 +26,18 @@ func init() {
 }
 
 func testSweepCloudFrontRealtimeLogConfigs(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).cloudfrontconn
+	conn := client.(*awsprovider.AWSClient).CloudFrontConn
 	input := &cloudfront.ListRealtimeLogConfigsInput{}
 	var sweeperErrs *multierror.Error
 
 	for {
 		output, err := conn.ListRealtimeLogConfigs(input)
 
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping CloudFront Real-time Log Configs sweep for %s: %s", region, err)
 			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
@@ -78,16 +81,16 @@ func TestAccAWSCloudFrontRealtimeLogConfig_basic(t *testing.T) {
 	streamResourceName := "aws_kinesis_stream.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontRealtimeLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFrontRealtimeLogConfigConfig(rName, samplingRate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontRealtimeLogConfigExists(resourceName, &v),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
+					atest.CheckAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.0.stream_type", "Kinesis"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.0.kinesis_stream_config.#", "1"),
@@ -116,16 +119,16 @@ func TestAccAWSCloudFrontRealtimeLogConfig_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_realtime_log_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontRealtimeLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFrontRealtimeLogConfigConfig(rName, samplingRate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontRealtimeLogConfigExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFrontRealtimeLogConfig(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCloudFrontRealtimeLogConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -145,16 +148,16 @@ func TestAccAWSCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 	stream2ResourceName := "aws_kinesis_stream.test.1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontRealtimeLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFrontRealtimeLogConfigConfig(rName, samplingRate1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontRealtimeLogConfigExists(resourceName, &v),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
+					atest.CheckAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.0.stream_type", "Kinesis"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.0.kinesis_stream_config.#", "1"),
@@ -171,7 +174,7 @@ func TestAccAWSCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 				Config: testAccAWSCloudFrontRealtimeLogConfigConfigUpdated(rName, samplingRate2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontRealtimeLogConfigExists(resourceName, &v),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
+					atest.CheckAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.0.stream_type", "Kinesis"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.0.kinesis_stream_config.#", "1"),
@@ -195,7 +198,7 @@ func TestAccAWSCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 }
 
 func testAccCheckCloudFrontRealtimeLogConfigDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudFrontConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_realtime_log_config" {
@@ -205,7 +208,7 @@ func testAccCheckCloudFrontRealtimeLogConfigDestroy(s *terraform.State) error {
 		// Try to find the resource
 		_, err := finder.RealtimeLogConfigByARN(conn, rs.Primary.ID)
 		// Verify the error is what we want
-		if isAWSErr(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig, "") {
+		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig, "") {
 			continue
 		}
 		if err != nil {
@@ -228,7 +231,7 @@ func testAccCheckCloudFrontRealtimeLogConfigExists(n string, v *cloudfront.Realt
 			return fmt.Errorf("No CloudFront Real-time Log Config ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudFrontConn
 		out, err := finder.RealtimeLogConfigByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -294,7 +297,7 @@ EOF
 }
 
 func testAccAWSCloudFrontRealtimeLogConfigConfig(rName string, samplingRate int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSCloudFrontRealtimeLogConfigConfigBase(rName, 1),
 		fmt.Sprintf(`
 resource "aws_cloudfront_realtime_log_config" "test" {
@@ -317,7 +320,7 @@ resource "aws_cloudfront_realtime_log_config" "test" {
 }
 
 func testAccAWSCloudFrontRealtimeLogConfigConfigUpdated(rName string, samplingRate int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSCloudFrontRealtimeLogConfigConfigBase(rName, 2),
 		fmt.Sprintf(`
 resource "aws_cloudfront_realtime_log_config" "test" {
