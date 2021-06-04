@@ -9,12 +9,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/envvar"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	"github.com/terraform-providers/terraform-provider-aws/aws/envvar"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -25,14 +28,14 @@ func init() {
 }
 
 func testSweepCodepipelinePipelines(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).codepipelineconn
-	sweepResources := make([]*testSweepResource, 0)
+	conn := client.(*awsprovider.AWSClient).CodePipelineConn
+	sweepResources := make([]*atest.TestSweepResource, 0)
 	var errs *multierror.Error
 
 	input := &codepipeline.ListPipelinesInput{}
@@ -48,7 +51,7 @@ func testSweepCodepipelinePipelines(region string) error {
 
 			d.SetId(aws.StringValue(pipeline.Name))
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, atest.NewTestSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -58,11 +61,11 @@ func testSweepCodepipelinePipelines(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Codepipeline Pipeline for %s: %w", region, err))
 	}
 
-	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := atest.TestSweepResourceOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Codepipeline Pipeline for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if atest.SweepSkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Codepipeline Pipeline sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -78,12 +81,12 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
-			testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t)
+			atest.PreCheckPartitionService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, codepipeline.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -91,7 +94,7 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists(resourceName, &p1),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.codepipeline_role", "arn"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s", name))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s", name))),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
@@ -183,19 +186,19 @@ func TestAccAWSCodePipeline_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
-			testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t)
+			atest.PreCheckPartitionService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, codepipeline.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodePipelineConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists(resourceName, &p),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodePipeline(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCodePipeline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -210,19 +213,19 @@ func TestAccAWSCodePipeline_emptyStageArtifacts(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
-			testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t)
+			atest.PreCheckPartitionService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, codepipeline.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodePipelineConfig_emptyStageArtifacts(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists(resourceName, &p),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s$", name))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s$", name))),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
@@ -252,12 +255,12 @@ func TestAccAWSCodePipeline_deployWithServiceRole(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
-			testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t)
+			atest.PreCheckPartitionService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, codepipeline.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -285,12 +288,12 @@ func TestAccAWSCodePipeline_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
-			testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t)
+			atest.PreCheckPartitionService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, codepipeline.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -343,13 +346,13 @@ func TestAccAWSCodePipeline_multiregion_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 2)
-			testAccPreCheckAWSCodePipelineSupported(t, testAccGetAlternateRegion())
-			testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckMultipleRegion(t, 2)
+			testAccPreCheckAWSCodePipelineSupported(t, atest.AlternateRegion())
+			atest.PreCheckPartitionService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -361,9 +364,9 @@ func TestAccAWSCodePipeline_multiregion_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", testAccGetRegion()),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.name", fmt.Sprintf("%s-Build", testAccGetAlternateRegion())),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.region", testAccGetAlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", atest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.name", fmt.Sprintf("%s-Build", atest.AlternateRegion())),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.region", atest.AlternateRegion()),
 				),
 			},
 			{
@@ -385,13 +388,13 @@ func TestAccAWSCodePipeline_multiregion_Update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 2)
-			testAccPreCheckAWSCodePipelineSupported(t, testAccGetAlternateRegion())
-			testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckMultipleRegion(t, 2)
+			testAccPreCheckAWSCodePipelineSupported(t, atest.AlternateRegion())
+			atest.PreCheckPartitionService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -403,9 +406,9 @@ func TestAccAWSCodePipeline_multiregion_Update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", testAccGetRegion()),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.name", fmt.Sprintf("%s-Build", testAccGetAlternateRegion())),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.region", testAccGetAlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", atest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.name", fmt.Sprintf("%s-Build", atest.AlternateRegion())),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.region", atest.AlternateRegion()),
 				),
 			},
 			{
@@ -417,9 +420,9 @@ func TestAccAWSCodePipeline_multiregion_Update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "BuildUpdated"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", testAccGetRegion()),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.name", fmt.Sprintf("%s-BuildUpdated", testAccGetAlternateRegion())),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.region", testAccGetAlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", atest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.name", fmt.Sprintf("%s-BuildUpdated", atest.AlternateRegion())),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.region", atest.AlternateRegion()),
 				),
 			},
 			{
@@ -441,13 +444,13 @@ func TestAccAWSCodePipeline_multiregion_ConvertSingleRegion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 2)
-			testAccPreCheckAWSCodePipelineSupported(t, testAccGetAlternateRegion())
-			testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckMultipleRegion(t, 2)
+			testAccPreCheckAWSCodePipelineSupported(t, atest.AlternateRegion())
+			atest.PreCheckPartitionService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -471,9 +474,9 @@ func TestAccAWSCodePipeline_multiregion_ConvertSingleRegion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", testAccGetRegion()),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.name", fmt.Sprintf("%s-Build", testAccGetAlternateRegion())),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.region", testAccGetAlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", atest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.name", fmt.Sprintf("%s-Build", atest.AlternateRegion())),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.1.region", atest.AlternateRegion()),
 				),
 			},
 			{
@@ -485,7 +488,7 @@ func TestAccAWSCodePipeline_multiregion_ConvertSingleRegion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
-					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", atest.Region()),
 				),
 			},
 			{
@@ -505,19 +508,19 @@ func TestAccAWSCodePipeline_WithNamespace(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
-			testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t)
+			atest.PreCheckPartitionService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, codepipeline.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodePipelineConfigWithNamespace(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists(resourceName, &p1),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s", name))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s", name))),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.namespace", "SourceVariables"),
 				),
 			},
@@ -539,11 +542,11 @@ func TestAccAWSCodePipeline_WithGitHubv1SourceAction(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, codepipeline.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -617,7 +620,7 @@ func testAccCheckAWSCodePipelineExists(n string, pipeline *codepipeline.Pipeline
 			return fmt.Errorf("No CodePipeline ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).codepipelineconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CodePipelineConn
 
 		out, err := conn.GetPipeline(&codepipeline.GetPipelineInput{
 			Name: aws.String(rs.Primary.ID),
@@ -633,7 +636,7 @@ func testAccCheckAWSCodePipelineExists(n string, pipeline *codepipeline.Pipeline
 }
 
 func testAccCheckAWSCodePipelineDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).codepipelineconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CodePipelineConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codepipeline" {
@@ -647,7 +650,7 @@ func testAccCheckAWSCodePipelineDestroy(s *terraform.State) error {
 		if err == nil {
 			return fmt.Errorf("Expected AWS CodePipeline to be gone, but was still found")
 		}
-		if isAWSErr(err, "PipelineNotFoundException", "") {
+		if tfawserr.ErrMessageContains(err, "PipelineNotFoundException", "") {
 			continue
 		}
 		return err
@@ -657,21 +660,21 @@ func testAccCheckAWSCodePipelineDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAWSCodePipelineSupported(t *testing.T, regions ...string) {
-	regions = append(regions, testAccGetRegion())
+	regions = append(regions, atest.Region())
 	for _, region := range regions {
-		conf := &Config{
+		conf := &awsprovider.Config{
 			Region: region,
 		}
 		client, err := conf.Client()
 		if err != nil {
 			t.Fatalf("error getting AWS client for region %s", region)
 		}
-		conn := client.(*AWSClient).codepipelineconn
+		conn := client.(*awsprovider.AWSClient).CodePipelineConn
 
 		input := &codepipeline.ListPipelinesInput{}
 		_, err = conn.ListPipelines(input)
 
-		if testAccPreCheckSkipError(err) {
+		if atest.PreCheckSkipError(err) {
 			t.Skipf("skipping acceptance testing: %s", err)
 		}
 
@@ -801,7 +804,7 @@ EOF
 }
 
 func testAccAWSCodePipelineConfig_basic(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSCodePipelineS3DefaultBucket(rName),
 		testAccAWSCodePipelineServiceIAMRole(rName),
 		fmt.Sprintf(`
@@ -864,7 +867,7 @@ resource "aws_codestarconnections_connection" "test" {
 }
 
 func testAccAWSCodePipelineConfig_basicUpdated(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSCodePipelineS3DefaultBucket(rName),
 		testAccAWSCodePipelineS3Bucket("updated", rName),
 		testAccAWSCodePipelineServiceIAMRole(rName),
@@ -928,7 +931,7 @@ resource "aws_codestarconnections_connection" "test" {
 }
 
 func testAccAWSCodePipelineConfig_emptyStageArtifacts(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSCodePipelineS3DefaultBucket(rName),
 		testAccAWSCodePipelineServiceIAMRole(rName),
 		fmt.Sprintf(`
@@ -1038,7 +1041,7 @@ EOF
 }
 
 func testAccAWSCodePipelineConfig_deployWithServiceRole(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSCodePipelineS3DefaultBucket(rName),
 		testAccAWSCodePipelineServiceIAMRoleWithAssumeRole(rName),
 		testAccAWSCodePipelineDeployActionIAMRole(rName),
@@ -1124,7 +1127,7 @@ resource "aws_codestarconnections_connection" "test" {
 }
 
 func testAccAWSCodePipelineConfigWithTags(rName, tag1, tag2 string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSCodePipelineS3DefaultBucket(rName),
 		testAccAWSCodePipelineServiceIAMRole(rName),
 		fmt.Sprintf(`
@@ -1193,8 +1196,8 @@ resource "aws_codestarconnections_connection" "test" {
 }
 
 func testAccAWSCodePipelineConfig_multiregion(rName string) string {
-	return composeConfig(
-		testAccAlternateRegionProviderConfig(),
+	return atest.ComposeConfig(
+		atest.ConfigProviderAlternateRegion(),
 		testAccAWSCodePipelineS3DefaultBucket(rName),
 		testAccAWSCodePipelineServiceIAMRole(rName),
 		testAccAWSCodePipelineS3BucketWithProvider("alternate", rName, "awsalternate"),
@@ -1283,12 +1286,12 @@ resource "aws_codestarconnections_connection" "test" {
   name          = %[1]q
   provider_type = "GitHub"
 }
-`, rName, testAccGetRegion(), testAccGetAlternateRegion()))
+`, rName, atest.Region(), atest.AlternateRegion()))
 }
 
 func testAccAWSCodePipelineConfig_multiregionUpdated(rName string) string {
-	return composeConfig(
-		testAccAlternateRegionProviderConfig(),
+	return atest.ComposeConfig(
+		atest.ConfigProviderAlternateRegion(),
 		testAccAWSCodePipelineS3DefaultBucket(rName),
 		testAccAWSCodePipelineServiceIAMRole(rName),
 		testAccAWSCodePipelineS3BucketWithProvider("alternate", rName, "awsalternate"),
@@ -1377,12 +1380,12 @@ resource "aws_codestarconnections_connection" "test" {
   name          = %[1]q
   provider_type = "GitHub"
 }
-`, rName, testAccGetRegion(), testAccGetAlternateRegion()))
+`, rName, atest.Region(), atest.AlternateRegion()))
 }
 
 func testAccAWSCodePipelineConfig_backToBasic(rName string) string {
-	return composeConfig(
-		testAccAlternateRegionProviderConfig(),
+	return atest.ComposeConfig(
+		atest.ConfigProviderAlternateRegion(),
 		testAccAWSCodePipelineConfig_basic(rName),
 	)
 }
@@ -1411,7 +1414,7 @@ resource "aws_s3_bucket" "%[1]s" {
 }
 
 func testAccAWSCodePipelineConfigWithNamespace(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSCodePipelineS3DefaultBucket(rName),
 		testAccAWSCodePipelineServiceIAMRole(rName),
 		fmt.Sprintf(`
@@ -1480,7 +1483,7 @@ resource "aws_s3_bucket" "foo" {
 }
 
 func testAccAWSCodePipelineConfig_WithGitHubv1SourceAction(rName, githubToken string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSCodePipelineS3DefaultBucket(rName),
 		testAccAWSCodePipelineServiceIAMRole(rName),
 		fmt.Sprintf(`
@@ -1539,7 +1542,7 @@ resource "aws_codepipeline" "test" {
 }
 
 func testAccAWSCodePipelineConfig_WithGitHubv1SourceAction_Updated(rName, githubToken string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSCodePipelineS3DefaultBucket(rName),
 		testAccAWSCodePipelineServiceIAMRole(rName),
 		fmt.Sprintf(`
