@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_basic(t *testing.T) {
@@ -17,9 +20,9 @@ func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_basic(t *testing.T) {
 	resourceName := "aws_codeartifact_repository_permissions_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codeartifact.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(codeartifact.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, codeartifact.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodeArtifactRepositoryPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -57,9 +60,9 @@ func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_owner(t *testing.T) {
 	resourceName := "aws_codeartifact_repository_permissions_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codeartifact.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(codeartifact.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, codeartifact.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodeArtifactRepositoryPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -86,16 +89,16 @@ func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_disappears(t *testing.T) 
 	resourceName := "aws_codeartifact_repository_permissions_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codeartifact.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(codeartifact.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, codeartifact.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodeArtifactRepositoryPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeArtifactRepositoryPermissionsPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactRepositoryPermissionsExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodeArtifactRepositoryPermissionsPolicy(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCodeArtifactRepositoryPermissionsPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -108,16 +111,16 @@ func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_disappears_domain(t *test
 	resourceName := "aws_codeartifact_repository_permissions_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codeartifact.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, codeartifact.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(codeartifact.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, codeartifact.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodeArtifactRepositoryPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeArtifactRepositoryPermissionsPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactRepositoryPermissionsExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodeArtifactRepositoryPermissionsPolicy(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCodeArtifactRepositoryPermissionsPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -136,7 +139,7 @@ func testAccCheckAWSCodeArtifactRepositoryPermissionsExists(n string) resource.T
 			return fmt.Errorf("no CodeArtifact domain set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).codeartifactconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CodeArtifactConn
 
 		domainOwner, domainName, repoName, err := decodeCodeArtifactRepositoryID(rs.Primary.ID)
 		if err != nil {
@@ -159,7 +162,7 @@ func testAccCheckAWSCodeArtifactRepositoryPermissionsDestroy(s *terraform.State)
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).codeartifactconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CodeArtifactConn
 
 		domainOwner, domainName, repoName, err := decodeCodeArtifactRepositoryID(rs.Primary.ID)
 		if err != nil {
@@ -178,7 +181,7 @@ func testAccCheckAWSCodeArtifactRepositoryPermissionsDestroy(s *terraform.State)
 			}
 		}
 
-		if isAWSErr(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 
