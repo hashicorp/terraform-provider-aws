@@ -10,9 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsElasticacheSubnetGroup() *schema.Resource {
@@ -64,7 +66,7 @@ func resourceAwsElasticacheSubnetGroupDiff(_ context.Context, diff *schema.Resou
 	// Reserved ElastiCache Subnet Groups with the name "default" do not support tagging;
 	// thus we must suppress the diff originating from the provider-level default_tags configuration
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19213
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	if len(defaultTagsConfig.GetTags()) > 0 && diff.Get("name").(string) == "default" {
 		return nil
 	}
@@ -73,8 +75,8 @@ func resourceAwsElasticacheSubnetGroupDiff(_ context.Context, diff *schema.Resou
 }
 
 func resourceAwsElasticacheSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Get the group properties
@@ -108,9 +110,9 @@ func resourceAwsElasticacheSubnetGroupCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsElasticacheSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	req := &elasticache.DescribeCacheSubnetGroupsInput{
 		CacheSubnetGroupName: aws.String(d.Get("name").(string)),
@@ -153,7 +155,7 @@ func resourceAwsElasticacheSubnetGroupRead(d *schema.ResourceData, meta interfac
 
 	tags, err := keyvaluetags.ElasticacheListTags(conn, d.Get("arn").(string))
 
-	if err != nil && !isAWSErr(err, "UnknownOperationException", "") {
+	if err != nil && !tfawserr.ErrMessageContains(err, "UnknownOperationException", "") {
 		return fmt.Errorf("error listing tags for ElastiCache SubnetGroup (%s): %w", d.Id(), err)
 	}
 
@@ -172,7 +174,7 @@ func resourceAwsElasticacheSubnetGroupRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsElasticacheSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
 
 	if d.HasChanges("subnet_ids", "description") {
 		var subnets []*string
@@ -204,7 +206,7 @@ func resourceAwsElasticacheSubnetGroupUpdate(d *schema.ResourceData, meta interf
 	return resourceAwsElasticacheSubnetGroupRead(d, meta)
 }
 func resourceAwsElasticacheSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
 
 	log.Printf("[DEBUG] Cache subnet group delete: %s", d.Id())
 
@@ -234,7 +236,7 @@ func resourceAwsElasticacheSubnetGroupDelete(d *schema.ResourceData, meta interf
 		})
 	}
 
-	if isAWSErr(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault, "") {
 		return nil
 	}
 
