@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsEfsAccessPoints() *schema.Resource {
@@ -34,7 +35,7 @@ func dataSourceAwsEfsAccessPoints() *schema.Resource {
 }
 
 func dataSourceAwsEfsAccessPointsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
+	conn := meta.(*awsprovider.AWSClient).EFSConn
 
 	fileSystemId := d.Get("file_system_id").(string)
 	input := &efs.DescribeAccessPointsInput{
