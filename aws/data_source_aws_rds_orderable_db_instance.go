@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsRdsOrderableDbInstance() *schema.Resource {
@@ -175,7 +176,7 @@ func dataSourceAwsRdsOrderableDbInstance() *schema.Resource {
 }
 
 func dataSourceAwsRdsOrderableDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{}
 
