@@ -5,13 +5,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccCheckDxVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).dxconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DirectConnectConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -41,7 +44,7 @@ func testAccCheckDxVirtualInterfaceExists(name string, vif *directconnect.Virtua
 }
 
 func testAccCheckDxVirtualInterfaceDestroy(s *terraform.State, t string) error {
-	conn := testAccProvider.Meta().(*AWSClient).dxconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).DirectConnectConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != t {
@@ -54,7 +57,7 @@ func testAccCheckDxVirtualInterfaceDestroy(s *terraform.State, t string) error {
 		resp, err := conn.DescribeVirtualInterfaces(&directconnect.DescribeVirtualInterfacesInput{
 			VirtualInterfaceId: aws.String(rs.Primary.ID),
 		})
-		if isAWSErr(err, directconnect.ErrCodeClientException, "does not exist") {
+		if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "does not exist") {
 			continue
 		}
 		if err != nil {
