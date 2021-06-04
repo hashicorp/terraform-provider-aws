@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSKinesisStreamConsumerDataSource_basic(t *testing.T) {
@@ -16,9 +17,9 @@ func TestAccAWSKinesisStreamConsumerDataSource_basic(t *testing.T) {
 	streamName := "aws_kinesis_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kinesis.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -42,9 +43,9 @@ func TestAccAWSKinesisStreamConsumerDataSource_Name(t *testing.T) {
 	streamName := "aws_kinesis_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kinesis.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -68,9 +69,9 @@ func TestAccAWSKinesisStreamConsumerDataSource_Arn(t *testing.T) {
 	streamName := "aws_kinesis_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kinesis.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -97,7 +98,7 @@ resource "aws_kinesis_stream" "test" {
 }
 
 func testAccAWSKinesisStreamConsumerDataSourceConfig(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSKinesisStreamConsumerDataSourceBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_kinesis_stream_consumer" "test" {
@@ -112,7 +113,7 @@ resource "aws_kinesis_stream_consumer" "test" {
 }
 
 func testAccAWSKinesisStreamConsumerDataSourceConfigName(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSKinesisStreamConsumerDataSourceBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_kinesis_stream_consumer" "test" {
@@ -128,7 +129,7 @@ resource "aws_kinesis_stream_consumer" "test" {
 }
 
 func testAccAWSKinesisStreamConsumerDataSourceConfigArn(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSKinesisStreamConsumerDataSourceBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_kinesis_stream_consumer" "test" {
