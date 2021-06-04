@@ -8,8 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/acmpca/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(t *testing.T) {
@@ -18,9 +20,9 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, acmpca.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
@@ -48,9 +50,9 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_UpdateRootCA(t *testing.T) 
 	updatedResourceName := "aws_acmpca_certificate_authority_certificate.updated"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, acmpca.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
@@ -81,9 +83,9 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_SubordinateCA(t *testing.T)
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, acmpca.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
@@ -111,7 +113,7 @@ func testAccCheckAwsAcmpcaCertificateAuthorityCertificateExists(resourceName str
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).acmpcaconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ACMPCAConn
 
 		output, err := finder.CertificateAuthorityCertificateByARN(conn, rs.Primary.ID)
 		if err != nil {
