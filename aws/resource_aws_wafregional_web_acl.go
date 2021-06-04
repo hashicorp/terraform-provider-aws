@@ -8,9 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsWafRegionalWebAcl() *schema.Resource {
@@ -60,7 +62,7 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 						"log_destination": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"redacted_fields": {
 							Type:     schema.TypeList,
@@ -174,10 +176,10 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 }
 
 func resourceAwsWafRegionalWebAclCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
-	region := meta.(*AWSClient).region
+	region := meta.(*awsprovider.AWSClient).Region
 
 	wr := newWafRegionalRetryer(conn, region)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -204,9 +206,9 @@ func resourceAwsWafRegionalWebAclCreate(d *schema.ResourceData, meta interface{}
 	webACLARN := aws.StringValue(resp.WebACL.WebACLArn)
 	if webACLARN == "" {
 		webACLARN = arn.ARN{
-			AccountID: meta.(*AWSClient).accountid,
-			Partition: meta.(*AWSClient).partition,
-			Region:    meta.(*AWSClient).region,
+			AccountID: meta.(*awsprovider.AWSClient).AccountID,
+			Partition: meta.(*awsprovider.AWSClient).Partition,
+			Region:    meta.(*awsprovider.AWSClient).Region,
 			Resource:  fmt.Sprintf("webacl/%s", d.Id()),
 			Service:   "waf-regional",
 		}.String()
@@ -246,9 +248,9 @@ func resourceAwsWafRegionalWebAclCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	params := &waf.GetWebACLInput{
 		WebACLId: aws.String(d.Id()),
@@ -256,7 +258,7 @@ func resourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}) 
 
 	resp, err := conn.GetWebACL(params)
 	if err != nil {
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			log.Printf("[WARN] WAF Regional ACL (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -275,9 +277,9 @@ func resourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}) 
 	webACLARN := aws.StringValue(resp.WebACL.WebACLArn)
 	if webACLARN == "" {
 		webACLARN = arn.ARN{
-			AccountID: meta.(*AWSClient).accountid,
-			Partition: meta.(*AWSClient).partition,
-			Region:    meta.(*AWSClient).region,
+			AccountID: meta.(*awsprovider.AWSClient).AccountID,
+			Partition: meta.(*awsprovider.AWSClient).Partition,
+			Region:    meta.(*awsprovider.AWSClient).Region,
 			Resource:  fmt.Sprintf("webacl/%s", d.Id()),
 			Service:   "waf-regional",
 		}.String()
@@ -317,7 +319,7 @@ func resourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Getting WAF Regional Web ACL (%s) Logging Configuration: %s", d.Id(), getLoggingConfigurationInput)
 	getLoggingConfigurationOutput, err := conn.GetLoggingConfiguration(getLoggingConfigurationInput)
 
-	if err != nil && !isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
+	if err != nil && !tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
 		return fmt.Errorf("error getting WAF Regional Web ACL (%s) Logging Configuration: %s", d.Id(), err)
 	}
 
@@ -333,8 +335,8 @@ func resourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsWafRegionalWebAclUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	region := meta.(*awsprovider.AWSClient).Region
 
 	if d.HasChanges("default_action", "rule") {
 		o, n := d.GetChange("rule")
@@ -391,8 +393,8 @@ func resourceAwsWafRegionalWebAclUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsWafRegionalWebAclDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	region := meta.(*awsprovider.AWSClient).Region
 
 	// First, need to delete all rules
 	rules := d.Get("rule").(*schema.Set).List()
