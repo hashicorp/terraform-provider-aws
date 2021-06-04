@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
@@ -18,9 +19,9 @@ func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, costandusagereportservice.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccPreCheckCur(t) },
+		ErrorCheck:        atest.ErrorCheck(t, costandusagereportservice.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -49,9 +50,9 @@ func TestAccDataSourceAwsCurReportDefinition_additional(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, costandusagereportservice.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccPreCheckCur(t) },
+		ErrorCheck:        atest.ErrorCheck(t, costandusagereportservice.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -89,7 +90,7 @@ func testAccDataSourceAwsCurReportDefinitionCheckExists(datasourceName, resource
 }
 
 func testAccDataSourceAwsCurReportDefinitionConfig_basic(reportName string, bucketName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccCurRegionProviderConfig(),
 		fmt.Sprintf(`
 data "aws_billing_service_account" "test" {}
@@ -157,7 +158,7 @@ data "aws_cur_report_definition" "test" {
 }
 
 func testAccDataSourceAwsCurReportDefinitionConfig_additional(reportName string, bucketName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccCurRegionProviderConfig(),
 		fmt.Sprintf(`
 data "aws_billing_service_account" "test" {}
