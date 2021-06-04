@@ -12,7 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsTimestreamWriteDatabase() *schema.Resource {
@@ -50,7 +51,7 @@ func resourceAwsTimestreamWriteDatabase() *schema.Resource {
 				// The ARN is of the format 'arn:aws:kms:REGION:ACCOUNT_ID:key/KMS_KEY_ID'. Appropriate diff suppression
 				// would require an extra API call to the kms service's DescribeKey method to decipher aliases.
 				// To avoid importing an extra service in this resource, input here is restricted to only ARNs.
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"table_count": {
@@ -68,8 +69,8 @@ func resourceAwsTimestreamWriteDatabase() *schema.Resource {
 }
 
 func resourceAwsTimestreamWriteDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).timestreamwriteconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).TimeStreamWriteConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	dbName := d.Get("database_name").(string)
@@ -102,9 +103,9 @@ func resourceAwsTimestreamWriteDatabaseCreate(ctx context.Context, d *schema.Res
 }
 
 func resourceAwsTimestreamWriteDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).timestreamwriteconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).TimeStreamWriteConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &timestreamwrite.DescribeDatabaseInput{
 		DatabaseName: aws.String(d.Id()),
@@ -155,7 +156,7 @@ func resourceAwsTimestreamWriteDatabaseRead(ctx context.Context, d *schema.Resou
 }
 
 func resourceAwsTimestreamWriteDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).timestreamwriteconn
+	conn := meta.(*awsprovider.AWSClient).TimeStreamWriteConn
 
 	if d.HasChange("kms_key_id") {
 		input := &timestreamwrite.UpdateDatabaseInput{
@@ -182,7 +183,7 @@ func resourceAwsTimestreamWriteDatabaseUpdate(ctx context.Context, d *schema.Res
 }
 
 func resourceAwsTimestreamWriteDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).timestreamwriteconn
+	conn := meta.(*awsprovider.AWSClient).TimeStreamWriteConn
 
 	input := &timestreamwrite.DeleteDatabaseInput{
 		DatabaseName: aws.String(d.Id()),
