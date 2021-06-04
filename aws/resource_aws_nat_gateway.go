@@ -9,9 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsNatGateway() *schema.Resource {
@@ -61,8 +63,8 @@ func resourceAwsNatGateway() *schema.Resource {
 }
 
 func resourceAwsNatGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Create the NAT Gateway
@@ -100,9 +102,9 @@ func resourceAwsNatGatewayCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	// Refresh the NAT Gateway state
 	ngRaw, state, err := NGStateRefreshFunc(conn, d.Id())()
@@ -148,7 +150,7 @@ func resourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsNatGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -162,7 +164,7 @@ func resourceAwsNatGatewayUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsNatGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 	deleteOpts := &ec2.DeleteNatGatewayInput{
 		NatGatewayId: aws.String(d.Id()),
 	}
@@ -208,7 +210,7 @@ func NGStateRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 		}
 		resp, err := conn.DescribeNatGateways(opts)
 		if err != nil {
-			if isAWSErr(err, "NatGatewayNotFound", "") {
+			if tfawserr.ErrMessageContains(err, "NatGatewayNotFound", "") {
 				resp = nil
 			} else {
 				log.Printf("Error on NGStateRefresh: %s", err)
