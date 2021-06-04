@@ -7,12 +7,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfglue "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGlueRegistry() *schema.Resource {
@@ -53,8 +55,8 @@ func resourceAwsGlueRegistry() *schema.Resource {
 }
 
 func resourceAwsGlueRegistryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &glue.CreateRegistryInput{
@@ -77,13 +79,13 @@ func resourceAwsGlueRegistryCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsGlueRegistryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.RegistryByID(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Registry (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -123,7 +125,7 @@ func resourceAwsGlueRegistryRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsGlueRegistryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	if d.HasChanges("description") {
 		input := &glue.UpdateRegistryInput{
@@ -152,7 +154,7 @@ func resourceAwsGlueRegistryUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsGlueRegistryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Registry: %s", d.Id())
 	input := &glue.DeleteRegistryInput{
@@ -161,7 +163,7 @@ func resourceAwsGlueRegistryDelete(d *schema.ResourceData, meta interface{}) err
 
 	_, err := conn.DeleteRegistry(input)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Glue Registry (%s): %w", d.Id(), err)
@@ -169,7 +171,7 @@ func resourceAwsGlueRegistryDelete(d *schema.ResourceData, meta interface{}) err
 
 	_, err = waiter.RegistryDeleted(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error waiting for Glue Registry (%s) to be deleted: %w", d.Id(), err)
