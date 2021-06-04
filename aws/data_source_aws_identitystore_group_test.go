@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/identitystore"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSIdentityStoreGroupDataSource_DisplayName(t *testing.T) {
@@ -16,12 +17,12 @@ func TestAccAWSIdentityStoreGroupDataSource_DisplayName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSSOAdminInstances(t)
 			testAccPreCheckAWSIdentityStoreGroupName(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, identitystore.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, identitystore.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -42,13 +43,13 @@ func TestAccAWSIdentityStoreGroupDataSource_GroupID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSSOAdminInstances(t)
 			testAccPreCheckAWSIdentityStoreGroupName(t)
 			testAccPreCheckAWSIdentityStoreGroupID(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, identitystore.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, identitystore.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -64,9 +65,9 @@ func TestAccAWSIdentityStoreGroupDataSource_GroupID(t *testing.T) {
 
 func TestAccAWSIdentityStoreGroupDataSource_NonExistent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
-		ErrorCheck:   testAccErrorCheck(t, identitystore.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		ErrorCheck:   atest.ErrorCheck(t, identitystore.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
