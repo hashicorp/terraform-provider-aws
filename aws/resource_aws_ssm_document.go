@@ -10,10 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ssm/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -188,8 +190,8 @@ func resourceAwsSsmDocument() *schema.Resource {
 }
 
 func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SSMConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Validates permissions keys, if set, to be type and account_ids
@@ -249,9 +251,9 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	SSMConn := meta.(*awsprovider.AWSClient).SSMConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading SSM Document: %s", d.Id())
 
@@ -259,9 +261,9 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 		Name: aws.String(d.Id()),
 	}
 
-	describeDocumentOutput, err := ssmconn.DescribeDocument(describeDocumentInput)
+	describeDocumentOutput, err := SSMConn.DescribeDocument(describeDocumentInput)
 
-	if isAWSErr(err, ssm.ErrCodeInvalidDocument, "") {
+	if tfawserr.ErrMessageContains(err, ssm.ErrCodeInvalidDocument, "") {
 		log.Printf("[WARN] SSM Document not found so removing from state")
 		d.SetId("")
 		return nil
@@ -281,7 +283,7 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 		Name:            describeDocumentOutput.Document.Name,
 	}
 
-	getDocumentOutput, err := ssmconn.GetDocument(getDocumentInput)
+	getDocumentOutput, err := SSMConn.GetDocument(getDocumentInput)
 
 	if err != nil {
 		return fmt.Errorf("error getting SSM Document (%s): %s", d.Id(), err)
@@ -309,10 +311,10 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("owner", doc.Owner)
 	d.Set("platform_types", flattenStringList(doc.PlatformTypes))
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "ssm",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("document/%s", *doc.Name),
 	}.String()
 	if err := d.Set("arn", arn); err != nil {
@@ -373,7 +375,7 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*awsprovider.AWSClient).SSMConn
 
 	// Validates permissions keys, if set, to be type and account_ids
 	// since ValidateFunc validates only the value not the key.
@@ -421,7 +423,7 @@ func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsSsmDocumentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*awsprovider.AWSClient).SSMConn
 
 	if err := deleteDocumentPermissions(d, meta); err != nil {
 		return err
@@ -440,7 +442,7 @@ func resourceAwsSsmDocumentDelete(d *schema.ResourceData, meta interface{}) erro
 
 	_, err = waiter.DocumentDeleted(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, ssm.ErrCodeInvalidDocument, "") {
+		if tfawserr.ErrMessageContains(err, ssm.ErrCodeInvalidDocument, "") {
 			return nil
 		}
 		return fmt.Errorf("error waiting for SSM Document (%s) to be Deleted: %w", d.Id(), err)
@@ -475,7 +477,7 @@ func expandSsmAttachmentsSources(a []interface{}) []*ssm.AttachmentsSource {
 }
 
 func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*awsprovider.AWSClient).SSMConn
 
 	log.Printf("[INFO] Setting permissions for document: %s", d.Id())
 
@@ -525,7 +527,7 @@ func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 }
 
 func getDocumentPermissions(d *schema.ResourceData, meta interface{}) (map[string]interface{}, error) {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*awsprovider.AWSClient).SSMConn
 
 	log.Printf("[INFO] Getting permissions for document: %s", d.Id())
 
@@ -567,7 +569,7 @@ func getDocumentPermissions(d *schema.ResourceData, meta interface{}) (map[strin
 }
 
 func deleteDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*awsprovider.AWSClient).SSMConn
 
 	log.Printf("[INFO] Removing permissions from document: %s", d.Id())
 
@@ -676,10 +678,10 @@ func updateAwsSSMDocument(d *schema.ResourceData, meta interface{}) error {
 
 	newDefaultVersion := d.Get("default_version").(string)
 
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*awsprovider.AWSClient).SSMConn
 	updated, err := conn.UpdateDocument(updateDocInput)
 
-	if isAWSErr(err, ssm.ErrCodeDuplicateDocumentContent, "") {
+	if tfawserr.ErrMessageContains(err, ssm.ErrCodeDuplicateDocumentContent, "") {
 		log.Printf("[DEBUG] Content is a duplicate of the latest version so update is not necessary: %s", d.Id())
 		log.Printf("[INFO] Updating the default version to the latest version %s: %s", newDefaultVersion, d.Id())
 
