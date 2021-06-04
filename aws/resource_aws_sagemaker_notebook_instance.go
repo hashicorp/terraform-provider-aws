@@ -8,12 +8,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSagemakerNotebookInstance() *schema.Resource {
@@ -48,7 +50,7 @@ func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"instance_type": {
@@ -130,8 +132,8 @@ func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 }
 
 func resourceAwsSagemakerNotebookInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -196,16 +198,16 @@ func resourceAwsSagemakerNotebookInstanceCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	describeNotebookInput := &sagemaker.DescribeNotebookInstanceInput{
 		NotebookInstanceName: aws.String(d.Id()),
 	}
 	notebookInstance, err := conn.DescribeNotebookInstance(describeNotebookInput)
 	if err != nil {
-		if isAWSErr(err, "ValidationException", "RecordNotFound") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find sageMaker notebook instance (%s); removing from state", d.Id())
 			return nil
@@ -291,7 +293,7 @@ func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -422,14 +424,14 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsSagemakerNotebookInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	describeNotebookInput := &sagemaker.DescribeNotebookInstanceInput{
 		NotebookInstanceName: aws.String(d.Id()),
 	}
 	notebook, err := conn.DescribeNotebookInstance(describeNotebookInput)
 	if err != nil {
-		if isAWSErr(err, "ValidationException", "RecordNotFound") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
 			return nil
 		}
 		return fmt.Errorf("unable to find sagemaker notebook instance to delete (%s): %s", d.Id(), err)
@@ -451,7 +453,7 @@ func resourceAwsSagemakerNotebookInstanceDelete(d *schema.ResourceData, meta int
 	}
 
 	if _, err := waiter.NotebookInstanceDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, "ValidationException", "RecordNotFound") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
 			return nil
 		}
 		return fmt.Errorf("error waiting for sagemaker notebook instance (%s) to delete: %w", d.Id(), err)
@@ -466,7 +468,7 @@ func stopSagemakerNotebookInstance(conn *sagemaker.SageMaker, id string) error {
 	}
 	notebook, err := conn.DescribeNotebookInstance(describeNotebookInput)
 	if err != nil {
-		if isAWSErr(err, "ValidationException", "RecordNotFound") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
 			return nil
 		}
 		return fmt.Errorf("unable to find sagemaker notebook instance (%s): %s", id, err)
@@ -497,7 +499,7 @@ func sagemakerNotebookInstanceStateRefreshFunc(conn *sagemaker.SageMaker, name s
 		}
 		notebook, err := conn.DescribeNotebookInstance(describeNotebookInput)
 		if err != nil {
-			if isAWSErr(err, "ValidationException", "RecordNotFound") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
 				return 1, "", nil
 			}
 			return nil, "", err
