@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSAutoscalingSchedule_basic(t *testing.T) {
@@ -24,9 +26,9 @@ func TestAccAWSAutoscalingSchedule_basic(t *testing.T) {
 	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -59,9 +61,9 @@ func TestAccAWSAutoscalingSchedule_disappears(t *testing.T) {
 	end := testAccAWSAutoscalingScheduleValidEnd(t)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -78,12 +80,12 @@ func TestAccAWSAutoscalingSchedule_disappears(t *testing.T) {
 
 func testAccCheckScalingScheduleDisappears(schedule *autoscaling.ScheduledUpdateGroupAction) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		autoscalingconn := testAccProvider.Meta().(*AWSClient).autoscalingconn
+		AutoScalingConn := atest.Provider.Meta().(*awsprovider.AWSClient).AutoScalingConn
 		params := &autoscaling.DeleteScheduledActionInput{
 			AutoScalingGroupName: schedule.AutoScalingGroupName,
 			ScheduledActionName:  schedule.ScheduledActionName,
 		}
-		_, err := autoscalingconn.DeleteScheduledAction(params)
+		_, err := AutoScalingConn.DeleteScheduledAction(params)
 		return err
 	}
 }
@@ -98,9 +100,9 @@ func TestAccAWSAutoscalingSchedule_recurrence(t *testing.T) {
 	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -132,9 +134,9 @@ func TestAccAWSAutoscalingSchedule_zeroValues(t *testing.T) {
 	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -165,9 +167,9 @@ func TestAccAWSAutoscalingSchedule_negativeOne(t *testing.T) {
 	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -213,7 +215,7 @@ func testAccCheckScalingScheduleExists(n string, policy *autoscaling.ScheduledUp
 		}
 
 		autoScalingGroup := rs.Primary.Attributes["autoscaling_group_name"]
-		conn := testAccProvider.Meta().(*AWSClient).autoscalingconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AutoScalingConn
 		params := &autoscaling.DescribeScheduledActionsInput{
 			AutoScalingGroupName: aws.String(autoScalingGroup),
 			ScheduledActionNames: []*string{aws.String(rs.Primary.ID)},
@@ -234,7 +236,7 @@ func testAccCheckScalingScheduleExists(n string, policy *autoscaling.ScheduledUp
 }
 
 func testAccCheckAWSAutoscalingScheduleDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).autoscalingconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).AutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_autoscaling_schedule" {
