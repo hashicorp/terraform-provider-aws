@@ -5,8 +5,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSsmResourceDataSync() *schema.Resource {
@@ -66,7 +68,7 @@ func resourceAwsSsmResourceDataSync() *schema.Resource {
 }
 
 func resourceAwsSsmResourceDataSyncCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*awsprovider.AWSClient).SSMConn
 	input := &ssm.CreateResourceDataSyncInput{
 		S3Destination: expandSsmResourceDataSyncS3Destination(d),
 		SyncName:      aws.String(d.Get("name").(string)),
@@ -75,7 +77,7 @@ func resourceAwsSsmResourceDataSyncCreate(d *schema.ResourceData, meta interface
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateResourceDataSync(input)
 		if err != nil {
-			if isAWSErr(err, ssm.ErrCodeResourceDataSyncInvalidConfigurationException, "S3 write failed for bucket") {
+			if tfawserr.ErrMessageContains(err, ssm.ErrCodeResourceDataSyncInvalidConfigurationException, "S3 write failed for bucket") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -95,7 +97,7 @@ func resourceAwsSsmResourceDataSyncCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsSsmResourceDataSyncRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*awsprovider.AWSClient).SSMConn
 
 	syncItem, err := findResourceDataSyncItem(conn, d.Id())
 	if err != nil {
@@ -111,7 +113,7 @@ func resourceAwsSsmResourceDataSyncRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsSsmResourceDataSyncDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*awsprovider.AWSClient).SSMConn
 
 	input := &ssm.DeleteResourceDataSyncInput{
 		SyncName: aws.String(d.Get("name").(string)),
@@ -119,7 +121,7 @@ func resourceAwsSsmResourceDataSyncDelete(d *schema.ResourceData, meta interface
 
 	_, err := conn.DeleteResourceDataSync(input)
 	if err != nil {
-		if isAWSErr(err, ssm.ErrCodeResourceDataSyncNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, ssm.ErrCodeResourceDataSyncNotFoundException, "") {
 			return nil
 		}
 		return err
