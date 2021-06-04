@@ -8,11 +8,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apigatewayv2/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -23,17 +26,17 @@ func init() {
 }
 
 func testSweepAPIGatewayV2VpcLinks(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).apigatewayv2conn
+	conn := client.(*awsprovider.AWSClient).APIGatewayV2Conn
 	input := &apigatewayv2.GetVpcLinksInput{}
 	var sweeperErrs *multierror.Error
 
 	for {
 		output, err := conn.GetVpcLinks(input)
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping API Gateway v2 VPC Link sweep for %s: %s", region, err)
 			return nil
 		}
@@ -46,7 +49,7 @@ func testSweepAPIGatewayV2VpcLinks(region string) error {
 			_, err := conn.DeleteVpcLink(&apigatewayv2.DeleteVpcLinkInput{
 				VpcLinkId: link.VpcLinkId,
 			})
-			if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 				continue
 			}
 			if err != nil {
@@ -57,7 +60,7 @@ func testSweepAPIGatewayV2VpcLinks(region string) error {
 			}
 
 			_, err = waiter.VpcLinkDeleted(conn, aws.StringValue(link.VpcLinkId))
-			if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 				continue
 			}
 			if err != nil {
@@ -84,16 +87,16 @@ func TestAccAWSAPIGatewayV2VpcLink_basic(t *testing.T) {
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2VpcLinkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayV2VpcLinkConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2VpcLinkExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/vpclinks/.+`)),
+					atest.MatchAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/vpclinks/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
@@ -104,7 +107,7 @@ func TestAccAWSAPIGatewayV2VpcLink_basic(t *testing.T) {
 				Config: testAccAWSAPIGatewayV2VpcLinkConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2VpcLinkExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/vpclinks/.+`)),
+					atest.MatchAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/vpclinks/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
@@ -126,9 +129,9 @@ func TestAccAWSAPIGatewayV2VpcLink_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2VpcLinkDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -149,16 +152,16 @@ func TestAccAWSAPIGatewayV2VpcLink_Tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2VpcLinkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayV2VpcLinkConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2VpcLinkExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/vpclinks/.+`)),
+					atest.MatchAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/vpclinks/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
@@ -185,7 +188,7 @@ func TestAccAWSAPIGatewayV2VpcLink_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSAPIGatewayV2VpcLinkDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_vpc_link" {
@@ -195,7 +198,7 @@ func testAccCheckAWSAPIGatewayV2VpcLinkDestroy(s *terraform.State) error {
 		_, err := conn.GetVpcLink(&apigatewayv2.GetVpcLinkInput{
 			VpcLinkId: aws.String(rs.Primary.ID),
 		})
-		if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 			continue
 		}
 		if err != nil {
@@ -210,7 +213,7 @@ func testAccCheckAWSAPIGatewayV2VpcLinkDestroy(s *terraform.State) error {
 
 func testAccCheckAWSAPIGatewayV2VpcLinkDisappears(v *apigatewayv2.GetVpcLinkOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayV2Conn
 
 		if _, err := conn.DeleteVpcLink(&apigatewayv2.DeleteVpcLinkInput{
 			VpcLinkId: v.VpcLinkId,
@@ -219,7 +222,7 @@ func testAccCheckAWSAPIGatewayV2VpcLinkDisappears(v *apigatewayv2.GetVpcLinkOutp
 		}
 
 		_, err := waiter.VpcLinkDeleted(conn, aws.StringValue(v.VpcLinkId))
-		if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 			return nil
 		}
 		if err != nil {
@@ -241,7 +244,7 @@ func testAccCheckAWSAPIGatewayV2VpcLinkExists(n string, v *apigatewayv2.GetVpcLi
 			return fmt.Errorf("No API Gateway v2 VPC Link ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayV2Conn
 
 		resp, err := conn.GetVpcLink(&apigatewayv2.GetVpcLinkInput{
 			VpcLinkId: aws.String(rs.Primary.ID),
