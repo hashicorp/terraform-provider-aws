@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -24,11 +27,11 @@ func init() {
 }
 
 func testSweepSagemakerEndpoints(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).sagemakerconn
+	conn := client.(*awsprovider.AWSClient).SageMakerConn
 
 	req := &sagemaker.ListEndpointsInput{
 		NameContains: aws.String("tf-acc-test"),
@@ -62,9 +65,9 @@ func TestAccAWSSagemakerEndpoint_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSagemakerEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -92,9 +95,9 @@ func TestAccAWSSagemakerEndpoint_EndpointConfigName(t *testing.T) {
 	sagemakerEndpointConfigurationResourceName2 := "aws_sagemaker_endpoint_configuration.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSagemakerEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -125,9 +128,9 @@ func TestAccAWSSagemakerEndpoint_Tags(t *testing.T) {
 	resourceName := "aws_sagemaker_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSagemakerEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -156,7 +159,7 @@ func TestAccAWSSagemakerEndpoint_Tags(t *testing.T) {
 }
 
 func testAccCheckSagemakerEndpointDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SageMakerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_endpoint" {
@@ -169,7 +172,7 @@ func testAccCheckSagemakerEndpointDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeEndpoint(describeInput)
 
-		if isAWSErr(err, "ValidationException", "") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "") {
 			continue
 		}
 
@@ -193,7 +196,7 @@ func testAccCheckSagemakerEndpointExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no SageMaker Endpoint ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SageMakerConn
 		opts := &sagemaker.DescribeEndpointInput{
 			EndpointName: aws.String(rs.Primary.ID),
 		}
