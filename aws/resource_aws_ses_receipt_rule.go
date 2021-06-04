@@ -11,9 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSesReceiptRule() *schema.Resource {
@@ -144,7 +146,7 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 						"topic_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 
 						"position": {
@@ -182,7 +184,7 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 						"function_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 
 						"invocation_type": {
@@ -195,7 +197,7 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 						"topic_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 
 						"position": {
@@ -236,7 +238,7 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 						"kms_key_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 
 						"object_key_prefix": {
@@ -247,7 +249,7 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 						"topic_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 
 						"position": {
@@ -294,7 +296,7 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 						"topic_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 
 						"position": {
@@ -328,7 +330,7 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 						"topic_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 
 						"position": {
@@ -360,13 +362,13 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 						"organization_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 
 						"topic_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 
 						"position": {
@@ -410,7 +412,7 @@ func resourceAwsSesReceiptRuleImport(d *schema.ResourceData, meta interface{}) (
 }
 
 func resourceAwsSesReceiptRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*awsprovider.AWSClient).SESConn
 
 	createOpts := &ses.CreateReceiptRuleInput{
 		Rule:        buildReceiptRule(d),
@@ -432,7 +434,7 @@ func resourceAwsSesReceiptRuleCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSesReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*awsprovider.AWSClient).SESConn
 
 	updateOpts := &ses.UpdateReceiptRuleInput{
 		Rule:        buildReceiptRule(d),
@@ -461,7 +463,7 @@ func resourceAwsSesReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSesReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*awsprovider.AWSClient).SESConn
 
 	ruleSetName := d.Get("rule_set_name").(string)
 	describeOpts := &ses.DescribeReceiptRuleInput{
@@ -471,12 +473,12 @@ func resourceAwsSesReceiptRuleRead(d *schema.ResourceData, meta interface{}) err
 
 	response, err := conn.DescribeReceiptRule(describeOpts)
 	if err != nil {
-		if isAWSErr(err, ses.ErrCodeRuleDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, ses.ErrCodeRuleDoesNotExistException, "") {
 			log.Printf("[WARN] SES Receipt Rule (%s) not found", d.Id())
 			d.SetId("")
 			return nil
 		}
-		if isAWSErr(err, ses.ErrCodeRuleSetDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, ses.ErrCodeRuleSetDoesNotExistException, "") {
 			log.Printf("[WARN] SES Receipt Rule Set (%s) belonging to SES Receipt Rule (%s) not found, removing from state", aws.StringValue(describeOpts.RuleSetName), d.Id())
 			d.SetId("")
 			return nil
@@ -638,10 +640,10 @@ func resourceAwsSesReceiptRuleRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "ses",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("receipt-rule-set/%s:receipt-rule/%s", ruleSetName, d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -650,7 +652,7 @@ func resourceAwsSesReceiptRuleRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsSesReceiptRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*awsprovider.AWSClient).SESConn
 
 	deleteOpts := &ses.DeleteReceiptRuleInput{
 		RuleName:    aws.String(d.Id()),
