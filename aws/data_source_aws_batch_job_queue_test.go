@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsBatchJobQueue_basic(t *testing.T) {
@@ -15,9 +16,9 @@ func TestAccDataSourceAwsBatchJobQueue_basic(t *testing.T) {
 	datasourceName := "data.aws_batch_job_queue.by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck: testAccErrorCheck(t, batch.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck: atest.ErrorCheck(t, batch.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsBatchJobQueueConfig(rName),
