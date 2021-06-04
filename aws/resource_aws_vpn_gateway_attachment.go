@@ -6,10 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsVpnGatewayAttachment() *schema.Resource {
@@ -35,7 +37,7 @@ func resourceAwsVpnGatewayAttachment() *schema.Resource {
 }
 
 func resourceAwsVpnGatewayAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	vpcId := d.Get("vpc_id").(string)
 	vgwId := d.Get("vpn_gateway_id").(string)
@@ -64,14 +66,14 @@ func resourceAwsVpnGatewayAttachmentCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsVpnGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	vpcId := d.Get("vpc_id").(string)
 	vgwId := d.Get("vpn_gateway_id").(string)
 
 	vpcAttachment, err := finder.VpnGatewayVpcAttachment(conn, vgwId, vpcId)
 
-	if isAWSErr(err, tfec2.InvalidVpnGatewayIDNotFound, "") {
+	if tfawserr.ErrMessageContains(err, tfec2.InvalidVpnGatewayIDNotFound, "") {
 		log.Printf("[WARN] VPN Gateway (%s) Attachment (%s) not found, removing from state", vgwId, vpcId)
 		d.SetId("")
 		return nil
@@ -91,7 +93,7 @@ func resourceAwsVpnGatewayAttachmentRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsVpnGatewayAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	vpcId := d.Get("vpc_id").(string)
 	vgwId := d.Get("vpn_gateway_id").(string)
@@ -102,7 +104,7 @@ func resourceAwsVpnGatewayAttachmentDelete(d *schema.ResourceData, meta interfac
 		VpnGatewayId: aws.String(vgwId),
 	})
 
-	if isAWSErr(err, tfec2.InvalidVpnGatewayAttachmentNotFound, "") || isAWSErr(err, tfec2.InvalidVpnGatewayIDNotFound, "") {
+	if tfawserr.ErrMessageContains(err, tfec2.InvalidVpnGatewayAttachmentNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.InvalidVpnGatewayIDNotFound, "") {
 		return nil
 	}
 
