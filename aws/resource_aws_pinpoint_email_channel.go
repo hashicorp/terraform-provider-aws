@@ -6,7 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsPinpointEmailChannel() *schema.Resource {
@@ -28,7 +30,7 @@ func resourceAwsPinpointEmailChannel() *schema.Resource {
 			"configuration_set": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"enabled": {
 				Type:     schema.TypeBool,
@@ -42,12 +44,12 @@ func resourceAwsPinpointEmailChannel() *schema.Resource {
 			"identity": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"messages_per_second": {
 				Type:     schema.TypeInt,
@@ -58,7 +60,7 @@ func resourceAwsPinpointEmailChannel() *schema.Resource {
 }
 
 func resourceAwsPinpointEmailChannelUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*awsprovider.AWSClient).PinpointConn
 
 	applicationId := d.Get("application_id").(string)
 
@@ -92,7 +94,7 @@ func resourceAwsPinpointEmailChannelUpsert(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsPinpointEmailChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*awsprovider.AWSClient).PinpointConn
 
 	log.Printf("[INFO] Reading Pinpoint Email Channel for application %s", d.Id())
 
@@ -100,7 +102,7 @@ func resourceAwsPinpointEmailChannelRead(d *schema.ResourceData, meta interface{
 		ApplicationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Pinpoint Email Channel for application %s not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
@@ -122,14 +124,14 @@ func resourceAwsPinpointEmailChannelRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsPinpointEmailChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*awsprovider.AWSClient).PinpointConn
 
 	log.Printf("[DEBUG] Deleting Pinpoint Email Channel for application %s", d.Id())
 	_, err := conn.DeleteEmailChannel(&pinpoint.DeleteEmailChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
