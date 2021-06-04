@@ -12,8 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/globalaccelerator/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
@@ -22,23 +24,23 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   atest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalAcceleratorEndpointGroupConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName, &v),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					atest.MatchAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", atest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", ""),
 					resource.TestCheckResourceAttr(resourceName, "health_check_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "TCP"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
+					atest.MatchAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "port_override.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "threshold_count", "3"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "100"),
@@ -59,16 +61,16 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   atest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalAcceleratorEndpointGroupConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlobalAcceleratorEndpointGroup(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsGlobalAcceleratorEndpointGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -85,28 +87,28 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_ALBEndpoint_ClientIP(t *testing.T)
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   atest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalAcceleratorEndpointGroupConfigALBEndpointClientIP(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName, &v),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					atest.MatchAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
 						"client_ip_preservation_enabled": "false",
 						"weight":                         "20",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", albResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", atest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "HTTP"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
+					atest.MatchAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "port_override.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "threshold_count", "3"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "100"),
@@ -121,19 +123,19 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_ALBEndpoint_ClientIP(t *testing.T)
 				Config: testAccGlobalAcceleratorEndpointGroupConfigALBEndpointClientIP(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName, &v),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					atest.MatchAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
 						"client_ip_preservation_enabled": "true",
 						"weight":                         "20",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", albResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", atest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "HTTP"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
+					atest.MatchAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "port_override.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "threshold_count", "3"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "100"),
@@ -159,28 +161,28 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_InstanceEndpoint(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   atest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalAcceleratorEndpointGroupConfigInstanceEndpoint(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName, &v),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					atest.MatchAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
 						"client_ip_preservation_enabled": "true",
 						"weight":                         "20",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", instanceResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", atest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "HTTP"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
+					atest.MatchAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "port_override.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "threshold_count", "3"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "100"),
@@ -210,28 +212,32 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_MultiRegion(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccMultipleRegionPreCheck(t, 2); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:        testAccErrorCheck(t, globalaccelerator.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		PreCheck: func() {
+			atest.PreCheck(t)
+			atest.PreCheckMultipleRegion(t, 2)
+			testAccPreCheckGlobalAccelerator(t)
+		},
+		ErrorCheck:        atest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalAcceleratorEndpointGroupConfigMultiRegion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName, &v),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					atest.MatchAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
 						"client_ip_preservation_enabled": "false",
 						"weight":                         "20",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", eipResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", testAccGetAlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", atest.AlternateRegion()),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "10"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/foo"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "HTTPS"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
+					atest.MatchAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "port_override.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "threshold_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "0"),
@@ -252,23 +258,23 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_PortOverrides(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   atest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalAcceleratorEndpointGroupConfigPortOverrides(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName, &v),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					atest.MatchAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", atest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", ""),
 					resource.TestCheckResourceAttr(resourceName, "health_check_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "TCP"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
+					atest.MatchAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "port_override.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_override.*", map[string]string{
 						"endpoint_port": "8081",
@@ -282,14 +288,14 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_PortOverrides(t *testing.T) {
 				Config: testAccGlobalAcceleratorEndpointGroupConfigPortOverridesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName, &v),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					atest.MatchAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", atest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", ""),
 					resource.TestCheckResourceAttr(resourceName, "health_check_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "TCP"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
+					atest.MatchAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "port_override.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_override.*", map[string]string{
 						"endpoint_port": "8081",
@@ -319,28 +325,28 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_TCPHealthCheckProtocol(t *testing.
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   atest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalAcceleratorEndpointGroupConfigTcpHealthCheckProtocol(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName, &v),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					atest.MatchAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
 						"client_ip_preservation_enabled": "false",
 						"weight":                         "10",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", eipResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", atest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_port", "1234"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "TCP"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
+					atest.MatchAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "port_override.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "threshold_count", "3"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "100"),
@@ -362,23 +368,23 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_Update(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   atest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalAcceleratorEndpointGroupConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName, &v),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					atest.MatchAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", atest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", ""),
 					resource.TestCheckResourceAttr(resourceName, "health_check_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "TCP"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
+					atest.MatchAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "port_override.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "threshold_count", "3"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "100"),
@@ -388,19 +394,19 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_Update(t *testing.T) {
 				Config: testAccGlobalAcceleratorEndpointGroupConfigUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName, &v),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					atest.MatchAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
 						"client_ip_preservation_enabled": "false",
 						"weight":                         "20",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", eipResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", atest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "10"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/foo"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "HTTPS"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
+					atest.MatchAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "port_override.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "threshold_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "0"),
@@ -417,7 +423,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_Update(t *testing.T) {
 
 func testAccCheckGlobalAcceleratorEndpointGroupExists(name string, v *globalaccelerator.EndpointGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).globalacceleratorconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).GlobalAcceleratorConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -441,7 +447,7 @@ func testAccCheckGlobalAcceleratorEndpointGroupExists(name string, v *globalacce
 }
 
 func testAccCheckGlobalAcceleratorEndpointGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).globalacceleratorconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).GlobalAcceleratorConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_globalaccelerator_endpoint_group" {
@@ -467,10 +473,10 @@ func testAccCheckGlobalAcceleratorEndpointGroupDestroy(s *terraform.State) error
 // placed into the VPC when Global Accelerator client IP address preservation is enabled.
 func testAccCheckGlobalAcceleratorEndpointGroupDeleteGlobalAcceleratorSecurityGroup(vpc *ec2.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 		input := &ec2.DescribeSecurityGroupsInput{
-			Filters: buildEC2AttributeFilterList(
+			Filters: BuildEC2AttributeFilterList(
 				map[string]string{
 					"group-name": "GlobalAccelerator",
 					"vpc-id":     aws.StringValue(vpc.VpcId),
@@ -536,7 +542,7 @@ resource "aws_vpc" "test" {
 }
 
 func testAccGlobalAcceleratorEndpointGroupConfigALBEndpointClientIP(rName string, clientIP bool) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
 		testAccGlobalAcceleratorEndpointGroupConfigBaseVpc(rName),
 		fmt.Sprintf(`
@@ -637,7 +643,7 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
 }
 
 func testAccGlobalAcceleratorEndpointGroupConfigInstanceEndpoint(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
 		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
@@ -707,7 +713,7 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
 }
 
 func testAccGlobalAcceleratorEndpointGroupConfigMultiRegion(rName string) string {
-	return composeConfig(testAccAlternateRegionProviderConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(atest.ConfigProviderAlternateRegion(), fmt.Sprintf(`
 resource "aws_globalaccelerator_accelerator" "test" {
   name            = %[1]q
   ip_address_type = "IPV4"
@@ -750,7 +756,7 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
   threshold_count               = 1
   traffic_dial_percentage       = 0
 }
-`, rName, testAccGetAlternateRegion()))
+`, rName, atest.AlternateRegion()))
 }
 
 func testAccGlobalAcceleratorEndpointGroupConfigPortOverrides(rName string) string {
