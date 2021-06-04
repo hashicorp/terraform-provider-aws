@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -25,14 +27,14 @@ func init() {
 }
 
 func testSweepRedshiftSubnetGroups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).redshiftconn
-	sweepResources := make([]*testSweepResource, 0)
+	conn := client.(*awsprovider.AWSClient).RedshiftConn
+	sweepResources := make([]*atest.TestSweepResource, 0)
 	var errs *multierror.Error
 
 	input := &redshift.DescribeClusterSubnetGroupsInput{}
@@ -57,7 +59,7 @@ func testSweepRedshiftSubnetGroups(region string) error {
 			d := r.Data(nil)
 			d.SetId(name)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, atest.NewTestSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -67,11 +69,11 @@ func testSweepRedshiftSubnetGroups(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Subnet Groups: %w", err))
 	}
 
-	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := atest.TestSweepResourceOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Subnet Groups for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if atest.SweepSkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Redshift Subnet Group sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -85,9 +87,9 @@ func TestAccAWSRedshiftSubnetGroup_basic(t *testing.T) {
 	resourceName := "aws_redshift_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -117,16 +119,16 @@ func TestAccAWSRedshiftSubnetGroup_disappears(t *testing.T) {
 	resourceName := "aws_redshift_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRedshiftSubnetGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRedshiftSubnetGroupExists(resourceName, &clusterSubnetGroup),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRedshiftSubnetGroup(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsRedshiftSubnetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -140,9 +142,9 @@ func TestAccAWSRedshiftSubnetGroup_updateDescription(t *testing.T) {
 	resourceName := "aws_redshift_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -178,9 +180,9 @@ func TestAccAWSRedshiftSubnetGroup_updateSubnetIds(t *testing.T) {
 	resourceName := "aws_redshift_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -216,9 +218,9 @@ func TestAccAWSRedshiftSubnetGroup_tags(t *testing.T) {
 	resourceName := "aws_redshift_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -253,7 +255,7 @@ func TestAccAWSRedshiftSubnetGroup_tags(t *testing.T) {
 }
 
 func testAccCheckRedshiftSubnetGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).RedshiftConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_subnet_group" {
@@ -294,7 +296,7 @@ func testAccCheckRedshiftSubnetGroupExists(n string, v *redshift.ClusterSubnetGr
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).RedshiftConn
 		resp, err := conn.DescribeClusterSubnetGroups(
 			&redshift.DescribeClusterSubnetGroupsInput{ClusterSubnetGroupName: aws.String(rs.Primary.ID)})
 		if err != nil {
@@ -311,7 +313,7 @@ func testAccCheckRedshiftSubnetGroupExists(n string, v *redshift.ClusterSubnetGr
 }
 
 func testAccRedshiftSubnetGroupConfig(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -349,7 +351,7 @@ resource "aws_redshift_subnet_group" "test" {
 }
 
 func testAccRedshiftSubnetGroup_updateDescription(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -387,7 +389,7 @@ resource "aws_redshift_subnet_group" "test" {
 }
 
 func testAccRedshiftSubnetGroupConfigWithTags(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -428,7 +430,7 @@ resource "aws_redshift_subnet_group" "test" {
 }
 
 func testAccRedshiftSubnetGroupConfigWithTagsUpdated(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -471,7 +473,7 @@ resource "aws_redshift_subnet_group" "test" {
 }
 
 func testAccRedshiftSubnetGroupConfig_updateSubnetIds(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
