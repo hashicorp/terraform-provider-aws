@@ -8,10 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsConfigDeliveryChannel() *schema.Resource {
@@ -44,7 +46,7 @@ func resourceAwsConfigDeliveryChannel() *schema.Resource {
 			"sns_topic_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"snapshot_delivery_properties": {
 				Type:     schema.TypeList,
@@ -65,7 +67,7 @@ func resourceAwsConfigDeliveryChannel() *schema.Resource {
 }
 
 func resourceAwsConfigDeliveryChannelPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*awsprovider.AWSClient).ConfigConn
 
 	name := d.Get("name").(string)
 	channel := configservice.DeliveryChannel{
@@ -99,7 +101,7 @@ func resourceAwsConfigDeliveryChannelPut(d *schema.ResourceData, meta interface{
 			return nil
 		}
 
-		if isAWSErr(err, "InsufficientDeliveryPolicyException", "") {
+		if tfawserr.ErrMessageContains(err, "InsufficientDeliveryPolicyException", "") {
 			return resource.RetryableError(err)
 		}
 
@@ -118,7 +120,7 @@ func resourceAwsConfigDeliveryChannelPut(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsConfigDeliveryChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*awsprovider.AWSClient).ConfigConn
 
 	input := configservice.DescribeDeliveryChannelsInput{
 		DeliveryChannelNames: []*string{aws.String(d.Id())},
@@ -161,7 +163,7 @@ func resourceAwsConfigDeliveryChannelRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsConfigDeliveryChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*awsprovider.AWSClient).ConfigConn
 	input := configservice.DeleteDeliveryChannelInput{
 		DeliveryChannelName: aws.String(d.Id()),
 	}
@@ -169,7 +171,7 @@ func resourceAwsConfigDeliveryChannelDelete(d *schema.ResourceData, meta interfa
 	err := resource.Retry(30*time.Second, func() *resource.RetryError {
 		_, err := conn.DeleteDeliveryChannel(&input)
 		if err != nil {
-			if isAWSErr(err, configservice.ErrCodeLastDeliveryChannelDeleteFailedException, "there is a running configuration recorder") {
+			if tfawserr.ErrMessageContains(err, configservice.ErrCodeLastDeliveryChannelDeleteFailedException, "there is a running configuration recorder") {
 				return resource.RetryableError(err)
 			}
 
