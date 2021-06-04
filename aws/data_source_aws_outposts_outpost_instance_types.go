@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsOutpostsOutpostInstanceTypes() *schema.Resource {
@@ -16,7 +17,7 @@ func dataSourceAwsOutpostsOutpostInstanceTypes() *schema.Resource {
 			"arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"instance_types": {
 				Type:     schema.TypeSet,
@@ -28,7 +29,7 @@ func dataSourceAwsOutpostsOutpostInstanceTypes() *schema.Resource {
 }
 
 func dataSourceAwsOutpostsOutpostInstanceTypesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).outpostsconn
+	conn := meta.(*awsprovider.AWSClient).OutpostsConn
 
 	input := &outposts.GetOutpostInstanceTypesInput{
 		OutpostId: aws.String(d.Get("arn").(string)), // Accepts both ARN and ID; prefer ARN which is more common
