@@ -5,18 +5,21 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSRoute53ZoneAssociation_basic(t *testing.T) {
 	resourceName := "aws_route53_zone_association.foobar"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -38,16 +41,16 @@ func TestAccAWSRoute53ZoneAssociation_disappears(t *testing.T) {
 	resourceName := "aws_route53_zone_association.foobar"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53ZoneAssociationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneAssociationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53ZoneAssociation(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsRoute53ZoneAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -60,16 +63,16 @@ func TestAccAWSRoute53ZoneAssociation_disappears_VPC(t *testing.T) {
 	vpcResourceName := "aws_vpc.bar"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53ZoneAssociationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneAssociationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsVpc(), vpcResourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsVpc(), vpcResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,16 +85,16 @@ func TestAccAWSRoute53ZoneAssociation_disappears_Zone(t *testing.T) {
 	route53ZoneResourceName := "aws_route53_zone.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, route53.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53ZoneAssociationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneAssociationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53Zone(), route53ZoneResourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsRoute53Zone(), route53ZoneResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -108,11 +111,11 @@ func TestAccAWSRoute53ZoneAssociation_CrossAccount(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			atest.PreCheck(t)
+			atest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, route53.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -140,11 +143,11 @@ func TestAccAWSRoute53ZoneAssociation_CrossRegion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 2)
+			atest.PreCheck(t)
+			atest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        testAccErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, route53.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -164,7 +167,7 @@ func TestAccAWSRoute53ZoneAssociation_CrossRegion(t *testing.T) {
 }
 
 func testAccCheckRoute53ZoneAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).r53conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).Route53Conn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_zone_association" {
 			continue
@@ -178,7 +181,7 @@ func testAccCheckRoute53ZoneAssociationDestroy(s *terraform.State) error {
 
 		hostedZoneSummary, err := route53GetZoneAssociation(conn, zoneID, vpcID, vpcRegion)
 
-		if isAWSErr(err, "AccessDenied", "is not owned by you") {
+		if tfawserr.ErrMessageContains(err, "AccessDenied", "is not owned by you") {
 			continue
 		}
 
@@ -210,7 +213,7 @@ func testAccCheckRoute53ZoneAssociationExists(resourceName string) resource.Test
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).r53conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).Route53Conn
 
 		hostedZoneSummary, err := route53GetZoneAssociation(conn, zoneID, vpcID, vpcRegion)
 
@@ -266,8 +269,8 @@ resource "aws_route53_zone_association" "foobar" {
 `
 
 func testAccRoute53ZoneAssociationCrossAccountConfig() string {
-	return composeConfig(
-		testAccAlternateAccountProviderConfig(),
+	return atest.ComposeConfig(
+		atest.ConfigProviderAlternateAccount(),
 		`
 resource "aws_vpc" "alternate" {
   provider = "awsalternate"
@@ -312,8 +315,8 @@ resource "aws_route53_zone_association" "test" {
 }
 
 func testAccRoute53ZoneAssociationRegionConfig() string {
-	return composeConfig(
-		testAccMultipleRegionProviderConfig(2),
+	return atest.ComposeConfig(
+		atest.ConfigProviderMultipleRegion(2),
 		`
 data "aws_region" "alternate" {
   provider = "awsalternate"
