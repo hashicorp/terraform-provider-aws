@@ -8,7 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ssm/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSSSMPatchGroup_basic(t *testing.T) {
@@ -16,9 +18,9 @@ func TestAccAWSSSMPatchGroup_basic(t *testing.T) {
 	resourceName := "aws_ssm_patch_group.patchgroup"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMPatchGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -36,16 +38,16 @@ func TestAccAWSSSMPatchGroup_disappears(t *testing.T) {
 	resourceName := "aws_ssm_patch_group.patchgroup"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSSMPatchGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMPatchGroupExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSsmPatchGroup(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSsmPatchGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -60,9 +62,9 @@ func TestAccAWSSSMPatchGroup_multipleBaselines(t *testing.T) {
 	resourceName3 := "aws_ssm_patch_group.test3"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMPatchGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -78,7 +80,7 @@ func TestAccAWSSSMPatchGroup_multipleBaselines(t *testing.T) {
 }
 
 func testAccCheckAWSSSMPatchGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ssmconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SSMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_patch_group" {
@@ -120,7 +122,7 @@ func testAccCheckAWSSSMPatchGroupExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ssmconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SSMConn
 
 		group, err := finder.PatchGroup(conn, patchGroup, baselineId)
 
