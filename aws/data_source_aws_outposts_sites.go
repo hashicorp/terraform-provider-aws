@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsOutpostsSites() *schema.Resource {
@@ -23,7 +24,7 @@ func dataSourceAwsOutpostsSites() *schema.Resource {
 }
 
 func dataSourceAwsOutpostsSitesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).outpostsconn
+	conn := meta.(*awsprovider.AWSClient).OutpostsConn
 
 	input := &outposts.ListSitesInput{}
 
@@ -53,7 +54,7 @@ func dataSourceAwsOutpostsSitesRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error setting ids: %w", err)
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*awsprovider.AWSClient).Region)
 
 	return nil
 }
