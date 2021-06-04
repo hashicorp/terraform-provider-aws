@@ -8,10 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsOrganizationsAccount() *schema.Resource {
@@ -83,8 +85,8 @@ func resourceAwsOrganizationsAccount() *schema.Resource {
 }
 
 func resourceAwsOrganizationsAccountCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).OrganizationsConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Create the account
@@ -113,7 +115,7 @@ func resourceAwsOrganizationsAccountCreate(d *schema.ResourceData, meta interfac
 
 		resp, err = conn.CreateAccount(createOpts)
 
-		if isAWSErr(err, organizations.ErrCodeFinalizingOrganizationException, "") {
+		if tfawserr.ErrMessageContains(err, organizations.ErrCodeFinalizingOrganizationException, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -181,16 +183,16 @@ func resourceAwsOrganizationsAccountCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsOrganizationsAccountRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).OrganizationsConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	describeOpts := &organizations.DescribeAccountInput{
 		AccountId: aws.String(d.Id()),
 	}
 	resp, err := conn.DescribeAccount(describeOpts)
 
-	if isAWSErr(err, organizations.ErrCodeAccountNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, organizations.ErrCodeAccountNotFoundException, "") {
 		log.Printf("[WARN] Account does not exist, removing from state: %s", d.Id())
 		d.SetId("")
 		return nil
@@ -241,7 +243,7 @@ func resourceAwsOrganizationsAccountRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsOrganizationsAccountUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*awsprovider.AWSClient).OrganizationsConn
 
 	if d.HasChange("parent_id") {
 		o, n := d.GetChange("parent_id")
@@ -269,7 +271,7 @@ func resourceAwsOrganizationsAccountUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsOrganizationsAccountDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*awsprovider.AWSClient).OrganizationsConn
 
 	input := &organizations.RemoveAccountFromOrganizationInput{
 		AccountId: aws.String(d.Id()),
@@ -277,7 +279,7 @@ func resourceAwsOrganizationsAccountDelete(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] Removing AWS account from organization: %s", input)
 	_, err := conn.RemoveAccountFromOrganization(input)
 	if err != nil {
-		if isAWSErr(err, organizations.ErrCodeAccountNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, organizations.ErrCodeAccountNotFoundException, "") {
 			return nil
 		}
 		return err
@@ -294,7 +296,7 @@ func resourceAwsOrganizationsAccountStateRefreshFunc(conn *organizations.Organiz
 		}
 		resp, err := conn.DescribeCreateAccountStatus(opts)
 		if err != nil {
-			if isAWSErr(err, organizations.ErrCodeCreateAccountStatusNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, organizations.ErrCodeCreateAccountStatusNotFoundException, "") {
 				resp = nil
 			} else {
 				log.Printf("Error on OrganizationAccountStateRefresh: %s", err)
