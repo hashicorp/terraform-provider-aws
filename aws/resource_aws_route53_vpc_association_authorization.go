@@ -7,7 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsRoute53VPCAssociationAuthorization() *schema.Resource {
@@ -43,13 +45,13 @@ func resourceAwsRoute53VPCAssociationAuthorization() *schema.Resource {
 }
 
 func resourceAwsRoute53VPCAssociationAuthorizationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*awsprovider.AWSClient).Route53Conn
 
 	req := &route53.CreateVPCAssociationAuthorizationInput{
 		HostedZoneId: aws.String(d.Get("zone_id").(string)),
 		VPC: &route53.VPC{
 			VPCId:     aws.String(d.Get("vpc_id").(string)),
-			VPCRegion: aws.String(meta.(*AWSClient).region),
+			VPCRegion: aws.String(meta.(*awsprovider.AWSClient).Region),
 		},
 	}
 
@@ -70,7 +72,7 @@ func resourceAwsRoute53VPCAssociationAuthorizationCreate(d *schema.ResourceData,
 }
 
 func resourceAwsRoute53VPCAssociationAuthorizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*awsprovider.AWSClient).Route53Conn
 
 	zone_id, vpc_id, err := resourceAwsRoute53VPCAssociationAuthorizationParseId(d.Id())
 	if err != nil {
@@ -85,7 +87,7 @@ func resourceAwsRoute53VPCAssociationAuthorizationRead(d *schema.ResourceData, m
 		log.Printf("[DEBUG] Listing Route53 VPC Association Authorizations for hosted zone %s", zone_id)
 		res, err := conn.ListVPCAssociationAuthorizations(&req)
 
-		if isAWSErr(err, route53.ErrCodeNoSuchHostedZone, "") {
+		if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchHostedZone, "") {
 			log.Printf("[WARN] Route53 VPC Association Authorization (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -119,7 +121,7 @@ func resourceAwsRoute53VPCAssociationAuthorizationRead(d *schema.ResourceData, m
 }
 
 func resourceAwsRoute53VPCAssociationAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*awsprovider.AWSClient).Route53Conn
 
 	zone_id, vpc_id, err := resourceAwsRoute53VPCAssociationAuthorizationParseId(d.Id())
 	if err != nil {
