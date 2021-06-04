@@ -7,11 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCloudFormationStackSetInstance() *schema.Resource {
@@ -70,14 +72,14 @@ func resourceAwsCloudFormationStackSetInstance() *schema.Resource {
 }
 
 func resourceAwsCloudFormationStackSetInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
+	conn := meta.(*awsprovider.AWSClient).CloudFormationConn
 
-	accountID := meta.(*AWSClient).accountid
+	accountID := meta.(*awsprovider.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	}
 
-	region := meta.(*AWSClient).region
+	region := meta.(*awsprovider.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)
 	}
@@ -172,7 +174,7 @@ func resourceAwsCloudFormationStackSetInstanceCreate(d *schema.ResourceData, met
 }
 
 func resourceAwsCloudFormationStackSetInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
+	conn := meta.(*awsprovider.AWSClient).CloudFormationConn
 
 	stackSetName, accountID, region, err := resourceAwsCloudFormationStackSetInstanceParseId(d.Id())
 
@@ -189,13 +191,13 @@ func resourceAwsCloudFormationStackSetInstanceRead(d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] Reading CloudFormation StackSet Instance: %s", d.Id())
 	output, err := conn.DescribeStackInstance(input)
 
-	if isAWSErr(err, cloudformation.ErrCodeStackInstanceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, cloudformation.ErrCodeStackInstanceNotFoundException, "") {
 		log.Printf("[WARN] CloudFormation StackSet Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
 		log.Printf("[WARN] CloudFormation StackSet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -225,7 +227,7 @@ func resourceAwsCloudFormationStackSetInstanceRead(d *schema.ResourceData, meta 
 }
 
 func resourceAwsCloudFormationStackSetInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
+	conn := meta.(*awsprovider.AWSClient).CloudFormationConn
 
 	if d.HasChange("parameter_overrides") {
 		stackSetName, accountID, region, err := resourceAwsCloudFormationStackSetInstanceParseId(d.Id())
@@ -262,7 +264,7 @@ func resourceAwsCloudFormationStackSetInstanceUpdate(d *schema.ResourceData, met
 }
 
 func resourceAwsCloudFormationStackSetInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
+	conn := meta.(*awsprovider.AWSClient).CloudFormationConn
 
 	stackSetName, accountID, region, err := resourceAwsCloudFormationStackSetInstanceParseId(d.Id())
 
@@ -281,11 +283,11 @@ func resourceAwsCloudFormationStackSetInstanceDelete(d *schema.ResourceData, met
 	log.Printf("[DEBUG] Deleting CloudFormation StackSet Instance: %s", d.Id())
 	output, err := conn.DeleteStackInstances(input)
 
-	if isAWSErr(err, cloudformation.ErrCodeStackInstanceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, cloudformation.ErrCodeStackInstanceNotFoundException, "") {
 		return nil
 	}
 
-	if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
 		return nil
 	}
 
