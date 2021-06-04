@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 type WafRegionalRetryer struct {
@@ -18,8 +19,8 @@ type WafRegionalRetryer struct {
 type withRegionalTokenFunc func(token *string) (interface{}, error)
 
 func (t *WafRegionalRetryer) RetryWithToken(f withRegionalTokenFunc) (interface{}, error) {
-	awsMutexKV.Lock(t.Region)
-	defer awsMutexKV.Unlock(t.Region)
+	awsprovider.MutexKV.Lock(t.Region)
+	defer awsprovider.MutexKV.Unlock(t.Region)
 
 	var out interface{}
 	var tokenOut *waf.GetChangeTokenOutput
