@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
@@ -17,9 +20,9 @@ func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -58,9 +61,9 @@ func TestAccAWSSSMMaintenanceWindowTask_noRole(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window_task.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -79,9 +82,9 @@ func TestAccAWSSSMMaintenanceWindowTask_updateForcesNewResource(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window_task.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -115,9 +118,9 @@ func TestAccAWSSSMMaintenanceWindowTask_Description(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -151,9 +154,9 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationAutomationParameters(t *te
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -192,9 +195,9 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationLambdaParameters(t *testin
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_tags_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -221,9 +224,9 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParameters(t *te
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -263,9 +266,9 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParametersCloudW
 
 	name := acctest.RandString(10)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -313,9 +316,9 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationStepFunctionParameters(t *
 	rString := acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -340,9 +343,9 @@ func TestAccAWSSSMMaintenanceWindowTask_emptyNotificationConfig(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window_task.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -362,16 +365,16 @@ func TestAccAWSSSMMaintenanceWindowTask_disappears(t *testing.T) {
 
 	name := acctest.RandString(10)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &before),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSsmMaintenanceWindowTask(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSsmMaintenanceWindowTask(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -410,7 +413,7 @@ func testAccCheckAWSSSMMaintenanceWindowTaskExists(n string, task *ssm.Maintenan
 			return fmt.Errorf("No SSM Maintenance Window Task Window ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ssmconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SSMConn
 
 		resp, err := conn.DescribeMaintenanceWindowTasks(&ssm.DescribeMaintenanceWindowTasksInput{
 			WindowId: aws.String(rs.Primary.Attributes["window_id"]),
@@ -431,7 +434,7 @@ func testAccCheckAWSSSMMaintenanceWindowTaskExists(n string, task *ssm.Maintenan
 }
 
 func testAccCheckAWSSSMMaintenanceWindowTaskDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ssmconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SSMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_maintenance_window_task" {
@@ -444,7 +447,7 @@ func testAccCheckAWSSSMMaintenanceWindowTaskDestroy(s *terraform.State) error {
 
 		if err != nil {
 			// Verify the error is what we want
-			if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+			if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
 				continue
 			}
 			return err
@@ -661,7 +664,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccAWSSSMMaintenanceWindowTaskConfigDescription(rName string, description string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSSSMMaintenanceWindowTaskConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_ssm_maintenance_window_task" "test" {
