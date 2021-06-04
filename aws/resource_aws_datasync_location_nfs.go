@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDataSyncLocationNfs() *schema.Resource {
@@ -77,8 +79,8 @@ func resourceAwsDataSyncLocationNfs() *schema.Resource {
 }
 
 func resourceAwsDataSyncLocationNfsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DataSyncConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateLocationNfsInput{
@@ -100,9 +102,9 @@ func resourceAwsDataSyncLocationNfsCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsDataSyncLocationNfsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DataSyncConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &datasync.DescribeLocationNfsInput{
 		LocationArn: aws.String(d.Id()),
@@ -111,7 +113,7 @@ func resourceAwsDataSyncLocationNfsRead(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Reading DataSync Location NFS: %s", input)
 	output, err := conn.DescribeLocationNfs(input)
 
-	if isAWSErr(err, "InvalidRequestException", "not found") {
+	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 		log.Printf("[WARN] DataSync Location NFS %q not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -157,7 +159,7 @@ func resourceAwsDataSyncLocationNfsRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsDataSyncLocationNfsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
+	conn := meta.(*awsprovider.AWSClient).DataSyncConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -171,7 +173,7 @@ func resourceAwsDataSyncLocationNfsUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsDataSyncLocationNfsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
+	conn := meta.(*awsprovider.AWSClient).DataSyncConn
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
@@ -180,7 +182,7 @@ func resourceAwsDataSyncLocationNfsDelete(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] Deleting DataSync Location NFS: %s", input)
 	_, err := conn.DeleteLocation(input)
 
-	if isAWSErr(err, "InvalidRequestException", "not found") {
+	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 		return nil
 	}
 
