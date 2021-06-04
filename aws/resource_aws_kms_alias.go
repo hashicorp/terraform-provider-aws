@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsKmsAlias() *schema.Resource {
@@ -57,7 +58,7 @@ func resourceAwsKmsAlias() *schema.Resource {
 }
 
 func resourceAwsKmsAliasCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*awsprovider.AWSClient).KMSConn
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -89,7 +90,7 @@ func resourceAwsKmsAliasCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsKmsAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*awsprovider.AWSClient).KMSConn
 
 	var alias *kms.AliasListEntry
 	var err error
@@ -129,7 +130,7 @@ func resourceAwsKmsAliasRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsKmsAliasUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*awsprovider.AWSClient).KMSConn
 
 	if d.HasChange("target_key_id") {
 		err := resourceAwsKmsAliasTargetUpdate(conn, d)
@@ -157,7 +158,7 @@ func resourceAwsKmsAliasTargetUpdate(conn *kms.KMS, d *schema.ResourceData) erro
 }
 
 func resourceAwsKmsAliasDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*awsprovider.AWSClient).KMSConn
 
 	req := &kms.DeleteAliasInput{
 		AliasName: aws.String(d.Id()),
