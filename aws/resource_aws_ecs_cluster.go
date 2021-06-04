@@ -12,8 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -104,9 +105,9 @@ func resourceAwsEcsCluster() *schema.Resource {
 func resourceAwsEcsClusterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("name", d.Id())
 	d.SetId(arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Service:   "ecs",
 		Resource:  fmt.Sprintf("cluster/%s", d.Id()),
 	}.String())
@@ -114,8 +115,8 @@ func resourceAwsEcsClusterImport(d *schema.ResourceData, meta interface{}) ([]*s
 }
 
 func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ECSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("name").(string)
@@ -173,9 +174,9 @@ func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ECSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &ecs.DescribeClustersInput{
 		Clusters: []*string{aws.String(d.Id())},
@@ -265,7 +266,7 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
+	conn := meta.(*awsprovider.AWSClient).ECSConn
 
 	clusterName := d.Get("name").(string)
 
@@ -303,13 +304,13 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		err := resource.Retry(ecsClusterTimeoutUpdate, func() *resource.RetryError {
 			_, err := conn.PutClusterCapacityProviders(&input)
 			if err != nil {
-				if isAWSErr(err, ecs.ErrCodeClientException, "Cluster was not ACTIVE") {
+				if tfawserr.ErrMessageContains(err, ecs.ErrCodeClientException, "Cluster was not ACTIVE") {
 					return resource.RetryableError(err)
 				}
-				if isAWSErr(err, ecs.ErrCodeResourceInUseException, "") {
+				if tfawserr.ErrMessageContains(err, ecs.ErrCodeResourceInUseException, "") {
 					return resource.RetryableError(err)
 				}
-				if isAWSErr(err, ecs.ErrCodeUpdateInProgressException, "") {
+				if tfawserr.ErrMessageContains(err, ecs.ErrCodeUpdateInProgressException, "") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -332,7 +333,7 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsEcsClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
+	conn := meta.(*awsprovider.AWSClient).ECSConn
 
 	log.Printf("[DEBUG] Deleting ECS cluster %s", d.Id())
 	input := &ecs.DeleteClusterInput{
@@ -346,15 +347,15 @@ func resourceAwsEcsClusterDelete(d *schema.ResourceData, meta interface{}) error
 			return nil
 		}
 
-		if isAWSErr(err, "ClusterContainsContainerInstancesException", "") {
+		if tfawserr.ErrMessageContains(err, "ClusterContainsContainerInstancesException", "") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
-		if isAWSErr(err, "ClusterContainsServicesException", "") {
+		if tfawserr.ErrMessageContains(err, "ClusterContainsServicesException", "") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
-		if isAWSErr(err, ecs.ErrCodeUpdateInProgressException, "") {
+		if tfawserr.ErrMessageContains(err, ecs.ErrCodeUpdateInProgressException, "") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
