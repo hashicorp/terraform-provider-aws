@@ -7,7 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsEbsVolumes() *schema.Resource {
@@ -29,7 +30,7 @@ func dataSourceAwsEbsVolumes() *schema.Resource {
 }
 
 func dataSourceAwsEbsVolumesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	req := &ec2.DescribeVolumesInput{}
 
@@ -65,7 +66,7 @@ func dataSourceAwsEbsVolumesRead(d *schema.ResourceData, meta interface{}) error
 		volumes = append(volumes, *volume.VolumeId)
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*awsprovider.AWSClient).Region)
 
 	if err := d.Set("ids", volumes); err != nil {
 		return fmt.Errorf("error setting ids: %w", err)
