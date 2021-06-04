@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsVpcEndpoint_gatewayBasic(t *testing.T) {
@@ -15,9 +16,9 @@ func TestAccDataSourceAwsVpcEndpoint_gatewayBasic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointConfig_gatewayBasic(rName),
@@ -32,8 +33,8 @@ func TestAccDataSourceAwsVpcEndpoint_gatewayBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "private_dns_enabled", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
-					testAccCheckResourceAttrAccountID(datasourceName, "owner_id"),
-					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+					atest.CheckAttrAccountID(datasourceName, "owner_id"),
+					atest.MatchAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 		},
@@ -45,9 +46,9 @@ func TestAccDataSourceAwsVpcEndpoint_byId(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointConfig_byId(rName),
@@ -62,8 +63,8 @@ func TestAccDataSourceAwsVpcEndpoint_byId(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "private_dns_enabled", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
-					testAccCheckResourceAttrAccountID(datasourceName, "owner_id"),
-					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+					atest.CheckAttrAccountID(datasourceName, "owner_id"),
+					atest.MatchAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 		},
@@ -75,9 +76,9 @@ func TestAccDataSourceAwsVpcEndpoint_byFilter(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointConfig_byFilter(rName),
@@ -92,8 +93,8 @@ func TestAccDataSourceAwsVpcEndpoint_byFilter(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "private_dns_enabled", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
-					testAccCheckResourceAttrAccountID(datasourceName, "owner_id"),
-					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+					atest.CheckAttrAccountID(datasourceName, "owner_id"),
+					atest.MatchAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 		},
@@ -105,9 +106,9 @@ func TestAccDataSourceAwsVpcEndpoint_byTags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointConfig_byTags(rName),
@@ -122,8 +123,8 @@ func TestAccDataSourceAwsVpcEndpoint_byTags(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "private_dns_enabled", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "3"),
-					testAccCheckResourceAttrAccountID(datasourceName, "owner_id"),
-					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+					atest.CheckAttrAccountID(datasourceName, "owner_id"),
+					atest.MatchAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 		},
@@ -135,9 +136,9 @@ func TestAccDataSourceAwsVpcEndpoint_gatewayWithRouteTableAndTags(t *testing.T) 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointConfig_gatewayWithRouteTableAndTags(rName),
@@ -153,8 +154,8 @@ func TestAccDataSourceAwsVpcEndpoint_gatewayWithRouteTableAndTags(t *testing.T) 
 					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.Name", rName),
-					testAccCheckResourceAttrAccountID(datasourceName, "owner_id"),
-					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+					atest.CheckAttrAccountID(datasourceName, "owner_id"),
+					atest.MatchAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 		},
@@ -166,9 +167,9 @@ func TestAccDataSourceAwsVpcEndpoint_interface(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointConfig_interface(rName),
@@ -184,8 +185,8 @@ func TestAccDataSourceAwsVpcEndpoint_interface(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.Name", rName),
-					testAccCheckResourceAttrAccountID(datasourceName, "owner_id"),
-					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+					atest.CheckAttrAccountID(datasourceName, "owner_id"),
+					atest.MatchAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 		},
