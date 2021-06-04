@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/xray/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsXrayEncryptionConfig() *schema.Resource {
@@ -25,7 +26,7 @@ func resourceAwsXrayEncryptionConfig() *schema.Resource {
 			"key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"type": {
 				Type:     schema.TypeString,
@@ -40,7 +41,7 @@ func resourceAwsXrayEncryptionConfig() *schema.Resource {
 }
 
 func resourceAwsXrayEncryptionConfigPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).xrayconn
+	conn := meta.(*awsprovider.AWSClient).XRayConn
 
 	input := &xray.PutEncryptionConfigInput{
 		Type: aws.String(d.Get("type").(string)),
@@ -55,7 +56,7 @@ func resourceAwsXrayEncryptionConfigPut(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error creating XRay Encryption Config: %w", err)
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*awsprovider.AWSClient).Region)
 
 	if _, err := waiter.EncryptionConfigAvailable(conn); err != nil {
 		return fmt.Errorf("error waiting for Xray Encryption Config (%s) to Available: %w", d.Id(), err)
@@ -65,7 +66,7 @@ func resourceAwsXrayEncryptionConfigPut(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsXrayEncryptionConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).xrayconn
+	conn := meta.(*awsprovider.AWSClient).XRayConn
 
 	config, err := conn.GetEncryptionConfig(&xray.GetEncryptionConfigInput{})
 
