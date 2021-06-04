@@ -6,7 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsBackupPlan() *schema.Resource {
@@ -36,8 +37,8 @@ func dataSourceAwsBackupPlan() *schema.Resource {
 }
 
 func dataSourceAwsBackupPlanRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).BackupConn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("plan_id").(string)
 
