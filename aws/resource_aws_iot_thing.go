@@ -5,8 +5,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsIotThing() *schema.Resource {
@@ -54,7 +56,7 @@ func resourceAwsIotThing() *schema.Resource {
 }
 
 func resourceAwsIotThingCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*awsprovider.AWSClient).IoTConn
 
 	params := &iot.CreateThingInput{
 		ThingName: aws.String(d.Get("name").(string)),
@@ -81,7 +83,7 @@ func resourceAwsIotThingCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsIotThingRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*awsprovider.AWSClient).IoTConn
 
 	params := &iot.DescribeThingInput{
 		ThingName: aws.String(d.Id()),
@@ -90,7 +92,7 @@ func resourceAwsIotThingRead(d *schema.ResourceData, meta interface{}) error {
 	out, err := conn.DescribeThing(params)
 
 	if err != nil {
-		if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] IoT Thing %q not found, removing from state", d.Id())
 			d.SetId("")
 		}
@@ -110,7 +112,7 @@ func resourceAwsIotThingRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsIotThingUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*awsprovider.AWSClient).IoTConn
 
 	params := &iot.UpdateThingInput{
 		ThingName: aws.String(d.Get("name").(string)),
@@ -144,7 +146,7 @@ func resourceAwsIotThingUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsIotThingDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*awsprovider.AWSClient).IoTConn
 
 	params := &iot.DeleteThingInput{
 		ThingName: aws.String(d.Id()),
@@ -153,7 +155,7 @@ func resourceAwsIotThingDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeleteThing(params)
 	if err != nil {
-		if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return err
