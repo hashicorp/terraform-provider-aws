@@ -10,7 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsFlowLog() *schema.Resource {
@@ -28,7 +29,7 @@ func resourceAwsFlowLog() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"log_destination": {
@@ -37,7 +38,7 @@ func resourceAwsFlowLog() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"log_group_name"},
-				ValidateFunc:  validateArn,
+				ValidateFunc:  ValidateArn,
 			},
 
 			"log_destination_type": {
@@ -120,8 +121,8 @@ func resourceAwsFlowLog() *schema.Resource {
 }
 
 func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	types := []struct {
@@ -199,9 +200,9 @@ func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	opts := &ec2.DescribeFlowLogsInput{
 		FlowLogIds: []*string{aws.String(d.Id())},
@@ -259,10 +260,10 @@ func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpc-flow-log/%s", d.Id()),
 	}.String()
 
@@ -272,7 +273,7 @@ func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsLogFlowUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -285,7 +286,7 @@ func resourceAwsLogFlowUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsLogFlowDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	log.Printf(
 		"[DEBUG] Flow Log Destroy: %s", d.Id())
