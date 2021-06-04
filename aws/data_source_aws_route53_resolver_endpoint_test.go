@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSRoute53ResolverEndpointDataSource_Basic(t *testing.T) {
@@ -18,9 +19,9 @@ func TestAccAWSRoute53ResolverEndpointDataSource_Basic(t *testing.T) {
 	datasourceName := "data.aws_route53_resolver_endpoint.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, route53resolver.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, route53resolver.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsRoute53ResolverEndpointConfig_NonExistent,
@@ -47,9 +48,9 @@ func TestAccAWSRoute53ResolverEndpointDataSource_Filter(t *testing.T) {
 	datasourceName := "data.aws_route53_resolver_endpoint.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, route53resolver.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, route53resolver.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsRoute53ResolverEndpointConfig_NonExistentFilter,
@@ -131,7 +132,7 @@ resource "aws_security_group" "sg2" {
 }
 
 func testAccDataSourceRoute53ResolverEndpointConfig_initial(rInt int, direction, name string) string {
-	return composeConfig(testAccDataSourceRoute53ResolverEndpointConfig_base(rInt), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccDataSourceRoute53ResolverEndpointConfig_base(rInt), fmt.Sprintf(`
 resource "aws_route53_resolver_endpoint" "foo" {
   direction = "%s"
   name      = "%s"
@@ -163,7 +164,7 @@ data "aws_route53_resolver_endpoint" "foo" {
 }
 
 func testAccDataSourceRoute53ResolverEndpointConfig_filter(rInt int, direction, name string) string {
-	return composeConfig(testAccDataSourceRoute53ResolverEndpointConfig_base(rInt), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccDataSourceRoute53ResolverEndpointConfig_base(rInt), fmt.Sprintf(`
 resource "aws_route53_resolver_endpoint" "foo" {
   direction = "%s"
   name      = "%s"
