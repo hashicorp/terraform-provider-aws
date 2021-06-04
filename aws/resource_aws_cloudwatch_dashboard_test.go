@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSCloudWatchDashboard_basic(t *testing.T) {
@@ -20,9 +22,9 @@ func TestAccAWSCloudWatchDashboard_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchDashboardDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -47,9 +49,9 @@ func TestAccAWSCloudWatchDashboard_update(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchDashboardDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -83,9 +85,9 @@ func TestAccAWSCloudWatchDashboard_updateName(t *testing.T) {
 	rInt := acctest.RandInt()
 	rInt2 := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchDashboardDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -116,7 +118,7 @@ func testAccCheckCloudWatchDashboardExists(n string, dashboard *cloudwatch.GetDa
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatchconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchConn
 		params := cloudwatch.GetDashboardInput{
 			DashboardName: aws.String(rs.Primary.ID),
 		}
@@ -133,7 +135,7 @@ func testAccCheckCloudWatchDashboardExists(n string, dashboard *cloudwatch.GetDa
 }
 
 func testAccCheckAWSCloudWatchDashboardDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudwatchconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_dashboard" {
@@ -158,7 +160,7 @@ func testAccCheckAWSCloudWatchDashboardDestroy(s *terraform.State) error {
 
 func testAccCheckAWSCloudWatchDashboardDestroyPrevious(dashboardName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatchconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchConn
 
 		params := cloudwatch.GetDashboardInput{
 			DashboardName: aws.String(dashboardName),
@@ -245,7 +247,7 @@ func testAccCloudWatchCheckDashboardBodyIsExpected(resourceName, expected string
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatchconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchConn
 		params := cloudwatch.GetDashboardInput{
 			DashboardName: aws.String(rs.Primary.ID),
 		}
