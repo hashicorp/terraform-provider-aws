@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSRedshiftParameterGroup_basic(t *testing.T) {
@@ -18,9 +20,9 @@ func TestAccAWSRedshiftParameterGroup_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -44,9 +46,9 @@ func TestAccAWSRedshiftParameterGroup_withParameters(t *testing.T) {
 	resourceName := "aws_redshift_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -88,9 +90,9 @@ func TestAccAWSRedshiftParameterGroup_withoutParameters(t *testing.T) {
 	resourceName := "aws_redshift_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -120,9 +122,9 @@ func TestAccAWSRedshiftParameterGroup_withTags(t *testing.T) {
 	resourceName := "aws_redshift_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -164,7 +166,7 @@ func TestAccAWSRedshiftParameterGroup_withTags(t *testing.T) {
 }
 
 func testAccCheckAWSRedshiftParameterGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).RedshiftConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_parameter_group" {
@@ -208,7 +210,7 @@ func testAccCheckAWSRedshiftParameterGroupExists(n string, v *redshift.ClusterPa
 			return fmt.Errorf("No Redshift Parameter Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).RedshiftConn
 
 		opts := redshift.DescribeClusterParameterGroupsInput{
 			ParameterGroupName: aws.String(rs.Primary.ID),
