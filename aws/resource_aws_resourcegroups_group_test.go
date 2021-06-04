@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSResourceGroup_basic(t *testing.T) {
@@ -34,9 +37,9 @@ func TestAccAWSResourceGroup_basic(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, resourcegroups.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, resourcegroups.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSResourceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -72,9 +75,9 @@ func TestAccAWSResourceGroup_tags(t *testing.T) {
 	desc1 := "Hello World"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, resourcegroups.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, resourcegroups.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSResourceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -122,7 +125,7 @@ func testAccCheckAWSResourceGroupExists(n string, v *resourcegroups.Group) resou
 			return fmt.Errorf("No resource group name is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).resourcegroupsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ResourceGroupsConn
 
 		resp, err := conn.GetGroup(&resourcegroups.GetGroupInput{
 			GroupName: aws.String(rs.Primary.ID),
@@ -147,7 +150,7 @@ func testAccCheckAWSResourceGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).resourcegroupsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ResourceGroupsConn
 		resp, err := conn.GetGroup(&resourcegroups.GetGroupInput{
 			GroupName: aws.String(rs.Primary.ID),
 		})
@@ -158,7 +161,7 @@ func testAccCheckAWSResourceGroupDestroy(s *terraform.State) error {
 			}
 		}
 
-		if isAWSErr(err, resourcegroups.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, resourcegroups.ErrCodeNotFoundException, "") {
 			return nil
 		}
 
