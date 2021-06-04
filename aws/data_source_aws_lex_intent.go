@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsLexIntent() *schema.Resource {
@@ -63,7 +64,7 @@ func dataSourceAwsLexIntent() *schema.Resource {
 }
 
 func dataSourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*awsprovider.AWSClient).LexModelBuildingConn
 
 	intentName := d.Get("name").(string)
 	resp, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
@@ -75,10 +76,10 @@ func dataSourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Service:   "lex",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("intent:%s", d.Get("name").(string)),
 	}
 	d.Set("arn", arn.String())
