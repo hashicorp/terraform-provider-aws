@@ -8,9 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -60,8 +62,8 @@ func resourceAwsApiGatewayVpcLink() *schema.Resource {
 }
 
 func resourceAwsApiGatewayVpcLinkCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &apigateway.CreateVpcLinkInput{
@@ -97,9 +99,9 @@ func resourceAwsApiGatewayVpcLinkCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsApiGatewayVpcLinkRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &apigateway.GetVpcLinkInput{
 		VpcLinkId: aws.String(d.Id()),
@@ -107,7 +109,7 @@ func resourceAwsApiGatewayVpcLinkRead(d *schema.ResourceData, meta interface{}) 
 
 	resp, err := conn.GetVpcLink(input)
 	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] VPC Link %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -127,9 +129,9 @@ func resourceAwsApiGatewayVpcLinkRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "apigateway",
-		Region:    meta.(*AWSClient).region,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Resource:  fmt.Sprintf("/vpclinks/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -141,7 +143,7 @@ func resourceAwsApiGatewayVpcLinkRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsApiGatewayVpcLinkUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	operations := make([]*apigateway.PatchOperation, 0)
 
@@ -175,7 +177,7 @@ func resourceAwsApiGatewayVpcLinkUpdate(d *schema.ResourceData, meta interface{}
 
 	_, err := conn.UpdateVpcLink(input)
 	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] VPC Link %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -200,7 +202,7 @@ func resourceAwsApiGatewayVpcLinkUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsApiGatewayVpcLinkDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	input := &apigateway.DeleteVpcLinkInput{
 		VpcLinkId: aws.String(d.Id()),
@@ -208,7 +210,7 @@ func resourceAwsApiGatewayVpcLinkDelete(d *schema.ResourceData, meta interface{}
 
 	_, err := conn.DeleteVpcLink(input)
 
-	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
@@ -249,7 +251,7 @@ func waitForApiGatewayVpcLinkDeletion(conn *apigateway.APIGateway, vpcLinkID str
 				VpcLinkId: aws.String(vpcLinkID),
 			})
 
-			if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 				return 1, "", nil
 			}
 
