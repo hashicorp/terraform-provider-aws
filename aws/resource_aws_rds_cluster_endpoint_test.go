@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSRDSClusterEndpoint_basic(t *testing.T) {
@@ -23,9 +25,9 @@ func TestAccAWSRDSClusterEndpoint_basic(t *testing.T) {
 	defaultResourceName := "aws_rds_cluster_endpoint.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSClusterEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -35,9 +37,9 @@ func TestAccAWSRDSClusterEndpoint_basic(t *testing.T) {
 					testAccCheckAWSRDSClusterEndpointAttributes(&customReaderEndpoint),
 					testAccCheckAWSRDSClusterEndpointExists(defaultResourceName, &customEndpoint),
 					testAccCheckAWSRDSClusterEndpointAttributes(&customEndpoint),
-					testAccMatchResourceAttrRegionalARN(readerResourceName, "arn", "rds", regexp.MustCompile(`cluster-endpoint:.+`)),
+					atest.MatchAttrRegionalARN(readerResourceName, "arn", "rds", regexp.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttrSet(readerResourceName, "endpoint"),
-					testAccMatchResourceAttrRegionalARN(defaultResourceName, "arn", "rds", regexp.MustCompile(`cluster-endpoint:.+`)),
+					atest.MatchAttrRegionalARN(defaultResourceName, "arn", "rds", regexp.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttrSet(defaultResourceName, "endpoint"),
 					resource.TestCheckResourceAttr(defaultResourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(readerResourceName, "tags.%", "0"),
@@ -64,9 +66,9 @@ func TestAccAWSRDSClusterEndpoint_tags(t *testing.T) {
 	resourceName := "aws_rds_cluster_endpoint.reader"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSClusterEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -135,11 +137,11 @@ func testAccCheckAWSRDSClusterEndpointAttributes(v *rds.DBClusterEndpoint) resou
 }
 
 func testAccCheckAWSClusterEndpointDestroy(s *terraform.State) error {
-	return testAccCheckAWSClusterEndpointDestroyWithProvider(s, testAccProvider)
+	return testAccCheckAWSClusterEndpointDestroyWithProvider(s, atest.Provider)
 }
 
 func testAccCheckAWSClusterEndpointDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*AWSClient).rdsconn
+	conn := provider.Meta().(*awsprovider.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_rds_cluster_endpoint" {
@@ -174,7 +176,7 @@ func testAccCheckAWSClusterEndpointDestroyWithProvider(s *terraform.State, provi
 }
 
 func testAccCheckAWSRDSClusterEndpointExists(resourceName string, endpoint *rds.DBClusterEndpoint) resource.TestCheckFunc {
-	return testAccCheckAWSRDSClusterEndpointExistsWithProvider(resourceName, endpoint, testAccProvider)
+	return testAccCheckAWSRDSClusterEndpointExistsWithProvider(resourceName, endpoint, atest.Provider)
 }
 
 func testAccCheckAWSRDSClusterEndpointExistsWithProvider(resourceName string, endpoint *rds.DBClusterEndpoint, provider *schema.Provider) resource.TestCheckFunc {
@@ -188,7 +190,7 @@ func testAccCheckAWSRDSClusterEndpointExistsWithProvider(resourceName string, en
 			return fmt.Errorf("DBClusterEndpoint ID is not set")
 		}
 
-		conn := provider.Meta().(*AWSClient).rdsconn
+		conn := provider.Meta().(*awsprovider.AWSClient).RDSConn
 
 		response, err := conn.DescribeDBClusterEndpoints(&rds.DescribeDBClusterEndpointsInput{
 			DBClusterEndpointIdentifier: aws.String(rs.Primary.ID),
@@ -209,7 +211,7 @@ func testAccCheckAWSRDSClusterEndpointExistsWithProvider(resourceName string, en
 }
 
 func testAccAWSClusterEndpointConfigBase(n int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = aws_rds_cluster.default.engine
   engine_version             = aws_rds_cluster.default.engine_version
