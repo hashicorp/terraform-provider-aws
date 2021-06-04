@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSIAMRolePolicy_basic(t *testing.T) {
@@ -24,9 +26,9 @@ func TestAccAWSIAMRolePolicy_basic(t *testing.T) {
 	roleName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -72,9 +74,9 @@ func TestAccAWSIAMRolePolicy_disappears(t *testing.T) {
 	rolePolicyResourceName := fmt.Sprintf("aws_iam_role_policy.test_%s", suffix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -100,9 +102,9 @@ func TestAccAWSIAMRolePolicy_namePrefix(t *testing.T) {
 	roleName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -145,9 +147,9 @@ func TestAccAWSIAMRolePolicy_generatedName(t *testing.T) {
 	roleName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -186,9 +188,9 @@ func TestAccAWSIAMRolePolicy_invalidJSON(t *testing.T) {
 	role := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -203,9 +205,9 @@ func TestAccAWSIAMRolePolicy_Policy_InvalidResource(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -217,7 +219,7 @@ func TestAccAWSIAMRolePolicy_Policy_InvalidResource(t *testing.T) {
 }
 
 func testAccCheckIAMRolePolicyDestroy(s *terraform.State) error {
-	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+	IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_role_policy" {
@@ -234,7 +236,7 @@ func testAccCheckIAMRolePolicyDestroy(s *terraform.State) error {
 			RoleName:   aws.String(role),
 		}
 
-		getResp, err := iamconn.GetRolePolicy(request)
+		getResp, err := IAMConn.GetRolePolicy(request)
 		if err != nil {
 			if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
 				// none found, that's good
@@ -253,14 +255,14 @@ func testAccCheckIAMRolePolicyDestroy(s *terraform.State) error {
 
 func testAccCheckIAMRolePolicyDisappears(out *iam.GetRolePolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 		params := &iam.DeleteRolePolicyInput{
 			PolicyName: out.PolicyName,
 			RoleName:   out.RoleName,
 		}
 
-		_, err := iamconn.DeleteRolePolicy(params)
+		_, err := IAMConn.DeleteRolePolicy(params)
 		return err
 	}
 }
@@ -284,13 +286,13 @@ func testAccCheckIAMRolePolicyExists(
 			return fmt.Errorf("Not Found: %s", iamRolePolicyResource)
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 		role, name, err := resourceAwsIamRolePolicyParseId(policy.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		output, err := iamconn.GetRolePolicy(&iam.GetRolePolicyInput{
+		output, err := IAMConn.GetRolePolicy(&iam.GetRolePolicyInput{
 			RoleName:   aws.String(role),
 			PolicyName: aws.String(name),
 		})
