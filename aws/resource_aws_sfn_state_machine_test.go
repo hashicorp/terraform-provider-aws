@@ -9,8 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sfn/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
@@ -20,16 +22,16 @@ func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sfn.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sfn.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSfnStateMachineConfig(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName, &sm),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "states", fmt.Sprintf("stateMachine:%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "states", fmt.Sprintf("stateMachine:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -55,7 +57,7 @@ func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
 				Config: testAccAWSSfnStateMachineConfig(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName, &sm),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "states", fmt.Sprintf("stateMachine:%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "states", fmt.Sprintf("stateMachine:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -81,9 +83,9 @@ func TestAccAWSSfnStateMachine_expressUpdate(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sfn.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sfn.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -121,9 +123,9 @@ func TestAccAWSSfnStateMachine_standardUpdate(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sfn.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sfn.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -161,9 +163,9 @@ func TestAccAWSSfnStateMachine_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sfn.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sfn.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -206,9 +208,9 @@ func TestAccAWSSfnStateMachine_TracingConfiguration(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sfn.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sfn.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -242,16 +244,16 @@ func TestAccAWSSfnStateMachine_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sfn.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sfn.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSfnStateMachineConfig(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName, &sm),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSfnStateMachine(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSfnStateMachine(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -265,9 +267,9 @@ func TestAccAWSSfnStateMachine_expressLoggingConfiguration(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sfn.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, sfn.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -312,7 +314,7 @@ func testAccCheckAWSSfnExists(n string, v *sfn.DescribeStateMachineOutput) resou
 			return fmt.Errorf("No Step Function State Machine ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sfnconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SFNConn
 
 		output, err := finder.StateMachineByARN(conn, rs.Primary.ID)
 
@@ -327,7 +329,7 @@ func testAccCheckAWSSfnExists(n string, v *sfn.DescribeStateMachineOutput) resou
 }
 
 func testAccCheckAWSSfnStateMachineDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sfnconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SFNConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sfn_state_machine" {
@@ -451,7 +453,7 @@ EOF
 }
 
 func testAccAWSSfnStateMachineConfig(rName string, rMaxAttempts int) string {
-	return composeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
@@ -484,7 +486,7 @@ EOF
 }
 
 func testAccAWSSfnStateMachineConfigTags1(rName, tag1Key, tag1Value string) string {
-	return composeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
@@ -521,7 +523,7 @@ EOF
 }
 
 func testAccAWSSfnStateMachineConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return composeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
@@ -559,7 +561,7 @@ EOF
 }
 
 func testAccAWSSfnStateMachineTypedConfig(rName, rType string, rMaxAttempts int) string {
-	return composeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
@@ -591,7 +593,7 @@ EOF
 }
 
 func testAccAWSSfnStateMachineExpressConfigLogConfiguration(rName string, rLevel string) string {
-	return composeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
@@ -635,7 +637,7 @@ EOF
 }
 
 func testAccAWSSfnStateMachineConfigTracingConfigEnable(rName string) string {
-	return composeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
@@ -672,7 +674,7 @@ EOF
 }
 
 func testAccAWSSfnStateMachineConfigTracingConfigDisable(rName string) string {
-	return composeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
