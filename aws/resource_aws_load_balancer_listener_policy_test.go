@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSLoadBalancerListenerPolicy_basic(t *testing.T) {
@@ -18,9 +20,9 @@ func TestAccAWSLoadBalancerListenerPolicy_basic(t *testing.T) {
 	lbName := rChar
 	mcName := rChar
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLoadBalancerListenerPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -57,7 +59,7 @@ func policyInListenerPolicies(str string, list []string) bool {
 }
 
 func testAccCheckAWSLoadBalancerListenerPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elbconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ELBConn
 
 	for _, rs := range s.RootModule().Resources {
 		switch {
@@ -116,9 +118,9 @@ func testAccCheckAWSLoadBalancerListenerPolicyDestroy(s *terraform.State) error 
 
 func testAccCheckAWSLoadBalancerListenerPolicyState(loadBalancerName string, loadBalancerListenerPort int64, loadBalancerListenerPolicyName string, assigned bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		elbconn := testAccProvider.Meta().(*AWSClient).elbconn
+		ELBConn := atest.Provider.Meta().(*awsprovider.AWSClient).ELBConn
 
-		loadBalancerDescription, err := elbconn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
+		loadBalancerDescription, err := ELBConn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
 			LoadBalancerNames: []*string{aws.String(loadBalancerName)},
 		})
 		if err != nil {
@@ -147,7 +149,7 @@ func testAccCheckAWSLoadBalancerListenerPolicyState(loadBalancerName string, loa
 }
 
 func testAccAWSLoadBalancerListenerPolicyConfig_basic0(lbName, mcName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -187,7 +189,7 @@ resource "aws_load_balancer_listener_policy" "test-lb-listener-policies-80" {
 }
 
 func testAccAWSLoadBalancerListenerPolicyConfig_basic1(lbName, mcName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -227,7 +229,7 @@ resource "aws_load_balancer_listener_policy" "test-lb-listener-policies-80" {
 }
 
 func testAccAWSLoadBalancerListenerPolicyConfig_basic2(lbName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
   name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0]]
