@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strconv"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -17,6 +16,8 @@ import (
 	awspolicy "github.com/jen20/awspolicyequivalence"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	tfsqs "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sqs"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sqs/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -633,36 +634,6 @@ func TestAccAWSSQSQueue_Encryption(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSQSQueueDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sqsconn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_sqs_queue" {
-			continue
-		}
-
-		// Check if queue exists by checking for its attributes
-		params := &sqs.GetQueueAttributesInput{
-			QueueUrl: aws.String(rs.Primary.ID),
-		}
-		err := resource.Retry(15*time.Second, func() *resource.RetryError {
-			_, err := conn.GetQueueAttributes(params)
-			if err != nil {
-				if isAWSErr(err, sqs.ErrCodeQueueDoesNotExist, "") {
-					return nil
-				}
-				return resource.NonRetryableError(err)
-			}
-			return resource.RetryableError(fmt.Errorf("Queue %s still exists. Failing!", rs.Primary.ID))
-		})
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func testAccCheckAWSSQSQueuePolicyAttribute(queueAttributes *map[string]*string, topicName, queueName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		accountID := testAccProvider.Meta().(*AWSClient).accountid
@@ -691,7 +662,7 @@ func testAccCheckAWSSQSQueuePolicyAttribute(queueAttributes *map[string]*string,
 	}
 }
 
-func testAccCheckAWSSQSQueueExists(resourceName string, queueAttributes *map[string]*string) resource.TestCheckFunc {
+func testAccCheckAWSSQSQueueExists(resourceName string, v *map[string]*string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -699,25 +670,45 @@ func testAccCheckAWSSQSQueueExists(resourceName string, queueAttributes *map[str
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Queue URL specified!")
+			return fmt.Errorf("No SQS Queue URL is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).sqsconn
 
-		input := &sqs.GetQueueAttributesInput{
-			QueueUrl:       aws.String(rs.Primary.ID),
-			AttributeNames: []*string{aws.String("All")},
-		}
-		output, err := conn.GetQueueAttributes(input)
+		output, err := finder.QueueAttributesByURL(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*queueAttributes = output.Attributes
+		*v = output
 
 		return nil
 	}
+}
+
+func testAccCheckAWSSQSQueueDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).sqsconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_sqs_queue" {
+			continue
+		}
+
+		_, err := finder.QueueAttributesByURL(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("SQS Queue %s still exists", rs.Primary.ID)
+	}
+
+	return nil
 }
 
 func testAccCheckAWSSQSFIFOQueueHighThroughputAttributes(queueAttributes *map[string]*string, deduplicationScope, fifoThroughputLimit string) resource.TestCheckFunc {
