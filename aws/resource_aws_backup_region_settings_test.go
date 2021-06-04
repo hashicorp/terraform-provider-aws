@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsBackupRegionSettings_basic(t *testing.T) {
@@ -17,12 +19,12 @@ func TestAccAwsBackupRegionSettings_basic(t *testing.T) {
 	resourceName := "aws_backup_region_settings.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(fsx.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(fsx.EndpointsID, t)
 			testAccPreCheckAWSBackup(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -82,7 +84,7 @@ func TestAccAwsBackupRegionSettings_basic(t *testing.T) {
 func testAccCheckAwsBackupRegionSettingsExists(settings *backup.DescribeRegionSettingsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
-		conn := testAccProvider.Meta().(*AWSClient).backupconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).BackupConn
 		resp, err := conn.DescribeRegionSettings(&backup.DescribeRegionSettingsInput{})
 		if err != nil {
 			return err
