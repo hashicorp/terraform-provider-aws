@@ -12,9 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	tfschemas "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/schemas"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/schemas/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -25,11 +27,11 @@ func init() {
 }
 
 func testSweepSchemasRegistries(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).schemasconn
+	conn := client.(*awsprovider.AWSClient).SchemasConn
 	input := &schemas.ListRegistriesInput{}
 	var sweeperErrs *multierror.Error
 
@@ -94,7 +96,7 @@ func testSweepSchemasRegistries(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping EventBridge Schemas Registry sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -112,16 +114,16 @@ func TestAccAWSSchemasRegistry_basic(t *testing.T) {
 	resourceName := "aws_schemas_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(schemas.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, schemas.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(schemas.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, schemas.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSchemasRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSchemasRegistryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasRegistryExists(resourceName, &v),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "schemas", fmt.Sprintf("registry/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "schemas", fmt.Sprintf("registry/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -142,16 +144,16 @@ func TestAccAWSSchemasRegistry_disappears(t *testing.T) {
 	resourceName := "aws_schemas_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(schemas.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, schemas.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(schemas.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, schemas.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSchemasRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSchemasRegistryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasRegistryExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSchemasRegistry(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSchemasRegistry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -165,9 +167,9 @@ func TestAccAWSSchemasRegistry_Description(t *testing.T) {
 	resourceName := "aws_schemas_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(schemas.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, schemas.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(schemas.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, schemas.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSchemasRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -206,9 +208,9 @@ func TestAccAWSSchemasRegistry_Tags(t *testing.T) {
 	resourceName := "aws_schemas_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(schemas.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, schemas.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(schemas.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, schemas.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSchemasRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -246,7 +248,7 @@ func TestAccAWSSchemasRegistry_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSSchemasRegistryDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).schemasconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SchemasConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_schemas_registry" {
@@ -280,7 +282,7 @@ func testAccCheckSchemasRegistryExists(n string, v *schemas.DescribeRegistryOutp
 			return fmt.Errorf("No EventBridge Schemas Registry ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).schemasconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SchemasConn
 
 		output, err := finder.RegistryByName(conn, rs.Primary.ID)
 
