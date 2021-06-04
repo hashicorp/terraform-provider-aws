@@ -136,9 +136,9 @@ func TestAccAWSServiceThing_Name_Generated(t *testing.T) {
   resourceName := "aws_service_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { testAccPreCheck(t) },
-    ErrorCheck:   testAccErrorCheck(t, service.EndpointsID),
-    Providers:    testAccProviders,
+    PreCheck:     func() { acctest.PreCheck(t) },
+    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
+    Providers:    acctest.Providers,
     CheckDestroy: testAccCheckAWSServiceThingDestroy,
     Steps: []resource.TestStep{
       {
@@ -164,9 +164,9 @@ func TestAccAWSServiceThing_NamePrefix(t *testing.T) {
   resourceName := "aws_service_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { testAccPreCheck(t) },
-    ErrorCheck:   testAccErrorCheck(t, service.EndpointsID),
-    Providers:    testAccProviders,
+    PreCheck:     func() { acctest.PreCheck(t) },
+    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
+    Providers:    acctest.Providers,
     CheckDestroy: testAccCheckAWSServiceThingDestroy,
     Steps: []resource.TestStep{
       {
@@ -250,7 +250,7 @@ As of version 3.38.0 of the Terraform AWS Provider, resources that previously im
 
 Thus, for in-flight and future contributions, implementing tagging support for Terraform AWS Provider resources requires the following, each with its own section below:
 
-- [ ] _Generated Service Tagging Code_: In the internal code generators (e.g. `aws/internal/keyvaluetags`), implementation and customization of how a service handles tagging, which is standardized for the resources.
+- [ ] _Generated Service Tagging Code_: In the internal code generators (e.g. `aws/keyvaluetags`), implementation and customization of how a service handles tagging, which is standardized for the resources.
 - [ ] _Resource Tagging Code Implementation_: In the resource code (e.g. `aws/resource_aws_service_thing.go`), implementation of `tags` and `tags_all` schema attributes, along with implementation of `CustomizeDiff` in the resource definition and handling in `Create`, `Read`, and `Update` functions.
 - [ ] _Resource Tagging Acceptance Testing Implementation_: In the resource acceptance testing (e.g. `aws/resource_aws_service_thing_test.go`), implementation of new acceptance test function and configurations to exercise new tagging logic.
 - [ ] _Resource Tagging Documentation Implementation_: In the resource documentation (e.g. `website/docs/r/service_thing.html.markdown`), addition of `tags` argument and `tags_all` attribute.
@@ -261,34 +261,34 @@ See also a [full example pull request for implementing resource tags with defaul
 
 This step is only necessary for the first implementation and may have been previously completed. If so, move on to the next section.
 
-More details about this code generation, including fixes for potential error messages in this process, can be found in the [keyvaluetags documentation](../../aws/internal/keyvaluetags/README.md).
+More details about this code generation, including fixes for potential error messages in this process, can be found in the [keyvaluetags documentation](../../aws/keyvaluetags/README.md).
 
 - Open the AWS Go SDK documentation for the service, e.g. for [`service/eks`](https://docs.aws.amazon.com/sdk-for-go/api/service/eks/). Note: there can be a delay between the AWS announcement and the updated AWS Go SDK documentation.
 - Determine the "type" of tagging implementation. Some services will use a simple map style (`map[string]*string` in Go) while others will have a separate structure shape (`[]service.Tag` struct with `Key` and `Value` fields).
 
-    - If the type is a map, add the AWS Go SDK service name (e.g. `eks`) to `mapServiceNames` in `aws/internal/keyvaluetags/generators/servicetags/main.go`
-    - Otherwise, if the type is a struct, add the AWS Go SDK service name (e.g. `eks`) to `sliceServiceNames` in `aws/internal/keyvaluetags/generators/servicetags/main.go`. If the struct name is not exactly `Tag`, it can be customized via the `ServiceTagType` function. If the struct key field is not exactly `Key`, it can be customized via the `ServiceTagTypeKeyField` function. If the struct value field is not exactly `Value`, it can be customized via the `ServiceTagTypeValueField` function.
+    - If the type is a map, add the AWS Go SDK service name (e.g. `eks`) to `mapServiceNames` in `aws/keyvaluetags/generators/servicetags/main.go`
+    - Otherwise, if the type is a struct, add the AWS Go SDK service name (e.g. `eks`) to `sliceServiceNames` in `aws/keyvaluetags/generators/servicetags/main.go`. If the struct name is not exactly `Tag`, it can be customized via the `ServiceTagType` function. If the struct key field is not exactly `Key`, it can be customized via the `ServiceTagTypeKeyField` function. If the struct value field is not exactly `Value`, it can be customized via the `ServiceTagTypeValueField` function.
 
-- Determine if the service API includes functionality for listing tags (usually a `ListTags` or `ListTagsForResource` API call) or updating tags (usually `TagResource` and `UntagResource` API calls). If so, add the AWS Go SDK service client information to `ServiceClientType` (along with the new required import) in `aws/internal/keyvaluetags/service_generation_customizations.go`, e.g. for EKS:
+- Determine if the service API includes functionality for listing tags (usually a `ListTags` or `ListTagsForResource` API call) or updating tags (usually `TagResource` and `UntagResource` API calls). If so, add the AWS Go SDK service client information to `ServiceClientType` (along with the new required import) in `aws/keyvaluetags/service_generation_customizations.go`, e.g. for EKS:
 
   ```go
   case "eks":
     funcType = reflect.TypeOf(eks.New)
   ```
 
-    - If the service API includes functionality for listing tags, add the AWS Go SDK service name (e.g. `eks`) to `serviceNames` in `aws/internal/keyvaluetags/generators/listtags/main.go`.
-    - If the service API includes functionality for updating tags, add the AWS Go SDK service name (e.g. `eks`) to `serviceNames` in `aws/internal/keyvaluetags/generators/updatetags/main.go`.
+    - If the service API includes functionality for listing tags, add the AWS Go SDK service name (e.g. `eks`) to `serviceNames` in `aws/keyvaluetags/generators/listtags/main.go`.
+    - If the service API includes functionality for updating tags, add the AWS Go SDK service name (e.g. `eks`) to `serviceNames` in `aws/keyvaluetags/generators/updatetags/main.go`.
 
 - Run `make gen` (`go generate ./...`) and ensure there are no errors via `make test` (`go test ./...`)
 
 ### Resource Tagging Code Implementation
 
-- In the resource Go file (e.g. `aws/resource_aws_eks_cluster.go`), add the following Go import: `"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"`
+- In the resource Go file (e.g. `aws/resource_aws_eks_cluster.go`), add the following Go import: `"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"`
 - In the resource schema, add `"tags": tagsSchema(),` and `"tags_all": tagsSchemaComputed(),`
 - In the `schema.Resource` struct definition, add the `CustomizeDiff: SetTagsDiff` handling essential to resource support for default tags:
 
   ```go
-  func resourceAwsEksCluster() *schema.Resource {
+  func ResourceAwsEksCluster() *schema.Resource {
     return &schema.Resource{
       /* ... other configuration ... */
       CustomizeDiff: SetTagsDiff,
@@ -299,7 +299,7 @@ More details about this code generation, including fixes for potential error mes
   If the resource already contains a `CustomizeDiff` function, append the `SetTagsDiff` via the `customdiff.Sequence` method:
 
   ```go
-  func resourceAwsExample() *schema.Resource {
+  func ResourceAwsExample() *schema.Resource {
     return &schema.Resource{
       /* ... other configuration ... */
       CustomizeDiff: customdiff.Sequence(
@@ -314,7 +314,7 @@ More details about this code generation, including fixes for potential error mes
 
   ```go
   // Typically declared near conn := /* ... */
-  defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+  defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
   tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
   
   input := &eks.CreateClusterInput{
@@ -327,7 +327,7 @@ More details about this code generation, including fixes for potential error mes
 
   ```go
   // Typically declared near conn := /* ... */
-  defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+  defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
   tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
   
   input := &eks.CreateClusterInput{
@@ -343,7 +343,7 @@ More details about this code generation, including fixes for potential error mes
 
   ```go
   // Typically declared near conn := /* ... */
-  defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+  defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
   tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
   
   if len(tags) > 0 {
@@ -357,7 +357,7 @@ More details about this code generation, including fixes for potential error mes
 
   ```go
   // Typically declared near conn := /* ... */
-  defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+  defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
   tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
   
   input := &ec2.CreateFleetInput{
@@ -370,8 +370,8 @@ More details about this code generation, including fixes for potential error mes
 
   ```go
   // Typically declared near conn := /* ... */
-  defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-  ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+  defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+  ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
   
   /* ... other d.Set(...) logic ... */
 
@@ -390,8 +390,8 @@ More details about this code generation, including fixes for potential error mes
 
   ```go
   // Typically declared near conn := /* ... */
-  defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-  ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+  defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+  ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
   /* ... other d.Set(...) logic ... */
   
@@ -452,9 +452,9 @@ More details about this code generation, including fixes for potential error mes
     resourceName := "aws_eks_cluster.test"
 
     resource.ParallelTest(t, resource.TestCase{
-      PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-      ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
-      Providers:    testAccProviders,
+      PreCheck:     func() { acctest.PreCheck(t); acctest.TestAccPreCheckAWSEks(t) },
+      ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
+      Providers:    acctest.Providers,
       CheckDestroy: testAccCheckAWSEksClusterDestroy,
       Steps: []resource.TestStep{
         {
@@ -574,7 +574,7 @@ guidelines.
    For reference:
 
     - `service` is the AWS short service name that matches the entry in
-     `endpointServiceNames` (created via the [New Service](#new-service)
+     `EndpointServiceNames` (created via the [New Service](#new-service)
      section)
     - `name` represents the conceptual infrastructure represented by the
      create, read, update, and delete methods of the service API. It should
@@ -609,13 +609,13 @@ into Terraform.
 
   To add the AWS Go SDK service client:
 
-    - In `aws/provider.go` Add a new service entry to `endpointServiceNames`.
+    - In `aws/provider.go` Add a new service entry to `EndpointServiceNames`.
     This service name should match the AWS Go SDK or AWS CLI service name.
     - In `aws/config.go`: Add a new import for the AWS Go SDK code. e.g.
     `github.com/aws/aws-sdk-go/service/quicksight`
     - In `aws/config.go`: Add a new `{SERVICE}conn` field to the `AWSClient`
     struct for the service client. The service name should match the name
-    in `endpointServiceNames`. e.g. `quicksightconn *quicksight.QuickSight`
+    in `EndpointServiceNames`. e.g. `quicksightconn *quicksight.QuickSight`
     - In `aws/config.go`: Create the new service client in the `{SERVICE}conn`
     field in the `AWSClient` instantiation within `Client()`. e.g.
     `quicksightconn: quicksight.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["quicksight"])})),`
