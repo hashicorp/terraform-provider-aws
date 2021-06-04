@@ -7,10 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediapackage"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsMediaPackageChannel() *schema.Resource {
@@ -76,8 +78,8 @@ func resourceAwsMediaPackageChannel() *schema.Resource {
 }
 
 func resourceAwsMediaPackageChannelCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediapackageconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).MediaPackageConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &mediapackage.CreateChannelInput{
@@ -100,9 +102,9 @@ func resourceAwsMediaPackageChannelCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsMediaPackageChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediapackageconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).MediaPackageConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &mediapackage.DescribeChannelInput{
 		Id: aws.String(d.Id()),
@@ -134,7 +136,7 @@ func resourceAwsMediaPackageChannelRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsMediaPackageChannelUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediapackageconn
+	conn := meta.(*awsprovider.AWSClient).MediaPackageConn
 
 	input := &mediapackage.UpdateChannelInput{
 		Id:          aws.String(d.Id()),
@@ -159,14 +161,14 @@ func resourceAwsMediaPackageChannelUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsMediaPackageChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediapackageconn
+	conn := meta.(*awsprovider.AWSClient).MediaPackageConn
 
 	input := &mediapackage.DeleteChannelInput{
 		Id: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteChannel(input)
 	if err != nil {
-		if isAWSErr(err, mediapackage.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, mediapackage.ErrCodeNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting MediaPackage Channel: %s", err)
@@ -178,7 +180,7 @@ func resourceAwsMediaPackageChannelDelete(d *schema.ResourceData, meta interface
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeChannel(dcinput)
 		if err != nil {
-			if isAWSErr(err, mediapackage.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, mediapackage.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
