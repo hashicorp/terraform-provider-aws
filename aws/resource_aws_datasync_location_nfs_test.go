@@ -10,9 +10,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -23,17 +26,17 @@ func init() {
 }
 
 func testSweepDataSyncLocationNfss(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).datasyncconn
+	conn := client.(*awsprovider.AWSClient).DataSyncConn
 
 	input := &datasync.ListLocationsInput{}
 	for {
 		output, err := conn.ListLocations(input)
 
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping DataSync Location EFS sweep for %s: %s", region, err)
 			return nil
 		}
@@ -60,7 +63,7 @@ func testSweepDataSyncLocationNfss(region string) error {
 
 			_, err := conn.DeleteLocation(input)
 
-			if isAWSErr(err, "InvalidRequestException", "not found") {
+			if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 				continue
 			}
 
@@ -85,16 +88,16 @@ func TestAccAWSDataSyncLocationNfs_basic(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   atest.ErrorCheck(t, datasync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationNfsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDataSyncLocationNfsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncLocationNfsExists(resourceName, &locationNfs1),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "on_prem_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "on_prem_config.0.agent_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_hostname", "example.com"),
@@ -119,9 +122,9 @@ func TestAccAWSDataSyncLocationNfs_disappears(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   atest.ErrorCheck(t, datasync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationNfsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -142,9 +145,9 @@ func TestAccAWSDataSyncLocationNfs_AgentARNs_Multple(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   atest.ErrorCheck(t, datasync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationNfsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -171,9 +174,9 @@ func TestAccAWSDataSyncLocationNfs_Subdirectory(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   atest.ErrorCheck(t, datasync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationNfsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -199,9 +202,9 @@ func TestAccAWSDataSyncLocationNfs_Tags(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   atest.ErrorCheck(t, datasync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationNfsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -242,7 +245,7 @@ func TestAccAWSDataSyncLocationNfs_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSDataSyncLocationNfsDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).datasyncconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).DataSyncConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datasync_location_nfs" {
@@ -255,7 +258,7 @@ func testAccCheckAWSDataSyncLocationNfsDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeLocationNfs(input)
 
-		if isAWSErr(err, "InvalidRequestException", "not found") {
+		if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 			return nil
 		}
 
@@ -274,7 +277,7 @@ func testAccCheckAWSDataSyncLocationNfsExists(resourceName string, locationNfs *
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).datasyncconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DataSyncConn
 		input := &datasync.DescribeLocationNfsInput{
 			LocationArn: aws.String(rs.Primary.ID),
 		}
@@ -297,7 +300,7 @@ func testAccCheckAWSDataSyncLocationNfsExists(resourceName string, locationNfs *
 
 func testAccCheckAWSDataSyncLocationNfsDisappears(location *datasync.DescribeLocationNfsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).datasyncconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DataSyncConn
 
 		input := &datasync.DeleteLocationInput{
 			LocationArn: location.LocationArn,
