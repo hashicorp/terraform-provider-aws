@@ -7,18 +7,21 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSIAMGroupPolicy_basic(t *testing.T) {
 	var groupPolicy1, groupPolicy2 iam.GetGroupPolicyOutput
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMGroupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -61,9 +64,9 @@ func TestAccAWSIAMGroupPolicy_disappears(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMGroupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -86,9 +89,9 @@ func TestAccAWSIAMGroupPolicy_namePrefix(t *testing.T) {
 	var groupPolicy1, groupPolicy2 iam.GetGroupPolicyOutput
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMGroupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -126,9 +129,9 @@ func TestAccAWSIAMGroupPolicy_generatedName(t *testing.T) {
 	var groupPolicy1, groupPolicy2 iam.GetGroupPolicyOutput
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMGroupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -162,7 +165,7 @@ func TestAccAWSIAMGroupPolicy_generatedName(t *testing.T) {
 }
 
 func testAccCheckIAMGroupPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iamconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_group_policy" {
@@ -181,7 +184,7 @@ func testAccCheckIAMGroupPolicyDestroy(s *terraform.State) error {
 
 		getResp, err := conn.GetGroupPolicy(request)
 		if err != nil {
-			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 				// none found, that's good
 				continue
 			}
@@ -198,14 +201,14 @@ func testAccCheckIAMGroupPolicyDestroy(s *terraform.State) error {
 
 func testAccCheckIAMGroupPolicyDisappears(out *iam.GetGroupPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 		params := &iam.DeleteGroupPolicyInput{
 			PolicyName: out.PolicyName,
 			GroupName:  out.GroupName,
 		}
 
-		_, err := iamconn.DeleteGroupPolicy(params)
+		_, err := IAMConn.DeleteGroupPolicy(params)
 		return err
 	}
 }
@@ -229,13 +232,13 @@ func testAccCheckIAMGroupPolicyExists(
 			return fmt.Errorf("Not Found: %s", iamGroupPolicyResource)
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 		group, name, err := resourceAwsIamGroupPolicyParseId(policy.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		output, err := iamconn.GetGroupPolicy(&iam.GetGroupPolicyInput{
+		output, err := IAMConn.GetGroupPolicy(&iam.GetGroupPolicyInput{
 			GroupName:  aws.String(group),
 			PolicyName: aws.String(name),
 		})
