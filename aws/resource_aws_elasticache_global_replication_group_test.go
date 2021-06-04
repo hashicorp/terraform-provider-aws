@@ -14,9 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -27,11 +29,11 @@ func init() {
 }
 
 func testSweepElasticacheGlobalReplicationGroups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).elasticacheconn
+	conn := client.(*awsprovider.AWSClient).ElastiCacheConn
 
 	var sweeperErrs *multierror.Error
 
@@ -74,7 +76,7 @@ func testSweepElasticacheGlobalReplicationGroups(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping ElastiCache Global Replication Group sweep for %q: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -97,9 +99,9 @@ func TestAccAWSElasticacheGlobalReplicationGroup_basic(t *testing.T) {
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticacheGlobalReplicationGroup(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSElasticacheGlobalReplicationGroup(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheGlobalReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -107,7 +109,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplicationGroup),
 					testAccCheckAWSElasticacheReplicationGroupExists(primaryReplicationGroupResourceName, &primaryReplicationGroup),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "elasticache", regexp.MustCompile(`globalreplicationgroup:`+elasticacheGlobalReplicationGroupRegionPrefixFormat+rName)),
+					atest.MatchAttrGlobalARN(resourceName, "arn", "elasticache", regexp.MustCompile(`globalreplicationgroup:`+elasticacheGlobalReplicationGroupRegionPrefixFormat+rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "at_rest_encryption_enabled", primaryReplicationGroupResourceName, "at_rest_encryption_enabled"),
 					resource.TestCheckResourceAttr(resourceName, "auth_token_enabled", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "cache_node_type", primaryReplicationGroupResourceName, "node_type"),
@@ -140,9 +142,9 @@ func TestAccAWSElasticacheGlobalReplicationGroup_Description(t *testing.T) {
 	resourceName := "aws_elasticache_global_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticacheGlobalReplicationGroup(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSElasticacheGlobalReplicationGroup(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheGlobalReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -175,16 +177,16 @@ func TestAccAWSElasticacheGlobalReplicationGroup_disappears(t *testing.T) {
 	resourceName := "aws_elasticache_global_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticacheGlobalReplicationGroup(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSElasticacheGlobalReplicationGroup(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheGlobalReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSElasticacheGlobalReplicationGroupConfig_basic(rName, primaryReplicationGroupId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplicationGroup),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsElasticacheGlobalReplicationGroup(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsElasticacheGlobalReplicationGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -200,11 +202,11 @@ func TestAccAWSElasticacheGlobalReplicationGroup_MultipleSecondaries(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 3)
+			atest.PreCheck(t)
+			atest.PreCheckMultipleRegion(t, 3)
 		},
-		ErrorCheck:        testAccErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3),
+		ErrorCheck:        atest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesMultipleRegion(&providers, 3),
 		CheckDestroy:      testAccCheckAWSElasticacheReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -225,11 +227,11 @@ func TestAccAWSElasticacheGlobalReplicationGroup_ReplaceSecondary_DifferentRegio
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 3)
+			atest.PreCheck(t)
+			atest.PreCheckMultipleRegion(t, 3)
 		},
-		ErrorCheck:        testAccErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3),
+		ErrorCheck:        atest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesMultipleRegion(&providers, 3),
 		CheckDestroy:      testAccCheckAWSElasticacheReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -259,7 +261,7 @@ func testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName string,
 			return fmt.Errorf("No ElastiCache Global Replication Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ElastiCacheConn
 		grg, err := finder.GlobalReplicationGroupByID(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error retrieving ElastiCache Global Replication Group (%s): %w", rs.Primary.ID, err)
@@ -276,7 +278,7 @@ func testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName string,
 }
 
 func testAccCheckAWSElasticacheGlobalReplicationGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ElastiCacheConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_global_replication_group" {
@@ -297,12 +299,12 @@ func testAccCheckAWSElasticacheGlobalReplicationGroupDestroy(s *terraform.State)
 }
 
 func testAccPreCheckAWSElasticacheGlobalReplicationGroup(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ElastiCacheConn
 
 	input := &elasticache.DescribeGlobalReplicationGroupsInput{}
 	_, err := conn.DescribeGlobalReplicationGroups(input)
 
-	if testAccPreCheckSkipError(err) ||
+	if atest.PreCheckSkipError(err) ||
 		tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidParameterValueException, "Access Denied to API Version: APIGlobalDatastore") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
@@ -353,11 +355,11 @@ resource "aws_elasticache_replication_group" "test" {
 }
 
 func testAccAWSElasticacheGlobalReplicationGroupConfig_MultipleSecondaries(rName string) string {
-	return composeConfig(
-		testAccMultipleRegionProviderConfig(3),
-		testAccElasticacheVpcBaseWithProvider(rName, "primary", ProviderNameAws),
-		testAccElasticacheVpcBaseWithProvider(rName, "alternate", ProviderNameAwsAlternate),
-		testAccElasticacheVpcBaseWithProvider(rName, "third", ProviderNameAwsThird),
+	return atest.ComposeConfig(
+		atest.ConfigProviderMultipleRegion(3),
+		testAccElasticacheVpcBaseWithProvider(rName, "primary", atest.ProviderNameAws),
+		testAccElasticacheVpcBaseWithProvider(rName, "alternate", atest.ProviderNameAwsAlternate),
+		testAccElasticacheVpcBaseWithProvider(rName, "third", atest.ProviderNameAwsThird),
 		fmt.Sprintf(`
 resource "aws_elasticache_global_replication_group" "test" {
   provider = aws
@@ -408,11 +410,11 @@ resource "aws_elasticache_replication_group" "third" {
 }
 
 func testAccAWSElasticacheReplicationGroupConfig_ReplaceSecondary_DifferentRegion_Setup(rName string) string {
-	return composeConfig(
-		testAccMultipleRegionProviderConfig(3),
-		testAccElasticacheVpcBaseWithProvider(rName, "primary", ProviderNameAws),
-		testAccElasticacheVpcBaseWithProvider(rName, "secondary", ProviderNameAwsAlternate),
-		testAccElasticacheVpcBaseWithProvider(rName, "third", ProviderNameAwsThird),
+	return atest.ComposeConfig(
+		atest.ConfigProviderMultipleRegion(3),
+		testAccElasticacheVpcBaseWithProvider(rName, "primary", atest.ProviderNameAws),
+		testAccElasticacheVpcBaseWithProvider(rName, "secondary", atest.ProviderNameAwsAlternate),
+		testAccElasticacheVpcBaseWithProvider(rName, "third", atest.ProviderNameAwsThird),
 		fmt.Sprintf(`
 resource "aws_elasticache_global_replication_group" "test" {
   provider = aws
@@ -451,11 +453,11 @@ resource "aws_elasticache_replication_group" "secondary" {
 }
 
 func testAccAWSElasticacheReplicationGroupConfig_ReplaceSecondary_DifferentRegion_Move(rName string) string {
-	return composeConfig(
-		testAccMultipleRegionProviderConfig(3),
-		testAccElasticacheVpcBaseWithProvider(rName, "primary", ProviderNameAws),
-		testAccElasticacheVpcBaseWithProvider(rName, "secondary", ProviderNameAwsAlternate),
-		testAccElasticacheVpcBaseWithProvider(rName, "third", ProviderNameAwsThird),
+	return atest.ComposeConfig(
+		atest.ConfigProviderMultipleRegion(3),
+		testAccElasticacheVpcBaseWithProvider(rName, "primary", atest.ProviderNameAws),
+		testAccElasticacheVpcBaseWithProvider(rName, "secondary", atest.ProviderNameAwsAlternate),
+		testAccElasticacheVpcBaseWithProvider(rName, "third", atest.ProviderNameAwsThird),
 		fmt.Sprintf(`
 resource "aws_elasticache_global_replication_group" "test" {
   provider = aws
@@ -494,7 +496,7 @@ resource "aws_elasticache_replication_group" "third" {
 }
 
 func testAccElasticacheVpcBaseWithProvider(rName, name, provider string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAvailableAZsNoOptInConfigWithProvider(name, provider),
 		fmt.Sprintf(`
 resource "aws_vpc" "%[1]s" {
