@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3outposts/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3outposts/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsS3OutpostsEndpoint() *schema.Resource {
@@ -73,7 +74,7 @@ func resourceAwsS3OutpostsEndpoint() *schema.Resource {
 }
 
 func resourceAwsS3OutpostsEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3outpostsconn
+	conn := meta.(*awsprovider.AWSClient).S3OutpostsConn
 
 	input := &s3outposts.CreateEndpointInput{
 		OutpostId:       aws.String(d.Get("outpost_id").(string)),
@@ -101,7 +102,7 @@ func resourceAwsS3OutpostsEndpointCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsS3OutpostsEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3outpostsconn
+	conn := meta.(*awsprovider.AWSClient).S3OutpostsConn
 
 	endpoint, err := finder.Endpoint(conn, d.Id())
 
@@ -136,7 +137,7 @@ func resourceAwsS3OutpostsEndpointRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsS3OutpostsEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3outpostsconn
+	conn := meta.(*awsprovider.AWSClient).S3OutpostsConn
 
 	parsedArn, err := arn.Parse(d.Id())
 
