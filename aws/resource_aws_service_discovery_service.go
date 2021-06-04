@@ -6,10 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicediscovery/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsServiceDiscoveryService() *schema.Resource {
@@ -141,8 +143,8 @@ func resourceAwsServiceDiscoveryService() *schema.Resource {
 }
 
 func resourceAwsServiceDiscoveryServiceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sdconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ServiceDiscoveryConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &servicediscovery.CreateServiceInput{
@@ -184,9 +186,9 @@ func resourceAwsServiceDiscoveryServiceCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsServiceDiscoveryServiceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sdconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ServiceDiscoveryConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &servicediscovery.GetServiceInput{
 		Id: aws.String(d.Id()),
@@ -194,7 +196,7 @@ func resourceAwsServiceDiscoveryServiceRead(d *schema.ResourceData, meta interfa
 
 	resp, err := conn.GetService(input)
 	if err != nil {
-		if isAWSErr(err, servicediscovery.ErrCodeServiceNotFound, "") {
+		if tfawserr.ErrMessageContains(err, servicediscovery.ErrCodeServiceNotFound, "") {
 			log.Printf("[WARN] Service Discovery Service (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -233,7 +235,7 @@ func resourceAwsServiceDiscoveryServiceRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsServiceDiscoveryServiceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sdconn
+	conn := meta.(*awsprovider.AWSClient).ServiceDiscoveryConn
 
 	if d.HasChanges("description", "dns_config", "health_check_config") {
 		input := &servicediscovery.UpdateServiceInput{
@@ -273,7 +275,7 @@ func resourceAwsServiceDiscoveryServiceUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsServiceDiscoveryServiceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sdconn
+	conn := meta.(*awsprovider.AWSClient).ServiceDiscoveryConn
 
 	input := &servicediscovery.DeleteServiceInput{
 		Id: aws.String(d.Id()),
@@ -281,7 +283,7 @@ func resourceAwsServiceDiscoveryServiceDelete(d *schema.ResourceData, meta inter
 
 	_, err := conn.DeleteService(input)
 
-	if isAWSErr(err, servicediscovery.ErrCodeServiceNotFound, "") {
+	if tfawserr.ErrMessageContains(err, servicediscovery.ErrCodeServiceNotFound, "") {
 		return nil
 	}
 
