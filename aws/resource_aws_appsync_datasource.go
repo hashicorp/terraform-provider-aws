@@ -8,8 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsAppsyncDatasource() *schema.Resource {
@@ -139,8 +141,8 @@ func resourceAwsAppsyncDatasource() *schema.Resource {
 }
 
 func resourceAwsAppsyncDatasourceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*awsprovider.AWSClient).AppSyncConn
+	region := meta.(*awsprovider.AWSClient).Region
 
 	input := &appsync.CreateDataSourceInput{
 		ApiId: aws.String(d.Get("api_id").(string)),
@@ -183,7 +185,7 @@ func resourceAwsAppsyncDatasourceCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsAppsyncDatasourceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
+	conn := meta.(*awsprovider.AWSClient).AppSyncConn
 
 	apiID, name, err := decodeAppsyncDataSourceID(d.Id())
 
@@ -198,7 +200,7 @@ func resourceAwsAppsyncDatasourceRead(d *schema.ResourceData, meta interface{}) 
 
 	resp, err := conn.GetDataSource(input)
 	if err != nil {
-		if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] AppSync Datasource %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -234,8 +236,8 @@ func resourceAwsAppsyncDatasourceRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsAppsyncDatasourceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*awsprovider.AWSClient).AppSyncConn
+	region := meta.(*awsprovider.AWSClient).Region
 
 	apiID, name, err := decodeAppsyncDataSourceID(d.Id())
 
@@ -281,7 +283,7 @@ func resourceAwsAppsyncDatasourceUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsAppsyncDatasourceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
+	conn := meta.(*awsprovider.AWSClient).AppSyncConn
 
 	apiID, name, err := decodeAppsyncDataSourceID(d.Id())
 
@@ -296,7 +298,7 @@ func resourceAwsAppsyncDatasourceDelete(d *schema.ResourceData, meta interface{}
 
 	_, err = conn.DeleteDataSource(input)
 	if err != nil {
-		if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 			return nil
 		}
 		return err
