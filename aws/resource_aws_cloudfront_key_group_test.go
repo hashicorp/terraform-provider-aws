@@ -7,10 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -21,11 +24,11 @@ func init() {
 }
 
 func testSweepCloudFrontKeyGroup(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).cloudfrontconn
+	conn := client.(*awsprovider.AWSClient).CloudFrontConn
 	var sweeperErrs *multierror.Error
 
 	input := &cloudfront.ListKeyGroupsInput{}
@@ -33,7 +36,7 @@ func testSweepCloudFrontKeyGroup(region string) error {
 	for {
 		output, err := conn.ListKeyGroups(input)
 		if err != nil {
-			if testSweepSkipSweepError(err) {
+			if atest.SweepSkipSweepError(err) {
 				log.Printf("[WARN] Skipping CloudFront key group sweep for %s: %s", region, err)
 				return nil
 			}
@@ -74,9 +77,9 @@ func TestAccAWSCloudFrontKeyGroup_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_key_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontKeyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -104,16 +107,16 @@ func TestAccAWSCloudFrontKeyGroup_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_key_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontKeyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFrontKeyGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontKeyGroupExistence(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFrontKeyGroup(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCloudFrontKeyGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -129,9 +132,9 @@ func TestAccAWSCloudFrontKeyGroup_Comment(t *testing.T) {
 	secondComment := "second comment"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontKeyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -162,9 +165,9 @@ func TestAccAWSCloudFrontKeyGroup_Items(t *testing.T) {
 	resourceName := "aws_cloudfront_key_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudFrontKeyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -200,7 +203,7 @@ func testAccCheckCloudFrontKeyGroupExistence(r string) resource.TestCheckFunc {
 			return fmt.Errorf("no Id is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudFrontConn
 
 		input := &cloudfront.GetKeyGroupInput{
 			Id: aws.String(rs.Primary.ID),
@@ -215,7 +218,7 @@ func testAccCheckCloudFrontKeyGroupExistence(r string) resource.TestCheckFunc {
 }
 
 func testAccCheckCloudFrontKeyGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudFrontConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_key_group" {
@@ -227,7 +230,7 @@ func testAccCheckCloudFrontKeyGroupDestroy(s *terraform.State) error {
 		}
 
 		_, err := conn.GetKeyGroup(input)
-		if isAWSErr(err, cloudfront.ErrCodeNoSuchResource, "") {
+		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchResource, "") {
 			continue
 		}
 		if err != nil {
