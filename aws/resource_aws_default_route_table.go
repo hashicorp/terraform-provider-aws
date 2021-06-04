@@ -9,8 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDefaultRouteTable() *schema.Resource {
@@ -144,8 +145,8 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 }
 
 func resourceAwsDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	routeTableID := d.Get("default_route_table_id").(string)
 
@@ -175,7 +176,7 @@ func resourceAwsDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsDefaultRouteTableRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 	// look up default route table for VPC
 	filter1 := &ec2.Filter{
 		Name:   aws.String("association.main"),
