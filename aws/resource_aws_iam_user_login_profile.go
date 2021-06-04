@@ -18,6 +18,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/encryption"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsIamUserLoginProfile() *schema.Resource {
@@ -125,7 +126,7 @@ func checkIAMPwdPolicy(pass []byte) bool {
 }
 
 func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	IAMConn := meta.(*awsprovider.AWSClient).IAMConn
 	username := d.Get("user").(string)
 
 	encryptionKey, err := encryption.RetrieveGPGKey(strings.TrimSpace(d.Get("pgp_key").(string)))
@@ -152,7 +153,7 @@ func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface
 	}
 
 	log.Println("[DEBUG] Create IAM User Login Profile request:", request)
-	createResp, err := iamconn.CreateLoginProfile(request)
+	createResp, err := IAMConn.CreateLoginProfile(request)
 	if err != nil {
 		return fmt.Errorf("Error creating IAM User Login Profile for %q: %s", username, err)
 	}
@@ -164,7 +165,7 @@ func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsIamUserLoginProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*awsprovider.AWSClient).IAMConn
 
 	input := &iam.GetLoginProfileInput{
 		UserName: aws.String(d.Id()),
@@ -212,7 +213,7 @@ func resourceAwsIamUserLoginProfileRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsIamUserLoginProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*awsprovider.AWSClient).IAMConn
 
 	input := &iam.DeleteLoginProfileInput{
 		UserName: aws.String(d.Id()),
@@ -223,12 +224,12 @@ func resourceAwsIamUserLoginProfileDelete(d *schema.ResourceData, meta interface
 	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteLoginProfile(input)
 
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			return nil
 		}
 
 		// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
-		if isAWSErr(err, iam.ErrCodeEntityTemporarilyUnmodifiableException, "") {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeEntityTemporarilyUnmodifiableException, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -244,7 +245,7 @@ func resourceAwsIamUserLoginProfileDelete(d *schema.ResourceData, meta interface
 		_, err = conn.DeleteLoginProfile(input)
 	}
 
-	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 		return nil
 	}
 
