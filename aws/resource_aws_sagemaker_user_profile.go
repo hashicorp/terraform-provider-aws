@@ -9,11 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSagemakerUserProfile() *schema.Resource {
@@ -70,7 +72,7 @@ func resourceAwsSagemakerUserProfile() *schema.Resource {
 						"execution_role": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"sharing_settings": {
 							Type:     schema.TypeList,
@@ -88,7 +90,7 @@ func resourceAwsSagemakerUserProfile() *schema.Resource {
 									"s3_kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 									"s3_output_path": {
 										Type:     schema.TypeString,
@@ -118,7 +120,7 @@ func resourceAwsSagemakerUserProfile() *schema.Resource {
 												"sagemaker_image_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: ValidateArn,
 												},
 											},
 										},
@@ -147,7 +149,7 @@ func resourceAwsSagemakerUserProfile() *schema.Resource {
 												"sagemaker_image_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: ValidateArn,
 												},
 											},
 										},
@@ -176,7 +178,7 @@ func resourceAwsSagemakerUserProfile() *schema.Resource {
 												"sagemaker_image_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: ValidateArn,
 												},
 											},
 										},
@@ -221,8 +223,8 @@ func resourceAwsSagemakerUserProfile() *schema.Resource {
 }
 
 func resourceAwsSagemakerUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &sagemaker.CreateUserProfileInput{
@@ -268,9 +270,9 @@ func resourceAwsSagemakerUserProfileCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsSagemakerUserProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	domainID, userProfileName, err := decodeSagemakerUserProfileName(d.Id())
 	if err != nil {
@@ -279,7 +281,7 @@ func resourceAwsSagemakerUserProfileRead(d *schema.ResourceData, meta interface{
 
 	UserProfile, err := finder.UserProfileByName(conn, domainID, userProfileName)
 	if err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker User Profile (%s), removing from state", d.Id())
 			return nil
@@ -320,7 +322,7 @@ func resourceAwsSagemakerUserProfileRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsSagemakerUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	if d.HasChange("user_settings") {
 		domainID := d.Get("domain_id").(string)
@@ -355,7 +357,7 @@ func resourceAwsSagemakerUserProfileUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsSagemakerUserProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	userProfileName := d.Get("user_profile_name").(string)
 	domainID := d.Get("domain_id").(string)
@@ -366,13 +368,13 @@ func resourceAwsSagemakerUserProfileDelete(d *schema.ResourceData, meta interfac
 	}
 
 	if _, err := conn.DeleteUserProfile(input); err != nil {
-		if !isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
 			return fmt.Errorf("error deleting SageMaker User Profile (%s): %w", d.Id(), err)
 		}
 	}
 
 	if _, err := waiter.UserProfileDeleted(conn, domainID, userProfileName); err != nil {
-		if !isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
 			return fmt.Errorf("error waiting for SageMaker User Profile (%s) to delete: %w", d.Id(), err)
 		}
 	}
