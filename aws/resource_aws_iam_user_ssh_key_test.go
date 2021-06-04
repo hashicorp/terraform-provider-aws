@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSUserSSHKey_basic(t *testing.T) {
@@ -20,9 +22,9 @@ func TestAccAWSUserSSHKey_basic(t *testing.T) {
 	resourceName := "aws_iam_user_ssh_key.user"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSUserSSHKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -49,9 +51,9 @@ func TestAccAWSUserSSHKey_pemEncoding(t *testing.T) {
 	resourceName := "aws_iam_user_ssh_key.user"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSUserSSHKeyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -71,7 +73,7 @@ func TestAccAWSUserSSHKey_pemEncoding(t *testing.T) {
 }
 
 func testAccCheckAWSUserSSHKeyDestroy(s *terraform.State) error {
-	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+	IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_user_ssh_key" {
@@ -80,7 +82,7 @@ func testAccCheckAWSUserSSHKeyDestroy(s *terraform.State) error {
 
 		username := rs.Primary.Attributes["username"]
 		encoding := rs.Primary.Attributes["encoding"]
-		_, err := iamconn.GetSSHPublicKey(&iam.GetSSHPublicKeyInput{
+		_, err := IAMConn.GetSSHPublicKey(&iam.GetSSHPublicKeyInput{
 			SSHPublicKeyId: aws.String(rs.Primary.ID),
 			UserName:       aws.String(username),
 			Encoding:       aws.String(encoding),
@@ -113,11 +115,11 @@ func testAccCheckAWSUserSSHKeyExists(n, status string, res *iam.GetSSHPublicKeyO
 			return fmt.Errorf("No SSHPublicKeyID is set")
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 		username := rs.Primary.Attributes["username"]
 		encoding := rs.Primary.Attributes["encoding"]
-		resp, err := iamconn.GetSSHPublicKey(&iam.GetSSHPublicKeyInput{
+		resp, err := IAMConn.GetSSHPublicKey(&iam.GetSSHPublicKeyInput{
 			SSHPublicKeyId: aws.String(rs.Primary.ID),
 			UserName:       aws.String(username),
 			Encoding:       aws.String(encoding),
