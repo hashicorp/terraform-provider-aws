@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSDataSourceIAMInstanceProfile_basic(t *testing.T) {
@@ -16,9 +17,9 @@ func TestAccAWSDataSourceIAMInstanceProfile_basic(t *testing.T) {
 	profileName := fmt.Sprintf("tf-acc-ds-instance-profile-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatasourceAwsIamInstanceProfileConfig(roleName, profileName),
