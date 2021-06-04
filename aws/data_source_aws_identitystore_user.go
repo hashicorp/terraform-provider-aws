@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/identitystore"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsIdentityStoreUser() *schema.Resource {
@@ -60,7 +61,7 @@ func dataSourceAwsIdentityStoreUser() *schema.Resource {
 }
 
 func dataSourceAwsIdentityStoreUserRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).identitystoreconn
+	conn := meta.(*awsprovider.AWSClient).IdentityStoreConn
 
 	input := &identitystore.ListUsersInput{
 		IdentityStoreId: aws.String(d.Get("identity_store_id").(string)),
