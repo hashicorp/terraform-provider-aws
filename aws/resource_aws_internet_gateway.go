@@ -9,9 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsInternetGateway() *schema.Resource {
@@ -46,8 +48,8 @@ func resourceAwsInternetGateway() *schema.Resource {
 }
 
 func resourceAwsInternetGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Create the gateway
@@ -97,9 +99,9 @@ func resourceAwsInternetGatewayCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsInternetGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	igRaw, _, err := IGStateRefreshFunc(conn, d.Id())()
 	if err != nil {
@@ -133,9 +135,9 @@ func resourceAwsInternetGatewayRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("owner_id", ig.OwnerId)
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		AccountID: aws.StringValue(ig.OwnerId),
 		Resource:  fmt.Sprintf("internet-gateway/%s", d.Id()),
 	}.String()
@@ -158,7 +160,7 @@ func resourceAwsInternetGatewayUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -172,7 +174,7 @@ func resourceAwsInternetGatewayUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsInternetGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	// Detach if it is attached
 	if err := resourceAwsInternetGatewayDetach(d, meta); err != nil {
@@ -189,11 +191,11 @@ func resourceAwsInternetGatewayDelete(d *schema.ResourceData, meta interface{}) 
 			return nil
 		}
 
-		if isAWSErr(err, "InvalidInternetGatewayID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidInternetGatewayID.NotFound", "") {
 			return nil
 		}
 
-		if isAWSErr(err, "DependencyViolation", "") {
+		if tfawserr.ErrMessageContains(err, "DependencyViolation", "") {
 			return resource.RetryableError(err)
 		}
 
@@ -209,7 +211,7 @@ func resourceAwsInternetGatewayDelete(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsInternetGatewayAttach(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.Get("vpc_id").(string) == "" {
 		log.Printf(
@@ -231,7 +233,7 @@ func resourceAwsInternetGatewayAttach(d *schema.ResourceData, meta interface{}) 
 		if err == nil {
 			return nil
 		}
-		if isAWSErr(err, "InvalidInternetGatewayID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidInternetGatewayID.NotFound", "") {
 			return resource.RetryableError(err)
 		}
 
@@ -267,7 +269,7 @@ func resourceAwsInternetGatewayAttach(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsInternetGatewayDetach(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	// Get the old VPC ID to detach from
 	vpcID, _ := d.GetChange("vpc_id")
@@ -368,7 +370,7 @@ func IGStateRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 			InternetGatewayIds: []*string{aws.String(id)},
 		})
 		if err != nil {
-			if isAWSErr(err, "InvalidInternetGatewayID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidInternetGatewayID.NotFound", "") {
 				resp = nil
 			} else {
 				log.Printf("[ERROR] Error on IGStateRefresh: %s", err)
@@ -400,7 +402,7 @@ func IGAttachStateRefreshFunc(conn *ec2.EC2, id string, expected string) resourc
 			InternetGatewayIds: []*string{aws.String(id)},
 		})
 		if err != nil {
-			if isAWSErr(err, "InvalidInternetGatewayID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidInternetGatewayID.NotFound", "") {
 				resp = nil
 			} else {
 				log.Printf("[ERROR] Error on IGStateRefresh: %s", err)
