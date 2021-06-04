@@ -7,11 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDataSyncLocationS3() *schema.Resource {
@@ -92,8 +94,8 @@ func resourceAwsDataSyncLocationS3() *schema.Resource {
 }
 
 func resourceAwsDataSyncLocationS3Create(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DataSyncConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateLocationS3Input{
@@ -120,13 +122,13 @@ func resourceAwsDataSyncLocationS3Create(d *schema.ResourceData, meta interface{
 
 		// Retry for IAM eventual consistency on error:
 		// InvalidRequestException: Unable to assume role. Reason: Access denied when calling sts:AssumeRole
-		if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "Unable to assume role") {
+		if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "Unable to assume role") {
 			return resource.RetryableError(err)
 		}
 
 		// Retry for IAM eventual consistency on error:
 		// InvalidRequestException: DataSync location access test failed: could not perform s3:ListObjectsV2 on bucket
-		if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "access test failed") {
+		if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "access test failed") {
 			return resource.RetryableError(err)
 		}
 
@@ -151,9 +153,9 @@ func resourceAwsDataSyncLocationS3Create(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDataSyncLocationS3Read(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DataSyncConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &datasync.DescribeLocationS3Input{
 		LocationArn: aws.String(d.Id()),
@@ -162,7 +164,7 @@ func resourceAwsDataSyncLocationS3Read(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Reading DataSync Location S3: %s", input)
 	output, err := conn.DescribeLocationS3(input)
 
-	if isAWSErr(err, "InvalidRequestException", "not found") {
+	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 		log.Printf("[WARN] DataSync Location S3 %q not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -208,7 +210,7 @@ func resourceAwsDataSyncLocationS3Read(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsDataSyncLocationS3Update(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
+	conn := meta.(*awsprovider.AWSClient).DataSyncConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -222,7 +224,7 @@ func resourceAwsDataSyncLocationS3Update(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDataSyncLocationS3Delete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).datasyncconn
+	conn := meta.(*awsprovider.AWSClient).DataSyncConn
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
@@ -231,7 +233,7 @@ func resourceAwsDataSyncLocationS3Delete(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] Deleting DataSync Location S3: %s", input)
 	_, err := conn.DeleteLocation(input)
 
-	if isAWSErr(err, "InvalidRequestException", "not found") {
+	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 		return nil
 	}
 
