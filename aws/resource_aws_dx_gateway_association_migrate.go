@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDxGatewayAssociationResourceV0() *schema.Resource {
@@ -76,7 +77,7 @@ func resourceAwsDxGatewayAssociationResourceV0() *schema.Resource {
 }
 
 func resourceAwsDxGatewayAssociationStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	log.Println("[INFO] Found Direct Connect gateway association state v0; migrating to v1")
 
