@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsKmsPublicKey() *schema.Resource {
@@ -53,7 +54,7 @@ func dataSourceAwsKmsPublicKey() *schema.Resource {
 }
 
 func dataSourceAwsKmsPublicKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*awsprovider.AWSClient).KMSConn
 	keyId := d.Get("key_id").(string)
 
 	input := &kms.GetPublicKeyInput{
