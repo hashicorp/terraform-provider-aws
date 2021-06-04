@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSNeptuneClusterInstance_basic(t *testing.T) {
@@ -25,9 +27,9 @@ func TestAccAWSNeptuneClusterInstance_basic(t *testing.T) {
 	clusterInstanceName := fmt.Sprintf("tf-cluster-instance-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, neptune.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -36,9 +38,9 @@ func TestAccAWSNeptuneClusterInstance_basic(t *testing.T) {
 					testAccCheckAWSNeptuneClusterInstanceExists(resourceName, &v),
 					testAccCheckAWSNeptuneClusterInstanceAttributes(&v),
 					testAccCheckNeptuneClusterAddress(&v, resourceName, neptuneDefaultPort),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("db:%s", clusterInstanceName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("db:%s", clusterInstanceName)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
-					resource.TestMatchResourceAttr(resourceName, "availability_zone", regexp.MustCompile(fmt.Sprintf("^%s[a-z]{1}$", testAccGetRegion()))),
+					resource.TestMatchResourceAttr(resourceName, "availability_zone", regexp.MustCompile(fmt.Sprintf("^%s[a-z]{1}$", atest.Region()))),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", clusterResourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dbi_resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "neptune"),
@@ -77,9 +79,9 @@ func TestAccAWSNeptuneClusterInstance_withaz(t *testing.T) {
 	availabiltyZonesDataSourceName := "data.aws_availability_zones.available"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, neptune.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -87,7 +89,7 @@ func TestAccAWSNeptuneClusterInstance_withaz(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterInstanceExists(resourceName, &v),
 					testAccCheckAWSNeptuneClusterInstanceAttributes(&v),
-					resource.TestMatchResourceAttr(resourceName, "availability_zone", regexp.MustCompile(fmt.Sprintf("^%s[a-z]{1}$", testAccGetRegion()))), // NOPE
+					resource.TestMatchResourceAttr(resourceName, "availability_zone", regexp.MustCompile(fmt.Sprintf("^%s[a-z]{1}$", atest.Region()))), // NOPE
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", availabiltyZonesDataSourceName, "names.0"),
 				),
 			},
@@ -104,9 +106,9 @@ func TestAccAWSNeptuneClusterInstance_namePrefix(t *testing.T) {
 	namePrefix := "tf-cluster-instance-"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, neptune.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -129,9 +131,9 @@ func TestAccAWSNeptuneClusterInstance_withSubnetGroup(t *testing.T) {
 	subnetGroupResourceName := "aws_neptune_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, neptune.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -153,9 +155,9 @@ func TestAccAWSNeptuneClusterInstance_generatedName(t *testing.T) {
 	resourceName := "aws_neptune_cluster_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, neptune.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -178,9 +180,9 @@ func TestAccAWSNeptuneClusterInstance_kmsKey(t *testing.T) {
 	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, neptune.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -205,7 +207,7 @@ func testAccCheckAWSNeptuneClusterInstanceExists(n string, v *neptune.DBInstance
 			return fmt.Errorf("No Neptune Instance ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).neptuneconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).NeptuneConn
 		resp, err := conn.DescribeDBInstances(&neptune.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(rs.Primary.ID),
 		})
@@ -260,7 +262,7 @@ func testAccCheckNeptuneClusterAddress(v *neptune.DBInstance, resourceName strin
 }
 
 func testAccAWSNeptuneClusterInstanceConfig(instanceName string, n int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSNeptuneClusterConfigBase(),
 		fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
@@ -303,7 +305,7 @@ resource "aws_neptune_parameter_group" "test" {
 }
 
 func testAccAWSNeptuneClusterInstanceConfigModified(instanceName string, n int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSNeptuneClusterConfigBase(),
 		fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
@@ -347,7 +349,7 @@ resource "aws_neptune_parameter_group" "test" {
 }
 
 func testAccAWSNeptuneClusterInstanceConfig_az(n int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSNeptuneClusterConfigBase(),
 		fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
@@ -391,7 +393,7 @@ resource "aws_neptune_parameter_group" "test" {
 }
 
 func testAccAWSNeptuneClusterInstanceConfig_withSubnetGroup(n int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSNeptuneClusterConfigBase(),
 		fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
@@ -451,7 +453,7 @@ resource "aws_neptune_subnet_group" "test" {
 }
 
 func testAccAWSNeptuneClusterInstanceConfig_namePrefix(namePrefix string, n int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSNeptuneClusterConfigBase(),
 		fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
@@ -511,7 +513,7 @@ resource "aws_neptune_subnet_group" "test" {
 }
 
 func testAccAWSNeptuneClusterInstanceConfig_generatedName(n int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSNeptuneClusterConfigBase(),
 		fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
@@ -570,7 +572,7 @@ resource "aws_neptune_subnet_group" "test" {
 }
 
 func testAccAWSNeptuneClusterInstanceConfigKmsKey(n int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSNeptuneClusterConfigBase(),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
