@@ -9,7 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCognitoIdentityPool() *schema.Resource {
@@ -83,7 +84,7 @@ func resourceAwsCognitoIdentityPool() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: ValidateArn,
 				},
 			},
 
@@ -92,7 +93,7 @@ func resourceAwsCognitoIdentityPool() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: ValidateArn,
 				},
 			},
 
@@ -114,8 +115,8 @@ func resourceAwsCognitoIdentityPool() *schema.Resource {
 }
 
 func resourceAwsCognitoIdentityPoolCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	log.Print("[DEBUG] Creating Cognito Identity Pool")
 
@@ -160,9 +161,9 @@ func resourceAwsCognitoIdentityPoolCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCognitoIdentityPoolRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading Cognito Identity Pool: %s", d.Id())
 
@@ -178,10 +179,10 @@ func resourceAwsCognitoIdentityPoolRead(d *schema.ResourceData, meta interface{}
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Service:   "cognito-identity",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("identitypool/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
@@ -220,7 +221,7 @@ func resourceAwsCognitoIdentityPoolRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsCognitoIdentityPoolUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityConn
 	log.Print("[DEBUG] Updating Cognito Identity Pool")
 
 	params := &cognitoidentity.IdentityPool{
@@ -270,7 +271,7 @@ func resourceAwsCognitoIdentityPoolUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCognitoIdentityPoolDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityConn
 	log.Printf("[DEBUG] Deleting Cognito Identity Pool: %s", d.Id())
 
 	_, err := conn.DeleteIdentityPool(&cognitoidentity.DeleteIdentityPoolInput{
