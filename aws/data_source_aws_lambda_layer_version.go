@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsLambdaLayerVersion() *schema.Resource {
@@ -79,7 +80,7 @@ func dataSourceAwsLambdaLayerVersion() *schema.Resource {
 }
 
 func dataSourceAwsLambdaLayerVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 	layerName := d.Get("layer_name").(string)
 
 	var version int64
