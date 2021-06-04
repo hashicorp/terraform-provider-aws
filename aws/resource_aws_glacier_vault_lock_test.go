@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glacier"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSGlacierVaultLock_basic(t *testing.T) {
@@ -18,9 +21,9 @@ func TestAccAWSGlacierVaultLock_basic(t *testing.T) {
 	resourceName := "aws_glacier_vault_lock.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glacier.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glacier.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlacierVaultLockDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,9 +53,9 @@ func TestAccAWSGlacierVaultLock_CompleteLock(t *testing.T) {
 	resourceName := "aws_glacier_vault_lock.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glacier.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glacier.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlacierVaultLockDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -86,7 +89,7 @@ func testAccCheckGlacierVaultLockExists(resourceName string, getVaultLockOutput 
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glacierconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).GlacierConn
 
 		input := &glacier.GetVaultLockInput{
 			VaultName: aws.String(rs.Primary.ID),
@@ -108,7 +111,7 @@ func testAccCheckGlacierVaultLockExists(resourceName string, getVaultLockOutput 
 }
 
 func testAccCheckGlacierVaultLockDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).glacierconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).GlacierConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glacier_vault_lock" {
@@ -120,7 +123,7 @@ func testAccCheckGlacierVaultLockDestroy(s *terraform.State) error {
 		}
 		output, err := conn.GetVaultLock(input)
 
-		if isAWSErr(err, glacier.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 
