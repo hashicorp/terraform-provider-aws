@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSCodeBuildWebhook_Bitbucket(t *testing.T) {
@@ -19,9 +21,9 @@ func TestAccAWSCodeBuildWebhook_Bitbucket(t *testing.T) {
 	resourceName := "aws_codebuild_webhook.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   atest.ErrorCheck(t, codebuild.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -51,9 +53,9 @@ func TestAccAWSCodeBuildWebhook_GitHub(t *testing.T) {
 	resourceName := "aws_codebuild_webhook.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   atest.ErrorCheck(t, codebuild.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -83,9 +85,9 @@ func TestAccAWSCodeBuildWebhook_GitHubEnterprise(t *testing.T) {
 	resourceName := "aws_codebuild_webhook.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   atest.ErrorCheck(t, codebuild.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -132,9 +134,9 @@ func TestAccAWSCodeBuildWebhook_BranchFilter(t *testing.T) {
 	resourceName := "aws_codebuild_webhook.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   atest.ErrorCheck(t, codebuild.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -167,9 +169,9 @@ func TestAccAWSCodeBuildWebhook_FilterGroup(t *testing.T) {
 	resourceName := "aws_codebuild_webhook.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   atest.ErrorCheck(t, codebuild.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -224,7 +226,7 @@ func testAccCheckAWSCodeBuildWebhookFilter(webhook *codebuild.Webhook, expectedF
 }
 
 func testAccCheckAWSCodeBuildWebhookDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).codebuildconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CodeBuildConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codebuild_webhook" {
@@ -260,7 +262,7 @@ func testAccCheckAWSCodeBuildWebhookExists(name string, webhook *codebuild.Webho
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).codebuildconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CodeBuildConn
 
 		resp, err := conn.BatchGetProjects(&codebuild.BatchGetProjectsInput{
 			Names: []*string{
