@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsRegions() *schema.Resource {
@@ -14,7 +15,7 @@ func dataSourceAwsRegions() *schema.Resource {
 		Read: dataSourceAwsRegionsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": dataSourceFiltersSchema(),
+			"filter": awsprovider.DataSourceFiltersSchema(),
 			"names": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -30,12 +31,12 @@ func dataSourceAwsRegions() *schema.Resource {
 }
 
 func dataSourceAwsRegionsRead(d *schema.ResourceData, meta interface{}) error {
-	connection := meta.(*AWSClient).ec2conn
+	connection := meta.(*awsprovider.AWSClient).EC2Conn
 
 	log.Printf("[DEBUG] Reading regions.")
 	request := &ec2.DescribeRegionsInput{}
 	if v, ok := d.GetOk("filter"); ok {
-		request.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
+		request.Filters = awsprovider.BuildDataSourceFilters(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("all_regions"); ok {
 		request.AllRegions = aws.Bool(v.(bool))
@@ -52,7 +53,7 @@ func dataSourceAwsRegionsRead(d *schema.ResourceData, meta interface{}) error {
 		names = append(names, aws.StringValue(v.RegionName))
 	}
 
-	d.SetId(meta.(*AWSClient).partition)
+	d.SetId(meta.(*awsprovider.AWSClient).Partition)
 	if err := d.Set("names", names); err != nil {
 		return fmt.Errorf("error setting names: %w", err)
 	}
