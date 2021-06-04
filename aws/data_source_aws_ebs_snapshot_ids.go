@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsEbsSnapshotIds() *schema.Resource {
@@ -15,7 +16,7 @@ func dataSourceAwsEbsSnapshotIds() *schema.Resource {
 		Read: dataSourceAwsEbsSnapshotIdsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": dataSourceFiltersSchema(),
+			"filter": awsprovider.DataSourceFiltersSchema(),
 			"owners": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -36,7 +37,7 @@ func dataSourceAwsEbsSnapshotIds() *schema.Resource {
 }
 
 func dataSourceAwsEbsSnapshotIdsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	restorableUsers, restorableUsersOk := d.GetOk("restorable_by_user_ids")
 	filters, filtersOk := d.GetOk("filter")
@@ -52,7 +53,7 @@ func dataSourceAwsEbsSnapshotIdsRead(d *schema.ResourceData, meta interface{}) e
 		params.RestorableByUserIds = expandStringList(restorableUsers.([]interface{}))
 	}
 	if filtersOk {
-		params.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
+		params.Filters = awsprovider.BuildDataSourceFilters(filters.(*schema.Set))
 	}
 	if ownersOk {
 		params.OwnerIds = expandStringList(owners.([]interface{}))
@@ -73,7 +74,7 @@ func dataSourceAwsEbsSnapshotIdsRead(d *schema.ResourceData, meta interface{}) e
 		snapshotIds = append(snapshotIds, *snapshot.SnapshotId)
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*awsprovider.AWSClient).Region)
 
 	d.Set("ids", snapshotIds)
 
