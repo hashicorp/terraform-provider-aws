@@ -16,8 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsStorageGatewayGateway() *schema.Resource {
@@ -188,7 +189,7 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 			"cloudwatch_log_group_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"smb_security_strategy": {
 				Type:         schema.TypeString,
@@ -239,10 +240,10 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 }
 
 func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).StorageGatewayConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
-	region := meta.(*AWSClient).region
+	region := meta.(*awsprovider.AWSClient).Region
 
 	activationKey := d.Get("activation_key").(string)
 	gatewayIpAddress := d.Get("gateway_ip_address").(string)
@@ -437,9 +438,9 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).StorageGatewayConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &storagegateway.DescribeGatewayInformationInput{
 		GatewayARN: aws.String(d.Id()),
@@ -450,7 +451,7 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 	output, err := conn.DescribeGatewayInformation(input)
 
 	if err != nil {
-		if isAWSErrStorageGatewayGatewayNotFound(err) {
+		if storageGatewayNotFound(err) {
 			log.Printf("[WARN] Storage Gateway Gateway %q not found - removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -475,8 +476,8 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 
 	log.Printf("[DEBUG] Reading Storage Gateway SMB Settings: %s", smbSettingsInput)
 	smbSettingsOutput, err := conn.DescribeSMBSettings(smbSettingsInput)
-	if err != nil && !isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "This operation is not valid for the specified gateway") {
-		if isAWSErrStorageGatewayGatewayNotFound(err) {
+	if err != nil && !tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "This operation is not valid for the specified gateway") {
+		if storageGatewayNotFound(err) {
 			log.Printf("[WARN] Storage Gateway Gateway %q not found - removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -584,7 +585,7 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*awsprovider.AWSClient).StorageGatewayConn
 
 	if d.HasChanges("gateway_name", "gateway_timezone", "cloudwatch_log_group_arn") {
 		input := &storagegateway.UpdateGatewayInformationInput{
@@ -714,7 +715,7 @@ func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsStorageGatewayGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*awsprovider.AWSClient).StorageGatewayConn
 
 	input := &storagegateway.DeleteGatewayInput{
 		GatewayARN: aws.String(d.Id()),
@@ -723,7 +724,7 @@ func resourceAwsStorageGatewayGatewayDelete(d *schema.ResourceData, meta interfa
 	log.Printf("[DEBUG] Deleting Storage Gateway Gateway: %s", input)
 	_, err := conn.DeleteGateway(input)
 	if err != nil {
-		if isAWSErrStorageGatewayGatewayNotFound(err) {
+		if storageGatewayNotFound(err) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Storage Gateway Gateway: %w", err)
@@ -784,11 +785,11 @@ func flattenStorageGatewayGatewayNetworkInterfaces(nis []*storagegateway.Network
 }
 
 // The API returns multiple responses for a missing gateway
-func isAWSErrStorageGatewayGatewayNotFound(err error) bool {
-	if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway was not found.") {
+func storageGatewayNotFound(err error) bool {
+	if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway was not found.") {
 		return true
 	}
-	if isAWSErr(err, storagegateway.ErrorCodeGatewayNotFound, "") {
+	if tfawserr.ErrMessageContains(err, storagegateway.ErrorCodeGatewayNotFound, "") {
 		return true
 	}
 	return false
