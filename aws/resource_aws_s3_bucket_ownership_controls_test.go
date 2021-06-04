@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSS3BucketOwnershipControls_basic(t *testing.T) {
@@ -17,9 +19,9 @@ func TestAccAWSS3BucketOwnershipControls_basic(t *testing.T) {
 	resourceName := "aws_s3_bucket_ownership_controls.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketOwnershipControlsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -45,16 +47,16 @@ func TestAccAWSS3BucketOwnershipControls_disappears(t *testing.T) {
 	resourceName := "aws_s3_bucket_ownership_controls.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketOwnershipControlsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSS3BucketOwnershipControlsConfig_Rule_ObjectOwnership(rName, s3.ObjectOwnershipBucketOwnerPreferred),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketOwnershipControlsExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsS3BucketOwnershipControls(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsS3BucketOwnershipControls(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -68,16 +70,16 @@ func TestAccAWSS3BucketOwnershipControls_disappears_Bucket(t *testing.T) {
 	s3BucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketOwnershipControlsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSS3BucketOwnershipControlsConfig_Rule_ObjectOwnership(rName, s3.ObjectOwnershipBucketOwnerPreferred),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketOwnershipControlsExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsS3Bucket(), s3BucketResourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsS3Bucket(), s3BucketResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -90,9 +92,9 @@ func TestAccAWSS3BucketOwnershipControls_Rule_ObjectOwnership(t *testing.T) {
 	resourceName := "aws_s3_bucket_ownership_controls.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketOwnershipControlsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -123,7 +125,7 @@ func TestAccAWSS3BucketOwnershipControls_Rule_ObjectOwnership(t *testing.T) {
 }
 
 func testAccCheckAWSS3BucketOwnershipControlsDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).s3conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).S3Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_bucket_ownership_controls" {
@@ -165,7 +167,7 @@ func testAccCheckAWSS3BucketOwnershipControlsExists(resourceName string) resourc
 			return fmt.Errorf("no resource ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).S3Conn
 
 		input := &s3.GetBucketOwnershipControlsInput{
 			Bucket: aws.String(rs.Primary.ID),
