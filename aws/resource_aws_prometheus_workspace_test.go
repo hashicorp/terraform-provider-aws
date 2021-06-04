@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/prometheusservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSAMPWorkspace_basic(t *testing.T) {
@@ -16,9 +19,9 @@ func TestAccAWSAMPWorkspace_basic(t *testing.T) {
 	resourceName := "aws_prometheus_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, prometheusservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, prometheusservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAMPWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -53,16 +56,16 @@ func TestAccAWSAMPWorkspace_basic(t *testing.T) {
 func TestAccAWSAMPWorkspace_disappears(t *testing.T) {
 	resourceName := "aws_prometheus_workspace.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, prometheusservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, prometheusservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAMPWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAWSAMPWorkspaceConfigWithoutAlias(),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAWSAMPWorkspaceExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsPrometheusWorkspace(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsPrometheusWorkspace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -81,7 +84,7 @@ func testCheckAWSAMPWorkspaceExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No AMP Workspace ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).prometheusserviceconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).PrometheusConn
 
 		req := &prometheusservice.DescribeWorkspaceInput{
 			WorkspaceId: aws.String(rs.Primary.ID),
@@ -99,7 +102,7 @@ func testCheckAWSAMPWorkspaceExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckAWSAMPWorkspaceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).prometheusserviceconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).PrometheusConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_prometheus_workspace" {
@@ -109,7 +112,7 @@ func testAccCheckAWSAMPWorkspaceDestroy(s *terraform.State) error {
 		_, err := conn.DescribeWorkspace(&prometheusservice.DescribeWorkspaceInput{
 			WorkspaceId: aws.String(rs.Primary.ID),
 		})
-		if isAWSErr(err, prometheusservice.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, prometheusservice.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 
