@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const uuidRegex = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
@@ -28,11 +30,11 @@ func init() {
 }
 
 func testSweepCloudWatchEventApiDestination(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).cloudwatcheventsconn
+	conn := client.(*awsprovider.AWSClient).CloudWatchEventsConn
 
 	var sweeperErrs *multierror.Error
 
@@ -83,9 +85,9 @@ func TestAccAWSCloudWatchEventApiDestination_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_api_destination.basic"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchevents.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventApiDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -97,7 +99,7 @@ func TestAccAWSCloudWatchEventApiDestination_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventApiDestinationExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("api-destination/%s/%s", name, uuidRegex))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("api-destination/%s/%s", name, uuidRegex))),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethod),
 					resource.TestCheckResourceAttr(resourceName, "invocation_endpoint", invocationEndpoint),
 				),
@@ -116,7 +118,7 @@ func TestAccAWSCloudWatchEventApiDestination_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventApiDestinationExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("api-destination/%s/%s", nameModified, uuidRegex))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("api-destination/%s/%s", nameModified, uuidRegex))),
 					testAccCheckCloudWatchEventApiDestinationRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethodModified),
 					resource.TestCheckResourceAttr(resourceName, "invocation_endpoint", invocationEndpointModified),
@@ -156,9 +158,9 @@ func TestAccAWSCloudWatchEventApiDestination_optional(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_api_destination.optional"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchevents.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventApiDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -232,9 +234,9 @@ func TestAccAWSCloudWatchEventApiDestination_disappears(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_api_destination.basic"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchevents.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchEventApiDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -245,7 +247,7 @@ func TestAccAWSCloudWatchEventApiDestination_disappears(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventApiDestinationExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchEventApiDestination(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCloudWatchEventApiDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -254,7 +256,7 @@ func TestAccAWSCloudWatchEventApiDestination_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSCloudWatchEventApiDestinationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchEventsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_event_api_destination" {
@@ -282,7 +284,7 @@ func testAccCheckCloudWatchEventApiDestinationExists(n string, v *events.Describ
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchEventsConn
 		params := events.DescribeApiDestinationInput{
 			Name: aws.String(rs.Primary.ID),
 		}
