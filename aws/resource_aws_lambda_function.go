@@ -20,9 +20,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	homedir "github.com/mitchellh/go-homedir"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lambda/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const awsMutexLambdaKey = `aws_lambda_function`
@@ -105,7 +106,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 			"code_signing_config_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"signing_profile_version_arn": {
 				Type:     schema.TypeString,
@@ -129,7 +130,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 						"target_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -146,7 +147,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 						"arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						// Local mount path inside a lambda function. Must start with "/mnt/".
 						"local_mount_path": {
@@ -173,7 +174,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				MaxItems: 5,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: ValidateArn,
 				},
 			},
 			"memory_size": {
@@ -313,7 +314,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 			"kms_key_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
@@ -374,8 +375,8 @@ func hasConfigChanges(d resourceDiffer) bool {
 // resourceAwsLambdaFunction maps to:
 // CreateFunction in the API / SDK
 func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	functionName := d.Get("function_name").(string)
@@ -399,8 +400,8 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		// Grab an exclusive lock so that we're only reading one function into
 		// memory at a time.
 		// See https://github.com/hashicorp/terraform/issues/9364
-		awsMutexKV.Lock(awsMutexLambdaKey)
-		defer awsMutexKV.Unlock(awsMutexLambdaKey)
+		awsprovider.MutexKV.Lock(awsMutexLambdaKey)
+		defer awsprovider.MutexKV.Unlock(awsMutexLambdaKey)
 		file, err := loadFileContent(filename.(string))
 		if err != nil {
 			return fmt.Errorf("unable to load %q: %w", filename.(string), err)
@@ -627,9 +628,9 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 // resourceAwsLambdaFunctionRead maps to:
 // GetFunction in the API / SDK
 func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	params := &lambda.GetFunctionInput{
 		FunctionName: aws.String(d.Get("function_name").(string)),
@@ -832,7 +833,7 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	// Currently, this functionality is only enabled in AWS Commercial partition
 	// and other partitions return ambiguous error codes (e.g. AccessDeniedException
 	// in AWS GovCloud (US)) so we cannot just ignore the error as would typically.
-	if meta.(*AWSClient).partition != endpoints.AwsPartitionID {
+	if meta.(*awsprovider.AWSClient).Partition != endpoints.AwsPartitionID {
 		return nil
 	}
 
@@ -879,7 +880,7 @@ func listVersionsByFunctionPages(c *lambda.Lambda, input *lambda.ListVersionsByF
 // resourceAwsLambdaFunction maps to:
 // DeleteFunction in the API / SDK
 func resourceAwsLambdaFunctionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	log.Printf("[INFO] Deleting Lambda Function: %s", d.Id())
 
@@ -913,7 +914,7 @@ func needsFunctionCodeUpdate(d resourceDiffer) bool {
 // resourceAwsLambdaFunctionUpdate maps to:
 // UpdateFunctionCode in the API / SDK
 func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	// If Code Signing Config is updated, calls PutFunctionCodeSigningConfig
 	// If removed, calls DeleteFunctionCodeSigningConfig
@@ -1128,8 +1129,8 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			// Grab an exclusive lock so that we're only reading one function into
 			// memory at a time.
 			// See https://github.com/hashicorp/terraform/issues/9364
-			awsMutexKV.Lock(awsMutexLambdaKey)
-			defer awsMutexKV.Unlock(awsMutexLambdaKey)
+			awsprovider.MutexKV.Lock(awsMutexLambdaKey)
+			defer awsprovider.MutexKV.Unlock(awsMutexLambdaKey)
 			file, err := loadFileContent(v.(string))
 			if err != nil {
 				return fmt.Errorf("unable to load %q: %w", v.(string), err)
@@ -1257,9 +1258,9 @@ func readEnvironmentVariables(ev map[string]interface{}) map[string]string {
 
 func lambdaFunctionInvokeArn(functionArn string, meta interface{}) string {
 	return arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "apigateway",
-		Region:    meta.(*AWSClient).region,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		AccountID: "lambda",
 		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", functionArn),
 	}.String()
