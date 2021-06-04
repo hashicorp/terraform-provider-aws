@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
@@ -24,7 +25,7 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 			// Accepting the proposal with overridden prefixes changes the returned RequestedAllowedPrefixesToDirectConnectGateway value (allowed_prefixes attribute).
 			// We only want to force a new resource if this value changes and the current proposal state is "requested".
 			customdiff.ForceNewIf("allowed_prefixes", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
-				conn := meta.(*AWSClient).dxconn
+				conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 				proposal, err := describeDirectConnectGatewayAssociationProposal(conn, d.Id())
 				if err != nil {
@@ -72,7 +73,7 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 }
 
 func resourceAwsDxGatewayAssociationProposalCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	allowedPrefixes := expandDirectConnectGatewayAssociationProposalAllowedPrefixes(d.Get("allowed_prefixes").(*schema.Set).List())
 	input := &directconnect.CreateDirectConnectGatewayAssociationProposalInput{
@@ -95,7 +96,7 @@ func resourceAwsDxGatewayAssociationProposalCreate(d *schema.ResourceData, meta 
 }
 
 func resourceAwsDxGatewayAssociationProposalRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	proposal, err := describeDirectConnectGatewayAssociationProposal(conn, d.Id())
 
@@ -133,7 +134,7 @@ func resourceAwsDxGatewayAssociationProposalRead(d *schema.ResourceData, meta in
 }
 
 func resourceAwsDxGatewayAssociationProposalDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dxconn
+	conn := meta.(*awsprovider.AWSClient).DirectConnectConn
 
 	input := &directconnect.DeleteDirectConnectGatewayAssociationProposalInput{
 		ProposalId: aws.String(d.Id()),
