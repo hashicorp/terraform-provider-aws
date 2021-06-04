@@ -171,38 +171,38 @@ rules:
 
   - id: helper-acctest-RandInt-compiled
     languages: [go]
-    message: Using `atest.RandInt()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
+    message: Using `acctest.RandInt()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
     paths:
       include:
         - aws/
     patterns:
       - pattern-either:
-        - pattern: const $CONST = fmt.Sprintf(..., <... atest.RandInt() ...>, ...)
-        - pattern: var $VAR = fmt.Sprintf(..., <... atest.RandInt() ...>, ...)
+        - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandInt() ...>, ...)
+        - pattern: var $VAR = fmt.Sprintf(..., <... acctest.RandInt() ...>, ...)
     severity: WARNING
 
   - id: helper-acctest-RandString-compiled
     languages: [go]
-    message: Using `atest.RandString()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
+    message: Using `acctest.RandString()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
     paths:
       include:
         - aws/
     patterns:
       - pattern-either:
-        - pattern: const $CONST = fmt.Sprintf(..., <... atest.RandString(...) ...>, ...)
-        - pattern: var $VAR = fmt.Sprintf(..., <... atest.RandString(...) ...>, ...)
+        - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandString(...) ...>, ...)
+        - pattern: var $VAR = fmt.Sprintf(..., <... acctest.RandString(...) ...>, ...)
     severity: WARNING
 
   - id: helper-acctest-RandomWithPrefix-compiled
     languages: [go]
-    message: Using `atest.RandomWithPrefix()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
+    message: Using `acctest.RandomWithPrefix()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
     paths:
       include:
         - aws/
     patterns:
       - pattern-either:
-        - pattern: const $CONST = fmt.Sprintf(..., <... atest.RandomWithPrefix(...) ...>, ...)
-        - pattern: var $VAR = fmt.Sprintf(..., <... atest.RandomWithPrefix(...) ...>, ...)
+        - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandomWithPrefix(...) ...>, ...)
+        - pattern: var $VAR = fmt.Sprintf(..., <... acctest.RandomWithPrefix(...) ...>, ...)
     severity: WARNING
 
   - id: helper-schema-Set-extraneous-NewSet-with-flattenStringList
