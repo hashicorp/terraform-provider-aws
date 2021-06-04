@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fms"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccAWSFmsPolicy_basic(t *testing.T) {
@@ -17,19 +20,19 @@ func testAccAWSFmsPolicy_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckFmsAdmin(t)
-			testAccOrganizationsAccountPreCheck(t)
+			atest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, fms.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, fms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFmsPolicyConfig(fmsPolicyName, wafRuleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsFmsPolicyExists("aws_fms_policy.test"),
-					testAccCheckResourceAttrRegionalARNIgnoreRegionAndAccount("aws_fms_policy.test", "arn", "fms", "policy/.+"),
+					atest.CheckAttrRegionalARNIgnoreRegionAndAccount("aws_fms_policy.test", "arn", "fms", "policy/.+"),
 					resource.TestCheckResourceAttr("aws_fms_policy.test", "name", fmsPolicyName),
 					resource.TestCheckResourceAttr("aws_fms_policy.test", "security_service_policy_data.#", "1"),
 				),
@@ -49,19 +52,19 @@ func testAccAWSFmsPolicy_cloudfrontDistribution(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckFmsAdmin(t)
-			testAccOrganizationsAccountPreCheck(t)
+			atest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, fms.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, fms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFmsPolicyConfig_cloudfrontDistribution(fmsPolicyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsFmsPolicyExists("aws_fms_policy.test"),
-					testAccCheckResourceAttrRegionalARNIgnoreRegionAndAccount("aws_fms_policy.test", "arn", "fms", "policy/.+"),
+					atest.CheckAttrRegionalARNIgnoreRegionAndAccount("aws_fms_policy.test", "arn", "fms", "policy/.+"),
 					resource.TestCheckResourceAttr("aws_fms_policy.test", "name", fmsPolicyName),
 					resource.TestCheckResourceAttr("aws_fms_policy.test", "security_service_policy_data.#", "1"),
 				),
@@ -82,19 +85,19 @@ func testAccAWSFmsPolicy_includeMap(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckFmsAdmin(t)
-			testAccOrganizationsAccountPreCheck(t)
+			atest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, fms.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, fms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFmsPolicyConfig_include(fmsPolicyName, wafRuleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsFmsPolicyExists("aws_fms_policy.test"),
-					testAccCheckResourceAttrRegionalARNIgnoreRegionAndAccount("aws_fms_policy.test", "arn", "fms", "policy/.+"),
+					atest.CheckAttrRegionalARNIgnoreRegionAndAccount("aws_fms_policy.test", "arn", "fms", "policy/.+"),
 					resource.TestCheckResourceAttr("aws_fms_policy.test", "name", fmsPolicyName),
 					resource.TestCheckResourceAttr("aws_fms_policy.test", "security_service_policy_data.#", "1"),
 				),
@@ -116,19 +119,19 @@ func testAccAWSFmsPolicy_update(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckFmsAdmin(t)
-			testAccOrganizationsAccountPreCheck(t)
+			atest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, fms.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, fms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFmsPolicyConfig(fmsPolicyName, wafRuleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsFmsPolicyExists("aws_fms_policy.test"),
-					testAccCheckResourceAttrRegionalARNIgnoreRegionAndAccount("aws_fms_policy.test", "arn", "fms", "policy/.+"),
+					atest.CheckAttrRegionalARNIgnoreRegionAndAccount("aws_fms_policy.test", "arn", "fms", "policy/.+"),
 					resource.TestCheckResourceAttr("aws_fms_policy.test", "name", fmsPolicyName),
 					resource.TestCheckResourceAttr("aws_fms_policy.test", "security_service_policy_data.#", "1"),
 				),
@@ -146,12 +149,12 @@ func testAccAWSFmsPolicy_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckFmsAdmin(t)
-			testAccOrganizationsAccountPreCheck(t)
+			atest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, fms.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, fms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -177,7 +180,7 @@ func testAccAWSFmsPolicy_tags(t *testing.T) {
 }
 
 func testAccCheckAwsFmsPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).fmsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).FMSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_fms_policy" {
@@ -192,7 +195,7 @@ func testAccCheckAwsFmsPolicyDestroy(s *terraform.State) error {
 
 		resp, err := conn.GetPolicy(input)
 
-		if isAWSErr(err, fms.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, fms.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 
@@ -219,7 +222,7 @@ func testAccCheckAwsFmsPolicyExists(name string) resource.TestCheckFunc {
 }
 
 func testAccFmsPolicyConfigBase() string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccFmsAdminRegionProviderConfig(),
 		`
 data "aws_caller_identity" "current" {}
@@ -238,7 +241,7 @@ resource "aws_fms_admin_account" "test" {
 }
 
 func testAccFmsPolicyConfig(name string, group string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccFmsPolicyConfigBase(),
 		fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
@@ -267,7 +270,7 @@ resource "aws_wafregional_rule_group" "test" {
 }
 
 func testAccFmsPolicyConfig_cloudfrontDistribution(name string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccFmsPolicyConfigBase(),
 		fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
@@ -345,7 +348,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 
 func testAccFmsPolicyConfig_updated(name string, group string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccFmsPolicyConfigBase(),
 		fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
@@ -378,7 +381,7 @@ resource "aws_wafregional_rule_group" "test" {
 }
 
 func testAccFmsPolicyConfig_include(name string, group string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccFmsPolicyConfigBase(),
 		fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
@@ -407,7 +410,7 @@ resource "aws_wafregional_rule_group" "test" {
 }
 
 func testAccFmsPolicyConfig_tags(name string, group string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccFmsPolicyConfigBase(),
 		fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
@@ -437,7 +440,7 @@ resource "aws_wafregional_rule_group" "test" {
 }
 
 func testAccFmsPolicyConfig_tagsChanged(name string, group string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccFmsPolicyConfigBase(),
 		fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
