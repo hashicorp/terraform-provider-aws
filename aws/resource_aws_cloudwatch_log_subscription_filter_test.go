@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSCloudwatchLogSubscriptionFilter_basic(t *testing.T) {
@@ -20,9 +22,9 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudwatchLogSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -53,9 +55,9 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudwatchLogSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -79,9 +81,9 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_disappears_LogGroup(t *testing.T)
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudwatchLogSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -105,9 +107,9 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_DestinationArn_KinesisDataFirehos
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudwatchLogSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -135,9 +137,9 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_DestinationArn_KinesisStream(t *t
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudwatchLogSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -164,9 +166,9 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_Distribution(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudwatchLogSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -202,9 +204,9 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_RoleArn(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudwatchLogSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -233,7 +235,7 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_RoleArn(t *testing.T) {
 
 func testAccCheckCloudwatchLogSubscriptionFilterDisappears(filter *cloudwatchlogs.SubscriptionFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchLogsConn
 
 		input := &cloudwatchlogs.DeleteSubscriptionFilterInput{
 			FilterName:   filter.FilterName,
@@ -247,7 +249,7 @@ func testAccCheckCloudwatchLogSubscriptionFilterDisappears(filter *cloudwatchlog
 }
 
 func testAccCheckCloudwatchLogSubscriptionFilterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchLogsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_subscription_filter" {
@@ -284,7 +286,7 @@ func testAccCheckAwsCloudwatchLogSubscriptionFilterExists(n string, filter *clou
 			return fmt.Errorf("SubscriptionFilter ID not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchLogsConn
 
 		logGroupName := rs.Primary.Attributes["log_group_name"]
 		filterName := rs.Primary.Attributes["name"]
