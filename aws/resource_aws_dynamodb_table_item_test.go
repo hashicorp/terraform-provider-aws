@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSDynamoDbTableItem_basic(t *testing.T) {
@@ -25,9 +28,9 @@ func TestAccAWSDynamoDbTableItem_basic(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -60,9 +63,9 @@ func TestAccAWSDynamoDbTableItem_rangeKey(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -104,9 +107,9 @@ func TestAccAWSDynamoDbTableItem_withMultipleItems(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -152,9 +155,9 @@ func TestAccAWSDynamoDbTableItem_update(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -200,9 +203,9 @@ func TestAccAWSDynamoDbTableItem_updateWithRangeKey(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -232,7 +235,7 @@ func TestAccAWSDynamoDbTableItem_updateWithRangeKey(t *testing.T) {
 }
 
 func testAccCheckAWSDynamoDbItemDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).DynamoDBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dynamodb_table_item" {
@@ -253,7 +256,7 @@ func testAccCheckAWSDynamoDbItemDestroy(s *terraform.State) error {
 			ExpressionAttributeNames: buildDynamoDbExpressionAttributeNames(attributes),
 		})
 		if err != nil {
-			if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return fmt.Errorf("Error retrieving DynamoDB table item: %s", err)
@@ -279,7 +282,7 @@ func testAccCheckAWSDynamoDbTableItemExists(n string, item *dynamodb.GetItemOutp
 			return fmt.Errorf("No DynamoDB table item ID specified!")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DynamoDBConn
 
 		attrs := rs.Primary.Attributes
 		attributes, err := expandDynamoDbTableItemAttributes(attrs["item"])
@@ -306,7 +309,7 @@ func testAccCheckAWSDynamoDbTableItemExists(n string, item *dynamodb.GetItemOutp
 
 func testAccCheckAWSDynamoDbTableItemCount(tableName string, count int64) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DynamoDBConn
 		out, err := conn.Scan(&dynamodb.ScanInput{
 			ConsistentRead: aws.Bool(true),
 			TableName:      aws.String(tableName),
