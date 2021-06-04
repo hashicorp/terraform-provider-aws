@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // See http://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region
@@ -48,7 +49,7 @@ func dataSourceAwsElasticBeanstalkHostedZone() *schema.Resource {
 }
 
 func dataSourceAwsElasticBeanstalkHostedZoneRead(d *schema.ResourceData, meta interface{}) error {
-	region := meta.(*AWSClient).region
+	region := meta.(*awsprovider.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)
 	}
