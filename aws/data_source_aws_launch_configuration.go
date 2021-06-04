@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsLaunchConfiguration() *schema.Resource {
@@ -214,8 +215,8 @@ func dataSourceAwsLaunchConfiguration() *schema.Resource {
 }
 
 func dataSourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*AWSClient).autoscalingconn
-	ec2conn := meta.(*AWSClient).ec2conn
+	AutoScalingConn := meta.(*awsprovider.AWSClient).AutoScalingConn
+	EC2Conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if v, ok := d.GetOk("name"); ok {
 		d.SetId(v.(string))
@@ -226,7 +227,7 @@ func dataSourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface
 	}
 
 	log.Printf("[DEBUG] launch configuration describe configuration: %s", describeOpts)
-	describConfs, err := autoscalingconn.DescribeLaunchConfigurations(&describeOpts)
+	describConfs, err := AutoScalingConn.DescribeLaunchConfigurations(&describeOpts)
 	if err != nil {
 		return fmt.Errorf("Error retrieving launch configuration: %w", err)
 	}
@@ -278,7 +279,7 @@ func dataSourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error setting vpc_classic_link_security_groups: %w", err)
 	}
 
-	if err := readLCBlockDevices(d, lc, ec2conn); err != nil {
+	if err := readLCBlockDevices(d, lc, EC2Conn); err != nil {
 		return err
 	}
 
