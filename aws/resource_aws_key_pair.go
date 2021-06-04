@@ -8,10 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsKeyPair() *schema.Resource {
@@ -78,8 +80,8 @@ func resourceAwsKeyPair() *schema.Resource {
 }
 
 func resourceAwsKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var keyName string
@@ -110,16 +112,16 @@ func resourceAwsKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsKeyPairRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeKeyPairsInput{
 		KeyNames: []*string{aws.String(d.Id())},
 	}
 	resp, err := conn.DescribeKeyPairs(req)
 	if err != nil {
-		if isAWSErr(err, "InvalidKeyPair.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidKeyPair.NotFound", "") {
 			log.Printf("[WARN] Key Pair (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -154,10 +156,10 @@ func resourceAwsKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("key-pair/%s", d.Id()),
 	}.String()
 
@@ -167,7 +169,7 @@ func resourceAwsKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsKeyPairUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -180,7 +182,7 @@ func resourceAwsKeyPairUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsKeyPairDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	_, err := conn.DeleteKeyPair(&ec2.DeleteKeyPairInput{
 		KeyName: aws.String(d.Id()),
