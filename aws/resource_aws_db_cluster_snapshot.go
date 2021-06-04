@@ -8,10 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const rdsDbClusterSnapshotCreateTimeout = 2 * time.Minute
@@ -111,8 +113,8 @@ func resourceAwsDbClusterSnapshot() *schema.Resource {
 }
 
 func resourceAwsDbClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &rds.CreateDBClusterSnapshotInput{
@@ -124,7 +126,7 @@ func resourceAwsDbClusterSnapshotCreate(d *schema.ResourceData, meta interface{}
 	err := resource.Retry(rdsDbClusterSnapshotCreateTimeout, func() *resource.RetryError {
 		_, err := conn.CreateDBClusterSnapshot(params)
 		if err != nil {
-			if isAWSErr(err, rds.ErrCodeInvalidDBClusterStateFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -159,16 +161,16 @@ func resourceAwsDbClusterSnapshotCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsDbClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	params := &rds.DescribeDBClusterSnapshotsInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),
 	}
 	resp, err := conn.DescribeDBClusterSnapshots(params)
 	if err != nil {
-		if isAWSErr(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 			log.Printf("[WARN] RDS DB Cluster Snapshot %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -223,7 +225,7 @@ func resourceAwsDbClusterSnapshotRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsdbClusterSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -237,14 +239,14 @@ func resourceAwsdbClusterSnapshotUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsDbClusterSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	params := &rds.DeleteDBClusterSnapshotInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteDBClusterSnapshot(params)
 	if err != nil {
-		if isAWSErr(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting RDS DB Cluster Snapshot %q: %s", d.Id(), err)
@@ -263,7 +265,7 @@ func resourceAwsDbClusterSnapshotStateRefreshFunc(dbClusterSnapshotIdentifier st
 
 		resp, err := conn.DescribeDBClusterSnapshots(opts)
 		if err != nil {
-			if isAWSErr(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 				return nil, "", nil
 			}
 			return nil, "", fmt.Errorf("Error retrieving DB Cluster Snapshots: %s", err)
