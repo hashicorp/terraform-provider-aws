@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -22,11 +24,11 @@ func init() {
 }
 
 func testSweepImageBuilderInfrastructureConfigurations(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).imagebuilderconn
+	conn := client.(*awsprovider.AWSClient).ImageBuilderConn
 
 	var sweeperErrs *multierror.Error
 
@@ -61,7 +63,7 @@ func testSweepImageBuilderInfrastructureConfigurations(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Image Builder Infrastructure Configuration sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -79,17 +81,17 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_basic(t *testing.T) {
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsImageBuilderInfrastructureConfigurationConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderInfrastructureConfigurationExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "imagebuilder", fmt.Sprintf("infrastructure-configuration/%s", rName)),
-					testAccCheckResourceAttrRfc3339(resourceName, "date_created"),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "imagebuilder", fmt.Sprintf("infrastructure-configuration/%s", rName)),
+					atest.CheckAttrRfc3339(resourceName, "date_created"),
 					resource.TestCheckResourceAttr(resourceName, "date_updated", ""),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_profile_name", iamInstanceProfileResourceName, "name"),
@@ -119,16 +121,16 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_disappears(t *testing.T) 
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsImageBuilderInfrastructureConfigurationConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderInfrastructureConfigurationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsImageBuilderInfrastructureConfiguration(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsImageBuilderInfrastructureConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -141,9 +143,9 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_Description(t *testing.T)
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -162,7 +164,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_Description(t *testing.T)
 				Config: testAccAwsImageBuilderInfrastructureConfigurationConfigDescription(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderInfrastructureConfigurationExists(resourceName),
-					testAccCheckResourceAttrRfc3339(resourceName, "date_updated"),
+					atest.CheckAttrRfc3339(resourceName, "date_updated"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
@@ -177,9 +179,9 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_InstanceProfileName(t *te
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -198,7 +200,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_InstanceProfileName(t *te
 				Config: testAccAwsImageBuilderInfrastructureConfigurationConfigInstanceProfileName2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderInfrastructureConfigurationExists(resourceName),
-					testAccCheckResourceAttrRfc3339(resourceName, "date_updated"),
+					atest.CheckAttrRfc3339(resourceName, "date_updated"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_profile_name", iamInstanceProfileResourceName2, "name"),
 				),
 			},
@@ -211,9 +213,9 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_InstanceTypes(t *testing.
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -232,7 +234,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_InstanceTypes(t *testing.
 				Config: testAccAwsImageBuilderInfrastructureConfigurationConfigInstanceTypes2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderInfrastructureConfigurationExists(resourceName),
-					testAccCheckResourceAttrRfc3339(resourceName, "date_updated"),
+					atest.CheckAttrRfc3339(resourceName, "date_updated"),
 					resource.TestCheckResourceAttr(resourceName, "instance_types.#", "1"),
 				),
 			},
@@ -247,9 +249,9 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_KeyPair(t *testing.T) {
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -268,7 +270,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_KeyPair(t *testing.T) {
 				Config: testAccAwsImageBuilderInfrastructureConfigurationConfigKeyPair2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderInfrastructureConfigurationExists(resourceName),
-					testAccCheckResourceAttrRfc3339(resourceName, "date_updated"),
+					atest.CheckAttrRfc3339(resourceName, "date_updated"),
 					resource.TestCheckResourceAttrPair(resourceName, "key_pair", keyPairResourceName2, "key_name"),
 				),
 			},
@@ -283,9 +285,9 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_Logging_S3Logs_S3BucketNa
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -306,7 +308,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_Logging_S3Logs_S3BucketNa
 				Config: testAccAwsImageBuilderInfrastructureConfigurationConfigLoggingS3LogsS3BucketName2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderInfrastructureConfigurationExists(resourceName),
-					testAccCheckResourceAttrRfc3339(resourceName, "date_updated"),
+					atest.CheckAttrRfc3339(resourceName, "date_updated"),
 					resource.TestCheckResourceAttr(resourceName, "logging.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "logging.0.s3_logs.0.s3_bucket_name", s3BucketResourceName2, "bucket"),
@@ -321,9 +323,9 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_Logging_S3Logs_S3KeyPrefi
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -344,7 +346,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_Logging_S3Logs_S3KeyPrefi
 				Config: testAccAwsImageBuilderInfrastructureConfigurationConfigLoggingS3LogsS3KeyPrefix(rName, "/prefix2/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderInfrastructureConfigurationExists(resourceName),
-					testAccCheckResourceAttrRfc3339(resourceName, "date_updated"),
+					atest.CheckAttrRfc3339(resourceName, "date_updated"),
 					resource.TestCheckResourceAttr(resourceName, "logging.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.0.s3_key_prefix", "/prefix2/"),
@@ -359,9 +361,9 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_ResourceTags(t *testing.T
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -381,7 +383,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_ResourceTags(t *testing.T
 				Config: testAccAwsImageBuilderInfrastructureConfigurationConfigResourceTags(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderInfrastructureConfigurationExists(resourceName),
-					testAccCheckResourceAttrRfc3339(resourceName, "date_updated"),
+					atest.CheckAttrRfc3339(resourceName, "date_updated"),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.key2", "value2"),
 				),
@@ -397,9 +399,9 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_SecurityGroupIds(t *testi
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -419,7 +421,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_SecurityGroupIds(t *testi
 				Config: testAccAwsImageBuilderInfrastructureConfigurationConfigSecurityGroupIds2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderInfrastructureConfigurationExists(resourceName),
-					testAccCheckResourceAttrRfc3339(resourceName, "date_updated"),
+					atest.CheckAttrRfc3339(resourceName, "date_updated"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroupResourceName2, "id"),
 				),
@@ -435,9 +437,9 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_SnsTopicArn(t *testing.T)
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -456,7 +458,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_SnsTopicArn(t *testing.T)
 				Config: testAccAwsImageBuilderInfrastructureConfigurationConfigSnsTopicArn2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderInfrastructureConfigurationExists(resourceName),
-					testAccCheckResourceAttrRfc3339(resourceName, "date_updated"),
+					atest.CheckAttrRfc3339(resourceName, "date_updated"),
 					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", snsTopicResourceName2, "arn"),
 				),
 			},
@@ -471,9 +473,9 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_SubnetId(t *testing.T) {
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -492,7 +494,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_SubnetId(t *testing.T) {
 				Config: testAccAwsImageBuilderInfrastructureConfigurationConfigSubnetId2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderInfrastructureConfigurationExists(resourceName),
-					testAccCheckResourceAttrRfc3339(resourceName, "date_updated"),
+					atest.CheckAttrRfc3339(resourceName, "date_updated"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName2, "id"),
 				),
 			},
@@ -505,9 +507,9 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_Tags(t *testing.T) {
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -549,9 +551,9 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_TerminateInstanceOnFailur
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -570,7 +572,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_TerminateInstanceOnFailur
 				Config: testAccAwsImageBuilderInfrastructureConfigurationConfigTerminateInstanceOnFailure(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderInfrastructureConfigurationExists(resourceName),
-					testAccCheckResourceAttrRfc3339(resourceName, "date_updated"),
+					atest.CheckAttrRfc3339(resourceName, "date_updated"),
 					resource.TestCheckResourceAttr(resourceName, "terminate_instance_on_failure", "false"),
 				),
 			},
@@ -579,7 +581,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_TerminateInstanceOnFailur
 }
 
 func testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).imagebuilderconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ImageBuilderConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_imagebuilder_infrastructure_configuration" {
@@ -615,7 +617,7 @@ func testAccCheckAwsImageBuilderInfrastructureConfigurationExists(resourceName s
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).imagebuilderconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ImageBuilderConn
 
 		input := &imagebuilder.GetInfrastructureConfigurationInput{
 			InfrastructureConfigurationArn: aws.String(rs.Primary.ID),
@@ -658,7 +660,7 @@ resource "aws_iam_role" "role" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigDescription(rName string, description string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
@@ -670,7 +672,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigInstanceProfileName1(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
@@ -681,7 +683,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigInstanceProfileName2(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_iam_instance_profile" "test2" {
@@ -712,7 +714,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigInstanceTypes1(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		testAccAvailableEc2InstanceTypeForRegion("t3.medium", "t2.medium"),
 		fmt.Sprintf(`
@@ -725,7 +727,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigInstanceTypes2(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		testAccAvailableEc2InstanceTypeForRegion("t3.large", "t2.large"),
 		fmt.Sprintf(`
@@ -738,7 +740,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigKeyPair1(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_key_pair" "test" {
@@ -755,7 +757,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigKeyPair2(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_key_pair" "test2" {
@@ -772,7 +774,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigLoggingS3LogsS3BucketName1(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -793,7 +795,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigLoggingS3LogsS3BucketName2(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test2" {
@@ -814,7 +816,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigLoggingS3LogsS3KeyPrefix(rName string, s3KeyPrefix string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -836,7 +838,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigName(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
@@ -847,7 +849,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigResourceTags(rName string, resourceTagKey string, resourceTagValue string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
@@ -862,7 +864,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigSecurityGroupIds1(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -882,7 +884,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigSecurityGroupIds2(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -902,7 +904,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigSubnetId1(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -928,7 +930,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigSubnetId2(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -954,7 +956,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigSnsTopicArn1(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
@@ -970,7 +972,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigSnsTopicArn2(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_sns_topic" "test2" {
@@ -986,7 +988,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigTags1(rName string, tagKey1 string, tagValue1 string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
@@ -1001,7 +1003,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigTags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
@@ -1017,7 +1019,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderInfrastructureConfigurationConfigTerminateInstanceOnFailure(rName string, terminateInstanceOnFailure bool) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsImageBuilderInfrastructureConfigurationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
