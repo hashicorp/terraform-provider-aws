@@ -8,10 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsOpsworksInstance() *schema.Resource {
@@ -462,7 +464,7 @@ func resourceAwsOpsworksInstanceValidate(d *schema.ResourceData) error {
 }
 
 func resourceAwsOpsworksInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*awsprovider.AWSClient).OpsWorksConn
 
 	req := &opsworks.DescribeInstancesInput{
 		InstanceIds: []*string{
@@ -474,7 +476,7 @@ func resourceAwsOpsworksInstanceRead(d *schema.ResourceData, meta interface{}) e
 
 	resp, err := client.DescribeInstances(req)
 	if err != nil {
-		if isAWSErr(err, opsworks.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
 			d.SetId("")
 			return nil
 		}
@@ -571,7 +573,7 @@ func resourceAwsOpsworksInstanceRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsOpsworksInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*awsprovider.AWSClient).OpsWorksConn
 
 	err := resourceAwsOpsworksInstanceValidate(d)
 	if err != nil {
@@ -734,7 +736,7 @@ func resourceAwsOpsworksInstanceCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsOpsworksInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*awsprovider.AWSClient).OpsWorksConn
 
 	err := resourceAwsOpsworksInstanceValidate(d)
 	if err != nil {
@@ -815,7 +817,7 @@ func resourceAwsOpsworksInstanceUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsOpsworksInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*awsprovider.AWSClient).OpsWorksConn
 
 	if v, ok := d.GetOk("status"); ok && v.(string) != "stopped" {
 		err := stopOpsworksInstance(d, meta, d.Timeout(schema.TimeoutDelete))
@@ -847,7 +849,7 @@ func resourceAwsOpsworksInstanceImport(
 }
 
 func startOpsworksInstance(d *schema.ResourceData, meta interface{}, wait bool, timeout time.Duration) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*awsprovider.AWSClient).OpsWorksConn
 
 	instanceId := d.Id()
 
@@ -885,7 +887,7 @@ func startOpsworksInstance(d *schema.ResourceData, meta interface{}, wait bool, 
 }
 
 func stopOpsworksInstance(d *schema.ResourceData, meta interface{}, timeout time.Duration) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*awsprovider.AWSClient).OpsWorksConn
 
 	instanceId := d.Id()
 
@@ -971,7 +973,7 @@ func OpsworksInstanceStateRefreshFunc(conn *opsworks.OpsWorks, instanceID string
 			InstanceIds: []*string{aws.String(instanceID)},
 		})
 		if err != nil {
-			if isAWSErr(err, opsworks.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
 				resp = nil
 			} else {
 				log.Printf("Error on OpsworksInstanceStateRefresh: %s", err)
