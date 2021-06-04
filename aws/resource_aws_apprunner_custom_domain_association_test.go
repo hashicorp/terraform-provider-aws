@@ -10,9 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	tfapprunner "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apprunner"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apprunner/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apprunner/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
@@ -21,9 +23,9 @@ func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 	serviceResourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apprunner.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerCustomDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -53,16 +55,16 @@ func TestAccAwsAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 	resourceName := "aws_apprunner_custom_domain_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apprunner.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppRunnerCustomDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppRunnerCustomDomainAssociation_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerCustomDomainAssociationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppRunnerCustomDomainAssociation(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsAppRunnerCustomDomainAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -76,7 +78,7 @@ func testAccCheckAwsAppRunnerCustomDomainAssociationDestroy(s *terraform.State) 
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apprunnerconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AppRunnerConn
 
 		domainName, serviceArn, err := tfapprunner.CustomDomainAssociationParseID(rs.Primary.ID)
 
@@ -119,7 +121,7 @@ func testAccCheckAwsAppRunnerCustomDomainAssociationExists(n string) resource.Te
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apprunnerconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AppRunnerConn
 
 		customDomain, err := finder.CustomDomain(context.Background(), conn, domainName, serviceArn)
 
