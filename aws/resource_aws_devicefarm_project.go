@@ -6,9 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDevicefarmProject() *schema.Resource {
@@ -44,8 +46,8 @@ func resourceAwsDevicefarmProject() *schema.Resource {
 }
 
 func resourceAwsDevicefarmProjectCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).devicefarmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DeviceFarmConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -77,9 +79,9 @@ func resourceAwsDevicefarmProjectCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsDevicefarmProjectRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).devicefarmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DeviceFarmConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &devicefarm.GetProjectInput{
 		Arn: aws.String(d.Id()),
@@ -88,7 +90,7 @@ func resourceAwsDevicefarmProjectRead(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Reading DeviceFarm Project: %s", d.Id())
 	out, err := conn.GetProject(input)
 	if err != nil {
-		if isAWSErr(err, devicefarm.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, devicefarm.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] DeviceFarm Project (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -123,7 +125,7 @@ func resourceAwsDevicefarmProjectRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsDevicefarmProjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).devicefarmconn
+	conn := meta.(*awsprovider.AWSClient).DeviceFarmConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &devicefarm.UpdateProjectInput{
@@ -157,7 +159,7 @@ func resourceAwsDevicefarmProjectUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsDevicefarmProjectDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).devicefarmconn
+	conn := meta.(*awsprovider.AWSClient).DeviceFarmConn
 
 	input := &devicefarm.DeleteProjectInput{
 		Arn: aws.String(d.Id()),
@@ -166,7 +168,7 @@ func resourceAwsDevicefarmProjectDelete(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Deleting DeviceFarm Project: %s", d.Id())
 	_, err := conn.DeleteProject(input)
 	if err != nil {
-		if isAWSErr(err, devicefarm.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, devicefarm.ErrCodeNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting DeviceFarm Project: %w", err)
