@@ -7,6 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // This resource is different than many since quotas are pre-existing
@@ -18,9 +20,9 @@ func TestAccAwsServiceQuotasServiceQuota_basic(t *testing.T) {
 	resourceName := "aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceQuotas(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicequotas.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSServiceQuotas(t) },
+		ErrorCheck:   atest.ErrorCheck(t, servicequotas.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -70,9 +72,9 @@ func TestAccAwsServiceQuotasServiceQuota_Value_IncreaseOnCreate(t *testing.T) {
 	resourceName := "aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceQuotas(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicequotas.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSServiceQuotas(t) },
+		ErrorCheck:   atest.ErrorCheck(t, servicequotas.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -113,9 +115,9 @@ func TestAccAwsServiceQuotasServiceQuota_Value_IncreaseOnUpdate(t *testing.T) {
 	resourceName := "aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceQuotas(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicequotas.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSServiceQuotas(t) },
+		ErrorCheck:   atest.ErrorCheck(t, servicequotas.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -139,13 +141,13 @@ func TestAccAwsServiceQuotasServiceQuota_Value_IncreaseOnUpdate(t *testing.T) {
 }
 
 func testAccPreCheckAWSServiceQuotas(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).servicequotasconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ServiceQuotasConn
 
 	input := &servicequotas.ListServicesInput{}
 
 	_, err := conn.ListServices(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
