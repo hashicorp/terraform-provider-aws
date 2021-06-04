@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsAutoscalingAttachment() *schema.Resource {
@@ -39,7 +40,7 @@ func resourceAwsAutoscalingAttachment() *schema.Resource {
 }
 
 func resourceAwsAutoscalingAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	asgconn := meta.(*AWSClient).autoscalingconn
+	asgconn := meta.(*awsprovider.AWSClient).AutoScalingConn
 	asgName := d.Get("autoscaling_group_name").(string)
 
 	if v, ok := d.GetOk("elb"); ok {
@@ -75,7 +76,7 @@ func resourceAwsAutoscalingAttachmentCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsAutoscalingAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	asgconn := meta.(*AWSClient).autoscalingconn
+	asgconn := meta.(*awsprovider.AWSClient).AutoScalingConn
 	asgName := d.Get("autoscaling_group_name").(string)
 
 	// Retrieve the ASG properties to get list of associated ELBs
@@ -126,7 +127,7 @@ func resourceAwsAutoscalingAttachmentRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsAutoscalingAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	asgconn := meta.(*AWSClient).autoscalingconn
+	asgconn := meta.(*awsprovider.AWSClient).AutoScalingConn
 	asgName := d.Get("autoscaling_group_name").(string)
 
 	if v, ok := d.GetOk("elb"); ok {
