@@ -8,10 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/secretsmanager/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -22,11 +25,11 @@ func init() {
 }
 
 func testSweepSecretsManagerSecretPolicies(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).secretsmanagerconn
+	conn := client.(*awsprovider.AWSClient).SecretsManagerConn
 
 	err = conn.ListSecretsPages(&secretsmanager.ListSecretsInput{}, func(page *secretsmanager.ListSecretsOutput, lastPage bool) bool {
 		if len(page.SecretList) == 0 {
@@ -44,7 +47,7 @@ func testSweepSecretsManagerSecretPolicies(region string) error {
 
 			_, err := conn.DeleteResourcePolicy(input)
 			if err != nil {
-				if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+				if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
 					continue
 				}
 				log.Printf("[ERROR] Failed to delete Secrets Manager Secret Policy (%s): %s", name, err)
@@ -54,7 +57,7 @@ func testSweepSecretsManagerSecretPolicies(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Secrets Manager Secret sweep for %s: %s", region, err)
 			return nil
 		}
@@ -69,9 +72,9 @@ func TestAccAwsSecretsManagerSecretPolicy_basic(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		ErrorCheck:   testAccErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck:   atest.ErrorCheck(t, secretsmanager.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -106,9 +109,9 @@ func TestAccAwsSecretsManagerSecretPolicy_blockPublicPolicy(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		ErrorCheck:   testAccErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck:   atest.ErrorCheck(t, secretsmanager.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -148,16 +151,16 @@ func TestAccAwsSecretsManagerSecretPolicy_disappears(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		ErrorCheck:   testAccErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck:   atest.ErrorCheck(t, secretsmanager.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsSecretsManagerSecretPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName, &policy),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSecretsManagerSecretPolicy(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSecretsManagerSecretPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -166,7 +169,7 @@ func TestAccAwsSecretsManagerSecretPolicy_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsSecretsManagerSecretPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).secretsmanagerconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SecretsManagerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_secretsmanager_secret_policy" {
@@ -198,7 +201,7 @@ func testAccCheckAwsSecretsManagerSecretPolicyDestroy(s *terraform.State) error 
 			output, err = conn.DescribeSecret(secretInput)
 		}
 
-		if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 
@@ -216,8 +219,8 @@ func testAccCheckAwsSecretsManagerSecretPolicyDestroy(s *terraform.State) error 
 
 		_, err = conn.GetResourcePolicy(input)
 
-		if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") ||
-			isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException,
+		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") ||
+			tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException,
 				"You can't perform this operation on the secret because it was marked for deletion.") {
 			continue
 		}
@@ -238,7 +241,7 @@ func testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName string, policy
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).secretsmanagerconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SecretsManagerConn
 		input := &secretsmanager.GetResourcePolicyInput{
 			SecretId: aws.String(rs.Primary.ID),
 		}
