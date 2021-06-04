@@ -6,11 +6,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
 )
 
-// buildEC2AttributeFilterList takes a flat map of scalar attributes (most
+// BuildEC2AttributeFilterList takes a flat map of scalar attributes (most
 // likely values extracted from a *schema.ResourceData on an EC2-querying
 // data source) and produces a []*ec2.Filter representing an exact match
 // for each of the given non-empty attributes.
@@ -31,7 +31,7 @@ import (
 // for the "Filters" attribute on most of the "Describe..." API functions in
 // the EC2 API, to aid in the implementation of Terraform data sources that
 // retrieve data about EC2 objects.
-func buildEC2AttributeFilterList(attrs map[string]string) []*ec2.Filter {
+func BuildEC2AttributeFilterList(attrs map[string]string) []*ec2.Filter {
 	return tfec2.BuildAttributeFilterList(attrs)
 }
 
