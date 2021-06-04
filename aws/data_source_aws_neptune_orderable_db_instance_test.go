@@ -7,6 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSNeptuneOrderableDbInstanceDataSource_basic(t *testing.T) {
@@ -17,9 +19,9 @@ func TestAccAWSNeptuneOrderableDbInstanceDataSource_basic(t *testing.T) {
 	class := "db.t3.medium"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSNeptuneOrderableDbInstance(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSNeptuneOrderableDbInstance(t) },
+		ErrorCheck:   atest.ErrorCheck(t, neptune.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -43,9 +45,9 @@ func TestAccAWSNeptuneOrderableDbInstanceDataSource_preferred(t *testing.T) {
 	preferredOption := "db.r4.2xlarge"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSNeptuneOrderableDbInstance(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSNeptuneOrderableDbInstance(t) },
+		ErrorCheck:   atest.ErrorCheck(t, neptune.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -62,7 +64,7 @@ func TestAccAWSNeptuneOrderableDbInstanceDataSource_preferred(t *testing.T) {
 }
 
 func testAccPreCheckAWSNeptuneOrderableDbInstance(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).neptuneconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).NeptuneConn
 
 	input := &neptune.DescribeOrderableDBInstanceOptionsInput{
 		Engine: aws.String("mysql"),
@@ -70,7 +72,7 @@ func testAccPreCheckAWSNeptuneOrderableDbInstance(t *testing.T) {
 
 	_, err := conn.DescribeOrderableDBInstanceOptions(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
