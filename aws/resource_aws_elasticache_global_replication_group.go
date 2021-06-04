@@ -13,6 +13,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -149,7 +150,7 @@ func elasticacheDescriptionStateFunc(v interface{}) string {
 }
 
 func resourceAwsElasticacheGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
 
 	input := &elasticache.CreateGlobalReplicationGroupInput{
 		GlobalReplicationGroupIdSuffix: aws.String(d.Get("global_replication_group_id_suffix").(string)),
@@ -175,7 +176,7 @@ func resourceAwsElasticacheGlobalReplicationGroupCreate(d *schema.ResourceData, 
 }
 
 func resourceAwsElasticacheGlobalReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
 
 	globalReplicationGroup, err := finder.GlobalReplicationGroupByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -211,7 +212,7 @@ func resourceAwsElasticacheGlobalReplicationGroupRead(d *schema.ResourceData, me
 }
 
 func resourceAwsElasticacheGlobalReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
 
 	// Only one field can be changed per request
 	updaters := map[string]elasticacheGlobalReplicationGroupUpdater{}
@@ -253,7 +254,7 @@ func updateElasticacheGlobalReplicationGroup(conn *elasticache.ElastiCache, id s
 }
 
 func resourceAwsElasticacheGlobalReplicationGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
 
 	err := deleteElasticacheGlobalReplicationGroup(conn, d.Id())
 	if err != nil {
