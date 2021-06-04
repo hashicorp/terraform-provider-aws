@@ -11,11 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/synthetics"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/synthetics/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -31,17 +34,17 @@ func init() {
 }
 
 func testSweepSyntheticsCanaries(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).syntheticsconn
+	conn := client.(*awsprovider.AWSClient).SyntheticsConn
 	input := &synthetics.DescribeCanariesInput{}
 	var sweeperErrs *multierror.Error
 
 	for {
 		output, err := conn.DescribeCanaries(input)
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Synthetics Canary sweep for %s: %s", region, err)
 			return nil
 		}
@@ -80,16 +83,16 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, synthetics.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, synthetics.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSyntheticsCanaryBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf1),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-1.0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -101,8 +104,8 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.duration_in_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(0 hour)"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "engine_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
-					testAccMatchResourceAttrRegionalARN(resourceName, "source_location_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
+					atest.MatchAttrRegionalARN(resourceName, "engine_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
+					atest.MatchAttrRegionalARN(resourceName, "source_location_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_s3_location", fmt.Sprintf("%s/", rName)),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
@@ -120,7 +123,7 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 				Config: testAccAWSSyntheticsCanaryZipUpdatedConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf2),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-1.0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -132,8 +135,8 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.duration_in_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(0 hour)"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "engine_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
-					testAccMatchResourceAttrRegionalARN(resourceName, "source_location_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
+					atest.MatchAttrRegionalARN(resourceName, "engine_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
+					atest.MatchAttrRegionalARN(resourceName, "source_location_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_s3_location", fmt.Sprintf("%s/", rName)),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
@@ -153,9 +156,9 @@ func TestAccAWSSyntheticsCanary_runtimeVersion(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, synthetics.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, synthetics.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -188,9 +191,9 @@ func TestAccAWSSyntheticsCanary_startCanary(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, synthetics.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, synthetics.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -236,9 +239,9 @@ func TestAccAWSSyntheticsCanary_startCanary_codeChanges(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, synthetics.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, synthetics.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -277,16 +280,16 @@ func TestAccAWSSyntheticsCanary_s3(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, synthetics.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, synthetics.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSyntheticsCanaryBasicS3CodeConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-1.0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -299,8 +302,8 @@ func TestAccAWSSyntheticsCanary_s3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.duration_in_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(0 hour)"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "engine_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
-					testAccMatchResourceAttrRegionalARN(resourceName, "source_location_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
+					atest.MatchAttrRegionalARN(resourceName, "engine_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
+					atest.MatchAttrRegionalARN(resourceName, "source_location_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_s3_location", fmt.Sprintf("%s/", rName)),
 				),
@@ -321,9 +324,9 @@ func TestAccAWSSyntheticsCanary_runConfig(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, synthetics.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, synthetics.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -367,9 +370,9 @@ func TestAccAWSSyntheticsCanary_runConfigTracing(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, synthetics.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, synthetics.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -409,9 +412,9 @@ func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, synthetics.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, synthetics.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -458,9 +461,9 @@ func TestAccAWSSyntheticsCanary_tags(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, synthetics.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, synthetics.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -504,16 +507,16 @@ func TestAccAWSSyntheticsCanary_disappears(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, synthetics.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, synthetics.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSyntheticsCanaryBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSyntheticsCanary(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSyntheticsCanary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -522,7 +525,7 @@ func TestAccAWSSyntheticsCanary_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsSyntheticsCanaryDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).syntheticsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SyntheticsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_synthetics_canary" {
@@ -532,7 +535,7 @@ func testAccCheckAwsSyntheticsCanaryDestroy(s *terraform.State) error {
 		name := rs.Primary.ID
 		_, err := finder.CanaryByName(conn, name)
 		if err != nil {
-			if isAWSErr(err, synthetics.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, synthetics.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return err
@@ -554,7 +557,7 @@ func testAccCheckAwsSyntheticsCanaryExists(n string, canary *synthetics.Canary) 
 		}
 
 		name := rs.Primary.ID
-		conn := testAccProvider.Meta().(*AWSClient).syntheticsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SyntheticsConn
 
 		out, err := finder.CanaryByName(conn, name)
 		if err != nil {
@@ -578,7 +581,7 @@ func testAccCheckAwsSyntheticsCanaryDeleteImplicitResources(n string) resource.T
 			return fmt.Errorf("synthetics Canary name not set")
 		}
 
-		lambdaConn := testAccProvider.Meta().(*AWSClient).lambdaconn
+		lambdaConn := atest.Provider.Meta().(*awsprovider.AWSClient).LambdaConn
 
 		layerArn := rs.Primary.Attributes["source_location_arn"]
 		layerArnObj, err := arn.Parse(layerArn)
@@ -735,7 +738,7 @@ EOF
 }
 
 func testAccAWSSyntheticsCanaryRunConfigConfig1(rName string) string {
-	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -756,7 +759,7 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccAWSSyntheticsCanaryRunConfigConfig2(rName string) string {
-	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -778,7 +781,7 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccAWSSyntheticsCanaryRunConfigTracingConfig(rName string, tracing bool) string {
-	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -800,7 +803,7 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccAWSSyntheticsCanaryBasicConfig(rName string) string {
-	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -817,7 +820,7 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccAWSSyntheticsCanaryRuntimeVersionConfig(rName, version string) string {
-	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -834,7 +837,7 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccAWSSyntheticsCanaryZipUpdatedConfig(rName string) string {
-	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -851,7 +854,7 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccAWSSyntheticsCanaryStartCanaryConfig(rName string, state bool) string {
-	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -869,7 +872,7 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccAWSSyntheticsCanaryStartCanaryZipUpdatedConfig(rName string, state bool) string {
-	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -887,7 +890,7 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccAWSSyntheticsCanaryBasicS3CodeConfig(rName string) string {
-	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -914,7 +917,7 @@ resource "aws_s3_bucket_object" "test" {
 }
 
 func testAccAWSSyntheticsCanaryVPCConfigBase(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -967,7 +970,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 func testAccAWSSyntheticsCanaryVPCConfig1(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSSyntheticsCanaryConfigBase(rName),
 		testAccAWSSyntheticsCanaryVPCConfigBase(rName),
 		fmt.Sprintf(`
@@ -994,7 +997,7 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccAWSSyntheticsCanaryVPCConfig2(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSSyntheticsCanaryConfigBase(rName),
 		testAccAWSSyntheticsCanaryVPCConfigBase(rName),
 		fmt.Sprintf(`
@@ -1021,7 +1024,7 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccAWSSyntheticsCanaryVPCConfig3(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSSyntheticsCanaryConfigBase(rName),
 		testAccAWSSyntheticsCanaryVPCConfigBase(rName),
 		fmt.Sprintf(`
@@ -1048,7 +1051,7 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccAWSSyntheticsCanaryConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -1069,7 +1072,7 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccAWSSyntheticsCanaryConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
