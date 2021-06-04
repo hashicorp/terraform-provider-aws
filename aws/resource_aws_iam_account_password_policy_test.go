@@ -8,6 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSIAMAccountPasswordPolicy_basic(t *testing.T) {
@@ -15,9 +17,9 @@ func TestAccAWSIAMAccountPasswordPolicy_basic(t *testing.T) {
 	resourceName := "aws_iam_account_password_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSIAMAccountPasswordPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -44,7 +46,7 @@ func TestAccAWSIAMAccountPasswordPolicy_basic(t *testing.T) {
 }
 
 func testAccCheckAWSIAMAccountPasswordPolicyDestroy(s *terraform.State) error {
-	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+	IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_account_password_policy" {
@@ -52,7 +54,7 @@ func testAccCheckAWSIAMAccountPasswordPolicyDestroy(s *terraform.State) error {
 		}
 
 		// Try to get policy
-		_, err := iamconn.GetAccountPasswordPolicy(&iam.GetAccountPasswordPolicyInput{})
+		_, err := IAMConn.GetAccountPasswordPolicy(&iam.GetAccountPasswordPolicyInput{})
 		if err == nil {
 			return fmt.Errorf("still exist.")
 		}
@@ -81,9 +83,9 @@ func testAccCheckAWSIAMAccountPasswordPolicyExists(n string, res *iam.GetAccount
 			return fmt.Errorf("No policy ID is set")
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		IAMConn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
-		resp, err := iamconn.GetAccountPasswordPolicy(&iam.GetAccountPasswordPolicyInput{})
+		resp, err := IAMConn.GetAccountPasswordPolicy(&iam.GetAccountPasswordPolicyInput{})
 		if err != nil {
 			return err
 		}
