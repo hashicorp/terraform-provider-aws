@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSagemakerCodeRepository() *schema.Resource {
@@ -57,7 +59,7 @@ func resourceAwsSagemakerCodeRepository() *schema.Resource {
 						"secret_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -67,7 +69,7 @@ func resourceAwsSagemakerCodeRepository() *schema.Resource {
 }
 
 func resourceAwsSagemakerCodeRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	name := d.Get("code_repository_name").(string)
 
@@ -88,11 +90,11 @@ func resourceAwsSagemakerCodeRepositoryCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsSagemakerCodeRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	codeRepository, err := finder.CodeRepositoryByName(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, "ValidationException", "Cannot find CodeRepository") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "Cannot find CodeRepository") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker code repository (%s); removing from state", d.Id())
 			return nil
@@ -112,7 +114,7 @@ func resourceAwsSagemakerCodeRepositoryRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsSagemakerCodeRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	input := &sagemaker.UpdateCodeRepositoryInput{
 		CodeRepositoryName: aws.String(d.Id()),
@@ -129,14 +131,14 @@ func resourceAwsSagemakerCodeRepositoryUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsSagemakerCodeRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteCodeRepositoryInput{
 		CodeRepositoryName: aws.String(d.Id()),
 	}
 
 	if _, err := conn.DeleteCodeRepository(input); err != nil {
-		if isAWSErr(err, "ValidationException", "Cannot find CodeRepository") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "Cannot find CodeRepository") {
 			return nil
 		}
 		return fmt.Errorf("error deleting SageMaker code repository (%s): %w", d.Id(), err)
