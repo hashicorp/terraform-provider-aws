@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsIamGroupMembership() *schema.Resource {
@@ -45,7 +46,7 @@ func resourceAwsIamGroupMembership() *schema.Resource {
 }
 
 func resourceAwsIamGroupMembershipCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*awsprovider.AWSClient).IAMConn
 
 	group := d.Get("group").(string)
 	userList := expandStringSet(d.Get("users").(*schema.Set))
@@ -59,7 +60,7 @@ func resourceAwsIamGroupMembershipCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsIamGroupMembershipRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*awsprovider.AWSClient).IAMConn
 	group := d.Get("group").(string)
 
 	input := &iam.GetGroupInput{
@@ -124,7 +125,7 @@ func resourceAwsIamGroupMembershipRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsIamGroupMembershipUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*awsprovider.AWSClient).IAMConn
 
 	if d.HasChange("users") {
 		group := d.Get("group").(string)
@@ -155,7 +156,7 @@ func resourceAwsIamGroupMembershipUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsIamGroupMembershipDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*awsprovider.AWSClient).IAMConn
 	userList := expandStringSet(d.Get("users").(*schema.Set))
 	group := d.Get("group").(string)
 
