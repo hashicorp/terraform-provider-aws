@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSecurityHubStandardsSubscription() *schema.Resource {
@@ -23,14 +24,14 @@ func resourceAwsSecurityHubStandardsSubscription() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 		},
 	}
 }
 
 func resourceAwsSecurityHubStandardsSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*awsprovider.AWSClient).SecurityHubConn
 	log.Printf("[DEBUG] Enabling Security Hub standard %s", d.Get("standards_arn"))
 
 	resp, err := conn.BatchEnableStandards(&securityhub.BatchEnableStandardsInput{
@@ -53,7 +54,7 @@ func resourceAwsSecurityHubStandardsSubscriptionCreate(d *schema.ResourceData, m
 }
 
 func resourceAwsSecurityHubStandardsSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*awsprovider.AWSClient).SecurityHubConn
 
 	log.Printf("[DEBUG] Reading Security Hub standard %s", d.Id())
 	resp, err := conn.GetEnabledStandards(&securityhub.GetEnabledStandardsInput{
@@ -78,7 +79,7 @@ func resourceAwsSecurityHubStandardsSubscriptionRead(d *schema.ResourceData, met
 }
 
 func resourceAwsSecurityHubStandardsSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*awsprovider.AWSClient).SecurityHubConn
 	log.Printf("[DEBUG] Disabling Security Hub standard %s", d.Id())
 
 	_, err := conn.BatchDisableStandards(&securityhub.BatchDisableStandardsInput{
