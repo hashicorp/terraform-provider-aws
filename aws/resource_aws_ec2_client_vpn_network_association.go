@@ -6,9 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEc2ClientVpnNetworkAssociation() *schema.Resource {
@@ -58,7 +60,7 @@ func resourceAwsEc2ClientVpnNetworkAssociation() *schema.Resource {
 }
 
 func resourceAwsEc2ClientVpnNetworkAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	req := &ec2.AssociateClientVpnTargetNetworkInput{
 		ClientVpnEndpointId: aws.String(d.Get("client_vpn_endpoint_id").(string)),
@@ -96,7 +98,7 @@ func resourceAwsEc2ClientVpnNetworkAssociationCreate(d *schema.ResourceData, met
 }
 
 func resourceAwsEc2ClientVpnNetworkAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("security_groups") {
 		input := &ec2.ApplySecurityGroupsToClientVpnTargetNetworkInput{
@@ -114,7 +116,7 @@ func resourceAwsEc2ClientVpnNetworkAssociationUpdate(d *schema.ResourceData, met
 }
 
 func resourceAwsEc2ClientVpnNetworkAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 	var err error
 
 	result, err := conn.DescribeClientVpnTargetNetworks(&ec2.DescribeClientVpnTargetNetworksInput{
@@ -122,7 +124,7 @@ func resourceAwsEc2ClientVpnNetworkAssociationRead(d *schema.ResourceData, meta 
 		AssociationIds:      []*string{aws.String(d.Id())},
 	})
 
-	if isAWSErr(err, tfec2.ErrCodeClientVpnAssociationIdNotFound, "") || isAWSErr(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
+	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnAssociationIdNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
 		log.Printf("[WARN] EC2 Client VPN Network Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -159,7 +161,7 @@ func resourceAwsEc2ClientVpnNetworkAssociationRead(d *schema.ResourceData, meta 
 }
 
 func resourceAwsEc2ClientVpnNetworkAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	err := deleteClientVpnNetworkAssociation(conn, d.Id(), d.Get("client_vpn_endpoint_id").(string))
 	if err != nil {
@@ -175,7 +177,7 @@ func deleteClientVpnNetworkAssociation(conn *ec2.EC2, networkAssociationID, clie
 		AssociationId:       aws.String(networkAssociationID),
 	})
 
-	if isAWSErr(err, tfec2.ErrCodeClientVpnAssociationIdNotFound, "") || isAWSErr(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
+	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnAssociationIdNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
 		return nil
 	}
 	if err != nil {
