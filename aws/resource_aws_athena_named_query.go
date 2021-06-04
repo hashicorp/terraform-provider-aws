@@ -5,7 +5,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsAthenaNamedQuery() *schema.Resource {
@@ -50,7 +52,7 @@ func resourceAwsAthenaNamedQuery() *schema.Resource {
 }
 
 func resourceAwsAthenaNamedQueryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).athenaconn
+	conn := meta.(*awsprovider.AWSClient).AthenaConn
 
 	input := &athena.CreateNamedQueryInput{
 		Database:    aws.String(d.Get("database").(string)),
@@ -73,7 +75,7 @@ func resourceAwsAthenaNamedQueryCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsAthenaNamedQueryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).athenaconn
+	conn := meta.(*awsprovider.AWSClient).AthenaConn
 
 	input := &athena.GetNamedQueryInput{
 		NamedQueryId: aws.String(d.Id()),
@@ -81,7 +83,7 @@ func resourceAwsAthenaNamedQueryRead(d *schema.ResourceData, meta interface{}) e
 
 	resp, err := conn.GetNamedQuery(input)
 	if err != nil {
-		if isAWSErr(err, athena.ErrCodeInvalidRequestException, d.Id()) {
+		if tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, d.Id()) {
 			log.Printf("[WARN] Athena Named Query (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -98,7 +100,7 @@ func resourceAwsAthenaNamedQueryRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsAthenaNamedQueryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).athenaconn
+	conn := meta.(*awsprovider.AWSClient).AthenaConn
 
 	input := &athena.DeleteNamedQueryInput{
 		NamedQueryId: aws.String(d.Id()),
