@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSLightsailInstancePublicPorts_basic(t *testing.T) {
@@ -18,12 +20,12 @@ func TestAccAWSLightsailInstancePublicPorts_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(lightsail.EndpointsID, t)
 			testAccPreCheckAWSLightsail(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, lightsail.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailInstancePublicPortsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -48,12 +50,12 @@ func TestAccAWSLightsailInstancePublicPorts_multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(lightsail.EndpointsID, t)
 			testAccPreCheckAWSLightsail(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, lightsail.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailInstancePublicPortsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -83,12 +85,12 @@ func TestAccAWSLightsailInstancePublicPorts_cidrs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(lightsail.EndpointsID, t)
 			testAccPreCheckAWSLightsail(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, lightsail.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailInstancePublicPortsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -117,7 +119,7 @@ func testAccCheckAWSLightsailInstancePublicPortsExists(resourceName string) reso
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).LightsailConn
 
 		input := &lightsail.GetInstancePortStatesInput{
 			InstanceName: aws.String(rs.Primary.Attributes["instance_name"]),
@@ -134,7 +136,7 @@ func testAccCheckAWSLightsailInstancePublicPortsExists(resourceName string) reso
 }
 
 func testAccCheckAWSLightsailInstancePublicPortsDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).LightsailConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lightsail_instance_public_ports" {
