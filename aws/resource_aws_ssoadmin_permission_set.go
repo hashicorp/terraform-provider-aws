@@ -13,9 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ssoadmin/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSsoAdminPermissionSet() *schema.Resource {
@@ -51,7 +52,7 @@ func resourceAwsSsoAdminPermissionSet() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"name": {
@@ -89,8 +90,8 @@ func resourceAwsSsoAdminPermissionSet() *schema.Resource {
 }
 
 func resourceAwsSsoAdminPermissionSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SSOAdminConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	instanceArn := d.Get("instance_arn").(string)
@@ -132,9 +133,9 @@ func resourceAwsSsoAdminPermissionSetCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsSsoAdminPermissionSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SSOAdminConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	arn, instanceArn, err := parseSsoAdminResourceID(d.Id())
 	if err != nil {
@@ -190,7 +191,7 @@ func resourceAwsSsoAdminPermissionSetRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsSsoAdminPermissionSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	conn := meta.(*awsprovider.AWSClient).SSOAdminConn
 
 	arn, instanceArn, err := parseSsoAdminResourceID(d.Id())
 	if err != nil {
@@ -242,7 +243,7 @@ func resourceAwsSsoAdminPermissionSetUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsSsoAdminPermissionSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	conn := meta.(*awsprovider.AWSClient).SSOAdminConn
 
 	arn, instanceArn, err := parseSsoAdminResourceID(d.Id())
 	if err != nil {
