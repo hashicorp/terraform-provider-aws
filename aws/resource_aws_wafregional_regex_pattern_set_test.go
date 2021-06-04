@@ -7,9 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // Serialized acceptance tests due to WAF account limits
@@ -36,9 +39,9 @@ func testAccAWSWafRegionalRegexPatternSet_basic(t *testing.T) {
 	resourceName := "aws_wafregional_regex_pattern_set.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(wafregional.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, wafregional.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalRegexPatternSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -66,9 +69,9 @@ func testAccAWSWafRegionalRegexPatternSet_changePatterns(t *testing.T) {
 	resourceName := "aws_wafregional_regex_pattern_set.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(wafregional.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, wafregional.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalRegexPatternSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -107,9 +110,9 @@ func testAccAWSWafRegionalRegexPatternSet_noPatterns(t *testing.T) {
 	resourceName := "aws_wafregional_regex_pattern_set.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(wafregional.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, wafregional.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalRegexPatternSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -135,9 +138,9 @@ func testAccAWSWafRegionalRegexPatternSet_disappears(t *testing.T) {
 	resourceName := "aws_wafregional_regex_pattern_set.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(wafregional.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, wafregional.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalRegexPatternSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -154,8 +157,8 @@ func testAccAWSWafRegionalRegexPatternSet_disappears(t *testing.T) {
 
 func testAccCheckAWSWafRegionalRegexPatternSetDisappears(set *waf.RegexPatternSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
-		region := testAccProvider.Meta().(*AWSClient).region
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).WAFRegionalConn
+		region := atest.Provider.Meta().(*awsprovider.AWSClient).Region
 
 		wr := newWafRegionalRetryer(conn, region)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -204,7 +207,7 @@ func testAccCheckAWSWafRegionalRegexPatternSetExists(n string, patternSet *waf.R
 			return fmt.Errorf("No WAF Regional Regex Pattern Set ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).WAFRegionalConn
 		resp, err := conn.GetRegexPatternSet(&waf.GetRegexPatternSetInput{
 			RegexPatternSetId: aws.String(rs.Primary.ID),
 		})
@@ -228,7 +231,7 @@ func testAccCheckAWSWafRegionalRegexPatternSetDestroy(s *terraform.State) error 
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).WAFRegionalConn
 		resp, err := conn.GetRegexPatternSet(&waf.GetRegexPatternSetInput{
 			RegexPatternSetId: aws.String(rs.Primary.ID),
 		})
@@ -240,7 +243,7 @@ func testAccCheckAWSWafRegionalRegexPatternSetDestroy(s *terraform.State) error 
 		}
 
 		// Return nil if the Regex Pattern Set is already destroyed
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			return nil
 		}
 
