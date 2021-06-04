@@ -7,7 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsIAMUser() *schema.Resource {
@@ -41,8 +42,8 @@ func dataSourceAwsIAMUser() *schema.Resource {
 }
 
 func dataSourceAwsIAMUserRead(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	IAMConn := meta.(*awsprovider.AWSClient).IAMConn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	userName := d.Get("user_name").(string)
 	req := &iam.GetUserInput{
@@ -50,7 +51,7 @@ func dataSourceAwsIAMUserRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Reading IAM User: %s", req)
-	resp, err := iamconn.GetUser(req)
+	resp, err := IAMConn.GetUser(req)
 	if err != nil {
 		return fmt.Errorf("error getting user: %w", err)
 	}
