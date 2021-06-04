@@ -8,7 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDynamoDbTableItem() *schema.Resource {
@@ -52,7 +54,7 @@ func validateDynamoDbTableItem(v interface{}, k string) (ws []string, errors []e
 }
 
 func resourceAwsDynamoDbTableItemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dynamodbconn
+	conn := meta.(*awsprovider.AWSClient).DynamoDBConn
 
 	tableName := d.Get("table_name").(string)
 	hashKey := d.Get("hash_key").(string)
@@ -88,7 +90,7 @@ func resourceAwsDynamoDbTableItemCreate(d *schema.ResourceData, meta interface{}
 
 func resourceAwsDynamoDbTableItemUpdate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Updating DynamoDB table %s", d.Id())
-	conn := meta.(*AWSClient).dynamodbconn
+	conn := meta.(*awsprovider.AWSClient).DynamoDBConn
 
 	if d.HasChange("item") {
 		tableName := d.Get("table_name").(string)
@@ -153,7 +155,7 @@ func resourceAwsDynamoDbTableItemUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsDynamoDbTableItemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dynamodbconn
+	conn := meta.(*awsprovider.AWSClient).DynamoDBConn
 
 	log.Printf("[DEBUG] Loading data for DynamoDB table item '%s'", d.Id())
 
@@ -173,7 +175,7 @@ func resourceAwsDynamoDbTableItemRead(d *schema.ResourceData, meta interface{}) 
 		ExpressionAttributeNames: buildDynamoDbExpressionAttributeNames(attributes),
 	})
 	if err != nil {
-		if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Dynamodb Table Item (%s) not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
@@ -203,7 +205,7 @@ func resourceAwsDynamoDbTableItemRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsDynamoDbTableItemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dynamodbconn
+	conn := meta.(*awsprovider.AWSClient).DynamoDBConn
 
 	attributes, err := expandDynamoDbTableItemAttributes(d.Get("item").(string))
 	if err != nil {
