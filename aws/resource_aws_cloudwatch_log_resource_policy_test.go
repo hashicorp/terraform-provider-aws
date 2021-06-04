@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -20,17 +22,17 @@ func init() {
 }
 
 func testSweepCloudWatchLogResourcePolicies(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).cloudwatchlogsconn
+	conn := client.(*awsprovider.AWSClient).CloudWatchLogsConn
 
 	input := &cloudwatchlogs.DescribeResourcePoliciesInput{}
 
 	for {
 		output, err := conn.DescribeResourcePolicies(input)
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping CloudWatchLog Resource Policy sweep for %s: %s", region, err)
 			return nil
 		}
@@ -68,9 +70,9 @@ func TestAccAWSCloudWatchLogResourcePolicy_basic(t *testing.T) {
 	var resourcePolicy cloudwatchlogs.ResourcePolicy
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckCloudWatchLogResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -78,7 +80,7 @@ func TestAccAWSCloudWatchLogResourcePolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogResourcePolicy(resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", name),
-					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"rds.%s\"},\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Resource\":\"arn:%s:logs:*:*:log-group:/aws/rds/*\"}]}", testAccGetPartitionDNSSuffix(), testAccGetPartition())),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"rds.%s\"},\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Resource\":\"arn:%s:logs:*:*:log-group:/aws/rds/*\"}]}", atest.PartitionDNSSuffix(), atest.Partition())),
 				),
 			},
 			{
@@ -91,7 +93,7 @@ func TestAccAWSCloudWatchLogResourcePolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogResourcePolicy(resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", name),
-					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"rds.%s\"},\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Resource\":\"arn:%s:logs:*:*:log-group:/aws/rds/example.com\"}]}", testAccGetPartitionDNSSuffix(), testAccGetPartition())),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"rds.%s\"},\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Resource\":\"arn:%s:logs:*:*:log-group:/aws/rds/example.com\"}]}", atest.PartitionDNSSuffix(), atest.Partition())),
 				),
 			},
 		},
@@ -100,7 +102,7 @@ func TestAccAWSCloudWatchLogResourcePolicy_basic(t *testing.T) {
 
 func testAccCheckCloudWatchLogResourcePolicy(pr string, resourcePolicy *cloudwatchlogs.ResourcePolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchLogsConn
 		rs, ok := s.RootModule().Resources[pr]
 		if !ok {
 			return fmt.Errorf("Not found: %s", pr)
@@ -125,7 +127,7 @@ func testAccCheckCloudWatchLogResourcePolicy(pr string, resourcePolicy *cloudwat
 }
 
 func testAccCheckCloudWatchLogResourcePolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchLogsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_resource_policy" {
