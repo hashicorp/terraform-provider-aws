@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSEcrDataSource_ecrImage(t *testing.T) {
@@ -16,9 +17,9 @@ func TestAccAWSEcrDataSource_ecrImage(t *testing.T) {
 	resourceByDigest := "data.aws_ecr_image.by_digest"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ecr.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ecr.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsEcrImageDataSourceConfig(registry, repo, tag),
