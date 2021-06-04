@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsKmsAlias() *schema.Resource {
@@ -35,7 +36,7 @@ func dataSourceAwsKmsAlias() *schema.Resource {
 }
 
 func dataSourceAwsKmsAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
+	conn := meta.(*awsprovider.AWSClient).KMSConn
 	params := &kms.ListAliasesInput{}
 
 	target := d.Get("name")
