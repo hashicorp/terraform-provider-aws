@@ -12,10 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/secretsmanager/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSecretsManagerSecret() *schema.Resource {
@@ -108,8 +109,8 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 }
 
 func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SecretsManagerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var secretName string
@@ -144,7 +145,7 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 		// Temporarily retry on these errors to support immediate secret recreation:
 		// InvalidRequestException: You can’t perform this operation on the secret because it was deleted.
 		// InvalidRequestException: You can't create this secret because a secret with this name is already scheduled for deletion.
-		if isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "scheduled for deletion") || isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "was deleted") {
+		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "scheduled for deletion") || tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "was deleted") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -170,7 +171,7 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			var err error
 			_, err = conn.PutResourcePolicy(input)
-			if isAWSErr(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
+			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
 				"This resource policy contains an unsupported principal") {
 				return resource.RetryableError(err)
 			}
@@ -199,7 +200,7 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 			_, err := conn.RotateSecret(input)
 			if err != nil {
 				// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-				if isAWSErr(err, "AccessDeniedException", "") {
+				if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -218,9 +219,9 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SecretsManagerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &secretsmanager.DescribeSecretInput{
 		SecretId: aws.String(d.Id()),
@@ -311,7 +312,7 @@ func resourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*awsprovider.AWSClient).SecretsManagerConn
 
 	if d.HasChanges("description", "kms_key_id") {
 		input := &secretsmanager.UpdateSecretInput{
@@ -345,7 +346,7 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 			err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 				var err error
 				_, err = conn.PutResourcePolicy(input)
-				if isAWSErr(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
+				if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
 					"This resource policy contains an unsupported principal") {
 					return resource.RetryableError(err)
 				}
@@ -386,7 +387,7 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 				_, err := conn.RotateSecret(input)
 				if err != nil {
 					// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-					if isAWSErr(err, "AccessDeniedException", "") {
+					if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
 						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)
@@ -423,7 +424,7 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsSecretsManagerSecretDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).secretsmanagerconn
+	conn := meta.(*awsprovider.AWSClient).SecretsManagerConn
 
 	input := &secretsmanager.DeleteSecretInput{
 		SecretId: aws.String(d.Id()),
@@ -439,7 +440,7 @@ func resourceAwsSecretsManagerSecretDelete(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] Deleting Secrets Manager Secret: %s", input)
 	_, err := conn.DeleteSecret(input)
 	if err != nil {
-		if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Secrets Manager Secret: %w", err)
