@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceCloudHsmV2Cluster() *schema.Resource {
@@ -74,7 +75,7 @@ func dataSourceCloudHsmV2Cluster() *schema.Resource {
 }
 
 func dataSourceCloudHsmV2ClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudhsmv2conn
+	conn := meta.(*awsprovider.AWSClient).CloudHSMV2Conn
 
 	clusterId := d.Get("cluster_id").(string)
 	filters := []*string{&clusterId}
