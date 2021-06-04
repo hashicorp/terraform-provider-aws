@@ -340,7 +340,7 @@ func TestValidateAwsAccountId(t *testing.T) {
 
 func TestValidateArn(t *testing.T) {
 	v := ""
-	_, errors := validateArn(v, "arn")
+	_, errors := ValidateArn(v, "arn")
 	if len(errors) != 0 {
 		t.Fatalf("%q should not be validated as an ARN: %q", v, errors)
 	}
@@ -364,7 +364,7 @@ func TestValidateArn(t *testing.T) {
 		"arn:aws-us-gov:s3:::bucket/object",                                                // lintignore:AWSAT005          // GovCloud S3 ARN
 	}
 	for _, v := range validNames {
-		_, errors := validateArn(v, "arn")
+		_, errors := ValidateArn(v, "arn")
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid ARN: %q", v, errors)
 		}
@@ -378,7 +378,7 @@ func TestValidateArn(t *testing.T) {
 		"arn:aws:logs:region:*:*", //lintignore:AWSAT005
 	}
 	for _, v := range invalidNames {
-		_, errors := validateArn(v, "arn")
+		_, errors := ValidateArn(v, "arn")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid ARN", v)
 		}
