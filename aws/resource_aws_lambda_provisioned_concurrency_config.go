@@ -8,9 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsLambdaProvisionedConcurrencyConfig() *schema.Resource {
@@ -50,7 +52,7 @@ func resourceAwsLambdaProvisionedConcurrencyConfig() *schema.Resource {
 }
 
 func resourceAwsLambdaProvisionedConcurrencyConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
 
@@ -76,7 +78,7 @@ func resourceAwsLambdaProvisionedConcurrencyConfigCreate(d *schema.ResourceData,
 }
 
 func resourceAwsLambdaProvisionedConcurrencyConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	functionName, qualifier, err := resourceAwsLambdaProvisionedConcurrencyConfigParseId(d.Id())
 
@@ -91,7 +93,7 @@ func resourceAwsLambdaProvisionedConcurrencyConfigRead(d *schema.ResourceData, m
 
 	output, err := conn.GetProvisionedConcurrencyConfig(input)
 
-	if isAWSErr(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException, "") || isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException, "") || tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Lambda Provisioned Concurrency Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -109,7 +111,7 @@ func resourceAwsLambdaProvisionedConcurrencyConfigRead(d *schema.ResourceData, m
 }
 
 func resourceAwsLambdaProvisionedConcurrencyConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	functionName, qualifier, err := resourceAwsLambdaProvisionedConcurrencyConfigParseId(d.Id())
 
@@ -137,7 +139,7 @@ func resourceAwsLambdaProvisionedConcurrencyConfigUpdate(d *schema.ResourceData,
 }
 
 func resourceAwsLambdaProvisionedConcurrencyConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	functionName, qualifier, err := resourceAwsLambdaProvisionedConcurrencyConfigParseId(d.Id())
 
@@ -152,7 +154,7 @@ func resourceAwsLambdaProvisionedConcurrencyConfigDelete(d *schema.ResourceData,
 
 	_, err = conn.DeleteProvisionedConcurrencyConfig(input)
 
-	if isAWSErr(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException, "") || isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException, "") || tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
