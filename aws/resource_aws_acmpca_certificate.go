@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/acmpca/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsAcmpcaCertificate() *schema.Resource {
@@ -57,7 +58,7 @@ func resourceAwsAcmpcaCertificate() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"certificate_signing_request": {
 				Type:     schema.TypeString,
@@ -104,7 +105,7 @@ func resourceAwsAcmpcaCertificate() *schema.Resource {
 }
 
 func resourceAwsAcmpcaCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).acmpcaconn
+	conn := meta.(*awsprovider.AWSClient).ACMPCAConn
 
 	certificateAuthorityArn := d.Get("certificate_authority_arn").(string)
 	input := &acmpca.IssueCertificateInput{
@@ -159,7 +160,7 @@ func resourceAwsAcmpcaCertificateCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsAcmpcaCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).acmpcaconn
+	conn := meta.(*awsprovider.AWSClient).ACMPCAConn
 
 	getCertificateInput := &acmpca.GetCertificateInput{
 		CertificateArn:          aws.String(d.Id()),
@@ -192,7 +193,7 @@ func resourceAwsAcmpcaCertificateRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsAcmpcaCertificateRevoke(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).acmpcaconn
+	conn := meta.(*awsprovider.AWSClient).ACMPCAConn
 
 	block, _ := pem.Decode([]byte(d.Get("certificate").(string)))
 	if block == nil {
@@ -225,7 +226,7 @@ func resourceAwsAcmpcaCertificateRevoke(d *schema.ResourceData, meta interface{}
 }
 
 func validateAcmPcaTemplateArn(v interface{}, k string) (ws []string, errors []error) {
-	wsARN, errorsARN := validateArn(v, k)
+	wsARN, errorsARN := ValidateArn(v, k)
 	ws = append(ws, wsARN...)
 	errors = append(errors, errorsARN...)
 
