@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/guardduty/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGuardDutyOrganizationAdminAccount() *schema.Resource {
@@ -32,7 +33,7 @@ func resourceAwsGuardDutyOrganizationAdminAccount() *schema.Resource {
 }
 
 func resourceAwsGuardDutyOrganizationAdminAccountCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
 
 	adminAccountID := d.Get("admin_account_id").(string)
 
@@ -56,7 +57,7 @@ func resourceAwsGuardDutyOrganizationAdminAccountCreate(d *schema.ResourceData, 
 }
 
 func resourceAwsGuardDutyOrganizationAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
 
 	adminAccount, err := getGuardDutyOrganizationAdminAccount(conn, d.Id())
 
@@ -76,7 +77,7 @@ func resourceAwsGuardDutyOrganizationAdminAccountRead(d *schema.ResourceData, me
 }
 
 func resourceAwsGuardDutyOrganizationAdminAccountDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
 
 	input := &guardduty.DisableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(d.Id()),
