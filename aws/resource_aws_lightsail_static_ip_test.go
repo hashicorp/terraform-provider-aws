@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -22,18 +24,18 @@ func init() {
 }
 
 func testSweepLightsailStaticIps(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).lightsailconn
+	conn := client.(*awsprovider.AWSClient).LightsailConn
 
 	input := &lightsail.GetStaticIpsInput{}
 
 	for {
 		output, err := conn.GetStaticIps(input)
 		if err != nil {
-			if testSweepSkipSweepError(err) {
+			if atest.SweepSkipSweepError(err) {
 				log.Printf("[WARN] Skipping Lightsail Static IP sweep for %s: %s", region, err)
 				return nil
 			}
@@ -71,9 +73,9 @@ func TestAccAWSLightsailStaticIp_basic(t *testing.T) {
 	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSLightsail(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lightsail.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailStaticIpDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -91,7 +93,7 @@ func TestAccAWSLightsailStaticIp_disappears(t *testing.T) {
 	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", acctest.RandString(5))
 
 	staticIpDestroy := func(*terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).LightsailConn
 		_, err := conn.ReleaseStaticIp(&lightsail.ReleaseStaticIpInput{
 			StaticIpName: aws.String(staticIpName),
 		})
@@ -104,9 +106,9 @@ func TestAccAWSLightsailStaticIp_disappears(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSLightsail(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lightsail.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailStaticIpDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -132,7 +134,7 @@ func testAccCheckAWSLightsailStaticIpExists(n string, staticIp *lightsail.Static
 			return errors.New("No Lightsail Static IP ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).LightsailConn
 
 		resp, err := conn.GetStaticIp(&lightsail.GetStaticIpInput{
 			StaticIpName: aws.String(rs.Primary.ID),
@@ -156,7 +158,7 @@ func testAccCheckAWSLightsailStaticIpDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).LightsailConn
 
 		resp, err := conn.GetStaticIp(&lightsail.GetStaticIpInput{
 			StaticIpName: aws.String(rs.Primary.ID),
