@@ -10,14 +10,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSVpnConnectionRoute_basic(t *testing.T) {
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccAwsVpnConnectionRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -37,7 +39,7 @@ func TestAccAWSVpnConnectionRoute_basic(t *testing.T) {
 }
 
 func testAccAwsVpnConnectionRouteDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpn_connection_route" {
 			continue
@@ -118,9 +120,9 @@ func testAccAwsVpnConnectionRoute(vpnConnectionRouteResource string) resource.Te
 			},
 		}
 
-		ec2conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		EC2Conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
-		_, err := ec2conn.DescribeVpnConnections(&ec2.DescribeVpnConnectionsInput{
+		_, err := EC2Conn.DescribeVpnConnections(&ec2.DescribeVpnConnectionsInput{
 			Filters: routeFilters,
 		})
 		return err
