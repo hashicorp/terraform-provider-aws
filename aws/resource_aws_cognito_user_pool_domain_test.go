@@ -9,9 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -22,11 +25,11 @@ func init() {
 }
 
 func testSweepCognitoUserPoolDomains(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).cognitoidpconn
+	conn := client.(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	input := &cognitoidentityprovider.ListUserPoolsInput{
 		MaxResults: aws.Int64(int64(50)),
@@ -63,7 +66,7 @@ func testSweepCognitoUserPoolDomains(region string) error {
 	})
 
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Cognito User Pool Domain sweep for %s: %s", region, err)
 			return nil
 		}
@@ -78,9 +81,9 @@ func TestAccAWSCognitoUserPoolDomain_basic(t *testing.T) {
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -114,16 +117,16 @@ func TestAccAWSCognitoUserPoolDomain_custom(t *testing.T) {
 	resourceName := "aws_cognito_user_pool_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCognitoUserPoolCustomDomain(t) },
-		ErrorCheck:        testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccPreCheckCognitoUserPoolCustomDomain(t) },
+		ErrorCheck:        atest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSCognitoUserPoolDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCognitoUserPoolDomainConfig_custom(rootDomain, domain, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolDomainExists(resourceName),
-					testAccCheckResourceAttrAccountID(resourceName, "aws_account_id"),
+					atest.CheckAttrAccountID(resourceName, "aws_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", acmCertificateResourceName, "arn"),
 					//lintignore:AWSAT001 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11666
 					resource.TestMatchResourceAttr(resourceName, "cloudfront_distribution_arn", regexp.MustCompile(`[a-z0-9]+.cloudfront.net$`)),
@@ -148,16 +151,16 @@ func TestAccAWSCognitoUserPoolDomain_disappears(t *testing.T) {
 	resourceName := "aws_cognito_user_pool_domain.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCognitoUserPoolDomainConfig_basic(domainName, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolDomainExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCognitoUserPoolDomain(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCognitoUserPoolDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -176,7 +179,7 @@ func testAccCheckAWSCognitoUserPoolDomainExists(n string) resource.TestCheckFunc
 			return errors.New("No Cognito User Pool Domain ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cognitoidpconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 		_, err := conn.DescribeUserPoolDomain(&cognitoidentityprovider.DescribeUserPoolDomainInput{
 			Domain: aws.String(rs.Primary.ID),
@@ -187,7 +190,7 @@ func testAccCheckAWSCognitoUserPoolDomainExists(n string) resource.TestCheckFunc
 }
 
 func testAccCheckAWSCognitoUserPoolDomainDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cognitoidpconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_user_pool_domain" {
@@ -199,7 +202,7 @@ func testAccCheckAWSCognitoUserPoolDomainDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return err
@@ -223,7 +226,7 @@ resource "aws_cognito_user_pool" "main" {
 }
 
 func testAccAWSCognitoUserPoolDomainConfig_custom(rootDomain string, domain string, poolName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccCognitoUserPoolCustomDomainRegionProviderConfig(),
 		fmt.Sprintf(`
 data "aws_route53_zone" "test" {
