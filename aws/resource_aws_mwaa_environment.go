@@ -6,11 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mwaa"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/mwaa/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/mwaa/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsMwaaEnvironment() *schema.Resource {
@@ -55,12 +57,12 @@ func resourceAwsMwaaEnvironment() *schema.Resource {
 			"execution_role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"kms_key": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"last_updated": {
 				Type:     schema.TypeList,
@@ -203,7 +205,7 @@ func resourceAwsMwaaEnvironment() *schema.Resource {
 			"source_bucket_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -233,8 +235,8 @@ func resourceAwsMwaaEnvironment() *schema.Resource {
 }
 
 func resourceAwsMwaaEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mwaaconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).MWAAConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := mwaa.CreateEnvironmentInput{
@@ -317,16 +319,16 @@ func resourceAwsMwaaEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsMwaaEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mwaaconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).MWAAConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading MWAA Environment: %s", d.Id())
 
 	environment, err := finder.EnvironmentByName(conn, d.Id())
 
 	if err != nil {
-		if isAWSErr(err, mwaa.ErrCodeResourceNotFoundException, "") && !d.IsNewResource() {
+		if tfawserr.ErrMessageContains(err, mwaa.ErrCodeResourceNotFoundException, "") && !d.IsNewResource() {
 			log.Printf("[WARN] MWAA Environment %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -385,7 +387,7 @@ func resourceAwsMwaaEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsMwaaEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mwaaconn
+	conn := meta.(*awsprovider.AWSClient).MWAAConn
 
 	input := mwaa.UpdateEnvironmentInput{
 		Name: aws.String(d.Get("name").(string)),
@@ -485,14 +487,14 @@ func resourceAwsMwaaEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsMwaaEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mwaaconn
+	conn := meta.(*awsprovider.AWSClient).MWAAConn
 
 	log.Printf("[INFO] Deleting MWAA Environment: %s", d.Id())
 	_, err := conn.DeleteEnvironment(&mwaa.DeleteEnvironmentInput{
 		Name: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, mwaa.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, mwaa.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 
