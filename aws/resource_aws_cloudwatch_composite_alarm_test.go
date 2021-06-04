@@ -15,7 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatch/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -26,12 +28,12 @@ func init() {
 }
 
 func testSweepCloudWatchCompositeAlarms(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).cloudwatchconn
+	conn := client.(*awsprovider.AWSClient).CloudWatchConn
 	ctx := context.Background()
 
 	input := &cloudwatch.DescribeAlarmsInput{
@@ -72,7 +74,7 @@ func testSweepCloudWatchCompositeAlarms(region string) error {
 		return !isLast
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudWatch Composite Alarms sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -88,9 +90,9 @@ func TestAccAwsCloudWatchCompositeAlarm_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_composite_alarm.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsCloudWatchCompositeAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -102,7 +104,7 @@ func TestAccAwsCloudWatchCompositeAlarm_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "alarm_description", ""),
 					resource.TestCheckResourceAttr(resourceName, "alarm_name", "tf-test-composite-"+suffix),
 					resource.TestCheckResourceAttr(resourceName, "alarm_rule", fmt.Sprintf("ALARM(tf-test-metric-0-%[1]s) OR ALARM(tf-test-metric-1-%[1]s)", suffix)),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "cloudwatch", regexp.MustCompile(`alarm:.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "cloudwatch", regexp.MustCompile(`alarm:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "insufficient_data_actions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ok_actions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -122,16 +124,16 @@ func TestAccAwsCloudWatchCompositeAlarm_disappears(t *testing.T) {
 	resourceName := "aws_cloudwatch_composite_alarm.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsCloudWatchCompositeAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsCloudWatchCompositeAlarmConfig_basic(suffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCloudWatchCompositeAlarmExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchCompositeAlarm(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCloudWatchCompositeAlarm(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -144,9 +146,9 @@ func TestAccAwsCloudWatchCompositeAlarm_actionsEnabled(t *testing.T) {
 	resourceName := "aws_cloudwatch_composite_alarm.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsCloudWatchCompositeAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -182,9 +184,9 @@ func TestAccAwsCloudWatchCompositeAlarm_alarmActions(t *testing.T) {
 	resourceName := "aws_cloudwatch_composite_alarm.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsCloudWatchCompositeAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -232,9 +234,9 @@ func TestAccAwsCloudWatchCompositeAlarm_description(t *testing.T) {
 	resourceName := "aws_cloudwatch_composite_alarm.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsCloudWatchCompositeAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -270,9 +272,9 @@ func TestAccAwsCloudWatchCompositeAlarm_insufficientDataActions(t *testing.T) {
 	resourceName := "aws_cloudwatch_composite_alarm.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsCloudWatchCompositeAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -320,9 +322,9 @@ func TestAccAwsCloudWatchCompositeAlarm_okActions(t *testing.T) {
 	resourceName := "aws_cloudwatch_composite_alarm.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsCloudWatchCompositeAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -370,9 +372,9 @@ func TestAccAwsCloudWatchCompositeAlarm_allActions(t *testing.T) {
 	resourceName := "aws_cloudwatch_composite_alarm.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsCloudWatchCompositeAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -412,9 +414,9 @@ func TestAccAwsCloudWatchCompositeAlarm_updateAlarmRule(t *testing.T) {
 	resourceName := "aws_cloudwatch_composite_alarm.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cloudwatch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsCloudWatchCompositeAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -445,7 +447,7 @@ func TestAccAwsCloudWatchCompositeAlarm_updateAlarmRule(t *testing.T) {
 }
 
 func testAccCheckAwsCloudWatchCompositeAlarmDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudwatchconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_composite_alarm" {
@@ -480,7 +482,7 @@ func testAccCheckAwsCloudWatchCompositeAlarmExists(resourceName string) resource
 			return fmt.Errorf("resource %s has not set its id", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatchconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudWatchConn
 
 		alarm, err := finder.CompositeAlarmByName(context.Background(), conn, rs.Primary.ID)
 
@@ -518,7 +520,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 }
 
 func testAccAwsCloudWatchCompositeAlarmConfig_actionsEnabled(enabled bool, suffix string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsCloudWatchCompositeAlarmBaseConfig(suffix),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_composite_alarm" "test" {
@@ -530,7 +532,7 @@ resource "aws_cloudwatch_composite_alarm" "test" {
 }
 
 func testAccAwsCloudWatchCompositeAlarmConfig_basic(suffix string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsCloudWatchCompositeAlarmBaseConfig(suffix),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_composite_alarm" "test" {
@@ -541,7 +543,7 @@ resource "aws_cloudwatch_composite_alarm" "test" {
 }
 
 func testAccAwsCloudWatchCompositeAlarmConfig_description(description, suffix string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsCloudWatchCompositeAlarmBaseConfig(suffix),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_composite_alarm" "test" {
@@ -553,7 +555,7 @@ resource "aws_cloudwatch_composite_alarm" "test" {
 }
 
 func testAccAwsCloudWatchCompositeAlarmConfig_alarmActions(suffix string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsCloudWatchCompositeAlarmBaseConfig(suffix),
 		fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
@@ -570,7 +572,7 @@ resource "aws_cloudwatch_composite_alarm" "test" {
 }
 
 func testAccAwsCloudWatchCompositeAlarmConfig_updateAlarmActions(suffix string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsCloudWatchCompositeAlarmBaseConfig(suffix),
 		fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
@@ -587,7 +589,7 @@ resource "aws_cloudwatch_composite_alarm" "test" {
 }
 
 func testAccAwsCloudWatchCompositeAlarmConfig_updateAlarmRule(suffix string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsCloudWatchCompositeAlarmBaseConfig(suffix),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_composite_alarm" "test" {
@@ -598,7 +600,7 @@ resource "aws_cloudwatch_composite_alarm" "test" {
 }
 
 func testAccAwsCloudWatchCompositeAlarmConfig_insufficientDataActions(suffix string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsCloudWatchCompositeAlarmBaseConfig(suffix),
 		fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
@@ -615,7 +617,7 @@ resource "aws_cloudwatch_composite_alarm" "test" {
 }
 
 func testAccAwsCloudWatchCompositeAlarmConfig_updateInsufficientDataActions(suffix string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsCloudWatchCompositeAlarmBaseConfig(suffix),
 		fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
@@ -632,7 +634,7 @@ resource "aws_cloudwatch_composite_alarm" "test" {
 }
 
 func testAccAwsCloudWatchCompositeAlarmConfig_okActions(suffix string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsCloudWatchCompositeAlarmBaseConfig(suffix),
 		fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
@@ -649,7 +651,7 @@ resource "aws_cloudwatch_composite_alarm" "test" {
 }
 
 func testAccAwsCloudWatchCompositeAlarmConfig_updateOkActions(suffix string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsCloudWatchCompositeAlarmBaseConfig(suffix),
 		fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
@@ -666,7 +668,7 @@ resource "aws_cloudwatch_composite_alarm" "test" {
 }
 
 func testAccAwsCloudWatchCompositeAlarmConfig_allActions(suffix string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsCloudWatchCompositeAlarmBaseConfig(suffix),
 		fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
