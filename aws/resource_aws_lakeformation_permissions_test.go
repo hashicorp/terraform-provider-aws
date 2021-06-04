@@ -12,8 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccAWSLakeFormationPermissions_basic(t *testing.T) {
@@ -22,9 +24,9 @@ func testAccAWSLakeFormationPermissions_basic(t *testing.T) {
 	roleName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(lakeformation.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, lakeformation.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -48,9 +50,9 @@ func testAccAWSLakeFormationPermissions_dataLocation(t *testing.T) {
 	bucketName := "aws_s3_bucket.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(lakeformation.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, lakeformation.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -76,9 +78,9 @@ func testAccAWSLakeFormationPermissions_database(t *testing.T) {
 	dbName := "aws_glue_catalog_database.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(lakeformation.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, lakeformation.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,9 +111,9 @@ func testAccAWSLakeFormationPermissions_tableName(t *testing.T) {
 	tableName := "aws_glue_catalog_table.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(lakeformation.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, lakeformation.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -138,9 +140,9 @@ func testAccAWSLakeFormationPermissions_tableWildcard(t *testing.T) {
 	databaseResourceName := "aws_glue_catalog_database.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(lakeformation.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, lakeformation.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -163,9 +165,9 @@ func testAccAWSLakeFormationPermissions_tableWithColumns(t *testing.T) {
 	tableName := "aws_glue_catalog_table.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(lakeformation.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, lakeformation.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -194,9 +196,9 @@ func testAccAWSLakeFormationPermissions_implicitTableWithColumnsPermissions(t *t
 	tableName := "aws_glue_catalog_table.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(lakeformation.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, lakeformation.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -223,9 +225,9 @@ func testAccAWSLakeFormationPermissions_implicitTablePermissions(t *testing.T) {
 	tableName := "aws_glue_catalog_table.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(lakeformation.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, lakeformation.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -250,9 +252,9 @@ func testAccAWSLakeFormationPermissions_selectPermissions(t *testing.T) {
 	roleName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(lakeformation.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, lakeformation.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -274,9 +276,9 @@ func testAccAWSLakeFormationPermissions_tableWildcardPermissions(t *testing.T) {
 	roleName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(lakeformation.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, lakeformation.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -298,9 +300,9 @@ func testAccAWSLakeFormationPermissions_columnWildcardPermissions(t *testing.T) 
 	roleName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(lakeformation.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, lakeformation.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -317,7 +319,7 @@ func testAccAWSLakeFormationPermissions_columnWildcardPermissions(t *testing.T) 
 }
 
 func testAccCheckAWSLakeFormationPermissionsDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).lakeformationconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).LakeFormationConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lakeformation_permissions" {
@@ -347,7 +349,7 @@ func testAccCheckAWSLakeFormationPermissionsExists(resourceName string) resource
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lakeformationconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).LakeFormationConn
 
 		permCount, err := permissionCountForLakeFormationResource(conn, rs)
 
