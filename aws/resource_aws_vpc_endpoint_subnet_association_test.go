@@ -9,15 +9,17 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSVpcEndpointSubnetAssociation_basic(t *testing.T) {
 	var vpce ec2.VpcEndpoint
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointSubnetAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -35,9 +37,9 @@ func TestAccAWSVpcEndpointSubnetAssociation_multiple(t *testing.T) {
 	var vpce ec2.VpcEndpoint
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVpcEndpointSubnetAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -56,7 +58,7 @@ func TestAccAWSVpcEndpointSubnetAssociation_multiple(t *testing.T) {
 }
 
 func testAccCheckVpcEndpointSubnetAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_endpoint_subnet_association" {
@@ -100,7 +102,7 @@ func testAccCheckVpcEndpointSubnetAssociationExists(n string, vpce *ec2.VpcEndpo
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 		resp, err := conn.DescribeVpcEndpoints(&ec2.DescribeVpcEndpointsInput{
 			VpcEndpointIds: aws.StringSlice([]string{rs.Primary.Attributes["vpc_endpoint_id"]}),
 		})
