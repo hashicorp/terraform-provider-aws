@@ -8,9 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -38,7 +40,7 @@ func resourceAwsApiGatewayV2Stage() *schema.Resource {
 						"destination_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"format": {
 							Type:     schema.TypeString,
@@ -183,8 +185,8 @@ func resourceAwsApiGatewayV2Stage() *schema.Resource {
 }
 
 func resourceAwsApiGatewayV2StageCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	apiId := d.Get("api_id").(string)
@@ -238,16 +240,16 @@ func resourceAwsApiGatewayV2StageCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsApiGatewayV2StageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	apiId := d.Get("api_id").(string)
 	resp, err := conn.GetStage(&apigatewayv2.GetStageInput{
 		ApiId:     aws.String(apiId),
 		StageName: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway v2 stage (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -261,9 +263,9 @@ func resourceAwsApiGatewayV2StageRead(d *schema.ResourceData, meta interface{}) 
 	if err != nil {
 		return fmt.Errorf("error setting access_log_settings: %s", err)
 	}
-	region := meta.(*AWSClient).region
+	region := meta.(*awsprovider.AWSClient).Region
 	resourceArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "apigateway",
 		Region:    region,
 		Resource:  fmt.Sprintf("/apis/%s/stages/%s", apiId, stageName),
@@ -278,10 +280,10 @@ func resourceAwsApiGatewayV2StageRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("deployment_id", resp.DeploymentId)
 	d.Set("description", resp.Description)
 	executionArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "execute-api",
 		Region:    region,
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("%s/%s", apiId, stageName),
 	}.String()
 	d.Set("execution_arn", executionArn)
@@ -328,7 +330,7 @@ func resourceAwsApiGatewayV2StageRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsApiGatewayV2StageUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	if d.HasChanges("access_log_settings", "auto_deploy", "client_certificate_id",
 		"default_route_settings", "deployment_id", "description",
@@ -380,7 +382,7 @@ func resourceAwsApiGatewayV2StageUpdate(d *schema.ResourceData, meta interface{}
 					RouteKey:  aws.String(routeKey),
 					StageName: aws.String(d.Id()),
 				})
-				if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+				if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 					continue
 				}
 				if err != nil {
@@ -422,14 +424,14 @@ func resourceAwsApiGatewayV2StageUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsApiGatewayV2StageDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 stage (%s)", d.Id())
 	_, err := conn.DeleteStage(&apigatewayv2.DeleteStageInput{
 		ApiId:     aws.String(d.Get("api_id").(string)),
 		StageName: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
@@ -448,7 +450,7 @@ func resourceAwsApiGatewayV2StageImport(d *schema.ResourceData, meta interface{}
 	apiId := parts[0]
 	stageName := parts[1]
 
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetStage(&apigatewayv2.GetStageInput{
 		ApiId:     aws.String(apiId),
