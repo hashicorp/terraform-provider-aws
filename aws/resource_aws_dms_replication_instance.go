@@ -7,10 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDmsReplicationInstance() *schema.Resource {
@@ -66,7 +68,7 @@ func resourceAwsDmsReplicationInstance() *schema.Resource {
 				Computed:     true,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"multi_az": {
 				Type:     schema.TypeBool,
@@ -133,8 +135,8 @@ func resourceAwsDmsReplicationInstance() *schema.Resource {
 }
 
 func resourceAwsDmsReplicationInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DMSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &dms.CreateReplicationInstanceInput{
@@ -200,9 +202,9 @@ func resourceAwsDmsReplicationInstanceCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsDmsReplicationInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DMSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	response, err := conn.DescribeReplicationInstances(&dms.DescribeReplicationInstancesInput{
 		Filters: []*dms.Filter{
@@ -213,7 +215,7 @@ func resourceAwsDmsReplicationInstanceRead(d *schema.ResourceData, meta interfac
 		},
 	})
 
-	if isAWSErr(err, dms.ErrCodeResourceNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, dms.ErrCodeResourceNotFoundFault, "") {
 		log.Printf("[WARN] DMS Replication Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -283,7 +285,7 @@ func resourceAwsDmsReplicationInstanceRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsDmsReplicationInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
+	conn := meta.(*awsprovider.AWSClient).DMSConn
 
 	request := &dms.ModifyReplicationInstanceInput{
 		ApplyImmediately:       aws.Bool(d.Get("apply_immediately").(bool)),
@@ -375,7 +377,7 @@ func resourceAwsDmsReplicationInstanceUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsDmsReplicationInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
+	conn := meta.(*awsprovider.AWSClient).DMSConn
 
 	request := &dms.DeleteReplicationInstanceInput{
 		ReplicationInstanceArn: aws.String(d.Get("replication_instance_arn").(string)),
@@ -385,7 +387,7 @@ func resourceAwsDmsReplicationInstanceDelete(d *schema.ResourceData, meta interf
 
 	_, err := conn.DeleteReplicationInstance(request)
 
-	if isAWSErr(err, dms.ErrCodeResourceNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, dms.ErrCodeResourceNotFoundFault, "") {
 		return nil
 	}
 
@@ -422,7 +424,7 @@ func resourceAwsDmsReplicationInstanceStateRefreshFunc(conn *dms.DatabaseMigrati
 			},
 		})
 
-		if isAWSErr(err, dms.ErrCodeResourceNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, dms.ErrCodeResourceNotFoundFault, "") {
 			return nil, "", nil
 		}
 
