@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSDmsReplicationSubnetGroup_basic(t *testing.T) {
@@ -17,9 +19,9 @@ func TestAccAWSDmsReplicationSubnetGroup_basic(t *testing.T) {
 	randId := acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: dmsReplicationSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +47,7 @@ func TestAccAWSDmsReplicationSubnetGroup_basic(t *testing.T) {
 }
 
 func checkDmsReplicationSubnetGroupExists(n string) resource.TestCheckFunc {
-	providers := []*schema.Provider{testAccProvider}
+	providers := []*schema.Provider{atest.Provider}
 	return checkDmsReplicationSubnetGroupExistsWithProviders(n, &providers)
 }
 
@@ -65,7 +67,7 @@ func checkDmsReplicationSubnetGroupExistsWithProviders(n string, providers *[]*s
 				continue
 			}
 
-			conn := provider.Meta().(*AWSClient).dmsconn
+			conn := provider.Meta().(*awsprovider.AWSClient).DMSConn
 			_, err := conn.DescribeReplicationSubnetGroups(&dms.DescribeReplicationSubnetGroupsInput{
 				Filters: []*dms.Filter{
 					{
@@ -101,7 +103,7 @@ func dmsReplicationSubnetGroupDestroy(s *terraform.State) error {
 }
 
 func dmsReplicationSubnetGroupConfig(randId string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "dms_vpc" {
   cidr_block = "10.1.0.0/16"
 
@@ -161,7 +163,7 @@ resource "aws_dms_replication_subnet_group" "dms_replication_subnet_group" {
 }
 
 func dmsReplicationSubnetGroupConfigUpdate(randId string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "dms_vpc" {
   cidr_block = "10.1.0.0/16"
 
