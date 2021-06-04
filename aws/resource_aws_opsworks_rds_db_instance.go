@@ -6,7 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsOpsworksRdsDbInstance() *schema.Resource {
@@ -41,7 +43,7 @@ func resourceAwsOpsworksRdsDbInstance() *schema.Resource {
 }
 
 func resourceAwsOpsworksRdsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*awsprovider.AWSClient).OpsWorksConn
 
 	req := &opsworks.UpdateRdsDbInstanceInput{
 		RdsDbInstanceArn: aws.String(d.Get("rds_db_instance_arn").(string)),
@@ -70,7 +72,7 @@ func resourceAwsOpsworksRdsDbInstanceUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsOpsworksRdsDbInstanceDeregister(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*awsprovider.AWSClient).OpsWorksConn
 
 	req := &opsworks.DeregisterRdsDbInstanceInput{
 		RdsDbInstanceArn: aws.String(d.Get("rds_db_instance_arn").(string)),
@@ -80,7 +82,7 @@ func resourceAwsOpsworksRdsDbInstanceDeregister(d *schema.ResourceData, meta int
 
 	_, err := client.DeregisterRdsDbInstance(req)
 	if err != nil {
-		if isAWSErr(err, "ResourceNotFoundException", "") {
+		if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "") {
 			log.Printf("[INFO] The db instance could not be found. Remove it from state.")
 			d.SetId("")
 			return nil
@@ -92,7 +94,7 @@ func resourceAwsOpsworksRdsDbInstanceDeregister(d *schema.ResourceData, meta int
 }
 
 func resourceAwsOpsworksRdsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*awsprovider.AWSClient).OpsWorksConn
 
 	req := &opsworks.DescribeRdsDbInstancesInput{
 		StackId: aws.String(d.Get("stack_id").(string)),
@@ -129,7 +131,7 @@ func resourceAwsOpsworksRdsDbInstanceRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsOpsworksRdsDbInstanceRegister(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*awsprovider.AWSClient).OpsWorksConn
 
 	req := &opsworks.RegisterRdsDbInstanceInput{
 		StackId:          aws.String(d.Get("stack_id").(string)),
