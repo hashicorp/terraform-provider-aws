@@ -9,8 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 /**
@@ -94,9 +97,9 @@ func TestAccAWSPinpointAPNSChannel_basicCertificate(t *testing.T) {
 	configuration := testAccAwsPinpointAPNSChannelCertConfigurationFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   atest.ErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSPinpointAPNSChannelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -128,9 +131,9 @@ func TestAccAWSPinpointAPNSChannel_basicToken(t *testing.T) {
 	configuration := testAccAwsPinpointAPNSChannelTokenConfigurationFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   atest.ErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSPinpointAPNSChannelDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -166,7 +169,7 @@ func testAccCheckAWSPinpointAPNSChannelExists(n string, channel *pinpoint.APNSCh
 			return fmt.Errorf("No Pinpoint APNs Channel with that Application ID exists")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).PinpointConn
 
 		// Check if the app exists
 		params := &pinpoint.GetApnsChannelInput{
@@ -217,7 +220,7 @@ resource "aws_pinpoint_apns_channel" "test_apns_channel" {
 }
 
 func testAccCheckAWSPinpointAPNSChannelDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).pinpointconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).PinpointConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_pinpoint_apns_channel" {
@@ -230,7 +233,7 @@ func testAccCheckAWSPinpointAPNSChannelDestroy(s *terraform.State) error {
 		}
 		_, err := conn.GetApnsChannel(params)
 		if err != nil {
-			if isAWSErr(err, pinpoint.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
 				continue
 			}
 			return err
