@@ -6,10 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicediscovery/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsServiceDiscoveryPrivateDnsNamespace() *schema.Resource {
@@ -64,8 +66,8 @@ func resourceAwsServiceDiscoveryPrivateDnsNamespace() *schema.Resource {
 }
 
 func resourceAwsServiceDiscoveryPrivateDnsNamespaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sdconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ServiceDiscoveryConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -120,9 +122,9 @@ func resourceAwsServiceDiscoveryPrivateDnsNamespaceCreate(d *schema.ResourceData
 }
 
 func resourceAwsServiceDiscoveryPrivateDnsNamespaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sdconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ServiceDiscoveryConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &servicediscovery.GetNamespaceInput{
 		Id: aws.String(d.Id()),
@@ -130,7 +132,7 @@ func resourceAwsServiceDiscoveryPrivateDnsNamespaceRead(d *schema.ResourceData, 
 
 	resp, err := conn.GetNamespace(input)
 	if err != nil {
-		if isAWSErr(err, servicediscovery.ErrCodeNamespaceNotFound, "") {
+		if tfawserr.ErrMessageContains(err, servicediscovery.ErrCodeNamespaceNotFound, "") {
 			d.SetId("")
 			return nil
 		}
@@ -166,7 +168,7 @@ func resourceAwsServiceDiscoveryPrivateDnsNamespaceRead(d *schema.ResourceData, 
 }
 
 func resourceAwsServiceDiscoveryPrivateDnsNamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sdconn
+	conn := meta.(*awsprovider.AWSClient).ServiceDiscoveryConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -179,7 +181,7 @@ func resourceAwsServiceDiscoveryPrivateDnsNamespaceUpdate(d *schema.ResourceData
 }
 
 func resourceAwsServiceDiscoveryPrivateDnsNamespaceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sdconn
+	conn := meta.(*awsprovider.AWSClient).ServiceDiscoveryConn
 
 	input := &servicediscovery.DeleteNamespaceInput{
 		Id: aws.String(d.Id()),
