@@ -7,8 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsBackupVaultNotifications() *schema.Resource {
@@ -31,7 +33,7 @@ func resourceAwsBackupVaultNotifications() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"backup_vault_events": {
 				Type:     schema.TypeSet,
@@ -51,7 +53,7 @@ func resourceAwsBackupVaultNotifications() *schema.Resource {
 }
 
 func resourceAwsBackupVaultNotificationsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*awsprovider.AWSClient).BackupConn
 
 	input := &backup.PutBackupVaultNotificationsInput{
 		BackupVaultName:   aws.String(d.Get("backup_vault_name").(string)),
@@ -70,14 +72,14 @@ func resourceAwsBackupVaultNotificationsCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsBackupVaultNotificationsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*awsprovider.AWSClient).BackupConn
 
 	input := &backup.GetBackupVaultNotificationsInput{
 		BackupVaultName: aws.String(d.Id()),
 	}
 
 	resp, err := conn.GetBackupVaultNotifications(input)
-	if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Backup Vault Notifcations %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -97,7 +99,7 @@ func resourceAwsBackupVaultNotificationsRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsBackupVaultNotificationsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*awsprovider.AWSClient).BackupConn
 
 	input := &backup.DeleteBackupVaultNotificationsInput{
 		BackupVaultName: aws.String(d.Id()),
@@ -105,7 +107,7 @@ func resourceAwsBackupVaultNotificationsDelete(d *schema.ResourceData, meta inte
 
 	_, err := conn.DeleteBackupVaultNotifications(input)
 	if err != nil {
-		if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Backup Vault Notifications (%s): %w", d.Id(), err)
