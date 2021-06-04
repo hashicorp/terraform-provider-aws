@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsKinesisStreamConsumer() *schema.Resource {
@@ -18,7 +19,7 @@ func dataSourceAwsKinesisStreamConsumer() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"creation_timestamp": {
@@ -40,14 +41,14 @@ func dataSourceAwsKinesisStreamConsumer() *schema.Resource {
 			"stream_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 		},
 	}
 }
 
 func dataSourceAwsKinesisStreamConsumerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kinesisconn
+	conn := meta.(*awsprovider.AWSClient).KinesisConn
 
 	streamArn := d.Get("stream_arn").(string)
 
