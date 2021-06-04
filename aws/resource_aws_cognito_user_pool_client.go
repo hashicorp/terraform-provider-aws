@@ -8,8 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCognitoUserPoolClient() *schema.Resource {
@@ -71,7 +73,7 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 							Optional:      true,
 							ExactlyOneOf:  []string{"analytics_configuration.0.application_id", "analytics_configuration.0.application_arn"},
 							ConflictsWith: []string{"analytics_configuration.0.external_id", "analytics_configuration.0.role_arn"},
-							ValidateFunc:  validateArn,
+							ValidateFunc:  ValidateArn,
 						},
 						"external_id": {
 							Type:          schema.TypeString,
@@ -83,7 +85,7 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 							Optional:      true,
 							Computed:      true,
 							ConflictsWith: []string{"analytics_configuration.0.application_arn"},
-							ValidateFunc:  validateArn,
+							ValidateFunc:  ValidateArn,
 						},
 						"user_data_shared": {
 							Type:     schema.TypeBool,
@@ -233,7 +235,7 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 }
 
 func resourceAwsCognitoUserPoolClientCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	params := &cognitoidentityprovider.CreateUserPoolClientInput{
 		ClientName: aws.String(d.Get("name").(string)),
@@ -322,7 +324,7 @@ func resourceAwsCognitoUserPoolClientCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsCognitoUserPoolClientRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	params := &cognitoidentityprovider.DescribeUserPoolClientInput{
 		ClientId:   aws.String(d.Id()),
@@ -334,7 +336,7 @@ func resourceAwsCognitoUserPoolClientRead(d *schema.ResourceData, meta interface
 	resp, err := conn.DescribeUserPoolClient(params)
 
 	if err != nil {
-		if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Cognito User Pool Client %s is already gone", d.Id())
 			d.SetId("")
 			return nil
@@ -373,7 +375,7 @@ func resourceAwsCognitoUserPoolClientRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCognitoUserPoolClientUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	params := &cognitoidentityprovider.UpdateUserPoolClientInput{
 		ClientId:   aws.String(d.Id()),
@@ -459,7 +461,7 @@ func resourceAwsCognitoUserPoolClientUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsCognitoUserPoolClientDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	params := &cognitoidentityprovider.DeleteUserPoolClientInput{
 		ClientId:   aws.String(d.Id()),
