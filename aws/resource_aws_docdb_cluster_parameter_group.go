@@ -7,10 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const docdbClusterParameterGroupMaxParamsBulkEdit = 20
@@ -94,8 +96,8 @@ func resourceAwsDocDBClusterParameterGroup() *schema.Resource {
 }
 
 func resourceAwsDocDBClusterParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).docdbconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DocDBConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var groupName string
@@ -129,9 +131,9 @@ func resourceAwsDocDBClusterParameterGroupCreate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsDocDBClusterParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).docdbconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DocDBConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	describeOpts := &docdb.DescribeDBClusterParameterGroupsInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
@@ -139,7 +141,7 @@ func resourceAwsDocDBClusterParameterGroupRead(d *schema.ResourceData, meta inte
 
 	describeResp, err := conn.DescribeDBClusterParameterGroups(describeOpts)
 	if err != nil {
-		if isAWSErr(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
 			log.Printf("[WARN] DocDB Cluster Parameter Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -192,7 +194,7 @@ func resourceAwsDocDBClusterParameterGroupRead(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsDocDBClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).docdbconn
+	conn := meta.(*awsprovider.AWSClient).DocDBConn
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -226,7 +228,7 @@ func resourceAwsDocDBClusterParameterGroupUpdate(d *schema.ResourceData, meta in
 				log.Printf("[DEBUG] Modify DocDB Cluster Parameter Group: %#v", modifyOpts)
 				_, err := conn.ModifyDBClusterParameterGroup(&modifyOpts)
 				if err != nil {
-					if isAWSErr(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
+					if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
 						log.Printf("[WARN] DocDB Cluster Parameter Group (%s) not found, removing from state", d.Id())
 						d.SetId("")
 						return nil
@@ -249,7 +251,7 @@ func resourceAwsDocDBClusterParameterGroupUpdate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsDocDBClusterParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).docdbconn
+	conn := meta.(*awsprovider.AWSClient).DocDBConn
 
 	deleteOpts := &docdb.DeleteDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
@@ -257,7 +259,7 @@ func resourceAwsDocDBClusterParameterGroupDelete(d *schema.ResourceData, meta in
 
 	_, err := conn.DeleteDBClusterParameterGroup(deleteOpts)
 	if err != nil {
-		if isAWSErr(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
 			return nil
 		}
 		return err
@@ -274,7 +276,7 @@ func waitForDocDBClusterParameterGroupDeletion(conn *docdb.DocDB, name string) e
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeDBClusterParameterGroups(params)
 
-		if isAWSErr(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
 			return nil
 		}
 
@@ -286,7 +288,7 @@ func waitForDocDBClusterParameterGroupDeletion(conn *docdb.DocDB, name string) e
 	})
 	if isResourceTimeoutError(err) {
 		_, err = conn.DescribeDBClusterParameterGroups(params)
-		if isAWSErr(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
 			return nil
 		}
 	}
