@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCodeArtifactDomainPermissionsPolicy() *schema.Resource {
@@ -52,7 +54,7 @@ func resourceAwsCodeArtifactDomainPermissionsPolicy() *schema.Resource {
 }
 
 func resourceAwsCodeArtifactDomainPermissionsPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
+	conn := meta.(*awsprovider.AWSClient).CodeArtifactConn
 	log.Print("[DEBUG] Creating CodeArtifact Domain Permissions Policy")
 
 	params := &codeartifact.PutDomainPermissionsPolicyInput{
@@ -79,7 +81,7 @@ func resourceAwsCodeArtifactDomainPermissionsPolicyPut(d *schema.ResourceData, m
 }
 
 func resourceAwsCodeArtifactDomainPermissionsPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
+	conn := meta.(*awsprovider.AWSClient).CodeArtifactConn
 	log.Printf("[DEBUG] Reading CodeArtifact Domain Permissions Policy: %s", d.Id())
 
 	domainOwner, domainName, err := decodeCodeArtifactDomainID(d.Id())
@@ -92,7 +94,7 @@ func resourceAwsCodeArtifactDomainPermissionsPolicyRead(d *schema.ResourceData, 
 		DomainOwner: aws.String(domainOwner),
 	})
 	if err != nil {
-		if isAWSErr(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] CodeArtifact Domain Permissions Policy %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -110,7 +112,7 @@ func resourceAwsCodeArtifactDomainPermissionsPolicyRead(d *schema.ResourceData, 
 }
 
 func resourceAwsCodeArtifactDomainPermissionsPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codeartifactconn
+	conn := meta.(*awsprovider.AWSClient).CodeArtifactConn
 	log.Printf("[DEBUG] Deleting CodeArtifact Domain Permissions Policy: %s", d.Id())
 
 	domainOwner, domainName, err := decodeCodeArtifactDomainID(d.Id())
@@ -125,7 +127,7 @@ func resourceAwsCodeArtifactDomainPermissionsPolicyDelete(d *schema.ResourceData
 
 	_, err = conn.DeleteDomainPermissionsPolicy(input)
 
-	if isAWSErr(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
