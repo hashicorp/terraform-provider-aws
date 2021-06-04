@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsIamAccountAlias() *schema.Resource {
@@ -23,7 +24,7 @@ func dataSourceAwsIamAccountAlias() *schema.Resource {
 }
 
 func dataSourceAwsIamAccountAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*awsprovider.AWSClient).IAMConn
 
 	log.Printf("[DEBUG] Reading IAM Account Aliases.")
 
