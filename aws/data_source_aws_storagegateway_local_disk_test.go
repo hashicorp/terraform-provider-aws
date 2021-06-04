@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSStorageGatewayLocalDiskDataSource_DiskNode(t *testing.T) {
@@ -16,9 +17,9 @@ func TestAccAWSStorageGatewayLocalDiskDataSource_DiskNode(t *testing.T) {
 	dataSourceName := "data.aws_storagegateway_local_disk.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, storagegateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -43,9 +44,9 @@ func TestAccAWSStorageGatewayLocalDiskDataSource_DiskPath(t *testing.T) {
 	dataSourceName := "data.aws_storagegateway_local_disk.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, storagegateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -77,7 +78,7 @@ func testAccAWSStorageGatewayLocalDiskDataSourceExists(dataSourceName string) re
 }
 
 func testAccAWSStorageGatewayLocalDiskDataSourceConfigBase(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSStorageGatewayGatewayConfig_GatewayType_FileS3(rName),
 		fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
@@ -100,7 +101,7 @@ resource "aws_volume_attachment" "test" {
 }
 
 func testAccAWSStorageGatewayLocalDiskDataSourceConfig_DiskNode(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSStorageGatewayLocalDiskDataSourceConfigBase(rName),
 		`
 data "aws_storagegateway_local_disk" "test" {
@@ -111,7 +112,7 @@ data "aws_storagegateway_local_disk" "test" {
 }
 
 func testAccAWSStorageGatewayLocalDiskDataSourceConfig_DiskNode_NonExistent(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSStorageGatewayLocalDiskDataSourceConfigBase(rName),
 		`
 data "aws_storagegateway_local_disk" "test" {
@@ -122,7 +123,7 @@ data "aws_storagegateway_local_disk" "test" {
 }
 
 func testAccAWSStorageGatewayLocalDiskDataSourceConfig_DiskPath(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSStorageGatewayLocalDiskDataSourceConfigBase(rName),
 		`
 data "aws_storagegateway_local_disk" "test" {
@@ -133,7 +134,7 @@ data "aws_storagegateway_local_disk" "test" {
 }
 
 func testAccAWSStorageGatewayLocalDiskDataSourceConfig_DiskPath_NonExistent(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSStorageGatewayLocalDiskDataSourceConfigBase(rName),
 		`
 data "aws_storagegateway_local_disk" "test" {
