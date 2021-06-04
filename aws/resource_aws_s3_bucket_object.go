@@ -15,13 +15,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/mitchellh/go-homedir"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const s3BucketObjectCreationTimeout = 2 * time.Minute
@@ -135,7 +137,7 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// ignore diffs where the user hasn't specified a kms_key_id but the bucket has a default KMS key configured
 					if new == "" && d.Get("server_side_encryption") == s3.ServerSideEncryptionAwsKms {
@@ -196,8 +198,8 @@ func resourceAwsS3BucketObject() *schema.Resource {
 }
 
 func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	S3Conn := meta.(*awsprovider.AWSClient).S3Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var body io.ReadSeeker
@@ -306,7 +308,7 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 		putInput.ObjectLockRetainUntilDate = expandS3ObjectDate(v.(string))
 	}
 
-	if _, err := s3conn.PutObject(putInput); err != nil {
+	if _, err := S3Conn.PutObject(putInput); err != nil {
 		return fmt.Errorf("Error putting object in S3 bucket (%s): %s", bucket, err)
 	}
 
@@ -319,9 +321,9 @@ func resourceAwsS3BucketObjectCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	S3Conn := meta.(*awsprovider.AWSClient).S3Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -336,9 +338,9 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 	err := resource.Retry(s3BucketObjectCreationTimeout, func() *resource.RetryError {
 		var err error
 
-		resp, err = s3conn.HeadObject(input)
+		resp, err = S3Conn.HeadObject(input)
 
-		if d.IsNewResource() && isAWSErrRequestFailureStatusCode(err, 404) {
+		if d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, 404) {
 			return resource.RetryableError(err)
 		}
 
@@ -350,10 +352,10 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 	})
 
 	if tfresource.TimedOut(err) {
-		resp, err = s3conn.HeadObject(input)
+		resp, err = S3Conn.HeadObject(input)
 	}
 
-	if !d.IsNewResource() && isAWSErrRequestFailureStatusCode(err, 404) {
+	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, 404) {
 		log.Printf("[WARN] S3 Object (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -405,7 +407,7 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 
 	// Retry due to S3 eventual consistency
 	tagsRaw, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return keyvaluetags.S3ObjectListTags(s3conn, bucket, key)
+		return keyvaluetags.S3ObjectListTags(S3Conn, bucket, key)
 	})
 
 	if err != nil {
@@ -437,7 +439,7 @@ func resourceAwsS3BucketObjectUpdate(d *schema.ResourceData, meta interface{}) e
 		return resourceAwsS3BucketObjectPut(d, meta)
 	}
 
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*awsprovider.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -504,7 +506,7 @@ func resourceAwsS3BucketObjectUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
+	S3Conn := meta.(*awsprovider.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -515,9 +517,9 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		err = deleteAllS3ObjectVersions(s3conn, bucket, key, d.Get("force_destroy").(bool), false)
+		err = deleteAllS3ObjectVersions(S3Conn, bucket, key, d.Get("force_destroy").(bool), false)
 	} else {
-		err = deleteS3ObjectVersion(s3conn, bucket, key, "", false)
+		err = deleteS3ObjectVersion(S3Conn, bucket, key, "", false)
 	}
 
 	if err != nil {
@@ -531,8 +533,8 @@ func resourceAwsS3BucketObjectSetKMS(d *schema.ResourceData, meta interface{}, s
 	// Only set non-default KMS key ID (one that doesn't match default)
 	if sseKMSKeyId != nil {
 		// retrieve S3 KMS Default Master Key
-		kmsconn := meta.(*AWSClient).kmsconn
-		kmsresp, err := kmsconn.DescribeKey(&kms.DescribeKeyInput{
+		KMSConn := meta.(*awsprovider.AWSClient).KMSConn
+		kmsresp, err := KMSConn.DescribeKey(&kms.DescribeKeyInput{
 			KeyId: aws.String("alias/aws/s3"),
 		})
 		if err != nil {
@@ -618,7 +620,7 @@ func deleteAllS3ObjectVersions(conn *s3.S3, bucketName, key string, force, ignor
 			}
 
 			err := deleteS3ObjectVersion(conn, bucketName, objectKey, objectVersionID, force)
-			if isAWSErr(err, "AccessDenied", "") && force {
+			if tfawserr.ErrMessageContains(err, "AccessDenied", "") && force {
 				// Remove any legal hold.
 				resp, err := conn.HeadObject(&s3.HeadObjectInput{
 					Bucket:    aws.String(bucketName),
@@ -671,7 +673,7 @@ func deleteAllS3ObjectVersions(conn *s3.S3, bucketName, key string, force, ignor
 		return !lastPage
 	})
 
-	if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+	if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
 		err = nil
 	}
 
@@ -711,7 +713,7 @@ func deleteAllS3ObjectVersions(conn *s3.S3, bucketName, key string, force, ignor
 		return !lastPage
 	})
 
-	if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+	if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
 		err = nil
 	}
 
@@ -753,7 +755,7 @@ func deleteS3ObjectVersion(conn *s3.S3, b, k, v string, force bool) error {
 		log.Printf("[WARN] Error deleting S3 Bucket (%s) Object (%s) Version (%s): %s", b, k, v, err)
 	}
 
-	if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, s3.ErrCodeNoSuchKey, "") {
+	if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") || tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchKey, "") {
 		return nil
 	}
 
