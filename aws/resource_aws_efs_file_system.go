@@ -7,11 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/efs/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEfsFileSystem() *schema.Resource {
@@ -74,7 +76,7 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"dns_name": {
@@ -143,8 +145,8 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 }
 
 func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EFSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	creationToken := ""
@@ -219,7 +221,7 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsEfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
+	conn := meta.(*awsprovider.AWSClient).EFSConn
 
 	if d.HasChanges("provisioned_throughput_in_mibps", "throughput_mode") {
 		throughputMode := d.Get("throughput_mode").(string)
@@ -275,15 +277,15 @@ func resourceAwsEfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EFSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeFileSystems(&efs.DescribeFileSystemsInput{
 		FileSystemId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, efs.ErrCodeFileSystemNotFound, "") {
+		if tfawserr.ErrMessageContains(err, efs.ErrCodeFileSystemNotFound, "") {
 			log.Printf("[WARN] EFS file system (%s) could not be found.", d.Id())
 			d.SetId("")
 			return nil
@@ -335,7 +337,7 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting size_in_bytes: %w", err)
 	}
 
-	d.Set("dns_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
+	d.Set("dns_name", meta.(*awsprovider.AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
 
 	res, err := conn.DescribeLifecycleConfiguration(&efs.DescribeLifecycleConfigurationInput{
 		FileSystemId: aws.String(d.Id()),
@@ -352,21 +354,21 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsEfsFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
+	conn := meta.(*awsprovider.AWSClient).EFSConn
 
 	log.Printf("[DEBUG] Deleting EFS file system: %s", d.Id())
 	_, err := conn.DeleteFileSystem(&efs.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, efs.ErrCodeFileSystemNotFound, "") {
+		if tfawserr.ErrMessageContains(err, efs.ErrCodeFileSystemNotFound, "") {
 			return nil
 		}
 		return fmt.Errorf("Error delete file system: %s with err %s", d.Id(), err.Error())
 	}
 
 	if _, err := waiter.FileSystemDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, efs.ErrCodeFileSystemNotFound, "") {
+		if tfawserr.ErrMessageContains(err, efs.ErrCodeFileSystemNotFound, "") {
 			return nil
 		}
 		return fmt.Errorf("error waiting for EFS file system (%s) deletion: %w", d.Id(), err)
