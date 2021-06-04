@@ -2267,7 +2267,7 @@ TASK_DEFINITION
 
     fsx_windows_file_server_volume_configuration {
       file_system_id = aws_fsx_windows_file_system.test.id
-	  root_directory = "\\data"
+      root_directory = "\\data"
 
       authorization_config {
         credentials_parameter = aws_secretsmanager_secret_version.test.arn
