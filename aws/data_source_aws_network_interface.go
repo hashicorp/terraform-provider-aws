@@ -7,7 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsNetworkInterface() *schema.Resource {
@@ -19,7 +20,7 @@ func dataSourceAwsNetworkInterface() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"filter": dataSourceFiltersSchema(),
+			"filter": awsprovider.DataSourceFiltersSchema(),
 			"association": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -145,8 +146,8 @@ func dataSourceAwsNetworkInterface() *schema.Resource {
 }
 
 func dataSourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeNetworkInterfacesInput{}
 	if v, ok := d.GetOk("id"); ok {
@@ -154,7 +155,7 @@ func dataSourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
+		input.Filters = awsprovider.BuildDataSourceFilters(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Reading Network Interface: %s", input)
