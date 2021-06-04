@@ -13,7 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDmsReplicationTask() *schema.Resource {
@@ -46,7 +47,7 @@ func resourceAwsDmsReplicationTask() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"replication_task_arn": {
 				Type:     schema.TypeString,
@@ -68,7 +69,7 @@ func resourceAwsDmsReplicationTask() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"table_mappings": {
 				Type:             schema.TypeString,
@@ -82,7 +83,7 @@ func resourceAwsDmsReplicationTask() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 		},
 
@@ -91,8 +92,8 @@ func resourceAwsDmsReplicationTask() *schema.Resource {
 }
 
 func resourceAwsDmsReplicationTaskCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DMSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &dms.CreateReplicationTaskInput{
@@ -146,9 +147,9 @@ func resourceAwsDmsReplicationTaskCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDmsReplicationTaskRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DMSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	response, err := conn.DescribeReplicationTasks(&dms.DescribeReplicationTasksInput{
 		Filters: []*dms.Filter{
@@ -193,7 +194,7 @@ func resourceAwsDmsReplicationTaskRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsDmsReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
+	conn := meta.(*awsprovider.AWSClient).DMSConn
 
 	request := &dms.ModifyReplicationTaskInput{
 		ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
@@ -263,7 +264,7 @@ func resourceAwsDmsReplicationTaskUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDmsReplicationTaskDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dmsconn
+	conn := meta.(*awsprovider.AWSClient).DMSConn
 
 	request := &dms.DeleteReplicationTaskInput{
 		ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
@@ -318,7 +319,7 @@ func resourceAwsDmsReplicationTaskSetState(d *schema.ResourceData, task *dms.Rep
 func resourceAwsDmsReplicationTaskStateRefreshFunc(
 	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		conn := meta.(*AWSClient).dmsconn
+		conn := meta.(*awsprovider.AWSClient).DMSConn
 
 		v, err := conn.DescribeReplicationTasks(&dms.DescribeReplicationTasksInput{
 			Filters: []*dms.Filter{
