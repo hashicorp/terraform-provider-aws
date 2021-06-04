@@ -128,6 +128,34 @@ resource "aws_ecs_task_definition" "service" {
 }
 ```
 
+### Example Using `fsx_windows_file_server_volume_configuration`
+
+```terraform
+resource "aws_ecs_task_definition" "service" {
+  family                = "service"
+  container_definitions = file("task-definitions/service.json")
+
+  volume {
+    name = "service-storage"
+
+    fsx_windows_file_server_volume_configuration {
+      file_system_id = aws_fsx_windows_file_system.test.id
+      root_directory = "\\data"
+
+      authorization_config {
+        credentials_parameter = aws_secretsmanager_secret_version.test.arn
+        domain                = aws_directory_service_directory.test.name
+      }
+    }
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode({ username : "admin", password : aws_directory_service_directory.test.password })
+}
+```
+
 ### Example Using `container_definitions` and `inference_accelerator`
 
 ```terraform
@@ -198,6 +226,7 @@ The following arguments are optional:
 
 * `docker_volume_configuration` - (Optional) Configuration block to configure a [docker volume](#docker_volume_configuration). Detailed below.
 * `efs_volume_configuration` - (Optional) Configuration block for an [EFS volume](#efs_volume_configuration). Detailed below.
+* `fsx_windows_file_server_volume_configuration` - (Optional) Configuration block for an [FSX Windows File Server volume](#fsx_windows_file_server_volume_configuration). Detailed below.
 * `host_path` - (Optional) Path on the host container instance that is presented to the container. If not set, ECS will create a nonpersistent data volume that starts empty and is deleted after the task has finished.
 * `name` - (Required) Name of the volume. This name is referenced in the `sourceVolume`
 parameter of container definition in the `mountPoints` section.
@@ -222,10 +251,23 @@ For more information, see [Specifying an EFS volume in your Task Definition Deve
 * `transit_encryption_port` - (Optional) Port to use for transit encryption. If you do not specify a transit encryption port, it will use the port selection strategy that the Amazon EFS mount helper uses.
 * `authorization_config` - (Optional) Configuration block for [authorization](#authorization_config) for the Amazon EFS file system. Detailed below.
 
-### authorization_config
+#### authorization_config
 
 * `access_point_id` - (Optional) Access point ID to use. If an access point is specified, the root directory value will be relative to the directory set for the access point. If specified, transit encryption must be enabled in the EFSVolumeConfiguration.
 * `iam` - (Optional) Whether or not to use the Amazon ECS task IAM role defined in a task definition when mounting the Amazon EFS file system. If enabled, transit encryption must be enabled in the EFSVolumeConfiguration. Valid values: `ENABLED`, `DISABLED`. If this parameter is omitted, the default value of `DISABLED` is used.
+
+### fsx_windows_file_server_volume_configuration
+
+For more information, see [Specifying an FSX Windows File Server volume in your Task Definition Developer Guide](https://docs.amazonaws.cn/en_us/AmazonECS/latest/developerguide/tutorial-wfsx-volumes.html)
+
+* `file_system_id` - (Required) The Amazon FSx for Windows File Server file system ID to use.
+* `root_directory` - (Required) The directory within the Amazon FSx for Windows File Server file system to mount as the root directory inside the host.
+* `authorization_config` - (OptiRequiredonal) Configuration block for [authorization](#authorization_config) for the Amazon FSx for Windows File Server file system detailed below.
+
+#### authorization_config
+
+* `credentials_parameter` - (Required) The authorization credential option to use. The authorization credential options can be provided using either the Amazon Resource Name (ARN) of an AWS Secrets Manager secret or AWS Systems Manager Parameter Store parameter. The ARNs refer to the stored credentials.
+* `domain` - (Required) A fully qualified domain name hosted by an AWS Directory Service Managed Microsoft AD (Active Directory) or self-hosted AD on Amazon EC2.
 
 ### placement_constraints
 
