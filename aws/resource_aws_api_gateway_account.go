@@ -6,9 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsApiGatewayAccount() *schema.Resource {
@@ -47,7 +49,7 @@ func resourceAwsApiGatewayAccount() *schema.Resource {
 }
 
 func resourceAwsApiGatewayAccountRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	log.Printf("[INFO] Reading API Gateway Account %s", d.Id())
 	account, err := conn.GetAccount(&apigateway.GetAccountInput{})
@@ -69,7 +71,7 @@ func resourceAwsApiGatewayAccountRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsApiGatewayAccountUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	input := apigateway.UpdateAccountInput{}
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -100,8 +102,8 @@ func resourceAwsApiGatewayAccountUpdate(d *schema.ResourceData, meta interface{}
 		out, err = conn.UpdateAccount(&input)
 
 		if err != nil {
-			if isAWSErr(err, "BadRequestException", expectedErrMsg) ||
-				isAWSErr(err, "BadRequestException", otherErrMsg) {
+			if tfawserr.ErrMessageContains(err, "BadRequestException", expectedErrMsg) ||
+				tfawserr.ErrMessageContains(err, "BadRequestException", otherErrMsg) {
 				log.Printf("[DEBUG] Retrying API Gateway Account update: %s", err)
 				return resource.RetryableError(err)
 			}
