@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 // These tests assume the existence of predefined Opsworks IAM roles named `aws-opsworks-ec2-role`
@@ -18,9 +19,9 @@ func TestAccAWSOpsworksRailsAppLayer_basic(t *testing.T) {
 	stackName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_rails_app_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(opsworks.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, opsworks.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksRailsAppLayerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -48,9 +49,9 @@ func TestAccAWSOpsworksRailsAppLayer_tags(t *testing.T) {
 	stackName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_rails_app_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(opsworks.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, opsworks.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsOpsworksRailsAppLayerDestroy,
 		Steps: []resource.TestStep{
 			{
