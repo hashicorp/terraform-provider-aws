@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsEcrRepository() *schema.Resource {
@@ -70,8 +72,8 @@ func dataSourceAwsEcrRepository() *schema.Resource {
 }
 
 func dataSourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ECRConn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
 	params := &ecr.DescribeRepositoriesInput{
@@ -85,7 +87,7 @@ func dataSourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Reading ECR repository: %#v", params)
 	out, err := conn.DescribeRepositories(params)
 	if err != nil {
-		if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
 			return fmt.Errorf("ECR Repository (%s) not found", name)
 		}
 		return fmt.Errorf("error reading ECR repository: %w", err)
