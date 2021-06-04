@@ -8,11 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDbSecurityGroup() *schema.Resource {
@@ -85,8 +87,8 @@ func resourceAwsDbSecurityGroup() *schema.Resource {
 }
 
 func resourceAwsDbSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var err error
@@ -145,8 +147,8 @@ func resourceAwsDbSecurityGroupCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsDbSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	sg, err := resourceAwsDbSecurityGroupRetrieve(d, meta)
 	if err != nil {
@@ -182,7 +184,7 @@ func resourceAwsDbSecurityGroupRead(d *schema.ResourceData, meta interface{}) er
 
 	d.Set("ingress", rules)
 
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	arn := aws.StringValue(sg.DBSecurityGroupArn)
 	d.Set("arn", arn)
@@ -208,7 +210,7 @@ func resourceAwsDbSecurityGroupRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsDbSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -258,7 +260,7 @@ func resourceAwsDbSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsDbSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	log.Printf("[DEBUG] DB Security Group destroy: %v", d.Id())
 
@@ -268,7 +270,7 @@ func resourceAwsDbSecurityGroupDelete(d *schema.ResourceData, meta interface{}) 
 	_, err := conn.DeleteDBSecurityGroup(&opts)
 
 	if err != nil {
-		if isAWSErr(err, "InvalidDBSecurityGroup.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidDBSecurityGroup.NotFound", "") {
 			return nil
 		}
 		return err
@@ -278,7 +280,7 @@ func resourceAwsDbSecurityGroupDelete(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsDbSecurityGroupRetrieve(d *schema.ResourceData, meta interface{}) (*rds.DBSecurityGroup, error) {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	opts := rds.DescribeDBSecurityGroupsInput{
 		DBSecurityGroupName: aws.String(d.Id()),
