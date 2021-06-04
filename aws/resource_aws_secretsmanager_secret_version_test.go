@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsSecretsManagerSecretVersion_BasicString(t *testing.T) {
@@ -18,9 +21,9 @@ func TestAccAwsSecretsManagerSecretVersion_BasicString(t *testing.T) {
 	secretResourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		ErrorCheck:   testAccErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck:   atest.ErrorCheck(t, secretsmanager.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,9 +53,9 @@ func TestAccAwsSecretsManagerSecretVersion_Base64Binary(t *testing.T) {
 	secretResourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		ErrorCheck:   testAccErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck:   atest.ErrorCheck(t, secretsmanager.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -81,9 +84,9 @@ func TestAccAwsSecretsManagerSecretVersion_VersionStages(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		ErrorCheck:   testAccErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck:   atest.ErrorCheck(t, secretsmanager.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -127,7 +130,7 @@ func TestAccAwsSecretsManagerSecretVersion_VersionStages(t *testing.T) {
 }
 
 func testAccCheckAwsSecretsManagerSecretVersionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).secretsmanagerconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SecretsManagerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_secretsmanager_secret_version" {
@@ -147,10 +150,10 @@ func testAccCheckAwsSecretsManagerSecretVersionDestroy(s *terraform.State) error
 		output, err := conn.GetSecretValue(input)
 
 		if err != nil {
-			if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
-			if isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "was deleted") || isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "was marked for deletion") {
+			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "was deleted") || tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "was marked for deletion") {
 				return nil
 			}
 			return err
@@ -187,7 +190,7 @@ func testAccCheckAwsSecretsManagerSecretVersionExists(resourceName string, versi
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).secretsmanagerconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SecretsManagerConn
 
 		input := &secretsmanager.GetSecretValueInput{
 			SecretId:  aws.String(secretID),
