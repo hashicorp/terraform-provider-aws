@@ -9,10 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsApiGatewayRestApi() *schema.Resource {
@@ -144,8 +146,8 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 }
 
 func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	log.Printf("[DEBUG] Creating API Gateway")
 
@@ -325,16 +327,16 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading API Gateway %s", d.Id())
 
 	api, err := conn.GetRestApi(&apigateway.GetRestApiInput{
 		RestApiId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -383,10 +385,10 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("binary_media_types", api.BinaryMediaTypes)
 
 	execution_arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "execute-api",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  d.Id(),
 	}.String()
 	d.Set("execution_arn", execution_arn)
@@ -416,9 +418,9 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	rest_api_arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "apigateway",
-		Region:    meta.(*AWSClient).region,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Resource:  fmt.Sprintf("/restapis/%s", d.Id()),
 	}.String()
 	d.Set("arn", rest_api_arn)
@@ -552,7 +554,7 @@ func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*api
 }
 
 func resourceAwsApiGatewayRestApiUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Updating API Gateway %s", d.Id())
 
 	if d.HasChange("tags_all") {
@@ -704,7 +706,7 @@ func resourceAwsApiGatewayRestApiUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsApiGatewayRestApiDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	input := &apigateway.DeleteRestApiInput{
 		RestApiId: aws.String(d.Id()),
@@ -713,7 +715,7 @@ func resourceAwsApiGatewayRestApiDelete(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Deleting API Gateway: %s", input)
 	_, err := conn.DeleteRestApi(input)
 
-	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
