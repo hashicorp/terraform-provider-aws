@@ -5,15 +5,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAWSEFSAccessPoints_basic(t *testing.T) {
 	dataSourceName := "data.aws_efs_access_points.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckEfsAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
