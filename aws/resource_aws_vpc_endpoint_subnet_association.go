@@ -8,9 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsVpcEndpointSubnetAssociation() *schema.Resource {
@@ -43,7 +45,7 @@ func resourceAwsVpcEndpointSubnetAssociation() *schema.Resource {
 }
 
 func resourceAwsVpcEndpointSubnetAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	endpointId := d.Get("vpc_endpoint_id").(string)
 	snId := d.Get("subnet_id").(string)
@@ -56,8 +58,8 @@ func resourceAwsVpcEndpointSubnetAssociationCreate(d *schema.ResourceData, meta 
 	// See https://github.com/hashicorp/terraform-provider-aws/issues/3382.
 	// Prevent concurrent subnet association requests and delay between requests.
 	mk := "vpc_endpoint_subnet_association_" + endpointId
-	awsMutexKV.Lock(mk)
-	defer awsMutexKV.Unlock(mk)
+	awsprovider.MutexKV.Lock(mk)
+	defer awsprovider.MutexKV.Unlock(mk)
 
 	c := &resource.StateChangeConf{
 		Delay:   1 * time.Minute,
@@ -86,14 +88,14 @@ func resourceAwsVpcEndpointSubnetAssociationCreate(d *schema.ResourceData, meta 
 }
 
 func resourceAwsVpcEndpointSubnetAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	endpointId := d.Get("vpc_endpoint_id").(string)
 	snId := d.Get("subnet_id").(string)
 
 	vpce, err := findResourceVpcEndpoint(conn, endpointId)
 	if err != nil {
-		if isAWSErr(err, "InvalidVpcEndpointId.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVpcEndpointId.NotFound", "") {
 			log.Printf("[WARN] Vpc Endpoint (%s) not found, removing Vpc Endpoint/Subnet association (%s) from state", endpointId, d.Id())
 			d.SetId("")
 			return nil
@@ -119,7 +121,7 @@ func resourceAwsVpcEndpointSubnetAssociationRead(d *schema.ResourceData, meta in
 }
 
 func resourceAwsVpcEndpointSubnetAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	endpointId := d.Get("vpc_endpoint_id").(string)
 	snId := d.Get("subnet_id").(string)
