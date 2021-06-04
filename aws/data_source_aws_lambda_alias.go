@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsLambdaAlias() *schema.Resource {
@@ -47,7 +48,7 @@ func dataSourceAwsLambdaAlias() *schema.Resource {
 }
 
 func dataSourceAwsLambdaAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
 
 	functionName := d.Get("function_name").(string)
 	name := d.Get("name").(string)
