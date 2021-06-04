@@ -6,9 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSagemakerEndpoint() *schema.Resource {
@@ -50,8 +52,8 @@ func resourceAwsSagemakerEndpoint() *schema.Resource {
 }
 
 func resourceAwsSagemakerEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
@@ -90,9 +92,9 @@ func resourceAwsSagemakerEndpointCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsSagemakerEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	describeInput := &sagemaker.DescribeEndpointInput{
 		EndpointName: aws.String(d.Id()),
@@ -100,7 +102,7 @@ func resourceAwsSagemakerEndpointRead(d *schema.ResourceData, meta interface{}) 
 
 	endpoint, err := conn.DescribeEndpoint(describeInput)
 	if err != nil {
-		if isAWSErr(err, "ValidationException", "") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "") {
 			log.Printf("[INFO] unable to find the SageMaker Endpoint resource and therefore it is removed from the state: %s", d.Id())
 			d.SetId("")
 			return nil
@@ -144,7 +146,7 @@ func resourceAwsSagemakerEndpointRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSagemakerEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -179,7 +181,7 @@ func resourceAwsSagemakerEndpointUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsSagemakerEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	deleteEndpointOpts := &sagemaker.DeleteEndpointInput{
 		EndpointName: aws.String(d.Id()),
@@ -188,7 +190,7 @@ func resourceAwsSagemakerEndpointDelete(d *schema.ResourceData, meta interface{}
 
 	_, err := conn.DeleteEndpoint(deleteEndpointOpts)
 
-	if isAWSErr(err, "ValidationException", "") {
+	if tfawserr.ErrMessageContains(err, "ValidationException", "") {
 		return nil
 	}
 
