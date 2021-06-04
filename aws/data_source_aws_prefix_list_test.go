@@ -10,13 +10,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccDataSourceAwsPrefixList_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsPrefixListConfig,
@@ -31,9 +33,9 @@ func TestAccDataSourceAwsPrefixList_basic(t *testing.T) {
 
 func TestAccDataSourceAwsPrefixList_filter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsPrefixListConfigFilter,
@@ -48,9 +50,9 @@ func TestAccDataSourceAwsPrefixList_filter(t *testing.T) {
 
 func TestAccDataSourceAwsPrefixList_nameDoesNotOverrideFilter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsPrefixListConfig_nameDoesNotOverrideFilter,
@@ -62,10 +64,10 @@ func TestAccDataSourceAwsPrefixList_nameDoesNotOverrideFilter(t *testing.T) {
 
 func testAccDataSourceAwsPrefixListCheck(name string) resource.TestCheckFunc {
 	getPrefixListId := func(name string) (string, error) {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 		input := ec2.DescribePrefixListsInput{
-			Filters: buildEC2AttributeFilterList(map[string]string{
+			Filters: BuildEC2AttributeFilterList(map[string]string{
 				"prefix-list-name": name,
 			}),
 		}
@@ -90,7 +92,7 @@ func testAccDataSourceAwsPrefixListCheck(name string) resource.TestCheckFunc {
 
 		attr := rs.Primary.Attributes
 
-		region := testAccGetRegion()
+		region := atest.Region()
 		prefixListName := fmt.Sprintf("com.amazonaws.%s.s3", region)
 		prefixListId, err := getPrefixListId(prefixListName)
 		if err != nil {
