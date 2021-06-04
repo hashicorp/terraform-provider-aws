@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsLicenseManagerAssociation() *schema.Resource {
@@ -24,20 +25,20 @@ func resourceAwsLicenseManagerAssociation() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"license_configuration_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 		},
 	}
 }
 
 func resourceAwsLicenseManagerAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).licensemanagerconn
+	conn := meta.(*awsprovider.AWSClient).LicenseManagerConn
 
 	resourceArn := d.Get("resource_arn").(string)
 	licenseConfigurationArn := d.Get("license_configuration_arn").(string)
@@ -62,7 +63,7 @@ func resourceAwsLicenseManagerAssociationCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsLicenseManagerAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).licensemanagerconn
+	conn := meta.(*awsprovider.AWSClient).LicenseManagerConn
 
 	resourceArn, licenseConfigurationArn, err := resourceAwsLicenseManagerAssociationParseId(d.Id())
 	if err != nil {
@@ -121,7 +122,7 @@ func resourceAwsLicenseManagerAssociationParseId(id string) (string, string, err
 }
 
 func resourceAwsLicenseManagerAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).licensemanagerconn
+	conn := meta.(*awsprovider.AWSClient).LicenseManagerConn
 
 	resourceArn, licenseConfigurationArn, err := resourceAwsLicenseManagerAssociationParseId(d.Id())
 	if err != nil {
