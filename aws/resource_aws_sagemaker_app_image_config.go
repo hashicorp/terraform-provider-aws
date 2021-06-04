@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSagemakerAppImageConfig() *schema.Resource {
@@ -99,7 +101,7 @@ func resourceAwsSagemakerAppImageConfig() *schema.Resource {
 }
 
 func resourceAwsSagemakerAppImageConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	name := d.Get("app_image_config_name").(string)
 	input := &sagemaker.CreateAppImageConfigInput{
@@ -121,11 +123,11 @@ func resourceAwsSagemakerAppImageConfigCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsSagemakerAppImageConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	image, err := finder.AppImageConfigByName(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker App Image Config (%s); removing from state", d.Id())
 			return nil
@@ -146,7 +148,7 @@ func resourceAwsSagemakerAppImageConfigRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsSagemakerAppImageConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	if d.HasChange("kernel_gateway_image_config") {
 
@@ -170,14 +172,14 @@ func resourceAwsSagemakerAppImageConfigUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsSagemakerAppImageConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteAppImageConfigInput{
 		AppImageConfigName: aws.String(d.Id()),
 	}
 
 	if _, err := conn.DeleteAppImageConfig(input); err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			return nil
 		}
 		return fmt.Errorf("error deleting SageMaker App Image Config (%s): %w", d.Id(), err)
