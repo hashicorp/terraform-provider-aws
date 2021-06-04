@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
@@ -94,19 +93,6 @@ func expandListeners(configured []interface{}) ([]*elb.Listener, error) {
 	}
 
 	return listeners, nil
-}
-
-// Takes JSON in a string. Decodes JSON into
-// an array of ecs.ContainerDefinition compatible objects
-func expandEcsContainerDefinitions(rawDefinitions string) ([]*ecs.ContainerDefinition, error) {
-	var definitions []*ecs.ContainerDefinition
-
-	err := json.Unmarshal([]byte(rawDefinitions), &definitions)
-	if err != nil {
-		return nil, fmt.Errorf("Error decoding JSON: %s", err)
-	}
-
-	return definitions, nil
 }
 
 // Takes the result of flatmap. Expand for an array of load balancers and
@@ -611,16 +597,6 @@ func flattenEcsLoadBalancers(list []*ecs.LoadBalancer) []map[string]interface{} 
 		result = append(result, l)
 	}
 	return result
-}
-
-// Encodes an array of ecs.ContainerDefinitions into a JSON string
-func flattenEcsContainerDefinitions(definitions []*ecs.ContainerDefinition) (string, error) {
-	b, err := jsonutil.BuildJSON(definitions)
-	if err != nil {
-		return "", err
-	}
-
-	return string(b), nil
 }
 
 // Flattens an array of Options into a []map[string]interface{}

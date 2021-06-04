@@ -2,12 +2,14 @@ package aws
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -1033,4 +1035,24 @@ func flattenFsxWinVolumeAuthorizationConfig(config *ecs.FSxWindowsFileServerAuth
 
 	items = append(items, m)
 	return items
+}
+
+func flattenEcsContainerDefinitions(definitions []*ecs.ContainerDefinition) (string, error) {
+	b, err := jsonutil.BuildJSON(definitions)
+	if err != nil {
+		return "", err
+	}
+
+	return string(b), nil
+}
+
+func expandEcsContainerDefinitions(rawDefinitions string) ([]*ecs.ContainerDefinition, error) {
+	var definitions []*ecs.ContainerDefinition
+
+	err := json.Unmarshal([]byte(rawDefinitions), &definitions)
+	if err != nil {
+		return nil, fmt.Errorf("Error decoding JSON: %s", err)
+	}
+
+	return definitions, nil
 }
