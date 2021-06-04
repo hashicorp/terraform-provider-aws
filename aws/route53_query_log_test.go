@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // Route 53 Query Logging can only be enabled with CloudWatch Log Groups in specific regions,
@@ -32,7 +34,7 @@ var testAccProviderRoute53QueryLogConfigure sync.Once
 
 // testAccPreCheckRoute53QueryLog verifies AWS credentials and that Route 53 Query Logging is supported
 func testAccPreCheckRoute53QueryLog(t *testing.T) {
-	testAccPartitionHasServicePreCheck(route53.EndpointsID, t)
+	atest.PreCheckPartitionService(route53.EndpointsID, t)
 
 	region := testAccGetRoute53QueryLogRegion()
 
@@ -43,7 +45,7 @@ func testAccPreCheckRoute53QueryLog(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderRoute53QueryLogConfigure.Do(func() {
-		testAccProviderRoute53QueryLog = Provider()
+		testAccProviderRoute53QueryLog = awsprovider.Provider()
 
 		config := map[string]interface{}{
 			"region": region,
@@ -66,7 +68,7 @@ func testAccPreCheckRoute53QueryLog(t *testing.T) {
 // Testing Route 53 Query Logging assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
 func testAccRoute53QueryLogRegionProviderConfig() string {
-	return testAccRegionalProviderConfig(testAccGetRoute53QueryLogRegion())
+	return atest.ConfigProviderRegional(testAccGetRoute53QueryLogRegion())
 }
 
 // testAccGetRoute53QueryLogRegion returns the Route 53 Query Logging region for testing
@@ -78,7 +80,7 @@ func testAccGetRoute53QueryLogRegion() string {
 	// AWS Commercial: https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/query-logs.html
 	// AWS GovCloud (US) - only private DNS: https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-r53.html
 	// AWS China - not available yet: https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
-	switch testAccGetPartition() {
+	switch atest.Partition() {
 	case endpoints.AwsPartitionID:
 		testAccRoute53QueryLogRegion = endpoints.UsEast1RegionID
 	}
