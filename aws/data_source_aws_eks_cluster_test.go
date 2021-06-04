@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSEksClusterDataSource_basic(t *testing.T) {
@@ -16,9 +17,9 @@ func TestAccAWSEksClusterDataSource_basic(t *testing.T) {
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   atest.ErrorCheck(t, eks.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
