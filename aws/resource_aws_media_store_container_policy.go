@@ -5,7 +5,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediastore"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsMediaStoreContainerPolicy() *schema.Resource {
@@ -35,7 +37,7 @@ func resourceAwsMediaStoreContainerPolicy() *schema.Resource {
 }
 
 func resourceAwsMediaStoreContainerPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediastoreconn
+	conn := meta.(*awsprovider.AWSClient).MediaStoreConn
 
 	input := &mediastore.PutContainerPolicyInput{
 		ContainerName: aws.String(d.Get("container_name").(string)),
@@ -52,7 +54,7 @@ func resourceAwsMediaStoreContainerPolicyPut(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsMediaStoreContainerPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediastoreconn
+	conn := meta.(*awsprovider.AWSClient).MediaStoreConn
 
 	input := &mediastore.GetContainerPolicyInput{
 		ContainerName: aws.String(d.Id()),
@@ -60,12 +62,12 @@ func resourceAwsMediaStoreContainerPolicyRead(d *schema.ResourceData, meta inter
 
 	resp, err := conn.GetContainerPolicy(input)
 	if err != nil {
-		if isAWSErr(err, mediastore.ErrCodeContainerNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
 			log.Printf("[WARN] MediaContainer Policy %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		if isAWSErr(err, mediastore.ErrCodePolicyNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, mediastore.ErrCodePolicyNotFoundException, "") {
 			log.Printf("[WARN] MediaContainer Policy %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -79,7 +81,7 @@ func resourceAwsMediaStoreContainerPolicyRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsMediaStoreContainerPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediastoreconn
+	conn := meta.(*awsprovider.AWSClient).MediaStoreConn
 
 	input := &mediastore.DeleteContainerPolicyInput{
 		ContainerName: aws.String(d.Id()),
@@ -87,13 +89,13 @@ func resourceAwsMediaStoreContainerPolicyDelete(d *schema.ResourceData, meta int
 
 	_, err := conn.DeleteContainerPolicy(input)
 	if err != nil {
-		if isAWSErr(err, mediastore.ErrCodeContainerNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
 			return nil
 		}
-		if isAWSErr(err, mediastore.ErrCodePolicyNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, mediastore.ErrCodePolicyNotFoundException, "") {
 			return nil
 		}
-		// if isAWSErr(err, mediastore.ErrCodeContainerInUseException, "Container must be ACTIVE in order to perform this operation") {
+		// if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerInUseException, "Container must be ACTIVE in order to perform this operation") {
 		// 	return nil
 		// }
 		return err
