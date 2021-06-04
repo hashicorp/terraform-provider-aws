@@ -9,12 +9,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -115,8 +117,8 @@ func resourceAwsRoute53ResolverRule() *schema.Resource {
 }
 
 func resourceAwsRoute53ResolverRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).Route53ResolverConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &route53resolver.CreateResolverRuleInput{
@@ -156,9 +158,9 @@ func resourceAwsRoute53ResolverRuleCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).Route53ResolverConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	ruleRaw, state, err := route53ResolverRuleRefresh(conn, d.Id())()
 	if err != nil {
@@ -205,7 +207,7 @@ func resourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsRoute53ResolverRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*awsprovider.AWSClient).Route53ResolverConn
 
 	if d.HasChanges("name", "resolver_endpoint_id", "target_ip") {
 		req := &route53resolver.UpdateResolverRuleInput{
@@ -247,13 +249,13 @@ func resourceAwsRoute53ResolverRuleUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsRoute53ResolverRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*awsprovider.AWSClient).Route53ResolverConn
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver rule: %s", d.Id())
 	_, err := conn.DeleteResolverRule(&route53resolver.DeleteResolverRuleInput{
 		ResolverRuleId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
@@ -289,7 +291,7 @@ func route53ResolverRuleRefresh(conn *route53resolver.Route53Resolver, ruleId st
 		resp, err := conn.GetResolverRule(&route53resolver.GetResolverRuleInput{
 			ResolverRuleId: aws.String(ruleId),
 		})
-		if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 			return "", route53ResolverRuleStatusDeleted, nil
 		}
 		if err != nil {
