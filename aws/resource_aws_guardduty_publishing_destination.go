@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/guardduty/waiter"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGuardDutyPublishingDestination() *schema.Resource {
@@ -38,19 +40,19 @@ func resourceAwsGuardDutyPublishingDestination() *schema.Resource {
 			"destination_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"kms_key_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 		},
 	}
 }
 
 func resourceAwsGuardDutyPublishingDestinationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
 
 	detectorID := d.Get("detector_id").(string)
 	input := guardduty.CreatePublishingDestinationInput{
@@ -81,7 +83,7 @@ func resourceAwsGuardDutyPublishingDestinationCreate(d *schema.ResourceData, met
 }
 
 func resourceAwsGuardDutyPublishingDestinationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
 
 	destinationId, detectorId, errStateRead := decodeGuardDutyPublishDestinationID(d.Id())
 
@@ -97,7 +99,7 @@ func resourceAwsGuardDutyPublishingDestinationRead(d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] Reading GuardDuty publishing destination: %s", input)
 	gdo, err := conn.DescribePublishingDestination(input)
 	if err != nil {
-		if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the one or more input parameters have invalid values.") {
+		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the one or more input parameters have invalid values.") {
 			log.Printf("[WARN] GuardDuty publishing destination: %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -113,7 +115,7 @@ func resourceAwsGuardDutyPublishingDestinationRead(d *schema.ResourceData, meta 
 }
 
 func resourceAwsGuardDutyPublishingDestinationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
 
 	destinationId, detectorId, errStateRead := decodeGuardDutyPublishDestinationID(d.Id())
 
@@ -140,7 +142,7 @@ func resourceAwsGuardDutyPublishingDestinationUpdate(d *schema.ResourceData, met
 }
 
 func resourceAwsGuardDutyPublishingDestinationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
 
 	destinationId, detectorId, errStateRead := decodeGuardDutyPublishDestinationID(d.Id())
 
@@ -156,7 +158,7 @@ func resourceAwsGuardDutyPublishingDestinationDelete(d *schema.ResourceData, met
 	log.Printf("[DEBUG] Delete GuardDuty publishing destination: %s", input)
 	_, err := conn.DeletePublishingDestination(&input)
 
-	if isAWSErr(err, guardduty.ErrCodeBadRequestException, "") {
+	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "") {
 		return nil
 	}
 
