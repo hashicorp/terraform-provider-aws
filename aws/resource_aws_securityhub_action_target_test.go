@@ -8,22 +8,24 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccAwsSecurityHubActionTarget_basic(t *testing.T) {
 	resourceName := "aws_securityhub_action_target.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, securityhub.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubActionTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsSecurityHubActionTargetConfigIdentifier("testaction"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecurityHubActionTargetExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "securityhub", "action/custom/testaction"),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "securityhub", "action/custom/testaction"),
 					resource.TestCheckResourceAttr(resourceName, "description", "This is a test custom action"),
 					resource.TestCheckResourceAttr(resourceName, "identifier", "testaction"),
 					resource.TestCheckResourceAttr(resourceName, "name", "Test action"),
@@ -42,16 +44,16 @@ func testAccAwsSecurityHubActionTarget_disappears(t *testing.T) {
 	resourceName := "aws_securityhub_action_target.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, securityhub.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubActionTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsSecurityHubActionTargetConfigIdentifier("testaction"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecurityHubActionTargetExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSecurityHubActionTarget(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSecurityHubActionTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -63,9 +65,9 @@ func testAccAwsSecurityHubActionTarget_Description(t *testing.T) {
 	resourceName := "aws_securityhub_action_target.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, securityhub.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubActionTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -95,9 +97,9 @@ func testAccAwsSecurityHubActionTarget_Name(t *testing.T) {
 	resourceName := "aws_securityhub_action_target.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, securityhub.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubActionTargetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -134,7 +136,7 @@ func testAccCheckAwsSecurityHubActionTargetExists(n string) resource.TestCheckFu
 			return fmt.Errorf("No Security Hub custom action ARN is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SecurityHubConn
 
 		action, err := resourceAwsSecurityHubActionTargetCheckExists(conn, rs.Primary.ID)
 
@@ -151,7 +153,7 @@ func testAccCheckAwsSecurityHubActionTargetExists(n string) resource.TestCheckFu
 }
 
 func testAccCheckAwsSecurityHubActionTargetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SecurityHubConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_action_target" {
