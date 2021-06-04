@@ -8,11 +8,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appmesh/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -26,11 +29,11 @@ func init() {
 }
 
 func testSweepAppmeshVirtualGateways(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).appmeshconn
+	conn := client.(*awsprovider.AWSClient).AppMeshConn
 
 	var sweeperErrs *multierror.Error
 
@@ -75,7 +78,7 @@ func testSweepAppmeshVirtualGateways(region string) error {
 
 		return !lastPage
 	})
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Appmesh virtual gateway sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -93,9 +96,9 @@ func testAccAwsAppmeshVirtualGateway_basic(t *testing.T) {
 	vgName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appmesh.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appmesh.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -103,7 +106,7 @@ func testAccAwsAppmeshVirtualGateway_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					atest.CheckAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
@@ -117,8 +120,8 @@ func testAccAwsAppmeshVirtualGateway_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					atest.CheckAttrAccountID(resourceName, "resource_owner"),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -138,16 +141,16 @@ func testAccAwsAppmeshVirtualGateway_disappears(t *testing.T) {
 	vgName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appmesh.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appmesh.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppmeshVirtualGatewayConfig(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppmeshVirtualGateway(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsAppmeshVirtualGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -162,9 +165,9 @@ func testAccAwsAppmeshVirtualGateway_BackendDefaults(t *testing.T) {
 	vgName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appmesh.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appmesh.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -172,7 +175,7 @@ func testAccAwsAppmeshVirtualGateway_BackendDefaults(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					atest.CheckAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "1"),
@@ -198,8 +201,8 @@ func testAccAwsAppmeshVirtualGateway_BackendDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					atest.CheckAttrAccountID(resourceName, "resource_owner"),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -207,7 +210,7 @@ func testAccAwsAppmeshVirtualGateway_BackendDefaults(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					atest.CheckAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "1"),
@@ -234,8 +237,8 @@ func testAccAwsAppmeshVirtualGateway_BackendDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					atest.CheckAttrAccountID(resourceName, "resource_owner"),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -255,9 +258,9 @@ func testAccAwsAppmeshVirtualGateway_BackendDefaultsCertificate(t *testing.T) {
 	vgName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appmesh.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appmesh.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -265,7 +268,7 @@ func testAccAwsAppmeshVirtualGateway_BackendDefaultsCertificate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					atest.CheckAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "1"),
@@ -298,8 +301,8 @@ func testAccAwsAppmeshVirtualGateway_BackendDefaultsCertificate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					atest.CheckAttrAccountID(resourceName, "resource_owner"),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -319,9 +322,9 @@ func testAccAwsAppmeshVirtualGateway_ListenerConnectionPool(t *testing.T) {
 	vgName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appmesh.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appmesh.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -329,7 +332,7 @@ func testAccAwsAppmeshVirtualGateway_ListenerConnectionPool(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					atest.CheckAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
@@ -347,8 +350,8 @@ func testAccAwsAppmeshVirtualGateway_ListenerConnectionPool(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					atest.CheckAttrAccountID(resourceName, "resource_owner"),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -356,7 +359,7 @@ func testAccAwsAppmeshVirtualGateway_ListenerConnectionPool(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					atest.CheckAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
@@ -375,8 +378,8 @@ func testAccAwsAppmeshVirtualGateway_ListenerConnectionPool(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					atest.CheckAttrAccountID(resourceName, "resource_owner"),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -396,9 +399,9 @@ func testAccAwsAppmeshVirtualGateway_ListenerHealthChecks(t *testing.T) {
 	vgName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appmesh.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appmesh.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -406,7 +409,7 @@ func testAccAwsAppmeshVirtualGateway_ListenerHealthChecks(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					atest.CheckAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
@@ -427,8 +430,8 @@ func testAccAwsAppmeshVirtualGateway_ListenerHealthChecks(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					atest.CheckAttrAccountID(resourceName, "resource_owner"),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -436,7 +439,7 @@ func testAccAwsAppmeshVirtualGateway_ListenerHealthChecks(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					atest.CheckAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
@@ -457,8 +460,8 @@ func testAccAwsAppmeshVirtualGateway_ListenerHealthChecks(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					atest.CheckAttrAccountID(resourceName, "resource_owner"),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -481,9 +484,9 @@ func testAccAwsAppmeshVirtualGateway_ListenerTls(t *testing.T) {
 	vgName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appmesh.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appmesh.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -491,7 +494,7 @@ func testAccAwsAppmeshVirtualGateway_ListenerTls(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					atest.CheckAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
@@ -513,8 +516,8 @@ func testAccAwsAppmeshVirtualGateway_ListenerTls(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					atest.CheckAttrAccountID(resourceName, "resource_owner"),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -536,7 +539,7 @@ func testAccAwsAppmeshVirtualGateway_ListenerTls(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					atest.CheckAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
@@ -556,8 +559,8 @@ func testAccAwsAppmeshVirtualGateway_ListenerTls(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					atest.CheckAttrAccountID(resourceName, "resource_owner"),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -585,9 +588,9 @@ func testAccAwsAppmeshVirtualGateway_ListenerValidation(t *testing.T) {
 	vgName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appmesh.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appmesh.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -595,7 +598,7 @@ func testAccAwsAppmeshVirtualGateway_ListenerValidation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					atest.CheckAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
@@ -626,8 +629,8 @@ func testAccAwsAppmeshVirtualGateway_ListenerValidation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					atest.CheckAttrAccountID(resourceName, "resource_owner"),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -641,7 +644,7 @@ func testAccAwsAppmeshVirtualGateway_ListenerValidation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					atest.CheckAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
@@ -668,8 +671,8 @@ func testAccAwsAppmeshVirtualGateway_ListenerValidation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					atest.CheckAttrAccountID(resourceName, "resource_owner"),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 		},
@@ -683,9 +686,9 @@ func testAccAwsAppmeshVirtualGateway_Logging(t *testing.T) {
 	vgName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appmesh.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appmesh.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -693,7 +696,7 @@ func testAccAwsAppmeshVirtualGateway_Logging(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					atest.CheckAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
@@ -710,8 +713,8 @@ func testAccAwsAppmeshVirtualGateway_Logging(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.0.file.0.path", "/dev/stdout"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					atest.CheckAttrAccountID(resourceName, "resource_owner"),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -719,7 +722,7 @@ func testAccAwsAppmeshVirtualGateway_Logging(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					atest.CheckAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
@@ -734,8 +737,8 @@ func testAccAwsAppmeshVirtualGateway_Logging(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.0.file.0.path", "/tmp/access.log"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					atest.CheckAttrAccountID(resourceName, "resource_owner"),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -755,9 +758,9 @@ func testAccAwsAppmeshVirtualGateway_Tags(t *testing.T) {
 	vgName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appmesh.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appmesh.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -796,7 +799,7 @@ func testAccAwsAppmeshVirtualGateway_Tags(t *testing.T) {
 }
 
 func testAccCheckAppmeshVirtualGatewayDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).appmeshconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).AppMeshConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appmesh_virtual_node" {
@@ -804,7 +807,7 @@ func testAccCheckAppmeshVirtualGatewayDestroy(s *terraform.State) error {
 		}
 
 		_, err := finder.VirtualGateway(conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["name"], rs.Primary.Attributes["mesh_owner"])
-		if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
 			continue
 		}
 		if err != nil {
@@ -818,7 +821,7 @@ func testAccCheckAppmeshVirtualGatewayDestroy(s *terraform.State) error {
 
 func testAccCheckAppmeshVirtualGatewayExists(name string, v *appmesh.VirtualGatewayData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).appmeshconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AppMeshConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -1125,7 +1128,7 @@ resource "aws_acmpca_certificate_authority" "test" {
 }
 
 func testAccAppmeshVirtualGatewayConfigListenerTlsAcm(meshName, vgName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAppmeshVirtualGatewayConfigRootCA(vgName),
 		fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
