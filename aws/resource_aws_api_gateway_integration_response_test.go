@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSAPIGatewayIntegrationResponse_basic(t *testing.T) {
@@ -18,9 +20,9 @@ func TestAccAWSAPIGatewayIntegrationResponse_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_integration_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationResponseDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -66,16 +68,16 @@ func TestAccAWSAPIGatewayIntegrationResponse_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_integration_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationResponseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayIntegrationResponseConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayIntegrationResponseExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayIntegrationResponse(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsApiGatewayIntegrationResponse(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -137,7 +139,7 @@ func testAccCheckAWSAPIGatewayIntegrationResponseExists(n string, res *apigatewa
 			return fmt.Errorf("No API Gateway Method ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayConn
 
 		req := &apigateway.GetIntegrationResponseInput{
 			HttpMethod: aws.String("GET"),
@@ -157,7 +159,7 @@ func testAccCheckAWSAPIGatewayIntegrationResponseExists(n string, res *apigatewa
 }
 
 func testAccCheckAWSAPIGatewayIntegrationResponseDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_integration_response" {
