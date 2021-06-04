@@ -8,10 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsVpcPeeringConnection() *schema.Resource {
@@ -72,8 +74,8 @@ func resourceAwsVpcPeeringConnection() *schema.Resource {
 }
 
 func resourceAwsVPCPeeringCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Create the vpc peering connection
@@ -115,11 +117,11 @@ func resourceAwsVPCPeeringCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsVPCPeeringRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient)
+	client := meta.(*awsprovider.AWSClient)
 	defaultTagsConfig := client.DefaultTagsConfig
 	ignoreTagsConfig := client.IgnoreTagsConfig
 
-	pcRaw, statusCode, err := vpcPeeringConnectionRefreshState(client.ec2conn, d.Id())()
+	pcRaw, statusCode, err := vpcPeeringConnectionRefreshState(client.EC2Conn, d.Id())()
 	// Allow a failed VPC Peering Connection to fallthrough,
 	// to allow rest of the logic below to do its work.
 	if err != nil && statusCode != ec2.VpcPeeringConnectionStateReasonCodeFailed {
@@ -147,9 +149,9 @@ func resourceAwsVPCPeeringRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] VPC Peering Connection response: %#v", pc)
 
 	log.Printf("[DEBUG] Account ID %s, VPC PeerConn Requester %s, Accepter %s",
-		client.accountid, *pc.RequesterVpcInfo.OwnerId, *pc.AccepterVpcInfo.OwnerId)
+		client.AccountID, *pc.RequesterVpcInfo.OwnerId, *pc.AccepterVpcInfo.OwnerId)
 
-	if (client.accountid == aws.StringValue(pc.AccepterVpcInfo.OwnerId)) && (client.accountid != aws.StringValue(pc.RequesterVpcInfo.OwnerId)) {
+	if (client.AccountID == aws.StringValue(pc.AccepterVpcInfo.OwnerId)) && (client.AccountID != aws.StringValue(pc.RequesterVpcInfo.OwnerId)) {
 		// We're the accepter
 		d.Set("peer_owner_id", pc.RequesterVpcInfo.OwnerId)
 		d.Set("peer_vpc_id", pc.RequesterVpcInfo.VpcId)
@@ -204,7 +206,7 @@ func resourceVPCPeeringConnectionAccept(conn *ec2.EC2, id string) (string, error
 }
 
 func resourceAwsVPCPeeringUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") && !d.IsNewResource() {
 		o, n := d.GetChange("tags_all")
@@ -268,7 +270,7 @@ func resourceAwsVPCPeeringUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsVPCPeeringDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	req := &ec2.DeleteVpcPeeringConnectionInput{
 		VpcPeeringConnectionId: aws.String(d.Id()),
@@ -276,12 +278,12 @@ func resourceAwsVPCPeeringDelete(d *schema.ResourceData, meta interface{}) error
 
 	_, err := conn.DeleteVpcPeeringConnection(req)
 
-	if isAWSErr(err, "InvalidVpcPeeringConnectionID.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidVpcPeeringConnectionID.NotFound", "") {
 		return nil
 	}
 
 	// "InvalidStateTransition: Invalid state transition for pcx-0000000000000000, attempted to transition from failed to deleting"
-	if isAWSErr(err, "InvalidStateTransition", "to deleting") {
+	if tfawserr.ErrMessageContains(err, "InvalidStateTransition", "to deleting") {
 		return nil
 	}
 
@@ -315,7 +317,7 @@ func vpcPeeringConnectionRefreshState(conn *ec2.EC2, id string) resource.StateRe
 			VpcPeeringConnectionIds: aws.StringSlice([]string{id}),
 		})
 		if err != nil {
-			if isAWSErr(err, "InvalidVpcPeeringConnectionID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidVpcPeeringConnectionID.NotFound", "") {
 				return nil, ec2.VpcPeeringConnectionStateReasonCodeDeleted, nil
 			}
 
