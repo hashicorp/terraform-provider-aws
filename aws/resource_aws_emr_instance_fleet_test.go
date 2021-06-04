@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSEMRInstanceFleet_basic(t *testing.T) {
@@ -18,9 +20,9 @@ func TestAccAWSEMRInstanceFleet_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emr_instance_fleet.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, emr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEmrInstanceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -46,9 +48,9 @@ func TestAccAWSEMRInstanceFleet_zero_count(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emr_instance_fleet.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, emr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEmrInstanceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -82,9 +84,9 @@ func TestAccAWSEMRInstanceFleet_ebsBasic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emr_instance_fleet.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, emr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEmrInstanceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -110,9 +112,9 @@ func TestAccAWSEMRInstanceFleet_full(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emr_instance_fleet.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, emr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEmrInstanceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -140,9 +142,9 @@ func TestAccAWSEMRInstanceFleet_disappears(t *testing.T) {
 	emrClusterResourceName := "aws_emr_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, emr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEmrInstanceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -151,7 +153,7 @@ func TestAccAWSEMRInstanceFleet_disappears(t *testing.T) {
 					testAccCheckAWSEmrInstanceFleetExists(resourceName, &fleet),
 					// EMR Instance Fleet can only be scaled down and are not removed until the
 					// Cluster is removed. Verify EMR Cluster disappearance handling.
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEMRCluster(), emrClusterResourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsEMRCluster(), emrClusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -160,7 +162,7 @@ func TestAccAWSEMRInstanceFleet_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSEmrInstanceFleetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).emrconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EMRConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_emr_cluster" {
@@ -200,8 +202,8 @@ func testAccCheckAWSEmrInstanceFleetExists(n string, v *emr.InstanceFleet) resou
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No task fleet id set")
 		}
-		meta := testAccProvider.Meta()
-		conn := meta.(*AWSClient).emrconn
+		meta := atest.Provider.Meta()
+		conn := meta.(*awsprovider.AWSClient).EMRConn
 		instanceFleets, err := fetchAllEMRInstanceFleets(conn, rs.Primary.Attributes["cluster_id"])
 		if err != nil {
 			return fmt.Errorf("EMR error: %v", err)
