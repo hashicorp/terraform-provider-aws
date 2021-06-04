@@ -7,6 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSEc2AvailabilityZoneGroup_OptInStatus(t *testing.T) {
@@ -18,9 +20,9 @@ func TestAccAWSEc2AvailabilityZoneGroup_OptInStatus(t *testing.T) {
 	localZone := "us-west-2-lax-1" // lintignore:AWSAT003 // currently the only generally available local zone
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2AvailabilityZoneGroup(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2AvailabilityZoneGroup(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -54,7 +56,7 @@ func TestAccAWSEc2AvailabilityZoneGroup_OptInStatus(t *testing.T) {
 }
 
 func testAccPreCheckAWSEc2AvailabilityZoneGroup(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	input := &ec2.DescribeAvailabilityZonesInput{
 		AllAvailabilityZones: aws.Bool(true),
@@ -71,7 +73,7 @@ func testAccPreCheckAWSEc2AvailabilityZoneGroup(t *testing.T) {
 
 	output, err := conn.DescribeAvailabilityZones(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
