@@ -9,11 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSagemakerApp() *schema.Resource {
@@ -68,7 +70,7 @@ func resourceAwsSagemakerApp() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -87,8 +89,8 @@ func resourceAwsSagemakerApp() *schema.Resource {
 }
 
 func resourceAwsSagemakerAppCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &sagemaker.CreateAppInput{
@@ -128,9 +130,9 @@ func resourceAwsSagemakerAppCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsSagemakerAppRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	domainID, userProfileName, appType, appName, err := decodeSagemakerAppID(d.Id())
 	if err != nil {
@@ -139,7 +141,7 @@ func resourceAwsSagemakerAppRead(d *schema.ResourceData, meta interface{}) error
 
 	app, err := finder.AppByName(conn, domainID, userProfileName, appType, appName)
 	if err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker App (%s), removing from state", d.Id())
 			return nil
@@ -185,7 +187,7 @@ func resourceAwsSagemakerAppRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsSagemakerAppUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -199,7 +201,7 @@ func resourceAwsSagemakerAppUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsSagemakerAppDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	appName := d.Get("app_name").(string)
 	appType := d.Get("app_type").(string)
@@ -215,18 +217,18 @@ func resourceAwsSagemakerAppDelete(d *schema.ResourceData, meta interface{}) err
 
 	if _, err := conn.DeleteApp(input); err != nil {
 
-		if isAWSErr(err, "ValidationException", "has already been deleted") ||
-			isAWSErr(err, "ValidationException", "previously failed and was automatically deleted") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "has already been deleted") ||
+			tfawserr.ErrMessageContains(err, "ValidationException", "previously failed and was automatically deleted") {
 			return nil
 		}
 
-		if !isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
 			return fmt.Errorf("error deleting SageMaker App (%s): %w", d.Id(), err)
 		}
 	}
 
 	if _, err := waiter.AppDeleted(conn, domainID, userProfileName, appType, appName); err != nil {
-		if !isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
 			return fmt.Errorf("error waiting for SageMaker App (%s) to delete: %w", d.Id(), err)
 		}
 	}
