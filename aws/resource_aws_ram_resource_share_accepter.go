@@ -207,8 +207,9 @@ func resourceAwsRamResourceShareAccepterDelete(d *schema.ResourceData, meta inte
 
 	_, err := conn.DisassociateResourceShare(input)
 
-	if err != nil {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ram.ErrCodeOperationNotPermittedException) {
 		return fmt.Errorf("Error leaving RAM resource share: %s", err)
+
 	}
 
 	_, err = waiter.ResourceShareOwnedBySelfDisassociated(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
