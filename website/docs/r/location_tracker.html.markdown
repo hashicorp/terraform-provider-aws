@@ -41,3 +41,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the tracker resource.
 * `arn` - The ARN of the tracker resource.
+
+## Import
+
+Location tracker can be imported using the `id`, e.g.
+
+```
+$ terraform import aws_location_tracker.test sample_location_tracker
+```
