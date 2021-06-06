@@ -2,6 +2,7 @@ package attrmap
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -9,15 +10,62 @@ import (
 
 // AttributeMap represents a map of Terraform resource attribute name to AWS API attribute name.
 // Useful for SQS Queue or SNS Topic attribute handling.
-type AttributeMap map[string]string
+type attributeInfo struct {
+	apiAttributeName string
+	tfType           schema.ValueType
+}
+
+type AttributeMap map[string]attributeInfo
+
+// New returns a new AttributeMap from the specified Terraform resource attribute name to AWS API attribute name map and resource schema.
+func New(attrMap map[string]string, schemaMap map[string]*schema.Schema) AttributeMap {
+	attributeMap := make(AttributeMap)
+
+	for tfAttributeName, apiAttributeName := range attrMap {
+		if s, ok := schemaMap[tfAttributeName]; ok {
+			attributeMap[tfAttributeName] = attributeInfo{
+				apiAttributeName: apiAttributeName,
+				tfType:           s.Type,
+			}
+		} else {
+			log.Printf("[ERROR] Unknown attribute: %s", tfAttributeName)
+		}
+	}
+
+	return attributeMap
+}
 
 // ApiAttributesToResourceData sets Terraform ResourceData from a map of AWS API attributes.
 func (m AttributeMap) ApiAttributesToResourceData(apiAttributes map[string]string, d *schema.ResourceData) error {
-	for tfAttributeName, apiAttributeName := range m {
-		if v, ok := apiAttributes[apiAttributeName]; ok {
-			if err := d.Set(tfAttributeName, v); err != nil {
+	for tfAttributeName, attributeInfo := range m {
+		if v, ok := apiAttributes[attributeInfo.apiAttributeName]; ok {
+			var err error
+			var tfAttributeValue interface{}
+
+			switch t := attributeInfo.tfType; t {
+			case schema.TypeBool:
+				tfAttributeValue, err = strconv.ParseBool(v)
+
+				if err != nil {
+					return fmt.Errorf("error parsing %s value (%s) into boolean: %w", tfAttributeName, v, err)
+				}
+			case schema.TypeInt:
+				tfAttributeValue, err = strconv.Atoi(v)
+
+				if err != nil {
+					return fmt.Errorf("error parsing %s value (%s) into integer: %w", tfAttributeName, v, err)
+				}
+			case schema.TypeString:
+				tfAttributeValue = v
+			default:
+				return fmt.Errorf("attribute %s is of unsupported type: %d", tfAttributeName, t)
+			}
+
+			if err := d.Set(tfAttributeName, tfAttributeValue); err != nil {
 				return fmt.Errorf("error setting %s: %w", tfAttributeName, err)
 			}
+		} else {
+			d.Set(tfAttributeName, nil)
 		}
 	}
 
@@ -29,22 +77,22 @@ func (m AttributeMap) ApiAttributesToResourceData(apiAttributes map[string]strin
 func (m AttributeMap) ResourceDataToApiAttributesCreate(d *schema.ResourceData) (map[string]string, error) {
 	apiAttributes := map[string]string{}
 
-	for tfAttributeName, apiAttributeName := range m {
+	for tfAttributeName, attributeInfo := range m {
 		if v, ok := d.GetOk(tfAttributeName); ok {
 			var apiAttributeValue string
 
-			switch v := v.(type) {
-			case int:
-				apiAttributeValue = strconv.Itoa(v)
-			case bool:
-				apiAttributeValue = strconv.FormatBool(v)
-			case string:
-				apiAttributeValue = v
+			switch t := attributeInfo.tfType; t {
+			case schema.TypeBool:
+				apiAttributeValue = strconv.FormatBool(v.(bool))
+			case schema.TypeInt:
+				apiAttributeValue = strconv.Itoa(v.(int))
+			case schema.TypeString:
+				apiAttributeValue = v.(string)
 			default:
-				return nil, fmt.Errorf("attribute %s is of unsupported type: %T", tfAttributeName, v)
+				return nil, fmt.Errorf("attribute %s is of unsupported type: %d", tfAttributeName, t)
 			}
 
-			apiAttributes[apiAttributeName] = apiAttributeValue
+			apiAttributes[attributeInfo.apiAttributeName] = apiAttributeValue
 		}
 	}
 
@@ -56,22 +104,24 @@ func (m AttributeMap) ResourceDataToApiAttributesCreate(d *schema.ResourceData) 
 func (m AttributeMap) ResourceDataToApiAttributesUpdate(d *schema.ResourceData) (map[string]string, error) {
 	apiAttributes := map[string]string{}
 
-	for tfAttributeName, apiAttributeName := range m {
+	for tfAttributeName, attributeInfo := range m {
 		if d.HasChange(tfAttributeName) {
+			v := d.Get(tfAttributeName)
+
 			var apiAttributeValue string
 
-			switch v := d.Get(tfAttributeName).(type) {
-			case int:
-				apiAttributeValue = strconv.Itoa(v)
-			case bool:
-				apiAttributeValue = strconv.FormatBool(v)
-			case string:
-				apiAttributeValue = v
+			switch t := attributeInfo.tfType; t {
+			case schema.TypeBool:
+				apiAttributeValue = strconv.FormatBool(v.(bool))
+			case schema.TypeInt:
+				apiAttributeValue = strconv.Itoa(v.(int))
+			case schema.TypeString:
+				apiAttributeValue = v.(string)
 			default:
-				return nil, fmt.Errorf("attribute %s is of unsupported type: %T", tfAttributeName, v)
+				return nil, fmt.Errorf("attribute %s is of unsupported type: %d", tfAttributeName, t)
 			}
 
-			apiAttributes[apiAttributeName] = apiAttributeValue
+			apiAttributes[attributeInfo.apiAttributeName] = apiAttributeValue
 		}
 	}
 
