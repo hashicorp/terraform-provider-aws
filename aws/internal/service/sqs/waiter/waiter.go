@@ -1,7 +1,7 @@
 package waiter
 
 import (
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -25,6 +25,10 @@ const (
 	QueueDeletedTimeout = 15 * time.Second
 )
 
+var (
+	queueStillExistsError = errors.New("SQS Queue still exists")
+)
+
 func QueueDeleted(conn *sqs.SQS, url string) error {
 	err := resource.Retry(QueueDeletedTimeout, func() *resource.RetryError {
 		var err error
@@ -39,14 +43,18 @@ func QueueDeleted(conn *sqs.SQS, url string) error {
 			return resource.NonRetryableError(err)
 		}
 
-		return resource.RetryableError(fmt.Errorf("SQS Queue (%s) still exists", url))
+		return resource.RetryableError(queueStillExistsError)
 	})
 
 	if tfresource.TimedOut(err) {
 		_, err = finder.QueueAttributesByURL(conn, url)
 
+		if err == nil {
+			return queueStillExistsError
+		}
+
 		if tfresource.NotFound(err) {
-			return nil
+			err = nil
 		}
 	}
 

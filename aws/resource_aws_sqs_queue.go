@@ -60,6 +60,71 @@ func resourceAwsSqsQueue() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"content_based_deduplication": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
+
+			"deduplication_scope": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(tfsqs.DeduplicationScope_Values(), false),
+			},
+
+			"delay_seconds": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      tfsqs.DefaultQueueDelaySeconds,
+				ValidateFunc: validation.IntBetween(0, 900),
+			},
+
+			"fifo_queue": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				ForceNew: true,
+				Optional: true,
+			},
+
+			"fifo_throughput_limit": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(tfsqs.FifoThroughputLimit_Values(), false),
+			},
+
+			"kms_data_key_reuse_period_seconds": {
+				Type:         schema.TypeInt,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(60, 86_400),
+			},
+
+			"kms_master_key_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
+			"max_message_size": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      tfsqs.DefaultQueueMaximumMessageSize,
+				ValidateFunc: validation.IntBetween(1024, 262_144),
+			},
+
+			"message_retention_seconds": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      tfsqs.DefaultQueueMessageRetentionPeriod,
+				ValidateFunc: validation.IntBetween(60, 1_209_600),
+			},
+
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -67,6 +132,7 @@ func resourceAwsSqsQueue() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
 			},
+
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -74,31 +140,7 @@ func resourceAwsSqsQueue() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 			},
-			"delay_seconds": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  tfsqs.DefaultQueueDelaySeconds,
-			},
-			"max_message_size": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  tfsqs.DefaultQueueMaximumMessageSize,
-			},
-			"message_retention_seconds": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  tfsqs.DefaultQueueMessageRetentionPeriod,
-			},
-			"receive_wait_time_seconds": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds,
-			},
-			"visibility_timeout_seconds": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  tfsqs.DefaultQueueVisibilityTimeout,
-			},
+
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -106,6 +148,13 @@ func resourceAwsSqsQueue() *schema.Resource {
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
+
+			"receive_wait_time_seconds": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds,
+			},
+
 			"redrive_policy": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -115,42 +164,14 @@ func resourceAwsSqsQueue() *schema.Resource {
 					return json
 				},
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"fifo_queue": {
-				Type:     schema.TypeBool,
-				Default:  false,
-				ForceNew: true,
-				Optional: true,
-			},
-			"content_based_deduplication": {
-				Type:     schema.TypeBool,
-				Default:  false,
-				Optional: true,
-			},
-			"kms_master_key_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"kms_data_key_reuse_period_seconds": {
-				Type:     schema.TypeInt,
-				Computed: true,
-				Optional: true,
-			},
-			"deduplication_scope": {
-				Type:         schema.TypeString,
+
+			"visibility_timeout_seconds": {
+				Type:         schema.TypeInt,
 				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(tfsqs.DeduplicationScope_Values(), false),
+				Default:      tfsqs.DefaultQueueVisibilityTimeout,
+				ValidateFunc: validation.IntBetween(0, 43_200),
 			},
-			"fifo_throughput_limit": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(tfsqs.FifoThroughputLimit_Values(), false),
-			},
+
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 		},
