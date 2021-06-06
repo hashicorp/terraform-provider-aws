@@ -11,6 +11,19 @@ import (
 // Useful for SQS Queue or SNS Topic attribute handling.
 type AttributeMap map[string]string
 
+// ApiAttributesToResourceData sets Terraform ResourceData from a map of AWS API attributes.
+func (m AttributeMap) ApiAttributesToResourceData(apiAttributes map[string]string, d *schema.ResourceData) error {
+	for tfAttributeName, apiAttributeName := range m {
+		if v, ok := apiAttributes[apiAttributeName]; ok {
+			if err := d.Set(tfAttributeName, v); err != nil {
+				return fmt.Errorf("error setting %s: %w", tfAttributeName, err)
+			}
+		}
+	}
+
+	return nil
+}
+
 // ResourceDataToApiAttributesCreate returns a map of AWS API attributes from Terraform ResourceData.
 // The API attributes map is suitable for resource create.
 func (m AttributeMap) ResourceDataToApiAttributesCreate(d *schema.ResourceData) (map[string]string, error) {

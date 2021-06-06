@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -270,134 +269,14 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	fifoQueue := false
+	err = sqsQueueAttributeMap.ApiAttributesToResourceData(output, d)
 
-	// Always set attribute defaults
-	d.Set("arn", "")
-	d.Set("content_based_deduplication", false)
-	d.Set("delay_seconds", tfsqs.DefaultQueueDelaySeconds)
-	d.Set("kms_data_key_reuse_period_seconds", 300)
-	d.Set("kms_master_key_id", "")
-	d.Set("max_message_size", tfsqs.DefaultQueueMaximumMessageSize)
-	d.Set("message_retention_seconds", tfsqs.DefaultQueueMessageRetentionPeriod)
-	d.Set("policy", "")
-	d.Set("receive_wait_time_seconds", tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)
-	d.Set("redrive_policy", "")
-	d.Set("visibility_timeout_seconds", tfsqs.DefaultQueueVisibilityTimeout)
-	d.Set("deduplication_scope", "")
-	d.Set("fifo_throughput_limit", "")
-
-	// if attributeOutput != nil {
-	queueAttributes := output
-
-	if v, ok := queueAttributes[sqs.QueueAttributeNameQueueArn]; ok {
-		d.Set("arn", v)
+	if err != nil {
+		return err
 	}
 
-	if v, ok := queueAttributes[sqs.QueueAttributeNameContentBasedDeduplication]; ok && v != "" {
-		vBool, err := strconv.ParseBool(v)
-
-		if err != nil {
-			return fmt.Errorf("error parsing content_based_deduplication value (%s) into boolean: %s", v, err)
-		}
-
-		d.Set("content_based_deduplication", vBool)
-	}
-
-	if v, ok := queueAttributes[sqs.QueueAttributeNameDelaySeconds]; ok && v != "" {
-		vInt, err := strconv.Atoi(v)
-
-		if err != nil {
-			return fmt.Errorf("error parsing delay_seconds value (%s) into integer: %s", v, err)
-		}
-
-		d.Set("delay_seconds", vInt)
-	}
-
-	if v, ok := queueAttributes[sqs.QueueAttributeNameFifoQueue]; ok && v != "" {
-		vBool, err := strconv.ParseBool(v)
-
-		if err != nil {
-			return fmt.Errorf("error parsing fifo_queue value (%s) into boolean: %s", v, err)
-		}
-
-		fifoQueue = vBool
-	}
-
-	if v, ok := queueAttributes[sqs.QueueAttributeNameKmsDataKeyReusePeriodSeconds]; ok && v != "" {
-		vInt, err := strconv.Atoi(v)
-
-		if err != nil {
-			return fmt.Errorf("error parsing kms_data_key_reuse_period_seconds value (%s) into integer: %s", v, err)
-		}
-
-		d.Set("kms_data_key_reuse_period_seconds", vInt)
-	}
-
-	if v, ok := queueAttributes[sqs.QueueAttributeNameKmsMasterKeyId]; ok {
-		d.Set("kms_master_key_id", v)
-	}
-
-	if v, ok := queueAttributes[sqs.QueueAttributeNameMaximumMessageSize]; ok && v != "" {
-		vInt, err := strconv.Atoi(v)
-
-		if err != nil {
-			return fmt.Errorf("error parsing max_message_size value (%s) into integer: %s", v, err)
-		}
-
-		d.Set("max_message_size", vInt)
-	}
-
-	if v, ok := queueAttributes[sqs.QueueAttributeNameMessageRetentionPeriod]; ok && v != "" {
-		vInt, err := strconv.Atoi(v)
-
-		if err != nil {
-			return fmt.Errorf("error parsing message_retention_seconds value (%s) into integer: %s", v, err)
-		}
-
-		d.Set("message_retention_seconds", vInt)
-	}
-
-	if v, ok := queueAttributes[sqs.QueueAttributeNamePolicy]; ok {
-		d.Set("policy", v)
-	}
-
-	if v, ok := queueAttributes[sqs.QueueAttributeNameReceiveMessageWaitTimeSeconds]; ok && v != "" {
-		vInt, err := strconv.Atoi(v)
-
-		if err != nil {
-			return fmt.Errorf("error parsing receive_wait_time_seconds value (%s) into integer: %s", v, err)
-		}
-
-		d.Set("receive_wait_time_seconds", vInt)
-	}
-
-	if v, ok := queueAttributes[sqs.QueueAttributeNameRedrivePolicy]; ok {
-		d.Set("redrive_policy", v)
-	}
-
-	if v, ok := queueAttributes[sqs.QueueAttributeNameVisibilityTimeout]; ok && v != "" {
-		vInt, err := strconv.Atoi(v)
-
-		if err != nil {
-			return fmt.Errorf("error parsing visibility_timeout_seconds value (%s) into integer: %s", v, err)
-		}
-
-		d.Set("visibility_timeout_seconds", vInt)
-	}
-
-	if v, ok := queueAttributes[sqs.QueueAttributeNameDeduplicationScope]; ok && v != "" {
-		d.Set("deduplication_scope", v)
-	}
-
-	if v, ok := queueAttributes[sqs.QueueAttributeNameFifoThroughputLimit]; ok && v != "" {
-		d.Set("fifo_throughput_limit", v)
-	}
-	// }
-
-	d.Set("fifo_queue", fifoQueue)
 	d.Set("name", name)
-	if fifoQueue {
+	if d.Get("fifo_queue").(bool) {
 		d.Set("name_prefix", naming.NamePrefixFromNameWithSuffix(name, tfsqs.FifoQueueNameSuffix))
 	} else {
 		d.Set("name_prefix", naming.NamePrefixFromName(name))
