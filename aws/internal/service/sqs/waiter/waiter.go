@@ -1,13 +1,10 @@
 package waiter
 
 import (
-	"errors"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sqs/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -23,44 +20,21 @@ const (
 	QueueCreatedTimeout = 70 * time.Second
 
 	QueueDeletedTimeout = 15 * time.Second
-)
 
-var (
-	queueStillExistsError = errors.New("SQS Queue still exists")
+	queueStateExists = "exists"
 )
 
 func QueueDeleted(conn *sqs.SQS, url string) error {
-	err := resource.Retry(QueueDeletedTimeout, func() *resource.RetryError {
-		var err error
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{queueStateExists},
+		Target:  []string{},
+		Refresh: QueueState(conn, url),
+		Timeout: QueueDeletedTimeout,
 
-		_, err = finder.QueueAttributesByURL(conn, url)
-
-		if tfresource.NotFound(err) {
-			return nil
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return resource.RetryableError(queueStillExistsError)
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = finder.QueueAttributesByURL(conn, url)
-
-		if err == nil {
-			return queueStillExistsError
-		}
-
-		if tfresource.NotFound(err) {
-			err = nil
-		}
+		ContinuousTargetOccurence: 3,
 	}
 
-	if err != nil {
-		return err
-	}
+	_, err := stateConf.WaitForState()
 
-	return nil
+	return err
 }
