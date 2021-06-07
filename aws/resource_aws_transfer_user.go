@@ -3,15 +3,16 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tftransfer "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsTransferUser() *schema.Resource {
@@ -69,6 +70,28 @@ func resourceAwsTransferUser() *schema.Resource {
 				ValidateFunc:     validateIAMPolicyJson,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
+			"posix_profile": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"gid": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+						"uid": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+						"secondary_gids": {
+							Type:     schema.TypeSet,
+							Elem:     &schema.Schema{Type: schema.TypeInt},
+							Optional: true,
+						},
+					},
+				},
+			},
 
 			"role": {
 				Type:         schema.TypeString,
@@ -124,6 +147,10 @@ func resourceAwsTransferUserCreate(d *schema.ResourceData, meta interface{}) err
 		createOpts.HomeDirectoryMappings = expandAwsTransferHomeDirectoryMappings(attr.([]interface{}))
 	}
 
+	if attr, ok := d.GetOk("posix_profile"); ok {
+		createOpts.PosixProfile = expandTransferUserPosixUser(attr.([]interface{}))
+	}
+
 	if attr, ok := d.GetOk("policy"); ok {
 		createOpts.Policy = aws.String(attr.(string))
 	}
@@ -154,36 +181,34 @@ func resourceAwsTransferUserRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error parsing Transfer User ID: %s", err)
 	}
 
-	descOpts := &transfer.DescribeUserInput{
-		UserName: aws.String(userName),
-		ServerId: aws.String(serverID),
+	resp, err := finder.UserByID(conn, serverID, userName)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Transfer User (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	log.Printf("[DEBUG] Describe Transfer User Option: %#v", descOpts)
-
-	resp, err := conn.DescribeUser(descOpts)
 	if err != nil {
-		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] Transfer User (%s) for Server (%s) not found, removing from state", userName, serverID)
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading Transfer User (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading Transfer User (%s): %w", d.Id(), err)
 	}
 
+	user := resp.User
 	d.Set("server_id", resp.ServerId)
-	d.Set("user_name", resp.User.UserName)
-	d.Set("arn", resp.User.Arn)
-	d.Set("home_directory", resp.User.HomeDirectory)
-	d.Set("home_directory_type", resp.User.HomeDirectoryType)
-	d.Set("policy", resp.User.Policy)
-	d.Set("role", resp.User.Role)
+	d.Set("user_name", user.UserName)
+	d.Set("arn", user.Arn)
+	d.Set("home_directory", user.HomeDirectory)
+	d.Set("home_directory_type", user.HomeDirectoryType)
+	d.Set("policy", user.Policy)
+	d.Set("role", user.Role)
 
-	if err := d.Set("home_directory_mappings", flattenAwsTransferHomeDirectoryMappings(resp.User.HomeDirectoryMappings)); err != nil {
-		return fmt.Errorf("Error setting home_directory_mappings: %s", err)
+	if err := d.Set("home_directory_mappings", flattenAwsTransferHomeDirectoryMappings(user.HomeDirectoryMappings)); err != nil {
+		return fmt.Errorf("Error setting home_directory_mappings: %w", err)
 	}
 
-	tags := keyvaluetags.TransferKeyValueTags(resp.User.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	if err := d.Set("posix_profile", flattenTransferUserPosixUser(user.PosixProfile)); err != nil {
+		return fmt.Errorf("Error setting posix_profile: %w", err)
+	}
+	tags := keyvaluetags.TransferKeyValueTags(user.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -219,6 +244,11 @@ func resourceAwsTransferUserUpdate(d *schema.ResourceData, meta interface{}) err
 		updateFlag = true
 	}
 
+	if d.HasChange("posix_profile") {
+		updateOpts.PosixProfile = expandTransferUserPosixUser(d.Get("posix_profile").([]interface{}))
+		updateFlag = true
+	}
+
 	if d.HasChange("home_directory_type") {
 		updateOpts.HomeDirectoryType = aws.String(d.Get("home_directory_type").(string))
 		updateFlag = true
@@ -242,14 +272,14 @@ func resourceAwsTransferUserUpdate(d *schema.ResourceData, meta interface{}) err
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("error updating Transfer User (%s): %s", d.Id(), err)
+			return fmt.Errorf("error updating Transfer User (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.TransferUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
 
@@ -260,7 +290,7 @@ func resourceAwsTransferUserDelete(d *schema.ResourceData, meta interface{}) err
 	conn := meta.(*AWSClient).transferconn
 	serverID, userName, err := tftransfer.UserParseResourceID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing Transfer User ID: %s", err)
+		return fmt.Errorf("error parsing Transfer User ID: %w", err)
 	}
 
 	delOpts := &transfer.DeleteUserInput{
@@ -275,45 +305,15 @@ func resourceAwsTransferUserDelete(d *schema.ResourceData, meta interface{}) err
 		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
-		return fmt.Errorf("error deleting Transfer User (%s) for Server(%s): %s", userName, serverID, err)
+		return fmt.Errorf("error deleting Transfer User (%s) for Server(%s): %w", userName, serverID, err)
 	}
 
-	if err := waitForTransferUserDeletion(conn, serverID, userName); err != nil {
-		return fmt.Errorf("error waiting for Transfer User (%s) for Server (%s): %s", userName, serverID, err)
-	}
+	_, err = waiter.UserDeleted(conn, serverID, userName)
 
-	return nil
-}
-
-func waitForTransferUserDeletion(conn *transfer.Transfer, serverID, userName string) error {
-	params := &transfer.DescribeUserInput{
-		ServerId: aws.String(serverID),
-		UserName: aws.String(userName),
-	}
-
-	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
-		_, err := conn.DescribeUser(params)
-
-		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return resource.RetryableError(fmt.Errorf("Transfer User (%s) for Server (%s) still exists", userName, serverID))
-	})
-
-	if isResourceTimeoutError(err) {
-		_, err = conn.DescribeUser(params)
-	}
-	if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
-		return nil
-	}
 	if err != nil {
-		return fmt.Errorf("Error decoding transfer user ID: %s", err)
+		return fmt.Errorf("error waiting for Transfer User (%s) delete: %w", d.Id(), err)
 	}
+
 	return nil
 }
 
@@ -343,4 +343,37 @@ func flattenAwsTransferHomeDirectoryMappings(mappings []*transfer.HomeDirectoryM
 		}
 	}
 	return l
+}
+
+func expandTransferUserPosixUser(pUser []interface{}) *transfer.PosixProfile {
+	if len(pUser) < 1 || pUser[0] == nil {
+		return nil
+	}
+
+	m := pUser[0].(map[string]interface{})
+
+	posixUser := &transfer.PosixProfile{
+		Gid: aws.Int64(int64(m["gid"].(int))),
+		Uid: aws.Int64(int64(m["uid"].(int))),
+	}
+
+	if v, ok := m["secondary_gids"].(*schema.Set); ok && len(v.List()) > 0 {
+		posixUser.SecondaryGids = expandInt64Set(v)
+	}
+
+	return posixUser
+}
+
+func flattenTransferUserPosixUser(posixUser *transfer.PosixProfile) []interface{} {
+	if posixUser == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"gid":            aws.Int64Value(posixUser.Gid),
+		"uid":            aws.Int64Value(posixUser.Uid),
+		"secondary_gids": aws.Int64ValueSlice(posixUser.SecondaryGids),
+	}
+
+	return []interface{}{m}
 }
