@@ -456,6 +456,7 @@ func Provider() *schema.Provider {
 			"aws_amplify_app":                                         resourceAwsAmplifyApp(),
 			"aws_amplify_backend_environment":                         resourceAwsAmplifyBackendEnvironment(),
 			"aws_amplify_branch":                                      resourceAwsAmplifyBranch(),
+			"aws_amplify_domain_association":                          resourceAwsAmplifyDomainAssociation(),
 			"aws_amplify_webhook":                                     resourceAwsAmplifyWebhook(),
 			"aws_api_gateway_account":                                 resourceAwsApiGatewayAccount(),
 			"aws_api_gateway_api_key":                                 resourceAwsApiGatewayApiKey(),
