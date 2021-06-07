@@ -399,7 +399,7 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
 			testAccPreCheckAWSCognitoIdentityProvider(t)
 			testAccPreCheckAWSPinpointApp(t)
 		},
-		ErrorCheck:   testAccErrorCheckSkipCognito(t),
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -452,7 +452,7 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfigWithArn(t *testing.T) {
 			testAccPreCheckAWSCognitoIdentityProvider(t)
 			testAccPreCheckAWSPinpointApp(t)
 		},
-		ErrorCheck:   testAccErrorCheckSkipCognito(t),
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -522,12 +522,6 @@ func TestAccAWSCognitoUserPoolClient_disappears_userPool(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccErrorCheckSkipCognito(t *testing.T) resource.ErrorCheckFunc {
-	return testAccErrorCheckSkipMessagesContaining(t,
-		"not supported in this region",
-	)
 }
 
 func testAccAWSCognitoUserPoolClientImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
