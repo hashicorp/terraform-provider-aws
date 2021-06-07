@@ -26,8 +26,9 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateUserPoolClient.html
 		Schema: map[string]*schema.Schema{
 			"access_token_validity": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(0, 86400),
 			},
 			"allowed_oauth_flows": {
 				Type:     schema.TypeSet,
@@ -133,8 +134,9 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 				ForceNew: true,
 			},
 			"id_token_validity": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(0, 86400),
 			},
 			"logout_urls": {
 				Type:     schema.TypeSet,
@@ -175,7 +177,7 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      30,
-				ValidateFunc: validation.IntBetween(0, 3650),
+				ValidateFunc: validation.IntBetween(0, 315360000),
 			},
 			"supported_identity_providers": {
 				Type:     schema.TypeSet,
