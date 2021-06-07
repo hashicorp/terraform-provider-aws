@@ -1,10 +1,14 @@
 package waiter
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	awspolicy "github.com/jen20/awspolicyequivalence"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sqs/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -23,6 +27,72 @@ const (
 
 	queueStateExists = "exists"
 )
+
+func QueueAttributesPropagated(conn *sqs.SQS, url string, expected map[string]string) error {
+	attributesMatch := func(got map[string]string) error {
+		for k, e := range expected {
+			g, ok := got[k]
+
+			if !ok {
+				return fmt.Errorf("SQS Queue attribute (%s) not available", k)
+			}
+
+			switch k {
+			case sqs.QueueAttributeNamePolicy:
+				equivalent, err := awspolicy.PoliciesAreEquivalent(g, e)
+
+				if err != nil {
+					return nil
+				}
+
+				if !equivalent {
+					return fmt.Errorf("SQS Queue policies are not equivalent")
+				}
+			default:
+				if g != e {
+					return fmt.Errorf("SQS Queue attribute (%s) got: %s, expected: %s", k, g, e)
+				}
+			}
+		}
+
+		return nil
+	}
+
+	var got map[string]string
+	err := resource.Retry(QueueAttributePropagationTimeout, func() *resource.RetryError {
+		var err error
+
+		got, err = finder.QueueAttributesByURL(conn, url)
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		err = attributesMatch(got)
+
+		if err != nil {
+			return resource.RetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		got, err = finder.QueueAttributesByURL(conn, url)
+
+		if err != nil {
+			return err
+		}
+
+		err = attributesMatch(got)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
 
 func QueueDeleted(conn *sqs.SQS, url string) error {
 	stateConf := &resource.StateChangeConf{
