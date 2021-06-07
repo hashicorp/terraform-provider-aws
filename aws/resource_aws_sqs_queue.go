@@ -240,6 +240,12 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.QueueUrl))
 
+	err = waiter.QueueAttributesPropagated(conn, d.Id(), attributes)
+
+	if err != nil {
+		return fmt.Errorf("error waiting for SQS Queue (%s) attributes to create: %w", d.Id(), err)
+	}
+
 	// Tag-on-create is currently only supported in AWS Commercial
 	if len(tags) > 0 && meta.(*AWSClient).partition != endpoints.AwsPartitionID {
 		if err := keyvaluetags.SqsUpdateTags(conn, d.Id(), nil, tags); err != nil {
@@ -331,6 +337,12 @@ func resourceAwsSqsQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if err != nil {
 			return fmt.Errorf("error updating SQS Queue (%s) attributes: %w", d.Id(), err)
+		}
+
+		err = waiter.QueueAttributesPropagated(conn, d.Id(), attributes)
+
+		if err != nil {
+			return fmt.Errorf("error waiting for SQS Queue (%s) attributes to update: %w", d.Id(), err)
 		}
 	}
 

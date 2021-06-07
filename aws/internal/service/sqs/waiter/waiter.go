@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	awspolicy "github.com/jen20/awspolicyequivalence"
+	tfjson "github.com/terraform-providers/terraform-provider-aws/aws/internal/json"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sqs/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
@@ -47,6 +48,10 @@ func QueueAttributesPropagated(conn *sqs.SQS, url string, expected map[string]st
 
 				if !equivalent {
 					return fmt.Errorf("SQS Queue policies are not equivalent")
+				}
+			case sqs.QueueAttributeNameRedrivePolicy:
+				if !tfjson.StringsEquivalent(g, e) {
+					return fmt.Errorf("SQS Queue redrive policies are not equivalent")
 				}
 			default:
 				if g != e {
