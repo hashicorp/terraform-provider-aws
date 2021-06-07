@@ -11,8 +11,9 @@ import (
 // AttributeMap represents a map of Terraform resource attribute name to AWS API attribute name.
 // Useful for SQS Queue or SNS Topic attribute handling.
 type attributeInfo struct {
-	apiAttributeName string
-	tfType           schema.ValueType
+	apiAttributeName   string
+	tfType             schema.ValueType
+	tfOptionalComputed bool
 }
 
 type AttributeMap map[string]attributeInfo
@@ -23,10 +24,16 @@ func New(attrMap map[string]string, schemaMap map[string]*schema.Schema) Attribu
 
 	for tfAttributeName, apiAttributeName := range attrMap {
 		if s, ok := schemaMap[tfAttributeName]; ok {
-			attributeMap[tfAttributeName] = attributeInfo{
+			attributeInfo := attributeInfo{
 				apiAttributeName: apiAttributeName,
 				tfType:           s.Type,
 			}
+
+			if s.Optional && s.Computed {
+				attributeInfo.tfOptionalComputed = true
+			}
+
+			attributeMap[tfAttributeName] = attributeInfo
 		} else {
 			log.Printf("[ERROR] Unknown attribute: %s", tfAttributeName)
 		}
@@ -78,20 +85,25 @@ func (m AttributeMap) ResourceDataToApiAttributesCreate(d *schema.ResourceData) 
 	apiAttributes := map[string]string{}
 
 	for tfAttributeName, attributeInfo := range m {
-		if v, ok := d.GetOk(tfAttributeName); ok {
-			var apiAttributeValue string
+		var apiAttributeValue string
 
-			switch t := attributeInfo.tfType; t {
-			case schema.TypeBool:
-				apiAttributeValue = strconv.FormatBool(v.(bool))
-			case schema.TypeInt:
-				apiAttributeValue = strconv.Itoa(v.(int))
-			case schema.TypeString:
-				apiAttributeValue = v.(string)
-			default:
-				return nil, fmt.Errorf("attribute %s is of unsupported type: %d", tfAttributeName, t)
+		switch v, t := d.Get(tfAttributeName), attributeInfo.tfType; t {
+		case schema.TypeBool:
+			if v := v.(bool); v {
+				apiAttributeValue = strconv.FormatBool(v)
 			}
+		case schema.TypeInt:
+			// On creation don't specify any zero Optional/Computed attribute integer values.
+			if v := v.(int); !attributeInfo.tfOptionalComputed || v != 0 {
+				apiAttributeValue = strconv.Itoa(v)
+			}
+		case schema.TypeString:
+			apiAttributeValue = v.(string)
+		default:
+			return nil, fmt.Errorf("attribute %s is of unsupported type: %d", tfAttributeName, t)
+		}
 
+		if apiAttributeValue != "" {
 			apiAttributes[attributeInfo.apiAttributeName] = apiAttributeValue
 		}
 	}

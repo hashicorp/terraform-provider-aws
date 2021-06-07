@@ -67,8 +67,8 @@ var (
 
 		"kms_data_key_reuse_period_seconds": {
 			Type:         schema.TypeInt,
-			Computed:     true,
 			Optional:     true,
+			Computed:     true,
 			ValidateFunc: validation.IntBetween(60, 86_400),
 		},
 

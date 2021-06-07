@@ -622,6 +622,33 @@ func TestAccAWSSQSQueue_Encryption(t *testing.T) {
 	})
 }
 
+func TestAccAWSSQSQueue_ZeroVisibilityTimeoutSeconds(t *testing.T) {
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigZeroVisibilityTimeoutSeconds(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSSQSQueuePolicyAttribute(queueAttributes *map[string]string, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		expectedPolicyText := fmt.Sprintf(
@@ -914,4 +941,13 @@ resource "aws_sqs_queue" "test" {
   kms_data_key_reuse_period_seconds = %[2]s
 }
 `, rName, kmsDataKeyReusePeriodSeconds)
+}
+
+func testAccAWSSQSConfigZeroVisibilityTimeoutSeconds(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  name                       = %[1]q
+  visibility_timeout_seconds = 0
+}
+`, rName)
 }
