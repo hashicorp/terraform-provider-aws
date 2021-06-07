@@ -15,6 +15,8 @@ import (
 )
 
 func init() {
+	RegisterServiceErrorCheckFunc(ecs.EndpointsID, testAccErrorCheckSkipECS)
+
 	resource.AddTestSweepers("aws_ecs_task_definition", &resource.Sweeper{
 		Name: "aws_ecs_task_definition",
 		F:    testSweepEcsTaskDefinitions,
@@ -63,6 +65,12 @@ func testSweepEcsTaskDefinitions(region string) error {
 	}
 
 	return sweeperErrs.ErrorOrNil()
+}
+
+func testAccErrorCheckSkipECS(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"Unsupported field 'inferenceAccelerators'",
+	)
 }
 
 func TestAccAWSEcsTaskDefinition_basic(t *testing.T) {
@@ -356,6 +364,10 @@ func TestAccAWSEcsTaskDefinition_withFsxWinFileSystem(t *testing.T) {
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_task_definition.test"
+
+	if testAccGetPartition() == "aws-us-gov" {
+		t.Skip("Amazon FSx for Windows File Server volumes for ECS tasks are not supported in GovCloud partition")
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
