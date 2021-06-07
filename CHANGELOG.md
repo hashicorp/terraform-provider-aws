@@ -1,4 +1,15 @@
 ## 3.45.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_ecs_task_definition: Add plan time validation for `family` and `requires_compatibilities`. ([#19670](https://github.com/hashicorp/terraform-provider-aws/issues/19670))
+* resource/aws_ecs_task_definition: Add support for `fsx_windows_file_server_volume_configuration`. ([#19670](https://github.com/hashicorp/terraform-provider-aws/issues/19670))
+* resource/aws_fsx_lustre_filesystem: Add `data_compression_type` argument. ([#19664](https://github.com/hashicorp/terraform-provider-aws/issues/19664))
+
+BUG FIXES:
+
+* resource/aws_lambda_function: Prevents perpetual diff in `vpc_config` ([#17610](https://github.com/hashicorp/terraform-provider-aws/issues/17610))
+
 ## 3.44.0 (June 03, 2021)
 
 FEATURES:
