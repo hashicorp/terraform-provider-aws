@@ -573,31 +573,16 @@ func TestAccAWSCloudWatchEventTarget_input_transformer(t *testing.T) {
 	var v events.Target
 	rName := acctest.RandomWithPrefix("tf_input_transformer")
 
-	tooManyInputPaths := []string{
-		"account",
-		"count",
-		"eventFirstSeen",
-		"eventLastSeen",
-		"Finding_ID",
-		"Finding_Type",
-		"instanceId",
-		"port",
-		"region",
-		"severity",
-		"time",
+	tooManyInputPaths := make([]string, 101)
+	for i := range tooManyInputPaths {
+		tooManyInputPaths[i] = fmt.Sprintf("InvalidField_%d", i)
 	}
-	validInputPaths := []string{
-		"account",
-		"count",
-		"eventFirstSeen",
-		"eventLastSeen",
-		"Finding_ID",
-		"Finding_Type",
-		"instanceId",
-		"region",
-		"severity",
-		"time",
+
+	validInputPaths := make([]string, 100)
+	for i := range validInputPaths {
+		validInputPaths[i] = fmt.Sprintf("ValidField_%d", i)
 	}
+
 	var expectedInputTemplate strings.Builder
 	fmt.Fprintf(&expectedInputTemplate, `{
   "detail-type": "Scheduled Event",
@@ -626,7 +611,7 @@ func TestAccAWSCloudWatchEventTarget_input_transformer(t *testing.T) {
 					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.%", strconv.Itoa(len(validInputPaths))),
-					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.time", "$.time"),
+					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.ValidField_99", "$.ValidField_99"),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_template", expectedInputTemplate.String()),
 				),
 			},
