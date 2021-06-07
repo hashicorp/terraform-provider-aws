@@ -23,9 +23,7 @@ func resourceAwsGameliftFleet() *schema.Resource {
 		Read:   resourceAwsGameliftFleetRead,
 		Update: resourceAwsGameliftFleetUpdate,
 		Delete: resourceAwsGameliftFleetDelete,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(70 * time.Minute),
 			Delete: schema.DefaultTimeout(20 * time.Minute),
@@ -41,41 +39,20 @@ func resourceAwsGameliftFleet() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"certificate_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"certificate_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      gamelift.CertificateTypeDisabled,
-							ValidateFunc: validation.StringInSlice(gamelift.CertificateType_Values(), false),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if d.Get("certificate_configuration.0.certificate_type").(string) == "" {
-									return true
-								}
-
-								return true
-							},
-						},
-					},
-				},
-			},
 			"ec2_instance_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(gamelift.EC2InstanceType_Values(), false),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"fleet_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      gamelift.FleetTypeOnDemand,
-				ValidateFunc: validation.StringInSlice(gamelift.FleetType_Values(), false),
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  gamelift.FleetTypeOnDemand,
+				ValidateFunc: validation.StringInSlice([]string{
+					gamelift.FleetTypeOnDemand,
+					gamelift.FleetTypeSpot,
+				}, false),
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -110,9 +87,12 @@ func resourceAwsGameliftFleet() *schema.Resource {
 							ValidateFunc: validateCIDRNetworkAddress,
 						},
 						"protocol": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(gamelift.IpProtocol_Values(), false),
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								gamelift.IpProtocolTcp,
+								gamelift.IpProtocolUdp,
+							}, false),
 						},
 						"to_port": {
 							Type:         schema.TypeInt,
@@ -127,20 +107,6 @@ func resourceAwsGameliftFleet() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			// "location_configuration": {
-			// 	Type:     schema.TypeList,
-			// 	Optional: true,
-			// 	Computed: true
-			// 	MaxItems: 100,
-			// 	Elem: &schema.Resource{
-			// 		Schema: map[string]*schema.Schema{
-			// 			"location": {
-			// 				Type:     schema.TypeString,
-			// 				Optional: true,
-			// 			},
-			// 		},
-			// 	},
-			// },
 			"metric_groups": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -151,10 +117,13 @@ func resourceAwsGameliftFleet() *schema.Resource {
 				},
 			},
 			"new_game_session_protection_policy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      gamelift.ProtectionPolicyNoProtection,
-				ValidateFunc: validation.StringInSlice(gamelift.ProtectionPolicy_Values(), false),
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  gamelift.ProtectionPolicyNoProtection,
+				ValidateFunc: validation.StringInSlice([]string{
+					gamelift.ProtectionPolicyNoProtection,
+					gamelift.ProtectionPolicyFullProtection,
+				}, false),
 			},
 			"operating_system": {
 				Type:     schema.TypeString,
@@ -222,17 +191,6 @@ func resourceAwsGameliftFleet() *schema.Resource {
 					},
 				},
 			},
-			"peer_vpc_aws_account_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateAwsAccountId,
-			},
-			"peer_vpc_id": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
 			"tags": tagsSchema(),
 
 			"tags_all": tagsSchemaComputed(),
@@ -279,15 +237,6 @@ func resourceAwsGameliftFleetCreate(d *schema.ResourceData, meta interface{}) er
 	}
 	if v, ok := d.GetOk("runtime_configuration"); ok {
 		input.RuntimeConfiguration = expandGameliftRuntimeConfiguration(v.([]interface{}))
-	}
-	if v, ok := d.GetOk("certificate_configuration"); ok {
-		input.CertificateConfiguration = expandGameliftFleetCertificateConfiguration(v.([]interface{}))
-	}
-	if v, ok := d.GetOk("peer_vpc_aws_account_id"); ok {
-		input.PeerVpcAwsAccountId = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("peer_vpc_id"); ok {
-		input.PeerVpcId = aws.String(v.(string))
 	}
 
 	log.Printf("[INFO] Creating Gamelift Fleet: %s", input)
@@ -391,7 +340,6 @@ func resourceAwsGameliftFleetRead(d *schema.ResourceData, meta interface{}) erro
 	arn := aws.StringValue(fleet.FleetArn)
 	d.Set("build_id", fleet.BuildId)
 	d.Set("description", fleet.Description)
-	d.Set("ec2_instance_type", fleet.InstanceType)
 	d.Set("arn", arn)
 	d.Set("log_paths", aws.StringValueSlice(fleet.LogPaths))
 	d.Set("metric_groups", flattenStringList(fleet.MetricGroups))
@@ -400,25 +348,7 @@ func resourceAwsGameliftFleetRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("instance_role_arn", fleet.InstanceRoleArn)
 	d.Set("new_game_session_protection_policy", fleet.NewGameSessionProtectionPolicy)
 	d.Set("operating_system", fleet.OperatingSystem)
-
-	if err := d.Set("resource_creation_limit_policy", flattenGameliftResourceCreationLimitPolicy(fleet.ResourceCreationLimitPolicy)); err != nil {
-		return fmt.Errorf("error setting resource_creation_limit_policy: %w", err)
-	}
-
-	if err := d.Set("certificate_configuration", flattenGameliftFleetCertificateConfiguration(fleet.CertificateConfiguration)); err != nil {
-		return fmt.Errorf("error setting certificate_configuration: %w", err)
-	}
-
-	runtimeOut, err := conn.DescribeRuntimeConfiguration(&gamelift.DescribeRuntimeConfigurationInput{
-		FleetId: aws.String(d.Id()),
-	})
-	if err != nil {
-		return fmt.Errorf("error describing Game Lift Fleet Runtime Configuration (%s): %w", arn, err)
-	}
-	if err := d.Set("runtime_configuration", flattenGameliftFleetRuntimeConfiguration(runtimeOut.RuntimeConfiguration)); err != nil {
-		return fmt.Errorf("error setting runtime_configuration: %w", err)
-	}
-
+	d.Set("resource_creation_limit_policy", flattenGameliftResourceCreationLimitPolicy(fleet.ResourceCreationLimitPolicy))
 	tags, err := keyvaluetags.GameliftListTags(conn, arn)
 
 	if isAWSErr(err, gamelift.ErrCodeInvalidRequestException, fmt.Sprintf("Resource %s is not in a taggable state", d.Id())) {
@@ -426,7 +356,7 @@ func resourceAwsGameliftFleetRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Game Lift Fleet (%s): %w", arn, err)
+		return fmt.Errorf("error listing tags for Game Lift Fleet (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
@@ -617,8 +547,8 @@ func flattenGameliftResourceCreationLimitPolicy(policy *gamelift.ResourceCreatio
 	}
 
 	m := make(map[string]interface{})
-	m["new_game_sessions_per_creator"] = aws.Int64Value(policy.NewGameSessionsPerCreator)
-	m["policy_period_in_minutes"] = aws.Int64Value(policy.PolicyPeriodInMinutes)
+	m["new_game_sessions_per_creator"] = *policy.NewGameSessionsPerCreator
+	m["policy_period_in_minutes"] = *policy.PolicyPeriodInMinutes
 
 	return []interface{}{m}
 }
@@ -748,60 +678,4 @@ OUTER:
 		a = append(a, expandGameliftIpPermission(newPerm))
 	}
 	return
-}
-
-func flattenGameliftFleetRuntimeConfiguration(config *gamelift.RuntimeConfiguration) []interface{} {
-	if config == nil {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-	m["game_session_activation_timeout_seconds"] = aws.Int64Value(config.GameSessionActivationTimeoutSeconds)
-	m["max_concurrent_game_session_activations"] = aws.Int64Value(config.MaxConcurrentGameSessionActivations)
-	m["server_process"] = flattenGameliftFleetRuntimeConfigurationServerProcess(config.ServerProcesses)
-
-	return []interface{}{m}
-}
-
-func flattenGameliftFleetRuntimeConfigurationServerProcess(configs []*gamelift.ServerProcess) []interface{} {
-	result := make([]interface{}, 0, len(configs))
-
-	for _, config := range configs {
-		m := make(map[string]interface{})
-		m["concurrent_executions"] = aws.Int64Value(config.ConcurrentExecutions)
-		m["launch_path"] = aws.StringValue(config.LaunchPath)
-
-		if config.Parameters != nil {
-			m["parameters"] = aws.StringValue(config.LaunchPath)
-		}
-
-		result = append(result, m)
-	}
-
-	return result
-}
-
-func expandGameliftFleetCertificateConfiguration(cfg []interface{}) *gamelift.CertificateConfiguration {
-	if len(cfg) < 1 {
-		return nil
-	}
-	out := gamelift.CertificateConfiguration{}
-	m := cfg[0].(map[string]interface{})
-
-	if v, ok := m["certificate_type"].(string); ok && v != "" {
-		out.CertificateType = aws.String(v)
-	}
-
-	return &out
-}
-
-func flattenGameliftFleetCertificateConfiguration(config *gamelift.CertificateConfiguration) []interface{} {
-	if config == nil {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-	m["certificate_type"] = aws.StringValue(config.CertificateType)
-
-	return []interface{}{m}
 }

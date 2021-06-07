@@ -258,11 +258,11 @@ For more information, see [Specifying an EFS volume in your Task Definition Deve
 
 ### fsx_windows_file_server_volume_configuration
 
-For more information, see [Specifying an FSX Windows File Server volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/tutorial-wfsx-volumes.html)
+For more information, see [Specifying an FSX Windows File Server volume in your Task Definition Developer Guide](https://docs.amazonaws.cn/en_us/AmazonECS/latest/developerguide/tutorial-wfsx-volumes.html)
 
 * `file_system_id` - (Required) The Amazon FSx for Windows File Server file system ID to use.
 * `root_directory` - (Required) The directory within the Amazon FSx for Windows File Server file system to mount as the root directory inside the host.
-* `authorization_config` - (Required) Configuration block for [authorization](#authorization_config) for the Amazon FSx for Windows File Server file system detailed below.
+* `authorization_config` - (OptiRequiredonal) Configuration block for [authorization](#authorization_config) for the Amazon FSx for Windows File Server file system detailed below.
 
 #### authorization_config
 
