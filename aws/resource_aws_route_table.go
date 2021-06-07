@@ -517,7 +517,7 @@ func resourceAwsRouteTableDelete(d *schema.ResourceData, meta interface{}) error
 		d := r.Data(nil)
 		d.SetId(v)
 
-		if err := r.Delete(d, meta); err != nil {
+		if err := tfresource.Delete(r, d, meta); err != nil {
 			return err
 		}
 	}
@@ -538,7 +538,7 @@ func resourceAwsRouteTableDelete(d *schema.ResourceData, meta interface{}) error
 	// Wait for the route table to really destroy
 	log.Printf("[DEBUG] Waiting for route table (%s) deletion", d.Id())
 	if _, err := waiter.RouteTableDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Route Table (%s) deletion: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for Route Table (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil

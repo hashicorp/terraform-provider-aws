@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/envvar"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 // sweeperAwsClients is a shared cache of regional AWSClient
@@ -77,7 +78,7 @@ func testSweepResourceOrchestrator(sweepResources []*testSweepResource) error {
 		sweepResource := sweepResource
 
 		g.Go(func() error {
-			return testAccDeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
+			return tfresource.Delete(sweepResource.resource, sweepResource.d, sweepResource.meta)
 		})
 	}
 

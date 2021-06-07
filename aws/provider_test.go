@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -26,6 +25,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/envvar"
 	organizationsfinder "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/organizations/finder"
 	stsfinder "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sts/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -1035,28 +1035,6 @@ func testAccAwsRegionProviderFunc(region string, providers *[]*schema.Provider) 
 	}
 }
 
-func testAccDeleteResource(resource *schema.Resource, d *schema.ResourceData, meta interface{}) error {
-	if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
-		var diags diag.Diagnostics
-
-		if resource.DeleteContext != nil {
-			diags = resource.DeleteContext(context.Background(), d, meta)
-		} else {
-			diags = resource.DeleteWithoutTimeout(context.Background(), d, meta)
-		}
-
-		for i := range diags {
-			if diags[i].Severity == diag.Error {
-				return fmt.Errorf("error deleting resource: %s", diags[i].Summary)
-			}
-		}
-
-		return nil
-	}
-
-	return resource.Delete(d, meta)
-}
-
 func testAccCheckResourceDisappears(provider *schema.Provider, resource *schema.Resource, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		resourceState, ok := s.RootModule().Resources[resourceName]
@@ -1069,7 +1047,7 @@ func testAccCheckResourceDisappears(provider *schema.Provider, resource *schema.
 			return fmt.Errorf("resource ID missing: %s", resourceName)
 		}
 
-		return testAccDeleteResource(resource, resource.Data(resourceState.Primary), provider.Meta())
+		return tfresource.Delete(resource, resource.Data(resourceState.Primary), provider.Meta())
 	}
 }
 
