@@ -43,7 +43,7 @@ func QueueAttributesPropagated(conn *sqs.SQS, url string, expected map[string]st
 				equivalent, err := awspolicy.PoliciesAreEquivalent(g, e)
 
 				if err != nil {
-					return nil
+					return err
 				}
 
 				if !equivalent {
