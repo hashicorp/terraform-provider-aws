@@ -17,6 +17,8 @@ import (
 )
 
 func init() {
+	RegisterServiceErrorCheckFunc(cognitoidentityprovider.EndpointsID, testAccErrorCheckSkipCognitoIdentityProvider)
+
 	resource.AddTestSweepers("aws_cognito_user_pool", &resource.Sweeper{
 		Name: "aws_cognito_user_pool",
 		F:    testSweepCognitoUserPools,
@@ -66,6 +68,12 @@ func testSweepCognitoUserPools(region string) error {
 	}
 
 	return nil
+}
+
+func testAccErrorCheckSkipCognitoIdentityProvider(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"not supported in this region",
+	)
 }
 
 func TestAccAWSCognitoUserPool_basic(t *testing.T) {
