@@ -1081,7 +1081,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error requesting spot fleet: %s", err)
+		return fmt.Errorf("Error requesting spot fleet: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.SpotFleetRequestId))
@@ -1132,7 +1132,7 @@ func resourceAwsSpotFleetRequestStateRefreshFunc(d *schema.ResourceData, meta in
 		resp, err := conn.DescribeSpotFleetRequests(req)
 
 		if err != nil {
-			log.Printf("Error on retrieving Spot Fleet Request when waiting: %s", err)
+			log.Printf("Error on retrieving Spot Fleet Request when waiting: %w", err)
 			return nil, "", nil
 		}
 
@@ -1158,7 +1158,7 @@ func resourceAwsSpotFleetRequestFulfillmentRefreshFunc(id string, conn *ec2.EC2)
 		resp, err := conn.DescribeSpotFleetRequests(req)
 
 		if err != nil {
-			log.Printf("Error on retrieving Spot Fleet Request when waiting: %s", err)
+			log.Printf("Error on retrieving Spot Fleet Request when waiting: %w", err)
 			return nil, "", nil
 		}
 
@@ -1298,7 +1298,7 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 
 	launchSpec, err := launchSpecsToSet(config.LaunchSpecifications, conn)
 	if err != nil {
-		return fmt.Errorf("error occurred while reading launch specification: %s", err)
+		return fmt.Errorf("error occurred while reading launch specification: %w", err)
 	}
 
 	d.Set("replace_unhealthy_instances", config.ReplaceUnhealthyInstances)
@@ -1318,20 +1318,20 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 
 	if len(config.LaunchTemplateConfigs) > 0 {
 		if err := d.Set("launch_template_config", flattenFleetLaunchTemplateConfig(config.LaunchTemplateConfigs)); err != nil {
-			return fmt.Errorf("error setting launch_template_config: %s", err)
+			return fmt.Errorf("error setting launch_template_config: %w", err)
 		}
 	}
 
 	if config.OnDemandTargetCapacity != nil {
-		d.Set("on_demand_target_capacity", aws.Int64Value(config.OnDemandTargetCapacity))
+		d.Set("on_demand_target_capacity", config.OnDemandTargetCapacity)
 	}
 
 	if config.OnDemandAllocationStrategy != nil {
-		d.Set("on_demand_allocation_strategy", aws.StringValue(config.OnDemandAllocationStrategy))
+		d.Set("on_demand_allocation_strategy", config.OnDemandAllocationStrategy)
 	}
 
 	if config.OnDemandMaxTotalPrice != nil {
-		d.Set("on_demand_max_total_price", aws.StringValue(config.OnDemandMaxTotalPrice))
+		d.Set("on_demand_max_total_price", config.OnDemandMaxTotalPrice)
 	}
 
 	if config.LoadBalancersConfig != nil {
@@ -1353,7 +1353,7 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 				flatTgs = append(flatTgs, tg.Arn)
 			}
 			if err := d.Set("target_group_arns", flattenStringSet(flatTgs)); err != nil {
-				return fmt.Errorf("error setting target_group_arns: %s", err)
+				return fmt.Errorf("error setting target_group_arns: %w", err)
 			}
 		}
 	}
