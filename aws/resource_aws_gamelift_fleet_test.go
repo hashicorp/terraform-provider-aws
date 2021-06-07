@@ -274,7 +274,7 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 				Config: testAccAWSGameliftFleetBasicConfig(fleetName, launchPath, params, buildName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, "build_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", "id"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
@@ -291,11 +291,17 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSGameliftFleetBasicUpdatedConfig(desc, uFleetName, launchPath, params, buildName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, "build_id"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
+					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", "id"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", uFleetName),
 					resource.TestCheckResourceAttr(resourceName, "description", desc),
@@ -359,6 +365,11 @@ func TestAccAWSGameliftFleet_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSGameliftFleetBasicConfigTags2(fleetName, launchPath, params, buildName, bucketName, key, roleArn, "key1", "value1updated", "key2", "value2"),
@@ -462,6 +473,11 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSGameliftFleetAllFieldsUpdatedConfig(fleetName, desc, launchPath, params[1], buildName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
@@ -544,7 +560,7 @@ func TestAccAWSGameliftFleet_disappears(t *testing.T) {
 				Config: testAccAWSGameliftFleetBasicConfig(fleetName, launchPath, params, buildName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
-					testAccCheckAWSGameliftFleetDisappears(&conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGameliftFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -588,33 +604,6 @@ func testAccCheckAWSGameliftFleetExists(n string, res *gamelift.FleetAttributes)
 		*res = *fleet
 
 		return nil
-	}
-}
-
-func testAccCheckAWSGameliftFleetDisappears(res *gamelift.FleetAttributes) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).gameliftconn
-
-		input := &gamelift.DeleteFleetInput{FleetId: res.FleetId}
-		err := resource.Retry(60*time.Minute, func() *resource.RetryError {
-			_, err := conn.DeleteFleet(input)
-			if err != nil {
-				msg := fmt.Sprintf("Cannot delete fleet %s that is in status of ", *res.FleetId)
-				if isAWSErr(err, gamelift.ErrCodeInvalidRequestException, msg) {
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if isResourceTimeoutError(err) {
-			_, err = conn.DeleteFleet(input)
-		}
-		if err != nil {
-			return fmt.Errorf("Error deleting Gamelift fleet: %s", err)
-		}
-
-		return waitForGameliftFleetToBeDeleted(conn, *res.FleetId, 15*time.Minute)
 	}
 }
 
@@ -860,6 +849,8 @@ resource "aws_gamelift_build" "test" {
 
 func testAccAWSGameLiftFleetIAMRole(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = "test-role-%[1]s"
 
@@ -872,7 +863,7 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "gamelift.amazonaws.com"
+          "gamelift.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": [
@@ -889,23 +880,21 @@ resource "aws_iam_policy" "test" {
   path        = "/"
   description = "GameLift Fleet PassRole Policy"
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "iam:PassRole",
-        "sts:AssumeRole"
-      ],
-      "Resource": [
-        "*"
+  policy = jsonencode({
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "iam:PassRole",
+            "sts:AssumeRole"
+          ],
+          "Resource" : [
+            "*"
+          ]
+        },
       ]
-    }
-  ]
-}
-EOF
+  })
 }
 
 resource "aws_iam_policy_attachment" "test-attach" {
