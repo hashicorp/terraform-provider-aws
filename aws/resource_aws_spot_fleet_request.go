@@ -1132,7 +1132,7 @@ func resourceAwsSpotFleetRequestStateRefreshFunc(d *schema.ResourceData, meta in
 		resp, err := conn.DescribeSpotFleetRequests(req)
 
 		if err != nil {
-			log.Printf("Error on retrieving Spot Fleet Request when waiting: %w", err)
+			log.Printf("Error on retrieving Spot Fleet Request when waiting: %s", err)
 			return nil, "", nil
 		}
 
@@ -1158,7 +1158,7 @@ func resourceAwsSpotFleetRequestFulfillmentRefreshFunc(id string, conn *ec2.EC2)
 		resp, err := conn.DescribeSpotFleetRequests(req)
 
 		if err != nil {
-			log.Printf("Error on retrieving Spot Fleet Request when waiting: %w", err)
+			log.Printf("Error on retrieving Spot Fleet Request when waiting: %s", err)
 			return nil, "", nil
 		}
 
@@ -1343,7 +1343,7 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 				flatLbs = append(flatLbs, lb.Name)
 			}
 			if err := d.Set("load_balancers", flattenStringSet(flatLbs)); err != nil {
-				return fmt.Errorf("error setting load_balancers: %s", err)
+				return fmt.Errorf("error setting load_balancers: %w", err)
 			}
 		}
 
@@ -1641,7 +1641,7 @@ func resourceAwsSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{})
 	if updateFlag {
 		log.Printf("[DEBUG] Modifying Spot Fleet Request: %#v", req)
 		if _, err := conn.ModifySpotFleetRequest(req); err != nil {
-			return fmt.Errorf("error updating spot request (%s): %s", d.Id(), err)
+			return fmt.Errorf("error updating spot request (%s): %w", d.Id(), err)
 		}
 
 		log.Println("[INFO] Waiting for Spot Fleet Request to be modified")
@@ -1663,7 +1663,7 @@ func resourceAwsSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{})
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
 
@@ -1678,7 +1678,7 @@ func resourceAwsSpotFleetRequestDelete(d *schema.ResourceData, meta interface{})
 	log.Printf("[INFO] Cancelling spot fleet request: %s", d.Id())
 	err := deleteSpotFleetRequest(d.Id(), terminateInstances, d.Timeout(schema.TimeoutDelete), conn)
 	if err != nil {
-		return fmt.Errorf("error deleting spot request (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting spot request (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -1704,7 +1704,7 @@ func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, 
 		})
 
 		if err != nil || resp == nil {
-			return 0, fmt.Errorf("error reading Spot Fleet Instances (%s): %s", spotFleetRequestID, err)
+			return 0, fmt.Errorf("error reading Spot Fleet Instances (%s): %w", spotFleetRequestID, err)
 		}
 
 		return len(resp.ActiveInstances), nil
