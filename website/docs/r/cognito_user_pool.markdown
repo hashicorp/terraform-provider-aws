@@ -137,10 +137,12 @@ The following arguments are optional:
 * `custom_sms_sender` - (Optional) A custom SMS sender AWS Lambda trigger. See [custom_sms_sender](#custom_sms_sender) Below.
 
 #### custom_email_sender
+
 * `lambda_arn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to send email notifications to users.
 * `lambda_version` - (Required) The Lambda version represents the signature of the "request" attribute in the "event" information Amazon Cognito passes to your custom email Lambda function. The only supported value is `V1_0`.
 
 #### custom_sms_sender
+
 * `lambda_arn` - (Required) he Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to send SMS notifications to users.
 * `lambda_version` - (Required) The Lambda version represents the signature of the "request" attribute in the "event" information Amazon Cognito passes to your custom SMS Lambda function. The only supported value is `V1_0`.
 
