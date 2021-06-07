@@ -96,7 +96,22 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 				},
 				ValidateFunc: validateAwsEcsTaskDefinitionContainerDefinitions,
 			},
-
+			"ephemeral_storage": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"size_in_gib": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IntBetween(21, 200),
+						},
+					},
+				},
+			},
 			"task_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -472,6 +487,10 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 		input.ProxyConfiguration = expandEcsTaskDefinitionProxyConfiguration(proxyConfigs)
 	}
 
+	if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]interface{})) > 0 {
+		input.EphemeralStorage = expandEcsTaskDefinitionEphemeralStorage(v.([]interface{}))
+	}
+
 	log.Printf("[DEBUG] Registering ECS task definition: %s", input)
 	out, err := conn.RegisterTaskDefinition(&input)
 	if err != nil {
@@ -571,6 +590,9 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error setting proxy_configuration: %w", err)
 	}
 
+	if err := d.Set("ephemeral_storage", flattenEcsTaskDefinitionEphemeralStorage(taskDefinition.EphemeralStorage)); err != nil {
+		return fmt.Errorf("error setting ephemeral_storage: %w", err)
+	}
 	return nil
 }
 
@@ -1065,4 +1087,25 @@ func expandEcsContainerDefinitions(rawDefinitions string) ([]*ecs.ContainerDefin
 	}
 
 	return definitions, nil
+}
+
+func expandEcsTaskDefinitionEphemeralStorage(config []interface{}) *ecs.EphemeralStorage {
+	configMap := config[0].(map[string]interface{})
+
+	es := &ecs.EphemeralStorage{
+		SizeInGiB: aws.Int64(int64(configMap["size_in_gib"].(int))),
+	}
+
+	return es
+}
+
+func flattenEcsTaskDefinitionEphemeralStorage(pc *ecs.EphemeralStorage) []map[string]interface{} {
+	if pc == nil {
+		return nil
+	}
+
+	m := make(map[string]interface{})
+	m["size_in_gib"] = aws.Int64Value(pc.SizeInGiB)
+
+	return []map[string]interface{}{m}
 }
