@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -15,12 +16,17 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsCurReportDefinitionCreate,
 		Read:   resourceAwsCurReportDefinitionRead,
+		Update: resourceAwsCurReportDefinitionUpdate,
 		Delete: resourceAwsCurReportDefinitionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"report_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -39,7 +45,6 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 			"format": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 				ValidateFunc: validation.StringInSlice(
 					costandusagereportservice.ReportFormat_Values(),
 					false,
@@ -48,7 +53,6 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 			"compression": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 				ValidateFunc: validation.StringInSlice(
 					costandusagereportservice.CompressionFormat_Values(),
 					false,
@@ -70,18 +74,19 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 			"s3_bucket": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"s3_prefix": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
 			"s3_region": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
+				ValidateFunc: validation.StringInSlice(
+					costandusagereportservice.AWSRegion_Values(),
+					false,
+				),
 			},
 			"additional_artifacts": {
 				Type: schema.TypeSet,
@@ -91,13 +96,10 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 						false,
 					),
 				},
-				Set:      schema.HashString,
 				Optional: true,
-				ForceNew: true,
 			},
 			"refresh_closed_reports": {
 				Type:     schema.TypeBool,
-				ForceNew: true,
 				Default:  true,
 				Optional: true,
 			},
@@ -188,7 +190,18 @@ func resourceAwsCurReportDefinitionRead(d *schema.ResourceData, meta interface{}
 		return nil
 	}
 
-	d.SetId(aws.StringValue(reportDefinition.ReportName))
+	reportName := aws.StringValue(reportDefinition.ReportName)
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "cur",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("definition/%s", reportName),
+	}.String()
+
+	d.Set("arn", arn)
+
+	d.SetId(reportName)
 	d.Set("report_name", reportDefinition.ReportName)
 	d.Set("time_unit", reportDefinition.TimeUnit)
 	d.Set("format", reportDefinition.Format)
@@ -202,6 +215,59 @@ func resourceAwsCurReportDefinitionRead(d *schema.ResourceData, meta interface{}
 	d.Set("report_versioning", reportDefinition.ReportVersioning)
 
 	return nil
+}
+
+func resourceAwsCurReportDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).costandusagereportconn
+
+	additionalArtifacts := expandStringSet(d.Get("additional_artifacts").(*schema.Set))
+	compression := aws.String(d.Get("compression").(string))
+	format := aws.String(d.Get("format").(string))
+	prefix := aws.String(d.Get("s3_prefix").(string))
+	reportVersioning := aws.String(d.Get("report_versioning").(string))
+
+	additionalArtifactsList := make([]string, 0)
+	for i := 0; i < len(additionalArtifacts); i++ {
+		additionalArtifactsList = append(additionalArtifactsList, *additionalArtifacts[i])
+	}
+
+	err := checkAwsCurReportDefinitionPropertyCombination(
+		additionalArtifactsList,
+		*compression,
+		*format,
+		*prefix,
+		*reportVersioning,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	reportName := d.Get("report_name").(string)
+
+	reportDefinition := &costandusagereportservice.ReportDefinition{
+		ReportName:               aws.String(reportName),
+		TimeUnit:                 aws.String(d.Get("time_unit").(string)),
+		Format:                   format,
+		Compression:              compression,
+		AdditionalSchemaElements: expandStringSet(d.Get("additional_schema_elements").(*schema.Set)),
+		S3Bucket:                 aws.String(d.Get("s3_bucket").(string)),
+		S3Prefix:                 prefix,
+		S3Region:                 aws.String(d.Get("s3_region").(string)),
+		AdditionalArtifacts:      additionalArtifacts,
+		RefreshClosedReports:     aws.Bool(d.Get("refresh_closed_reports").(bool)),
+		ReportVersioning:         reportVersioning,
+	}
+
+	reportDefinitionInput := &costandusagereportservice.ModifyReportDefinitionInput{
+		ReportDefinition: reportDefinition,
+	}
+
+	_, err = conn.ModifyReportDefinition(reportDefinitionInput)
+	if err != nil {
+		return fmt.Errorf("Error updating AWS Cost And Usage Report Definition: %w", err)
+	}
+	return resourceAwsCurReportDefinitionRead(d, meta)
 }
 
 func resourceAwsCurReportDefinitionDelete(d *schema.ResourceData, meta interface{}) error {

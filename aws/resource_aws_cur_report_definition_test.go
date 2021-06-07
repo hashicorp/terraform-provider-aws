@@ -28,6 +28,7 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 				Config: testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCurReportDefinitionExists(resourceName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "cur", fmt.Sprintf("definition/%s", reportName)),
 					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, "compression", "GZIP"),
@@ -37,6 +38,11 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, "region"),
 					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "2"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -77,6 +83,11 @@ func TestAccAwsCurReportDefinition_textOrCsv(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "report_versioning", reportVersioning),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -114,6 +125,11 @@ func TestAccAwsCurReportDefinition_parquet(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "refresh_closed_reports", "false"),
 					resource.TestCheckResourceAttr(resourceName, "report_versioning", reportVersioning),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -154,6 +170,11 @@ func TestAccAwsCurReportDefinition_athena(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "report_versioning", reportVersioning),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -193,6 +214,11 @@ func TestAccAwsCurReportDefinition_refresh(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "report_versioning", reportVersioning),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -231,6 +257,34 @@ func TestAccAwsCurReportDefinition_overwrite(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "refresh_closed_reports", "false"),
 					resource.TestCheckResourceAttr(resourceName, "report_versioning", reportVersioning),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsCurReportDefinition_disappears(t *testing.T) {
+	resourceName := "aws_cur_report_definition.test"
+	reportName := acctest.RandomWithPrefix("tf_acc_test")
+	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
+		ErrorCheck:        testAccErrorCheck(t, costandusagereportservice.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsCurReportDefinitionExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCurReportDefinition(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
