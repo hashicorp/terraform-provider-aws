@@ -32,9 +32,10 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateUserPool.html
 		Schema: map[string]*schema.Schema{
 			"account_recovery_setting": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"recovery_mechanism": {
@@ -612,35 +613,8 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		params.AutoVerifiedAttributes = expandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("email_configuration"); ok {
-		configs := v.([]interface{})
-		config, ok := configs[0].(map[string]interface{})
-
-		if ok && config != nil {
-			emailConfigurationType := &cognitoidentityprovider.EmailConfigurationType{}
-
-			if v, ok := config["reply_to_email_address"]; ok && v.(string) != "" {
-				emailConfigurationType.ReplyToEmailAddress = aws.String(v.(string))
-			}
-
-			if v, ok := config["source_arn"]; ok && v.(string) != "" {
-				emailConfigurationType.SourceArn = aws.String(v.(string))
-			}
-
-			if v, ok := config["from_email_address"]; ok && v.(string) != "" {
-				emailConfigurationType.From = aws.String(v.(string))
-			}
-
-			if v, ok := config["email_sending_account"]; ok && v.(string) != "" {
-				emailConfigurationType.EmailSendingAccount = aws.String(v.(string))
-			}
-
-			if v, ok := config["configuration_set"]; ok && v.(string) != "" {
-				emailConfigurationType.ConfigurationSet = aws.String(v.(string))
-			}
-
-			params.EmailConfiguration = emailConfigurationType
-		}
+	if v, ok := d.GetOk("email_configuration"); ok && len(v.([]interface{})) > 0 {
+		params.EmailConfiguration = expandCognitoUserPoolEmailConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("admin_create_user_config"); ok {
@@ -690,8 +664,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("schema"); ok {
-		configs := v.(*schema.Set).List()
-		params.Schema = expandCognitoUserPoolSchema(configs)
+		params.Schema = expandCognitoUserPoolSchema(v.(*schema.Set).List())
 	}
 
 	// For backwards compatibility, include this outside of MFA configuration
@@ -1084,37 +1057,8 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 			}
 		}
 
-		if v, ok := d.GetOk("email_configuration"); ok {
-
-			configs := v.([]interface{})
-			config, ok := configs[0].(map[string]interface{})
-
-			if ok && config != nil {
-				log.Printf("[DEBUG] Set Values to update from configs")
-				emailConfigurationType := &cognitoidentityprovider.EmailConfigurationType{}
-
-				if v, ok := config["reply_to_email_address"]; ok && v.(string) != "" {
-					emailConfigurationType.ReplyToEmailAddress = aws.String(v.(string))
-				}
-
-				if v, ok := config["source_arn"]; ok && v.(string) != "" {
-					emailConfigurationType.SourceArn = aws.String(v.(string))
-				}
-
-				if v, ok := config["email_sending_account"]; ok && v.(string) != "" {
-					emailConfigurationType.EmailSendingAccount = aws.String(v.(string))
-				}
-
-				if v, ok := config["from_email_address"]; ok && v.(string) != "" {
-					emailConfigurationType.From = aws.String(v.(string))
-				}
-
-				if v, ok := config["configuration_set"]; ok && v.(string) != "" {
-					emailConfigurationType.ConfigurationSet = aws.String(v.(string))
-				}
-
-				params.EmailConfiguration = emailConfigurationType
-			}
+		if v, ok := d.GetOk("email_configuration"); ok && len(v.([]interface{})) > 0 {
+			params.EmailConfiguration = expandCognitoUserPoolEmailConfig(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("email_verification_subject"); ok {
@@ -2247,4 +2191,32 @@ func flattenCognitoUserPoolCustomEmailSender(u *cognitoidentityprovider.CustomEm
 	m["lambda_version"] = aws.StringValue(u.LambdaVersion)
 
 	return []map[string]interface{}{m}
+}
+
+func expandCognitoUserPoolEmailConfig(emailConfig []interface{}) *cognitoidentityprovider.EmailConfigurationType {
+	config := emailConfig[0].(map[string]interface{})
+
+	emailConfigurationType := &cognitoidentityprovider.EmailConfigurationType{}
+
+	if v, ok := config["reply_to_email_address"]; ok && v.(string) != "" {
+		emailConfigurationType.ReplyToEmailAddress = aws.String(v.(string))
+	}
+
+	if v, ok := config["source_arn"]; ok && v.(string) != "" {
+		emailConfigurationType.SourceArn = aws.String(v.(string))
+	}
+
+	if v, ok := config["from_email_address"]; ok && v.(string) != "" {
+		emailConfigurationType.From = aws.String(v.(string))
+	}
+
+	if v, ok := config["email_sending_account"]; ok && v.(string) != "" {
+		emailConfigurationType.EmailSendingAccount = aws.String(v.(string))
+	}
+
+	if v, ok := config["configuration_set"]; ok && v.(string) != "" {
+		emailConfigurationType.ConfigurationSet = aws.String(v.(string))
+	}
+
+	return emailConfigurationType
 }
