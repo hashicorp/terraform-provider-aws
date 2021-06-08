@@ -725,6 +725,38 @@ func TestAccAWSEcsTaskDefinition_Fargate(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
+	var conf ecs.TaskDefinition
+
+	tdName := acctest.RandomWithPrefix("tf-acc-td-fargate")
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinitionFargateEphemeralStorage(tdName, `[{"protocol": "tcp", "containerPort": 8000}]`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "requires_compatibilities.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu", "256"),
+					resource.TestCheckResourceAttr(resourceName, "memory", "512"),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.0.size_in_gib", "30"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 func TestAccAWSEcsTaskDefinition_ExecutionRole(t *testing.T) {
 	var conf ecs.TaskDefinition
 
@@ -1382,6 +1414,37 @@ resource "aws_ecs_task_definition" "test" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = "256"
   memory                   = "512"
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true,
+    "portMappings": %s
+  }
+]
+TASK_DEFINITION
+
+}
+`, tdName, portMappings)
+}
+
+func testAccAWSEcsTaskDefinitionFargateEphemeralStorage(tdName, portMappings string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family                   = "%s"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+
+  ephemeral_storage {
+    size_in_gib = 30
+  }
 
   container_definitions = <<TASK_DEFINITION
 [
