@@ -103,10 +103,10 @@ func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).costandusagereportconn
 
 	additionalArtifacts := expandStringSet(d.Get("additional_artifacts").(*schema.Set))
-	compression := aws.String(d.Get("compression").(string))
-	format := aws.String(d.Get("format").(string))
-	prefix := aws.String(d.Get("s3_prefix").(string))
-	reportVersioning := aws.String(d.Get("report_versioning").(string))
+	compression := d.Get("compression").(string)
+	format := d.Get("format").(string)
+	prefix := d.Get("s3_prefix").(string)
+	reportVersioning := d.Get("report_versioning").(string)
 
 	additionalArtifactsList := make([]string, 0)
 	for i := 0; i < len(additionalArtifacts); i++ {
@@ -115,10 +115,10 @@ func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface
 
 	err := checkAwsCurReportDefinitionPropertyCombination(
 		additionalArtifactsList,
-		*compression,
-		*format,
-		*prefix,
-		*reportVersioning,
+		compression,
+		format,
+		prefix,
+		reportVersioning,
 	)
 
 	if err != nil {
@@ -130,15 +130,15 @@ func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface
 	reportDefinition := &cur.ReportDefinition{
 		ReportName:               aws.String(reportName),
 		TimeUnit:                 aws.String(d.Get("time_unit").(string)),
-		Format:                   format,
-		Compression:              compression,
+		Format:                   aws.String(format),
+		Compression:              aws.String(compression),
 		AdditionalSchemaElements: expandStringSet(d.Get("additional_schema_elements").(*schema.Set)),
 		S3Bucket:                 aws.String(d.Get("s3_bucket").(string)),
-		S3Prefix:                 prefix,
+		S3Prefix:                 aws.String(prefix),
 		S3Region:                 aws.String(d.Get("s3_region").(string)),
 		AdditionalArtifacts:      additionalArtifacts,
 		RefreshClosedReports:     aws.Bool(d.Get("refresh_closed_reports").(bool)),
-		ReportVersioning:         reportVersioning,
+		ReportVersioning:         aws.String(reportVersioning),
 	}
 
 	reportDefinitionInput := &cur.PutReportDefinitionInput{
@@ -203,10 +203,10 @@ func resourceAwsCurReportDefinitionUpdate(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).costandusagereportconn
 
 	additionalArtifacts := expandStringSet(d.Get("additional_artifacts").(*schema.Set))
-	compression := aws.String(d.Get("compression").(string))
-	format := aws.String(d.Get("format").(string))
-	prefix := aws.String(d.Get("s3_prefix").(string))
-	reportVersioning := aws.String(d.Get("report_versioning").(string))
+	compression := d.Get("compression").(string)
+	format := d.Get("format").(string)
+	prefix := d.Get("s3_prefix").(string)
+	reportVersioning := d.Get("report_versioning").(string)
 
 	additionalArtifactsList := make([]string, 0)
 	for i := 0; i < len(additionalArtifacts); i++ {
@@ -215,10 +215,10 @@ func resourceAwsCurReportDefinitionUpdate(d *schema.ResourceData, meta interface
 
 	err := checkAwsCurReportDefinitionPropertyCombination(
 		additionalArtifactsList,
-		*compression,
-		*format,
-		*prefix,
-		*reportVersioning,
+		compression,
+		format,
+		prefix,
+		reportVersioning,
 	)
 
 	if err != nil {
@@ -230,19 +230,24 @@ func resourceAwsCurReportDefinitionUpdate(d *schema.ResourceData, meta interface
 	reportDefinition := &cur.ReportDefinition{
 		ReportName:               aws.String(reportName),
 		TimeUnit:                 aws.String(d.Get("time_unit").(string)),
-		Format:                   format,
-		Compression:              compression,
+		Format:                   aws.String(format),
+		Compression:              aws.String(compression),
 		AdditionalSchemaElements: expandStringSet(d.Get("additional_schema_elements").(*schema.Set)),
 		S3Bucket:                 aws.String(d.Get("s3_bucket").(string)),
-		S3Prefix:                 prefix,
+		S3Prefix:                 aws.String(prefix),
 		S3Region:                 aws.String(d.Get("s3_region").(string)),
 		AdditionalArtifacts:      additionalArtifacts,
 		RefreshClosedReports:     aws.Bool(d.Get("refresh_closed_reports").(bool)),
-		ReportVersioning:         reportVersioning,
+		ReportVersioning:         aws.String(reportVersioning),
+	}
+
+	if err != nil {
+		return err
 	}
 
 	reportDefinitionInput := &cur.ModifyReportDefinitionInput{
 		ReportDefinition: reportDefinition,
+		ReportName:       aws.String(reportName),
 	}
 
 	_, err = conn.ModifyReportDefinition(reportDefinitionInput)
