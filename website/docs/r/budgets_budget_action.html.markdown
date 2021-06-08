@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_budgets_budget_action
 
-Provides a budgets budget resource. Budgets use the cost visualisation provided by Cost Explorer to show you the status of your budgets, to provide forecasts of your estimated costs, and to track your AWS usage, including your free tier usage.
+Provides a budget action resource. Budget actions are cost savings controls that run either automatically on your behalf or by using a workflow approval process.
 
 ## Example Usage
 
