@@ -176,7 +176,6 @@ resource "aws_wafv2_web_acl" "example" {
     sampled_requests_enabled   = false
   }
 }
-
 ```
 
 ## Argument Reference
