@@ -3,7 +3,7 @@ subcategory: "Budgets"
 layout: "aws"
 page_title: "AWS: aws_budgets_budget_action"
 description: |-
-  Provides a budgets budget action resource.
+  Provides a budget action resource.
 ---
 
 # Resource: aws_budgets_budget_action
