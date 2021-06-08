@@ -699,6 +699,13 @@ func expandOrigin(m map[string]interface{}) *cloudfront.Origin {
 		Id:         aws.String(m["origin_id"].(string)),
 		DomainName: aws.String(m["domain_name"].(string)),
 	}
+
+	if v, ok := m["connection_attempts"]; ok {
+		origin.ConnectionAttempts = aws.Int64(int64(v.(int)))
+	}
+	if v, ok := m["connection_timeout"]; ok {
+		origin.ConnectionTimeout = aws.Int64(int64(v.(int)))
+	}
 	if v, ok := m["custom_header"]; ok {
 		origin.CustomHeaders = expandCustomHeaders(v.(*schema.Set))
 	}
@@ -710,6 +717,13 @@ func expandOrigin(m map[string]interface{}) *cloudfront.Origin {
 	if v, ok := m["origin_path"]; ok {
 		origin.OriginPath = aws.String(v.(string))
 	}
+
+	if v, ok := m["origin_shield"]; ok {
+		if s := v.([]interface{}); len(s) > 0 {
+			origin.OriginShield = expandOriginShield(s[0].(map[string]interface{}))
+		}
+	}
+
 	if v, ok := m["s3_origin_config"]; ok {
 		if s := v.([]interface{}); len(s) > 0 {
 			origin.S3OriginConfig = expandS3OriginConfig(s[0].(map[string]interface{}))
@@ -731,6 +745,12 @@ func flattenOrigin(or *cloudfront.Origin) map[string]interface{} {
 	m := make(map[string]interface{})
 	m["origin_id"] = aws.StringValue(or.Id)
 	m["domain_name"] = aws.StringValue(or.DomainName)
+	if or.ConnectionAttempts != nil {
+		m["connection_attempts"] = int(aws.Int64Value(or.ConnectionAttempts))
+	}
+	if or.ConnectionTimeout != nil {
+		m["connection_timeout"] = int(aws.Int64Value(or.ConnectionTimeout))
+	}
 	if or.CustomHeaders != nil {
 		m["custom_header"] = flattenCustomHeaders(or.CustomHeaders)
 	}
@@ -739,6 +759,9 @@ func flattenOrigin(or *cloudfront.Origin) map[string]interface{} {
 	}
 	if or.OriginPath != nil {
 		m["origin_path"] = aws.StringValue(or.OriginPath)
+	}
+	if or.OriginShield != nil && aws.BoolValue(or.OriginShield.Enabled) {
+		m["origin_shield"] = []interface{}{flattenOriginShield(or.OriginShield)}
 	}
 	if or.S3OriginConfig != nil && aws.StringValue(or.S3OriginConfig.OriginAccessIdentity) != "" {
 		m["s3_origin_config"] = []interface{}{flattenS3OriginConfig(or.S3OriginConfig)}
@@ -851,6 +874,12 @@ func originHash(v interface{}) int {
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["origin_id"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["domain_name"].(string)))
+	if v, ok := m["connection_attempts"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+	}
+	if v, ok := m["connection_timeout"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+	}
 	if v, ok := m["custom_header"]; ok {
 		buf.WriteString(fmt.Sprintf("%d-", customHeadersHash(v.(*schema.Set))))
 	}
@@ -862,6 +891,13 @@ func originHash(v interface{}) int {
 	if v, ok := m["origin_path"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
+
+	if v, ok := m["origin_shield"]; ok {
+		if s := v.([]interface{}); len(s) > 0 && s[0] != nil {
+			buf.WriteString(fmt.Sprintf("%d-", originShieldHash((s[0].(map[string]interface{})))))
+		}
+	}
+
 	if v, ok := m["s3_origin_config"]; ok {
 		if s := v.([]interface{}); len(s) > 0 && s[0] != nil {
 			buf.WriteString(fmt.Sprintf("%d-", s3OriginConfigHash((s[0].(map[string]interface{})))))
@@ -1026,9 +1062,23 @@ func expandS3OriginConfig(m map[string]interface{}) *cloudfront.S3OriginConfig {
 	}
 }
 
+func expandOriginShield(m map[string]interface{}) *cloudfront.OriginShield {
+	return &cloudfront.OriginShield{
+		Enabled:            aws.Bool(m["enabled"].(bool)),
+		OriginShieldRegion: aws.String(m["origin_shield_region"].(string)),
+	}
+}
+
 func flattenS3OriginConfig(s3o *cloudfront.S3OriginConfig) map[string]interface{} {
 	return map[string]interface{}{
 		"origin_access_identity": aws.StringValue(s3o.OriginAccessIdentity),
+	}
+}
+
+func flattenOriginShield(o *cloudfront.OriginShield) map[string]interface{} {
+	return map[string]interface{}{
+		"origin_shield_region": aws.StringValue(o.OriginShieldRegion),
+		"enabled":              aws.BoolValue(o.Enabled),
 	}
 }
 
@@ -1038,6 +1088,14 @@ func s3OriginConfigHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["origin_access_identity"].(string)))
+	return hashcode.String(buf.String())
+}
+
+func originShieldHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%t-", m["enabled"].(bool)))
+	buf.WriteString(fmt.Sprintf("%s-", m["origin_shield_region"].(string)))
 	return hashcode.String(buf.String())
 }
 

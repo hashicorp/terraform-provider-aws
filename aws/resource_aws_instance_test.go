@@ -38,6 +38,7 @@ func init() {
 func testAccErrorCheckSkipEC2(t *testing.T) resource.ErrorCheckFunc {
 	return testAccErrorCheckSkipMessagesContaining(t,
 		"VolumeTypeNotAvailableInRegion",
+		"Invalid value specified for Phase",
 	)
 }
 

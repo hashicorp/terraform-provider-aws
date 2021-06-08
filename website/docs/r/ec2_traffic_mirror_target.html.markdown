@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_ec2_traffic_mirror_target
 
-Provides an Traffic mirror target.  
+Provides a Traffic mirror target.  
 Read [limits and considerations](https://docs.aws.amazon.com/vpc/latest/mirroring/traffic-mirroring-considerations.html) for traffic mirroring
 
 ## Example Usage

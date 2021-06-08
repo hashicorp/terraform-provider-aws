@@ -623,34 +623,24 @@ into Terraform.
     - In `website/docs/guides/custom-service-endpoints.html.md`: Add the service
     name in the list of customizable endpoints.
     - In `infrastructure/repository/labels-service.tf`: Add the new service to create a repository label.
-    - In `.hashibot.hcl`: Add the new service to automated issue and pull request labeling. e.g. with the `quicksight` service
+    - In `.github/labeler-issue-triage.yml`: Add the new service to automated issue labeling. e.g. with the `quicksight` service
 
-  ```hcl
-  behavior "regexp_issue_labeler_v2" "service_labels" {
-    # ... other configuration ...
+  ```yaml
+  # ... other services ...
+  service/quicksight:
+    - '((\*|-) ?`?|(data|resource) "?)aws_quicksight_'
+  # ... other services ...
+  ```
 
-    label_map = {
-      # ... other services ...
-      "service/quicksight" = [
-        "aws_quicksight_",
-      ],
-      # ... other services ...
-    }
-  }
+    - In `.github/labeler-pr-triage.yml`: Add the new service to automated pull request labeling. e.g. with the `quicksight` service
 
-  behavior "pull_request_path_labeler" "service_labels"
-    # ... other configuration ...
-
-    label_map = {
-      # ... other services ...
-      "service/quicksight" = [
-        "aws/internal/service/quicksight/**/*",
-        "**/*_quicksight_*",
-        "**/quicksight_*",
-      ],
-      # ... other services ...
-    }
-  }
+  ```yaml
+  # ... other services ...
+  service/quicksight:
+    - 'aws/internal/service/quicksight/**/*'
+    - '**/*_quicksight_*'
+    - '**/quicksight_*'
+  # ... other services ...
   ```
 
     - Run the following then submit the pull request:

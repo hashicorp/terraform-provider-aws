@@ -6,7 +6,6 @@ import (
 	"log"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/msk/waiter"
 )
 
 func resourceAwsMskCluster() *schema.Resource {
@@ -26,6 +26,13 @@ func resourceAwsMskCluster() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(waiter.ClusterCreateTimeout),
+			Update: schema.DefaultTimeout(waiter.ClusterUpdateTimeout),
+			Delete: schema.DefaultTimeout(waiter.ClusterDeleteTimeout),
+		},
+
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("kafka_version", func(_ context.Context, old, new, meta interface{}) bool {
 				return new.(string) < old.(string)
@@ -38,6 +45,10 @@ func resourceAwsMskCluster() *schema.Resource {
 				Computed: true,
 			},
 			"bootstrap_brokers": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bootstrap_brokers_sasl_iam": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -108,6 +119,11 @@ func resourceAwsMskCluster() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"scram": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										ForceNew: true,
+									},
+									"iam": {
 										Type:     schema.TypeBool,
 										Optional: true,
 										ForceNew: true,
@@ -399,7 +415,7 @@ func waitForMskClusterCreation(conn *kafka.Kafka, arn string) error {
 	input := &kafka.DescribeClusterInput{
 		ClusterArn: aws.String(arn),
 	}
-	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(waiter.ClusterCreateTimeout, func() *resource.RetryError {
 		out, err := conn.DescribeCluster(input)
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -462,6 +478,7 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", cluster.ClusterArn)
 	d.Set("bootstrap_brokers", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerString)))
+	d.Set("bootstrap_brokers_sasl_iam", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringSaslIam)))
 	d.Set("bootstrap_brokers_sasl_scram", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringSaslScram)))
 	d.Set("bootstrap_brokers_tls", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringTls)))
 
@@ -680,7 +697,25 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	return resourceAwsMskClusterRead(d, meta)
+}
 
+func resourceAwsMskClusterDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).kafkaconn
+
+	log.Printf("[DEBUG] Deleting MSK cluster: %q", d.Id())
+	_, err := conn.DeleteCluster(&kafka.DeleteClusterInput{
+		ClusterArn: aws.String(d.Id()),
+	})
+	if err != nil {
+		if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
+			return nil
+		}
+		return fmt.Errorf("failed deleting MSK cluster %q: %s", d.Id(), err)
+	}
+
+	log.Printf("[DEBUG] Waiting for MSK cluster %q to be deleted", d.Id())
+
+	return resourceAwsMskClusterDeleteWaiter(conn, d.Id())
 }
 
 func expandMskClusterBrokerNodeGroupInfo(l []interface{}) *kafka.BrokerNodeGroupInfo {
@@ -712,9 +747,14 @@ func expandMskClusterClientAuthentication(l []interface{}) *kafka.ClientAuthenti
 
 	m := l[0].(map[string]interface{})
 
-	ca := &kafka.ClientAuthentication{
-		Sasl: expandMskClusterScram(m["sasl"].([]interface{})),
-		Tls:  expandMskClusterTls(m["tls"].([]interface{})),
+	ca := &kafka.ClientAuthentication{}
+
+	if v, ok := m["sasl"].([]interface{}); ok {
+		ca.Sasl = expandMskClusterSasl(v)
+	}
+
+	if v, ok := m["tls"].([]interface{}); ok {
+		ca.Tls = expandMskClusterTls(v)
 	}
 
 	return ca
@@ -770,7 +810,7 @@ func expandMskClusterEncryptionInTransit(l []interface{}) *kafka.EncryptionInTra
 	return eit
 }
 
-func expandMskClusterScram(l []interface{}) *kafka.Sasl {
+func expandMskClusterSasl(l []interface{}) *kafka.Sasl {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -780,10 +820,18 @@ func expandMskClusterScram(l []interface{}) *kafka.Sasl {
 		return nil
 	}
 
-	sasl := &kafka.Sasl{
-		Scram: &kafka.Scram{
-			Enabled: aws.Bool(tfMap["scram"].(bool)),
-		},
+	sasl := &kafka.Sasl{}
+
+	if v, ok := tfMap["scram"].(bool); ok {
+		sasl.Scram = &kafka.Scram{
+			Enabled: aws.Bool(v),
+		}
+	}
+
+	if v, ok := tfMap["iam"].(bool); ok {
+		sasl.Iam = &kafka.Iam{
+			Enabled: aws.Bool(v),
+		}
 	}
 
 	return sasl
@@ -1014,18 +1062,27 @@ func flattenMskSasl(sasl *kafka.Sasl) []map[string]interface{} {
 	}
 
 	m := map[string]interface{}{
-		"scram": flattenMskScram(sasl.Scram),
+		"scram": flattenMskSaslScram(sasl.Scram),
+		"iam":   flattenMskSaslIam(sasl.Iam),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenMskScram(scram *kafka.Scram) bool {
+func flattenMskSaslScram(scram *kafka.Scram) bool {
 	if scram == nil {
 		return false
 	}
 
 	return aws.BoolValue(scram.Enabled)
+}
+
+func flattenMskSaslIam(iam *kafka.Iam) bool {
+	if iam == nil {
+		return false
+	}
+
+	return aws.BoolValue(iam.Enabled)
 }
 
 func flattenMskTls(tls *kafka.Tls) []map[string]interface{} {
@@ -1155,30 +1212,11 @@ func flattenMskLoggingInfoBrokerLogsS3(e *kafka.S3) []map[string]interface{} {
 	return []map[string]interface{}{m}
 }
 
-func resourceAwsMskClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
-
-	log.Printf("[DEBUG] Deleting MSK cluster: %q", d.Id())
-	_, err := conn.DeleteCluster(&kafka.DeleteClusterInput{
-		ClusterArn: aws.String(d.Id()),
-	})
-	if err != nil {
-		if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
-			return nil
-		}
-		return fmt.Errorf("failed deleting MSK cluster %q: %s", d.Id(), err)
-	}
-
-	log.Printf("[DEBUG] Waiting for MSK cluster %q to be deleted", d.Id())
-
-	return resourceAwsMskClusterDeleteWaiter(conn, d.Id())
-}
-
 func resourceAwsMskClusterDeleteWaiter(conn *kafka.Kafka, arn string) error {
 	input := &kafka.DescribeClusterInput{
 		ClusterArn: aws.String(arn),
 	}
-	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(waiter.ClusterDeleteTimeout, func() *resource.RetryError {
 		_, err := conn.DescribeCluster(input)
 
 		if err != nil {
@@ -1235,7 +1273,7 @@ func waitForMskClusterOperation(conn *kafka.Kafka, clusterOperationARN string) e
 		Pending: []string{"PENDING", "UPDATE_IN_PROGRESS"},
 		Target:  []string{"UPDATE_COMPLETE"},
 		Refresh: mskClusterOperationRefreshFunc(conn, clusterOperationARN),
-		Timeout: 2 * time.Hour,
+		Timeout: waiter.ClusterUpdateTimeout,
 	}
 
 	log.Printf("[DEBUG] Waiting for MSK Cluster Operation (%s) completion", clusterOperationARN)

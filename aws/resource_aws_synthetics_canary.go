@@ -96,7 +96,7 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 						"timeout_in_seconds": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntBetween(60, 14*60),
+							ValidateFunc: validation.IntBetween(3, 14*60),
 							Default:      840,
 						},
 					},

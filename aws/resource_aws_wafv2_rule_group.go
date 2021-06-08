@@ -86,9 +86,9 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"allow": wafv2EmptySchema(),
-									"block": wafv2EmptySchema(),
-									"count": wafv2EmptySchema(),
+									"allow": wafv2AllowConfigSchema(),
+									"block": wafv2BlockConfigSchema(),
+									"count": wafv2CountConfigSchema(),
 								},
 							},
 						},

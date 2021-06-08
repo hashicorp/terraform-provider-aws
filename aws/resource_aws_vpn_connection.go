@@ -1742,13 +1742,13 @@ func validateVpnConnectionTunnelInsideIpv6CIDR() schema.SchemaValidateFunc {
 
 func validateLocalIpv4NetworkCidr() schema.SchemaValidateFunc {
 	return validation.All(
-		validation.IsCIDRNetwork(32, 32),
+		validation.IsCIDRNetwork(0, 32),
 	)
 }
 
 func validateLocalIpv6NetworkCidr() schema.SchemaValidateFunc {
 	return validation.All(
-		validation.IsCIDRNetwork(128, 128),
+		validation.IsCIDRNetwork(0, 128),
 	)
 }
 

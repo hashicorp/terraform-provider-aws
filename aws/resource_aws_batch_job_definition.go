@@ -210,8 +210,8 @@ func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{
 		input.Tags = tags.IgnoreAws().BatchTags()
 	}
 
-	if v, ok := d.GetOk("timeout"); ok {
-		input.Timeout = expandJobDefinitionTimeout(v.([]interface{}))
+	if v, ok := d.GetOk("timeout"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Timeout = expandBatchJobTimeout(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	output, err := conn.RegisterJobDefinition(input)
@@ -278,8 +278,12 @@ func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	if err := d.Set("timeout", flattenBatchJobTimeout(jobDefinition.Timeout)); err != nil {
-		return fmt.Errorf("error setting timeout: %w", err)
+	if jobDefinition.Timeout != nil {
+		if err := d.Set("timeout", []interface{}{flattenBatchJobTimeout(jobDefinition.Timeout)}); err != nil {
+			return fmt.Errorf("error setting timeout: %w", err)
+		}
+	} else {
+		d.Set("timeout", nil)
 	}
 
 	d.Set("revision", jobDefinition.Revision)
@@ -488,23 +492,30 @@ func flattenBatchEvaluateOnExits(apiObjects []*batch.EvaluateOnExit) []interface
 	return tfList
 }
 
-func expandJobDefinitionTimeout(item []interface{}) *batch.JobTimeout {
-	timeout := &batch.JobTimeout{}
-	data := item[0].(map[string]interface{})
-
-	if v, ok := data["attempt_duration_seconds"].(int); ok && v >= 60 {
-		timeout.AttemptDurationSeconds = aws.Int64(int64(v))
+func expandBatchJobTimeout(tfMap map[string]interface{}) *batch.JobTimeout {
+	if tfMap == nil {
+		return nil
 	}
 
-	return timeout
+	apiObject := &batch.JobTimeout{}
+
+	if v, ok := tfMap["attempt_duration_seconds"].(int); ok && v != 0 {
+		apiObject.AttemptDurationSeconds = aws.Int64(int64(v))
+	}
+
+	return apiObject
 }
 
-func flattenBatchJobTimeout(item *batch.JobTimeout) []map[string]interface{} {
-	data := []map[string]interface{}{}
-	if item != nil && item.AttemptDurationSeconds != nil {
-		data = append(data, map[string]interface{}{
-			"attempt_duration_seconds": int(aws.Int64Value(item.AttemptDurationSeconds)),
-		})
+func flattenBatchJobTimeout(apiObject *batch.JobTimeout) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
-	return data
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AttemptDurationSeconds; v != nil {
+		tfMap["attempt_duration_seconds"] = aws.Int64Value(v)
+	}
+
+	return tfMap
 }

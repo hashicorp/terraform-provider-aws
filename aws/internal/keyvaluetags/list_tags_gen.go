@@ -93,6 +93,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go/service/schemas"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/sfn"
@@ -1636,6 +1637,23 @@ func SagemakerListTags(conn *sagemaker.SageMaker, identifier string) (KeyValueTa
 	}
 
 	return SagemakerKeyValueTags(output.Tags), nil
+}
+
+// SchemasListTags lists schemas service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func SchemasListTags(conn *schemas.Schemas, identifier string) (KeyValueTags, error) {
+	input := &schemas.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return SchemasKeyValueTags(output.Tags), nil
 }
 
 // SecurityhubListTags lists securityhub service tags.

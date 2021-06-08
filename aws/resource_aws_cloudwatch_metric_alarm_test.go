@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatch/finder"
 )
 
 func TestAccAWSCloudWatchMetricAlarm_basic(t *testing.T) {
@@ -30,8 +31,18 @@ func TestAccAWSCloudWatchMetricAlarm_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metric_name", "CPUUtilization"),
 					resource.TestCheckResourceAttr(resourceName, "statistic", "Average"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "cloudwatch", regexp.MustCompile(`alarm:.+`)),
-					testAccCheckCloudWatchMetricAlarmDimension(resourceName, "InstanceId", "i-abc123"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_description", "This metric monitors ec2 cpu utilization"),
+					resource.TestCheckResourceAttr(resourceName, "threshold", "80"),
+					resource.TestCheckResourceAttr(resourceName, "period", "120"),
+					resource.TestCheckResourceAttr(resourceName, "namespace", "AWS/EC2"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "comparison_operator", "GreaterThanOrEqualToThreshold"),
+					resource.TestCheckResourceAttr(resourceName, "datapoints_to_alarm", "0"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_periods", "2"),
+					resource.TestCheckResourceAttr(resourceName, "insufficient_data_actions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dimensions.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dimensions.InstanceId", "i-abc123"),
 				),
 			},
 			{
@@ -390,24 +401,6 @@ func TestAccAWSCloudWatchMetricAlarm_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudWatchMetricAlarmDimension(n, k, v string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-		key := fmt.Sprintf("dimensions.%s", k)
-		val, ok := rs.Primary.Attributes[key]
-		if !ok {
-			return fmt.Errorf("Could not find dimension: %s", k)
-		}
-		if val != v {
-			return fmt.Errorf("Expected dimension %s => %s; got: %s", k, v, val)
-		}
-		return nil
-	}
-}
-
 func testAccCheckCloudWatchMetricAlarmExists(n string, alarm *cloudwatch.MetricAlarm) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -416,17 +409,14 @@ func testAccCheckCloudWatchMetricAlarmExists(n string, alarm *cloudwatch.MetricA
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).cloudwatchconn
-		params := cloudwatch.DescribeAlarmsInput{
-			AlarmNames: []*string{aws.String(rs.Primary.ID)},
-		}
-		resp, err := conn.DescribeAlarms(&params)
+		resp, err := finder.MetricAlarmByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
-		if len(resp.MetricAlarms) == 0 {
+		if resp == nil {
 			return fmt.Errorf("Alarm not found")
 		}
-		*alarm = *resp.MetricAlarms[0]
+		*alarm = *resp
 
 		return nil
 	}
@@ -440,15 +430,9 @@ func testAccCheckAWSCloudWatchMetricAlarmDestroy(s *terraform.State) error {
 			continue
 		}
 
-		params := cloudwatch.DescribeAlarmsInput{
-			AlarmNames: []*string{aws.String(rs.Primary.ID)},
-		}
-
-		resp, err := conn.DescribeAlarms(&params)
-
+		resp, err := finder.MetricAlarmByName(conn, rs.Primary.ID)
 		if err == nil {
-			if len(resp.MetricAlarms) != 0 &&
-				*resp.MetricAlarms[0].AlarmName == rs.Primary.ID {
+			if resp != nil && aws.StringValue(resp.AlarmName) == rs.Primary.ID {
 				return fmt.Errorf("Alarm Still Exists: %s", rs.Primary.ID)
 			}
 		}

@@ -93,6 +93,21 @@ func TestAccAwsAppRunnerService_ImageRepository_basic(t *testing.T) {
 					testAccCheckAwsAppRunnerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "service_name", rName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`service/%s/.+`, rName))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "auto_scaling_configuration_arn", "apprunner", regexp.MustCompile(`autoscalingconfiguration/DefaultConfiguration/1/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.protocol", apprunner.HealthCheckProtocolTcp),
+					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.path", "/"),
+					// Only check the following attribute values for health_check and instance configurations
+					// are set as their defaults differ in the API documentation and API itself
+					resource.TestCheckResourceAttrSet(resourceName, "health_check_configuration.0.interval"),
+					resource.TestCheckResourceAttrSet(resourceName, "health_check_configuration.0.timeout"),
+					resource.TestCheckResourceAttrSet(resourceName, "health_check_configuration.0.healthy_threshold"),
+					resource.TestCheckResourceAttrSet(resourceName, "health_check_configuration.0.unhealthy_threshold"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_configuration.0.cpu"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_configuration.0.memory"),
+					resource.TestCheckResourceAttrSet(resourceName, "service_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "service_url"),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.auto_deployments_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.#", "1"),
@@ -100,6 +115,8 @@ func TestAccAwsAppRunnerService_ImageRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.0.image_configuration.0.port", "8000"),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.0.image_identifier", "public.ecr.aws/jg/hello:latest"),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.0.image_repository_type", apprunner.ImageRepositoryTypeEcrPublic),
+					resource.TestCheckResourceAttr(resourceName, "status", apprunner.ServiceStatusRunning),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -245,9 +262,9 @@ func TestAccAwsAppRunnerService_ImageRepository_InstanceConfiguration(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", "1 vCPU"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", "1024"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_configuration.0.instance_role_arn", roleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.memory", "3 GB"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.memory", "3072"),
 				),
 			},
 			{
@@ -260,7 +277,7 @@ func TestAccAwsAppRunnerService_ImageRepository_InstanceConfiguration(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", "2 vCPU"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", "2048"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_configuration.0.instance_role_arn", roleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.memory", "4096"),
 				),
@@ -274,8 +291,41 @@ func TestAccAwsAppRunnerService_ImageRepository_InstanceConfiguration(t *testing
 				Config: testAccAppRunnerService_imageRepository(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerServiceExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_configuration.0.cpu"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_configuration.0.memory"),
 				),
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19469
+func TestAccAwsAppRunnerService_ImageRepository_RuntimeEnvironmentVars(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_apprunner_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppRunnerService_imageRepository_runtimeEnvVars(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppRunnerServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "source_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.0.image_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.0.image_configuration.0.runtime_environment_variables.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.0.image_configuration.0.runtime_environment_variables.APP_NAME", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -443,6 +493,27 @@ resource "aws_apprunner_service" "test" {
 `, rName)
 }
 
+func testAccAppRunnerService_imageRepository_runtimeEnvVars(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_apprunner_service" "test" {
+  service_name = %[1]q
+  source_configuration {
+    auto_deployments_enabled = false
+    image_repository {
+      image_configuration {
+        port = "8000"
+        runtime_environment_variables = {
+          APP_NAME = %[1]q
+        }
+      }
+      image_identifier      = "public.ecr.aws/jg/hello:latest"
+      image_repository_type = "ECR_PUBLIC"
+    }
+  }
+}
+`, rName)
+}
+
 func testAccAppRunnerService_imageRepository_autoScalingConfiguration(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apprunner_auto_scaling_configuration_version" "test" {
@@ -560,47 +631,13 @@ resource "aws_iam_role" "test" {
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "Service": [
-          "apprunner.${data.aws_partition.current.dns_suffix}"
-        ]
+        "Service": "tasks.apprunner.${data.aws_partition.current.dns_suffix}"
       },
-      "Action": [
-        "sts:AssumeRole"
-      ]
+      "Action": "sts:AssumeRole"
     }
   ]
 }
 EOF
-}
-
-resource "aws_iam_policy" "test" {
-  name        = %[1]q
-  path        = "/"
-  description = "App Runner PassRole Policy"
-
-  policy = <<EOF
-{
- "Version": "2012-10-17",
- "Statement": [
-   {
-     "Effect": "Allow",
-     "Action": [
-       "iam:PassRole",
-       "apprunner:*"
-     ],
-     "Resource": [
-       "*"
-     ]
-   }
- ]
-}
-EOF
-}
-
-resource "aws_iam_policy_attachment" "test" {
-  name       = %[1]q
-  roles      = [aws_iam_role.test.name]
-  policy_arn = aws_iam_policy.test.arn
 }
 `, rName)
 }
@@ -642,7 +679,7 @@ resource "aws_apprunner_service" "test" {
   instance_configuration {
     cpu               = "2 vCPU"
     instance_role_arn = aws_iam_role.test.arn
-    memory            = "4096"
+    memory            = "4 GB"
   }
 
   source_configuration {

@@ -241,7 +241,9 @@ func resourceAwsEksAddonUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input.AddonVersion = aws.String(d.Get("addon_version").(string))
 	}
 
-	if d.HasChange("service_account_role_arn") {
+	// If service account role ARN is already provided, use it. Otherwise, the add-on uses
+	// permissions assigned to the node IAM role.
+	if d.HasChange("service_account_role_arn") || d.Get("service_account_role_arn").(string) != "" {
 		input.ServiceAccountRoleArn = aws.String(d.Get("service_account_role_arn").(string))
 	}
 

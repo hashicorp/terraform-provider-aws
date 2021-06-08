@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/experimental/nullable"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -162,15 +163,7 @@ func dataSourceAwsMqBroker() *schema.Resource {
 			},
 			"logs": {
 				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				// Ignore missing configuration block
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"general": {
@@ -178,7 +171,7 @@ func dataSourceAwsMqBroker() *schema.Resource {
 							Computed: true,
 						},
 						"audit": {
-							Type:     schema.TypeBool,
+							Type:     nullable.TypeNullableBool,
 							Computed: true,
 						},
 					},

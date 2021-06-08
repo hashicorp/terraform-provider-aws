@@ -170,9 +170,13 @@ func TestAccAwsEc2ManagedPrefixList_Entry_Description(t *testing.T) {
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2ManagedPrefixListExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
 						"cidr":        "1.0.0.0/8",
+						"description": "description1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
+						"cidr":        "2.0.0.0/8",
 						"description": "description1",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -188,9 +192,13 @@ func TestAccAwsEc2ManagedPrefixList_Entry_Description(t *testing.T) {
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2ManagedPrefixListExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
 						"cidr":        "1.0.0.0/8",
+						"description": "description2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
+						"cidr":        "2.0.0.0/8",
 						"description": "description2",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "version", "3"), // description-only updates require two operations
@@ -414,6 +422,11 @@ resource "aws_ec2_managed_prefix_list" "test" {
 
   entry {
     cidr        = "1.0.0.0/8"
+    description = %[2]q
+  }
+
+  entry {
+    cidr        = "2.0.0.0/8"
     description = %[2]q
   }
 }

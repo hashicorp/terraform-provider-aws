@@ -114,6 +114,7 @@ func TestAccAWSSNSTopic_basic(t *testing.T) {
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "false"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner"),
 				),
 			},
 			{
@@ -227,6 +228,11 @@ func TestAccAWSSNSTopic_withIAMRole(t *testing.T) {
 					testAccCheckAWSSNSTopicExists(resourceName, attributes),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -304,7 +310,15 @@ func TestAccAWSSNSTopic_deliveryStatus(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "sqs_success_feedback_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "sqs_success_feedback_sample_rate", "70"),
 					resource.TestCheckResourceAttrPair(resourceName, "sqs_failure_feedback_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "firehose_failure_feedback_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "firehose_success_feedback_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "firehose_success_feedback_sample_rate", "60"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -521,6 +535,28 @@ func TestAccAWSSNSTopic_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSNSTopic_disappears(t *testing.T) {
+	attributes := make(map[string]string)
+	resourceName := "aws_sns_topic.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSNSTopicConfigNameGenerated,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicExists(resourceName, attributes),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSnsTopic(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -871,6 +907,9 @@ resource "aws_sns_topic" "test" {
   sqs_success_feedback_role_arn            = aws_iam_role.example.arn
   sqs_success_feedback_sample_rate         = 70
   sqs_failure_feedback_role_arn            = aws_iam_role.example.arn
+  firehose_success_feedback_sample_rate    = 60
+  firehose_failure_feedback_role_arn       = aws_iam_role.example.arn
+  firehose_success_feedback_role_arn       = aws_iam_role.example.arn
 }
 
 data "aws_partition" "current" {}

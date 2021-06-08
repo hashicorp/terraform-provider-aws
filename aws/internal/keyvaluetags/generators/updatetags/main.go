@@ -115,6 +115,7 @@ var serviceNames = []string{
 	"secretsmanager",
 	"securityhub",
 	"servicediscovery",
+	"schemas",
 	"sfn",
 	"shield",
 	"signer",

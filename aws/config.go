@@ -28,6 +28,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/aws/aws-sdk-go/service/budgets"
+	"github.com/aws/aws-sdk-go/service/chime"
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -103,6 +104,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/aws/aws-sdk-go/service/locationservice"
 	"github.com/aws/aws-sdk-go/service/macie"
 	"github.com/aws/aws-sdk-go/service/macie2"
 	"github.com/aws/aws-sdk-go/service/managedblockchain"
@@ -139,6 +141,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/aws/aws-sdk-go/service/s3outposts"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go/service/schemas"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
@@ -233,6 +236,7 @@ type AWSClient struct {
 	batchconn                           *batch.Batch
 	budgetconn                          *budgets.Budgets
 	cfconn                              *cloudformation.CloudFormation
+	chimeconn                           *chime.Chime
 	cloud9conn                          *cloud9.Cloud9
 	cloudfrontconn                      *cloudfront.CloudFront
 	cloudhsmv2conn                      *cloudhsmv2.CloudHSMV2
@@ -310,6 +314,7 @@ type AWSClient struct {
 	lexmodelconn                        *lexmodelbuildingservice.LexModelBuildingService
 	licensemanagerconn                  *licensemanager.LicenseManager
 	lightsailconn                       *lightsail.Lightsail
+	locationconn                        *locationservice.LocationService
 	macieconn                           *macie.Macie
 	macie2conn                          *macie2.Macie2
 	managedblockchainconn               *managedblockchain.ManagedBlockchain
@@ -352,6 +357,7 @@ type AWSClient struct {
 	s3outpostsconn                      *s3outposts.S3Outposts
 	sagemakerconn                       *sagemaker.SageMaker
 	scconn                              *servicecatalog.ServiceCatalog
+	schemasconn                         *schemas.Schemas
 	sdconn                              *servicediscovery.ServiceDiscovery
 	secretsmanagerconn                  *secretsmanager.SecretsManager
 	securityhubconn                     *securityhub.SecurityHub
@@ -481,6 +487,7 @@ func (c *Config) Client() (interface{}, error) {
 		batchconn:                           batch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["batch"])})),
 		budgetconn:                          budgets.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["budgets"])})),
 		cfconn:                              cloudformation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudformation"])})),
+		chimeconn:                           chime.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["chime"])})),
 		cloud9conn:                          cloud9.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloud9"])})),
 		cloudfrontconn:                      cloudfront.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudfront"])})),
 		cloudhsmv2conn:                      cloudhsmv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudhsm"])})),
@@ -557,6 +564,7 @@ func (c *Config) Client() (interface{}, error) {
 		lexmodelconn:                        lexmodelbuildingservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["lexmodels"])})),
 		licensemanagerconn:                  licensemanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["licensemanager"])})),
 		lightsailconn:                       lightsail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["lightsail"])})),
+		locationconn:                        locationservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["location"])})),
 		macieconn:                           macie.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["macie"])})),
 		macie2conn:                          macie2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["macie2"])})),
 		managedblockchainconn:               managedblockchain.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["managedblockchain"])})),
@@ -595,6 +603,7 @@ func (c *Config) Client() (interface{}, error) {
 		s3outpostsconn:                      s3outposts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3outposts"])})),
 		sagemakerconn:                       sagemaker.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sagemaker"])})),
 		scconn:                              servicecatalog.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["servicecatalog"])})),
+		schemasconn:                         schemas.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["schemas"])})),
 		sdconn:                              servicediscovery.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["servicediscovery"])})),
 		secretsmanagerconn:                  secretsmanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["secretsmanager"])})),
 		securityhubconn:                     securityhub.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["securityhub"])})),

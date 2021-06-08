@@ -447,6 +447,16 @@ func ResourcegroupsKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// SchemasTags returns schemas service tags.
+func (tags KeyValueTags) SchemasTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// SchemasKeyValueTags creates KeyValueTags from schemas service tags.
+func SchemasKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // SecurityhubTags returns securityhub service tags.
 func (tags KeyValueTags) SecurityhubTags() map[string]*string {
 	return aws.StringMap(tags.Map())
