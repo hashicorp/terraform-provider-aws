@@ -86,6 +86,7 @@ resource "aws_transfer_server" "example" {
 The following arguments are supported:
 
 * `certificate` - (Optional) The Amazon Resource Name (ARN) of the AWS Certificate Manager (ACM) certificate. This is required when `protocols` is set to `FTPS`
+* `domain` - (Optional) The domain of the storage system that is used for file transfers. Valid values are: `S3` and `EFS`. The default value is `S3`.
 * `protocols` - (Optional) Specifies the file transfer protocol or protocols over which your file transfer protocol client can connect to your server's endpoint. This defaults to `SFTP` . The available protocols are:
     * `SFTP`: File transfer over SSH
     * `FTPS`: File transfer with TLS encryption
