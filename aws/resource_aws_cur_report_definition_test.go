@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
+	cur "github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -20,7 +20,7 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, costandusagereportservice.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cur.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -28,7 +28,8 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 				Config: testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCurReportDefinitionExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "cur", fmt.Sprintf("definition/%s", reportName)),
+					//workaround for region being based on s3 bucket region
+					testAccCheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "arn", "cur", fmt.Sprintf("definition/%s", reportName)),
 					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, "compression", "GZIP"),
@@ -62,7 +63,7 @@ func TestAccAwsCurReportDefinition_textOrCsv(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, costandusagereportservice.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cur.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -106,7 +107,7 @@ func TestAccAwsCurReportDefinition_parquet(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, costandusagereportservice.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cur.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -149,7 +150,7 @@ func TestAccAwsCurReportDefinition_athena(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, costandusagereportservice.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cur.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -193,7 +194,7 @@ func TestAccAwsCurReportDefinition_refresh(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, costandusagereportservice.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cur.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -237,7 +238,7 @@ func TestAccAwsCurReportDefinition_overwrite(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, costandusagereportservice.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cur.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -274,7 +275,7 @@ func TestAccAwsCurReportDefinition_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, costandusagereportservice.EndpointsID),
+		ErrorCheck:        testAccErrorCheck(t, cur.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -482,184 +483,184 @@ func TestCheckAwsCurReportDefinitionPropertyCombination(t *testing.T) {
 	testCases := map[string]propertyCombinationTestCase{
 		"TestAthenaAndAdditionalArtifacts": {
 			additionalArtifacts: []string{
-				costandusagereportservice.AdditionalArtifactAthena,
-				costandusagereportservice.AdditionalArtifactRedshift,
+				cur.AdditionalArtifactAthena,
+				cur.AdditionalArtifactRedshift,
 			},
-			compression:      costandusagereportservice.CompressionFormatZip,
-			format:           costandusagereportservice.ReportFormatTextOrcsv,
+			compression:      cur.CompressionFormatZip,
+			format:           cur.ReportFormatTextOrcsv,
 			prefix:           "prefix/",
-			reportVersioning: costandusagereportservice.ReportVersioningCreateNewReport,
+			reportVersioning: cur.ReportVersioningCreateNewReport,
 			shouldError:      true,
 		},
 		"TestAthenaAndEmptyPrefix": {
 			additionalArtifacts: []string{
-				costandusagereportservice.AdditionalArtifactAthena,
+				cur.AdditionalArtifactAthena,
 			},
-			compression:      costandusagereportservice.CompressionFormatZip,
-			format:           costandusagereportservice.ReportFormatTextOrcsv,
+			compression:      cur.CompressionFormatZip,
+			format:           cur.ReportFormatTextOrcsv,
 			prefix:           "",
-			reportVersioning: costandusagereportservice.ReportVersioningCreateNewReport,
+			reportVersioning: cur.ReportVersioningCreateNewReport,
 			shouldError:      true,
 		},
 		"TestAthenaAndOverrideReport": {
 			additionalArtifacts: []string{
-				costandusagereportservice.AdditionalArtifactAthena,
+				cur.AdditionalArtifactAthena,
 			},
-			compression:      costandusagereportservice.CompressionFormatZip,
-			format:           costandusagereportservice.ReportFormatTextOrcsv,
+			compression:      cur.CompressionFormatZip,
+			format:           cur.ReportFormatTextOrcsv,
 			prefix:           "prefix/",
-			reportVersioning: costandusagereportservice.ReportVersioningCreateNewReport,
+			reportVersioning: cur.ReportVersioningCreateNewReport,
 			shouldError:      true,
 		},
 		"TestAthenaWithNonParquetFormat": {
 			additionalArtifacts: []string{
-				costandusagereportservice.AdditionalArtifactAthena,
+				cur.AdditionalArtifactAthena,
 			},
-			compression:      costandusagereportservice.CompressionFormatParquet,
-			format:           costandusagereportservice.ReportFormatTextOrcsv,
+			compression:      cur.CompressionFormatParquet,
+			format:           cur.ReportFormatTextOrcsv,
 			prefix:           "prefix/",
-			reportVersioning: costandusagereportservice.ReportVersioningCreateNewReport,
+			reportVersioning: cur.ReportVersioningCreateNewReport,
 			shouldError:      true,
 		},
 		"TestParquetFormatWithoutParquetCompression": {
 			additionalArtifacts: []string{
-				costandusagereportservice.AdditionalArtifactAthena,
+				cur.AdditionalArtifactAthena,
 			},
-			compression:      costandusagereportservice.CompressionFormatZip,
-			format:           costandusagereportservice.ReportFormatParquet,
+			compression:      cur.CompressionFormatZip,
+			format:           cur.ReportFormatParquet,
 			prefix:           "prefix/",
-			reportVersioning: costandusagereportservice.ReportVersioningCreateNewReport,
+			reportVersioning: cur.ReportVersioningCreateNewReport,
 			shouldError:      true,
 		},
 		"TestCSVFormatWithParquetCompression": {
 			additionalArtifacts: []string{
-				costandusagereportservice.AdditionalArtifactAthena,
+				cur.AdditionalArtifactAthena,
 			},
-			compression:      costandusagereportservice.CompressionFormatParquet,
-			format:           costandusagereportservice.ReportFormatTextOrcsv,
+			compression:      cur.CompressionFormatParquet,
+			format:           cur.ReportFormatTextOrcsv,
 			prefix:           "prefix/",
-			reportVersioning: costandusagereportservice.ReportVersioningCreateNewReport,
+			reportVersioning: cur.ReportVersioningCreateNewReport,
 			shouldError:      true,
 		},
 		"TestRedshiftWithParquetformat": {
 			additionalArtifacts: []string{
-				costandusagereportservice.AdditionalArtifactRedshift,
+				cur.AdditionalArtifactRedshift,
 			},
-			compression:      costandusagereportservice.CompressionFormatParquet,
-			format:           costandusagereportservice.ReportFormatParquet,
+			compression:      cur.CompressionFormatParquet,
+			format:           cur.ReportFormatParquet,
 			prefix:           "prefix/",
-			reportVersioning: costandusagereportservice.ReportVersioningCreateNewReport,
+			reportVersioning: cur.ReportVersioningCreateNewReport,
 			shouldError:      true,
 		},
 		"TestQuicksightWithParquetformat": {
 			additionalArtifacts: []string{
-				costandusagereportservice.AdditionalArtifactQuicksight,
+				cur.AdditionalArtifactQuicksight,
 			},
-			compression:      costandusagereportservice.CompressionFormatParquet,
-			format:           costandusagereportservice.ReportFormatParquet,
+			compression:      cur.CompressionFormatParquet,
+			format:           cur.ReportFormatParquet,
 			prefix:           "prefix/",
-			reportVersioning: costandusagereportservice.ReportVersioningCreateNewReport,
+			reportVersioning: cur.ReportVersioningCreateNewReport,
 			shouldError:      true,
 		},
 		"TestAthenaValidCombination": {
 			additionalArtifacts: []string{
-				costandusagereportservice.AdditionalArtifactAthena,
+				cur.AdditionalArtifactAthena,
 			},
-			compression:      costandusagereportservice.CompressionFormatParquet,
-			format:           costandusagereportservice.ReportFormatParquet,
+			compression:      cur.CompressionFormatParquet,
+			format:           cur.ReportFormatParquet,
 			prefix:           "prefix/",
-			reportVersioning: costandusagereportservice.ReportVersioningOverwriteReport,
+			reportVersioning: cur.ReportVersioningOverwriteReport,
 			shouldError:      false,
 		},
 		"TestRedshiftWithGzipedOverwrite": {
 			additionalArtifacts: []string{
-				costandusagereportservice.AdditionalArtifactRedshift,
+				cur.AdditionalArtifactRedshift,
 			},
-			compression:      costandusagereportservice.CompressionFormatGzip,
-			format:           costandusagereportservice.ReportFormatTextOrcsv,
+			compression:      cur.CompressionFormatGzip,
+			format:           cur.ReportFormatTextOrcsv,
 			prefix:           "prefix/",
-			reportVersioning: costandusagereportservice.ReportVersioningOverwriteReport,
+			reportVersioning: cur.ReportVersioningOverwriteReport,
 			shouldError:      false,
 		},
 		"TestRedshiftWithZippedOverwrite": {
 			additionalArtifacts: []string{
-				costandusagereportservice.AdditionalArtifactRedshift,
+				cur.AdditionalArtifactRedshift,
 			},
-			compression:      costandusagereportservice.CompressionFormatZip,
-			format:           costandusagereportservice.ReportFormatTextOrcsv,
+			compression:      cur.CompressionFormatZip,
+			format:           cur.ReportFormatTextOrcsv,
 			prefix:           "",
-			reportVersioning: costandusagereportservice.ReportVersioningOverwriteReport,
+			reportVersioning: cur.ReportVersioningOverwriteReport,
 			shouldError:      false,
 		},
 		"TestRedshiftWithGzipedCreateNew": {
 			additionalArtifacts: []string{
-				costandusagereportservice.AdditionalArtifactRedshift,
+				cur.AdditionalArtifactRedshift,
 			},
-			compression:      costandusagereportservice.CompressionFormatGzip,
-			format:           costandusagereportservice.ReportFormatTextOrcsv,
+			compression:      cur.CompressionFormatGzip,
+			format:           cur.ReportFormatTextOrcsv,
 			prefix:           "",
-			reportVersioning: costandusagereportservice.ReportVersioningCreateNewReport,
+			reportVersioning: cur.ReportVersioningCreateNewReport,
 			shouldError:      false,
 		},
 		"TestRedshiftWithZippedCreateNew": {
 			additionalArtifacts: []string{
-				costandusagereportservice.AdditionalArtifactRedshift,
+				cur.AdditionalArtifactRedshift,
 			},
-			compression:      costandusagereportservice.CompressionFormatZip,
-			format:           costandusagereportservice.ReportFormatTextOrcsv,
+			compression:      cur.CompressionFormatZip,
+			format:           cur.ReportFormatTextOrcsv,
 			prefix:           "",
-			reportVersioning: costandusagereportservice.ReportVersioningCreateNewReport,
+			reportVersioning: cur.ReportVersioningCreateNewReport,
 			shouldError:      false,
 		},
 		"TestQuicksightWithGzipedOverwrite": {
 			additionalArtifacts: []string{
-				costandusagereportservice.AdditionalArtifactQuicksight,
+				cur.AdditionalArtifactQuicksight,
 			},
-			compression:      costandusagereportservice.CompressionFormatGzip,
-			format:           costandusagereportservice.ReportFormatTextOrcsv,
+			compression:      cur.CompressionFormatGzip,
+			format:           cur.ReportFormatTextOrcsv,
 			prefix:           "",
-			reportVersioning: costandusagereportservice.ReportVersioningOverwriteReport,
+			reportVersioning: cur.ReportVersioningOverwriteReport,
 			shouldError:      false,
 		},
 		"TestQuicksightWithZippedOverwrite": {
 			additionalArtifacts: []string{
-				costandusagereportservice.AdditionalArtifactQuicksight,
+				cur.AdditionalArtifactQuicksight,
 			},
-			compression:      costandusagereportservice.CompressionFormatZip,
-			format:           costandusagereportservice.ReportFormatTextOrcsv,
+			compression:      cur.CompressionFormatZip,
+			format:           cur.ReportFormatTextOrcsv,
 			prefix:           "",
-			reportVersioning: costandusagereportservice.ReportVersioningOverwriteReport,
+			reportVersioning: cur.ReportVersioningOverwriteReport,
 			shouldError:      false,
 		},
 		"TestQuicksightWithGzipedCreateNew": {
 			additionalArtifacts: []string{
-				costandusagereportservice.AdditionalArtifactQuicksight,
+				cur.AdditionalArtifactQuicksight,
 			},
-			compression:      costandusagereportservice.CompressionFormatGzip,
-			format:           costandusagereportservice.ReportFormatTextOrcsv,
+			compression:      cur.CompressionFormatGzip,
+			format:           cur.ReportFormatTextOrcsv,
 			prefix:           "",
-			reportVersioning: costandusagereportservice.ReportVersioningCreateNewReport,
+			reportVersioning: cur.ReportVersioningCreateNewReport,
 			shouldError:      false,
 		},
 		"TestQuicksightWithZippedCreateNew": {
 			additionalArtifacts: []string{
-				costandusagereportservice.AdditionalArtifactQuicksight,
+				cur.AdditionalArtifactQuicksight,
 			},
-			compression:      costandusagereportservice.CompressionFormatZip,
-			format:           costandusagereportservice.ReportFormatTextOrcsv,
+			compression:      cur.CompressionFormatZip,
+			format:           cur.ReportFormatTextOrcsv,
 			prefix:           "",
-			reportVersioning: costandusagereportservice.ReportVersioningCreateNewReport,
+			reportVersioning: cur.ReportVersioningCreateNewReport,
 			shouldError:      false,
 		},
 		"TestMultipleArtifacts": {
 			additionalArtifacts: []string{
-				costandusagereportservice.AdditionalArtifactRedshift,
-				costandusagereportservice.AdditionalArtifactQuicksight,
+				cur.AdditionalArtifactRedshift,
+				cur.AdditionalArtifactQuicksight,
 			},
-			compression:      costandusagereportservice.CompressionFormatGzip,
-			format:           costandusagereportservice.ReportFormatTextOrcsv,
+			compression:      cur.CompressionFormatGzip,
+			format:           cur.ReportFormatTextOrcsv,
 			prefix:           "prefix/",
-			reportVersioning: costandusagereportservice.ReportVersioningOverwriteReport,
+			reportVersioning: cur.ReportVersioningOverwriteReport,
 			shouldError:      false,
 		},
 	}

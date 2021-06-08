@@ -3,10 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
+	cur "github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/costandusagereportservice/finder"
@@ -28,46 +29,36 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 				Computed: true,
 			},
 			"report_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 256),
-			},
-			"time_unit": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: validation.StringInSlice(
-					costandusagereportservice.TimeUnit_Values(),
-					false,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 256),
+					validation.StringMatch(regexp.MustCompile(`[0-9A-Za-z!\-_.*\'()]+`), "The name must be unique, is case sensitive, and can't include spaces."),
 				),
+			},
+			"time_unit": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(cur.TimeUnit_Values(), false),
 			},
 			"format": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice(
-					costandusagereportservice.ReportFormat_Values(),
-					false,
-				),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(cur.ReportFormat_Values(), false),
 			},
 			"compression": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice(
-					costandusagereportservice.CompressionFormat_Values(),
-					false,
-				),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(cur.CompressionFormat_Values(), false),
 			},
 			"additional_schema_elements": {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice(
-						costandusagereportservice.SchemaElement_Values(),
-						false,
-					),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(cur.SchemaElement_Values(), false),
 				},
-				Set:      schema.HashString,
 				Required: true,
 				ForceNew: true,
 			},
@@ -81,20 +72,14 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
 			"s3_region": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice(
-					costandusagereportservice.AWSRegion_Values(),
-					false,
-				),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(cur.AWSRegion_Values(), false),
 			},
 			"additional_artifacts": {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice(
-						costandusagereportservice.AdditionalArtifact_Values(),
-						false,
-					),
+					ValidateFunc: validation.StringInSlice(cur.AdditionalArtifact_Values(), false),
 				},
 				Optional: true,
 			},
@@ -104,14 +89,11 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 				Optional: true,
 			},
 			"report_versioning": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-				Default:  costandusagereportservice.ReportVersioningCreateNewReport,
-				ValidateFunc: validation.StringInSlice(
-					costandusagereportservice.ReportVersioning_Values(),
-					false,
-				),
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Optional:     true,
+				Default:      cur.ReportVersioningCreateNewReport,
+				ValidateFunc: validation.StringInSlice(cur.ReportVersioning_Values(), false),
 			},
 		},
 	}
@@ -145,7 +127,7 @@ func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface
 
 	reportName := d.Get("report_name").(string)
 
-	reportDefinition := &costandusagereportservice.ReportDefinition{
+	reportDefinition := &cur.ReportDefinition{
 		ReportName:               aws.String(reportName),
 		TimeUnit:                 aws.String(d.Get("time_unit").(string)),
 		Format:                   format,
@@ -159,14 +141,14 @@ func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface
 		ReportVersioning:         reportVersioning,
 	}
 
-	reportDefinitionInput := &costandusagereportservice.PutReportDefinitionInput{
+	reportDefinitionInput := &cur.PutReportDefinitionInput{
 		ReportDefinition: reportDefinition,
 	}
 	log.Printf("[DEBUG] Creating AWS Cost and Usage Report Definition : %v", reportDefinitionInput)
 
 	_, err = conn.PutReportDefinition(reportDefinitionInput)
 	if err != nil {
-		return fmt.Errorf("Error creating AWS Cost And Usage Report Definition: %s", err)
+		return fmt.Errorf("Error creating AWS Cost And Usage Report Definition: %w", err)
 	}
 	d.SetId(reportName)
 	return resourceAwsCurReportDefinitionRead(d, meta)
@@ -245,7 +227,7 @@ func resourceAwsCurReportDefinitionUpdate(d *schema.ResourceData, meta interface
 
 	reportName := d.Get("report_name").(string)
 
-	reportDefinition := &costandusagereportservice.ReportDefinition{
+	reportDefinition := &cur.ReportDefinition{
 		ReportName:               aws.String(reportName),
 		TimeUnit:                 aws.String(d.Get("time_unit").(string)),
 		Format:                   format,
@@ -259,7 +241,7 @@ func resourceAwsCurReportDefinitionUpdate(d *schema.ResourceData, meta interface
 		ReportVersioning:         reportVersioning,
 	}
 
-	reportDefinitionInput := &costandusagereportservice.ModifyReportDefinitionInput{
+	reportDefinitionInput := &cur.ModifyReportDefinitionInput{
 		ReportDefinition: reportDefinition,
 	}
 
@@ -273,7 +255,7 @@ func resourceAwsCurReportDefinitionUpdate(d *schema.ResourceData, meta interface
 func resourceAwsCurReportDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).costandusagereportconn
 
-	_, err := conn.DeleteReportDefinition(&costandusagereportservice.DeleteReportDefinitionInput{
+	_, err := conn.DeleteReportDefinition(&cur.DeleteReportDefinitionInput{
 		ReportName: aws.String(d.Id()),
 	})
 
@@ -291,7 +273,7 @@ func checkAwsCurReportDefinitionPropertyCombination(additionalArtifacts []string
 	hasAthena := false
 
 	for _, artifact := range additionalArtifacts {
-		if artifact == costandusagereportservice.AdditionalArtifactAthena {
+		if artifact == cur.AdditionalArtifactAthena {
 			hasAthena = true
 			break
 		}
@@ -301,55 +283,55 @@ func checkAwsCurReportDefinitionPropertyCombination(additionalArtifacts []string
 		if len(additionalArtifacts) > 1 {
 			return fmt.Errorf(
 				"When %s exists within additional_artifacts, no other artifact type can be declared",
-				costandusagereportservice.AdditionalArtifactAthena,
+				cur.AdditionalArtifactAthena,
 			)
 		}
 
 		if len(prefix) == 0 {
 			return fmt.Errorf(
 				"When %s exists within additional_artifacts, prefix cannot be empty",
-				costandusagereportservice.AdditionalArtifactAthena,
+				cur.AdditionalArtifactAthena,
 			)
 		}
 
-		if reportVersioning != costandusagereportservice.ReportVersioningOverwriteReport {
+		if reportVersioning != cur.ReportVersioningOverwriteReport {
 			return fmt.Errorf(
 				"When %s exists within additional_artifacts, report_versioning must be %s",
-				costandusagereportservice.AdditionalArtifactAthena,
-				costandusagereportservice.ReportVersioningOverwriteReport,
+				cur.AdditionalArtifactAthena,
+				cur.ReportVersioningOverwriteReport,
 			)
 		}
 
-		if format != costandusagereportservice.ReportFormatParquet {
+		if format != cur.ReportFormatParquet {
 			return fmt.Errorf(
 				"When %s exists within additional_artifacts, both format and compression must be %s",
-				costandusagereportservice.AdditionalArtifactAthena,
-				costandusagereportservice.ReportFormatParquet,
+				cur.AdditionalArtifactAthena,
+				cur.ReportFormatParquet,
 			)
 		}
-	} else if len(additionalArtifacts) > 0 && (format == costandusagereportservice.ReportFormatParquet) {
+	} else if len(additionalArtifacts) > 0 && (format == cur.ReportFormatParquet) {
 		return fmt.Errorf(
 			"When additional_artifacts includes %s and/or %s, format must not be %s",
-			costandusagereportservice.AdditionalArtifactQuicksight,
-			costandusagereportservice.AdditionalArtifactRedshift,
-			costandusagereportservice.ReportFormatParquet,
+			cur.AdditionalArtifactQuicksight,
+			cur.AdditionalArtifactRedshift,
+			cur.ReportFormatParquet,
 		)
 	}
 
-	if format == costandusagereportservice.ReportFormatParquet {
-		if compression != costandusagereportservice.CompressionFormatParquet {
+	if format == cur.ReportFormatParquet {
+		if compression != cur.CompressionFormatParquet {
 			return fmt.Errorf(
 				"When format is %s, compression must also be %s",
-				costandusagereportservice.ReportFormatParquet,
-				costandusagereportservice.CompressionFormatParquet,
+				cur.ReportFormatParquet,
+				cur.CompressionFormatParquet,
 			)
 		}
 	} else {
-		if compression == costandusagereportservice.CompressionFormatParquet {
+		if compression == cur.CompressionFormatParquet {
 			return fmt.Errorf(
 				"When format is %s, compression must not be %s",
 				format,
-				costandusagereportservice.CompressionFormatParquet,
+				cur.CompressionFormatParquet,
 			)
 		}
 	}
