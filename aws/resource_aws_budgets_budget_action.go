@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfbudgets "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets/waiter"
 )
 
 func resourceAwsBudgetsBudgetAction() *schema.Resource {
@@ -230,10 +231,14 @@ func resourceAwsBudgetsBudgetActionCreate(d *schema.ResourceData, meta interface
 		return output, err
 	})
 	if err != nil {
-		return fmt.Errorf("create budget failed: %v", err)
+		return fmt.Errorf("create Budget Action failed: %v", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s:%s", aws.StringValue(output.AccountId), aws.StringValue(output.ActionId), aws.StringValue(output.BudgetName)))
+
+	if _, err := waiter.ActionAvailable(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Budget Action (%s) creation: %w", d.Id(), err)
+	}
 
 	return resourceAwsBudgetsBudgetActionRead(d, meta)
 }
@@ -332,6 +337,10 @@ func resourceAwsBudgetsBudgetActionUpdate(d *schema.ResourceData, meta interface
 	_, err = conn.UpdateBudgetAction(input)
 	if err != nil {
 		return fmt.Errorf("Updating Budget Action failed: %w", err)
+	}
+
+	if _, err := waiter.ActionAvailable(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Budget Action (%s) update: %w", d.Id(), err)
 	}
 
 	return resourceAwsBudgetsBudgetActionRead(d, meta)
