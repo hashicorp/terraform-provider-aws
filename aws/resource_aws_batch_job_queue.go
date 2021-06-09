@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsBatchJobQueue() *schema.Resource {
@@ -37,6 +38,7 @@ func resourceAwsBatchJobQueue() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validateBatchName,
 			},
 			"priority": {
@@ -48,22 +50,33 @@ func resourceAwsBatchJobQueue() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{batch.JQStateDisabled, batch.JQStateEnabled}, true),
 			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsBatchJobQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).batchconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	input := batch.CreateJobQueueInput{
 		ComputeEnvironmentOrder: createComputeEnvironmentOrder(d.Get("compute_environments").([]interface{})),
 		JobQueueName:            aws.String(d.Get("name").(string)),
 		Priority:                aws.Int64(int64(d.Get("priority").(int))),
 		State:                   aws.String(d.Get("state").(string)),
 	}
+
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().BatchTags()
+	}
+
 	name := d.Get("name").(string)
 	out, err := conn.CreateJobQueue(&input)
 	if err != nil {
@@ -84,7 +97,7 @@ func resourceAwsBatchJobQueueCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error waiting for JobQueue state to be \"VALID\": %s", err)
 	}
 
-	arn := *out.JobQueueArn
+	arn := aws.StringValue(out.JobQueueArn)
 	log.Printf("[DEBUG] JobQueue created: %s", arn)
 	d.SetId(arn)
 
@@ -93,6 +106,8 @@ func resourceAwsBatchJobQueueCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsBatchJobQueueRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).batchconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	jq, err := getJobQueue(conn, d.Id())
 	if err != nil {
@@ -124,36 +139,58 @@ func resourceAwsBatchJobQueueRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("priority", jq.Priority)
 	d.Set("state", jq.State)
 
+	tags := keyvaluetags.BatchKeyValueTags(jq.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
 	return nil
 }
 
 func resourceAwsBatchJobQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).batchconn
 
-	name := d.Get("name").(string)
-	updateInput := &batch.UpdateJobQueueInput{
-		ComputeEnvironmentOrder: createComputeEnvironmentOrder(d.Get("compute_environments").([]interface{})),
-		JobQueue:                aws.String(name),
-		Priority:                aws.Int64(int64(d.Get("priority").(int))),
-		State:                   aws.String(d.Get("state").(string)),
-	}
-	_, err := conn.UpdateJobQueue(updateInput)
-	if err != nil {
-		return err
-	}
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{batch.JQStatusUpdating},
-		Target:     []string{batch.JQStatusValid},
-		Refresh:    batchJobQueueRefreshStatusFunc(conn, name),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+	if d.HasChanges("compute_environments", "priority", "state") {
+		name := d.Get("name").(string)
+		updateInput := &batch.UpdateJobQueueInput{
+			ComputeEnvironmentOrder: createComputeEnvironmentOrder(d.Get("compute_environments").([]interface{})),
+			JobQueue:                aws.String(name),
+			Priority:                aws.Int64(int64(d.Get("priority").(int))),
+			State:                   aws.String(d.Get("state").(string)),
+		}
+		_, err := conn.UpdateJobQueue(updateInput)
+		if err != nil {
+			return err
+		}
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{batch.JQStatusUpdating},
+			Target:     []string{batch.JQStatusValid},
+			Refresh:    batchJobQueueRefreshStatusFunc(conn, name),
+			Timeout:    10 * time.Minute,
+			Delay:      10 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			return err
+		}
 	}
 
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return err
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := keyvaluetags.BatchUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
+
 	return resourceAwsBatchJobQueueRead(d, meta)
 }
 

@@ -3,18 +3,20 @@ package aws
 import (
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccAWSElbHostedZoneId_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, elb.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsElbHostedZoneIdConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_elb_hosted_zone_id.main", "id", "Z1H1FL5HABSF5"),
+					resource.TestCheckResourceAttr("data.aws_elb_hosted_zone_id.main", "id", elbHostedZoneIdPerRegionMap[testAccGetRegion()]),
 				),
 			},
 			{
@@ -31,6 +33,7 @@ const testAccCheckAwsElbHostedZoneIdConfig = `
 data "aws_elb_hosted_zone_id" "main" {}
 `
 
+//lintignore:AWSAT003
 const testAccCheckAwsElbHostedZoneIdExplicitRegionConfig = `
 data "aws_elb_hosted_zone_id" "regional" {
   region = "eu-west-1"

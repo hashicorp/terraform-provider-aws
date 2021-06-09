@@ -5,13 +5,13 @@ import (
 	"log"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsCloudWatchLogMetricFilter() *schema.Resource {
@@ -78,6 +78,11 @@ func resourceAwsCloudWatchLogMetricFilter() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validateTypeStringNullableFloat,
 						},
+						"dimensions": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 					},
 				},
 			},
@@ -126,7 +131,7 @@ func resourceAwsCloudWatchLogMetricFilterRead(d *schema.ResourceData, meta inter
 	mf, err := lookupCloudWatchLogMetricFilter(conn, d.Get("name").(string),
 		d.Get("log_group_name").(string), nil)
 	if err != nil {
-		if _, ok := err.(*resource.NotFoundError); ok {
+		if tfresource.NotFound(err) {
 			log.Printf("[WARN] Removing CloudWatch Log Metric Filter as it is gone")
 			d.SetId("")
 			return nil
@@ -170,7 +175,7 @@ func lookupCloudWatchLogMetricFilter(conn *cloudwatchlogs.CloudWatchLogs,
 	}
 
 	for _, mf := range resp.MetricFilters {
-		if *mf.FilterName == name {
+		if aws.StringValue(mf.FilterName) == name {
 			return mf, nil
 		}
 	}

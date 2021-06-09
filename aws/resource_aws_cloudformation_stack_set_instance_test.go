@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -12,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
 )
 
 func init() {
@@ -84,7 +84,7 @@ func testSweepCloudformationStackSetInstances(region string) error {
 				continue
 			}
 
-			if err := waitForCloudFormationStackSetOperation(conn, stackSetName, aws.StringValue(output.OperationId), 30*time.Minute); err != nil {
+			if err := waiter.StackSetOperationSucceeded(conn, stackSetName, aws.StringValue(output.OperationId), waiter.StackSetInstanceDeletedDefaultTimeout); err != nil {
 				sweeperErr := fmt.Errorf("error waiting for CloudFormation StackSet Instance (%s) deletion: %w", id, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
@@ -105,6 +105,7 @@ func TestAccAWSCloudFormationStackSetInstance_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -139,6 +140,7 @@ func TestAccAWSCloudFormationStackSetInstance_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -146,7 +148,7 @@ func TestAccAWSCloudFormationStackSetInstance_disappears(t *testing.T) {
 				Config: testAccAWSCloudFormationStackSetInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance1),
-					testAccCheckCloudFormationStackSetInstanceDisappears(&stackInstance1),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFormationStackSetInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -158,21 +160,22 @@ func TestAccAWSCloudFormationStackSetInstance_disappears_StackSet(t *testing.T) 
 	var stackInstance1 cloudformation.StackInstance
 	var stackSet1 cloudformation.StackSet
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	cloudformationStackSetResourceName := "aws_cloudformation_stack_set.test"
+	stackSetResourceName := "aws_cloudformation_stack_set.test"
 	resourceName := "aws_cloudformation_stack_set_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFormationStackSetInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackSetExists(cloudformationStackSetResourceName, &stackSet1),
+					testAccCheckCloudFormationStackSetExists(stackSetResourceName, &stackSet1),
 					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance1),
-					testAccCheckCloudFormationStackSetInstanceDisappears(&stackInstance1),
-					testAccCheckCloudFormationStackSetDisappears(&stackSet1),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFormationStackSetInstance(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFormationStackSet(), stackSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -187,6 +190,7 @@ func TestAccAWSCloudFormationStackSetInstance_ParameterOverrides(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -250,6 +254,7 @@ func TestAccAWSCloudFormationStackSetInstance_RetainStack(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -398,27 +403,6 @@ func testAccCheckAWSCloudFormationStackSetInstanceDestroy(s *terraform.State) er
 	}
 
 	return nil
-}
-
-func testAccCheckCloudFormationStackSetInstanceDisappears(stackInstance *cloudformation.StackInstance) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cfconn
-
-		input := &cloudformation.DeleteStackInstancesInput{
-			Accounts:     []*string{stackInstance.Account},
-			Regions:      []*string{stackInstance.Region},
-			RetainStacks: aws.Bool(false),
-			StackSetName: stackInstance.StackSetId,
-		}
-
-		output, err := conn.DeleteStackInstances(input)
-
-		if err != nil {
-			return err
-		}
-
-		return waitForCloudFormationStackSetOperation(conn, aws.StringValue(stackInstance.StackSetId), aws.StringValue(output.OperationId), 10*time.Minute)
-	}
 }
 
 func testAccCheckCloudFormationStackSetInstanceNotRecreated(i, j *cloudformation.StackInstance) resource.TestCheckFunc {

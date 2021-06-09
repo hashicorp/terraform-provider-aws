@@ -3,15 +3,13 @@ package aws
 import (
 	"fmt"
 	"regexp"
+	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
-	"testing"
 )
 
 func TestAccAWSServiceCatalogPortfolio_basic(t *testing.T) {
@@ -21,6 +19,7 @@ func TestAccAWSServiceCatalogPortfolio_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
 		Steps: []resource.TestStep{
@@ -52,6 +51,7 @@ func TestAccAWSServiceCatalogPortfolio_Disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
 		Steps: []resource.TestStep{
@@ -74,6 +74,7 @@ func TestAccAWSServiceCatalogPortfolio_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
 		Steps: []resource.TestStep{

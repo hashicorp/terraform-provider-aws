@@ -10,11 +10,13 @@ description: |-
 
 Provides a S3 bucket resource.
 
+-> This functionality is for managing S3 in an AWS Partition. To manage [S3 on Outposts](https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html), see the [`aws_s3control_bucket`](/docs/providers/aws/r/s3control_bucket.html) resource.
+
 ## Example Usage
 
 ### Private Bucket w/ Tags
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "b" {
   bucket = "my-tf-test-bucket"
   acl    = "private"
@@ -28,7 +30,7 @@ resource "aws_s3_bucket" "b" {
 
 ### Static Website Hosting
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "b" {
   bucket = "s3-website-test.hashicorp.com"
   acl    = "public-read"
@@ -54,7 +56,7 @@ EOF
 
 ### Using CORS
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "b" {
   bucket = "s3-website-test.hashicorp.com"
   acl    = "public-read"
@@ -71,7 +73,7 @@ resource "aws_s3_bucket" "b" {
 
 ### Using versioning
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "b" {
   bucket = "my-tf-test-bucket"
   acl    = "private"
@@ -84,7 +86,7 @@ resource "aws_s3_bucket" "b" {
 
 ### Enable Logging
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "log_bucket" {
   bucket = "my-tf-log-bucket"
   acl    = "log-delivery-write"
@@ -103,7 +105,7 @@ resource "aws_s3_bucket" "b" {
 
 ### Using object lifecycle
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "bucket" {
   bucket = "my-bucket"
   acl    = "private"
@@ -115,8 +117,8 @@ resource "aws_s3_bucket" "bucket" {
     prefix = "log/"
 
     tags = {
-      "rule"      = "log"
-      "autoclean" = "true"
+      rule      = "log"
+      autoclean = "true"
     }
 
     transition {
@@ -176,7 +178,7 @@ resource "aws_s3_bucket" "versioning_bucket" {
 
 ### Using replication configuration
 
-```hcl
+```terraform
 provider "aws" {
   region = "eu-west-1"
 }
@@ -220,23 +222,25 @@ resource "aws_iam_policy" "replication" {
       ],
       "Effect": "Allow",
       "Resource": [
-        "${aws_s3_bucket.bucket.arn}"
+        "${aws_s3_bucket.source.arn}"
       ]
     },
     {
       "Action": [
-        "s3:GetObjectVersion",
-        "s3:GetObjectVersionAcl"
+        "s3:GetObjectVersionForReplication",
+        "s3:GetObjectVersionAcl",
+         "s3:GetObjectVersionTagging"
       ],
       "Effect": "Allow",
       "Resource": [
-        "${aws_s3_bucket.bucket.arn}/*"
+        "${aws_s3_bucket.source.arn}/*"
       ]
     },
     {
       "Action": [
         "s3:ReplicateObject",
-        "s3:ReplicateDelete"
+        "s3:ReplicateDelete",
+        "s3:ReplicateTags"
       ],
       "Effect": "Allow",
       "Resource": "${aws_s3_bucket.destination.arn}/*"
@@ -259,9 +263,9 @@ resource "aws_s3_bucket" "destination" {
   }
 }
 
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "source" {
   provider = aws.central
-  bucket   = "tf-test-bucket-12345"
+  bucket   = "tf-test-bucket-source-12345"
   acl      = "private"
 
   versioning {
@@ -287,7 +291,7 @@ resource "aws_s3_bucket" "bucket" {
 
 ### Enable Default Server Side Encryption
 
-```hcl
+```terraform
 resource "aws_kms_key" "mykey" {
   description             = "This key is used to encrypt bucket objects"
   deletion_window_in_days = 10
@@ -309,7 +313,7 @@ resource "aws_s3_bucket" "mybucket" {
 
 ### Using ACL policy grants
 
-```hcl
+```terraform
 data "aws_canonical_user_id" "current_user" {}
 
 resource "aws_s3_bucket" "bucket" {
@@ -323,7 +327,7 @@ resource "aws_s3_bucket" "bucket" {
 
   grant {
     type        = "Group"
-    permissions = ["READ", "WRITE"]
+    permissions = ["READ_ACP", "WRITE"]
     uri         = "http://acs.amazonaws.com/groups/s3/LogDelivery"
   }
 }
@@ -333,13 +337,13 @@ resource "aws_s3_bucket" "bucket" {
 
 The following arguments are supported:
 
-* `bucket` - (Optional, Forces new resource) The name of the bucket. If omitted, Terraform will assign a random, unique name.
-* `bucket_prefix` - (Optional, Forces new resource) Creates a unique bucket name beginning with the specified prefix. Conflicts with `bucket`.
-* `acl` - (Optional) The [canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) to apply. Defaults to "private".  Conflicts with `grant`.
+* `bucket` - (Optional, Forces new resource) The name of the bucket. If omitted, Terraform will assign a random, unique name. Must be less than or equal to 63 characters in length.
+* `bucket_prefix` - (Optional, Forces new resource) Creates a unique bucket name beginning with the specified prefix. Conflicts with `bucket`. Must be less than or equal to 37 characters in length.
+* `acl` - (Optional) The [canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) to apply. Valid values are `private`, `public-read`, `public-read-write`, `aws-exec-read`, `authenticated-read`, and `log-delivery-write`. Defaults to `private`.  Conflicts with `grant`.
 * `grant` - (Optional) An [ACL policy grant](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#sample-acl) (documented below). Conflicts with `acl`.
 * `policy` - (Optional) A valid [bucket policy](https://docs.aws.amazon.com/AmazonS3/latest/dev/example-bucket-policies.html) JSON document. Note that if the policy document is not specific enough (but still valid), Terraform may view the policy as constantly changing in a `terraform plan`. In this case, please make sure you use the verbose/specific version of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 
-* `tags` - (Optional) A map of tags to assign to the bucket.
+* `tags` - (Optional) A map of tags to assign to the bucket. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `force_destroy` - (Optional, Default:`false`) A boolean that indicates all objects (including any [locked objects](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html)) should be deleted from the bucket so that the bucket can be destroyed without error. These objects are *not* recoverable.
 * `website` - (Optional) A website object (documented below).
 * `cors_rule` - (Optional) A rule of [Cross-Origin Resource Sharing](https://docs.aws.amazon.com/AmazonS3/latest/dev/cors.html) (documented below).
@@ -385,7 +389,7 @@ The `logging` object supports the following:
 
 The `lifecycle_rule` object supports the following:
 
-* `id` - (Optional) Unique identifier for the rule.
+* `id` - (Optional) Unique identifier for the rule. Must be less than or equal to 255 characters in length.
 * `prefix` - (Optional) Object key prefix identifying one or more objects to which the rule applies.
 * `tags` - (Optional) Specifies object tags key and value.
 * `enabled` - (Required) Specifies lifecycle rule status.
@@ -395,13 +399,13 @@ The `lifecycle_rule` object supports the following:
 * `noncurrent_version_expiration` - (Optional) Specifies when noncurrent object versions expire (documented below).
 * `noncurrent_version_transition` - (Optional) Specifies when noncurrent object versions transitions (documented below).
 
-At least one of `expiration`, `transition`, `noncurrent_version_expiration`, `noncurrent_version_transition` must be specified.
+At least one of `abort_incomplete_multipart_upload_days`, `expiration`, `transition`, `noncurrent_version_expiration`, `noncurrent_version_transition` must be specified.
 
 The `expiration` object supports the following
 
 * `date` (Optional) Specifies the date after which you want the corresponding action to take effect.
 * `days` (Optional) Specifies the number of days after object creation when the specific rule action takes effect.
-* `expired_object_delete_marker` (Optional) On a versioned bucket (versioning-enabled or versioning-suspended bucket), you can add this element in the lifecycle configuration to direct Amazon S3 to delete expired object delete markers.
+* `expired_object_delete_marker` (Optional) On a versioned bucket (versioning-enabled or versioning-suspended bucket), you can add this element in the lifecycle configuration to direct Amazon S3 to delete expired object delete markers. This cannot be specified with Days or Date in a Lifecycle Expiration Policy.
 
 The `transition` object supports the following
 
@@ -425,11 +429,11 @@ The `replication_configuration` object supports the following:
 
 The `rules` object supports the following:
 
-* `id` - (Optional) Unique identifier for the rule.
+* `id` - (Optional) Unique identifier for the rule. Must be less than or equal to 255 characters in length.
 * `priority` - (Optional) The priority associated with the rule.
 * `destination` - (Required) Specifies the destination for the rule (documented below).
 * `source_selection_criteria` - (Optional) Specifies special object selection criteria (documented below).
-* `prefix` - (Optional) Object keyname prefix identifying one or more objects to which the rule applies.
+* `prefix` - (Optional) Object keyname prefix identifying one or more objects to which the rule applies. Must be less than or equal to 1024 characters in length.
 * `status` - (Required) The status of the rule. Either `Enabled` or `Disabled`. The rule is ignored if status is not Enabled.
 * `filter` - (Optional) Filter that identifies subset of objects to which the replication rule applies (documented below).
 
@@ -440,6 +444,8 @@ Replication configuration V1 supports filtering based on only the `prefix` attri
 * For a specific rule, `prefix` conflicts with `filter`
 * If any rule has `filter` specified then they all must
 * `priority` is optional (with a default value of `0`) but must be unique between multiple rules
+
+~> **NOTE:** Replication to multiple destination buckets requires that `priority` is specified in the `rules` object. If the corresponding rule requires no filter, an empty configuration block `filter {}` must be specified.
 
 The `destination` object supports the following:
 
@@ -461,7 +467,7 @@ The `sse_kms_encrypted_objects` object supports the following:
 
 The `filter` object supports the following:
 
-* `prefix` - (Optional) Object keyname prefix that identifies subset of objects to which the rule applies.
+* `prefix` - (Optional) Object keyname prefix that identifies subset of objects to which the rule applies. Must be less than or equal to 1024 characters in length.
 * `tags` - (Optional)  A map of tags that identifies subset of objects to which the rule applies.
 The rule applies only to objects having all the tags in its tagset.
 
@@ -472,6 +478,7 @@ The `server_side_encryption_configuration` object supports the following:
 The `rule` object supports the following:
 
 * `apply_server_side_encryption_by_default` - (required) A single object for setting server-side encryption by default. (documented below)
+* `bucket_key_enabled` - (Optional) Whether or not to use [Amazon S3 Bucket Keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) for SSE-KMS.
 
 The `apply_server_side_encryption_by_default` object supports the following:
 
@@ -480,7 +487,7 @@ The `apply_server_side_encryption_by_default` object supports the following:
 
 The `grant` object supports the following:
 
-* `id` - (optional) Canonical user id to grant for. Used only when `type` is `CanonicalUser`.  
+* `id` - (optional) Canonical user id to grant for. Used only when `type` is `CanonicalUser`.
 * `type` - (required) - Type of grantee to apply for. Valid values are `CanonicalUser` and `Group`. `AmazonCustomerByEmail` is not supported.
 * `permissions` - (required) List of permissions to apply for grantee. Valid values are `READ`, `WRITE`, `READ_ACP`, `WRITE_ACP`, `FULL_CONTROL`.
 * `uri` - (optional) Uri address to grant for. Used only when `type` is `Group`.
@@ -520,6 +527,7 @@ In addition to all arguments above, the following attributes are exported:
 * `bucket_regional_domain_name` - The bucket region-specific domain name. The bucket domain name including the region name, please refer [here](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) for format. Note: The AWS CloudFront allows specifying S3 region-specific endpoint when creating S3 origin, it will prevent [redirect issues](https://forums.aws.amazon.com/thread.jspa?threadID=216814) from CloudFront to S3 Origin URL.
 * `hosted_zone_id` - The [Route 53 Hosted Zone ID](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) for this bucket's region.
 * `region` - The AWS region this bucket resides in.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `website_endpoint` - The website endpoint, if the bucket is configured with a website. If not, this will be an empty string.
 * `website_domain` - The domain of the website endpoint, if the bucket is configured with a website. If not, this will be an empty string. This is used to create Route 53 alias records.
 

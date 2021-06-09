@@ -25,7 +25,7 @@ func testSweepGuarddutyDetectors(region string) error {
 	client, err := sharedClientForRegion(region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).guarddutyconn
@@ -41,7 +41,10 @@ func testSweepGuarddutyDetectors(region string) error {
 
 			log.Printf("[INFO] Deleting GuardDuty Detector: %s", id)
 			_, err := conn.DeleteDetector(input)
-
+			if testSweepSkipResourceError(err) {
+				log.Printf("[WARN] Skipping GuardDuty Detector (%s): %s", id, err)
+				continue
+			}
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting GuardDuty Detector (%s): %w", id, err)
 				log.Printf("[ERROR] %s", sweeperErr)
@@ -58,7 +61,7 @@ func testSweepGuarddutyDetectors(region string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error retrieving GuardDuty Detectors: %s", err)
+		return fmt.Errorf("error retrieving GuardDuty Detectors: %w", err)
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -69,6 +72,7 @@ func testAccAwsGuardDutyDetector_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyDetectorDestroy,
 		Steps: []resource.TestStep{
@@ -118,6 +122,7 @@ func testAccAwsGuardDutyDetector_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyDetectorDestroy,
 		Steps: []resource.TestStep{

@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSAPIGatewayV2Authorizer_basic(t *testing.T) {
@@ -21,6 +20,7 @@ func TestAccAWSAPIGatewayV2Authorizer_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
 		Steps: []resource.TestStep{
@@ -57,6 +57,7 @@ func TestAccAWSAPIGatewayV2Authorizer_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
 		Steps: []resource.TestStep{
@@ -82,6 +83,7 @@ func TestAccAWSAPIGatewayV2Authorizer_Credentials(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
 		Steps: []resource.TestStep{
@@ -96,7 +98,7 @@ func TestAccAWSAPIGatewayV2Authorizer_Credentials(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "enable_simple_responses", "false"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "route.request.header.Auth"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "route.request.header.Auth"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -118,8 +120,8 @@ func TestAccAWSAPIGatewayV2Authorizer_Credentials(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "enable_simple_responses", "false"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "route.request.header.Auth"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "route.request.querystring.Name"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "route.request.header.Auth"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "route.request.querystring.Name"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("%s-updated", rName)),
 				),
@@ -151,6 +153,7 @@ func TestAccAWSAPIGatewayV2Authorizer_JWT(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
 		Steps: []resource.TestStep{
@@ -165,10 +168,10 @@ func TestAccAWSAPIGatewayV2Authorizer_JWT(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authorizer_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_simple_responses", "false"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$request.header.Authorization"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$request.header.Authorization"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.0.audience.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "jwt_configuration.0.audience.*", "test"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "jwt_configuration.0.audience.*", "test"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -189,11 +192,11 @@ func TestAccAWSAPIGatewayV2Authorizer_JWT(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authorizer_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_simple_responses", "false"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$request.header.Authorization"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$request.header.Authorization"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.0.audience.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "jwt_configuration.0.audience.*", "test"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "jwt_configuration.0.audience.*", "testing"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "jwt_configuration.0.audience.*", "test"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "jwt_configuration.0.audience.*", "testing"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -210,6 +213,7 @@ func TestAccAWSAPIGatewayV2Authorizer_HttpApiLambdaRequestAuthorizer_InitialMiss
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
 		Steps: []resource.TestStep{
@@ -224,7 +228,7 @@ func TestAccAWSAPIGatewayV2Authorizer_HttpApiLambdaRequestAuthorizer_InitialMiss
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "enable_simple_responses", "true"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$request.header.Auth"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$request.header.Auth"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -246,8 +250,8 @@ func TestAccAWSAPIGatewayV2Authorizer_HttpApiLambdaRequestAuthorizer_InitialMiss
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "enable_simple_responses", "false"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$request.querystring.User"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$context.routeKey"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$request.querystring.User"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$context.routeKey"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -263,8 +267,8 @@ func TestAccAWSAPIGatewayV2Authorizer_HttpApiLambdaRequestAuthorizer_InitialMiss
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "enable_simple_responses", "false"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$request.querystring.User"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$context.routeKey"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$request.querystring.User"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$context.routeKey"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -282,6 +286,7 @@ func TestAccAWSAPIGatewayV2Authorizer_HttpApiLambdaRequestAuthorizer_InitialZero
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
 		Steps: []resource.TestStep{
@@ -296,8 +301,8 @@ func TestAccAWSAPIGatewayV2Authorizer_HttpApiLambdaRequestAuthorizer_InitialZero
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "enable_simple_responses", "false"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$request.querystring.User"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$context.routeKey"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$request.querystring.User"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$context.routeKey"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -319,8 +324,8 @@ func TestAccAWSAPIGatewayV2Authorizer_HttpApiLambdaRequestAuthorizer_InitialZero
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "enable_simple_responses", "false"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$request.querystring.User"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$context.routeKey"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$request.querystring.User"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$context.routeKey"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),

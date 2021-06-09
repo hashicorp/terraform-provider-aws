@@ -5,12 +5,11 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/docdb"
 )
 
 func TestAccAWSDocDBSubnetGroup_basic(t *testing.T) {
@@ -20,6 +19,7 @@ func TestAccAWSDocDBSubnetGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDocDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -50,6 +50,7 @@ func TestAccAWSDocDBSubnetGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDocDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -71,6 +72,7 @@ func TestAccAWSDocDBSubnetGroup_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDocDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -98,6 +100,7 @@ func TestAccAWSDocDBSubnetGroup_generatedName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDocDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -124,6 +127,7 @@ func TestAccAWSDocDBSubnetGroup_updateDescription(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDocDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -314,7 +318,7 @@ resource "aws_docdb_subnet_group" "foo" {
 }
 
 func testAccDocDBSubnetGroupConfig_namePrefix() string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -346,11 +350,11 @@ resource "aws_subnet" "b" {
 resource "aws_docdb_subnet_group" "test" {
   name_prefix = "tf_test-"
   subnet_ids  = [aws_subnet.a.id, aws_subnet.b.id]
-}`))
+}`)
 }
 
 func testAccDocDBSubnetGroupConfig_generatedName() string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -381,5 +385,5 @@ resource "aws_subnet" "b" {
 
 resource "aws_docdb_subnet_group" "test" {
   subnet_ids = [aws_subnet.a.id, aws_subnet.b.id]
-}`))
+}`)
 }

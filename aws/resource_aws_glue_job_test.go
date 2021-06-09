@@ -64,6 +64,7 @@ func TestAccAWSGlueJob_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -99,6 +100,7 @@ func TestAccAWSGlueJob_Command(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -135,6 +137,7 @@ func TestAccAWSGlueJob_DefaultArguments(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -173,6 +176,7 @@ func TestAccAWSGlueJob_nonOverridableArguments(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -211,6 +215,7 @@ func TestAccAWSGlueJob_Description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -245,6 +250,7 @@ func TestAccAWSGlueJob_GlueVersion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -286,6 +292,7 @@ func TestAccAWSGlueJob_ExecutionProperty(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -326,6 +333,7 @@ func TestAccAWSGlueJob_MaxRetries(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -364,6 +372,7 @@ func TestAccAWSGlueJob_NotificationProperty(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -404,6 +413,7 @@ func TestAccAWSGlueJob_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -449,6 +459,7 @@ func TestAccAWSGlueJob_Timeout(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -483,6 +494,7 @@ func TestAccAWSGlueJob_SecurityConfiguration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -517,6 +529,7 @@ func TestAccAWSGlueJob_WorkerType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -558,6 +571,7 @@ func TestAccAWSGlueJob_PythonShell(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -613,6 +627,7 @@ func TestAccAWSGlueJob_MaxCapacity(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -650,6 +665,7 @@ func TestAccAWSGlueJob_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -730,8 +746,10 @@ func testAccCheckAWSGlueJobDestroy(s *terraform.State) error {
 
 func testAccAWSGlueJobConfig_Base(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_iam_policy" "AWSGlueServiceRole" {
-  arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+  arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
 }
 
 resource "aws_iam_role" "test" {
@@ -744,7 +762,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "glue.amazonaws.com"
+        "Service": "glue.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""

@@ -10,6 +10,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -59,11 +61,9 @@ func resourceAwsCodePipeline() *schema.Resource {
 							Required: true,
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								codepipeline.ArtifactStoreTypeS3,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(codepipeline.ArtifactStoreType_Values(), false),
 						},
 						"encryption_key": {
 							Type:     schema.TypeList,
@@ -76,11 +76,9 @@ func resourceAwsCodePipeline() *schema.Resource {
 										Required: true,
 									},
 									"type": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											codepipeline.EncryptionKeyTypeKms,
-										}, false),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(codepipeline.EncryptionKeyType_Values(), false),
 									},
 								},
 							},
@@ -115,29 +113,19 @@ func resourceAwsCodePipeline() *schema.Resource {
 										DiffSuppressFunc: suppressCodePipelineStageActionConfiguration,
 									},
 									"category": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											codepipeline.ActionCategorySource,
-											codepipeline.ActionCategoryBuild,
-											codepipeline.ActionCategoryDeploy,
-											codepipeline.ActionCategoryTest,
-											codepipeline.ActionCategoryInvoke,
-											codepipeline.ActionCategoryApproval,
-										}, false),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(codepipeline.ActionCategory_Values(), false),
 									},
 									"owner": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											codepipeline.ActionOwnerAws,
-											codepipeline.ActionOwnerThirdParty,
-											codepipeline.ActionOwnerCustom,
-										}, false),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(codepipeline.ActionOwner_Values(), false),
 									},
 									"provider": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: resourceAwsCodePipelineValidateActionProvider,
 									},
 									"version": {
 										Type:     schema.TypeString,
@@ -181,13 +169,18 @@ func resourceAwsCodePipeline() *schema.Resource {
 					},
 				},
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsCodePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codepipelineconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	pipeline, err := expandAwsCodePipeline(d)
 	if err != nil {
@@ -195,7 +188,7 @@ func resourceAwsCodePipelineCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	params := &codepipeline.CreatePipelineInput{
 		Pipeline: pipeline,
-		Tags:     keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CodepipelineTags(),
+		Tags:     tags.IgnoreAws().CodepipelineTags(),
 	}
 
 	var resp *codepipeline.CreatePipelineOutput
@@ -360,7 +353,7 @@ func expandAwsCodePipelineActions(a []interface{}) []*codepipeline.ActionDeclara
 	for _, config := range a {
 		data := config.(map[string]interface{})
 
-		conf := expandAwsCodePipelineStageActionConfiguration(data["configuration"].(map[string]interface{}))
+		conf := expandStringMap(data["configuration"].(map[string]interface{}))
 
 		action := codepipeline.ActionDeclaration{
 			ActionTypeId: &codepipeline.ActionTypeId{
@@ -418,15 +411,14 @@ func flattenAwsCodePipelineStageActions(si int, actions []*codepipeline.ActionDe
 			"name":     aws.StringValue(action.Name),
 		}
 		if action.Configuration != nil {
-			config := flattenAwsCodePipelineStageActionConfiguration(action.Configuration)
+			config := aws.StringValueMap(action.Configuration)
 
 			actionProvider := aws.StringValue(action.ActionTypeId.Provider)
 			if actionProvider == CodePipelineProviderGitHub {
 				if _, ok := config[CodePipelineGitHubActionConfigurationOAuthToken]; ok {
 					// The AWS API returns "****" for the OAuthToken value. Pull the value from the configuration.
 					addr := fmt.Sprintf("stage.%d.action.%d.configuration.OAuthToken", si, ai)
-					hash := hashCodePipelineGitHubToken(d.Get(addr).(string))
-					config[CodePipelineGitHubActionConfigurationOAuthToken] = hash
+					config[CodePipelineGitHubActionConfigurationOAuthToken] = d.Get(addr).(string)
 				}
 			}
 
@@ -462,23 +454,6 @@ func flattenAwsCodePipelineStageActions(si int, actions []*codepipeline.ActionDe
 	return actionsList
 }
 
-func expandAwsCodePipelineStageActionConfiguration(config map[string]interface{}) map[string]*string {
-	m := map[string]*string{}
-	for k, v := range config {
-		s := v.(string)
-		m[k] = &s
-	}
-	return m
-}
-
-func flattenAwsCodePipelineStageActionConfiguration(config map[string]*string) map[string]string {
-	m := map[string]string{}
-	for k, v := range config {
-		m[k] = *v
-	}
-	return m
-}
-
 func expandAwsCodePipelineActionsOutputArtifacts(s []interface{}) []*codepipeline.OutputArtifact {
 	outputArtifacts := []*codepipeline.OutputArtifact{}
 	for _, artifact := range s {
@@ -495,7 +470,7 @@ func expandAwsCodePipelineActionsOutputArtifacts(s []interface{}) []*codepipelin
 func flattenAwsCodePipelineActionsOutputArtifacts(artifacts []*codepipeline.OutputArtifact) []string {
 	values := []string{}
 	for _, artifact := range artifacts {
-		values = append(values, *artifact.Name)
+		values = append(values, aws.StringValue(artifact.Name))
 	}
 	return values
 }
@@ -516,13 +491,14 @@ func expandAwsCodePipelineActionsInputArtifacts(s []interface{}) []*codepipeline
 func flattenAwsCodePipelineActionsInputArtifacts(artifacts []*codepipeline.InputArtifact) []string {
 	values := []string{}
 	for _, artifact := range artifacts {
-		values = append(values, *artifact.Name)
+		values = append(values, aws.StringValue(artifact.Name))
 	}
 	return values
 }
 
 func resourceAwsCodePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codepipelineconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.GetPipeline(&codepipeline.GetPipelineInput{
@@ -567,8 +543,15 @@ func resourceAwsCodePipelineRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error listing tags for CodePipeline (%s): %w", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags for CodePipeline (%s): %w", arn, err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -591,8 +574,8 @@ func resourceAwsCodePipelineUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	arn := d.Get("arn").(string)
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.CodepipelineUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating CodePipeline (%s) tags: %w", arn, err)
@@ -618,6 +601,25 @@ func resourceAwsCodePipelineDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	return err
+}
+
+func resourceAwsCodePipelineValidateActionProvider(i interface{}, path cty.Path) diag.Diagnostics {
+	v, ok := i.(string)
+	if !ok {
+		return diag.Errorf("expected type to be string")
+	}
+
+	if v == CodePipelineProviderGitHub {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "The CodePipeline GitHub version 1 action provider is deprecated.",
+				Detail:   "Use a GitHub version 2 action (with a CodeStar Connection `aws_codestarconnections_connection`) instead. See https://docs.aws.amazon.com/codepipeline/latest/userguide/update-github-action-connections.html",
+			},
+		}
+	}
+
+	return nil
 }
 
 func suppressCodePipelineStageActionConfiguration(k, old, new string, d *schema.ResourceData) bool {

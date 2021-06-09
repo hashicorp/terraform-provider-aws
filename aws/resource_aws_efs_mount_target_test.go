@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
-
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -95,6 +94,7 @@ func TestAccAWSEFSMountTarget_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEfsMountTargetDestroy,
 		Steps: []resource.TestStep{
@@ -137,6 +137,7 @@ func TestAccAWSEFSMountTarget_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -158,6 +159,7 @@ func TestAccAWSEFSMountTarget_IpAddress(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEfsMountTargetDestroy,
 		Steps: []resource.TestStep{
@@ -177,13 +179,14 @@ func TestAccAWSEFSMountTarget_IpAddress(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13845
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13845
 func TestAccAWSEFSMountTarget_IpAddress_EmptyString(t *testing.T) {
 	var mount efs.MountTargetDescription
 	resourceName := "aws_efs_mount_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEfsMountTargetDestroy,
 		Steps: []resource.TestStep{

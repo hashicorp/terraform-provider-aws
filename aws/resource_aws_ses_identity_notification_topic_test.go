@@ -16,7 +16,7 @@ import (
 func TestAccAwsSESIdentityNotificationTopic_basic(t *testing.T) {
 	domain := fmt.Sprintf(
 		"%s.terraformtesting.com",
-		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+		acctest.RandString(10))
 	topicName := fmt.Sprintf("test-topic-%d", acctest.RandInt())
 	resourceName := "aws_ses_identity_notification_topic.test"
 
@@ -25,6 +25,7 @@ func TestAccAwsSESIdentityNotificationTopic_basic(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckAWSSES(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESIdentityNotificationTopicDestroy,
 		Steps: []resource.TestStep{

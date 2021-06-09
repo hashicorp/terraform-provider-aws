@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsDirectoryServiceDirectory() *schema.Resource {
@@ -188,7 +187,7 @@ func dataSourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta int
 	} else {
 		securityGroupId = dir.VpcSettings.SecurityGroupId
 	}
-	d.Set("security_group_id", aws.StringValue(securityGroupId))
+	d.Set("security_group_id", securityGroupId)
 
 	tags, err := keyvaluetags.DirectoryserviceListTags(conn, d.Id())
 	if err != nil {

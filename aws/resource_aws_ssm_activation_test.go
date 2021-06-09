@@ -20,6 +20,7 @@ func TestAccAWSSSMActivation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMActivationDestroy,
 		Steps: []resource.TestStep{
@@ -51,6 +52,7 @@ func TestAccAWSSSMActivation_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMActivationDestroy,
 		Steps: []resource.TestStep{
@@ -102,6 +104,7 @@ func TestAccAWSSSMActivation_expirationDate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMActivationDestroy,
 		Steps: []resource.TestStep{
@@ -132,6 +135,7 @@ func TestAccAWSSSMActivation_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMActivationDestroy,
 		Steps: []resource.TestStep{
@@ -243,6 +247,8 @@ func testAccCheckAWSSSMActivationDestroy(s *terraform.State) error {
 
 func testAccAWSSSMActivationBasicConfigBase(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test_role" {
   name = %[1]q
 
@@ -253,7 +259,7 @@ resource "aws_iam_role" "test_role" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "ssm.amazonaws.com"
+        "Service": "ssm.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -265,7 +271,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "test_attach" {
   role       = aws_iam_role.test_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
 }
 `, rName)
 }

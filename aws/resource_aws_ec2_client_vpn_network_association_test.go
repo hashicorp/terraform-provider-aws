@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -38,9 +37,9 @@ func testSweepEc2ClientVpnNetworkAssociations(region string) error {
 	var sweeperErrs *multierror.Error
 
 	input := &ec2.DescribeClientVpnEndpointsInput{}
-	err = conn.DescribeClientVpnEndpointsPages(input, func(page *ec2.DescribeClientVpnEndpointsOutput, isLast bool) bool {
+	err = conn.DescribeClientVpnEndpointsPages(input, func(page *ec2.DescribeClientVpnEndpointsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, clientVpnEndpoint := range page.ClientVpnEndpoints {
@@ -48,9 +47,9 @@ func testSweepEc2ClientVpnNetworkAssociations(region string) error {
 			input := &ec2.DescribeClientVpnTargetNetworksInput{
 				ClientVpnEndpointId: clientVpnEndpoint.ClientVpnEndpointId,
 			}
-			err := conn.DescribeClientVpnTargetNetworksPages(input, func(page *ec2.DescribeClientVpnTargetNetworksOutput, isLast bool) bool {
+			err := conn.DescribeClientVpnTargetNetworksPages(input, func(page *ec2.DescribeClientVpnTargetNetworksOutput, lastPage bool) bool {
 				if page == nil {
-					return !isLast
+					return !lastPage
 				}
 
 				for _, networkAssociation := range page.ClientVpnTargetNetworks {
@@ -67,7 +66,7 @@ func testSweepEc2ClientVpnNetworkAssociations(region string) error {
 					}
 				}
 
-				return !isLast
+				return !lastPage
 			})
 
 			if testSweepSkipSweepError(err) {
@@ -80,7 +79,7 @@ func testSweepEc2ClientVpnNetworkAssociations(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Client VPN network association sweep for %s: %s", region, err)
@@ -105,6 +104,7 @@ func testAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -132,6 +132,54 @@ func testAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 	})
 }
 
+func testAccAwsEc2ClientVpnNetworkAssociation_multipleSubnets(t *testing.T) {
+	var assoc ec2.TargetNetwork
+	var group ec2.SecurityGroup
+	rStr := acctest.RandString(5)
+	resourceNames := []string{"aws_ec2_client_vpn_network_association.test", "aws_ec2_client_vpn_network_association.test2"}
+	endpointResourceName := "aws_ec2_client_vpn_endpoint.test"
+	subnetResourceNames := []string{"aws_subnet.test", "aws_subnet.test2"}
+	vpcResourceName := "aws_vpc.test"
+	defaultSecurityGroupResourceName := "aws_default_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnNetworkAssociationConfigMultipleSubnets(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnNetworkAssociationExists(resourceNames[0], &assoc),
+					resource.TestMatchResourceAttr(resourceNames[0], "association_id", regexp.MustCompile("^cvpn-assoc-[a-z0-9]+$")),
+					resource.TestMatchResourceAttr(resourceNames[1], "association_id", regexp.MustCompile("^cvpn-assoc-[a-z0-9]+$")),
+					resource.TestCheckResourceAttrPair(resourceNames[0], "id", resourceNames[0], "association_id"),
+					resource.TestCheckResourceAttrPair(resourceNames[0], "client_vpn_endpoint_id", endpointResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceNames[0], "subnet_id", subnetResourceNames[0], "id"),
+					resource.TestCheckResourceAttrPair(resourceNames[1], "subnet_id", subnetResourceNames[1], "id"),
+					testAccCheckAWSDefaultSecurityGroupExists(defaultSecurityGroupResourceName, &group),
+					resource.TestCheckResourceAttr(resourceNames[0], "security_groups.#", "1"),
+					testAccCheckAwsEc2ClientVpnNetworkAssociationSecurityGroupID(resourceNames[0], "security_groups.*", &group),
+					resource.TestCheckResourceAttrPair(resourceNames[0], "vpc_id", vpcResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceNames[0],
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsEc2ClientVpnNetworkAssociationImportStateIdFunc(resourceNames[0]),
+			},
+			{
+				ResourceName:      resourceNames[1],
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsEc2ClientVpnNetworkAssociationImportStateIdFunc(resourceNames[1]),
+			},
+		},
+	})
+}
+
 func testAccAwsEc2ClientVpnNetworkAssociation_disappears(t *testing.T) {
 	var assoc ec2.TargetNetwork
 	rStr := acctest.RandString(5)
@@ -139,6 +187,7 @@ func testAccAwsEc2ClientVpnNetworkAssociation_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -164,6 +213,7 @@ func testAccAwsEc2ClientVpnNetworkAssociation_securityGroups(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -255,7 +305,7 @@ func testAccCheckAwsEc2ClientVpnNetworkAssociationExists(name string, assoc *ec2
 
 func testAccCheckAwsEc2ClientVpnNetworkAssociationSecurityGroupID(name, key string, group *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return tfawsresource.TestCheckTypeSetElemAttr(name, key, aws.StringValue(group.GroupId))(s)
+		return resource.TestCheckTypeSetElemAttr(name, key, aws.StringValue(group.GroupId))(s)
 	}
 }
 
@@ -278,6 +328,38 @@ func testAccEc2ClientVpnNetworkAssociationConfigBasic(rName string) string {
 resource "aws_ec2_client_vpn_network_association" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
   subnet_id              = aws_subnet.test.id
+}
+
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  description            = "terraform-testacc-clientvpn-%[1]s"
+  server_certificate_arn = aws_acm_certificate.test.arn
+  client_cidr_block      = "10.0.0.0/16"
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+}
+`, rName))
+}
+
+func testAccEc2ClientVpnNetworkAssociationConfigMultipleSubnets(rName string) string {
+	return composeConfig(
+		testAccEc2ClientVpnNetworkAssociationVpcBase(rName),
+		testAccEc2ClientVpnNetworkAssociationAcmCertificateBase(),
+		fmt.Sprintf(`
+resource "aws_ec2_client_vpn_network_association" "test" {
+  client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
+  subnet_id              = aws_subnet.test.id
+}
+
+resource "aws_ec2_client_vpn_network_association" "test2" {
+  client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
+  subnet_id              = aws_subnet.test2.id
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
@@ -378,18 +460,7 @@ resource "aws_security_group" "test2" {
 }
 
 func testAccEc2ClientVpnNetworkAssociationVpcBase(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # InvalidParameterValue: AZ us-west-2d is not currently supported. Please choose another az in this region
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -412,7 +483,18 @@ resource "aws_subnet" "test" {
     Name = "tf-acc-subnet-%[1]s"
   }
 }
-`, rName)
+
+resource "aws_subnet" "test2" {
+  availability_zone       = data.aws_availability_zones.available.names[1]
+  cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
+  vpc_id                  = aws_vpc.test.id
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "tf-acc-subnet-%[1]s-2"
+  }
+}
+`, rName))
 }
 
 func testAccEc2ClientVpnNetworkAssociationAcmCertificateBase() string {

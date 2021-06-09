@@ -15,13 +15,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 )
 
 var r53NoRecordsFound = errors.New("No matching records found")
 var r53NoHostedZoneFound = errors.New("No matching Hosted Zone found")
-var r53ValidRecordTypes = regexp.MustCompile("^(A|AAAA|CAA|CNAME|MX|NAPTR|NS|PTR|SOA|SPF|SRV|TXT)$")
+var r53ValidRecordTypes = regexp.MustCompile("^(A|AAAA|CAA|CNAME|MX|NAPTR|NS|PTR|SOA|SPF|SRV|TXT|DS)$")
 
 func resourceAwsRoute53Record() *schema.Resource {
 	//lintignore:R011
@@ -70,6 +69,7 @@ func resourceAwsRoute53Record() *schema.Resource {
 					route53.RRTypeSpf,
 					route53.RRTypeAaaa,
 					route53.RRTypeCaa,
+					route53.RRTypeDs,
 				}, false),
 			},
 
@@ -512,7 +512,7 @@ func resourceAwsRoute53RecordRead(d *schema.ResourceData, meta interface{}) erro
 		//we check that we have parsed the id into the correct number of segments
 		//we need at least 3 segments!
 		if parts[0] == "" || parts[1] == "" || parts[2] == "" {
-			return fmt.Errorf("Error Importing aws_route_53 record. Please make sure the record ID is in the form ZONEID_RECORDNAME_TYPE (i.e. Z4KAPRWWNC7JR_dev_A")
+			return fmt.Errorf("Error Importing aws_route_53 record. Please make sure the record ID is in the form ZONEID_RECORDNAME_TYPE_SET-IDENTIFIER (e.g. Z4KAPRWWNC7JR_dev.example.com_NS_dev), where SET-IDENTIFIER is optional")
 		}
 
 		d.Set("zone_id", parts[0])

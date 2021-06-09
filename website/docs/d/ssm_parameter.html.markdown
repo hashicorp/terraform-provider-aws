@@ -12,14 +12,14 @@ Provides an SSM Parameter data source.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ssm_parameter" "foo" {
   name = "foo"
 }
 ```
 
 ~> **Note:** The unencrypted value of a SecureString will be stored in the raw state as plain-text.
-[Read more about sensitive data in state](/docs/state/sensitive-data.html).
+[Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
 
 ~> **Note:** The data source is currently following the behavior of the [SSM API](https://docs.aws.amazon.com/sdk-for-go/api/service/ssm/#Parameter) to return a string value, regardless of parameter type. For type `StringList`, we can use the built-in [split()](https://www.terraform.io/docs/configuration/functions/split.html) function to get values in a list. Example: `split(",", data.aws_ssm_parameter.subnets.value)`
@@ -38,5 +38,5 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the parameter.
 * `name` - The name of the parameter.
 * `type` - The type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
-* `value` - The value of the parameter.
+* `value` - The value of the parameter. This value is always marked as sensitive in the Terraform plan output, regardless of `type`. In Terraform CLI version 0.15 and later, this may require additional configuration handling for certain scenarios. For more information, see the [Terraform v0.15 Upgrade Guide](https://www.terraform.io/upgrade-guides/0-15.html#sensitive-output-values).
 * `version` - The version of the parameter.

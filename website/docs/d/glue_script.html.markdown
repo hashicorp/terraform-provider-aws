@@ -14,7 +14,7 @@ Use this data source to generate a Glue script from a Directed Acyclic Graph (DA
 
 ### Generate Python Script
 
-```hcl
+```terraform
 data "aws_glue_script" "example" {
   language = "PYTHON"
 
@@ -116,7 +116,7 @@ output "python_script" {
 
 ### Generate Scala Code
 
-```hcl
+```terraform
 data "aws_glue_script" "example" {
   language = "SCALA"
 
@@ -243,5 +243,6 @@ output "scala_code" {
 
 ## Attributes Reference
 
+* `id` - AWS Region.
 * `python_script` - The Python script generated from the DAG when the `language` argument is set to `PYTHON`.
 * `scala_code` - The Scala code generated from the DAG when the `language` argument is set to `SCALA`.

@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -76,6 +75,7 @@ func TestAccAWSAPIGatewayV2Api_basicWebSocket(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
@@ -113,6 +113,7 @@ func TestAccAWSAPIGatewayV2Api_basicHttp(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
@@ -150,6 +151,7 @@ func TestAccAWSAPIGatewayV2Api_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
@@ -173,6 +175,7 @@ func TestAccAWSAPIGatewayV2Api_AllAttributesWebSocket(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
@@ -254,6 +257,7 @@ func TestAccAWSAPIGatewayV2Api_AllAttributesHttp(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
@@ -334,6 +338,7 @@ func TestAccAWSAPIGatewayV2Api_Openapi(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
@@ -380,6 +385,7 @@ func TestAccAWSAPIGatewayV2Api_Openapi_WithTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
@@ -424,6 +430,7 @@ func TestAccAWSAPIGatewayV2Api_Openapi_WithCorsConfiguration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
@@ -435,9 +442,9 @@ func TestAccAWSAPIGatewayV2Api_Openapi_WithCorsConfiguration(t *testing.T) {
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_methods.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_methods.*", "delete"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_methods.*", "delete"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_origins.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_origins.*", "https://www.google.de"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_origins.*", "https://www.google.de"),
 				),
 			},
 			{
@@ -462,11 +469,11 @@ func TestAccAWSAPIGatewayV2Api_Openapi_WithCorsConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
 					testAccCheckAWSAPIGatewayV2ApiRoutes(&v, []string{"GET /update"}),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_methods.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_methods.*", "get"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_methods.*", "put"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_methods.*", "get"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_methods.*", "put"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_origins.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_origins.*", "https://www.example.com"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_origins.*", "https://www.google.de"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_origins.*", "https://www.example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_origins.*", "https://www.google.de"),
 				),
 			},
 		},
@@ -480,6 +487,7 @@ func TestAccAWSAPIGatewayV2Api_OpenapiWithMoreFields(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
@@ -525,6 +533,59 @@ func TestAccAWSAPIGatewayV2Api_OpenapiWithMoreFields(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayV2Api_Openapi_FailOnWarnings(t *testing.T) {
+	var v apigatewayv2.GetApiOutput
+	resourceName := "aws_apigatewayv2_api.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
+		Steps: []resource.TestStep{
+			// Invalid body should not be accepted when fail_on_warnings is enabled
+			{
+				Config:      testAccAWSAPIGatewayV2ApiConfig_FailOnWarnings(rName, "fail_on_warnings = true"),
+				ExpectError: regexp.MustCompile(`BadRequestException: Warnings found during import`),
+			},
+			// Warnings do not break the deployment when fail_on_warnings is disabled
+			{
+				Config: testAccAWSAPIGatewayV2ApiConfig_FailOnWarnings(rName, "fail_on_warnings = false"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
+					resource.TestCheckResourceAttr(resourceName, "fail_on_warnings", "false"),
+					testAccCheckAWSAPIGatewayV2ApiRoutes(&v, []string{"GET /update"}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body", "fail_on_warnings"},
+			},
+			// fail_on_warnings should be optional and false by default
+			{
+				Config: testAccAWSAPIGatewayV2ApiConfig_FailOnWarnings(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
+					testAccCheckAWSAPIGatewayV2ApiRoutes(&v, []string{"GET /update"}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body", "fail_on_warnings"},
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAPIGatewayV2ApiRoutes(v *apigatewayv2.GetApiOutput, routes []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
@@ -563,6 +624,7 @@ func TestAccAWSAPIGatewayV2Api_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
@@ -615,6 +677,7 @@ func TestAccAWSAPIGatewayV2Api_CorsConfiguration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
@@ -628,12 +691,12 @@ func TestAccAWSAPIGatewayV2Api_CorsConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_credentials", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_headers.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_headers.*", "Authorization"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_headers.*", "Authorization"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_methods.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_methods.*", "GET"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_methods.*", "put"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_methods.*", "GET"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_methods.*", "put"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_origins.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_origins.*", "https://www.example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_origins.*", "https://www.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.expose_headers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.max_age", "0"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -661,12 +724,12 @@ func TestAccAWSAPIGatewayV2Api_CorsConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_credentials", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_headers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_methods.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_methods.*", "*"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_methods.*", "*"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_origins.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_origins.*", "HTTP://WWW.EXAMPLE.ORG"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_origins.*", "https://example.io"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_origins.*", "HTTP://WWW.EXAMPLE.ORG"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_origins.*", "https://example.io"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.expose_headers.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.expose_headers.*", "X-Api-Id"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.expose_headers.*", "X-Api-Id"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.max_age", "500"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					testAccMatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexp.MustCompile(`.+`)),
@@ -705,6 +768,7 @@ func TestAccAWSAPIGatewayV2Api_QuickCreate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
@@ -1263,4 +1327,48 @@ resource "aws_apigatewayv2_api" "test" {
 EOF
 }
 `, rName, rName)
+}
+
+func testAccAWSAPIGatewayV2ApiConfig_FailOnWarnings(rName string, failOnWarnings string) string {
+	return fmt.Sprintf(`
+resource "aws_apigatewayv2_api" "test" {
+  name          = %[1]q
+  protocol_type = "HTTP"
+  body          = <<EOF
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Title test",
+    "version": "2.0",
+    "description": "Description test"
+  },
+  "paths": {
+    "/update": {
+      "get": {
+        "x-amazon-apigateway-integration": {
+          "type": "HTTP_PROXY",
+          "httpMethod": "GET",
+          "payloadFormatVersion": "1.0",
+          "uri": "https://www.google.de"
+        },
+        "responses": {
+          "200": {
+            "description": "Response description",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelThatDoesNotExist"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+EOF
+  %[2]s
+}
+`, rName, failOnWarnings)
 }

@@ -24,6 +24,7 @@ func TestAccAWSRDSClusterEndpoint_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -64,6 +65,7 @@ func TestAccAWSRDSClusterEndpoint_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -170,6 +172,7 @@ func testAccCheckAWSClusterEndpointDestroyWithProvider(s *terraform.State, provi
 
 	return nil
 }
+
 func testAccCheckAWSRDSClusterEndpointExists(resourceName string, endpoint *rds.DBClusterEndpoint) resource.TestCheckFunc {
 	return testAccCheckAWSRDSClusterEndpointExistsWithProvider(resourceName, endpoint, testAccProvider)
 }
@@ -208,14 +211,14 @@ func testAccCheckAWSRDSClusterEndpointExistsWithProvider(resourceName string, en
 func testAccAWSClusterEndpointConfigBase(n int) string {
 	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
-   engine                     = aws_rds_cluster.default.engine
-   engine_version             = aws_rds_cluster.default.engine_version
-   preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t3.medium"]
+  engine                     = aws_rds_cluster.default.engine
+  engine_version             = aws_rds_cluster.default.engine_version
+  preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t3.medium"]
 }
 
 resource "aws_rds_cluster" "default" {
-  cluster_identifier              = "tf-aurora-cluster-%[1]d"
-  availability_zones              = [
+  cluster_identifier = "tf-aurora-cluster-%[1]d"
+  availability_zones = [
     data.aws_availability_zones.available.names[0],
     data.aws_availability_zones.available.names[1],
     data.aws_availability_zones.available.names[2]

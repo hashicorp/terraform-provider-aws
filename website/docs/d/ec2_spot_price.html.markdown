@@ -12,7 +12,7 @@ Information about most recent Spot Price for a given EC2 instance.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ec2_spot_price" "example" {
   instance_type     = "t3.medium"
   availability_zone = "us-west-2a"
@@ -41,5 +41,6 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - AWS Region.
 * `spot_price` - The most recent Spot Price value for the given instance type and AZ.
 * `spot_price_timestamp` - The timestamp at which the Spot Price value was published.

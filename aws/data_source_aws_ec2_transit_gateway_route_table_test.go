@@ -3,6 +3,7 @@ package aws
 import (
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -12,6 +13,7 @@ func TestAccAWSEc2TransitGatewayRouteTableDataSource_Filter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -22,6 +24,7 @@ func TestAccAWSEc2TransitGatewayRouteTableDataSource_Filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "default_propagation_route_table", dataSourceName, "default_propagation_route_table"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 				),
 			},
 		},
@@ -34,6 +37,7 @@ func TestAccAWSEc2TransitGatewayRouteTableDataSource_ID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -44,6 +48,7 @@ func TestAccAWSEc2TransitGatewayRouteTableDataSource_ID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "default_propagation_route_table", dataSourceName, "default_propagation_route_table"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 				),
 			},
 		},

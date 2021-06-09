@@ -73,6 +73,7 @@ func TestAccAWSIoTTopicRule_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -103,6 +104,7 @@ func TestAccAWSIoTTopicRule_cloudwatchalarm(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -127,6 +129,7 @@ func TestAccAWSIoTTopicRule_cloudwatchmetric(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -151,6 +154,7 @@ func TestAccAWSIoTTopicRule_dynamodb(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -180,6 +184,7 @@ func TestAccAWSIoTTopicRule_dynamoDbv2(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -199,6 +204,7 @@ func TestAccAWSIoTTopicRule_elasticsearch(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -223,6 +229,7 @@ func TestAccAWSIoTTopicRule_firehose(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -247,6 +254,7 @@ func TestAccAWSIoTTopicRule_firehose_separator(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -277,6 +285,7 @@ func TestAccAWSIoTTopicRule_kinesis(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -301,6 +310,7 @@ func TestAccAWSIoTTopicRule_lambda(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -325,6 +335,7 @@ func TestAccAWSIoTTopicRule_republish(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -349,6 +360,7 @@ func TestAccAWSIoTTopicRule_republish_with_qos(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -373,6 +385,7 @@ func TestAccAWSIoTTopicRule_s3(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -397,6 +410,7 @@ func TestAccAWSIoTTopicRule_sns(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -421,6 +435,7 @@ func TestAccAWSIoTTopicRule_sqs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -445,6 +460,7 @@ func TestAccAWSIoTTopicRule_step_functions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -468,6 +484,7 @@ func TestAccAWSIoTTopicRule_iot_analytics(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -486,6 +503,7 @@ func TestAccAWSIoTTopicRule_iot_events(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -505,6 +523,7 @@ func TestAccAWSIoTTopicRule_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -548,6 +567,7 @@ func TestAccAWSIoTTopicRule_errorAction(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
 		Steps: []resource.TestStep{
@@ -620,6 +640,8 @@ func testAccCheckAWSIoTTopicRuleExists(name string) resource.TestCheckFunc {
 }
 
 const testAccAWSIoTTopicRuleRole = `
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "iot_role" {
   name = "test_role_%[1]s"
 
@@ -630,7 +652,7 @@ resource "aws_iam_role" "iot_role" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "iot.amazonaws.com"
+        "Service": "iot.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -794,7 +816,7 @@ resource "aws_iot_topic_rule" "rule" {
   sql_version = "2015-10-08"
 
   elasticsearch {
-    endpoint = "https://domain.${data.aws_region.current.name}.es.amazonaws.com"
+    endpoint = "https://domain.${data.aws_region.current.name}.es.${data.aws_partition.current.dns_suffix}"
     id       = "myIdentifier"
     index    = "myindex"
     type     = "mydocument"
@@ -858,6 +880,8 @@ resource "aws_iot_topic_rule" "rule" {
 
 func testAccAWSIoTTopicRule_lambda(rName string) string {
 	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+data "aws_region" "current" {}
+
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -866,7 +890,7 @@ resource "aws_iot_topic_rule" "rule" {
   sql_version = "2015-10-08"
 
   lambda {
-    function_arn = "arn:aws:lambda:us-east-1:123456789012:function:ProcessKinesisRecords"
+    function_arn = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.name}:123456789012:function:ProcessKinesisRecords"
   }
 }
 `, rName)
@@ -927,6 +951,8 @@ resource "aws_iot_topic_rule" "rule" {
 
 func testAccAWSIoTTopicRule_sns(rName string) string {
 	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+data "aws_region" "current" {}
+
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -936,7 +962,7 @@ resource "aws_iot_topic_rule" "rule" {
 
   sns {
     role_arn   = aws_iam_role.iot_role.arn
-    target_arn = "arn:aws:sns:us-east-1:123456789012:my_corporate_topic"
+    target_arn = "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}:123456789012:my_corporate_topic"
   }
 }
 `, rName)

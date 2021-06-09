@@ -12,7 +12,7 @@ Retrieve information about an EKS Cluster.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_eks_cluster" "example" {
   name = "example"
 }
@@ -33,7 +33,7 @@ output "identity-oidc-issuer" {
 
 ## Argument Reference
 
-* `name` - (Required) The name of the cluster
+* `name` - (Required) The name of the cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
 
 ## Attributes Reference
 
@@ -47,6 +47,8 @@ output "identity-oidc-issuer" {
 * `identity` - Nested attribute containing identity provider information for your cluster. Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019. For an example using this information to enable IAM Roles for Service Accounts, see the [`aws_eks_cluster` resource documentation](/docs/providers/aws/r/eks_cluster.html).
     * `oidc` - Nested attribute containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster.
         * `issuer` - Issuer URL for the OpenID Connect identity provider.
+* `kubernetes_network_config` - Nested list containing Kubernetes Network Configuration.
+    * `service_ipv4_cidr` - The CIDR block to assign Kubernetes service IP addresses from.
 * `platform_version` - The platform version for the cluster.
 * `role_arn` - The Amazon Resource Name (ARN) of the IAM role that provides permissions for the Kubernetes control plane to make calls to AWS API operations on your behalf.
 * `status` - The status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`.

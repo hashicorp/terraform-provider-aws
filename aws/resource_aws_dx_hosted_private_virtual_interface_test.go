@@ -36,7 +36,8 @@ func TestAccAwsDxHostedPrivateVirtualInterface_basic(t *testing.T) {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxHostedPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -94,7 +95,8 @@ func TestAccAwsDxHostedPrivateVirtualInterface_AccepterTags(t *testing.T) {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxHostedPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{

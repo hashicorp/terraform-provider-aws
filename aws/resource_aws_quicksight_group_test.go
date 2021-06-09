@@ -5,13 +5,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSQuickSightGroup_basic(t *testing.T) {
@@ -22,6 +21,7 @@ func TestAccAWSQuickSightGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, quicksight.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckQuickSightGroupDestroy,
 		Steps: []resource.TestStep{
@@ -57,6 +57,7 @@ func TestAccAWSQuickSightGroup_withDescription(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, quicksight.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckQuickSightGroupDestroy,
 		Steps: []resource.TestStep{
@@ -90,6 +91,7 @@ func TestAccAWSQuickSightGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, quicksight.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckQuickSightGroupDestroy,
 		Steps: []resource.TestStep{

@@ -6,14 +6,13 @@ import (
 	"net"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/route53"
 )
 
 func resourceAwsRoute53HealthCheck() *schema.Resource {
@@ -154,8 +153,11 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 				Default:  false,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
@@ -187,7 +189,7 @@ func resourceAwsRoute53HealthCheckUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if d.HasChange("child_healthchecks") {
-		updateHealthCheck.ChildHealthChecks = expandStringList(d.Get("child_healthchecks").(*schema.Set).List())
+		updateHealthCheck.ChildHealthChecks = expandStringSet(d.Get("child_healthchecks").(*schema.Set))
 
 	}
 	if d.HasChange("child_health_threshold") {
@@ -216,7 +218,7 @@ func resourceAwsRoute53HealthCheckUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if d.HasChange("regions") {
-		updateHealthCheck.Regions = expandStringList(d.Get("regions").(*schema.Set).List())
+		updateHealthCheck.Regions = expandStringSet(d.Get("regions").(*schema.Set))
 	}
 
 	if d.HasChange("disabled") {
@@ -228,8 +230,8 @@ func resourceAwsRoute53HealthCheckUpdate(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.Route53UpdateTags(conn, d.Id(), route53.TagResourceTypeHealthcheck, o, n); err != nil {
 			return fmt.Errorf("error updating Route53 Health Check (%s) tags: %s", d.Id(), err)
@@ -241,6 +243,8 @@ func resourceAwsRoute53HealthCheckUpdate(d *schema.ResourceData, meta interface{
 
 func resourceAwsRoute53HealthCheckCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).r53conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	healthConfig := &route53.HealthCheckConfig{
 		Type: aws.String(d.Get("type").(string)),
@@ -290,7 +294,7 @@ func resourceAwsRoute53HealthCheckCreate(d *schema.ResourceData, meta interface{
 
 	if *healthConfig.Type == route53.HealthCheckTypeCalculated {
 		if v, ok := d.GetOk("child_healthchecks"); ok {
-			healthConfig.ChildHealthChecks = expandStringList(v.(*schema.Set).List())
+			healthConfig.ChildHealthChecks = expandStringSet(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("child_health_threshold"); ok {
@@ -317,7 +321,7 @@ func resourceAwsRoute53HealthCheckCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if v, ok := d.GetOk("regions"); ok {
-		healthConfig.Regions = expandStringList(v.(*schema.Set).List())
+		healthConfig.Regions = expandStringSet(v.(*schema.Set))
 	}
 
 	callerRef := resource.UniqueId()
@@ -340,9 +344,9 @@ func resourceAwsRoute53HealthCheckCreate(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	d.SetId(*resp.HealthCheck.Id)
+	d.SetId(aws.StringValue(resp.HealthCheck.Id))
 
-	if err := keyvaluetags.Route53UpdateTags(conn, d.Id(), route53.TagResourceTypeHealthcheck, map[string]interface{}{}, d.Get("tags").(map[string]interface{})); err != nil {
+	if err := keyvaluetags.Route53UpdateTags(conn, d.Id(), route53.TagResourceTypeHealthcheck, nil, tags); err != nil {
 		return fmt.Errorf("error setting Route53 Health Check (%s) tags: %s", d.Id(), err)
 	}
 
@@ -351,6 +355,7 @@ func resourceAwsRoute53HealthCheckCreate(d *schema.ResourceData, meta interface{
 
 func resourceAwsRoute53HealthCheckRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).r53conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	read, err := conn.GetHealthCheck(&route53.GetHealthCheckInput{HealthCheckId: aws.String(d.Id())})
@@ -401,8 +406,15 @@ func resourceAwsRoute53HealthCheckRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error listing tags for Route53 Health Check (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil

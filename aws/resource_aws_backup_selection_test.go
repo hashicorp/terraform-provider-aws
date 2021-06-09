@@ -18,6 +18,7 @@ func TestAccAwsBackupSelection_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
@@ -44,6 +45,7 @@ func TestAccAwsBackupSelection_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
@@ -59,7 +61,7 @@ func TestAccAwsBackupSelection_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupSelection_backupPlanDisappears(t *testing.T) {
+func TestAccAwsBackupSelection_disappears_BackupPlan(t *testing.T) {
 	var selection1 backup.GetBackupSelectionOutput
 	resourceName := "aws_backup_selection.test"
 	backupPlanResourceName := "aws_backup_plan.test"
@@ -67,6 +69,7 @@ func TestAccAwsBackupSelection_backupPlanDisappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
@@ -90,6 +93,7 @@ func TestAccAwsBackupSelection_withTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
@@ -117,6 +121,7 @@ func TestAccAwsBackupSelection_withResources(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
@@ -144,6 +149,7 @@ func TestAccAwsBackupSelection_updateTag(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{

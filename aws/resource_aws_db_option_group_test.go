@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -78,6 +77,7 @@ func TestAccAWSDBOptionGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
@@ -110,6 +110,7 @@ func TestAccAWSDBOptionGroup_timeoutBlock(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
@@ -136,6 +137,7 @@ func TestAccAWSDBOptionGroup_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
@@ -162,6 +164,7 @@ func TestAccAWSDBOptionGroup_generatedName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
@@ -181,13 +184,14 @@ func TestAccAWSDBOptionGroup_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBOptionGroupConfig_OptionGroupDescription(t *testing.T) {
+func TestAccAWSDBOptionGroup_OptionGroupDescription(t *testing.T) {
 	var optionGroup1 rds.OptionGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_db_option_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
@@ -213,6 +217,7 @@ func TestAccAWSDBOptionGroup_basicDestroyWithInstance(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
@@ -235,6 +240,7 @@ func TestAccAWSDBOptionGroup_Option_OptionSettings(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
@@ -246,7 +252,7 @@ func TestAccAWSDBOptionGroup_Option_OptionSettings(t *testing.T) {
 						"aws_db_option_group.bar", "name", rName),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "option.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs("aws_db_option_group.bar", "option.*.option_settings.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs("aws_db_option_group.bar", "option.*.option_settings.*", map[string]string{
 						"value": "UTC",
 					}),
 				),
@@ -267,7 +273,7 @@ func TestAccAWSDBOptionGroup_Option_OptionSettings(t *testing.T) {
 						"aws_db_option_group.bar", "name", rName),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "option.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs("aws_db_option_group.bar", "option.*.option_settings.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs("aws_db_option_group.bar", "option.*.option_settings.*", map[string]string{
 						"value": "US/Pacific",
 					}),
 				),
@@ -289,6 +295,7 @@ func TestAccAWSDBOptionGroup_Option_OptionSettings_IAMRole(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
@@ -319,6 +326,7 @@ func TestAccAWSDBOptionGroup_sqlServerOptionsUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
@@ -356,18 +364,19 @@ func TestAccAWSDBOptionGroup_OracleOptionsUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBOptionGroupOracleEEOptionSettings(rName, "12.1.0.4.v1"),
+				Config: testAccAWSDBOptionGroupOracleEEOptionSettings(rName, "13.2.0.0.v2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBOptionGroupExists("aws_db_option_group.bar", &v),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "name", rName),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "option.#", "1"),
-					testAccCheckAWSDBOptionGroupOptionVersionAttribute(&v, "12.1.0.4.v1"),
+					testAccCheckAWSDBOptionGroupOptionVersionAttribute(&v, "13.2.0.0.v2"),
 				),
 			},
 			{
@@ -378,21 +387,21 @@ func TestAccAWSDBOptionGroup_OracleOptionsUpdate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix", "option"},
 			},
 			{
-				Config: testAccAWSDBOptionGroupOracleEEOptionSettings(rName, "12.1.0.5.v1"),
+				Config: testAccAWSDBOptionGroupOracleEEOptionSettings(rName, "13.3.0.0.v2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBOptionGroupExists("aws_db_option_group.bar", &v),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "name", rName),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "option.#", "1"),
-					testAccCheckAWSDBOptionGroupOptionVersionAttribute(&v, "12.1.0.5.v1"),
+					testAccCheckAWSDBOptionGroupOptionVersionAttribute(&v, "13.3.0.0.v2"),
 				),
 			},
 		},
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/1876
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/1876
 func TestAccAWSDBOptionGroup_Option_OptionSettings_MultipleNonDefault(t *testing.T) {
 	var optionGroup1, optionGroup2 rds.OptionGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -400,6 +409,7 @@ func TestAccAWSDBOptionGroup_Option_OptionSettings_MultipleNonDefault(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
@@ -433,6 +443,7 @@ func TestAccAWSDBOptionGroup_multipleOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
@@ -463,6 +474,7 @@ func TestAccAWSDBOptionGroup_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
@@ -501,7 +513,7 @@ func TestAccAWSDBOptionGroup_Tags(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/7114
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7114
 func TestAccAWSDBOptionGroup_Tags_WithOptions(t *testing.T) {
 	var optionGroup1, optionGroup2, optionGroup3 rds.OptionGroup
 	resourceName := "aws_db_option_group.test"
@@ -509,6 +521,7 @@ func TestAccAWSDBOptionGroup_Tags_WithOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
@@ -568,7 +581,7 @@ func testAccCheckAWSDBOptionGroupOptionSettingsIAMRole(optionGroup *rds.OptionGr
 		}
 
 		settingValue := aws.StringValue(optionGroup.Options[0].OptionSettings[0].Value)
-		iamArnRegExp := regexp.MustCompile(`^arn:aws:iam::\d{12}:role/.+`)
+		iamArnRegExp := regexp.MustCompile(fmt.Sprintf(`^arn:%s:iam::\d{12}:role/.+`, testAccGetPartition()))
 		if !iamArnRegExp.MatchString(settingValue) {
 			return fmt.Errorf("Expected option setting to be a valid IAM role but received %s", settingValue)
 		}
@@ -684,7 +697,7 @@ func testAccAWSDBOptionGroupBasicDestroyConfig(r string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "bar" {
   allocated_storage = 10
-  engine            = "MySQL"
+  engine            = "mysql"
   engine_version    = "5.6.35"
   instance_class    = "db.t2.micro"
   name              = "baz"
@@ -733,24 +746,26 @@ resource "aws_db_option_group" "bar" {
 
 func testAccAWSDBOptionGroupOptionSettingsIAMRole(r string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_document" "rds_assume_role" {
   statement {
     actions = ["sts:AssumeRole"]
 
     principals {
       type        = "Service"
-      identifiers = ["rds.amazonaws.com"]
+      identifiers = ["rds.${data.aws_partition.current.dns_suffix}"]
     }
   }
 }
 
 resource "aws_iam_role" "sql_server_backup" {
-  name               = "rds-backup-%s"
+  name               = "rds-backup-%[1]s"
   assume_role_policy = data.aws_iam_policy_document.rds_assume_role.json
 }
 
 resource "aws_db_option_group" "bar" {
-  name                     = "%s"
+  name                     = "%[1]s"
   option_group_description = "Test option group for terraform"
   engine_name              = "sqlserver-ex"
   major_engine_version     = "14.00"
@@ -764,7 +779,7 @@ resource "aws_db_option_group" "bar" {
     }
   }
 }
-`, r, r)
+`, r)
 }
 
 func testAccAWSDBOptionGroupOptionSettings_update(r string) string {

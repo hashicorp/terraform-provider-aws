@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -63,22 +64,33 @@ func resourceAwsSsmMaintenanceWindow() *schema.Resource {
 				Optional: true,
 			},
 
+			"schedule_offset": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(1, 6),
+			},
+
 			"start_date": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsSsmMaintenanceWindowCreate(d *schema.ResourceData, meta interface{}) error {
 	ssmconn := meta.(*AWSClient).ssmconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &ssm.CreateMaintenanceWindowInput{
 		AllowUnassociatedTargets: aws.Bool(d.Get("allow_unassociated_targets").(bool)),
@@ -88,8 +100,8 @@ func resourceAwsSsmMaintenanceWindowCreate(d *schema.ResourceData, meta interfac
 		Schedule:                 aws.String(d.Get("schedule").(string)),
 	}
 
-	if v, ok := d.GetOk("tags"); ok {
-		params.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SsmTags()
+	if len(tags) > 0 {
+		params.Tags = tags.IgnoreAws().SsmTags()
 	}
 
 	if v, ok := d.GetOk("end_date"); ok {
@@ -98,6 +110,10 @@ func resourceAwsSsmMaintenanceWindowCreate(d *schema.ResourceData, meta interfac
 
 	if v, ok := d.GetOk("schedule_timezone"); ok {
 		params.ScheduleTimezone = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("schedule_offset"); ok {
+		params.ScheduleOffset = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("start_date"); ok {
@@ -113,7 +129,7 @@ func resourceAwsSsmMaintenanceWindowCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error creating SSM Maintenance Window: %s", err)
 	}
 
-	d.SetId(*resp.WindowId)
+	d.SetId(aws.StringValue(resp.WindowId))
 
 	if !d.Get("enabled").(bool) {
 		input := &ssm.UpdateMaintenanceWindowInput{
@@ -154,6 +170,10 @@ func resourceAwsSsmMaintenanceWindowUpdate(d *schema.ResourceData, meta interfac
 		params.ScheduleTimezone = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("schedule_offset"); ok {
+		params.ScheduleOffset = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("start_date"); ok {
 		params.StartDate = aws.String(v.(string))
 	}
@@ -172,8 +192,8 @@ func resourceAwsSsmMaintenanceWindowUpdate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error updating SSM Maintenance Window (%s): %s", d.Id(), err)
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.SsmUpdateTags(ssmconn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow, o, n); err != nil {
 			return fmt.Errorf("error updating SSM Maintenance Window (%s) tags: %s", d.Id(), err)
@@ -185,6 +205,7 @@ func resourceAwsSsmMaintenanceWindowUpdate(d *schema.ResourceData, meta interfac
 
 func resourceAwsSsmMaintenanceWindowRead(d *schema.ResourceData, meta interface{}) error {
 	ssmconn := meta.(*AWSClient).ssmconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	params := &ssm.GetMaintenanceWindowInput{
@@ -208,6 +229,7 @@ func resourceAwsSsmMaintenanceWindowRead(d *schema.ResourceData, meta interface{
 	d.Set("end_date", resp.EndDate)
 	d.Set("name", resp.Name)
 	d.Set("schedule_timezone", resp.ScheduleTimezone)
+	d.Set("schedule_offset", resp.ScheduleOffset)
 	d.Set("schedule", resp.Schedule)
 	d.Set("start_date", resp.StartDate)
 	d.Set("description", resp.Description)
@@ -218,8 +240,15 @@ func resourceAwsSsmMaintenanceWindowRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error listing tags for SSM Maintenance Window (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil

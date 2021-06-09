@@ -50,17 +50,17 @@ func dataSourceAwsSfnActivityRead(d *schema.ResourceData, meta interface{}) erro
 		name := nm.(string)
 		var acts []*sfn.ActivityListItem
 
-		err := conn.ListActivitiesPages(&sfn.ListActivitiesInput{}, func(page *sfn.ListActivitiesOutput, b bool) bool {
+		err := conn.ListActivitiesPages(&sfn.ListActivitiesInput{}, func(page *sfn.ListActivitiesOutput, lastPage bool) bool {
 			for _, a := range page.Activities {
 				if name == aws.StringValue(a.Name) {
 					acts = append(acts, a)
 				}
 			}
-			return true
+			return !lastPage
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error listing activities: %s", err)
+			return fmt.Errorf("Error listing activities: %w", err)
 		}
 
 		if len(acts) == 0 {
@@ -73,7 +73,7 @@ func dataSourceAwsSfnActivityRead(d *schema.ResourceData, meta interface{}) erro
 
 		act := acts[0]
 
-		d.SetId(*act.ActivityArn)
+		d.SetId(aws.StringValue(act.ActivityArn))
 		d.Set("name", act.Name)
 		d.Set("arn", act.ActivityArn)
 		if err := d.Set("creation_date", act.CreationDate.Format(time.RFC3339)); err != nil {
@@ -89,14 +89,14 @@ func dataSourceAwsSfnActivityRead(d *schema.ResourceData, meta interface{}) erro
 
 		act, err := conn.DescribeActivity(params)
 		if err != nil {
-			return fmt.Errorf("Error describing activities: %s", err)
+			return fmt.Errorf("Error describing activities: %w", err)
 		}
 
 		if act == nil {
 			return fmt.Errorf("No activity found with arn %s in this region", arn)
 		}
 
-		d.SetId(*act.ActivityArn)
+		d.SetId(aws.StringValue(act.ActivityArn))
 		d.Set("name", act.Name)
 		d.Set("arn", act.ActivityArn)
 		if err := d.Set("creation_date", act.CreationDate.Format(time.RFC3339)); err != nil {
