@@ -145,6 +145,9 @@ func resourceAwsDxGatewayAssociationProposalRead(d *schema.ResourceData, meta in
 			return nil
 		}
 
+		// once accepted, AWS will delete the proposal after after some time (days?)
+		// in this case we don't need to create a new proposal, use metadata from the association
+		// to artificially populate the missing proposal in state as if it was still there.
 		log.Printf("[INFO] Direct Connect Gateway Association Proposal (%s) has been accepted", d.Id())
 		assoc := assocRaw.(*directconnect.GatewayAssociation)
 		d.Set("associated_gateway_id", assoc.AssociatedGateway.Id)
