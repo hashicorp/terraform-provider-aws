@@ -96,11 +96,11 @@ func TestAccAWSAppmeshMeshDataSource_specAndTagsSet(t *testing.T) {
 func testAccCheckAwsAppmeshMeshDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
-	name = %q
+  name = %[1]q
 }
 
 data "aws_appmesh_mesh" "test" {
-    name = aws_appmesh_mesh.test.name
+  name = aws_appmesh_mesh.test.name
 }
 `, rName)
 }
@@ -110,11 +110,11 @@ func testAccCheckAwsAppmeshMeshDataSourceConfig_meshOwner(rName string) string {
 data "aws_caller_identity" "current" {}
 
 resource "aws_appmesh_mesh" "test" {
-	name = %q
+  name = %[1]q
 }
 
 data "aws_appmesh_mesh" "test" {
-  name = aws_appmesh_mesh.test.name
+  name       = aws_appmesh_mesh.test.name
   mesh_owner = data.aws_caller_identity.current.account_id
 }
 `, rName)
@@ -125,7 +125,7 @@ func testAccCheckAwsAppmeshMeshDataSourceConfig_specAndTagsSet(rName string) str
 data "aws_caller_identity" "current" {}
 
 resource "aws_appmesh_mesh" "test" {
-	name = %q
+  name = %[1]q
 
   spec {
     egress_filter {
