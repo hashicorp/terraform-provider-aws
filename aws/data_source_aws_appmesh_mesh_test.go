@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/appmesh"
@@ -16,8 +15,10 @@ func TestAccAWSAppmeshMeshDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_appmesh_mesh.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAppmeshMeshDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsAppmeshMeshDataSourceConfig(rName),
@@ -43,6 +44,7 @@ func TestAccAWSAppmeshMeshDataSource_meshOwner(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshMeshDestroy,
 		Steps: []resource.TestStep{
@@ -70,6 +72,7 @@ func TestAccAWSAppmeshMeshDataSource_specAndTagsSet(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshMeshDestroy,
 		Steps: []resource.TestStep{
