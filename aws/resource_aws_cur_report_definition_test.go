@@ -64,7 +64,7 @@ func testSweepCurReportDefinitions(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsCurReportDefinition_basic(t *testing.T) {
+func testAccAwsCurReportDefinition_basic(t *testing.T) {
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 	reportName := acctest.RandomWithPrefix("tf_acc_test")
@@ -117,7 +117,7 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsCurReportDefinition_textOrCsv(t *testing.T) {
+func testAccAwsCurReportDefinition_textOrCsv(t *testing.T) {
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 	reportName := acctest.RandomWithPrefix("tf_acc_test")
@@ -161,7 +161,7 @@ func TestAccAwsCurReportDefinition_textOrCsv(t *testing.T) {
 	})
 }
 
-func TestAccAwsCurReportDefinition_parquet(t *testing.T) {
+func testAccAwsCurReportDefinition_parquet(t *testing.T) {
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 	reportName := acctest.RandomWithPrefix("tf_acc_test")
@@ -204,7 +204,7 @@ func TestAccAwsCurReportDefinition_parquet(t *testing.T) {
 	})
 }
 
-func TestAccAwsCurReportDefinition_athena(t *testing.T) {
+func testAccAwsCurReportDefinition_athena(t *testing.T) {
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 	reportName := acctest.RandomWithPrefix("tf_acc_test")
@@ -248,7 +248,7 @@ func TestAccAwsCurReportDefinition_athena(t *testing.T) {
 	})
 }
 
-func TestAccAwsCurReportDefinition_refresh(t *testing.T) {
+func testAccAwsCurReportDefinition_refresh(t *testing.T) {
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 	reportName := acctest.RandomWithPrefix("tf_acc_test")
@@ -292,7 +292,7 @@ func TestAccAwsCurReportDefinition_refresh(t *testing.T) {
 	})
 }
 
-func TestAccAwsCurReportDefinition_overwrite(t *testing.T) {
+func testAccAwsCurReportDefinition_overwrite(t *testing.T) {
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 	reportName := acctest.RandomWithPrefix("tf_acc_test")
@@ -336,7 +336,7 @@ func TestAccAwsCurReportDefinition_overwrite(t *testing.T) {
 	})
 }
 
-func TestAccAwsCurReportDefinition_disappears(t *testing.T) {
+func testAccAwsCurReportDefinition_disappears(t *testing.T) {
 	resourceName := "aws_cur_report_definition.test"
 	reportName := acctest.RandomWithPrefix("tf_acc_test")
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
