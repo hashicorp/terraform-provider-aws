@@ -61,11 +61,11 @@ func testAccAWSGlobalAcceleratorAcceleratorConfigWithDataSource(rName string) st
 	return fmt.Sprintf(`
 resource "aws_globalaccelerator_accelerator" "test" {
   name = %[1]q
-  attributes { 
+  attributes {
     flow_logs_enabled   = false
     flow_logs_s3_bucket = ""
     flow_logs_s3_prefix = "flow-logs/globalaccelerator/"
-   }
+  }
 }
 
 data "aws_globalaccelerator_accelerator" "test_by_arn" {
