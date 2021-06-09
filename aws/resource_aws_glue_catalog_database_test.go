@@ -149,7 +149,6 @@ func TestAccAWSGlueCatalogDatabase_targetDatabase(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_database.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.catalog_id", "aws_glue_catalog_database.test2", "catalog_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.database_name", "aws_glue_catalog_database.test2", "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "location_uri", "aws_glue_catalog_database.test2", "location_uri"),
 				),
 			},
 		},
