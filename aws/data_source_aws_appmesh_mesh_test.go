@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -15,7 +16,7 @@ func TestAccAWSAppmeshMeshDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_appmesh_mesh.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -41,7 +42,7 @@ func TestAccAWSAppmeshMeshDataSource_meshOwner(t *testing.T) {
 	dataSourceName := "data.aws_appmesh_mesh.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshMeshDestroy,
 		Steps: []resource.TestStep{
@@ -68,7 +69,7 @@ func TestAccAWSAppmeshMeshDataSource_specAndTagsSet(t *testing.T) {
 	dataSourceName := "data.aws_appmesh_mesh.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshMeshDestroy,
 		Steps: []resource.TestStep{
@@ -88,26 +89,6 @@ func TestAccAWSAppmeshMeshDataSource_specAndTagsSet(t *testing.T) {
 		},
 	})
 }
-
-func TestAccAWSAppmeshMeshDataSource_nonExistent(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAppmeshMeshDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccCheckAwsAppmeshMeshDataSourceConfig_NonExistent,
-				ExpectError: regexp.MustCompile(`not found`),
-			},
-		},
-	})
-}
-
-const testAccCheckAwsAppmeshMeshDataSourceConfig_NonExistent = `
-data "aws_appmesh_mesh" "test" {
-  name = "tf-acc-test-non-existent"
-}
-`
 
 func testAccCheckAwsAppmeshMeshDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`

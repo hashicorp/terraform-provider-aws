@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_appmesh_mesh
 
-The App Mesh Mesh data source allows details of an App Mesh Mesh to be retrieved by it's name and/or mesh_owner.
+The App Mesh Mesh data source allows details of an App Mesh Mesh to be retrieved by its name and optionally the mesh_owner.
 
 ## Example Usage
 

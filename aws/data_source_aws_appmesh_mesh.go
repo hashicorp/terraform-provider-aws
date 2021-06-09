@@ -15,35 +15,6 @@ func dataSourceAwsAppmeshMesh() *schema.Resource {
 		Read: dataSourceAwsAppmeshMeshRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
-			"spec": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"egress_filter": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -62,11 +33,38 @@ func dataSourceAwsAppmeshMesh() *schema.Resource {
 			"mesh_owner": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
+			},
+
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 
 			"resource_owner": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			"spec": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"egress_filter": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 
 			"tags": tagsSchemaComputed(),
@@ -88,9 +86,6 @@ func dataSourceAwsAppmeshMeshRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	resp, err := conn.DescribeMesh(req)
-	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
-		return fmt.Errorf("App Mesh Mesh (%s) not found", meshName)
-	}
 	if err != nil {
 		return fmt.Errorf("error reading App Mesh service mesh: %s", err)
 	}
