@@ -623,6 +623,7 @@ func expandGlueStorageDescriptor(l []interface{}) *glue.StorageDescriptor {
 	}
 
 	if v, ok := s["schema_reference"]; ok {
+		storageDescriptor.Columns = nil
 		storageDescriptor.SchemaReference = expandGlueTableSchemaReference(v.([]interface{}))
 	}
 
