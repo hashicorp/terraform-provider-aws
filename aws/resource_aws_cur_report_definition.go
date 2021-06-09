@@ -147,10 +147,13 @@ func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] Creating AWS Cost and Usage Report Definition : %v", reportDefinitionInput)
 
 	_, err = conn.PutReportDefinition(reportDefinitionInput)
+
 	if err != nil {
-		return fmt.Errorf("Error creating AWS Cost And Usage Report Definition: %w", err)
+		return fmt.Errorf("error creating Cost And Usage Report Definition (%s): %w", reportName, err)
 	}
+
 	d.SetId(reportName)
+
 	return resourceAwsCurReportDefinitionRead(d, meta)
 }
 
@@ -160,14 +163,14 @@ func resourceAwsCurReportDefinitionRead(d *schema.ResourceData, meta interface{}
 	reportDefinition, err := finder.ReportDefinitionByName(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading Report definition (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading Cost And Usage Report Definition (%s): %w", d.Id(), err)
 	}
 
 	if reportDefinition == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading Report definition (%s): not found after creation", d.Id())
+			return fmt.Errorf("error reading Cost And Usage Report Definition (%s): not found after creation", d.Id())
 		}
-		log.Printf("[WARN] Report definition (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Cost And Usage Report Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -251,21 +254,24 @@ func resourceAwsCurReportDefinitionUpdate(d *schema.ResourceData, meta interface
 	}
 
 	_, err = conn.ModifyReportDefinition(reportDefinitionInput)
+
 	if err != nil {
-		return fmt.Errorf("Error updating AWS Cost And Usage Report Definition: %w", err)
+		return fmt.Errorf("error updating Cost And Usage Report Definition (%s): %w", d.Id(), err)
 	}
+
 	return resourceAwsCurReportDefinitionRead(d, meta)
 }
 
 func resourceAwsCurReportDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).costandusagereportconn
 
+	log.Printf("[DEBUG] Deleting Cost And Usage Report Definition (%s)", d.Id())
 	_, err := conn.DeleteReportDefinition(&cur.DeleteReportDefinitionInput{
 		ReportName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error deleting Report Definition (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting Cost And Usage Report Definition (%s): %w", d.Id(), err)
 	}
 
 	return nil
