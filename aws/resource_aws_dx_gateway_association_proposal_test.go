@@ -185,6 +185,34 @@ func TestAccAwsDxGatewayAssociationProposal_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAwsDxGatewayAssociationProposal_endOfLife(t *testing.T) {
+	var proposal1 directconnect.GatewayAssociationProposal
+	var providers []*schema.Provider
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_dx_gateway_association_proposal.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckAwsDxGatewayAssociationProposalDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDxGatewayAssociationProposalConfig_endOfLife(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal1),
+					testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName),
+					testAccCheckAwsDxGatewayAssociationProposalDisappears(&proposal1),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAwsDxGatewayAssociationProposal_AllowedPrefixes(t *testing.T) {
 	var proposal1, proposal2 directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
@@ -336,6 +364,20 @@ resource "aws_dx_gateway_association_proposal" "test" {
 `
 }
 
+func testAccDxGatewayAssociationProposalConfig_endOfLife(rName string, rBgpAsn int) string {
+	return testAccDxGatewayAssociationProposalConfig_basicVpnGateway(rName, rBgpAsn) + `
+data "aws_caller_identity" "current" {}
+
+resource "aws_dx_gateway_association" "test" {
+provider = "awsalternate"
+
+proposal_id                         = aws_dx_gateway_association_proposal.test.id
+dx_gateway_id                       = aws_dx_gateway.test.id
+associated_gateway_owner_account_id = data.aws_caller_identity.current.account_id
+}
+`
+}
+
 func testAccDxGatewayAssociationProposalConfig_basicTransitGateway(rName string, rBgpAsn int) string {
 	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
@@ -384,4 +426,30 @@ resource "aws_dx_gateway_association_proposal" "test" {
   associated_gateway_id       = aws_vpn_gateway.test.id
 }
 `
+}
+
+func testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).dxconn
+
+		proposal, err := describeDirectConnectGatewayAssociationProposal(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		if proposal == nil {
+			return fmt.Errorf("Direct Connect Gateway Association Proposal (%s) not found", rs.Primary.ID)
+		}
+
+		if aws.StringValue(proposal.ProposalState) != "accepted" {
+			return fmt.Errorf("Direct Connect Gateway Association Proposal (%s) not accepted", rs.Primary.ID)
+		}
+		return nil
+	}
 }
