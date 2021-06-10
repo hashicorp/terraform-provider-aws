@@ -7,6 +7,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_nat_gateway: Add `connectivity_type` attribute ([#19758](https://github.com/hashicorp/terraform-provider-aws/issues/19758))
 * data-source/aws_transfer_server: Add `domain` attribute. ([#19691](https://github.com/hashicorp/terraform-provider-aws/issues/19691))
 * resource/aws_cognito_user_pool: Add `custom_domain`, `domain`, and `estimated_number_of_users` attributes ([#16502](https://github.com/hashicorp/terraform-provider-aws/issues/16502))
 * resource/aws_cognito_user_pool: Add `custom_email_sender`, `custom_sms_sender`, and `kms_key_id` to `lambda_config` ([#16502](https://github.com/hashicorp/terraform-provider-aws/issues/16502))
@@ -20,6 +21,7 @@ ENHANCEMENTS:
 * resource/aws_ecs_task_definition: Add support for `ephemeral_storage`. ([#19694](https://github.com/hashicorp/terraform-provider-aws/issues/19694))
 * resource/aws_ecs_task_definition: Add support for `fsx_windows_file_server_volume_configuration`. ([#19670](https://github.com/hashicorp/terraform-provider-aws/issues/19670))
 * resource/aws_fsx_lustre_filesystem: Add `data_compression_type` argument. ([#19664](https://github.com/hashicorp/terraform-provider-aws/issues/19664))
+* resource/aws_nat_gateway: Add `connectivity_type` argument ([#19758](https://github.com/hashicorp/terraform-provider-aws/issues/19758))
 * resource/aws_sqs_queue: Add `deduplication_scope` and `fifo_throughput_limit` arguments ([#19639](https://github.com/hashicorp/terraform-provider-aws/issues/19639))
 * resource/aws_sqs_queue: Add `url` attribute ([#19639](https://github.com/hashicorp/terraform-provider-aws/issues/19639))
 * resource/aws_transfer_server: Add `domain` argument. ([#19691](https://github.com/hashicorp/terraform-provider-aws/issues/19691))
