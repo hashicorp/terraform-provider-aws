@@ -447,13 +447,6 @@ func TestAccAWSCloudWatchEventTarget_ecs(t *testing.T) {
 				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
-			{
-				Config: testAccAWSCloudWatchEventTargetConfigEcsWithBlankLaunchType(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", ""),
-				),
-			},
 		},
 	})
 }
@@ -489,6 +482,26 @@ func TestAccAWSCloudWatchEventTarget_ecsWithBlankLaunchType(t *testing.T) {
 				ImportState:       true,
 				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCloudWatchEventTargetConfigEcs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", "FARGATE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCloudWatchEventTargetConfigEcsWithBlankLaunchType(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", ""),
+				),
 			},
 		},
 	})
