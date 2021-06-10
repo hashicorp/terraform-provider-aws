@@ -81,7 +81,7 @@ func resourceAwsBackupVaultPolicyRead(d *schema.ResourceData, meta interface{}) 
 		}
 
 		for _, el := range resp.BackupVaultList {
-			if *el.BackupVaultName == d.Id() {
+			if aws.StringValue(el.BackupVaultName) == d.Id() {
 				return fmt.Errorf("error reading Backup Vault Policy (%s): %w", d.Id(), err)
 			}
 		}
