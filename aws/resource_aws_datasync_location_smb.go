@@ -227,7 +227,7 @@ func resourceAwsDataSyncLocationSmbUpdate(d *schema.ResourceData, meta interface
 		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.DatasyncUpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Datasync SMB location (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating Datasync SMB location (%s) tags: %w", d.Id(), err)
 		}
 	}
 	return resourceAwsDataSyncLocationSmbRead(d, meta)
@@ -248,7 +248,7 @@ func resourceAwsDataSyncLocationSmbDelete(d *schema.ResourceData, meta interface
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting DataSync Location SMB (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting DataSync Location SMB (%s): %w", d.Id(), err)
 	}
 
 	return nil
