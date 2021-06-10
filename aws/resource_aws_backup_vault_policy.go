@@ -73,8 +73,24 @@ func resourceAwsBackupVaultPolicyRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Backup Vault Policy (%s): %w", d.Id(), err)
+		listInput := &backup.ListBackupVaultsInput{}
+		resp, errList := conn.ListBackupVaults(listInput)
+
+		if errList != nil {
+			return fmt.Errorf("error reading Backup Vault Policy (%s): %w and could not list Backup Vaults (%s)", d.Id(), err, errList)
+		}
+
+		for _, el := range resp.BackupVaultList {
+			if *el.BackupVaultName == d.Id() {
+				return fmt.Errorf("error reading Backup Vault Policy (%s): %w", d.Id(), err)
+			}
+		}
+
+		log.Printf("[WARN] Backup Vault Policy %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
+
 	d.Set("backup_vault_name", resp.BackupVaultName)
 	d.Set("policy", resp.Policy)
 	d.Set("backup_vault_arn", resp.BackupVaultArn)
