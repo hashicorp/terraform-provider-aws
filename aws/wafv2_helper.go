@@ -528,6 +528,31 @@ func wafv2CustomResponseSchema() *schema.Schema {
 	}
 }
 
+func wafv2CustomResponseBodiesSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeMap,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"content": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 10240),
+				},
+				"content_type": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						"text/plain",
+						"text/html",
+						"application/json",
+					}, false),
+				},
+			},
+		},
+	}
+}
+
 func expandWafv2Rules(l []interface{}) []*wafv2.Rule {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -651,6 +676,9 @@ func expandWafv2CustomResponse(l []interface{}) *wafv2.CustomResponse {
 
 	customResponse := &wafv2.CustomResponse{}
 
+	if v, ok := m["custom_response_body_key"].(string); ok {
+		customResponse.CustomResponseBodyKey = aws.String(v)
+	}
 	if v, ok := m["response_code"].(int); ok && v > 0 {
 		customResponse.ResponseCode = aws.Int64(int64(v))
 	}
@@ -1160,8 +1188,9 @@ func flattenWafv2CustomResponse(r *wafv2.CustomResponse) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"response_code":   int(aws.Int64Value(r.ResponseCode)),
-		"response_header": flattenWafv2CustomHeaders(r.ResponseHeaders),
+		"custom_response_body_key": aws.StringValue(r.CustomResponseBodyKey),
+		"response_code":            int(aws.Int64Value(r.ResponseCode)),
+		"response_header":          flattenWafv2CustomHeaders(r.ResponseHeaders),
 	}
 
 	return []interface{}{m}
