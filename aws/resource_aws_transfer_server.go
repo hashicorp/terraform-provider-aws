@@ -40,6 +40,13 @@ func resourceAwsTransferServer() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validateArn,
 			},
+			"domain": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      transfer.DomainS3,
+				ValidateFunc: validation.StringInSlice(transfer.Domain_Values(), false),
+			},
 
 			"endpoint": {
 				Type:     schema.TypeString,
@@ -175,6 +182,10 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 		input.Certificate = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("domain"); ok {
+		input.Domain = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("endpoint_details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.EndpointDetails = expandTransferEndpointDetails(v.([]interface{})[0].(map[string]interface{}))
 
@@ -286,6 +297,7 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("arn", output.Arn)
 	d.Set("certificate", output.Certificate)
+	d.Set("domain", output.Domain)
 	d.Set("endpoint", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.server.transfer", d.Id())))
 	if output.EndpointDetails != nil {
 		if err := d.Set("endpoint_details", []interface{}{flattenTransferEndpointDetails(output.EndpointDetails)}); err != nil {

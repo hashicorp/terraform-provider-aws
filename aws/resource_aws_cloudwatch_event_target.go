@@ -143,10 +143,13 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
 						"launch_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      events.LaunchTypeEc2,
-							ValidateFunc: validation.StringInSlice(events.LaunchType_Values(), false),
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  events.LaunchTypeEc2,
+							ValidateFunc: validation.Any(
+								validation.StringIsEmpty,
+								validation.StringInSlice(events.LaunchType_Values(), false),
+							),
 						},
 						"network_configuration": {
 							Type:     schema.TypeList,
@@ -261,7 +264,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							ValidateFunc: validation.All(
-								MapMaxItems(10),
+								MapMaxItems(100),
 								MapKeysDoNotMatch(regexp.MustCompile(`^AWS.*$`), "input_path must not start with \"AWS\""),
 							),
 						},

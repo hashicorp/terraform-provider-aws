@@ -224,6 +224,8 @@ service/licensemanager:
   - '((\*|-) ?`?|(data|resource) "?)aws_licensemanager_'
 service/lightsail:
   - '((\*|-) ?`?|(data|resource) "?)aws_lightsail_'
+service/location:
+  - '((\*|-) ?`?|(data|resource) "?)aws_location_'
 service/machinelearning:
   - '((\*|-) ?`?|(data|resource) "?)aws_machinelearning_'
 service/macie:

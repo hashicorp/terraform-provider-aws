@@ -119,7 +119,7 @@ func TestAccAWSServiceCatalogProvisioningArtifact_basic(t *testing.T) {
 				Config: testAccAWSServiceCatalogProvisioningArtifactConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProvisioningArtifactExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
+					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttr(resourceName, "disable_template_validation", "true"),
@@ -181,7 +181,7 @@ func TestAccAWSServiceCatalogProvisioningArtifact_update(t *testing.T) {
 				Config: testAccAWSServiceCatalogProvisioningArtifactConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProvisioningArtifactExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
+					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttr(resourceName, "guidance", servicecatalog.ProvisioningArtifactGuidanceDefault),
@@ -226,7 +226,7 @@ func TestAccAWSServiceCatalogProvisioningArtifact_physicalID(t *testing.T) {
 				Config: testAccAWSServiceCatalogProvisioningArtifactConfig_physicalID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProvisioningArtifactExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
+					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttr(resourceName, "disable_template_validation", "false"),

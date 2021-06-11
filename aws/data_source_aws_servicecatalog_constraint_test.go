@@ -23,7 +23,7 @@ func TestAccAWSServiceCatalogConstraintDataSource_basic(t *testing.T) {
 				Config: testAccAWSServiceCatalogConstraintDataSourceConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogConstraintExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "acceptLanguage", dataSourceName, "acceptLanguage"),
+					resource.TestCheckResourceAttrPair(resourceName, "accept_language", dataSourceName, "accept_language"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
 					resource.TestCheckResourceAttrPair(resourceName, "owner", dataSourceName, "owner"),
 					resource.TestCheckResourceAttrPair(resourceName, "parameters", dataSourceName, "parameters"),

@@ -94,6 +94,7 @@ func resourceAwsAmplifyApp() *schema.Resource {
 						"enable_performance_mode": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 
 						"enable_pull_request_preview": {

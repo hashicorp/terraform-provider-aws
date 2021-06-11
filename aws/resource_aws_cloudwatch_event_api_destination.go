@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"math"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -44,7 +43,7 @@ func resourceAwsCloudWatchEventApiDestination() *schema.Resource {
 			"invocation_rate_limit_per_second": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, math.MaxInt64),
+				ValidateFunc: validation.IntBetween(1, 300),
 				Default:      300,
 			},
 			"http_method": {
@@ -149,7 +148,7 @@ func resourceAwsCloudWatchEventApiDestinationUpdate(d *schema.ResourceData, meta
 		input.InvocationEndpoint = aws.String(invocationEndpoint.(string))
 	}
 	if invocationRateLimitPerSecond, ok := d.GetOk("invocation_rate_limit_per_second"); ok {
-		input.InvocationRateLimitPerSecond = aws.Int64(invocationRateLimitPerSecond.(int64))
+		input.InvocationRateLimitPerSecond = aws.Int64(int64(invocationRateLimitPerSecond.(int)))
 	}
 	if httpMethod, ok := d.GetOk("http_method"); ok {
 		input.HttpMethod = aws.String(httpMethod.(string))

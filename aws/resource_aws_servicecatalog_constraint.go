@@ -30,7 +30,7 @@ func resourceAwsServiceCatalogConstraint() *schema.Resource {
 			"accept_language": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "en",
+				Default:      tfservicecatalog.AcceptLanguageEnglish,
 				ValidateFunc: validation.StringInSlice(tfservicecatalog.AcceptLanguage_Values(), false),
 			},
 			"description": {
@@ -151,7 +151,7 @@ func resourceAwsServiceCatalogConstraintRead(d *schema.ResourceData, meta interf
 	acceptLanguage := d.Get("accept_language").(string)
 
 	if acceptLanguage == "" {
-		acceptLanguage = "en"
+		acceptLanguage = tfservicecatalog.AcceptLanguageEnglish
 	}
 
 	d.Set("accept_language", acceptLanguage)

@@ -236,6 +236,12 @@ func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(0, 255),
 									},
+									"s3_object_acl": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.StringInSlice(acmpca.S3ObjectAcl_Values(), false),
+									},
 								},
 							},
 						},
@@ -602,6 +608,9 @@ func expandAcmpcaCrlConfiguration(l []interface{}) *acmpca.CrlConfiguration {
 	if v, ok := m["s3_bucket_name"]; ok && v.(string) != "" {
 		config.S3BucketName = aws.String(v.(string))
 	}
+	if v, ok := m["s3_object_acl"]; ok && v.(string) != "" {
+		config.S3ObjectAcl = aws.String(v.(string))
+	}
 
 	return config
 }
@@ -668,6 +677,7 @@ func flattenAcmpcaCrlConfiguration(config *acmpca.CrlConfiguration) []interface{
 		"enabled":            aws.BoolValue(config.Enabled),
 		"expiration_in_days": int(aws.Int64Value(config.ExpirationInDays)),
 		"s3_bucket_name":     aws.StringValue(config.S3BucketName),
+		"s3_object_acl":      aws.StringValue(config.S3ObjectAcl),
 	}
 
 	return []interface{}{m}
