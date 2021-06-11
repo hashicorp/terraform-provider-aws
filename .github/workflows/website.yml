@@ -16,9 +16,6 @@ on:
       - website/docs/**
       - tools/go.mod
 
-env:
-  GO111MODULE: on
-
 jobs:
   markdown-link-check:
     runs-on: ubuntu-latest
@@ -143,7 +140,7 @@ jobs:
                 "--enable-rule=terraform_deprecated_index"
                 )
             fi
-            # echo "Let's go with $filename..."
+            
             # We need to capture the output and error code here. We don't want to exit on the first error
             set +e
             ./scripts/validate-terraform-file.sh "$filename" "${rules[@]}"

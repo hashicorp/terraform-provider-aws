@@ -315,6 +315,10 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"interface_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -342,6 +346,7 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 						"host_resource_group_arn": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"spread_domain": {
 							Type:     schema.TypeString,
@@ -461,7 +466,7 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 		Region:    meta.(*AWSClient).region,
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),

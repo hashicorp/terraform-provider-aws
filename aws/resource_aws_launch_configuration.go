@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsLaunchConfiguration() *schema.Resource {
@@ -177,9 +178,10 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 							ForceNew: true,
 						},
 
-						"no_device": {
+						"encrypted": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 							ForceNew: true,
 						},
 
@@ -190,8 +192,21 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 							ForceNew: true,
 						},
 
+						"no_device": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+
 						"snapshot_id": {
 							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+
+						"throughput": {
+							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
@@ -206,13 +221,6 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 
 						"volume_type": {
 							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-
-						"encrypted": {
-							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
@@ -305,6 +313,13 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 						},
 
 						"iops": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+
+						"throughput": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
@@ -434,7 +449,11 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
-			if *aws.String(bd["device_name"].(string)) == *rootDeviceName {
+			if v, ok := bd["throughput"].(int); ok && v > 0 {
+				ebs.Throughput = aws.Int64(int64(v))
+			}
+
+			if bd["device_name"].(string) == aws.StringValue(rootDeviceName) {
 				return fmt.Errorf("Root device (%s) declared as an 'ebs_block_device'.  Use 'root_block_device' keyword.", *rootDeviceName)
 			}
 
@@ -481,6 +500,10 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
+			if v, ok := bd["throughput"].(int); ok && v > 0 {
+				ebs.Throughput = aws.Int64(int64(v))
+			}
+
 			if dn, err := fetchRootDeviceName(d.Get("image_id").(string), ec2conn); err == nil {
 				if dn == nil {
 					return fmt.Errorf(
@@ -515,7 +538,7 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 
 	// IAM profiles can take ~10 seconds to propagate in AWS:
 	// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-	err = resource.Retry(90*time.Second, func() *resource.RetryError {
+	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := autoscalingconn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
 		if err != nil {
 			if isAWSErr(err, "ValidationError", "Invalid IamInstanceProfile") {
@@ -761,6 +784,9 @@ func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autosca
 		}
 		if bdm.Ebs != nil && bdm.Ebs.Iops != nil {
 			bd["iops"] = *bdm.Ebs.Iops
+		}
+		if bdm.Ebs != nil && bdm.Ebs.Throughput != nil {
+			bd["throughput"] = *bdm.Ebs.Throughput
 		}
 		if bdm.Ebs != nil && bdm.Ebs.Encrypted != nil {
 			bd["encrypted"] = *bdm.Ebs.Encrypted

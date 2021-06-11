@@ -69,6 +69,7 @@ func TestAccAWSLaunchConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -103,6 +104,7 @@ func TestAccAWSLaunchConfiguration_withBlockDevices(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -134,6 +136,7 @@ func TestAccAWSLaunchConfiguration_withInstanceStoreAMI(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -162,6 +165,7 @@ func TestAccAWSLaunchConfiguration_RootBlockDevice_AmiDisappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -191,6 +195,7 @@ func TestAccAWSLaunchConfiguration_RootBlockDevice_VolumeSize(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -225,6 +230,7 @@ func TestAccAWSLaunchConfiguration_encryptedRootBlockDevice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -251,6 +257,7 @@ func TestAccAWSLaunchConfiguration_withSpotPrice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -280,6 +287,7 @@ func TestAccAWSLaunchConfiguration_withVpcClassicLink(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -307,6 +315,7 @@ func TestAccAWSLaunchConfiguration_withIAMProfile(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -332,6 +341,7 @@ func TestAccAWSLaunchConfiguration_withEncryption(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -352,12 +362,45 @@ func TestAccAWSLaunchConfiguration_withEncryption(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchConfiguration_withGP3(t *testing.T) {
+	var conf autoscaling.LaunchConfiguration
+	resourceName := "aws_launch_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchConfigurationWithGP3(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.test", &conf),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"volume_type": "gp3",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"throughput": "150",
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchConfiguration_updateEbsBlockDevices(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -396,6 +439,7 @@ func TestAccAWSLaunchConfiguration_metadataOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -425,6 +469,7 @@ func TestAccAWSLaunchConfiguration_ebs_noDevice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -448,12 +493,14 @@ func TestAccAWSLaunchConfiguration_ebs_noDevice(t *testing.T) {
 		},
 	})
 }
+
 func TestAccAWSLaunchConfiguration_userData(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -815,6 +862,29 @@ resource "aws_launch_configuration" "test" {
     device_name = "/dev/sdb"
     volume_size = 9
     encrypted   = true
+  }
+}
+`)
+}
+
+func testAccAWSLaunchConfigurationWithGP3() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+resource "aws_launch_configuration" "test" {
+  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type               = "t2.micro"
+  associate_public_ip_address = false
+
+  root_block_device {
+    volume_type = "gp3"
+    volume_size = 11
+  }
+
+  ebs_block_device {
+    volume_type = "gp3"
+    device_name = "/dev/sdb"
+    volume_size = 9
+    encrypted   = true
+    throughput  = 150
   }
 }
 `)
