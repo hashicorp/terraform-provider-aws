@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 )
 
 const (
@@ -257,10 +258,28 @@ const (
 	NetworkAclEntryPropagationTimeout = 5 * time.Minute
 )
 
+func RouteReady(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, destination string) (*ec2.Route, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    []string{RouteStatusReady},
+		Refresh:                   RouteStatus(conn, routeFinder, routeTableID, destination),
+		Timeout:                   PropagationTimeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Route); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 const (
 	RouteTableReadyTimeout   = 10 * time.Minute
 	RouteTableDeletedTimeout = 5 * time.Minute
-	RouteTableUpdateTimeout  = 5 * time.Minute
+	RouteTableUpdatedTimeout = 5 * time.Minute
 
 	RouteTableNotFoundChecks = 40
 )

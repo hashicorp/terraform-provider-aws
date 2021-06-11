@@ -211,7 +211,20 @@ func resourceAwsRouteTableCreate(d *schema.ResourceData, meta interface{}) error
 				return fmt.Errorf("error creating route: %w", err)
 			}
 
-			_, destination := routeTableRouteDestinationAttribute(v)
+			destinationAttributeKey, destination := routeTableRouteDestinationAttribute(v)
+
+			var routeFinder finder.RouteFinder
+
+			switch destinationAttributeKey {
+			case "cidr_block":
+				routeFinder = finder.RouteByIPv4Destination
+			case "ipv6_cidr_block":
+				routeFinder = finder.RouteByIPv6Destination
+			case "destination_prefix_list_id":
+				routeFinder = finder.RouteByPrefixListIDDestination
+			default:
+				return fmt.Errorf("error creating Route: unexpected route destination attribute: %q", destinationAttributeKey)
+			}
 
 			input := expandEc2CreateRouteInput(v)
 
@@ -222,10 +235,23 @@ func resourceAwsRouteTableCreate(d *schema.ResourceData, meta interface{}) error
 			input.RouteTableId = aws.String(d.Id())
 
 			log.Printf("[DEBUG] Creating Route: %s", input)
-			err = createRoute(conn, input, waiter.PropagationTimeout)
+			_, err = tfresource.RetryWhenAwsErrCodeEquals(
+				waiter.PropagationTimeout,
+				func() (interface{}, error) {
+					return conn.CreateRoute(input)
+				},
+				tfec2.ErrCodeInvalidParameterException,
+				tfec2.ErrCodeInvalidTransitGatewayIDNotFound,
+			)
 
 			if err != nil {
 				return fmt.Errorf("error creating Route for Route Table (%s) with destination (%s): %w", d.Id(), destination, err)
+			}
+
+			_, err = waiter.RouteReady(conn, routeFinder, d.Id(), destination)
+
+			if err != nil {
+				return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to become available: %w", d.Id(), destination, err)
 			}
 		}
 	}
@@ -264,7 +290,6 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting route: %w", err)
 	}
 
-	// Tags
 	tags := keyvaluetags.Ec2KeyValueTags(routeTable.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -461,7 +486,7 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 			}
 
 			log.Printf("[INFO] Creating route for %s: %#v", d.Id(), opts)
-			err := resource.Retry(waiter.RouteTableUpdateTimeout, func() *resource.RetryError {
+			err := resource.Retry(waiter.RouteTableUpdatedTimeout, func() *resource.RetryError {
 				_, err := conn.CreateRoute(&opts)
 
 				if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {

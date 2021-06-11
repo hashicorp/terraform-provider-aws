@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -230,36 +231,23 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Route: %s", input)
-	err = createRoute(conn, input, d.Timeout(schema.TimeoutCreate))
+	_, err = tfresource.RetryWhenAwsErrCodeEquals(
+		d.Timeout(schema.TimeoutCreate),
+		func() (interface{}, error) {
+			return conn.CreateRoute(input)
+		},
+		tfec2.ErrCodeInvalidParameterException,
+		tfec2.ErrCodeInvalidTransitGatewayIDNotFound,
+	)
 
 	if err != nil {
 		return fmt.Errorf("error creating Route for Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		_, err = routeFinder(conn, routeTableID, destination)
-
-		if err != nil {
-			return resource.RetryableError(err)
-		}
-
-		if tfresource.NotFound(err) {
-			return resource.RetryableError(fmt.Errorf("route not found"))
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = routeFinder(conn, routeTableID, destination)
-	}
+	_, err = waiter.RouteReady(conn, routeFinder, routeTableID, destination)
 
 	if err != nil {
-		return fmt.Errorf("error reading Route for Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
-	}
-
-	if tfresource.NotFound(err) {
-		return fmt.Errorf("route in Route Table (%s) with destination (%s) not found", routeTableID, destination)
+		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to become available: %w", routeTableID, destination, err)
 	}
 
 	d.SetId(tfec2.RouteCreateID(routeTableID, destination))
@@ -349,13 +337,18 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 		RouteTableId: aws.String(routeTableID),
 	}
 
+	var routeFinder finder.RouteFinder
+
 	switch destination := aws.String(destination); destinationAttributeKey {
 	case "destination_cidr_block":
 		input.DestinationCidrBlock = destination
+		routeFinder = finder.RouteByIPv4Destination
 	case "destination_ipv6_cidr_block":
 		input.DestinationIpv6CidrBlock = destination
+		routeFinder = finder.RouteByIPv6Destination
 	case "destination_prefix_list_id":
 		input.DestinationPrefixListId = destination
+		routeFinder = finder.RouteByPrefixListIDDestination
 	default:
 		return fmt.Errorf("error updating Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -392,6 +385,12 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating Route for Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
+	_, err = waiter.RouteReady(conn, routeFinder, routeTableID, destination)
+
+	if err != nil {
+		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to become available: %w", routeTableID, destination, err)
+	}
+
 	return resourceAwsRouteRead(d, meta)
 }
 
@@ -420,9 +419,10 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
 
+	log.Printf("[DEBUG] Deleting Route (%s)", d.Id())
 	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		log.Printf("[DEBUG] Deleting Route (%s)", d.Id())
 		_, err = conn.DeleteRoute(input)
+
 		if err == nil {
 			return nil
 		}
@@ -444,7 +444,6 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		log.Printf("[DEBUG] Deleting Route (%s)", d.Id())
 		_, err = conn.DeleteRoute(input)
 	}
 
@@ -502,33 +501,4 @@ func routeTargetAttribute(d *schema.ResourceData) (string, string, error) {
 	}
 
 	return "", "", fmt.Errorf("route target attribute not specified")
-}
-
-// createRoute attempts to create a route.
-// The specified eventual consistency timeout is respected.
-// Any error is returned.
-func createRoute(conn *ec2.EC2, input *ec2.CreateRouteInput, timeout time.Duration) error {
-	err := resource.Retry(timeout, func() *resource.RetryError {
-		_, err := conn.CreateRoute(input)
-
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidParameterException) {
-			return resource.RetryableError(err)
-		}
-
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidTransitGatewayIDNotFound) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateRoute(input)
-	}
-
-	return err
 }

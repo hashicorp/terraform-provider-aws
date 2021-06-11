@@ -247,6 +247,26 @@ func InstanceIamInstanceProfile(conn *ec2.EC2, id string) resource.StateRefreshF
 }
 
 const (
+	RouteStatusReady = "ready"
+)
+
+func RouteStatus(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, destination string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := routeFinder(conn, routeTableID, destination)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, RouteStatusReady, nil
+	}
+}
+
+const (
 	RouteTableStatusReady = "ready"
 )
 
