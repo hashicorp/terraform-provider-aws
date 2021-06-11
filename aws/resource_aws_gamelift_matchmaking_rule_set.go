@@ -66,7 +66,7 @@ func resourceAwsGameliftMatchmakingRuleSetCreate(d *schema.ResourceData, meta in
 		return fmt.Errorf("error creating GameLift Matchmaking Rule Set: %s", err)
 	}
 
-	d.SetId(*out.RuleSet.RuleSetArn)
+	d.SetId(aws.StringValue(out.RuleSet.RuleSetArn))
 
 	return resourceAwsGameliftMatchmakingRuleSetRead(d, meta)
 }

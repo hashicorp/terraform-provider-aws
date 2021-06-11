@@ -75,6 +75,7 @@ func TestAccAWSGameliftMatchmakingRuleSet_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
 		Providers:    testAccProviders,
+		ErrorCheck:   testAccErrorCheck(t, gamelift.EndpointsID),
 		CheckDestroy: testAccCheckAWSGameliftMatchmakingRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -115,6 +116,7 @@ func TestAccAWSGameliftMatchmakingRuleSet_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
 		Providers:    testAccProviders,
+		ErrorCheck:   testAccErrorCheck(t, gamelift.EndpointsID),
 		CheckDestroy: testAccCheckAWSGameliftMatchmakingRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -160,6 +162,7 @@ func TestAccAWSGameliftMatchmakingRuleSet_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
 		Providers:    testAccProviders,
+		ErrorCheck:   testAccErrorCheck(t, gamelift.EndpointsID),
 		CheckDestroy: testAccCheckAWSGameliftMatchmakingRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
