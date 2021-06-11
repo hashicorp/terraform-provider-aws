@@ -53,7 +53,7 @@ func resourceAwsWafv2WebACL() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"custom_response_bodies": wafv2CustomResponseBodiesSchema(),
+			"custom_response_body": wafv2CustomResponseBodySchema(),
 			"default_action": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -157,8 +157,8 @@ func resourceAwsWafv2WebACLCreate(d *schema.ResourceData, meta interface{}) erro
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
-	if v, ok := d.Get("custom_response_bodies").(map[string]interface{}); ok {
-		params.CustomResponseBodies = expandWafv2CustomResponseBodies(v)
+	if v, ok := d.Get("custom_response_body").(*schema.Set); ok && len(v.List()) > 0 {
+		params.CustomResponseBodies = expandWafv2CustomResponseBodies(v.List())
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -229,8 +229,8 @@ func resourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("arn", resp.WebACL.ARN)
 	d.Set("lock_token", resp.LockToken)
 
-	if err := d.Set("custom_response_bodies", flattenWafv2CustomResponseBodies(resp.WebACL.CustomResponseBodies)); err != nil {
-		return fmt.Errorf("Error setting custom_response_bodies: %w", err)
+	if err := d.Set("custom_response_body", flattenWafv2CustomResponseBodies(resp.WebACL.CustomResponseBodies)); err != nil {
+		return fmt.Errorf("Error setting custom_response_body: %w", err)
 	}
 
 	if err := d.Set("default_action", flattenWafv2DefaultAction(resp.WebACL.DefaultAction)); err != nil {
@@ -268,7 +268,7 @@ func resourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) error 
 func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
 
-	if d.HasChanges("custom_response_bodies", "default_action", "description", "rule", "visibility_config") {
+	if d.HasChanges("custom_response_body", "default_action", "description", "rule", "visibility_config") {
 		u := &wafv2.UpdateWebACLInput{
 			Id:               aws.String(d.Id()),
 			Name:             aws.String(d.Get("name").(string)),
@@ -279,8 +279,8 @@ func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) erro
 			VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 		}
 
-		if v, ok := d.Get("custom_response_bodies").(map[string]interface{}); ok {
-			u.CustomResponseBodies = expandWafv2CustomResponseBodies(v)
+		if v, ok := d.Get("custom_response_body").(*schema.Set); ok && len(v.List()) > 0 {
+			u.CustomResponseBodies = expandWafv2CustomResponseBodies(v.List())
 		}
 
 		if v, ok := d.GetOk("description"); ok {
@@ -709,24 +709,6 @@ func expandWafv2ExcludedRule(m map[string]interface{}) *wafv2.ExcludedRule {
 	}
 }
 
-func expandWafv2CustomResponseBodies(m map[string]interface{}) map[string]*wafv2.CustomResponseBody {
-	if len(m) == 0 {
-		return nil
-	}
-
-	customResponseBodies := make(map[string]*wafv2.CustomResponseBody)
-
-	for key, v := range m {
-		vm := v.(map[string]interface{})
-		customResponseBodies[key] = &wafv2.CustomResponseBody{
-			Content:     aws.String(vm["content"].(string)),
-			ContentType: aws.String(vm["content_type"].(string)),
-		}
-	}
-
-	return customResponseBodies
-}
-
 func flattenWafv2WebACLRootStatement(s *wafv2.Statement) interface{} {
 	if s == nil {
 		return []interface{}{}
@@ -901,22 +883,6 @@ func flattenWafv2ExcludedRules(r []*wafv2.ExcludedRule) interface{} {
 		m := make(map[string]interface{})
 		m["name"] = aws.StringValue(rule.Name)
 		out[i] = m
-	}
-
-	return out
-}
-
-func flattenWafv2CustomResponseBodies(b map[string]*wafv2.CustomResponseBody) interface{} {
-	if len(b) == 0 {
-		return map[string]interface{}{}
-	}
-
-	out := map[string]interface{}{}
-	for key, body := range b {
-		out[key] = map[string]interface{}{
-			"content":      aws.StringValue(body.Content),
-			"content_type": aws.StringValue(body.ContentType),
-		}
 	}
 
 	return out

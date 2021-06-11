@@ -48,7 +48,7 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
-			"custom_response_bodies": wafv2CustomResponseBodiesSchema(),
+			"custom_response_body": wafv2CustomResponseBodySchema(),
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -130,8 +130,8 @@ func resourceAwsWafv2RuleGroupCreate(d *schema.ResourceData, meta interface{}) e
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
-	if v, ok := d.Get("custom_response_bodies").(map[string]interface{}); ok {
-		params.CustomResponseBodies = expandWafv2CustomResponseBodies(v)
+	if v, ok := d.Get("custom_response_body").(*schema.Set); ok && len(v.List()) > 0 {
+		params.CustomResponseBodies = expandWafv2CustomResponseBodies(v.List())
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -202,8 +202,8 @@ func resourceAwsWafv2RuleGroupRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("arn", resp.RuleGroup.ARN)
 	d.Set("lock_token", resp.LockToken)
 
-	if err := d.Set("custom_response_bodies", flattenWafv2CustomResponseBodies(resp.RuleGroup.CustomResponseBodies)); err != nil {
-		return fmt.Errorf("Error setting custom_response_bodies: %w", err)
+	if err := d.Set("custom_response_body", flattenWafv2CustomResponseBodies(resp.RuleGroup.CustomResponseBodies)); err != nil {
+		return fmt.Errorf("Error setting custom_response_body: %w", err)
 	}
 
 	if err := d.Set("rule", flattenWafv2Rules(resp.RuleGroup.Rules)); err != nil {
@@ -248,8 +248,8 @@ func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
-	if v, ok := d.Get("custom_response_bodies").(map[string]interface{}); ok {
-		u.CustomResponseBodies = expandWafv2CustomResponseBodies(v)
+	if v, ok := d.Get("custom_response_body").(*schema.Set); ok && len(v.List()) > 0 {
+		u.CustomResponseBodies = expandWafv2CustomResponseBodies(v.List())
 	}
 
 	if v, ok := d.GetOk("description"); ok {

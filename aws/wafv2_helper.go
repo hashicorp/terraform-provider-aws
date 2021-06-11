@@ -497,6 +497,14 @@ func wafv2CustomResponseSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"custom_response_body_key": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexp.MustCompile(`^[\w\-]+$`), "must contain only alphanumeric, hyphen, and underscore characters"),
+					),
+				},
 				"response_code": {
 					Type:         schema.TypeInt,
 					Required:     true,
@@ -528,12 +536,20 @@ func wafv2CustomResponseSchema() *schema.Schema {
 	}
 }
 
-func wafv2CustomResponseBodiesSchema() *schema.Schema {
+func wafv2CustomResponseBodySchema() *schema.Schema {
 	return &schema.Schema{
-		Type:     schema.TypeMap,
+		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"key": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexp.MustCompile(`^[\w\-]+$`), "must contain only alphanumeric, hyphen, and underscore characters"),
+					),
+				},
 				"content": {
 					Type:         schema.TypeString,
 					Required:     true,
@@ -543,9 +559,9 @@ func wafv2CustomResponseBodiesSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Required: true,
 					ValidateFunc: validation.StringInSlice([]string{
-						"text/plain",
-						"text/html",
-						"application/json",
+						"TEXT_PLAIN",
+						"TEXT_HTML",
+						"APPLICATION_JSON",
 					}, false),
 				},
 			},
@@ -664,6 +680,25 @@ func expandWafv2BlockAction(l []interface{}) *wafv2.BlockAction {
 	return action
 }
 
+func expandWafv2CustomResponseBodies(m []interface{}) map[string]*wafv2.CustomResponseBody {
+	if len(m) == 0 {
+		return nil
+	}
+
+	customResponseBodies := make(map[string]*wafv2.CustomResponseBody, len(m))
+
+	for _, v := range m {
+		vm := v.(map[string]interface{})
+		key := vm["key"].(string)
+		customResponseBodies[key] = &wafv2.CustomResponseBody{
+			Content:     aws.String(vm["content"].(string)),
+			ContentType: aws.String(vm["content_type"].(string)),
+		}
+	}
+
+	return customResponseBodies
+}
+
 func expandWafv2CustomResponse(l []interface{}) *wafv2.CustomResponse {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -676,7 +711,7 @@ func expandWafv2CustomResponse(l []interface{}) *wafv2.CustomResponse {
 
 	customResponse := &wafv2.CustomResponse{}
 
-	if v, ok := m["custom_response_body_key"].(string); ok {
+	if v, ok := m["custom_response_body_key"].(string); ok && len(v) > 0 {
 		customResponse.CustomResponseBodyKey = aws.String(v)
 	}
 	if v, ok := m["response_code"].(int); ok && v > 0 {
@@ -1170,6 +1205,25 @@ func flattenWafv2Count(a *wafv2.CountAction) []interface{} {
 	return []interface{}{m}
 }
 
+func flattenWafv2CustomResponseBodies(b map[string]*wafv2.CustomResponseBody) interface{} {
+	if len(b) == 0 {
+		return make([]map[string]interface{}, 0)
+	}
+
+	out := make([]map[string]interface{}, len(b))
+	i := 0
+	for key, body := range b {
+		out[i] = map[string]interface{}{
+			"key":          key,
+			"content":      aws.StringValue(body.Content),
+			"content_type": aws.StringValue(body.ContentType),
+		}
+		i += 1
+	}
+
+	return out
+}
+
 func flattenWafv2CustomRequestHandling(c *wafv2.CustomRequestHandling) []interface{} {
 	if c == nil {
 		return []interface{}{}
@@ -1188,9 +1242,12 @@ func flattenWafv2CustomResponse(r *wafv2.CustomResponse) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"custom_response_body_key": aws.StringValue(r.CustomResponseBodyKey),
-		"response_code":            int(aws.Int64Value(r.ResponseCode)),
-		"response_header":          flattenWafv2CustomHeaders(r.ResponseHeaders),
+		"response_code":   int(aws.Int64Value(r.ResponseCode)),
+		"response_header": flattenWafv2CustomHeaders(r.ResponseHeaders),
+	}
+
+	if r.CustomResponseBodyKey != nil {
+		m["custom_response_body_key"] = aws.StringValue(r.CustomResponseBodyKey)
 	}
 
 	return []interface{}{m}
