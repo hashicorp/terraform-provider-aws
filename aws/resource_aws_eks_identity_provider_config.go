@@ -344,7 +344,7 @@ func expandEksOidcIdentityProviderConfigRequest(l []interface{}) (string, *eks.O
 	}
 
 	if v, ok := m["required_claims"].(map[string]interface{}); ok && len(v) > 0 {
-		oidcIdentityProviderConfigRequest.RequiredClaims = stringMapToPointers(v)
+		oidcIdentityProviderConfigRequest.RequiredClaims = expandStringMap(v)
 	}
 
 	if v, ok := m["username_claim"].(string); ok && v != "" {
