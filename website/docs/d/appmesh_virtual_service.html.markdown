@@ -14,8 +14,8 @@ The App Mesh Virtual Service data source allows details of an App Mesh Virtual S
 
 ```hcl
 data "aws_appmesh_virtual_service" "test" {
-	name       = "example.mesh.local"
-  mesh_name  = "example-mesh"
+  name      = "example.mesh.local"
+  mesh_name = "example-mesh"
 }
 ```
 
@@ -23,7 +23,7 @@ data "aws_appmesh_virtual_service" "test" {
 data "aws_caller_identity" "current" {}
 
 data "aws_appmesh_virtual_service" "test" {
-	name       = "example.mesh.local"
+  name       = "example.mesh.local"
   mesh_name  = "example-mesh"
   mesh_owner = data.aws_caller_identity.current.account_id
 }
