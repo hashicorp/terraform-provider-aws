@@ -31,6 +31,7 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -43,6 +44,7 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validation.StringLenBetween(1, 255-resource.UniqueIDSuffixLength),
@@ -351,8 +353,10 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 	autoscalingconn := meta.(*AWSClient).autoscalingconn
 	ec2conn := meta.(*AWSClient).ec2conn
 
+	lcName := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
+
 	createLaunchConfigurationOpts := autoscaling.CreateLaunchConfigurationInput{
-		LaunchConfigurationName: aws.String(d.Get("name").(string)),
+		LaunchConfigurationName: aws.String(lcName),
 		ImageId:                 aws.String(d.Get("image_id").(string)),
 		InstanceType:            aws.String(d.Get("instance_type").(string)),
 		EbsOptimized:            aws.Bool(d.Get("ebs_optimized").(bool)),
@@ -525,9 +529,6 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 		createLaunchConfigurationOpts.BlockDeviceMappings = blockDevices
 	}
 
-	lcName := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
-	createLaunchConfigurationOpts.LaunchConfigurationName = aws.String(lcName)
-
 	log.Printf("[DEBUG] autoscaling create launch configuration: %s", createLaunchConfigurationOpts)
 
 	// IAM profiles can take ~10 seconds to propagate in AWS:
@@ -590,7 +591,7 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 	d.Set("image_id", lc.ImageId)
 	d.Set("instance_type", lc.InstanceType)
 	d.Set("name", lc.LaunchConfigurationName)
-	d.Set("name_prefix", aws.StringValue(naming.NamePrefixFromName(aws.StringValue(lc.LaunchConfigurationName))))
+	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(lc.LaunchConfigurationName)))
 	d.Set("arn", lc.LaunchConfigurationARN)
 
 	d.Set("iam_instance_profile", lc.IamInstanceProfile)

@@ -91,7 +91,7 @@ func TestAccAWSLaunchConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfiguration_NamePrefix(t *testing.T) {
+func TestAccAWSLaunchConfiguration_Name_Generated(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	resourceName := "aws_launch_configuration.test"
 
@@ -101,11 +101,11 @@ func TestAccAWSLaunchConfiguration_NamePrefix(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationNamePrefixConfig(),
+				Config: testAccAWSLaunchConfigurationConfigNameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
-					naming.TestCheckResourceAttrNameFromPrefix(
-						resourceName, "name", "tf-acc-test-"),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
 			{
@@ -118,7 +118,7 @@ func TestAccAWSLaunchConfiguration_NamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchConfiguration_Name_Generated(t *testing.T) {
+func TestAccAWSLaunchConfiguration_NamePrefix(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	resourceName := "aws_launch_configuration.test"
 
@@ -128,12 +128,11 @@ func TestAccAWSLaunchConfiguration_Name_Generated(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationNameGeneratedConfig(),
+				Config: testAccAWSLaunchConfigurationConfigNamePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
-					naming.TestCheckResourceAttrNameGenerated(
-						resourceName, "name"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(`launchConfiguration:.+`)),
+					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -853,27 +852,23 @@ resource "aws_launch_configuration" "test" {
 `, acctest.RandInt()))
 }
 
-func testAccAWSLaunchConfigurationNameGeneratedConfig() string {
+func testAccAWSLaunchConfigurationConfigNameGenerated() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_launch_configuration" "test" {
-  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type               = "t2.micro"
-  user_data                   = "testtest-user-data-change"
-  associate_public_ip_address = false
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
 }
 `)
 }
 
-func testAccAWSLaunchConfigurationNamePrefixConfig() string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+func testAccAWSLaunchConfigurationConfigNamePrefix(namePrefix string) string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name_prefix                 = "tf-acc-test-"
-  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type               = "t2.micro"
-  user_data                   = "testtest-user-data-change"
-  associate_public_ip_address = false
+  name_prefix   = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
 }
-`)
+`, namePrefix))
 }
 
 func testAccAWSLaunchConfigurationWithEncryption() string {

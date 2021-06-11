@@ -180,7 +180,10 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_NamePrefix(t *testing.T) {
+func TestAccAWSAutoScalingGroup_Name_Generated(t *testing.T) {
+	var group autoscaling.Group
+	resourceName := "aws_autoscaling_group.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
@@ -188,12 +191,11 @@ func TestAccAWSAutoScalingGroup_NamePrefix(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAutoScalingGroupConfig_NamePrefix(),
+				Config: testAccAWSAutoScalingGroupConfigNameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
-					naming.TestCheckResourceAttrNameFromPrefix(
-						"aws_autoscaling_group.test", "name", "tf-test-"),
-					resource.TestCheckResourceAttrSet(
-						"aws_autoscaling_group.test", "arn"),
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
 			{
@@ -213,7 +215,10 @@ func TestAccAWSAutoScalingGroup_NamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_Name_Generated(t *testing.T) {
+func TestAccAWSAutoScalingGroup_NamePrefix(t *testing.T) {
+	var group autoscaling.Group
+	resourceName := "aws_autoscaling_group.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
@@ -221,16 +226,15 @@ func TestAccAWSAutoScalingGroup_Name_Generated(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAutoScalingGroupConfig_Name_Generated(),
+				Config: testAccAWSAutoScalingGroupConfigNamePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
-					naming.TestCheckResourceAttrNameGenerated(
-						"aws_autoscaling_group.bar", "name"),
-					resource.TestCheckResourceAttrSet(
-						"aws_autoscaling_group.bar", "arn"),
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
 			{
-				ResourceName:      "aws_autoscaling_group.bar",
+				ResourceName:      "aws_autoscaling_group.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
@@ -2336,59 +2340,43 @@ func TestAccAWSAutoScalingGroup_launchTempPartitionNum(t *testing.T) {
 	})
 }
 
-func testAccAWSAutoScalingGroupConfig_Name_Generated() string {
-	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), fmt.Sprintf(`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "foobar" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
-resource "aws_autoscaling_group" "bar" {
-  availability_zones   = [data.aws_availability_zones.available.names[0]]
-  desired_capacity     = 0
-  max_size             = 0
-  min_size             = 0
-  launch_configuration = aws_launch_configuration.foobar.name
-}
-`))
-}
-
-func testAccAWSAutoScalingGroupConfig_NamePrefix() string {
-	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), fmt.Sprintf(`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
+func testAccAWSAutoScalingGroupConfigNameGenerated() string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		`
 resource "aws_launch_configuration" "test" {
-  image_id      = data.aws_ami.test_ami.id
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
-  desired_capacity     = 0
   max_size             = 0
   min_size             = 0
-  name_prefix          = "tf-test-"
   launch_configuration = aws_launch_configuration.test.name
 }
-`))
+`)
+}
+
+func testAccAWSAutoScalingGroupConfigNamePrefix(namePrefix string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		fmt.Sprintf(`
+resource "aws_launch_configuration" "test" {
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  max_size             = 0
+  min_size             = 0
+  name_prefix          = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
+}
+`, namePrefix))
 }
 
 func testAccAWSAutoScalingGroupConfig_terminationPoliciesEmpty() string {
