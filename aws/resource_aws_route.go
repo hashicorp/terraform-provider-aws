@@ -408,13 +408,18 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 		RouteTableId: aws.String(routeTableID),
 	}
 
+	var routeFinder finder.RouteFinder
+
 	switch destination := aws.String(destination); destinationAttributeKey {
 	case "destination_cidr_block":
 		input.DestinationCidrBlock = destination
+		routeFinder = finder.RouteByIPv4Destination
 	case "destination_ipv6_cidr_block":
 		input.DestinationIpv6CidrBlock = destination
+		routeFinder = finder.RouteByIPv6Destination
 	case "destination_prefix_list_id":
 		input.DestinationPrefixListId = destination
+		routeFinder = finder.RouteByPrefixListIDDestination
 	default:
 		return fmt.Errorf("error deleting Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -453,6 +458,12 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		return fmt.Errorf("error deleting Route for Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
+	}
+
+	_, err = waiter.RouteDeleted(conn, routeFinder, routeTableID, destination)
+
+	if err != nil {
+		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to delete: %w", routeTableID, destination, err)
 	}
 
 	return nil
