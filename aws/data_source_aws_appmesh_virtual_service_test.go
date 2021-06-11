@@ -72,37 +72,37 @@ func TestAccAWSAppmeshVirtualServiceDataSource_virtualRouter(t *testing.T) {
 func testAccCheckAwsAppmeshVirtualServiceDataSourceConfig_virtualNode(rName, vsName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
-	name = %[1]q
+  name = %[1]q
 }
-	
+
 resource "aws_appmesh_virtual_node" "test" {
-	name      = %[1]q
-	mesh_name = aws_appmesh_mesh.test.id
-	
-	spec {}
+  name      = %[1]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {}
 }
-	
+
 resource "aws_appmesh_virtual_service" "test" {
-	name      = %[2]q
-	mesh_name = aws_appmesh_mesh.test.id
-	
-	spec {
-		provider {
-			virtual_node {
-				virtual_node_name = aws_appmesh_virtual_node.test.name
-			}
-		}
-	}
-	
-	tags = {
+  name      = %[2]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    provider {
+      virtual_node {
+        virtual_node_name = aws_appmesh_virtual_node.test.name
+      }
+    }
+  }
+
+  tags = {
     foo  = "bar"
     good = "bad"
-	}
+  }
 }
 
 data "aws_appmesh_virtual_service" "test" {
-	name       = aws_appmesh_virtual_service.test.name
-  mesh_name  = aws_appmesh_mesh.test.name
+  name      = aws_appmesh_virtual_service.test.name
+  mesh_name = aws_appmesh_mesh.test.name
 }
 `, rName, vsName)
 }
@@ -112,9 +112,9 @@ func testAccCheckAwsAppmeshVirtualServiceDataSourceConfig_virtualRouter(rName, v
 data "aws_caller_identity" "current" {}
 
 resource "aws_appmesh_mesh" "test" {
-	name = %[1]q
+  name = %[1]q
 }
-	
+
 resource "aws_appmesh_virtual_router" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -128,22 +128,22 @@ resource "aws_appmesh_virtual_router" "test" {
     }
   }
 }
-	
+
 resource "aws_appmesh_virtual_service" "test" {
-	name      = %[2]q
-	mesh_name = aws_appmesh_mesh.test.id
-	
-	spec {
-		provider {
-			virtual_router {
-				virtual_router_name = aws_appmesh_virtual_router.test.name
-			}
-		}
-	}
+  name      = %[2]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    provider {
+      virtual_router {
+        virtual_router_name = aws_appmesh_virtual_router.test.name
+      }
+    }
+  }
 }
 
 data "aws_appmesh_virtual_service" "test" {
-	name       = aws_appmesh_virtual_service.test.name
+  name       = aws_appmesh_virtual_service.test.name
   mesh_name  = aws_appmesh_mesh.test.name
   mesh_owner = data.aws_caller_identity.current.account_id
 }
