@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Autoscaling"
 layout: "aws"
 page_title: "AWS: aws_launch_configuration"
 description: |-
