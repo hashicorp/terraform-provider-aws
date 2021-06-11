@@ -136,7 +136,7 @@ resource "aws_autoscaling_group" "bar" {
 The following arguments are supported:
 
 * `name` - (Optional) The name of the launch configuration. If you leave
-  this blank, Terraform will auto-generate a unique name.
+  this blank, Terraform will auto-generate a unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified
   prefix. Conflicts with `name`.
 * `image_id` - (Required) The EC2 image ID to launch.
