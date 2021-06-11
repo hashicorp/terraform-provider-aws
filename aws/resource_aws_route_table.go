@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -192,7 +191,7 @@ func resourceAwsRouteTableCreate(d *schema.ResourceData, meta interface{}) error
 			v := v.(string)
 
 			log.Printf("[DEBUG] Enabling Route Table (%s) VPN Gateway (%s) route propagation", d.Id(), v)
-			err = enableVgwRoutePropagation(conn, d.Id(), v, waiter.PropagationTimeout)
+			err = enableVgwRoutePropagation(conn, d.Id(), v)
 
 			if err != nil {
 				return fmt.Errorf("error enabling Route Table (%s) VPN Gateway (%s) route propagation: %w", d.Id(), v, err)
@@ -322,57 +321,31 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 		o, n := d.GetChange("propagating_vgws")
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
-		remove := os.Difference(ns).List()
+		del := os.Difference(ns).List()
 		add := ns.Difference(os).List()
 
 		// Now first loop through all the old propagations and disable any obsolete ones
-		for _, vgw := range remove {
-			id := vgw.(string)
+		for _, v := range del {
+			v := v.(string)
 
-			// Disable the propagation as it no longer exists in the config
-			log.Printf("[INFO] Deleting VGW propagation from %s: %s", d.Id(), id)
-			_, err := conn.DisableVgwRoutePropagation(&ec2.DisableVgwRoutePropagationInput{
-				RouteTableId: aws.String(d.Id()),
-				GatewayId:    aws.String(id),
-			})
+			log.Printf("[DEBUG] Disabling Route Table (%s) VPN Gateway (%s) route propagation", d.Id(), v)
+			err := disableVgwRoutePropagation(conn, d.Id(), v)
+
 			if err != nil {
-				return err
+				return fmt.Errorf("error disabling Route Table (%s) VPN Gateway (%s) route propagation: %w", d.Id(), v, err)
 			}
 		}
 
-		// Make sure we save the state of the currently configured rules
-		propagatingVGWs := os.Intersection(ns)
-		d.Set("propagating_vgws", propagatingVGWs)
-
 		// Then loop through all the newly configured propagations and enable them
-		for _, vgw := range add {
-			id := vgw.(string)
+		for _, v := range add {
+			v := v.(string)
 
-			var err error
-			for i := 0; i < 5; i++ {
-				log.Printf("[INFO] Enabling VGW propagation for %s: %s", d.Id(), id)
-				_, err = conn.EnableVgwRoutePropagation(&ec2.EnableVgwRoutePropagationInput{
-					RouteTableId: aws.String(d.Id()),
-					GatewayId:    aws.String(id),
-				})
-				if err == nil {
-					break
-				}
+			log.Printf("[DEBUG] Enabling Route Table (%s) VPN Gateway (%s) route propagation", d.Id(), v)
+			err := enableVgwRoutePropagation(conn, d.Id(), v)
 
-				// If we get a Gateway.NotAttached, it is usually some
-				// eventually consistency stuff. So we have to just wait a
-				// bit...
-				if isAWSErr(err, "Gateway.NotAttached", "") {
-					time.Sleep(20 * time.Second)
-					continue
-				}
-			}
 			if err != nil {
-				return err
+				return fmt.Errorf("error enabling Route Table (%s) VPN Gateway (%s) route propagation: %w", d.Id(), v, err)
 			}
-
-			propagatingVGWs.Add(vgw)
-			d.Set("propagating_vgws", propagatingVGWs)
 		}
 	}
 
@@ -635,32 +608,35 @@ func resourceAwsRouteTableHash(v interface{}) int {
 	return hashcode.String(buf.String())
 }
 
+// disableVgwRoutePropagation attempts to disable VGW route propagation.
+// Any error is returned.
+func disableVgwRoutePropagation(conn *ec2.EC2, routeTableID, gatewayID string) error {
+	input := &ec2.DisableVgwRoutePropagationInput{
+		GatewayId:    aws.String(gatewayID),
+		RouteTableId: aws.String(routeTableID),
+	}
+
+	_, err := conn.DisableVgwRoutePropagation(input)
+
+	return err
+}
+
 // enableVgwRoutePropagation attempts to enable VGW route propagation.
 // The specified eventual consistency timeout is respected.
 // Any error is returned.
-func enableVgwRoutePropagation(conn *ec2.EC2, routeTableID, gatewayID string, timeout time.Duration) error {
+func enableVgwRoutePropagation(conn *ec2.EC2, routeTableID, gatewayID string) error {
 	input := &ec2.EnableVgwRoutePropagationInput{
 		GatewayId:    aws.String(gatewayID),
 		RouteTableId: aws.String(routeTableID),
 	}
 
-	err := resource.Retry(timeout, func() *resource.RetryError {
-		_, err := conn.EnableVgwRoutePropagation(input)
-
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeGatewayNotAttached) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.EnableVgwRoutePropagation(input)
-	}
+	_, err := tfresource.RetryWhenAwsErrCodeEquals(
+		waiter.PropagationTimeout,
+		func() (interface{}, error) {
+			return conn.EnableVgwRoutePropagation(input)
+		},
+		tfec2.ErrCodeGatewayNotAttached,
+	)
 
 	return err
 }
