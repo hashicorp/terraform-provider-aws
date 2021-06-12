@@ -310,7 +310,7 @@ func TestAccAWSEcsCluster_containerInsights(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSEcsClusterConfigContainerInsights(rName),
+				Config: testAccAWSEcsClusterConfigContainerInsights(rName, "enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ecs", fmt.Sprintf("cluster/%s", rName)),
@@ -323,7 +323,7 @@ func TestAccAWSEcsCluster_containerInsights(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSEcsClusterConfigContainerInsightsDisable(rName),
+				Config: testAccAWSEcsClusterConfigContainerInsights(rName, "disabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "setting.#", "1"),
@@ -353,22 +353,27 @@ func TestAccAWSEcsCluster_configuration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.kms_key_id", "aws_kms_key.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.logging", "OVERRIDE"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.log_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.log_configuration.0.cloud_watch_encryption_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.log_configuration.0.cloud_watch_log_group_name", "aws_cloudwatch_log_group.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execute_command_configuration.0.kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.logging", "OVERRIDE"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.0.cloud_watch_encryption_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.0.cloud_watch_log_group_name", "aws_cloudwatch_log_group.test", "name"),
 				),
 			},
 			{
 				Config: testAccAWSEcsClusterConfiguationConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.kms_key_id", "aws_kms_key.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.logging", "OVERRIDE"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.log_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.log_configuration.0.cloud_watch_encryption_enabled", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.log_configuration.0.cloud_watch_log_group_name", "aws_cloudwatch_log_group.test", "name")),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.#", "1"),
+
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execute_command_configuration.0.kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.logging", "OVERRIDE"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.0.cloud_watch_encryption_enabled", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.0.cloud_watch_log_group_name", "aws_cloudwatch_log_group.test", "name"),
+				),
 			},
 		},
 	})
@@ -618,28 +623,16 @@ resource "aws_ecs_cluster" "test" {
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }
 
-func testAccAWSEcsClusterConfigContainerInsights(rName string) string {
+func testAccAWSEcsClusterConfigContainerInsights(rName, value string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-  name = %q
+  name = %[1]q
   setting {
     name  = "containerInsights"
-    value = "enabled"
+    value = %[2]q
   }
 }
-`, rName)
-}
-
-func testAccAWSEcsClusterConfigContainerInsightsDisable(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "test" {
-  name = %q
-  setting {
-    name  = "containerInsights"
-    value = "disabled"
-  }
-}
-`, rName)
+`, rName, value)
 }
 
 func testAccAWSEcsClusterConfiguationConfig(rName string, enable bool) string {
