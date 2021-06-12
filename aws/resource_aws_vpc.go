@@ -407,7 +407,7 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("enable_classiclink_dns_support", classiclinkdns_enabled)
 	}
 
-	routeTableId, err := resourceAwsVpcSetMainRouteTable(conn, vpcid)
+	routeTableId, err := resourceAwsVpcSetMainRouteTable(conn, d)
 	if err != nil {
 		log.Printf("[WARN] Unable to set Main Route Table: %s", err)
 	}
@@ -769,7 +769,8 @@ func resourceAwsVpcSetDefaultRouteTable(conn *ec2.EC2, d *schema.ResourceData) e
 	return nil
 }
 
-func resourceAwsVpcSetMainRouteTable(conn *ec2.EC2, vpcid string) (string, error) {
+func resourceAwsVpcSetMainRouteTable(conn *ec2.EC2, d *schema.ResourceData) (string, error) {
+	vpcid := d.Id()
 	filter1 := &ec2.Filter{
 		Name:   aws.String("association.main"),
 		Values: []*string{aws.String("true")},
