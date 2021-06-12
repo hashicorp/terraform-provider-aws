@@ -106,7 +106,7 @@ func TestAccAWSEcsCluster_disappears(t *testing.T) {
 				Config: testAccAWSEcsClusterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
-					testAccCheckAWSEcsClusterDisappears(&cluster1),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEcsCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -432,22 +432,6 @@ func testAccCheckAWSEcsClusterExists(resourceName string, cluster *ecs.Cluster) 
 		}
 
 		return fmt.Errorf("ECS Cluster (%s) not found", rs.Primary.ID)
-	}
-}
-
-func testAccCheckAWSEcsClusterDisappears(cluster *ecs.Cluster) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ecsconn
-
-		input := &ecs.DeleteClusterInput{
-			Cluster: cluster.ClusterArn,
-		}
-
-		if _, err := conn.DeleteCluster(input); err != nil {
-			return fmt.Errorf("error deleting ECS Cluster (%s): %s", aws.StringValue(cluster.ClusterArn), err)
-		}
-
-		return nil
 	}
 }
 
