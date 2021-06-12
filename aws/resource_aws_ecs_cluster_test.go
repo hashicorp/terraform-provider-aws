@@ -337,6 +337,43 @@ func TestAccAWSEcsCluster_containerInsights(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsCluster_configuration(t *testing.T) {
+	var cluster1 ecs.Cluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecs_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsClusterConfiguationConfig(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.logging", "OVERRIDE"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.log_configuration.0.cloud_watch_encryption_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.log_configuration.0.cloud_watch_log_group_name", "aws_cloudwatch_log_group.test", "name"),
+				),
+			},
+			{
+				Config: testAccAWSEcsClusterConfiguationConfig(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.logging", "OVERRIDE"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.log_configuration.0.cloud_watch_encryption_enabled", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.log_configuration.0.cloud_watch_log_group_name", "aws_cloudwatch_log_group.test", "name")),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEcsClusterDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ecsconn
 
@@ -603,4 +640,33 @@ resource "aws_ecs_cluster" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAWSEcsClusterConfiguationConfig(rName string, enable bool) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+
+  configuration {
+    execute_command_configuration {
+	  kms_key_id = aws_kms_key.test.arn
+	  logging    = "OVERRIDE"
+
+	  log_configuration {
+        cloud_watch_encryption_enabled = %[2]t
+		cloud_watch_log_group_name     = aws_cloudwatch_log_group.test.name
+	  }
+	}
+  }
+}
+`, rName, enable)
 }
