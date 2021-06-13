@@ -424,7 +424,7 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
 
-	log.Printf("[DEBUG] Deleting Route (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting Route: %s", input)
 	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err = conn.DeleteRoute(input)
 

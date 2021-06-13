@@ -353,7 +353,7 @@ func TestAccAWSRouteTable_IPv6_To_EgressOnlyInternetGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRouteTable_tags(t *testing.T) {
+func TestAccAWSRouteTable_Tags(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -688,7 +688,7 @@ func TestAccAWSRouteTable_IPv4_To_VpcPeeringConnection(t *testing.T) {
 	})
 }
 
-func TestAccAWSRouteTable_vgwRoutePropagation(t *testing.T) {
+func TestAccAWSRouteTable_VgwRoutePropagation(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	vgwResourceName1 := "aws_vpn_gateway.test1"
