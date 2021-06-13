@@ -324,7 +324,7 @@ func TestAccAWSDefaultRouteTable_VpcEndpointAssociation(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultRouteTable_tags(t *testing.T) {
+func TestAccAWSDefaultRouteTable_Tags(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")

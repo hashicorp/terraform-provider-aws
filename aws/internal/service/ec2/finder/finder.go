@@ -235,6 +235,19 @@ func NetworkInterfaceSecurityGroup(conn *ec2.EC2, networkInterfaceID string, sec
 	return result, err
 }
 
+// MainRouteTableByVpcID returns the main route table for the specified VPC.
+// Returns NotFoundError if no route table is found.
+func MainRouteTableByVpcID(conn *ec2.EC2, vpcID string) (*ec2.RouteTable, error) {
+	input := &ec2.DescribeRouteTablesInput{
+		Filters: tfec2.BuildAttributeFilterList(map[string]string{
+			"association.main": "true",
+			"vpc-id":           vpcID,
+		}),
+	}
+
+	return RouteTable(conn, input)
+}
+
 // RouteTableByID returns the route table corresponding to the specified identifier.
 // Returns NotFoundError if no route table is found.
 func RouteTableByID(conn *ec2.EC2, routeTableID string) (*ec2.RouteTable, error) {
