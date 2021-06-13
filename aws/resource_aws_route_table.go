@@ -829,11 +829,11 @@ func flattenEc2Route(apiObject *ec2.Route) map[string]interface{} {
 		tfMap["local_gateway_id"] = aws.StringValue(v)
 	}
 
-	if v := apiObject.NetworkInterfaceId; v != nil {
+	if v := apiObject.NatGatewayId; v != nil {
 		tfMap["nat_gateway_id"] = aws.StringValue(v)
 	}
 
-	if v := apiObject.TransitGatewayId; v != nil {
+	if v := apiObject.NetworkInterfaceId; v != nil {
 		tfMap["network_interface_id"] = aws.StringValue(v)
 	}
 
