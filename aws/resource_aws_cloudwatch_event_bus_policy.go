@@ -31,7 +31,7 @@ func resourceAwsCloudWatchEventBusPolicy() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateCloudWatchEventBusName,
+				ValidateFunc: validateCloudWatchEventBusNameOrARN,
 				Default:      tfevents.DefaultEventBusName,
 			},
 			"policy": {
