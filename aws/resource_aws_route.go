@@ -241,7 +241,7 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	)
 
 	if err != nil {
-		return fmt.Errorf("error creating Route for Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
+		return fmt.Errorf("error creating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
 	_, err = waiter.RouteReady(conn, routeFinder, routeTableID, destination)
@@ -288,7 +288,7 @@ func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Route for Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
+		return fmt.Errorf("error reading Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)
@@ -382,7 +382,7 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 	_, err = conn.ReplaceRoute(input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Route for Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
+		return fmt.Errorf("error updating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
 	_, err = waiter.RouteReady(conn, routeFinder, routeTableID, destination)
@@ -457,7 +457,7 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Route for Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
+		return fmt.Errorf("error deleting Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
 	_, err = waiter.RouteDeleted(conn, routeFinder, routeTableID, destination)

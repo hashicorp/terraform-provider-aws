@@ -515,7 +515,7 @@ func ec2RouteTableAddRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]
 	)
 
 	if err != nil {
-		return fmt.Errorf("error creating Route for Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
+		return fmt.Errorf("error creating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
 	_, err = waiter.RouteReady(conn, routeFinder, routeTableID, destination)
@@ -559,7 +559,7 @@ func ec2RouteTableDeleteRoute(conn *ec2.EC2, routeTableID string, tfMap map[stri
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Route for Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
+		return fmt.Errorf("error deleting Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
 	_, err = waiter.RouteDeleted(conn, routeFinder, routeTableID, destination)
@@ -607,7 +607,7 @@ func ec2RouteTableUpdateRoute(conn *ec2.EC2, routeTableID string, tfMap map[stri
 	_, err := conn.ReplaceRoute(input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Route for Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
+		return fmt.Errorf("error updating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
 	_, err = waiter.RouteReady(conn, routeFinder, routeTableID, destination)
