@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccAWSAppmeshMeshDataSource_basic(t *testing.T) {
+func TestAccDataSourceAWSAppmeshMesh_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appmesh_mesh.test"
 	dataSourceName := "data.aws_appmesh_mesh.test"
@@ -37,7 +37,7 @@ func TestAccAWSAppmeshMeshDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppmeshMeshDataSource_meshOwner(t *testing.T) {
+func TestAccDataSourceAWSAppmeshMesh_meshOwner(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appmesh_mesh.test"
 	dataSourceName := "data.aws_appmesh_mesh.test"
@@ -65,7 +65,7 @@ func TestAccAWSAppmeshMeshDataSource_meshOwner(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppmeshMeshDataSource_specAndTagsSet(t *testing.T) {
+func TestAccDataSourceAWSAppmeshMesh_specAndTagsSet(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appmesh_mesh.test"
 	dataSourceName := "data.aws_appmesh_mesh.test"
