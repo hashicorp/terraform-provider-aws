@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecs/finder"
 )
 
 func init() {
@@ -35,14 +36,13 @@ func testSweepEcsClusters(region string) error {
 		}
 
 		for _, clusterARNPtr := range page.ClusterArns {
-			input := &ecs.DeleteClusterInput{
-				Cluster: clusterARNPtr,
-			}
 			clusterARN := aws.StringValue(clusterARNPtr)
 
 			log.Printf("[INFO] Deleting ECS Cluster: %s", clusterARN)
-			_, err = conn.DeleteCluster(input)
-
+			r := resourceAwsEcsCluster()
+			d := r.Data(nil)
+			d.SetId(clusterARN)
+			err = r.Delete(d, client)
 			if err != nil {
 				log.Printf("[ERROR] Error deleting ECS Cluster (%s): %s", clusterARN, err)
 			}
@@ -55,7 +55,7 @@ func testSweepEcsClusters(region string) error {
 			log.Printf("[WARN] Skipping ECS Cluster sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("error retrieving ECS Clusters: %s", err)
+		return fmt.Errorf("error retrieving ECS Clusters: %w", err)
 	}
 
 	return nil
@@ -362,6 +362,12 @@ func TestAccAWSEcsCluster_configuration(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportStateId:     rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSEcsClusterConfiguationConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
@@ -386,16 +392,14 @@ func testAccCheckAWSEcsClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		out, err := conn.DescribeClusters(&ecs.DescribeClustersInput{
-			Clusters: []*string{aws.String(rs.Primary.ID)},
-		})
+		out, err := finder.CluserByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
 		for _, c := range out.Clusters {
-			if *c.ClusterArn == rs.Primary.ID && *c.Status != "INACTIVE" {
+			if aws.StringValue(c.ClusterArn) == rs.Primary.ID && aws.StringValue(c.Status) != "INACTIVE" {
 				return fmt.Errorf("ECS cluster still exists:\n%s", c)
 			}
 		}
@@ -412,16 +416,10 @@ func testAccCheckAWSEcsClusterExists(resourceName string, cluster *ecs.Cluster) 
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ecsconn
-
-		input := &ecs.DescribeClustersInput{
-			Clusters: []*string{aws.String(rs.Primary.ID)},
-			Include:  []*string{aws.String(ecs.ClusterFieldTags)},
-		}
-
-		output, err := conn.DescribeClusters(input)
+		output, err := finder.CluserByARN(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error reading ECS Cluster (%s): %s", rs.Primary.ID, err)
+			return fmt.Errorf("error reading ECS Cluster (%s): %w", rs.Primary.ID, err)
 		}
 
 		for _, c := range output.Clusters {

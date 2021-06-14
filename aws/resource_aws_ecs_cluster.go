@@ -13,11 +13,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecs/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecs/waiter"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 const (
-	ecsClusterTimeoutCreate = 10 * time.Minute
 	ecsClusterTimeoutDelete = 10 * time.Minute
 	ecsClusterTimeoutUpdate = 10 * time.Minute
 )
@@ -224,8 +225,8 @@ func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(aws.StringValue(out.Cluster.ClusterArn))
 
-	if err = waitForEcsClusterActive(conn, clusterName, ecsClusterTimeoutCreate); err != nil {
-		return fmt.Errorf("error waiting for ECS Cluster (%s) creation: %w", d.Id(), err)
+	if _, err := waiter.ClusterAvailable(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
 	}
 
 	return resourceAwsEcsClusterRead(d, meta)
@@ -236,16 +237,10 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	input := &ecs.DescribeClustersInput{
-		Clusters: []*string{aws.String(d.Id())},
-		Include:  []*string{aws.String(ecs.ClusterFieldTags)},
-	}
-
-	log.Printf("[DEBUG] Reading ECS Cluster: %s", input)
 	var out *ecs.DescribeClustersOutput
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
-		out, err = conn.DescribeClusters(input)
+		out, err = finder.CluserByARN(conn, d.Id())
 
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -261,7 +256,7 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if isResourceTimeoutError(err) {
-		out, err = conn.DescribeClusters(input)
+		out, err = finder.CluserByARN(conn, d.Id())
 	}
 
 	if isResourceNotFoundError(err) {
@@ -332,8 +327,6 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
 
-	clusterName := d.Get("name").(string)
-
 	if d.HasChanges("setting", "configuration") {
 		input := ecs.UpdateClusterInput{
 			Cluster: aws.String(d.Id()),
@@ -352,8 +345,8 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("error changing ECS cluster (%s): %w", d.Id(), err)
 		}
 
-		if err = waitForEcsClusterActive(conn, clusterName, ecsClusterTimeoutUpdate); err != nil {
-			return fmt.Errorf("error waiting for ECS Cluster (%s) update: %w", d.Id(), err)
+		if _, err := waiter.ClusterAvailable(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
 		}
 	}
 
@@ -395,8 +388,8 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("error changing ECS cluster capacity provider settings (%s): %w", d.Id(), err)
 		}
 
-		if err = waitForEcsClusterActive(conn, clusterName, ecsClusterTimeoutUpdate); err != nil {
-			return fmt.Errorf("error waiting for ECS Cluster (%s) update: %w", d.Id(), err)
+		if _, err := waiter.ClusterAvailable(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
 		}
 	}
 
@@ -439,49 +432,12 @@ func resourceAwsEcsClusterDelete(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error deleting ECS cluster: %s", err)
 	}
 
-	clusterName := d.Get("name").(string)
-	stateConf := resource.StateChangeConf{
-		Pending: []string{"ACTIVE", "DEPROVISIONING"},
-		Target:  []string{"INACTIVE"},
-		Timeout: ecsClusterTimeoutDelete,
-		Refresh: refreshEcsClusterStatus(conn, clusterName),
-	}
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for ECS cluster to become inactive: %w", err)
+	if _, err := waiter.ClusterDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for ECS Cluster (%s) to become Deleted: %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] ECS cluster %q deleted", d.Id())
 	return nil
-}
-
-func waitForEcsClusterActive(conn *ecs.ECS, clusterName string, timeout time.Duration) error {
-	stateConf := resource.StateChangeConf{
-		Pending: []string{"PROVISIONING"},
-		Target:  []string{"ACTIVE"},
-		Timeout: timeout,
-		Refresh: refreshEcsClusterStatus(conn, clusterName),
-		Delay:   10 * time.Second,
-	}
-	_, err := stateConf.WaitForState()
-	return err
-}
-
-func refreshEcsClusterStatus(conn *ecs.ECS, clusterName string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := conn.DescribeClusters(&ecs.DescribeClustersInput{
-			Clusters: []*string{aws.String(clusterName)},
-		})
-		if err != nil {
-			return nil, "", err
-		}
-		for _, c := range output.Clusters {
-			if aws.StringValue(c.ClusterName) == clusterName {
-				return c, aws.StringValue(c.Status), nil
-			}
-		}
-		return nil, "", fmt.Errorf("ECS cluster %q missing", clusterName)
-	}
 }
 
 func expandEcsSettings(configured *schema.Set) []*ecs.ClusterSetting {
@@ -523,7 +479,7 @@ func flattenEcsSettings(list []*ecs.ClusterSetting) []map[string]interface{} {
 	return result
 }
 
-func flattenECSClusterConfiguration(apiObject *ecs.ClusterConfiguration) map[string]interface{} {
+func flattenECSClusterConfiguration(apiObject *ecs.ClusterConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -533,10 +489,10 @@ func flattenECSClusterConfiguration(apiObject *ecs.ClusterConfiguration) map[str
 	if apiObject.ExecuteCommandConfiguration != nil {
 		tfMap["execute_command_configuration"] = flattenECSClusterConfigurationExecuteCommandConfiguration(apiObject.ExecuteCommandConfiguration)
 	}
-	return tfMap
+	return []interface{}{tfMap}
 }
 
-func flattenECSClusterConfigurationExecuteCommandConfiguration(apiObject *ecs.ExecuteCommandConfiguration) map[string]interface{} {
+func flattenECSClusterConfigurationExecuteCommandConfiguration(apiObject *ecs.ExecuteCommandConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -555,23 +511,32 @@ func flattenECSClusterConfigurationExecuteCommandConfiguration(apiObject *ecs.Ex
 		tfMap["logging"] = aws.StringValue(apiObject.Logging)
 	}
 
-	return tfMap
+	return []interface{}{tfMap}
 }
 
-func flattenECSClusterConfigurationExecuteCommandConfigurationLogConfiguration(apiObject *ecs.ExecuteCommandLogConfiguration) map[string]interface{} {
+func flattenECSClusterConfigurationExecuteCommandConfigurationLogConfiguration(apiObject *ecs.ExecuteCommandLogConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["cloud_watch_log_group_name"] = aws.StringValue(apiObject.CloudWatchLogGroupName)
 	tfMap["cloud_watch_encryption_enabled"] = aws.BoolValue(apiObject.CloudWatchEncryptionEnabled)
 	tfMap["s3_bucket_encryption_enabled"] = aws.BoolValue(apiObject.S3EncryptionEnabled)
-	tfMap["s3_bucket_name"] = aws.StringValue(apiObject.S3BucketName)
-	tfMap["s3_key_prefix"] = aws.StringValue(apiObject.S3KeyPrefix)
 
-	return tfMap
+	if apiObject.CloudWatchLogGroupName != nil {
+		tfMap["cloud_watch_log_group_name"] = aws.StringValue(apiObject.CloudWatchLogGroupName)
+	}
+
+	if apiObject.S3BucketName != nil {
+		tfMap["s3_bucket_name"] = aws.StringValue(apiObject.S3BucketName)
+	}
+
+	if apiObject.S3KeyPrefix != nil {
+		tfMap["s3_key_prefix"] = aws.StringValue(apiObject.S3KeyPrefix)
+	}
+
+	return []interface{}{tfMap}
 }
 
 func expandECSClusterConfiguration(nc []interface{}) *ecs.ClusterConfiguration {
