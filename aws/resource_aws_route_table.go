@@ -375,11 +375,7 @@ func resourceAwsRouteTableDelete(d *schema.ResourceData, meta interface{}) error
 	for _, v := range routeTable.Associations {
 		v := aws.StringValue(v.RouteTableAssociationId)
 
-		r := resourceAwsRouteTableAssociation()
-		d := r.Data(nil)
-		d.SetId(v)
-
-		if err := r.Delete(d, meta); err != nil {
+		if err := ec2RouteTableAssociationDelete(conn, v); err != nil {
 			return err
 		}
 	}

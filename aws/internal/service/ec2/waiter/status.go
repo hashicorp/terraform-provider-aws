@@ -286,6 +286,22 @@ func RouteTableStatus(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	}
 }
 
+func RouteTableAssociationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.RouteTableAssociationByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output.AssociationState, aws.StringValue(output.AssociationState.State), nil
+	}
+}
+
 const (
 	SecurityGroupStatusCreated = "Created"
 

@@ -235,6 +235,34 @@ func NetworkInterfaceSecurityGroup(conn *ec2.EC2, networkInterfaceID string, sec
 	return result, err
 }
 
+// RouteTableAssociationByID returns the route table association corresponding to the specified identifier.
+// Returns NotFoundError if no route table association is found.
+func RouteTableAssociationByID(conn *ec2.EC2, associationID string) (*ec2.RouteTableAssociation, error) {
+	input := &ec2.DescribeRouteTablesInput{
+		Filters: tfec2.BuildAttributeFilterList(map[string]string{
+			"association.route-table-association-id": associationID,
+		}),
+	}
+
+	routeTable, err := RouteTable(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, association := range routeTable.Associations {
+		if aws.StringValue(association.RouteTableAssociationId) == associationID {
+			if state := aws.StringValue(association.AssociationState.State); state == ec2.RouteTableAssociationStateCodeDisassociated {
+				return nil, &resource.NotFoundError{Message: state}
+			}
+
+			return association, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
+}
+
 // MainRouteTableByVpcID returns the main route table for the specified VPC.
 // Returns NotFoundError if no route table is found.
 func MainRouteTableByVpcID(conn *ec2.EC2, vpcID string) (*ec2.RouteTable, error) {

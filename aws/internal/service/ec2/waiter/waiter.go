@@ -1,14 +1,17 @@
 package waiter
 
 import (
+	"errors"
 	"strconv"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -295,6 +298,12 @@ func RouteReady(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, des
 }
 
 const (
+	RouteTableAssociationPropagationTimeout = 5 * time.Minute
+
+	RouteTableAssociationCreatedTimeout = 5 * time.Minute
+	RouteTableAssociationUpdatedTimeout = 5 * time.Minute
+	RouteTableAssociationDeletedTimeout = 5 * time.Minute
+
 	RouteTableReadyTimeout   = 10 * time.Minute
 	RouteTableDeletedTimeout = 5 * time.Minute
 	RouteTableUpdatedTimeout = 5 * time.Minute
@@ -331,6 +340,69 @@ func RouteTableDeleted(conn *ec2.EC2, id string) (*ec2.RouteTable, error) {
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.RouteTable); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func RouteTableAssociationCreated(conn *ec2.EC2, id string) (*ec2.RouteTableAssociationState, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.RouteTableAssociationStateCodeAssociating},
+		Target:  []string{ec2.RouteTableAssociationStateCodeAssociated},
+		Refresh: RouteTableAssociationState(conn, id),
+		Timeout: RouteTableAssociationCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.RouteTableAssociationState); ok {
+		if output != nil && aws.StringValue(output.State) == ec2.RouteTableAssociationStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func RouteTableAssociationDeleted(conn *ec2.EC2, id string) (*ec2.RouteTableAssociationState, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.RouteTableAssociationStateCodeDisassociating},
+		Target:  []string{},
+		Refresh: RouteTableAssociationState(conn, id),
+		Timeout: RouteTableAssociationDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.RouteTableAssociationState); ok {
+		if output != nil && aws.StringValue(output.State) == ec2.RouteTableAssociationStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func RouteTableAssociationUpdated(conn *ec2.EC2, id string) (*ec2.RouteTableAssociationState, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.RouteTableAssociationStateCodeAssociating},
+		Target:  []string{ec2.RouteTableAssociationStateCodeAssociated},
+		Refresh: RouteTableAssociationState(conn, id),
+		Timeout: RouteTableAssociationUpdatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.RouteTableAssociationState); ok {
+		if output != nil && aws.StringValue(output.State) == ec2.RouteTableAssociationStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+		}
+
 		return output, err
 	}
 
