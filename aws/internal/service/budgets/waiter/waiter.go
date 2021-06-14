@@ -15,12 +15,12 @@ func ActionAvailable(conn *budgets.Budgets, id string) (*budgets.Action, error) 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			budgets.ActionStatusExecutionInProgress,
-			budgets.ActionStatusPending,
+			budgets.ActionStatusStandby,
 		},
 		Target: []string{
-			budgets.ActionStatusStandby,
 			budgets.ActionStatusExecutionSuccess,
 			budgets.ActionStatusExecutionFailure,
+			budgets.ActionStatusPending,
 		},
 		Refresh: ActionStatus(conn, id),
 		Timeout: ActionAvailableTimeout,
