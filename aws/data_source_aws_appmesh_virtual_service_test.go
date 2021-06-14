@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccAWSAppmeshVirtualServiceDataSource_virtualNode(t *testing.T) {
+func TestAccDataSourceAWSAppmeshVirtualService_virtualNode(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appmesh_virtual_service.test"
 	dataSourceName := "data.aws_appmesh_virtual_service.test"
@@ -39,7 +39,7 @@ func TestAccAWSAppmeshVirtualServiceDataSource_virtualNode(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppmeshVirtualServiceDataSource_virtualRouter(t *testing.T) {
+func TestAccDataSourceAWSAppmeshVirtualService_virtualRouter(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appmesh_virtual_service.test"
 	dataSourceName := "data.aws_appmesh_virtual_service.test"
