@@ -1,4 +1,4 @@
-package tfresource_test
+package tfresource
 
 import (
 	"errors"
@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestNotFound(t *testing.T) {
@@ -41,7 +40,7 @@ func TestNotFound(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
-			got := tfresource.NotFound(testCase.Err)
+			got := NotFound(testCase.Err)
 
 			if got != testCase.Expected {
 				t.Errorf("got %t, expected %t", got, testCase.Expected)
@@ -89,7 +88,7 @@ func TestTimedOut(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
-			got := tfresource.TimedOut(testCase.Err)
+			got := TimedOut(testCase.Err)
 
 			if got != testCase.Expected {
 				t.Errorf("got %t, expected %t", got, testCase.Expected)
