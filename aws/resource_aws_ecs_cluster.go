@@ -240,7 +240,7 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 	var out *ecs.DescribeClustersOutput
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
-		out, err = finder.CluserByARN(conn, d.Id())
+		out, err = finder.ClusterByARN(conn, d.Id())
 
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -256,7 +256,7 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if isResourceTimeoutError(err) {
-		out, err = finder.CluserByARN(conn, d.Id())
+		out, err = finder.ClusterByARN(conn, d.Id())
 	}
 
 	if isResourceNotFoundError(err) {

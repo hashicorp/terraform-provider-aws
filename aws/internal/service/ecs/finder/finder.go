@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func CluserByARN(conn *ecs.ECS, arn string) (*ecs.DescribeClustersOutput, error) {
+func ClusterByARN(conn *ecs.ECS, arn string) (*ecs.DescribeClustersOutput, error) {
 	input := &ecs.DescribeClustersInput{
 		Clusters: []*string{aws.String(arn)},
 		Include:  []*string{aws.String(ecs.ClusterFieldTags), aws.String(ecs.ClusterFieldConfigurations)},
