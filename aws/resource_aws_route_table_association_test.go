@@ -214,18 +214,6 @@ func testAccCheckRouteTableAssociationExists(n string, v *ec2.RouteTableAssociat
 	}
 }
 
-func testAccCheckRouteTableAssociationDisappears(rta *ec2.RouteTableAssociation) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-		_, err := conn.DisassociateRouteTable(&ec2.DisassociateRouteTableInput{
-			AssociationId: rta.RouteTableAssociationId,
-		})
-
-		return err
-	}
-}
-
 func testAccAWSRouteTabAssocImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]

@@ -235,6 +235,46 @@ func NetworkInterfaceSecurityGroup(conn *ec2.EC2, networkInterfaceID string, sec
 	return result, err
 }
 
+// MainRouteTableAssociationByID returns the main route table association corresponding to the specified identifier.
+// Returns NotFoundError if no route table association is found.
+func MainRouteTableAssociationByID(conn *ec2.EC2, associationID string) (*ec2.RouteTableAssociation, error) {
+	association, err := RouteTableAssociationByID(conn, associationID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !aws.BoolValue(association.Main) {
+		return nil, &resource.NotFoundError{
+			Message: fmt.Sprintf("%s is not the association with the main route table", associationID),
+		}
+	}
+
+	return association, err
+}
+
+// MainRouteTableAssociationByVpcID returns the main route table association for the specified VPC.
+// Returns NotFoundError if no route table association is found.
+func MainRouteTableAssociationByVpcID(conn *ec2.EC2, vpcID string) (*ec2.RouteTableAssociation, error) {
+	routeTable, err := MainRouteTableByVpcID(conn, vpcID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, association := range routeTable.Associations {
+		if aws.BoolValue(association.Main) {
+			if state := aws.StringValue(association.AssociationState.State); state == ec2.RouteTableAssociationStateCodeDisassociated {
+				continue
+			}
+
+			return association, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
+}
+
 // RouteTableAssociationByID returns the route table association corresponding to the specified identifier.
 // Returns NotFoundError if no route table association is found.
 func RouteTableAssociationByID(conn *ec2.EC2, associationID string) (*ec2.RouteTableAssociation, error) {
