@@ -1,17 +1,14 @@
 package aws
 
 import (
-	// "encoding/json"
 	"fmt"
 	"testing"
-	// "time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	// tfevents "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents"
 )
 
 func TestAccAWSCloudwatchEventBusPolicy_basic(t *testing.T) {
@@ -33,6 +30,28 @@ func TestAccAWSCloudwatchEventBusPolicy_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudWatchEventBusPolicy_disappears(t *testing.T) {
+	resourceName := "aws_cloudwatch_event_bus_policy.test"
+	rstring := acctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudwatchEventBusPolicyConfig(rstring),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCloudwatchEventBusPolicyExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchEventBusPolicy(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -98,26 +117,4 @@ resource "aws_cloudwatch_event_bus_policy" "test" {
   event_bus_name = aws_cloudwatch_event_bus.test.name
 }
 `, name)
-}
-
-func TestAccAWSCloudWatchEventBusPolicy_Disappears(t *testing.T) {
-	resourceName := "aws_cloudwatch_event_bus_policy.test"
-	busName := acctest.RandomWithPrefix("tf-acc-test-bus")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSCloudwatchEventBusPolicyConfig(busName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloudwatchEventBusPolicyExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchEventBusPolicy(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
 }
