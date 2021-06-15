@@ -127,6 +127,29 @@ func TestAccAWSCloudWatchLogMetricFilter_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudWatchLogMetricFilter_disappears_logGroup(t *testing.T) {
+	var mf cloudwatchlogs.MetricFilter
+	rInt := acctest.RandInt()
+	resourceName := "aws_cloudwatch_log_metric_filter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchLogMetricFilterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchLogMetricFilterConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchLogMetricFilterExists(resourceName, &mf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchLogGroup(), "aws_cloudwatch_log_group.test"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckCloudWatchLogMetricFilterName(mf *cloudwatchlogs.MetricFilter, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if name != *mf.FilterName {
