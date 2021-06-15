@@ -99,7 +99,7 @@ The following arguments are optional:
 
 The following arguments are required:
 
-* `column_names` - (Required, at least one of `column_names` or `wildcard`) List of column names for the table.
+* `column_names` - (Required, at least one of `column_names` or `wildcard`) Set of column names for the table.
 * `database_name` – (Required) Name of the database for the table with columns resource. Unique to the Data Catalog.
 * `name` – (Required) Name of the table resource.
 * `wildcard` - (Required, at least one of `column_names` or `wildcard`) Whether to use a column wildcard. If `excluded_column_names` is included, `wildcard` must be set to `true` to avoid Terraform reporting a difference.
@@ -107,7 +107,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
-* `excluded_column_names` - (Optional) List of column names for the table to exclude. If `excluded_column_names` is included, `wildcard` must be set to `true` to avoid Terraform reporting a difference.
+* `excluded_column_names` - (Optional) Set of column names for the table to exclude. If `excluded_column_names` is included, `wildcard` must be set to `true` to avoid Terraform reporting a difference.
 
 ## Attributes Reference
 
