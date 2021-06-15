@@ -169,7 +169,7 @@ func testAccAWSLakeFormationPermissions_tableWithColumns(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationPermissionsConfig_tableWithColumns(rName),
+				Config: testAccAWSLakeFormationPermissionsConfig_tableWithColumns(rName, "\"event\", \"timestamp\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLakeFormationPermissionsExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
@@ -179,6 +179,51 @@ func testAccAWSLakeFormationPermissions_tableWithColumns(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.0", "event"),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.1", "timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionSelect),
+				),
+			},
+			{
+				Config: testAccAWSLakeFormationPermissionsConfig_tableWithColumns(rName, "\"timestamp\", \"event\""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLakeFormationPermissionsExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.database_name", tableName, "database_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.name", tableName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.0", "event"),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.1", "timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionSelect),
+				),
+			},
+			{
+				Config: testAccAWSLakeFormationPermissionsConfig_tableWithColumns(rName, "\"timestamp\", \"event\", \"transactionamount\""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLakeFormationPermissionsExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.database_name", tableName, "database_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.name", tableName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.0", "event"),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.1", "timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.2", "transactionamount"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionSelect),
+				),
+			},
+			{
+				Config: testAccAWSLakeFormationPermissionsConfig_tableWithColumns(rName, "\"event\""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLakeFormationPermissionsExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.database_name", tableName, "database_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.name", tableName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.0", "event"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionSelect),
 				),
@@ -806,7 +851,7 @@ resource "aws_lakeformation_permissions" "test" {
 `, rName)
 }
 
-func testAccAWSLakeFormationPermissionsConfig_tableWithColumns(rName string) string {
+func testAccAWSLakeFormationPermissionsConfig_tableWithColumns(rName string, columns string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -853,7 +898,7 @@ resource "aws_glue_catalog_table" "test" {
     }
 
     columns {
-      name = "value"
+      name = "transactionamount"
       type = "double"
     }
   }
@@ -870,13 +915,13 @@ resource "aws_lakeformation_permissions" "test" {
   table_with_columns {
     database_name = aws_glue_catalog_table.test.database_name
     name          = aws_glue_catalog_table.test.name
-    column_names  = ["event", "timestamp"]
+    column_names  = [%[2]s]
   }
 
   # for consistency, ensure that admins are setup before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
-`, rName)
+`, rName, columns)
 }
 
 func testAccAWSLakeFormationPermissionsConfig_implicitTableWithColumnsPermissions(rName string) string {
