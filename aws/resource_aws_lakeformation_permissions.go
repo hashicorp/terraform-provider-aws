@@ -21,7 +21,6 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLakeFormationPermissionsCreate,
 		Read:   resourceAwsLakeFormationPermissionsRead,
-		Update: resourceAwsLakeFormationPermissionsCreate,
 		Delete: resourceAwsLakeFormationPermissionsDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -33,8 +32,9 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 			},
 			"catalog_resource": {
 				Type:     schema.TypeBool,
-				Optional: true,
 				Default:  false,
+				ForceNew: true,
+				Optional: true,
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
@@ -45,9 +45,10 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 			},
 			"data_location": {
 				Type:     schema.TypeList,
-				Optional: true,
 				Computed: true,
+				ForceNew: true,
 				MaxItems: 1,
+				Optional: true,
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
@@ -59,13 +60,15 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"arn": {
 							Type:         schema.TypeString,
+							ForceNew:     true,
 							Required:     true,
 							ValidateFunc: validateArn,
 						},
 						"catalog_id": {
 							Type:         schema.TypeString,
-							Optional:     true,
 							Computed:     true,
+							ForceNew:     true,
+							Optional:     true,
 							ValidateFunc: validateAwsAccountId,
 						},
 					},
@@ -73,9 +76,10 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 			},
 			"database": {
 				Type:     schema.TypeList,
-				Optional: true,
 				Computed: true,
+				ForceNew: true,
 				MaxItems: 1,
+				Optional: true,
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
@@ -87,12 +91,14 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"catalog_id": {
 							Type:         schema.TypeString,
-							Optional:     true,
 							Computed:     true,
+							ForceNew:     true,
+							Optional:     true,
 							ValidateFunc: validateAwsAccountId,
 						},
 						"name": {
 							Type:     schema.TypeString,
+							ForceNew: true,
 							Required: true,
 						},
 					},
@@ -100,9 +106,9 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 			},
 			"permissions": {
 				Type:     schema.TypeList,
-				Required: true,
 				ForceNew: true,
 				MinItems: 1,
+				Required: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringInSlice(lakeformation.Permission_Values(), false),
@@ -110,9 +116,9 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 			},
 			"permissions_with_grant_option": {
 				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
 				Computed: true,
+				ForceNew: true,
+				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringInSlice(lakeformation.Permission_Values(), false),
@@ -120,15 +126,16 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 			},
 			"principal": {
 				Type:         schema.TypeString,
-				Required:     true,
 				ForceNew:     true,
+				Required:     true,
 				ValidateFunc: validatePrincipal,
 			},
 			"table": {
 				Type:     schema.TypeList,
-				Optional: true,
 				Computed: true,
+				ForceNew: true,
 				MaxItems: 1,
+				Optional: true,
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
@@ -140,18 +147,21 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"catalog_id": {
 							Type:         schema.TypeString,
-							Optional:     true,
 							Computed:     true,
+							ForceNew:     true,
+							Optional:     true,
 							ValidateFunc: validateAwsAccountId,
 						},
 						"database_name": {
 							Type:     schema.TypeString,
+							ForceNew: true,
 							Required: true,
 						},
 						"name": {
 							Type:     schema.TypeString,
-							Optional: true,
 							Computed: true,
+							ForceNew: true,
+							Optional: true,
 							AtLeastOneOf: []string{
 								"table.0.name",
 								"table.0.wildcard",
@@ -159,8 +169,9 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 						},
 						"wildcard": {
 							Type:     schema.TypeBool,
-							Optional: true,
 							Default:  false,
+							ForceNew: true,
+							Optional: true,
 							AtLeastOneOf: []string{
 								"table.0.name",
 								"table.0.wildcard",
@@ -171,9 +182,10 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 			},
 			"table_with_columns": {
 				Type:     schema.TypeList,
-				Optional: true,
 				Computed: true,
+				ForceNew: true,
 				MaxItems: 1,
+				Optional: true,
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
@@ -185,13 +197,16 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"catalog_id": {
 							Type:         schema.TypeString,
-							Optional:     true,
 							Computed:     true,
+							ForceNew:     true,
+							Optional:     true,
 							ValidateFunc: validateAwsAccountId,
 						},
 						"column_names": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
+							ForceNew: true,
 							Optional: true,
+							Set:      schema.HashString,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.NoZeroValues,
@@ -203,11 +218,14 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 						},
 						"database_name": {
 							Type:     schema.TypeString,
+							ForceNew: true,
 							Required: true,
 						},
 						"excluded_column_names": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
+							ForceNew: true,
 							Optional: true,
+							Set:      schema.HashString,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.NoZeroValues,
@@ -215,12 +233,14 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 						},
 						"name": {
 							Type:     schema.TypeString,
+							ForceNew: true,
 							Required: true,
 						},
 						"wildcard": {
 							Type:     schema.TypeBool,
-							Optional: true,
 							Default:  false,
+							ForceNew: true,
+							Optional: true,
 							AtLeastOneOf: []string{
 								"table_with_columns.0.column_names",
 								"table_with_columns.0.wildcard",
@@ -405,18 +425,33 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
 		log.Printf("[WARN] Resource Lake Formation permissions (%s) not found, removing from state", d.Id())
 		d.SetId("")
+
+		if true {
+			return fmt.Errorf("death note: %d", 1)
+		}
+
 		return nil
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, "AccessDeniedException", "Resource does not exist") {
 		log.Printf("[WARN] Resource Lake Formation permissions (%s) not found, removing from state: %s", d.Id(), err)
 		d.SetId("")
+
+		if true {
+			return fmt.Errorf("death note: %d", 2)
+		}
+
 		return nil
 	}
 
 	if !d.IsNewResource() && len(allPermissions) == 0 {
 		log.Printf("[WARN] Resource Lake Formation permissions (%s) not found, removing from state (0 permissions)", d.Id())
 		d.SetId("")
+
+		if true {
+			return fmt.Errorf("death note: %d", 3)
+		}
+
 		return nil
 	}
 
@@ -449,11 +484,26 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 	}
 
 	if tableType == TableTypeTableWithColumns {
+		columnNames := make([]*string, 0)
+		excludedColumnNames := make([]*string, 0)
+
+		if v, ok := d.GetOk("table_with_columns.0.column_names"); ok {
+			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
+				columnNames = expandStringSet(v)
+			}
+		}
+
+		if v, ok := d.GetOk("table_with_columns.0.excluded_column_names"); ok {
+			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
+				excludedColumnNames = expandStringSet(v)
+			}
+		}
+
 		cleanPermissions = filterLakeFormationTableWithColumnsPermissions(
 			d.Get("table_with_columns.0.database_name").(string),
 			d.Get("table_with_columns.0.wildcard").(bool),
-			expandStringList(d.Get("table_with_columns.0.column_names").([]interface{})),
-			expandStringList(d.Get("table_with_columns.0.excluded_column_names").([]interface{})),
+			columnNames,
+			excludedColumnNames,
 			allPermissions,
 		)
 	}
@@ -461,6 +511,11 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 	if len(cleanPermissions) == 0 {
 		log.Printf("[WARN] Resource Lake Formation permissions (%s) not found, removing from state", d.Id())
 		d.SetId("")
+
+		if true {
+			return fmt.Errorf("death note: %d, %v", 4, allPermissions)
+		}
+
 		return nil
 	}
 
@@ -887,17 +942,21 @@ func expandLakeFormationTableWithColumnsResource(tfMap map[string]interface{}) *
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["column_names"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.ColumnNames = expandStringList(v.([]interface{}))
+	if v, ok := tfMap["column_names"]; ok {
+		if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
+			apiObject.ColumnNames = expandStringSet(v)
+		}
 	}
 
 	if v, ok := tfMap["database_name"].(string); ok && v != "" {
 		apiObject.DatabaseName = aws.String(v)
 	}
 
-	if v, ok := tfMap["excluded_column_names"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.ColumnWildcard = &lakeformation.ColumnWildcard{
-			ExcludedColumnNames: expandStringList(v.([]interface{})),
+	if v, ok := tfMap["excluded_column_names"]; ok {
+		if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
+			apiObject.ColumnWildcard = &lakeformation.ColumnWildcard{
+				ExcludedColumnNames: expandStringSet(v),
+			}
 		}
 	}
 
@@ -923,7 +982,7 @@ func flattenLakeFormationTableWithColumnsResource(apiObject *lakeformation.Table
 		tfMap["catalog_id"] = aws.StringValue(v)
 	}
 
-	tfMap["column_names"] = flattenStringList(apiObject.ColumnNames)
+	tfMap["column_names"] = flattenStringSet(apiObject.ColumnNames)
 
 	if v := apiObject.DatabaseName; v != nil {
 		tfMap["database_name"] = aws.StringValue(v)
@@ -931,7 +990,7 @@ func flattenLakeFormationTableWithColumnsResource(apiObject *lakeformation.Table
 
 	if v := apiObject.ColumnWildcard; v != nil {
 		tfMap["wildcard"] = true
-		tfMap["excluded_column_names"] = flattenStringList(v.ExcludedColumnNames)
+		tfMap["excluded_column_names"] = flattenStringSet(v.ExcludedColumnNames)
 	}
 
 	if v := apiObject.Name; v != nil {
