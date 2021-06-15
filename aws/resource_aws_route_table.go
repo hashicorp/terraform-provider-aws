@@ -888,7 +888,7 @@ func routeTableRouteDestinationAttribute(m map[string]interface{}) (string, stri
 }
 
 // routeTableRouteTargetAttribute returns the attribute key and value of the route table route's target.
-func routeTableRouteTargetAttribute(m map[string]interface{}) (string, string) {
+func routeTableRouteTargetAttribute(m map[string]interface{}) (string, string) { //nolint:unparam
 	for _, key := range routeTableValidTargets {
 		if v, ok := m[key].(string); ok && v != "" {
 			return key, v
