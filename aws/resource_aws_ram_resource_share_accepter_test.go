@@ -202,22 +202,77 @@ func testAccAwsRamResourceShareAccepterResourceAssociation(rName string) string 
 	return composeConfig(testAccAwsRamResourceShareAccepterBasic(rName), fmt.Sprintf(`
 resource "aws_ram_resource_association" "test" {
   provider           = "awsalternate"
-  resource_arn       = aws_route53_resolver_query_log_config.test.arn
+  resource_arn       = aws_codebuild_project.test.arn
   resource_share_arn = aws_ram_resource_share.test.arn
 }
 
-resource "aws_route53_resolver_query_log_config" "test" {
-  provider        = "awsalternate"
+resource "aws_codebuild_project" "test" {
+  provider     = "awsalternate"
 
-  name            = %[1]q
-  destination_arn = aws_s3_bucket.test.arn
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
 }
 
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-  provider      = "awsalternate"
+resource "aws_iam_role" "test" {
+  provider = "awsalternate"
 
-  force_destroy = true
+  name     = %[1]q
+
+  assume_role_policy = <<-EOF
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Principal": {
+            "Service": "codebuild.amazonaws.com"
+          },
+          "Action": "sts:AssumeRole"
+        }
+      ]
+    }
+    EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  provider = "awsalternate"
+
+  name     = %[1]q
+  role     = aws_iam_role.test.name
+
+  policy = <<-POLICY
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Resource": [
+            "*"
+          ],
+          "Action": [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ]
+        }
+      ]
+    }
+    POLICY
 }
 `, rName))
 }
