@@ -129,6 +129,13 @@ func resourceAwsVpc() *schema.Resource {
 
 			"tags_all": tagsSchemaComputed(),
 
+			"propagate_tags": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: false,
+				Default:  false,
+			},
+
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -711,9 +718,11 @@ func resourceAwsVpcSetDefaultNetworkAcl(conn *ec2.EC2, d *schema.ResourceData) e
 	}
 	if v := networkAclResp.NetworkAcls; len(v) > 0 {
 		d.Set("default_network_acl_id", v[0].NetworkAclId)
-		if err := keyvaluetags.Ec2UpdateTags(conn, *(v[0].NetworkAclId), v[0].Tags, d.Get("tags_all")); err != nil {
-			log.Printf("[ERROR] resourceAwsVpcSetDefaultNetworkAcl: %#v", err)
-			return err
+		if d.Get("propagate_tags").(bool) {
+			if err := keyvaluetags.Ec2UpdateTags(conn, *(v[0].NetworkAclId), v[0].Tags, d.Get("tags_all")); err != nil {
+				log.Printf("[ERROR] resourceAwsVpcSetDefaultNetworkAcl: %#v", err)
+				return err
+			}
 		}
 	}
 	return nil
@@ -738,9 +747,11 @@ func resourceAwsVpcSetDefaultSecurityGroup(conn *ec2.EC2, d *schema.ResourceData
 	}
 	if v := securityGroupResp.SecurityGroups; len(v) > 0 {
 		d.Set("default_security_group_id", v[0].GroupId)
-		if err := keyvaluetags.Ec2UpdateTags(conn, *(v[0].GroupId), v[0].Tags, d.Get("tags_all")); err != nil {
-			log.Printf("[ERROR] resourceAwsVpcSetDefaultSecurityGroup: %#v", err)
-			return err
+		if d.Get("propagate_tags").(bool) {
+			if err := keyvaluetags.Ec2UpdateTags(conn, *(v[0].GroupId), v[0].Tags, d.Get("tags_all")); err != nil {
+				log.Printf("[ERROR] resourceAwsVpcSetDefaultSecurityGroup: %#v", err)
+				return err
+			}
 		}
 	}
 
@@ -772,9 +783,11 @@ func resourceAwsVpcSetDefaultRouteTable(conn *ec2.EC2, d *schema.ResourceData) e
 
 	// There Can Be Only 1 ... Default Route Table
 	d.Set("default_route_table_id", resp.RouteTables[0].RouteTableId)
-	if err := keyvaluetags.Ec2UpdateTags(conn, *(resp.RouteTables[0].RouteTableId), resp.RouteTables[0].Tags, d.Get("tags_all")); err != nil {
-		log.Printf("[ERROR] resourceAwsVpcSetDefaultRouteTable: %#v", err)
-		return err
+	if d.Get("propagate_tags").(bool) {
+		if err := keyvaluetags.Ec2UpdateTags(conn, *(resp.RouteTables[0].RouteTableId), resp.RouteTables[0].Tags, d.Get("tags_all")); err != nil {
+			log.Printf("[ERROR] resourceAwsVpcSetDefaultRouteTable: %#v", err)
+			return err
+		}
 	}
 
 	return nil
@@ -803,9 +816,11 @@ func resourceAwsVpcSetMainRouteTable(conn *ec2.EC2, d *schema.ResourceData) (str
 	if len(resp.RouteTables) < 1 || resp.RouteTables[0] == nil {
 		return "", fmt.Errorf("Main Route table not found")
 	}
-	if err := keyvaluetags.Ec2UpdateTags(conn, *(resp.RouteTables[0].RouteTableId), resp.RouteTables[0].Tags, d.Get("tags_all")); err != nil {
-		log.Printf("[ERROR] resourceAwsVpcSetMainRouteTable: %#v", err)
-		return "", err
+	if d.Get("propagate_tags").(bool) {
+		if err := keyvaluetags.Ec2UpdateTags(conn, *(resp.RouteTables[0].RouteTableId), resp.RouteTables[0].Tags, d.Get("tags_all")); err != nil {
+			log.Printf("[ERROR] resourceAwsVpcSetMainRouteTable: %#v", err)
+			return "", err
+		}
 	}
 
 	// There Can Be Only 1 Main Route Table for a VPC
