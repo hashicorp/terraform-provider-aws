@@ -7,64 +7,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
-
-func TestRetryUntilFound(t *testing.T) {
-	var retryCount int32
-
-	testCases := []struct {
-		Name        string
-		F           func() (interface{}, error)
-		ExpectError bool
-	}{
-		{
-			Name: "no error",
-			F: func() (interface{}, error) {
-				return nil, nil
-			},
-		},
-		{
-			Name: "non-retryable other error",
-			F: func() (interface{}, error) {
-				return nil, errors.New("TestCode")
-			},
-			ExpectError: true,
-		},
-		{
-			Name: "retryable not-found error timeout",
-			F: func() (interface{}, error) {
-				return nil, &resource.NotFoundError{}
-			},
-			ExpectError: true,
-		},
-		{
-			Name: "retryable AWS error success",
-			F: func() (interface{}, error) {
-				if atomic.CompareAndSwapInt32(&retryCount, 0, 1) {
-					return nil, &resource.NotFoundError{}
-				}
-
-				return nil, nil
-			},
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.Name, func(t *testing.T) {
-			retryCount = 0
-
-			_, err := tfresource.RetryUntilFound(5*time.Second, testCase.F)
-
-			if testCase.ExpectError && err == nil {
-				t.Fatal("expected error")
-			} else if !testCase.ExpectError && err != nil {
-				t.Fatalf("unexpected error: %s", err)
-			}
-		})
-	}
-}
 
 func TestRetryWhenAwsErrCodeEquals(t *testing.T) {
 	var retryCount int32
