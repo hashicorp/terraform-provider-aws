@@ -26,12 +26,12 @@ func resourceAwsVpcEndpointSubnetAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"vpc_endpoint_id": {
+			"subnet_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"subnet_id": {
+			"vpc_endpoint_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -48,21 +48,21 @@ func resourceAwsVpcEndpointSubnetAssociation() *schema.Resource {
 func resourceAwsVpcEndpointSubnetAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	endpointId := d.Get("vpc_endpoint_id").(string)
-	snId := d.Get("subnet_id").(string)
+	endpointID := d.Get("vpc_endpoint_id").(string)
+	subnetID := d.Get("subnet_id").(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
-	id := fmt.Sprintf("%s/%s", endpointId, snId)
+	id := fmt.Sprintf("%s/%s", endpointID, subnetID)
 
 	input := &ec2.ModifyVpcEndpointInput{
-		VpcEndpointId: aws.String(endpointId),
-		AddSubnetIds:  aws.StringSlice([]string{snId}),
+		VpcEndpointId: aws.String(endpointID),
+		AddSubnetIds:  aws.StringSlice([]string{subnetID}),
 	}
 
 	log.Printf("[DEBUG] Creating VPC Endpoint Subnet Association: %s", input)
 
 	// See https://github.com/hashicorp/terraform-provider-aws/issues/3382.
 	// Prevent concurrent subnet association requests and delay between requests.
-	mk := "vpc_endpoint_subnet_association_" + endpointId
+	mk := "vpc_endpoint_subnet_association_" + endpointID
 	awsMutexKV.Lock(mk)
 	defer awsMutexKV.Unlock(mk)
 
@@ -82,12 +82,12 @@ func resourceAwsVpcEndpointSubnetAssociationCreate(d *schema.ResourceData, meta 
 		return fmt.Errorf("error creating VPC Endpoint Subnet Association (%s): %w", id, err)
 	}
 
-	d.SetId(tfec2.VpcEndpointSubnetAssociationCreateID(endpointId, snId))
+	d.SetId(tfec2.VpcEndpointSubnetAssociationCreateID(endpointID, subnetID))
 
-	_, err = waiter.VpcEndpointAvailable(conn, endpointId, d.Timeout(schema.TimeoutCreate))
+	_, err = waiter.VpcEndpointAvailable(conn, endpointID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for VPC Endpoint (%s) to become available: %w", endpointId, err)
+		return fmt.Errorf("error waiting for VPC Endpoint (%s) to become available: %w", endpointID, err)
 	}
 
 	return resourceAwsVpcEndpointSubnetAssociationRead(d, meta)
@@ -96,12 +96,12 @@ func resourceAwsVpcEndpointSubnetAssociationCreate(d *schema.ResourceData, meta 
 func resourceAwsVpcEndpointSubnetAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	endpointId := d.Get("vpc_endpoint_id").(string)
-	snId := d.Get("subnet_id").(string)
+	endpointID := d.Get("vpc_endpoint_id").(string)
+	subnetID := d.Get("subnet_id").(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
-	id := fmt.Sprintf("%s/%s", endpointId, snId)
+	id := fmt.Sprintf("%s/%s", endpointID, subnetID)
 
-	err := finder.VpcEndpointSubnetAssociationExists(conn, endpointId, snId)
+	err := finder.VpcEndpointSubnetAssociationExists(conn, endpointID, subnetID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint Subnet Association (%s) not found, removing from state", id)
@@ -119,18 +119,17 @@ func resourceAwsVpcEndpointSubnetAssociationRead(d *schema.ResourceData, meta in
 func resourceAwsVpcEndpointSubnetAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	endpointId := d.Get("vpc_endpoint_id").(string)
-	snId := d.Get("subnet_id").(string)
+	endpointID := d.Get("vpc_endpoint_id").(string)
+	subnetID := d.Get("subnet_id").(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
-	id := fmt.Sprintf("%s/%s", endpointId, snId)
+	id := fmt.Sprintf("%s/%s", endpointID, subnetID)
 
 	input := &ec2.ModifyVpcEndpointInput{
-		VpcEndpointId:   aws.String(endpointId),
-		RemoveSubnetIds: aws.StringSlice([]string{snId}),
+		VpcEndpointId:   aws.String(endpointID),
+		RemoveSubnetIds: aws.StringSlice([]string{subnetID}),
 	}
 
-	log.Printf("[DEBUG] Deleting VPC Endpoint Subnet Association: %s", input)
-
+	log.Printf("[DEBUG] Deleting VPC Endpoint Subnet Association: %s", id)
 	_, err := conn.ModifyVpcEndpoint(input)
 
 	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVpcEndpointIdNotFound) || tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidSubnetIdNotFound) || tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidParameter) {
@@ -141,10 +140,10 @@ func resourceAwsVpcEndpointSubnetAssociationDelete(d *schema.ResourceData, meta 
 		return fmt.Errorf("error deleting VPC Endpoint Subnet Association (%s): %w", id, err)
 	}
 
-	_, err = waiter.VpcEndpointAvailable(conn, endpointId, d.Timeout(schema.TimeoutDelete))
+	_, err = waiter.VpcEndpointAvailable(conn, endpointID, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for VPC Endpoint (%s) to become available: %w", endpointId, err)
+		return fmt.Errorf("error waiting for VPC Endpoint (%s) to become available: %w", endpointID, err)
 	}
 
 	return nil

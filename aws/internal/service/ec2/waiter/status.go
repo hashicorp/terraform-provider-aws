@@ -520,3 +520,23 @@ func VpcEndpointState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 		return vpcEndpoint, aws.StringValue(vpcEndpoint.State), nil
 	}
 }
+
+const (
+	VpcEndpointRouteTableAssociationStatusReady = "ready"
+)
+
+func VpcEndpointRouteTableAssociationStatus(conn *ec2.EC2, vpcEndpointID, routeTableID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		err := finder.VpcEndpointRouteTableAssociationExists(conn, vpcEndpointID, routeTableID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return "", VpcEndpointRouteTableAssociationStatusReady, nil
+	}
+}

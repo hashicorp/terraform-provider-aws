@@ -751,3 +751,31 @@ func VpcEndpointDeleted(conn *ec2.EC2, vpcEndpointID string, timeout time.Durati
 
 	return nil, err
 }
+
+func VpcEndpointRouteTableAssociationDeleted(conn *ec2.EC2, vpcEndpointID, routeTableID string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{VpcEndpointRouteTableAssociationStatusReady},
+		Target:                    []string{},
+		Refresh:                   VpcEndpointRouteTableAssociationStatus(conn, vpcEndpointID, routeTableID),
+		Timeout:                   PropagationTimeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func VpcEndpointRouteTableAssociationReady(conn *ec2.EC2, vpcEndpointID, routeTableID string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    []string{VpcEndpointRouteTableAssociationStatusReady},
+		Refresh:                   VpcEndpointRouteTableAssociationStatus(conn, vpcEndpointID, routeTableID),
+		Timeout:                   PropagationTimeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
