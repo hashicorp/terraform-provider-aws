@@ -504,3 +504,19 @@ func ManagedPrefixListState(conn *ec2.EC2, prefixListId string) resource.StateRe
 		return managedPrefixList, aws.StringValue(managedPrefixList.State), nil
 	}
 }
+
+func VpcEndpointState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		vpcEndpoint, err := finder.VpcEndpointByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return vpcEndpoint, aws.StringValue(vpcEndpoint.State), nil
+	}
+}

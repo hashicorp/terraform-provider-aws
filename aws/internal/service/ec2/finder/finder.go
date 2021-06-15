@@ -619,59 +619,96 @@ func VpcByID(conn *ec2.EC2, id string) (*ec2.Vpc, error) {
 	return nil, nil
 }
 
-// VpcEndpointByID looks up a VpcEndpoint by ID. When not found, returns nil and potentially an API error.
-func VpcEndpointByID(conn *ec2.EC2, id string) (*ec2.VpcEndpoint, error) {
+// VpcEndpointByID returns the VPC endpoint corresponding to the specified identifier.
+// Returns NotFoundError if no VPC endpoint is found.
+func VpcEndpointByID(conn *ec2.EC2, vpcEndpointID string) (*ec2.VpcEndpoint, error) {
 	input := &ec2.DescribeVpcEndpointsInput{
-		VpcEndpointIds: aws.StringSlice([]string{id}),
+		VpcEndpointIds: aws.StringSlice([]string{vpcEndpointID}),
 	}
 
-	output, err := conn.DescribeVpcEndpoints(input)
+	vpcEndpoint, err := VpcEndpoint(conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, nil
+	if state := aws.StringValue(vpcEndpoint.State); state == tfec2.VpcEndpointStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
 	}
 
-	for _, vpcEndpoint := range output.VpcEndpoints {
-		if vpcEndpoint == nil {
-			continue
+	// Eventual consistency check.
+	if aws.StringValue(vpcEndpoint.VpcEndpointId) != vpcEndpointID {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
 		}
-
-		if aws.StringValue(vpcEndpoint.VpcEndpointId) != id {
-			continue
-		}
-
-		return vpcEndpoint, nil
 	}
 
-	return nil, nil
+	return vpcEndpoint, nil
 }
 
-// VpcEndpointRouteTableAssociation returns the associated Route Table ID if found
-func VpcEndpointRouteTableAssociation(conn *ec2.EC2, vpcEndpointID string, routeTableID string) (*string, error) {
-	var result *string
+func VpcEndpoint(conn *ec2.EC2, input *ec2.DescribeVpcEndpointsInput) (*ec2.VpcEndpoint, error) {
+	output, err := conn.DescribeVpcEndpoints(input)
 
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVpcEndpointIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.VpcEndpoints) == 0 || output.VpcEndpoints[0] == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output.VpcEndpoints[0], nil
+}
+
+// VpcEndpointRouteTableAssociationExists returns NotFoundError if no association for the specified VPC endpoint and route table IDs is found.
+func VpcEndpointRouteTableAssociationExists(conn *ec2.EC2, vpcEndpointID string, routeTableID string) error {
 	vpcEndpoint, err := VpcEndpointByID(conn, vpcEndpointID)
 
 	if err != nil {
-		return nil, err
-	}
-
-	if vpcEndpoint == nil {
-		return nil, nil
+		return err
 	}
 
 	for _, vpcEndpointRouteTableID := range vpcEndpoint.RouteTableIds {
 		if aws.StringValue(vpcEndpointRouteTableID) == routeTableID {
-			result = vpcEndpointRouteTableID
-			break
+			return nil
 		}
 	}
 
-	return result, err
+	return &resource.NotFoundError{
+		LastError: fmt.Errorf("VPC Endpoint Route Table Association (%s/%s) not found", vpcEndpointID, routeTableID),
+	}
+}
+
+// VpcEndpointSubnetAssociationExists returns NotFoundError if no association for the specified VPC endpoint and subnet IDs is found.
+func VpcEndpointSubnetAssociationExists(conn *ec2.EC2, vpcEndpointID string, subnetID string) error {
+	vpcEndpoint, err := VpcEndpointByID(conn, vpcEndpointID)
+
+	if err != nil {
+		return err
+	}
+
+	for _, vpcEndpointSubnetID := range vpcEndpoint.SubnetIds {
+		if aws.StringValue(vpcEndpointSubnetID) == subnetID {
+			return nil
+		}
+	}
+
+	return &resource.NotFoundError{
+		LastError: fmt.Errorf("VPC Endpoint Subnet Association (%s/%s) not found", vpcEndpointID, subnetID),
+	}
 }
 
 // VpcPeeringConnectionByID returns the VPC peering connection corresponding to the specified identifier.

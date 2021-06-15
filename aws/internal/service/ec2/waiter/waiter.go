@@ -2,6 +2,7 @@ package waiter
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -688,4 +689,65 @@ func ManagedPrefixListDeleted(conn *ec2.EC2, prefixListId string) error {
 	}
 
 	return nil
+}
+
+func VpcEndpointAccepted(conn *ec2.EC2, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpoint, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{tfec2.VpcEndpointStatePendingAcceptance},
+		Target:     []string{tfec2.VpcEndpointStateAvailable},
+		Timeout:    timeout,
+		Refresh:    VpcEndpointState(conn, vpcEndpointID),
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcEndpoint); ok {
+		if output != nil && aws.StringValue(output.State) == tfec2.VpcEndpointStateFailed && output.LastError != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(output.LastError.Code), aws.StringValue(output.LastError.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func VpcEndpointAvailable(conn *ec2.EC2, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpoint, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{tfec2.VpcEndpointStatePending},
+		Target:     []string{tfec2.VpcEndpointStateAvailable, tfec2.VpcEndpointStatePendingAcceptance},
+		Timeout:    timeout,
+		Refresh:    VpcEndpointState(conn, vpcEndpointID),
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcEndpoint); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func VpcEndpointDeleted(conn *ec2.EC2, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpoint, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{tfec2.VpcEndpointStateDeleting},
+		Target:     []string{},
+		Timeout:    timeout,
+		Refresh:    VpcEndpointState(conn, vpcEndpointID),
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcEndpoint); ok {
+		return output, err
+	}
+
+	return nil, err
 }
