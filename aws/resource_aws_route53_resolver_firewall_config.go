@@ -15,6 +15,7 @@ func resourceAwsRoute53ResolverFirewallConfig() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsRoute53ResolverFirewallConfigCreate,
 		Read:   resourceAwsRoute53ResolverFirewallConfigRead,
+		Update: resourceAwsRoute53ResolverFirewallConfigUpdate,
 		Delete: resourceAwsRoute53ResolverFirewallConfigDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
