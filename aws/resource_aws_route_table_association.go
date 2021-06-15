@@ -121,7 +121,7 @@ func resourceAwsRouteTableAssociationUpdate(d *schema.ResourceData, meta interfa
 	output, err := conn.ReplaceRouteTableAssociation(input)
 
 	// This whole thing with the resource ID being changed on update seems unsustainable.
-	// Keeping it here for backwards compatibilty...
+	// Keeping it here for backwards compatibility...
 
 	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidAssociationIDNotFound) {
 		// Not found, so just create a new one

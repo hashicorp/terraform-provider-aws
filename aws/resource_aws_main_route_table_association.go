@@ -113,7 +113,7 @@ func resourceAwsMainRouteTableAssociationUpdate(d *schema.ResourceData, meta int
 	}
 
 	// This whole thing with the resource ID being changed on update seems unsustainable.
-	// Keeping it here for backwards compatibilty...
+	// Keeping it here for backwards compatibility...
 	d.SetId(aws.StringValue(output.NewAssociationId))
 
 	log.Printf("[DEBUG] Waiting for Main Route Table Association (%s) update", d.Id())
