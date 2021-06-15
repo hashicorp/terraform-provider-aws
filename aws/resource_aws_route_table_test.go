@@ -2116,12 +2116,12 @@ resource "aws_network_interface" "test1" {
 }
 
 resource "aws_network_interface" "test2" {
-	subnet_id = aws_subnet.test.id
-  
-	tags = {
-	  Name = %[1]q
-	}
+  subnet_id = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
   }
+}
 
 resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
