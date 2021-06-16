@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
@@ -30,6 +31,7 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -42,6 +44,7 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validation.StringLenBetween(1, 255-resource.UniqueIDSuffixLength),
@@ -178,9 +181,10 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 							ForceNew: true,
 						},
 
-						"no_device": {
+						"encrypted": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 							ForceNew: true,
 						},
 
@@ -191,8 +195,21 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 							ForceNew: true,
 						},
 
+						"no_device": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+
 						"snapshot_id": {
 							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+
+						"throughput": {
+							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
@@ -207,13 +224,6 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 
 						"volume_type": {
 							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-
-						"encrypted": {
-							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
@@ -312,6 +322,13 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 							ForceNew: true,
 						},
 
+						"throughput": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+
 						"volume_size": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -336,8 +353,10 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 	autoscalingconn := meta.(*AWSClient).autoscalingconn
 	ec2conn := meta.(*AWSClient).ec2conn
 
+	lcName := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
+
 	createLaunchConfigurationOpts := autoscaling.CreateLaunchConfigurationInput{
-		LaunchConfigurationName: aws.String(d.Get("name").(string)),
+		LaunchConfigurationName: aws.String(lcName),
 		ImageId:                 aws.String(d.Get("image_id").(string)),
 		InstanceType:            aws.String(d.Get("instance_type").(string)),
 		EbsOptimized:            aws.Bool(d.Get("ebs_optimized").(bool)),
@@ -435,6 +454,10 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
+			if v, ok := bd["throughput"].(int); ok && v > 0 {
+				ebs.Throughput = aws.Int64(int64(v))
+			}
+
 			if bd["device_name"].(string) == aws.StringValue(rootDeviceName) {
 				return fmt.Errorf("Root device (%s) declared as an 'ebs_block_device'.  Use 'root_block_device' keyword.", *rootDeviceName)
 			}
@@ -482,6 +505,10 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
+			if v, ok := bd["throughput"].(int); ok && v > 0 {
+				ebs.Throughput = aws.Int64(int64(v))
+			}
+
 			if dn, err := fetchRootDeviceName(d.Get("image_id").(string), ec2conn); err == nil {
 				if dn == nil {
 					return fmt.Errorf(
@@ -501,16 +528,6 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 	if len(blockDevices) > 0 {
 		createLaunchConfigurationOpts.BlockDeviceMappings = blockDevices
 	}
-
-	var lcName string
-	if v, ok := d.GetOk("name"); ok {
-		lcName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		lcName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		lcName = resource.UniqueId()
-	}
-	createLaunchConfigurationOpts.LaunchConfigurationName = aws.String(lcName)
 
 	log.Printf("[DEBUG] autoscaling create launch configuration: %s", createLaunchConfigurationOpts)
 
@@ -574,6 +591,7 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 	d.Set("image_id", lc.ImageId)
 	d.Set("instance_type", lc.InstanceType)
 	d.Set("name", lc.LaunchConfigurationName)
+	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(lc.LaunchConfigurationName)))
 	d.Set("arn", lc.LaunchConfigurationARN)
 
 	d.Set("iam_instance_profile", lc.IamInstanceProfile)
@@ -762,6 +780,9 @@ func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autosca
 		}
 		if bdm.Ebs != nil && bdm.Ebs.Iops != nil {
 			bd["iops"] = *bdm.Ebs.Iops
+		}
+		if bdm.Ebs != nil && bdm.Ebs.Throughput != nil {
+			bd["throughput"] = *bdm.Ebs.Throughput
 		}
 		if bdm.Ebs != nil && bdm.Ebs.Encrypted != nil {
 			bd["encrypted"] = *bdm.Ebs.Encrypted

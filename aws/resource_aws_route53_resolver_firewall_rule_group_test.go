@@ -19,6 +19,7 @@ func init() {
 		Name: "aws_route53_resolver_firewall_rule_group",
 		F:    testSweepRoute53ResolverFirewallRuleGroups,
 		Dependencies: []string{
+			"aws_route53_resolver_firewall_rule",
 			"aws_route53_resolver_firewall_rule_group_association",
 		},
 	})

@@ -74,13 +74,18 @@ func resourceAwsIamPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsIamPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iamconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -96,7 +101,7 @@ func resourceAwsIamPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 		Path:           aws.String(d.Get("path").(string)),
 		PolicyDocument: aws.String(d.Get("policy").(string)),
 		PolicyName:     aws.String(name),
-		Tags:           keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IamTags(),
+		Tags:           tags.IgnoreAws().IamTags(),
 	}
 
 	response, err := conn.CreatePolicy(request)
@@ -111,6 +116,7 @@ func resourceAwsIamPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 
 func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iamconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &iam.GetPolicyInput{
@@ -162,8 +168,15 @@ func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("path", policy.Path)
 	d.Set("policy_id", policy.PolicyId)
 
-	if err := d.Set("tags", keyvaluetags.IamKeyValueTags(policy.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	tags := keyvaluetags.IamKeyValueTags(policy.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	// Retrieve policy
@@ -221,7 +234,7 @@ func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsIamPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iamconn
 
-	if d.HasChangeExcept("tags") {
+	if d.HasChangesExcept("tags", "tags_all") {
 
 		if err := iamPolicyPruneVersions(d.Id(), conn); err != nil {
 			return err
@@ -238,8 +251,8 @@ func resourceAwsIamPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.IamPolicyUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags for IAM Policy (%s): %w", d.Id(), err)

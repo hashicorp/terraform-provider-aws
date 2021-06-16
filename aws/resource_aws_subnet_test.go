@@ -115,11 +115,10 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckSubnetDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetConfig,
@@ -153,11 +152,10 @@ func TestAccAWSSubnet_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckSubnetDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetTagsConfig1(rName, "key1", "value1"),
@@ -521,6 +519,47 @@ func TestAccAWSSubnet_defaultAndIgnoreTags(t *testing.T) {
 	})
 }
 
+// TestAccAWSSubnet_updateTagsKnownAtApply ensures computed "tags_all"
+// attributes are correctly determined when the provider-level default_tags block
+// is left unused and resource tags are only known at apply time, thereby
+// eliminating "Inconsistent final plan" errors
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18366
+func TestAccAWSSubnet_updateTagsKnownAtApply(t *testing.T) {
+	var providers []*schema.Provider
+	var subnet ec2.Subnet
+	resourceName := "aws_subnet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		CheckDestroy:      testAccCheckSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetConfig_tagsComputedFromVpcDataSource1("key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &subnet),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+				),
+			},
+			{
+				Config: testAccSubnetConfig_tagsComputedFromVpcDataSource2("key1", "value1", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &subnet),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSubnet_ignoreTags(t *testing.T) {
 	var providers []*schema.Provider
 	var subnet ec2.Subnet
@@ -557,11 +596,10 @@ func TestAccAWSSubnet_ipv6(t *testing.T) {
 	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckSubnetDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetConfigIpv6,
@@ -598,11 +636,10 @@ func TestAccAWSSubnet_enableIpv6(t *testing.T) {
 	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckSubnetDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetConfigPreIpv6,
@@ -642,11 +679,10 @@ func TestAccAWSSubnet_availabilityZoneId(t *testing.T) {
 	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckSubnetDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetConfigAvailabilityZoneId(),
@@ -786,11 +822,10 @@ func TestAccAWSSubnet_outpost(t *testing.T) {
 	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckSubnetDestroy,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetConfigOutpost(),
@@ -967,6 +1002,48 @@ resource "aws_subnet" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+const testAccSubnetComputedTagsBaseConfig = `
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+  tags       = local.tags
+}
+
+data "aws_vpc" "test" {
+  id = aws_vpc.test.id
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  vpc_id     = aws_vpc.test.id
+  tags       = data.aws_vpc.test.tags
+}
+`
+
+func testAccSubnetConfig_tagsComputedFromVpcDataSource1(tagKey1, tagValue1 string) string {
+	return composeConfig(
+		testAccSubnetComputedTagsBaseConfig,
+		fmt.Sprintf(`
+locals {
+  tags = {
+    %q = %q
+  }
+}
+`, tagKey1, tagValue1))
+}
+
+func testAccSubnetConfig_tagsComputedFromVpcDataSource2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return composeConfig(
+		testAccSubnetComputedTagsBaseConfig,
+		fmt.Sprintf(`
+locals {
+  tags = {
+    %q = %q
+    %q = %q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 const testAccSubnetConfigPreIpv6 = `

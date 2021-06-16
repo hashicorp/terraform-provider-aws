@@ -1,4 +1,4 @@
-SWEEP?=us-east-1,us-west-2
+SWEEP?=us-east-1,us-east-2,us-west-2
 TEST?=./...
 SWEEP_DIR?=./aws
 PKG_NAME=aws
@@ -92,8 +92,8 @@ awsproviderlint:
 	@awsproviderlint \
 		-c 1 \
 		-AWSAT006=false \
+		-AWSR002=false \
 		-AWSV001=false \
-		-AT010=false \
 		-R001=false \
 		-R010=false \
 		-R018=false \
