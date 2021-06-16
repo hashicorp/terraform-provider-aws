@@ -1399,7 +1399,7 @@ resource "aws_lakeformation_permissions" "test" {
     database_name         = aws_glue_catalog_table.test.database_name
     name                  = aws_glue_catalog_table.test.name
     wildcard              = true
-	excluded_column_names = ["value"]
+    excluded_column_names = ["value"]
   }
 
   # for consistency, ensure that admins are setup before testing
