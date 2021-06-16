@@ -384,6 +384,30 @@ func testAccAWSLakeFormationPermissions_columnWildcardPermissions(t *testing.T) 
 	})
 }
 
+func testAccAWSLakeFormationPermissions_columnWildcardExcludedColumnsPermissions(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lakeformation_permissions.test"
+	roleName := "aws_iam_role.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lakeformation.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLakeFormationPermissionsConfig_columnWildcardExcludedColumnsPermissions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLakeFormationPermissionsExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSLakeFormationPermissionsDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).lakeformationconn
 
@@ -576,7 +600,7 @@ func permissionCountForLakeFormationResource(conn *lakeformation.LakeFormation, 
 	columnWildcard := false
 
 	if tableType == tflakeformation.TableTypeTableWithColumns {
-		if v := rs.Primary.Attributes["table.0.wildcard"]; v != "" && v == "true" {
+		if v := rs.Primary.Attributes["table_with_columns.0.wildcard"]; v != "" && v == "true" {
 			columnWildcard = true
 		}
 
@@ -605,7 +629,7 @@ func permissionCountForLakeFormationResource(conn *lakeformation.LakeFormation, 
 		}
 
 		for i := 0; i < colCount; i++ {
-			columnNames = append(columnNames, aws.String(rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.excluded_column_names.%d", i)]))
+			excludedColumnNames = append(excludedColumnNames, aws.String(rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.excluded_column_names.%d", i)]))
 		}
 	}
 
@@ -1302,6 +1326,80 @@ resource "aws_lakeformation_permissions" "test" {
     database_name = aws_glue_catalog_table.test.database_name
     name          = aws_glue_catalog_table.test.name
     wildcard      = true
+  }
+
+  # for consistency, ensure that admins are setup before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+`, rName)
+}
+
+func testAccAWSLakeFormationPermissionsConfig_columnWildcardExcludedColumnsPermissions(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "glue.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+
+  storage_descriptor {
+    columns {
+      name = "event"
+      type = "string"
+    }
+
+    columns {
+      name = "timestamp"
+      type = "date"
+    }
+
+    columns {
+      name = "value"
+      type = "double"
+    }
+  }
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_caller_identity.current.arn]
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions = ["SELECT"]
+  principal   = aws_iam_role.test.arn
+
+  table_with_columns {
+    database_name         = aws_glue_catalog_table.test.database_name
+    name                  = aws_glue_catalog_table.test.name
+    wildcard              = true
+	excluded_column_names = ["value"]
   }
 
   # for consistency, ensure that admins are setup before testing
