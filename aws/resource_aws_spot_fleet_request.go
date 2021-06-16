@@ -242,10 +242,9 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 							ForceNew: true,
 						},
 						"instance_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(ec2.InstanceType_Values(), false),
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
 						},
 						"key_name": {
 							Type:         schema.TypeString,
@@ -363,10 +362,9 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										ForceNew: true,
 									},
 									"instance_type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringInSlice(ec2.InstanceType_Values(), false),
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
 									},
 									"spot_price": {
 										Type:     schema.TypeString,
