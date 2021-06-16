@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create an EventBridge policy to support cross-account events.
 ---
 
-# Resource: aws_cloudwatch_event_permission
+# Resource: aws_cloudwatch_event_bus_policy
 
 Provides a resource to create an EventBridge resource policy to support cross-account events.
 
@@ -19,6 +19,61 @@ Provides a resource to create an EventBridge resource policy to support cross-ac
 ### Account Access
 
 ```hcl
+data "aws_iam_policy_document" "test" {
+  statement {
+    sid    = "DevAccountAccess"
+    effect = "Allow"
+    actions = [
+      "events:PutEvents",
+    ]
+    resources = [
+      "arn:aws:events:eu-west-1:111111111111:event-bus/default"
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["123456789012"]
+    }
+  }
+}
+
+resource "aws_cloudwatch_event_bus_policy" "test" {
+  policy         = data.aws_iam_policy_document.access.json
+  event_bus_name = aws_cloudwatch_event_bus.test.name
+}
+```
+
+### Organization Access
+
+```hcl
+data "aws_iam_policy_document" "test" {
+  statement {
+    sid    = "OrganizationAccess"
+    effect = "Allow"
+    actions = [
+      "events:DescribeRule",
+      "events:ListRules",
+      "events:ListTargetsByRule",
+      "events:ListTagsForResource",
+    ]
+    resources = [
+      "arn:aws:events:eu-west-1:11111111111111:rule/*",
+      "arn:aws:events:eu-west-1:111111111111:event-bus/default"
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:PrincipalOrgID"
+      values   = aws_organizations_organization.example.id
+    }
+  }
+}
+
 resource "aws_cloudwatch_event_bus_policy" "test" {
   policy         = data.aws_iam_policy_document.access.json
   event_bus_name = aws_cloudwatch_event_bus.test.name
