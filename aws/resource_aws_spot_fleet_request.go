@@ -986,9 +986,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		spotFleetConfig.SpotPrice = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOkExists("on_demand_target_capacity"); ok {
-		spotFleetConfig.OnDemandTargetCapacity = aws.Int64(int64(v.(int)))
-	}
+	spotFleetConfig.OnDemandTargetCapacity = aws.Int64(int64(d.Get("on_demand_target_capacity").(int)))
 
 	if v, ok := d.GetOk("on_demand_allocation_strategy"); ok {
 		spotFleetConfig.OnDemandAllocationStrategy = aws.String(v.(string))
@@ -1320,17 +1318,9 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	if config.OnDemandTargetCapacity != nil {
-		d.Set("on_demand_target_capacity", config.OnDemandTargetCapacity)
-	}
-
-	if config.OnDemandAllocationStrategy != nil {
-		d.Set("on_demand_allocation_strategy", config.OnDemandAllocationStrategy)
-	}
-
-	if config.OnDemandMaxTotalPrice != nil {
-		d.Set("on_demand_max_total_price", config.OnDemandMaxTotalPrice)
-	}
+	d.Set("on_demand_target_capacity", config.OnDemandTargetCapacity)
+	d.Set("on_demand_allocation_strategy", config.OnDemandAllocationStrategy)
+	d.Set("on_demand_max_total_price", config.OnDemandMaxTotalPrice)
 
 	if config.LoadBalancersConfig != nil {
 		lbConf := config.LoadBalancersConfig
@@ -1608,35 +1598,25 @@ func resourceAwsSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{})
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifySpotFleetRequest.html
 	conn := meta.(*AWSClient).ec2conn
 
-	req := &ec2.ModifySpotFleetRequestInput{
-		SpotFleetRequestId: aws.String(d.Id()),
-	}
-
-	updateFlag := false
-
-	if d.HasChange("target_capacity") {
-		if val, ok := d.GetOkExists("target_capacity"); ok {
-			req.TargetCapacity = aws.Int64(int64(val.(int)))
-			updateFlag = true
-		}
-	}
-
-	if d.HasChange("on_demand_target_capacity") {
-		if val, ok := d.GetOkExists("on_demand_target_capacity"); ok {
-			req.OnDemandTargetCapacity = aws.Int64(int64(val.(int)))
-			updateFlag = true
-		}
-	}
-
-	if d.HasChange("excess_capacity_termination_policy") {
-		if val, ok := d.GetOk("excess_capacity_termination_policy"); ok {
-			req.ExcessCapacityTerminationPolicy = aws.String(val.(string))
+	if d.HasChangesExcept("tags", "tags_all") {
+		req := &ec2.ModifySpotFleetRequestInput{
+			SpotFleetRequestId: aws.String(d.Id()),
 		}
 
-		updateFlag = true
-	}
+		if d.HasChange("target_capacity") {
+			req.TargetCapacity = aws.Int64(int64(d.Get("target_capacity").(int)))
+		}
 
-	if updateFlag {
+		if d.HasChange("on_demand_target_capacity") {
+			req.OnDemandTargetCapacity = aws.Int64(int64(d.Get("on_demand_target_capacity").(int)))
+		}
+
+		if d.HasChange("excess_capacity_termination_policy") {
+			if val, ok := d.GetOk("excess_capacity_termination_policy"); ok {
+				req.ExcessCapacityTerminationPolicy = aws.String(val.(string))
+			}
+		}
+
 		log.Printf("[DEBUG] Modifying Spot Fleet Request: %#v", req)
 		if _, err := conn.ModifySpotFleetRequest(req); err != nil {
 			return fmt.Errorf("error updating spot request (%s): %w", d.Id(), err)
