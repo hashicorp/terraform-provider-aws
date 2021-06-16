@@ -612,6 +612,10 @@ func resourceAwsLakeFormationPermissionsDelete(d *schema.ResourceData, meta inte
 		return nil
 	})
 
+	if tfresource.TimedOut(err) {
+		_, err = conn.RevokePermissions(input)
+	}
+
 	if err != nil && !tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "No permissions revoked. Grantee has no") {
 		return fmt.Errorf("unable to revoke LakeFormation Permissions (input: %v): %w", input, err)
 	}
