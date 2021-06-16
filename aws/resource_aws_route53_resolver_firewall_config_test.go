@@ -8,9 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53resolver/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -68,6 +70,7 @@ func testSweepRoute53ResolverFirewallConfigs(region string) error {
 func TestAccAWSRoute53ResolverFirewallConfig_basic(t *testing.T) {
 	var v route53resolver.FirewallConfig
 	resourceName := "aws_route53_resolver_firewall_config.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
@@ -76,7 +79,7 @@ func TestAccAWSRoute53ResolverFirewallConfig_basic(t *testing.T) {
 		CheckDestroy: testAccCheckRoute53ResolverFirewallConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverFirewallConfigConfig(),
+				Config: testAccRoute53ResolverFirewallConfigConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallConfigExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "firewall_fail_open", "ENABLED"),
@@ -95,6 +98,7 @@ func TestAccAWSRoute53ResolverFirewallConfig_basic(t *testing.T) {
 func TestAccAWSRoute53ResolverFirewallConfig_disappears(t *testing.T) {
 	var v route53resolver.FirewallConfig
 	resourceName := "aws_route53_resolver_firewall_config.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
@@ -103,7 +107,7 @@ func TestAccAWSRoute53ResolverFirewallConfig_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckRoute53ResolverFirewallConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverFirewallConfigConfig(),
+				Config: testAccRoute53ResolverFirewallConfigConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallConfigExists(resourceName, &v),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53ResolverFirewallConfig(), resourceName),
@@ -122,15 +126,20 @@ func testAccCheckRoute53ResolverFirewallConfigDestroy(s *terraform.State) error 
 			continue
 		}
 
-		// Try to find the resource
-		_, err := finder.FirewallConfigByID(conn, rs.Primary.ID)
-		// Verify the error is what we want
-		if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		config, err := finder.FirewallConfigByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
 			continue
 		}
+
 		if err != nil {
 			return err
 		}
+
+		if aws.StringValue(config.FirewallFailOpen) == route53resolver.FirewallFailOpenStatusDisabled {
+			return nil
+		}
+
 		return fmt.Errorf("Route 53 Resolver DNS Firewall config still exists: %s", rs.Primary.ID)
 	}
 
@@ -149,7 +158,9 @@ func testAccCheckRoute53ResolverFirewallConfigExists(n string, v *route53resolve
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
+
 		out, err := finder.FirewallConfigByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
@@ -160,15 +171,19 @@ func testAccCheckRoute53ResolverFirewallConfigExists(n string, v *route53resolve
 	}
 }
 
-func testAccRoute53ResolverFirewallConfigConfig() string {
+func testAccRoute53ResolverFirewallConfigConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route53_resolver_firewall_config" "test" {
   resource_id        = aws_vpc.test.id
   firewall_fail_open = "ENABLED"
 }
-`)
+`, rName)
 }

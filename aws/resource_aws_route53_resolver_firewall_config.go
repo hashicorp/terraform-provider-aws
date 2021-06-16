@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53resolver/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsRoute53ResolverFirewallConfig() *schema.Resource {
@@ -70,14 +71,14 @@ func resourceAwsRoute53ResolverFirewallConfigRead(d *schema.ResourceData, meta i
 
 	config, err := finder.FirewallConfigByID(conn, d.Id())
 
-	if err != nil {
-		return fmt.Errorf("error getting Route 53 Resolver DNS Firewall config (%s): %w", d.Id(), err)
-	}
-
-	if config == nil {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route 53 Resolver DNS Firewall config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error getting Route 53 Resolver DNS Firewall config (%s): %w", d.Id(), err)
 	}
 
 	d.Set("owner_id", config.OwnerId)
