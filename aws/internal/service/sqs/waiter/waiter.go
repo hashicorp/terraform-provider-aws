@@ -2,12 +2,14 @@ package waiter
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	awspolicy "github.com/jen20/awspolicyequivalence"
 	tfjson "github.com/terraform-providers/terraform-provider-aws/aws/internal/json"
+	tfsqs "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sqs"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sqs/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
@@ -35,6 +37,16 @@ func QueueAttributesPropagated(conn *sqs.SQS, url string, expected map[string]st
 			g, ok := got[k]
 
 			if !ok {
+				// Missing attribute equivalent to empty expected value.
+				if e == "" {
+					continue
+				}
+
+				// Backwards compatibility: https://github.com/hashicorp/terraform-provider-aws/issues/19786.
+				if k == sqs.QueueAttributeNameKmsDataKeyReusePeriodSeconds && e == strconv.Itoa(tfsqs.DefaultQueueKmsDataKeyReusePeriodSeconds) {
+					continue
+				}
+
 				return fmt.Errorf("SQS Queue attribute (%s) not available", k)
 			}
 
@@ -90,10 +102,10 @@ func QueueAttributesPropagated(conn *sqs.SQS, url string, expected map[string]st
 		}
 
 		err = attributesMatch(got)
+	}
 
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		return err
 	}
 
 	return nil
