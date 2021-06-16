@@ -26,7 +26,7 @@ func TestAccAWSCloudwatchEventBusPolicy_basic(t *testing.T) {
 				Config: testAccAWSCloudwatchEventBusPolicyConfig(rstring),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSCloudWatchEventBusPolicyDocument(resourceName),
-					// testAccCheckAWSCloudwatchEventBusPolicyExists(resourceName),
+					testAccCheckAWSCloudwatchEventBusPolicyExists(resourceName),
 				),
 			},
 			{
@@ -102,12 +102,10 @@ func testAccAWSCloudWatchEventBusPolicyDocument(pr string) resource.TestCheckFun
 			return fmt.Errorf("No ID is set")
 		}
 
-		eventBusName := eventBusPolicyResource.Primary.ID
-		fmt.Printf("policy from state (struct): %+v\n", eventBusPolicyResource.Primary.Attributes["policy"])
-
 		var policyFromState map[string]interface{}
 		err := json.Unmarshal([]byte(eventBusPolicyResource.Primary.Attributes["policy"]), &policyFromState)
-		fmt.Printf("policy from state (map): %+v\n", policyFromState)
+
+		eventBusName := eventBusPolicyResource.Primary.ID
 
 		input := &events.DescribeEventBusInput{
 			Name: aws.String(eventBusName),
@@ -116,10 +114,8 @@ func testAccAWSCloudWatchEventBusPolicyDocument(pr string) resource.TestCheckFun
 		cloudWatchEventsConnection := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
 		describedEventBus, err := cloudWatchEventsConnection.DescribeEventBus(input)
 
-		var policyFromSdk map[string]interface{}
-		err = json.Unmarshal([]byte(*describedEventBus.Policy), &policyFromSdk)
-
-		fmt.Printf("output from SDK: %+v\n", policyFromSdk)
+		var describedEventBusPolicy map[string]interface{}
+		err = json.Unmarshal([]byte(*describedEventBus.Policy), &describedEventBusPolicy)
 
 		if err != nil {
 			return fmt.Errorf("Reading CloudWatch Events bus policy for '%s' failed: %w", pr, err)
@@ -128,8 +124,8 @@ func testAccAWSCloudWatchEventBusPolicyDocument(pr string) resource.TestCheckFun
 			return fmt.Errorf("Not found: %s", pr)
 		}
 
-		if !reflect.DeepEqual(policyFromSdk, policyFromState) {
-			return fmt.Errorf("Policy on state doesn't match generated policy")
+		if !reflect.DeepEqual(describedEventBusPolicy, policyFromState) {
+			return fmt.Errorf("CloudWatch Events bus policy mismatch for '%s'", pr)
 		}
 
 		return nil
