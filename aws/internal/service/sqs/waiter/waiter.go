@@ -37,6 +37,11 @@ func QueueAttributesPropagated(conn *sqs.SQS, url string, expected map[string]st
 			g, ok := got[k]
 
 			if !ok {
+				// Missing attribute equivalent to empty expected value.
+				if e == "" {
+					continue
+				}
+
 				// Backwards compatibility: https://github.com/hashicorp/terraform-provider-aws/issues/19786.
 				if k == sqs.QueueAttributeNameKmsDataKeyReusePeriodSeconds && e == strconv.Itoa(tfsqs.DefaultQueueKmsDataKeyReusePeriodSeconds) {
 					continue
