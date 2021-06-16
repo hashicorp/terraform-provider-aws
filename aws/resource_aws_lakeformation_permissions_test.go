@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	tflakeformation "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lakeformation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -36,6 +37,28 @@ func testAccAWSLakeFormationPermissions_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionCreateDatabase),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "true"),
 				),
+			},
+		},
+	})
+}
+
+func testAccAWSLakeFormationPermissions_disappears(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lakeformation_permissions.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lakeformation.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLakeFormationPermissionsConfig_tableWithColumns(rName, "\"event\", \"timestamp\""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLakeFormationPermissionsExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsLakeFormationPermissions(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -455,7 +478,7 @@ func permissionCountForLakeFormationResource(conn *lakeformation.LakeFormation, 
 	tableType := ""
 
 	if v, ok := rs.Primary.Attributes["table.#"]; ok && v != "" && v != "0" {
-		tableType = TableTypeTable
+		tableType = tflakeformation.TableTypeTable
 
 		tfMap := map[string]interface{}{}
 
@@ -467,7 +490,7 @@ func permissionCountForLakeFormationResource(conn *lakeformation.LakeFormation, 
 			tfMap["database_name"] = v
 		}
 
-		if v := rs.Primary.Attributes["table.0.name"]; v != "" && v != TableNameAllTables {
+		if v := rs.Primary.Attributes["table.0.name"]; v != "" && v != tflakeformation.TableNameAllTables {
 			tfMap["name"] = v
 		}
 
@@ -479,7 +502,7 @@ func permissionCountForLakeFormationResource(conn *lakeformation.LakeFormation, 
 	}
 
 	if v, ok := rs.Primary.Attributes["table_with_columns.#"]; ok && v != "" && v != "0" {
-		tableType = TableTypeTableWithColumns
+		tableType = tflakeformation.TableTypeTableWithColumns
 
 		tfMap := map[string]interface{}{}
 
@@ -548,53 +571,46 @@ func permissionCountForLakeFormationResource(conn *lakeformation.LakeFormation, 
 		return 0, fmt.Errorf("error listing Lake Formation permissions after retry: %w", err)
 	}
 
+	columnNames := make([]*string, 0)
+	excludedColumnNames := make([]*string, 0)
+	columnWildcard := false
+
+	if tableType == tflakeformation.TableTypeTableWithColumns {
+		if v := rs.Primary.Attributes["table.0.wildcard"]; v != "" && v == "true" {
+			columnWildcard = true
+		}
+
+		colCount := 0
+
+		if v := rs.Primary.Attributes["table_with_columns.0.column_names.#"]; v != "" {
+			colCount, err = strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_names.#"])
+
+			if err != nil {
+				return 0, fmt.Errorf("could not convert string (%s) Atoi for column_names: %w", rs.Primary.Attributes["table_with_columns.0.column_names.#"], err)
+			}
+		}
+
+		for i := 0; i < colCount; i++ {
+			columnNames = append(columnNames, aws.String(rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_names.%d", i)]))
+		}
+
+		colCount = 0
+
+		if v := rs.Primary.Attributes["table_with_columns.0.excluded_column_names.#"]; v != "" {
+			colCount, err = strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.excluded_column_names.#"])
+
+			if err != nil {
+				return 0, fmt.Errorf("could not convert string (%s) Atoi for excluded_column_names: %w", rs.Primary.Attributes["table_with_columns.0.excluded_column_names.#"], err)
+			}
+		}
+
+		for i := 0; i < colCount; i++ {
+			columnNames = append(columnNames, aws.String(rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.excluded_column_names.%d", i)]))
+		}
+	}
+
 	// clean permissions = filter out permissions that do not pertain to this specific resource
-
-	var cleanPermissions []*lakeformation.PrincipalResourcePermissions
-
-	if input.Resource.Catalog != nil {
-		cleanPermissions = filterLakeFormationCatalogPermissions(allPermissions)
-	}
-
-	if input.Resource.DataLocation != nil {
-		cleanPermissions = filterLakeFormationDataLocationPermissions(allPermissions)
-	}
-
-	if input.Resource.Database != nil {
-		cleanPermissions = filterLakeFormationDatabasePermissions(allPermissions)
-	}
-
-	if tableType == TableTypeTable {
-		cleanPermissions = filterLakeFormationTablePermissions(
-			aws.StringValue(input.Resource.Table.Name),
-			input.Resource.Table.TableWildcard != nil,
-			allPermissions,
-		)
-	}
-
-	var columnNames []string
-	if cols, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_names.#"]); err == nil {
-		for i := 0; i < cols; i++ {
-			columnNames = append(columnNames, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_names.%d", i)])
-		}
-	}
-
-	var excludedColumnNames []string
-	if cols, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.excluded_column_names.#"]); err == nil {
-		for i := 0; i < cols; i++ {
-			excludedColumnNames = append(excludedColumnNames, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.excluded_column_names.%d", i)])
-		}
-	}
-
-	if tableType == TableTypeTableWithColumns {
-		cleanPermissions = filterLakeFormationTableWithColumnsPermissions(
-			rs.Primary.Attributes["table_with_columns.0.database_name"],
-			rs.Primary.Attributes["table_with_columns.0.wildcard"] == "true",
-			aws.StringSlice(columnNames),
-			aws.StringSlice(excludedColumnNames),
-			allPermissions,
-		)
-	}
+	cleanPermissions := tflakeformation.FilterPermissions(input, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
 
 	return len(cleanPermissions), nil
 }
