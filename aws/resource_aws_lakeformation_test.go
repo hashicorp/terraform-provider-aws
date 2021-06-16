@@ -16,6 +16,7 @@ func TestAccAWSLakeFormation_serial(t *testing.T) {
 			"basic":        testAccAWSLakeFormationPermissions_basic,
 			"dataLocation": testAccAWSLakeFormationPermissions_dataLocation,
 			"database":     testAccAWSLakeFormationPermissions_database,
+			"disappears":   testAccAWSLakeFormationPermissions_disappears,
 		},
 		"TablePermissions": {
 			"columnWildcardPermissions":           testAccAWSLakeFormationPermissions_columnWildcardPermissions,
