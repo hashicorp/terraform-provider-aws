@@ -11,7 +11,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -36,7 +35,7 @@ func testSweepEksClusters(region string) error {
 	}
 	conn := client.(*AWSClient).eksconn
 	input := &eks.ListClustersInput{}
-	var sweeperErrs *multierror.Error
+	sweepResources := make([]*testSweepResource, 0)
 
 	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -48,13 +47,7 @@ func testSweepEksClusters(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(cluster))
 
-			err = r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -62,14 +55,20 @@ func testSweepEksClusters(region string) error {
 
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		return nil
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters: %w", err))
+		return fmt.Errorf("error listing EKS Clusters (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	err = testSweepResourceOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EKS Clusters (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func TestAccAWSEksCluster_basic(t *testing.T) {
