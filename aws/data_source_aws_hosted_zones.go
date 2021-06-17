@@ -293,6 +293,7 @@ func dataSourceAwsHostedZonesRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Unsupported region: %s", region)
 	}
 
+	d.SetId(region)
 	d.Set("region", region)
 	d.Set("alb", ids["alb"])
 	d.Set("cloudfront", ids["cloudfront"])
