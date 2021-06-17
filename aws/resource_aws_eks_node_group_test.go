@@ -318,10 +318,10 @@ func TestAccAWSEksNodeGroup_ForceUpdateVersion(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigForceUpdateVersion(rName, "1.15"),
+				Config: testAccAWSEksNodeGroupConfigForceUpdateVersion(rName, "1.19"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.15"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.19"),
 				),
 			},
 			{
@@ -331,10 +331,10 @@ func TestAccAWSEksNodeGroup_ForceUpdateVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_update_version"},
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigForceUpdateVersion(rName, "1.16"),
+				Config: testAccAWSEksNodeGroupConfigForceUpdateVersion(rName, "1.20"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.16"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.20"),
 				),
 			},
 		},
@@ -945,10 +945,10 @@ func TestAccAWSEksNodeGroup_Version(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigVersion(rName, "1.15"),
+				Config: testAccAWSEksNodeGroupConfigVersion(rName, "1.19"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.15"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.19"),
 				),
 			},
 			{
@@ -957,11 +957,11 @@ func TestAccAWSEksNodeGroup_Version(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigVersion(rName, "1.16"),
+				Config: testAccAWSEksNodeGroupConfigVersion(rName, "1.20"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup2),
 					testAccCheckAWSEksNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.16"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.20"),
 				),
 			},
 		},
