@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/transfer"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -33,7 +32,7 @@ func testSweepTransferServers(region string) error {
 	}
 	conn := client.(*AWSClient).transferconn
 	input := &transfer.ListServersInput{}
-	var sweeperErrs *multierror.Error
+	sweepResources := make([]*testSweepResource, 0)
 
 	err = conn.ListServersPages(input, func(page *transfer.ListServersOutput, lastPage bool) bool {
 		if page == nil {
@@ -45,13 +44,9 @@ func testSweepTransferServers(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(server.ServerId))
 			d.Set("force_destroy", true) // In lieu of an aws_transfer_user sweeper.
-			err = r.Delete(d, client)
+			d.Set("identity_provider_type", server.IdentityProviderType)
 
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -59,14 +54,20 @@ func testSweepTransferServers(region string) error {
 
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Transfer Server sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		return nil
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Transfer Servers: %w", err))
+		return fmt.Errorf("error listing Transfer Servers (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	err = testSweepResourceOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Transfer Servers (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func testAccErrorCheckSkipTransfer(t *testing.T) resource.ErrorCheckFunc {
@@ -392,12 +393,47 @@ func TestAccAWSTransferServer_apiGateway(t *testing.T) {
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTransferServerApiGatewayIdentityProviderTypeConfig(rName),
+				Config: testAccAWSTransferServerApiGatewayIdentityProviderTypeConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
 					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", "arn"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
+func TestAccAWSTransferServer_apiGateway_forceDestroy(t *testing.T) {
+	var conf transfer.DescribedServer
+	resourceName := "aws_transfer_server.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSTransferServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSTransferServerApiGatewayIdentityProviderTypeConfig(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
+					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", "arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -747,18 +783,20 @@ resource "aws_transfer_server" "test" {
 `)
 }
 
-func testAccAWSTransferServerApiGatewayIdentityProviderTypeConfig(rName string) string {
+func testAccAWSTransferServerApiGatewayIdentityProviderTypeConfig(rName string, forceDestroy bool) string {
 	return composeConfig(
 		testAccAWSTransferServerConfigBaseApiGateway(rName),
 		testAccAWSTransferServerConfigBaseLoggingRole(rName),
-		`
+		fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   identity_provider_type = "API_GATEWAY"
   url                    = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
   invocation_role        = aws_iam_role.test.arn
   logging_role           = aws_iam_role.test.arn
+
+  force_destroy = %[1]t
 }
-`)
+`, forceDestroy))
 }
 
 func testAccAWSTransferServerForceDestroyConfig(rName string) string {

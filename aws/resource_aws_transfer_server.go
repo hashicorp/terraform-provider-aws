@@ -8,12 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/go-multierror"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	tftransfer "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
@@ -438,7 +437,7 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsTransferServerDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
 
-	if d.Get("force_destroy").(bool) {
+	if d.Get("force_destroy").(bool) && d.Get("identity_provider_type").(string) == transfer.IdentityProviderTypeServiceManaged {
 		input := &transfer.ListUsersInput{
 			ServerId: aws.String(d.Id()),
 		}
@@ -450,15 +449,12 @@ func resourceAwsTransferServerDelete(d *schema.ResourceData, meta interface{}) e
 			}
 
 			for _, user := range page.Users {
-				resourceID := tftransfer.UserCreateResourceID(d.Id(), aws.StringValue(user.UserName))
-
-				r := resourceAwsTransferUser()
-				d := r.Data(nil)
-				d.SetId(resourceID)
-				err := r.Delete(d, meta)
+				err := transferUserDelete(conn, d.Id(), aws.StringValue(user.UserName))
 
 				if err != nil {
-					deletionErrs = multierror.Append(deletionErrs, fmt.Errorf("error deleting Transfer User (%s): %w", resourceID, err))
+					log.Printf("[ERROR] %s", err)
+					deletionErrs = multierror.Append(deletionErrs, err)
+
 					continue
 				}
 			}
@@ -477,7 +473,7 @@ func resourceAwsTransferServerDelete(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	log.Printf("[DEBUG] Deleting Transfer Server (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting Transfer Server: (%s)", d.Id())
 	_, err := conn.DeleteServer(&transfer.DeleteServerInput{
 		ServerId: aws.String(d.Id()),
 	})
