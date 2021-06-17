@@ -35,36 +35,41 @@ func testSweepEksClusters(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).eksconn
-
-	var errors error
 	input := &eks.ListClustersInput{}
-	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
-		for _, cluster := range page.Clusters {
-			name := aws.StringValue(cluster)
+	var sweeperErrs *multierror.Error
 
-			log.Printf("[INFO] Deleting EKS Cluster: %s", name)
-			err := deleteEksCluster(conn, name)
+	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, cluster := range page.Clusters {
+			r := resourceAwsEksCluster()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(cluster))
+
+			err = r.Delete(d, client)
+
 			if err != nil {
-				errors = multierror.Append(errors, fmt.Errorf("error deleting EKS Cluster %q: %w", name, err))
-				continue
-			}
-			err = waitForDeleteEksCluster(conn, name, 15*time.Minute)
-			if err != nil {
-				errors = multierror.Append(errors, fmt.Errorf("error waiting for EKS Cluster %q deletion: %w", name, err))
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
 		}
-		return true
+
+		return !lastPage
 	})
+
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
-		return errors // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		errors = multierror.Append(errors, fmt.Errorf("error retrieving EKS Clusters: %w", err))
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
-	return errors
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSEksCluster_basic(t *testing.T) {
