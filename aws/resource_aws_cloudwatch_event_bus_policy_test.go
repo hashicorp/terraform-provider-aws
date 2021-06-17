@@ -109,8 +109,8 @@ func testAccAWSCloudWatchEventBusPolicyDocument(pr string) resource.TestCheckFun
 			return fmt.Errorf("No ID is set")
 		}
 
-		var policyFromState map[string]interface{}
-		err := json.Unmarshal([]byte(eventBusPolicyResource.Primary.Attributes["policy"]), &policyFromState)
+		var eventBusPolicyResourcePolicyDocument map[string]interface{}
+		err := json.Unmarshal([]byte(eventBusPolicyResource.Primary.Attributes["policy"]), &eventBusPolicyResourcePolicyDocument)
 
 		eventBusName := eventBusPolicyResource.Primary.ID
 
@@ -131,7 +131,7 @@ func testAccAWSCloudWatchEventBusPolicyDocument(pr string) resource.TestCheckFun
 			return fmt.Errorf("Not found: %s", pr)
 		}
 
-		if !reflect.DeepEqual(describedEventBusPolicy, policyFromState) {
+		if !reflect.DeepEqual(describedEventBusPolicy, eventBusPolicyResourcePolicyDocument) {
 			return fmt.Errorf("CloudWatch Events bus policy mismatch for '%s'", pr)
 		}
 
