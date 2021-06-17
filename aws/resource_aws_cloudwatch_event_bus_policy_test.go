@@ -19,6 +19,7 @@ func TestAccAWSCloudwatchEventBusPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
 		Steps: []resource.TestStep{
@@ -26,14 +27,14 @@ func TestAccAWSCloudwatchEventBusPolicy_basic(t *testing.T) {
 				Config: testAccAWSCloudwatchEventBusPolicyConfig(rstring),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudwatchEventBusPolicyExists(resourceName),
-					testAccAWSCloudWatchEventBusPolicyDocument(resourceName),
+					testAccAWSCloudwatchEventBusPolicyDocument(resourceName),
 				),
 			},
 			{
 				Config: testAccAWSCloudwatchEventBusPolicyConfigUpdate(rstring),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudwatchEventBusPolicyExists(resourceName),
-					testAccAWSCloudWatchEventBusPolicyDocument(resourceName),
+					testAccAWSCloudwatchEventBusPolicyDocument(resourceName),
 				),
 			},
 			{
@@ -45,7 +46,7 @@ func TestAccAWSCloudwatchEventBusPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventBusPolicy_disappears(t *testing.T) {
+func TestAccAWSCloudwatchEventBusPolicy_disappears(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_bus_policy.test"
 	rstring := acctest.RandString(5)
 
@@ -98,7 +99,7 @@ func testAccCheckAWSCloudwatchEventBusPolicyExists(pr string) resource.TestCheck
 	}
 }
 
-func testAccAWSCloudWatchEventBusPolicyDocument(pr string) resource.TestCheckFunc {
+func testAccAWSCloudwatchEventBusPolicyDocument(pr string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		eventBusPolicyResource, ok := state.RootModule().Resources[pr]
 		if !ok {
@@ -111,6 +112,9 @@ func testAccAWSCloudWatchEventBusPolicyDocument(pr string) resource.TestCheckFun
 
 		var eventBusPolicyResourcePolicyDocument map[string]interface{}
 		err := json.Unmarshal([]byte(eventBusPolicyResource.Primary.Attributes["policy"]), &eventBusPolicyResourcePolicyDocument)
+		if err != nil {
+			return fmt.Errorf("Parsing CloudWatch Events bus policy for '%s' failed: %w", pr, err)
+		}
 
 		eventBusName := eventBusPolicyResource.Primary.ID
 
@@ -120,6 +124,9 @@ func testAccAWSCloudWatchEventBusPolicyDocument(pr string) resource.TestCheckFun
 
 		cloudWatchEventsConnection := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
 		describedEventBus, err := cloudWatchEventsConnection.DescribeEventBus(input)
+		if err != nil {
+			return fmt.Errorf("Reading CloudWatch Events bus policy for '%s' failed: %w", pr, err)
+		}
 
 		var describedEventBusPolicy map[string]interface{}
 		err = json.Unmarshal([]byte(*describedEventBus.Policy), &describedEventBusPolicy)
