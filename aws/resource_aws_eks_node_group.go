@@ -606,7 +606,7 @@ func expandEksNodegroupScalingConfig(l []interface{}) *eks.NodegroupScalingConfi
 
 	config := &eks.NodegroupScalingConfig{}
 
-	if v, ok := m["desired_size"].(int); ok && v != 0 {
+	if v, ok := m["desired_size"].(int); ok {
 		config.DesiredSize = aws.Int64(int64(v))
 	}
 
@@ -614,7 +614,7 @@ func expandEksNodegroupScalingConfig(l []interface{}) *eks.NodegroupScalingConfi
 		config.MaxSize = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["min_size"].(int); ok && v != 0 {
+	if v, ok := m["min_size"].(int); ok {
 		config.MinSize = aws.Int64(int64(v))
 	}
 
