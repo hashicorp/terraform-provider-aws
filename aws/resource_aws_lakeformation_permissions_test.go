@@ -699,7 +699,15 @@ resource "aws_iam_role" "test" {
       },
       "Effect": "Allow",
       "Sid": ""
-    }
+    },
+    {
+		"Action": "sts:AssumeRole",
+		"Principal": {
+		  "Service": "s3.amazonaws.com"
+		},
+		"Effect": "Allow",
+		"Sid": ""
+	  }
   ]
 }
 EOF
@@ -712,7 +720,8 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_lakeformation_resource" "test" {
-  arn = aws_s3_bucket.test.arn
+  arn      = aws_s3_bucket.test.arn
+  role_arn = aws_iam_role.test.arn
 }
 
 data "aws_caller_identity" "current" {}
