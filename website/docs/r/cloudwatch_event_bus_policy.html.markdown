@@ -80,6 +80,60 @@ resource "aws_cloudwatch_event_bus_policy" "test" {
 }
 ```
 
+### Multiple Statements
+
+```hcl
+data "aws_iam_policy_document" "test" {
+  
+  statement {
+    sid    = "DevAccountAccess"
+    effect = "Allow"
+    actions = [
+      "events:PutEvents",
+    ]
+    resources = [
+      "arn:aws:events:eu-west-1:111111111111:event-bus/default"
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["123456789012"]
+    }
+  }
+  
+  statement {
+    sid    = "OrganizationAccess"
+    effect = "Allow"
+    actions = [
+      "events:DescribeRule",
+      "events:ListRules",
+      "events:ListTargetsByRule",
+      "events:ListTagsForResource",
+    ]
+    resources = [
+      "arn:aws:events:eu-west-1:11111111111111:rule/*",
+      "arn:aws:events:eu-west-1:111111111111:event-bus/default"
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:PrincipalOrgID"
+      values   = aws_organizations_organization.example.id
+    }
+  }
+}
+
+resource "aws_cloudwatch_event_bus_policy" "test" {
+  policy         = data.aws_iam_policy_document.access.json
+  event_bus_name = aws_cloudwatch_event_bus.test.name
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
