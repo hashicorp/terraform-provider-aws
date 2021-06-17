@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfeks "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/eks"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
@@ -22,7 +23,6 @@ func resourceAwsEksCluster() *schema.Resource {
 		Read:   resourceAwsEksClusterRead,
 		Update: resourceAwsEksClusterUpdate,
 		Delete: resourceAwsEksClusterDelete,
-
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -56,6 +56,14 @@ func resourceAwsEksCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"enabled_cluster_log_types": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(eks.LogType_Values(), true),
+				},
+			},
 			"encryption_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -80,10 +88,8 @@ func resourceAwsEksCluster() *schema.Resource {
 							MinItems: 1,
 							Required: true,
 							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.StringInSlice([]string{
-									"secrets",
-								}, false),
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(tfeks.Resources_Values(), false),
 							},
 						},
 					},
@@ -113,7 +119,6 @@ func resourceAwsEksCluster() *schema.Resource {
 					},
 				},
 			},
-
 			"kubernetes_network_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -134,7 +139,6 @@ func resourceAwsEksCluster() *schema.Resource {
 					},
 				},
 			},
-
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -183,6 +187,15 @@ func resourceAwsEksCluster() *schema.Resource {
 							Optional: true,
 							Default:  true,
 						},
+						"public_access_cidrs": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validateCIDRNetworkAddress,
+							},
+						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -196,30 +209,12 @@ func resourceAwsEksCluster() *schema.Resource {
 							MinItems: 1,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"public_access_cidrs": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validateCIDRNetworkAddress,
-							},
-						},
 						"vpc_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
-			},
-			"enabled_cluster_log_types": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(eks.LogType_Values(), true),
-				},
-				Set: schema.HashString,
 			},
 		},
 	}
