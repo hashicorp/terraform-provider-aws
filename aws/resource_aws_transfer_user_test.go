@@ -13,12 +13,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
-func TestAccAWSTransferUser_basic(t *testing.T) {
+func testAccAWSTransferUser_basic(t *testing.T) {
 	var conf transfer.DescribedUser
 	resourceName := "aws_transfer_user.test"
 	rName := acctest.RandString(10)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
 		Providers:    testAccProviders,
@@ -43,12 +43,12 @@ func TestAccAWSTransferUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSTransferUser_posix(t *testing.T) {
+func testAccAWSTransferUser_posix(t *testing.T) {
 	var conf transfer.DescribedUser
 	resourceName := "aws_transfer_user.test"
 	rName := acctest.RandString(10)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
 		Providers:    testAccProviders,
@@ -82,13 +82,13 @@ func TestAccAWSTransferUser_posix(t *testing.T) {
 	})
 }
 
-func TestAccAWSTransferUser_modifyWithOptions(t *testing.T) {
+func testAccAWSTransferUser_modifyWithOptions(t *testing.T) {
 	var conf transfer.DescribedUser
 	resourceName := "aws_transfer_user.test"
 	rName := acctest.RandString(10)
 	rName2 := acctest.RandString(10)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
 		Providers:    testAccProviders,
@@ -129,13 +129,13 @@ func TestAccAWSTransferUser_modifyWithOptions(t *testing.T) {
 	})
 }
 
-func TestAccAWSTransferUser_disappears(t *testing.T) {
+func testAccAWSTransferUser_disappears(t *testing.T) {
 	var serverConf transfer.DescribedServer
 	var userConf transfer.DescribedUser
 	rName := acctest.RandString(10)
 	resourceName := "aws_transfer_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
 		Providers:    testAccProviders,
@@ -154,8 +154,8 @@ func TestAccAWSTransferUser_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSTransferUser_UserName_Validation(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+func testAccAWSTransferUser_UserName_Validation(t *testing.T) {
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
 		Providers:    testAccProviders,
@@ -191,12 +191,12 @@ func TestAccAWSTransferUser_UserName_Validation(t *testing.T) {
 	})
 }
 
-func TestAccAWSTransferUser_homeDirectoryMappings(t *testing.T) {
+func testAccAWSTransferUser_homeDirectoryMappings(t *testing.T) {
 	var conf transfer.DescribedUser
 	rName := acctest.RandString(10)
 	resourceName := "aws_transfer_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
 		Providers:    testAccProviders,
