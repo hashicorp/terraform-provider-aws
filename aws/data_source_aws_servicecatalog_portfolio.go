@@ -67,18 +67,18 @@ func dataSourceAwsServiceCatalogPortfolioRead(d *schema.ResourceData, meta inter
 	output, err := conn.DescribePortfolio(input)
 
 	if err != nil {
-		return fmt.Errorf("error getting Service Catalog Portfolio: %w", err)
+		return fmt.Errorf("error getting Service Catalog Portfolio (%s): %w", d.Get("id").(string), err)
 	}
 
 	if output == nil || output.PortfolioDetail == nil {
-		return fmt.Errorf("error getting Service Catalog Portfolio: empty response")
+		return fmt.Errorf("error getting Service Catalog Portfolio (%s): empty response", d.Get("id").(string))
 	}
 
 	detail := output.PortfolioDetail
 
 	d.SetId(aws.StringValue(detail.Id))
 
-	if err := d.Set("created_time", detail.CreatedTime.Format(time.RFC3339)); err != nil {
+	if err := d.Set("created_time", aws.TimeValue(detail.CreatedTime).Format(time.RFC3339)); err != nil {
 		log.Printf("[DEBUG] Error setting created_time: %s", err)
 	}
 
