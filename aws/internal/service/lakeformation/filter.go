@@ -15,31 +15,40 @@ const (
 )
 
 func FilterPermissions(input *lakeformation.ListPermissionsInput, tableType string, columnNames []*string, excludedColumnNames []*string, columnWildcard bool, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
-	// clean permissions = filter out permissions that do not pertain to this specific resource
-
-	var cleanPermissions []*lakeformation.PrincipalResourcePermissions
+	// For most Lake Formation resources, filtering within the provider is unnecessary. The input
+	// contains everything for AWS to give you back exactly what you want. However, many challenges
+	// arise with tables and tables with columns. Perhaps the two biggest problems (so far) are as
+	// follows:
+	// 1. SELECT - when you grant SELECT, it may be part of a list of permissions. However, when
+	//    listing permissions, SELECT comes back in a separate permission.
+	// 2. Tables with columns. The ListPermissionsInput does not allow you to include a tables with
+	//    columns resource. This means you might get back more permissions than actually pertain to
+	//    the current situation. The table may have separate permissions that also come back.
+	//
+	// Thus, for most cases this is just a pass through filter but attempts to clean out
+	// permissions in the special cases to avoid extra permissions being included.
 
 	if input.Resource.Catalog != nil {
-		cleanPermissions = FilterLakeFormationCatalogPermissions(allPermissions)
+		return FilterLakeFormationCatalogPermissions(allPermissions)
 	}
 
 	if input.Resource.DataLocation != nil {
-		cleanPermissions = FilterLakeFormationDataLocationPermissions(allPermissions)
+		return FilterLakeFormationDataLocationPermissions(allPermissions)
 	}
 
 	if input.Resource.Database != nil {
-		cleanPermissions = FilterLakeFormationDatabasePermissions(allPermissions)
-	}
-
-	if tableType == TableTypeTable {
-		cleanPermissions = FilterLakeFormationTablePermissions(input.Resource.Table, allPermissions)
+		return FilterLakeFormationDatabasePermissions(allPermissions)
 	}
 
 	if tableType == TableTypeTableWithColumns {
-		cleanPermissions = FilterLakeFormationTableWithColumnsPermissions(input.Resource.Table, columnNames, excludedColumnNames, columnWildcard, allPermissions)
+		return FilterLakeFormationTableWithColumnsPermissions(input.Resource.Table, columnNames, excludedColumnNames, columnWildcard, allPermissions)
 	}
 
-	return cleanPermissions
+	if input.Resource.Table != nil || tableType == TableTypeTable {
+		return FilterLakeFormationTablePermissions(input.Resource.Table, allPermissions)
+	}
+
+	return nil
 }
 
 func FilterLakeFormationTablePermissions(table *lakeformation.TableResource, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
@@ -68,7 +77,7 @@ func FilterLakeFormationTablePermissions(table *lakeformation.TableResource, all
 			}
 		}
 
-		if perm.Resource.Table != nil {
+		if perm.Resource.Table != nil && aws.StringValue(perm.Resource.Table.DatabaseName) == aws.StringValue(table.DatabaseName) {
 			if aws.StringValue(perm.Resource.Table.Name) == aws.StringValue(table.Name) {
 				cleanPermissions = append(cleanPermissions, perm)
 				continue
