@@ -38,6 +38,38 @@ func TestAccAWSCloudwatchEventBusPolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudwatchEventBusPolicy_update(t *testing.T) {
+	resourceName := "aws_cloudwatch_event_bus_policy.test"
+	rstring := acctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudwatchEventBusPolicyConfig(rstring),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCloudwatchEventBusPolicyExists(resourceName),
+					testAccAWSCloudWatchEventBusPolicyDocument(resourceName),
+				),
+			},
+			{
+				Config: testAccAWSCloudwatchEventBusPolicyConfigUpdated(rstring),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCloudwatchEventBusPolicyExists(resourceName),
+					testAccAWSCloudWatchEventBusPolicyDocument(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudWatchEventBusPolicy_disappears(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_bus_policy.test"
 	rstring := acctest.RandString(5)
@@ -148,6 +180,50 @@ data "aws_iam_policy_document" "access" {
     }
     actions = [
       "events:PutEvents",
+      "events:PutRule"
+    ]
+    resources = [
+      aws_cloudwatch_event_bus.test.arn,
+    ]
+  }
+}
+
+resource "aws_cloudwatch_event_bus_policy" "test" {
+  policy         = data.aws_iam_policy_document.access.json
+  event_bus_name = aws_cloudwatch_event_bus.test.name
+}
+`, name)
+}
+
+func testAccAWSCloudwatchEventBusPolicyConfigUpdated(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %[1]q
+}
+
+data "aws_iam_policy_document" "access" {
+  statement {
+    sid    = "test-resource-policy-1"
+    effect = "Allow"
+    principals {
+      identifiers = ["ecs.amazonaws.com"]
+      type        = "Service"
+    }
+    actions = [
+      "events:PutEvents",
+    ]
+    resources = [
+      aws_cloudwatch_event_bus.test.arn,
+    ]
+  }
+  statement {
+    sid    = "test-resource-policy-2"
+    effect = "Allow"
+    principals {
+      identifiers = ["ecs.amazonaws.com"]
+      type        = "Service"
+    }
+    actions = [
       "events:PutRule"
     ]
     resources = [
