@@ -91,7 +91,10 @@ func resourceAwsBackupVaultPolicyDelete(d *schema.ResourceData, meta interface{}
 
 	_, err := conn.DeleteBackupVaultAccessPolicy(input)
 	if err != nil {
-		if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+		if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") ||
+			isAWSErr(err, "AccessDeniedException", "") {
+			log.Printf("[WARN] Backup Vault Policy (%s) not found, removing from state", d.Id())
+			d.SetId("")
 			return nil
 		}
 		return fmt.Errorf("error deleting Backup Vault Policy (%s): %w", d.Id(), err)
