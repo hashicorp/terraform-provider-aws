@@ -6,7 +6,7 @@ description: |-
   Provides information for a Service Catalog Portfolio.
 ---
 
-# Data source: aws_servicecatalog_portfolio
+# Data Source: aws_servicecatalog_portfolio
 
 Provides information for a Service Catalog Portfolio.
 
@@ -22,7 +22,7 @@ data "aws_servicecatalog_portfolio" "portfolio" {
 
 The following arguments are required:
 
-* `id` - (Optional) Portfolio identifier.
+* `id` - (Required) Portfolio identifier.
 
 The following arguments are optional:
 
