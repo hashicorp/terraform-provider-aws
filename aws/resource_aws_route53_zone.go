@@ -348,7 +348,7 @@ func deleteAllRecordsInHostedZoneId(hostedZoneId, hostedZoneName string, conn *r
 		changes := make([]*route53.Change, 0)
 		// 100 items per page returned by default
 		for _, set := range sets {
-			if strings.TrimSuffix(*set.Name, ".") == strings.TrimSuffix(hostedZoneName, ".") && (*set.Type == "NS" || *set.Type == "SOA") {
+			if strings.TrimSuffix(aws.StringValue(set.Name), ".") == strings.TrimSuffix(hostedZoneName, ".") && (aws.StringValue(set.Type) == "NS" || aws.StringValue(set.Type) == "SOA") {
 				// Zone NS & SOA records cannot be deleted
 				continue
 			}
@@ -357,8 +357,7 @@ func deleteAllRecordsInHostedZoneId(hostedZoneId, hostedZoneName string, conn *r
 				ResourceRecordSet: set,
 			})
 		}
-		log.Printf("[DEBUG] Deleting %d records (page %d) from %s",
-			len(changes), pageNum, hostedZoneId)
+		log.Printf("[DEBUG] Deleting %d records (page %d) from %s", len(changes), pageNum, hostedZoneId)
 
 		req := &route53.ChangeResourceRecordSetsInput{
 			HostedZoneId: aws.String(hostedZoneId),
@@ -373,7 +372,7 @@ func deleteAllRecordsInHostedZoneId(hostedZoneId, hostedZoneName string, conn *r
 		if out, ok := resp.(*route53.ChangeResourceRecordSetsOutput); ok {
 			log.Printf("[DEBUG] Waiting for change batch to become INSYNC: %#v", out)
 			if out.ChangeInfo != nil && out.ChangeInfo.Id != nil {
-				lastErrorFromWaiter = waitForRoute53RecordSetToSync(conn, cleanChangeID(*out.ChangeInfo.Id))
+				lastErrorFromWaiter = waitForRoute53RecordSetToSync(conn, cleanChangeID(aws.StringValue(out.ChangeInfo.Id)))
 			} else {
 				log.Printf("[DEBUG] Change info was empty")
 			}
@@ -397,7 +396,7 @@ func resourceAwsGoRoute53Wait(r53 *route53.Route53, ref *route53.GetChangeInput)
 	if err != nil {
 		return nil, "UNKNOWN", err
 	}
-	return true, *status.ChangeInfo.Status, nil
+	return true, aws.StringValue(status.ChangeInfo.Status), nil
 }
 
 // cleanChangeID is used to remove the leading /change/
@@ -446,7 +445,7 @@ func getNameServers(zoneId string, zoneName string, r53 *route53.Route53) ([]str
 	}
 	ns := make([]string, len(resp.ResourceRecordSets[0].ResourceRecords))
 	for i := range resp.ResourceRecordSets[0].ResourceRecords {
-		ns[i] = *resp.ResourceRecordSets[0].ResourceRecords[i].Value
+		ns[i] = aws.StringValue(resp.ResourceRecordSets[0].ResourceRecords[i].Value)
 	}
 	sort.Strings(ns)
 	return ns, nil
