@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -288,30 +289,39 @@ func resourceAwsTransferUserUpdate(d *schema.ResourceData, meta interface{}) err
 
 func resourceAwsTransferUserDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
+
 	serverID, userName, err := tftransfer.UserParseResourceID(d.Id())
+
 	if err != nil {
 		return fmt.Errorf("error parsing Transfer User ID: %w", err)
 	}
 
-	delOpts := &transfer.DeleteUserInput{
-		UserName: aws.String(userName),
+	return transferUserDelete(conn, serverID, userName)
+}
+
+// transferUserDelete attempts to delete a transfer user.
+func transferUserDelete(conn *transfer.Transfer, serverID, userName string) error {
+	id := fmt.Sprintf("%s/%s", serverID, userName)
+	input := &transfer.DeleteUserInput{
 		ServerId: aws.String(serverID),
+		UserName: aws.String(userName),
 	}
 
-	log.Printf("[DEBUG] Delete Transfer User Option: %#v", delOpts)
+	log.Printf("[INFO] Deleting Transfer User: %s", id)
+	_, err := conn.DeleteUser(input)
 
-	_, err = conn.DeleteUser(delOpts)
+	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
-		return fmt.Errorf("error deleting Transfer User (%s) for Server(%s): %w", userName, serverID, err)
+		return fmt.Errorf("error deleting Transfer User (%s): %w", id, err)
 	}
 
 	_, err = waiter.UserDeleted(conn, serverID, userName)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Transfer User (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for Transfer User (%s) delete: %w", id, err)
 	}
 
 	return nil
