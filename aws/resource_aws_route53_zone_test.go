@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -71,6 +73,86 @@ func TestTrimTrailingPeriod(t *testing.T) {
 			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
 		}
 	}
+}
+
+// add sweeper to delete resources
+func init() {
+	resource.AddTestSweepers("aws_route53_zone", &resource.Sweeper{
+		Name: "aws_route53_zone",
+		Dependencies: []string{
+			"aws_service_discovery_http_namespace",
+			"aws_service_discovery_public_dns_namespace",
+			"aws_service_discovery_private_dns_namespace",
+			"aws_elb",
+		},
+		F: testSweepRoute53Zones,
+	})
+}
+
+func testSweepRoute53Zones(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).r53conn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
+
+	input := &route53.ListHostedZonesInput{}
+
+	hostedZonesToPreserve := []string{
+		"acmetest.hashicorp.engineering",
+		"tfacc.hashicorptest.com",
+		"aws.tfacc.hashicorptest.com",
+	}
+
+	err = conn.ListHostedZonesPages(input, func(page *route53.ListHostedZonesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, detail := range page.HostedZones {
+			if detail == nil {
+				continue
+			}
+
+			id := aws.StringValue(detail.Id)
+
+			for _, domain := range hostedZonesToPreserve {
+				if strings.Contains(aws.StringValue(detail.Name), domain) {
+					log.Printf("[DEBUG] Skipping Route53 Hosted Zone (%s): %s", domain, id)
+					continue
+				}
+			}
+
+			r := resourceAwsRoute53Zone()
+			d := r.Data(nil)
+			d.SetId(id)
+			d.Set("force_destroy", true)
+			d.Set("name", detail.Name)
+
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error describing Route53 Hosted Zones for %s: %w", region, err))
+	}
+
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Route53 Hosted Zones for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping Route53 Hosted Zones sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func TestAccAWSRoute53Zone_basic(t *testing.T) {
