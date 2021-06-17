@@ -84,9 +84,7 @@ func testSweepResourceOrchestrator(sweepResources []*testSweepResource) error {
 
 		g.Go(func() error {
 			err := resource.Retry(SweepThrottlingRetryTimeout, func() *resource.RetryError {
-				var err error
-
-				err = testAccDeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
+				err := testAccDeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
 
 				if err != nil {
 					if tfawserr.ErrCodeContains(err, "ThrottlingException: Rate exceeded") {
@@ -95,6 +93,7 @@ func testSweepResourceOrchestrator(sweepResources []*testSweepResource) error {
 
 					return resource.NonRetryableError(err)
 				}
+
 				return nil
 			})
 
