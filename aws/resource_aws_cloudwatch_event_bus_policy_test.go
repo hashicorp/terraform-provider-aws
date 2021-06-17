@@ -25,37 +25,12 @@ func TestAccAWSCloudwatchEventBusPolicy_basic(t *testing.T) {
 			{
 				Config: testAccAWSCloudwatchEventBusPolicyConfig(rstring),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSCloudWatchEventBusPolicyDocument(resourceName),
-					testAccCheckAWSCloudwatchEventBusPolicyExists(resourceName),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSCloudwatchEventBusPolicy_update(t *testing.T) {
-	resourceName := "aws_cloudwatch_event_bus_policy.test"
-	rstring := acctest.RandString(5)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSCloudwatchEventBusPolicyConfig(rstring),
-				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudwatchEventBusPolicyExists(resourceName),
 					testAccAWSCloudWatchEventBusPolicyDocument(resourceName),
 				),
 			},
 			{
-				Config: testAccAWSCloudwatchEventBusPolicyConfigUpdated(rstring),
+				Config: testAccAWSCloudwatchEventBusPolicyConfigUpdate(rstring),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudwatchEventBusPolicyExists(resourceName),
 					testAccAWSCloudWatchEventBusPolicyDocument(resourceName),
@@ -195,7 +170,7 @@ resource "aws_cloudwatch_event_bus_policy" "test" {
 `, name)
 }
 
-func testAccAWSCloudwatchEventBusPolicyConfigUpdated(name string) string {
+func testAccAWSCloudwatchEventBusPolicyConfigUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
