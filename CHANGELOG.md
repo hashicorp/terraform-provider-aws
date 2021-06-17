@@ -20,6 +20,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_directory_service_directory: Check VpcSettings and ConnectSettings for nil values ([#19820](https://github.com/hashicorp/terraform-provider-aws/issues/19820))
 * data-source/aws_lakeformation_permissions: Fix diffs resulting from order of column names and exclude column names ([#19817](https://github.com/hashicorp/terraform-provider-aws/issues/19817))
 * resource/aws_cognito_identity_provider: Fix updating `idp_identifiers` crash. ([#19819](https://github.com/hashicorp/terraform-provider-aws/issues/19819))
 * resource/aws_glue_trigger: Fix default timeouts for Create and Delete operations ([#19827](https://github.com/hashicorp/terraform-provider-aws/issues/19827))
