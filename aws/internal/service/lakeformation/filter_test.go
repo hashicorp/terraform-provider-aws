@@ -55,7 +55,7 @@ func TestFilterPermissions(t *testing.T) {
 			ExpectedClean: nil,
 		},
 		{
-			Name: "wrongTableResource",
+			Name: "wrongTableResource", // this may not actually be possible but we account for it
 			Input: &lakeformation.ListPermissionsInput{
 				Principal: principal,
 				Resource: &lakeformation.Resource{
@@ -82,6 +82,456 @@ func TestFilterPermissions(t *testing.T) {
 			},
 			ExpectedClean: nil,
 		},
+		{
+			Name: "tableResource",
+			Input: &lakeformation.ListPermissionsInput{
+				Principal: principal,
+				Resource: &lakeformation.Resource{
+					Table: &lakeformation.TableResource{
+						CatalogId:    aws.String(accountID),
+						DatabaseName: aws.String(dbName),
+						Name:         aws.String(tableName),
+					},
+				},
+			},
+			All: []*lakeformation.PrincipalResourcePermissions{
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionSelect}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						Table: &lakeformation.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+			},
+			ExpectedClean: []*lakeformation.PrincipalResourcePermissions{
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionSelect}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						Table: &lakeformation.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+			},
+		},
+		{
+			Name: "tableResourceSelectPerm",
+			Input: &lakeformation.ListPermissionsInput{
+				Principal: principal,
+				Resource: &lakeformation.Resource{
+					Table: &lakeformation.TableResource{
+						CatalogId:    aws.String(accountID),
+						DatabaseName: aws.String(dbName),
+						Name:         aws.String(tableName),
+					},
+				},
+			},
+			All: []*lakeformation.PrincipalResourcePermissions{
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionAlter, lakeformation.PermissionDelete}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						Table: &lakeformation.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionSelect}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						TableWithColumns: &lakeformation.TableWithColumnsResource{
+							CatalogId:      aws.String(accountID),
+							DatabaseName:   aws.String(dbName),
+							Name:           aws.String(tableName),
+							ColumnWildcard: &lakeformation.ColumnWildcard{},
+						},
+					},
+				},
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionAlter}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						TableWithColumns: &lakeformation.TableWithColumnsResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+			},
+			ExpectedClean: []*lakeformation.PrincipalResourcePermissions{
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionAlter, lakeformation.PermissionDelete}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						Table: &lakeformation.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionSelect}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						TableWithColumns: &lakeformation.TableWithColumnsResource{
+							CatalogId:      aws.String(accountID),
+							DatabaseName:   aws.String(dbName),
+							Name:           aws.String(tableName),
+							ColumnWildcard: &lakeformation.ColumnWildcard{},
+						},
+					},
+				},
+			},
+		},
+		{
+			Name: "tableResourceSelectPermGrant",
+			Input: &lakeformation.ListPermissionsInput{
+				Principal: principal,
+				Resource: &lakeformation.Resource{
+					Table: &lakeformation.TableResource{
+						CatalogId:    aws.String(accountID),
+						DatabaseName: aws.String(dbName),
+						Name:         aws.String(tableName),
+					},
+				},
+			},
+			All: []*lakeformation.PrincipalResourcePermissions{
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionAlter, lakeformation.PermissionDelete}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{lakeformation.PermissionAlter, lakeformation.PermissionDelete}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						Table: &lakeformation.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionSelect}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{lakeformation.PermissionSelect}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						TableWithColumns: &lakeformation.TableWithColumnsResource{
+							CatalogId:      aws.String(accountID),
+							DatabaseName:   aws.String(dbName),
+							Name:           aws.String(tableName),
+							ColumnWildcard: &lakeformation.ColumnWildcard{},
+						},
+					},
+				},
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionAlter}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{lakeformation.PermissionAlter}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						TableWithColumns: &lakeformation.TableWithColumnsResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+			},
+			ExpectedClean: []*lakeformation.PrincipalResourcePermissions{
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionAlter, lakeformation.PermissionDelete}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{lakeformation.PermissionAlter, lakeformation.PermissionDelete}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						Table: &lakeformation.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionSelect}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{lakeformation.PermissionSelect}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						TableWithColumns: &lakeformation.TableWithColumnsResource{
+							CatalogId:      aws.String(accountID),
+							DatabaseName:   aws.String(dbName),
+							Name:           aws.String(tableName),
+							ColumnWildcard: &lakeformation.ColumnWildcard{},
+						},
+					},
+				},
+			},
+		},
+		{
+			Name: "twcBasic",
+			Input: &lakeformation.ListPermissionsInput{
+				Principal: principal,
+				Resource: &lakeformation.Resource{
+					Table: &lakeformation.TableResource{
+						CatalogId:    aws.String(accountID),
+						DatabaseName: aws.String(dbName),
+						Name:         aws.String(tableName),
+					},
+				},
+			},
+			TableType:   TableTypeTableWithColumns,
+			ColumnNames: aws.StringSlice([]string{"value"}),
+			All: []*lakeformation.PrincipalResourcePermissions{
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionAlter, lakeformation.PermissionDelete}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						Table: &lakeformation.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionSelect}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						TableWithColumns: &lakeformation.TableWithColumnsResource{
+							CatalogId:    aws.String(accountID),
+							ColumnNames:  aws.StringSlice([]string{"value"}),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionSelect}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						TableWithColumns: &lakeformation.TableWithColumnsResource{
+							CatalogId:    aws.String(accountID),
+							ColumnNames:  aws.StringSlice([]string{"fred"}),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+			},
+			ExpectedClean: []*lakeformation.PrincipalResourcePermissions{
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionAlter, lakeformation.PermissionDelete}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						Table: &lakeformation.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionSelect}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						TableWithColumns: &lakeformation.TableWithColumnsResource{
+							CatalogId:    aws.String(accountID),
+							ColumnNames:  aws.StringSlice([]string{"value"}),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+			},
+		},
+		{
+			Name: "twcWildcard",
+			Input: &lakeformation.ListPermissionsInput{
+				Principal: principal,
+				Resource: &lakeformation.Resource{
+					Table: &lakeformation.TableResource{
+						CatalogId:    aws.String(accountID),
+						DatabaseName: aws.String(dbName),
+						Name:         aws.String(tableName),
+					},
+				},
+			},
+			TableType:      TableTypeTableWithColumns,
+			ColumnWildcard: true,
+			All: []*lakeformation.PrincipalResourcePermissions{
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionAlter, lakeformation.PermissionDelete}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						Table: &lakeformation.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionSelect}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						TableWithColumns: &lakeformation.TableWithColumnsResource{
+							CatalogId:      aws.String(accountID),
+							ColumnWildcard: &lakeformation.ColumnWildcard{},
+							DatabaseName:   aws.String(dbName),
+							Name:           aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionSelect}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						TableWithColumns: &lakeformation.TableWithColumnsResource{
+							CatalogId:    aws.String(accountID),
+							ColumnNames:  aws.StringSlice([]string{"fred"}),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+			},
+			ExpectedClean: []*lakeformation.PrincipalResourcePermissions{
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionAlter, lakeformation.PermissionDelete}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						Table: &lakeformation.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionSelect}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						TableWithColumns: &lakeformation.TableWithColumnsResource{
+							CatalogId:      aws.String(accountID),
+							ColumnWildcard: &lakeformation.ColumnWildcard{},
+							DatabaseName:   aws.String(dbName),
+							Name:           aws.String(tableName),
+						},
+					},
+				},
+			},
+		},
+		{
+			Name: "twcWildcardExcluded",
+			Input: &lakeformation.ListPermissionsInput{
+				Principal: principal,
+				Resource: &lakeformation.Resource{
+					Table: &lakeformation.TableResource{
+						CatalogId:    aws.String(accountID),
+						DatabaseName: aws.String(dbName),
+						Name:         aws.String(tableName),
+					},
+				},
+			},
+			TableType:           TableTypeTableWithColumns,
+			ColumnWildcard:      true,
+			ExcludedColumnNames: aws.StringSlice([]string{"value"}),
+			All: []*lakeformation.PrincipalResourcePermissions{
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionAlter, lakeformation.PermissionDelete}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						Table: &lakeformation.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionSelect}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						TableWithColumns: &lakeformation.TableWithColumnsResource{
+							CatalogId: aws.String(accountID),
+							ColumnWildcard: &lakeformation.ColumnWildcard{
+								ExcludedColumnNames: aws.StringSlice([]string{"value"}),
+							},
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionSelect}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						TableWithColumns: &lakeformation.TableWithColumnsResource{
+							CatalogId:    aws.String(accountID),
+							ColumnNames:  aws.StringSlice([]string{"fred"}),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+			},
+			ExpectedClean: []*lakeformation.PrincipalResourcePermissions{
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionAlter, lakeformation.PermissionDelete}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						Table: &lakeformation.TableResource{
+							CatalogId:    aws.String(accountID),
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+				{
+					Permissions:                aws.StringSlice([]string{lakeformation.PermissionSelect}),
+					PermissionsWithGrantOption: aws.StringSlice([]string{}),
+					Principal:                  principal,
+					Resource: &lakeformation.Resource{
+						TableWithColumns: &lakeformation.TableWithColumnsResource{
+							CatalogId: aws.String(accountID),
+							ColumnWildcard: &lakeformation.ColumnWildcard{
+								ExcludedColumnNames: aws.StringSlice([]string{"value"}),
+							},
+							DatabaseName: aws.String(dbName),
+							Name:         aws.String(tableName),
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -89,7 +539,7 @@ func TestFilterPermissions(t *testing.T) {
 			got := FilterPermissions(testCase.Input, testCase.TableType, testCase.ColumnNames, testCase.ExcludedColumnNames, testCase.ColumnWildcard, testCase.All)
 
 			if !reflect.DeepEqual(testCase.ExpectedClean, got) {
-				t.Errorf("got %v, expected %v", got, testCase.ExpectedClean)
+				t.Errorf("got %v, expected %v, input %v", got, testCase.ExpectedClean, testCase.Input)
 			}
 		})
 	}
