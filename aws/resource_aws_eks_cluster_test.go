@@ -7,13 +7,14 @@ import (
 	"regexp"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/eks/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -73,7 +74,6 @@ func testSweepEksClusters(region string) error {
 
 func TestAccAWSEksCluster_basic(t *testing.T) {
 	var cluster eks.Cluster
-
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_eks_cluster.test"
 
@@ -114,6 +114,29 @@ func TestAccAWSEksCluster_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEksCluster_disappears(t *testing.T) {
+	var cluster eks.Cluster
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_eks_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEksClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEksClusterConfig_Required(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksClusterExists(resourceName, &cluster),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEksCluster(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -514,22 +537,14 @@ func testAccCheckAWSEksClusterExists(resourceName string, cluster *eks.Cluster) 
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).eksconn
-		output, err := conn.DescribeCluster(&eks.DescribeClusterInput{
-			Name: aws.String(rs.Primary.ID),
-		})
+
+		output, err := finder.ClusterByName(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if output == nil || output.Cluster == nil {
-			return fmt.Errorf("EKS Cluster (%s) not found", rs.Primary.ID)
-		}
-
-		if aws.StringValue(output.Cluster.Name) != rs.Primary.ID {
-			return fmt.Errorf("EKS Cluster (%s) not found", rs.Primary.ID)
-		}
-
-		*cluster = *output.Cluster
+		*cluster = *output
 
 		return nil
 	}
@@ -543,27 +558,17 @@ func testAccCheckAWSEksClusterDestroy(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*AWSClient).eksconn
 
-		// Handle eventual consistency
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			output, err := conn.DescribeCluster(&eks.DescribeClusterInput{
-				Name: aws.String(rs.Primary.ID),
-			})
+		_, err := finder.ClusterByName(conn, rs.Primary.ID)
 
-			if err != nil {
-				if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
-					return nil
-				}
-				return resource.NonRetryableError(err)
-			}
+		if tfresource.NotFound(err) {
+			continue
+		}
 
-			if output != nil && output.Cluster != nil && aws.StringValue(output.Cluster.Name) == rs.Primary.ID {
-				return resource.RetryableError(fmt.Errorf("EKS Cluster %s still exists", rs.Primary.ID))
-			}
+		if err != nil {
+			return err
+		}
 
-			return nil
-		})
-
-		return err
+		return fmt.Errorf("EKS Cluster %s still exists", rs.Primary.ID)
 	}
 
 	return nil
