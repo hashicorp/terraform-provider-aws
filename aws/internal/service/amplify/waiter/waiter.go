@@ -26,7 +26,7 @@ func DomainAssociationCreated(conn *amplify.Amplify, appID, domainName string) (
 	outputRaw, err := stateConf.WaitForState()
 
 	if v, ok := outputRaw.(*amplify.DomainAssociation); ok {
-		if v != nil && aws.StringValue(v.DomainStatus) == amplify.DomainStatusFailed {
+		if status := aws.StringValue(v.DomainStatus); status == amplify.DomainStatusFailed {
 			tfresource.SetLastError(err, errors.New(aws.StringValue(v.StatusReason)))
 		}
 
