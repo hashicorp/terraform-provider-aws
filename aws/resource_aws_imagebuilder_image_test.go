@@ -45,19 +45,50 @@ func testSweepImageBuilderImages(region string) error {
 				continue
 			}
 
-			arn := aws.StringValue(imageVersion.Arn)
+			imageVersionArn := aws.StringValue(imageVersion.Arn)
 
-			r := resourceAwsImageBuilderImage()
-			d := r.Data(nil)
-			d.SetId(arn)
+			input := &imagebuilder.ListImageBuildVersionsInput{
+				ImageVersionArn: imageVersion.Arn,
+			}
 
-			err := r.Delete(d, client)
+			var imageBuildVersionArns []string
+
+			err := conn.ListImageBuildVersionsPages(input, func(page *imagebuilder.ListImageBuildVersionsOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, imageSummary := range page.ImageSummaryList {
+					if imageSummary == nil {
+						continue
+					}
+
+					imageBuildVersionArns = append(imageBuildVersionArns, aws.StringValue(imageSummary.Arn))
+				}
+
+				return !lastPage
+			})
 
 			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Image Builder Image (%s): %w", arn, err)
+				sweeperErr := fmt.Errorf("error listing Image Builder Image Build Versions for image (%s): %w", imageVersionArn, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 				continue
+			}
+
+			for _, imageBuildVersionArn := range imageBuildVersionArns {
+				r := resourceAwsImageBuilderImage()
+				d := r.Data(nil)
+				d.SetId(imageBuildVersionArn)
+
+				err := r.Delete(d, client)
+
+				if err != nil {
+					sweeperErr := fmt.Errorf("error deleting Image Builder Image (%s): %w", imageBuildVersionArn, err)
+					log.Printf("[ERROR] %s", sweeperErr)
+					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+					continue
+				}
 			}
 		}
 
