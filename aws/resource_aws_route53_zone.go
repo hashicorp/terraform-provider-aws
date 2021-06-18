@@ -10,11 +10,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsRoute53Zone() *schema.Resource {
@@ -312,7 +315,11 @@ func resourceAwsRoute53ZoneDelete(d *schema.ResourceData, meta interface{}) erro
 
 	if d.Get("force_destroy").(bool) {
 		if err := deleteAllRecordsInHostedZoneId(d.Id(), d.Get("name").(string), conn); err != nil {
-			return fmt.Errorf("error deleting records in Route53 Hosted Zone (%s): %s", d.Id(), err)
+			return fmt.Errorf("error while force deleting Route53 Hosted Zone (%s), deleting records: %w", d.Id(), err)
+		}
+
+		if err := deleteDNSSECForZone(conn, d.Id()); err != nil {
+			return fmt.Errorf("error while force deleting Route53 Hosted Zone (%s), disabling DNSSEC: %w", d.Id(), err)
 		}
 	}
 
@@ -385,6 +392,58 @@ func deleteAllRecordsInHostedZoneId(hostedZoneId, hostedZoneName string, conn *r
 	if err != nil {
 		return fmt.Errorf("Failed listing/deleting record sets: %s\nLast error from deletion: %s\nLast error from waiter: %s",
 			err, lastDeleteErr, lastErrorFromWaiter)
+	}
+
+	return nil
+}
+
+func deleteDNSSECForZone(conn *route53.Route53, hostedZoneId string) error {
+	// hosted zones cannot be deleted if DNSSEC Key Signing Keys exist
+	input := &route53.DisableHostedZoneDNSSECInput{
+		HostedZoneId: aws.String(hostedZoneId),
+	}
+
+	var output *route53.DisableHostedZoneDNSSECOutput
+	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+		var err error
+
+		output, err = conn.DisableHostedZoneDNSSEC(input)
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, route53.ErrCodeKeySigningKeyInParentDSRecord) {
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		output, err = conn.DisableHostedZoneDNSSEC(input)
+	}
+
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeDNSSECNotFound) {
+		return nil
+	}
+
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
+		return nil
+	}
+
+	if tfawserr.ErrCodeContains(err, "InvalidArgument: Operation is unsupported for private") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("disabling Route 53 Hosted Zone DNSSEC (%s): %w", hostedZoneId, err)
+	}
+
+	if output != nil && output.ChangeInfo != nil {
+		if _, err := waiter.ChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
+			return fmt.Errorf("waiting for Route 53 Hosted Zone DNSSEC (%s) disable: %w", hostedZoneId, err)
+		}
 	}
 
 	return nil
