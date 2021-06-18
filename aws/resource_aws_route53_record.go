@@ -604,7 +604,7 @@ func resourceAwsRoute53RecordRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 // findRecord takes a ResourceData struct for aws_resource_route53_record. It
-// uses the referenced zone_id to query Route53 and find information on it's
+// uses the referenced zone_id to query Route53 and find information on its
 // records.
 //
 // If records are found, it returns the matching
