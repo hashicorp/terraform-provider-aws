@@ -838,6 +838,9 @@ func flattenWafv2ManagedRuleGroupStatement(r *wafv2.ManagedRuleGroupStatement) i
 		"scope_down_statement": nil,
 	}
 
+if r.ScopeDownStatement != nil {
+		m["scope_down_statement"] = []interface{}{flattenWafv2Statement(r.ScopeDownStatement)}
+}
 	return []interface{}{m}
 }
 
