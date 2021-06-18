@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -88,7 +89,7 @@ func testSweepResourceOrchestrator(sweepResources []*testSweepResource) error {
 				err := testAccDeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
 
 				if err != nil {
-					if tfawserr.ErrCodeContains(err, "Throttling") {
+					if strings.Contains(err.Error(), "Throttling") {
 						log.Printf("[INFO] While sweeping resource (%s), encountered throttling error (%s). Retrying...", sweepResource.d.Id(), err)
 						return resource.RetryableError(err)
 					}
