@@ -260,8 +260,8 @@ func resourceAwsRoute53RecordUpdate(d *schema.ResourceData, meta interface{}) er
 		return resourceAwsRoute53RecordCreate(d, meta)
 	}
 
-	// Otherwise we delete the existing record and create a new record within
-	// a transactional change
+	// Otherwise, we delete the existing record and create a new record within
+	// a transactional change.
 	conn := meta.(*AWSClient).r53conn
 	zone := cleanZoneID(d.Get("zone_id").(string))
 
