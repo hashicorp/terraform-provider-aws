@@ -674,9 +674,9 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 	// We need to loop over all records starting from the record we are looking for because
 	// Weighted, Latency, Geo, and Failover resource record sets have a special option
 	// called SetIdentifier which allows multiple entries with the same name and type but
-	// a different SetIdentifier
+	// a different SetIdentifier.
 	// For all other records we are setting the maxItems to 1 so that we don't return extra
-	// unneeded records
+	// unneeded records.
 	err = conn.ListResourceRecordSetsPages(lopts, func(resp *route53.ListResourceRecordSetsOutput, lastPage bool) bool {
 		for _, recordSet := range resp.ResourceRecordSets {
 
