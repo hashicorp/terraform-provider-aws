@@ -407,7 +407,7 @@ func resourceAwsRoute53RecordCreate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	// Protect existing DNS records which might be managed in another way
+	// Protect existing DNS records which might be managed in another way.
 	// Use UPSERT only if the overwrite flag is true or if the current action is an update
 	// Else CREATE is used and fail if the same record exists
 	var action string
