@@ -506,7 +506,7 @@ func waitForRoute53RecordSetToSync(conn *route53.Route53, requestId string) erro
 }
 
 func resourceAwsRoute53RecordRead(d *schema.ResourceData, meta interface{}) error {
-	// If we don't have a zone ID we're doing an import. Parse it from the ID.
+	// If we don't have a zone ID, we're doing an import. Parse it from the ID.
 	if _, ok := d.GetOk("zone_id"); !ok {
 		parts := parseRecordId(d.Id())
 		//we check that we have parsed the id into the correct number of segments
