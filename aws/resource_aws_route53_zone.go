@@ -432,7 +432,7 @@ func deleteDNSSECForZone(conn *route53.Route53, hostedZoneId string) error {
 		return nil
 	}
 
-	if tfawserr.ErrCodeContains(err, "InvalidArgument: Operation is unsupported for private") {
+	if tfawserr.ErrMessageContains(err, "InvalidArgument", "Operation is unsupported for private") {
 		return nil
 	}
 
