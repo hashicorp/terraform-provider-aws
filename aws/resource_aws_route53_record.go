@@ -906,7 +906,7 @@ func FQDN(name string) string {
 }
 
 // Route 53 stores certain characters with the octal equivalent in ASCII format.
-// This function converts all of these characters back into the original character
+// This function converts all of these characters back into the original character.
 // E.g. "*" is stored as "\\052" and "@" as "\\100"
 func cleanRecordName(name string) string {
 	str := name
