@@ -908,7 +908,6 @@ func FQDN(name string) string {
 // Route 53 stores certain characters with the octal equivalent in ASCII format.
 // This function converts all of these characters back into the original character
 // E.g. "*" is stored as "\\052" and "@" as "\\100"
-
 func cleanRecordName(name string) string {
 	str := name
 	s, err := strconv.Unquote(`"` + str + `"`)
@@ -946,7 +945,7 @@ func resourceAwsRoute53AliasRecordHash(v interface{}) int {
 
 // nilString takes a string as an argument and returns a string
 // pointer. The returned pointer is nil if the string argument is
-// empty, otherwise it is a pointer to a copy of the string.
+// empty. Otherwise, it is a pointer to a copy of the string.
 func nilString(s string) *string {
 	if s == "" {
 		return nil
