@@ -74,7 +74,7 @@ func testSweepEksClusters(region string) error {
 
 func TestAccAWSEksCluster_basic(t *testing.T) {
 	var cluster eks.Cluster
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -121,7 +121,7 @@ func TestAccAWSEksCluster_basic(t *testing.T) {
 
 func TestAccAWSEksCluster_disappears(t *testing.T) {
 	var cluster eks.Cluster
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -142,11 +142,11 @@ func TestAccAWSEksCluster_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksCluster_EncryptionConfig(t *testing.T) {
+func TestAccAWSEksCluster_EncryptionConfig_Create(t *testing.T) {
 	var cluster eks.Cluster
-	kmsKeyResourceName := "aws_kms_key.test"
-	resourceName := "aws_eks_cluster.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_eks_cluster.test"
+	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
@@ -173,10 +173,47 @@ func TestAccAWSEksCluster_EncryptionConfig(t *testing.T) {
 	})
 }
 
+func TestAccAWSEksCluster_EncryptionConfig_Update(t *testing.T) {
+	var cluster eks.Cluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_eks_cluster.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEksClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEksClusterConfig_Required(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "encryption_config.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSEksClusterConfig_EncryptionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "encryption_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.provider.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_config.0.provider.0.key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.resources.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEksCluster_Version(t *testing.T) {
 	var cluster1, cluster2 eks.Cluster
-
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -211,8 +248,7 @@ func TestAccAWSEksCluster_Version(t *testing.T) {
 
 func TestAccAWSEksCluster_Logging(t *testing.T) {
 	var cluster1, cluster2 eks.Cluster
-
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -304,8 +340,7 @@ func TestAccAWSEksCluster_Tags(t *testing.T) {
 
 func TestAccAWSEksCluster_VpcConfig_SecurityGroupIds(t *testing.T) {
 	var cluster eks.Cluster
-
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -333,8 +368,7 @@ func TestAccAWSEksCluster_VpcConfig_SecurityGroupIds(t *testing.T) {
 
 func TestAccAWSEksCluster_VpcConfig_EndpointPrivateAccess(t *testing.T) {
 	var cluster1, cluster2, cluster3 eks.Cluster
-
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -380,8 +414,7 @@ func TestAccAWSEksCluster_VpcConfig_EndpointPrivateAccess(t *testing.T) {
 
 func TestAccAWSEksCluster_VpcConfig_EndpointPublicAccess(t *testing.T) {
 	var cluster1, cluster2, cluster3 eks.Cluster
-
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -426,9 +459,8 @@ func TestAccAWSEksCluster_VpcConfig_EndpointPublicAccess(t *testing.T) {
 }
 
 func TestAccAWSEksCluster_VpcConfig_PublicAccessCidrs(t *testing.T) {
-	var cluster1 eks.Cluster
-
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	var cluster eks.Cluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -440,7 +472,7 @@ func TestAccAWSEksCluster_VpcConfig_PublicAccessCidrs(t *testing.T) {
 			{
 				Config: testAccAWSEksClusterConfig_VpcConfig_PublicAccessCidrs(rName, `["1.2.3.4/32", "5.6.7.8/32"]`),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksClusterExists(resourceName, &cluster1),
+					testAccCheckAWSEksClusterExists(resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.public_access_cidrs.#", "2"),
 				),
@@ -453,7 +485,7 @@ func TestAccAWSEksCluster_VpcConfig_PublicAccessCidrs(t *testing.T) {
 			{
 				Config: testAccAWSEksClusterConfig_VpcConfig_PublicAccessCidrs(rName, `["4.3.2.1/32", "8.7.6.5/32"]`),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksClusterExists(resourceName, &cluster1),
+					testAccCheckAWSEksClusterExists(resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.public_access_cidrs.#", "2"),
 				),
@@ -464,8 +496,7 @@ func TestAccAWSEksCluster_VpcConfig_PublicAccessCidrs(t *testing.T) {
 
 func TestAccAWSEksCluster_NetworkConfig_ServiceIpv4Cidr(t *testing.T) {
 	var cluster1, cluster2 eks.Cluster
-
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -651,7 +682,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name                          = "terraform-testacc-eks-cluster-base"
+    Name                          = %[1]q
     "kubernetes.io/cluster/%[1]s" = "shared"
   }
 }
@@ -664,7 +695,7 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name                          = "terraform-testacc-eks-cluster-base"
+    Name                          = %[1]q
     "kubernetes.io/cluster/%[1]s" = "shared"
   }
 }
@@ -674,7 +705,7 @@ resource "aws_subnet" "test" {
 func testAccAWSEksClusterConfig_Required(rName string) string {
 	return composeConfig(testAccAWSEksClusterConfig_Base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
-  name     = %q
+  name     = %[1]q
   role_arn = aws_iam_role.test.arn
 
   vpc_config {
@@ -689,9 +720,9 @@ resource "aws_eks_cluster" "test" {
 func testAccAWSEksClusterConfig_Version(rName, version string) string {
 	return composeConfig(testAccAWSEksClusterConfig_Base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
-  name     = %q
+  name     = %[1]q
   role_arn = aws_iam_role.test.arn
-  version  = %q
+  version  = %[2]q
 
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
@@ -705,9 +736,9 @@ resource "aws_eks_cluster" "test" {
 func testAccAWSEksClusterConfig_Logging(rName string, logTypes []string) string {
 	return composeConfig(testAccAWSEksClusterConfig_Base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
-  name                      = %q
+  name                      = %[1]q
   role_arn                  = aws_iam_role.test.arn
-  enabled_cluster_log_types = ["%v"]
+  enabled_cluster_log_types = ["%[2]v"]
 
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
@@ -791,12 +822,12 @@ resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "terraform-testacc-eks-cluster-sg"
+    Name = %[1]q
   }
 }
 
 resource "aws_eks_cluster" "test" {
-  name     = %q
+  name     = %[1]q
   role_arn = aws_iam_role.test.arn
 
   vpc_config {
@@ -812,11 +843,11 @@ resource "aws_eks_cluster" "test" {
 func testAccAWSEksClusterConfig_VpcConfig_EndpointPrivateAccess(rName string, endpointPrivateAccess bool) string {
 	return composeConfig(testAccAWSEksClusterConfig_Base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
-  name     = %q
+  name     = %[1]q
   role_arn = aws_iam_role.test.arn
 
   vpc_config {
-    endpoint_private_access = %t
+    endpoint_private_access = %[2]t
     endpoint_public_access  = true
     subnet_ids              = aws_subnet.test[*].id
   }
@@ -829,12 +860,12 @@ resource "aws_eks_cluster" "test" {
 func testAccAWSEksClusterConfig_VpcConfig_EndpointPublicAccess(rName string, endpointPublicAccess bool) string {
 	return composeConfig(testAccAWSEksClusterConfig_Base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
-  name     = %q
+  name     = %[1]q
   role_arn = aws_iam_role.test.arn
 
   vpc_config {
     endpoint_private_access = true
-    endpoint_public_access  = %t
+    endpoint_public_access  = %[2]t
     subnet_ids              = aws_subnet.test[*].id
   }
 
@@ -846,13 +877,13 @@ resource "aws_eks_cluster" "test" {
 func testAccAWSEksClusterConfig_VpcConfig_PublicAccessCidrs(rName string, publicAccessCidr string) string {
 	return composeConfig(testAccAWSEksClusterConfig_Base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
-  name     = %q
+  name     = %[1]q
   role_arn = aws_iam_role.test.arn
 
   vpc_config {
     endpoint_private_access = true
     endpoint_public_access  = true
-    public_access_cidrs     = %s
+    public_access_cidrs     = %[2]s
     subnet_ids              = aws_subnet.test[*].id
   }
 
@@ -864,7 +895,7 @@ resource "aws_eks_cluster" "test" {
 func testAccAWSEksClusterConfig_NetworkConfig_ServiceIpv4Cidr(rName string, serviceIpv4Cidr string) string {
 	return composeConfig(testAccAWSEksClusterConfig_Base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
-  name     = %q
+  name     = %[1]q
   role_arn = aws_iam_role.test.arn
 
   vpc_config {
@@ -872,7 +903,7 @@ resource "aws_eks_cluster" "test" {
   }
 
   kubernetes_network_config {
-    service_ipv4_cidr = %s
+    service_ipv4_cidr = %[2]s
   }
 
   depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
