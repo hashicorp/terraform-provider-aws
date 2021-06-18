@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -30,7 +32,13 @@ func resourceAwsEksCluster() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			SetTagsDiff,
+			customdiff.ForceNewIfChange("encryption_config", func(_ context.Context, old, new, meta interface{}) bool {
+				// You cannot disable envelope encryption after enabling it. This action is irreversible.
+				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
+			}),
+		),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -67,9 +75,6 @@ func resourceAwsEksCluster() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(eks.LogType_Values(), true),
 				},
 			},
-			// TODO
-			// TODO You cannot disable envelope encryption after enabling it. This action is irreversible.
-			// TODO
 			"encryption_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -260,26 +265,26 @@ func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error
 		output, err = conn.CreateCluster(input)
 
 		// InvalidParameterException: roleArn, arn:aws:iam::123456789012:role/XXX, does not exist
-		if isAWSErr(err, eks.ErrCodeInvalidParameterException, "does not exist") {
+		if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "does not exist") {
 			return resource.RetryableError(err)
 		}
 
 		// InvalidParameterException: Error in role params
-		if isAWSErr(err, eks.ErrCodeInvalidParameterException, "Error in role params") {
+		if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "Error in role params") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, eks.ErrCodeInvalidParameterException, "Role could not be assumed because the trusted entity is not correct") {
+		if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "Role could not be assumed because the trusted entity is not correct") {
 			return resource.RetryableError(err)
 		}
 
 		// InvalidParameterException: The provided role doesn't have the Amazon EKS Managed Policies associated with it. Please ensure the following policy is attached: arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
-		if isAWSErr(err, eks.ErrCodeInvalidParameterException, "The provided role doesn't have the Amazon EKS Managed Policies associated with it") {
+		if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "The provided role doesn't have the Amazon EKS Managed Policies associated with it") {
 			return resource.RetryableError(err)
 		}
 
 		// InvalidParameterException: IAM role's policy must include the `ec2:DescribeSubnets` action
-		if isAWSErr(err, eks.ErrCodeInvalidParameterException, "IAM role's policy must include") {
+		if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "IAM role's policy must include") {
 			return resource.RetryableError(err)
 		}
 
