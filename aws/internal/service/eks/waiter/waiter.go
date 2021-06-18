@@ -18,6 +18,23 @@ const (
 	EksAddonDeletedTimeout = 40 * time.Minute
 )
 
+func ClusterDeleted(conn *eks.EKS, name string, timeout time.Duration) (*eks.Cluster, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{eks.ClusterStatusActive, eks.ClusterStatusDeleting},
+		Target:  []string{},
+		Refresh: ClusterStatus(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*eks.Cluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 // EksAddonCreated waits for a EKS add-on to return status "ACTIVE" or "CREATE_FAILED"
 func EksAddonCreated(ctx context.Context, conn *eks.EKS, clusterName, addonName string) (*eks.Addon, error) {
 	stateConf := resource.StateChangeConf{
