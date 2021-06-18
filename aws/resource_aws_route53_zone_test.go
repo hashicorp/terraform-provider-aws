@@ -106,6 +106,7 @@ func testSweepRoute53Zones(region string) error {
 		"acmetest.hashicorp.engineering",
 		"tfacc.hashicorptest.com",
 		"aws.tfacc.hashicorptest.com",
+		"hashicorp.com",
 	}
 
 	err = conn.ListHostedZonesPages(input, func(page *route53.ListHostedZonesOutput, lastPage bool) bool {
