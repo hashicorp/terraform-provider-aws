@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"testing"
 	"time"
@@ -15,7 +16,7 @@ import (
 )
 
 const (
-	SweepThrottlingRetryTimeout = 5 * time.Minute
+	SweepThrottlingRetryTimeout = 10 * time.Minute
 )
 
 // sweeperAwsClients is a shared cache of regional AWSClient
@@ -87,7 +88,8 @@ func testSweepResourceOrchestrator(sweepResources []*testSweepResource) error {
 				err := testAccDeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
 
 				if err != nil {
-					if tfawserr.ErrCodeContains(err, "ThrottlingException: Rate exceeded") {
+					if tfawserr.ErrCodeContains(err, "Throttling") {
+						log.Printf("[INFO] While sweeping resource (%s), encountered throttling error (%s). Retrying...", sweepResource.d.Id(), err)
 						return resource.RetryableError(err)
 					}
 
