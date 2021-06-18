@@ -69,8 +69,8 @@ resource "aws_route53_zone" "example" {
 }
 
 resource "aws_route53_key_signing_key" "example" {
-  hosted_zone_id             = aws_route53_zone.test.id
-  key_management_service_arn = aws_kms_key.test.arn
+  hosted_zone_id             = aws_route53_zone.example.id
+  key_management_service_arn = aws_kms_key.example.arn
   name                       = "example"
 }
 
