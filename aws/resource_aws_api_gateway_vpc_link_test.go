@@ -53,7 +53,7 @@ func testSweepAPIGatewayVpcLinks(region string) error {
 	}
 
 	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping App Runner AutoScaling Configuration Version for %s: %w", region, err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping API Gateway VPC Links"))
 	}
 
 	return sweeperErrs.ErrorOrNil()
