@@ -145,7 +145,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The name of the EventBrige event bus.
+* `id` - The name of the EventBridge event bus.
 
 ## Import
 
