@@ -147,6 +147,7 @@ func TestAccAWSEksAddon_disappears_Cluster(t *testing.T) {
 	var addon eks.Addon
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_addon.test"
+	clusterResourceName := "aws_eks_cluster"
 	addonName := "vpc-cni"
 	ctx := context.TODO()
 
@@ -160,7 +161,7 @@ func TestAccAWSEksAddon_disappears_Cluster(t *testing.T) {
 				Config: testAccAWSEksAddon_Basic(rName, addonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
-					testAccCheckAWSEksClusterDisappears(ctx, &addon),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEksCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -794,28 +795,6 @@ func testAccCheckAWSEksAddonDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccCheckAWSEksClusterDisappears(ctx context.Context, addon *eks.Addon) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).eksconn
-
-		input := &eks.DeleteClusterInput{
-			Name: addon.ClusterName,
-		}
-
-		_, err := conn.DeleteClusterWithContext(ctx, input)
-
-		if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return waitForDeleteEksCluster(conn, aws.StringValue(addon.ClusterName), 30*time.Minute)
-	}
 }
 
 func testAccPreCheckAWSEksAddon(t *testing.T) {

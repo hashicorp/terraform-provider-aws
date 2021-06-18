@@ -9,7 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -17,6 +19,23 @@ const (
 	EksAddonUpdatedTimeout = 20 * time.Minute
 	EksAddonDeletedTimeout = 40 * time.Minute
 )
+
+func ClusterCreated(conn *eks.EKS, name string, timeout time.Duration) (*eks.Cluster, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{eks.ClusterStatusCreating},
+		Target:  []string{eks.ClusterStatusActive},
+		Refresh: ClusterStatus(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*eks.Cluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
 
 func ClusterDeleted(conn *eks.EKS, name string, timeout time.Duration) (*eks.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
@@ -29,6 +48,32 @@ func ClusterDeleted(conn *eks.EKS, name string, timeout time.Duration) (*eks.Clu
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*eks.Cluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func UpdateSuccessful(conn *eks.EKS, name, id string, timeout time.Duration) (*eks.Update, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{eks.UpdateStatusInProgress},
+		Target:  []string{eks.UpdateStatusSuccessful},
+		Refresh: UpdateStatus(conn, name, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*eks.Update); ok {
+		if status := aws.StringValue(output.Status); status == eks.UpdateStatusCancelled || status == eks.UpdateStatusFailed {
+			var errs *multierror.Error
+
+			for _, e := range output.Errors {
+				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(e.ErrorCode), aws.StringValue(e.ErrorMessage)))
+			}
+			tfresource.SetLastError(err, errs.ErrorOrNil())
+		}
+
 		return output, err
 	}
 

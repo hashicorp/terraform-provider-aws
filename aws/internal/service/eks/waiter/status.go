@@ -28,7 +28,7 @@ func ClusterStatus(conn *eks.EKS, name string) resource.StateRefreshFunc {
 	}
 }
 
-func UodateStatus(conn *eks.EKS, name, id string) resource.StateRefreshFunc {
+func UpdateStatus(conn *eks.EKS, name, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := finder.UpdateByNameAndID(conn, name, id)
 
