@@ -616,7 +616,7 @@ func resourceAwsRoute53RecordRead(d *schema.ResourceData, meta interface{}) erro
 // If no matching recordset is found, it returns nil and a r53NoRecordsFound
 // error.
 //
-// If there are other errors, it returns nil a nil recordset and passes on the
+// If there are other errors, it returns a nil recordset and passes on the
 // error.
 func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceRecordSet, error) {
 	conn := meta.(*AWSClient).r53conn
