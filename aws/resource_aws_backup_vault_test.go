@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -47,22 +48,25 @@ func testSweepBackupVaults(region string) error {
 				continue
 			}
 
+			name := aws.StringValue(vault.BackupVaultName)
+
 			// Ignore Default Backup Vault in region (cannot be deleted)
-			if aws.StringValue(vault.BackupVaultName) == "Default" {
-				log.Printf("[INFO] Skipping Backup Vault: Default")
+			// and automated Backups that result in AccessDeniedException when deleted
+			if name == "Default" || strings.Contains(name, "automatic-backup-vault") {
+				log.Printf("[INFO] Skipping Backup Vault: %s", name)
 				continue
 			}
 
 			// Backup Vault deletion only supported when empty
 			// Reference: https://docs.aws.amazon.com/aws-backup/latest/devguide/API_DeleteBackupVault.html
 			if aws.Int64Value(vault.NumberOfRecoveryPoints) != 0 {
-				log.Printf("[INFO] Skipping Backup Vault (%s): not empty", aws.StringValue(vault.BackupVaultName))
+				log.Printf("[INFO] Skipping Backup Vault (%s): not empty", name)
 				continue
 			}
 
 			r := resourceAwsBackupVault()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(vault.BackupVaultName))
+			d.SetId(name)
 
 			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
@@ -74,7 +78,7 @@ func testSweepBackupVaults(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Backup Vaults for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Backup Vaults for %s: %w", region, err))
 	}
 
