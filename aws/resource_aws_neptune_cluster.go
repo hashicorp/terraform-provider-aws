@@ -102,6 +102,11 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 				Computed: true,
 			},
 
+			"copy_tags_to_snapshot": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -293,6 +298,7 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 
 	createDbClusterInput := &neptune.CreateDBClusterInput{
 		DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
+		CopyTagsToSnapshot:  aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		Engine:              aws.String(d.Get("engine").(string)),
 		Port:                aws.Int64(int64(d.Get("port").(int))),
 		StorageEncrypted:    aws.Bool(d.Get("storage_encrypted").(bool)),
@@ -301,6 +307,7 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 	}
 	restoreDBClusterFromSnapshotInput := &neptune.RestoreDBClusterFromSnapshotInput{
 		DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
+		CopyTagsToSnapshot:  aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		Engine:              aws.String(d.Get("engine").(string)),
 		Port:                aws.Int64(int64(d.Get("port").(int))),
 		SnapshotIdentifier:  aws.String(d.Get("snapshot_identifier").(string)),
@@ -326,6 +333,11 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if attr, ok := d.GetOk("engine_version"); ok {
+		createDbClusterInput.EngineVersion = aws.String(attr.(string))
+		restoreDBClusterFromSnapshotInput.EngineVersion = aws.String(attr.(string))
+	}
+
+	if attr, ok := d.GetOk("copy_tags_to_snapshot"); ok {
 		createDbClusterInput.EngineVersion = aws.String(attr.(string))
 		restoreDBClusterFromSnapshotInput.EngineVersion = aws.String(attr.(string))
 	}
@@ -485,6 +497,7 @@ func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, 
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
+	d.Set("copy_tags_to_snapshot", dbc.CopyTagsToSnapshot)
 
 	if err := d.Set("enable_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports)); err != nil {
 		return fmt.Errorf("Error saving EnableCloudwatchLogsExports to state for Neptune Cluster (%s): %s", d.Id(), err)
@@ -561,6 +574,11 @@ func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) e
 	req := &neptune.ModifyDBClusterInput{
 		ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
 		DBClusterIdentifier: aws.String(d.Id()),
+	}
+
+	if d.HasChange("copy_tags_to_snapshot") {
+		req.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
+		requestUpdate = true
 	}
 
 	if d.HasChange("vpc_security_group_ids") {
