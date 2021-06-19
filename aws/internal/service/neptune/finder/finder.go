@@ -3,6 +3,7 @@ package finder
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfneptune "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/neptune"
 )
@@ -18,11 +19,17 @@ func EndpointById(conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint,
 	}
 
 	output, err := conn.DescribeDBClusterEndpoints(input)
-	if err != nil {
+
+	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterEndpointNotFoundFault) ||
+		tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	if output == nil {

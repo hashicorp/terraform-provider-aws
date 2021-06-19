@@ -12,6 +12,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/neptune/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/neptune/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsNeptuneClusterEndpoint() *schema.Resource {
@@ -113,12 +114,13 @@ func resourceAwsNeptuneClusterEndpointRead(d *schema.ResourceData, meta interfac
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := finder.EndpointById(conn, d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		d.SetId("")
+		log.Printf("[DEBUG] Neptune Cluster Endpoint (%s) not found", d.Id())
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterEndpointNotFoundFault) {
-			d.SetId("")
-			log.Printf("[DEBUG] Neptune Cluster Endpoint (%s) not found", d.Id())
-			return nil
-		}
 		return fmt.Errorf("error describing Neptune Cluster Endpoint (%s): %w", d.Id(), err)
 	}
 
@@ -204,6 +206,10 @@ func resourceAwsNeptuneClusterEndpointDelete(d *schema.ResourceData, meta interf
 
 	_, err := conn.DeleteDBClusterEndpoint(input)
 	if err != nil {
+		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterEndpointNotFoundFault) ||
+			tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
+			return nil
+		}
 		return fmt.Errorf("Neptune Cluster Endpoint cannot be deleted: %w", err)
 	}
 	_, err = waiter.DBClusterEndpointDeleted(conn, d.Id())

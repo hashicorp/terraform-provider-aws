@@ -220,12 +220,10 @@ resource "aws_neptune_cluster_endpoint" "test" {
 
 func testAccAWSNeptuneClusterEndpointConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return composeConfig(testAccAWSNeptuneClusterEndpointConfigBase(rName), fmt.Sprintf(`
-resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1"
-  skip_final_snapshot                  = true
+resource "aws_neptune_cluster_endpoint" "test" {
+  cluster_identifier          = aws_neptune_cluster.test.cluster_identifier
+  cluster_endpoint_identifier = %[1]q
+  endpoint_type               = "READER"
 
   tags = {
     %[2]q = %[3]q
@@ -236,12 +234,10 @@ resource "aws_neptune_cluster" "test" {
 
 func testAccAWSNeptuneClusterEndpointConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return composeConfig(testAccAWSNeptuneClusterEndpointConfigBase(rName), fmt.Sprintf(`
-resource "aws_neptune_cluster" "test" {
-  cluster_identifier                   = %[1]q
-  availability_zones                   = local.availability_zone_names
-  engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1"
-  skip_final_snapshot                  = true
+resource "aws_neptune_cluster_endpoint" "test" {
+  cluster_identifier          = aws_neptune_cluster.test.cluster_identifier
+  cluster_endpoint_identifier = %[1]q
+  endpoint_type               = "READER"
 
   tags = {
     %[2]q = %[3]q
