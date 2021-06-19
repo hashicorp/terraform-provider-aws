@@ -337,11 +337,6 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 		restoreDBClusterFromSnapshotInput.EngineVersion = aws.String(attr.(string))
 	}
 
-	if attr, ok := d.GetOk("copy_tags_to_snapshot"); ok {
-		createDbClusterInput.EngineVersion = aws.String(attr.(string))
-		restoreDBClusterFromSnapshotInput.EngineVersion = aws.String(attr.(string))
-	}
-
 	if attr, ok := d.GetOk("iam_database_authentication_enabled"); ok {
 		createDbClusterInput.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
 		restoreDBClusterFromSnapshotInput.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
