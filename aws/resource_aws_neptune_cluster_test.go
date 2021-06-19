@@ -505,6 +505,29 @@ func TestAccAWSNeptuneCluster_deleteProtection(t *testing.T) {
 	})
 }
 
+func TestAccAWSNeptuneCluster_disappears(t *testing.T) {
+	var dbCluster neptune.DBCluster
+	rName := acctest.RandomWithPrefix("tf-acc")
+	resourceName := "aws_neptune_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNeptuneClusterConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterExists(resourceName, &dbCluster),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsNeptuneCluster(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSNeptuneClusterDestroy(s *terraform.State) error {
 	return testAccCheckAWSNeptuneClusterDestroyWithProvider(s, testAccProvider)
 }
