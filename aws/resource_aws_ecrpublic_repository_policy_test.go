@@ -33,6 +33,31 @@ func TestAccAWSEcrPublicRepositoryPolicy_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+		},
+	})
+}
+
+func TestAccAWSEcrPublicRepositoryPolicy_policy(t *testing.T) {
+	randString := acctest.RandString(10)
+	resourceName := "aws_ecrpublic_repository_policy.default"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsEcrPublicRepositoryPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcrPublicRepositoryPolicy(randString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcrPublicRepositoryPolicyExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 			{
 				Config: testAccAWSEcrPublicRepositoryPolicyUpdated(randString),
 				Check: resource.ComposeTestCheckFunc(
