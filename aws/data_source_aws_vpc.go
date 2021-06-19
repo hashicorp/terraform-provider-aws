@@ -194,7 +194,7 @@ func dataSourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 		Partition: meta.(*AWSClient).partition,
 		Service:   ec2.ServiceName,
 		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: aws.StringValue(vpc.OwnerId),
 		Resource:  fmt.Sprintf("vpc/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)

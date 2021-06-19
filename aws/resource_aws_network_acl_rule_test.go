@@ -234,7 +234,7 @@ func TestAccAWSNetworkAclRule_allProtocol(t *testing.T) {
 }
 
 func TestAccAWSNetworkAclRule_tcpProtocol(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,

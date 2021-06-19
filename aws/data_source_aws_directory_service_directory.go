@@ -182,12 +182,12 @@ func dataSourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta int
 	d.Set("enable_sso", dir.SsoEnabled)
 
 	var securityGroupId *string
-	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
+	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector && dir.ConnectSettings != nil {
 		securityGroupId = dir.ConnectSettings.SecurityGroupId
-	} else {
+	} else if dir.VpcSettings != nil {
 		securityGroupId = dir.VpcSettings.SecurityGroupId
 	}
-	d.Set("security_group_id", aws.StringValue(securityGroupId))
+	d.Set("security_group_id", securityGroupId)
 
 	tags, err := keyvaluetags.DirectoryserviceListTags(conn, d.Id())
 	if err != nil {

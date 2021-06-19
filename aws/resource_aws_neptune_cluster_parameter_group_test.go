@@ -22,6 +22,7 @@ func TestAccAWSNeptuneClusterParameterGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -54,6 +55,7 @@ func TestAccAWSNeptuneClusterParameterGroup_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -81,6 +83,7 @@ func TestAccAWSNeptuneClusterParameterGroup_generatedName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -108,6 +111,7 @@ func TestAccAWSNeptuneClusterParameterGroup_Description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -137,6 +141,7 @@ func TestAccAWSNeptuneClusterParameterGroup_NamePrefix_Parameter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -183,6 +188,7 @@ func TestAccAWSNeptuneClusterParameterGroup_Parameter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -230,6 +236,7 @@ func TestAccAWSNeptuneClusterParameterGroup_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{

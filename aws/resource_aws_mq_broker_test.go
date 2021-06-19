@@ -263,6 +263,7 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -335,6 +336,7 @@ func TestAccAWSMqBroker_throughputOptimized(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -413,6 +415,7 @@ func TestAccAWSMqBroker_allFieldsDefaultVpc(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -536,6 +539,7 @@ func TestAccAWSMqBroker_allFieldsCustomVpc(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -647,6 +651,7 @@ func TestAccAWSMqBroker_EncryptionOptions_KmsKeyId(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -680,6 +685,7 @@ func TestAccAWSMqBroker_EncryptionOptions_UseAwsOwnedKey_Disabled(t *testing.T) 
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -712,6 +718,7 @@ func TestAccAWSMqBroker_EncryptionOptions_UseAwsOwnedKey_Enabled(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -744,6 +751,7 @@ func TestAccAWSMqBroker_updateUsers(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -816,6 +824,7 @@ func TestAccAWSMqBroker_tags(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -865,6 +874,7 @@ func TestAccAWSMqBroker_updateSecurityGroup(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -917,6 +927,7 @@ func TestAccAWSMqBroker_updateEngineVersion(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -955,6 +966,7 @@ func TestAccAWSMqBroker_disappears(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -981,6 +993,7 @@ func TestAccAWSMqBroker_rabbitmq(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -995,6 +1008,9 @@ func TestAccAWSMqBroker_rabbitmq(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexp.MustCompile(`^amqps://[a-z0-9-\.]+:5671$`)),
+					resource.TestCheckResourceAttr(resourceName, "logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "false"),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", ""),
 				),
 			},
 			{
@@ -1002,6 +1018,81 @@ func TestAccAWSMqBroker_rabbitmq(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+}
+
+func TestAccAWSMqBroker_rabbitmq_Logs(t *testing.T) {
+	var broker mq.DescribeBrokerResponse
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_mq_broker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			testAccPreCheckAWSMq(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMqBrokerConfigRabbitLogs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMqBrokerExists(resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.8.6"),
+					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
+					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexp.MustCompile(`^amqps://[a-z0-9-\.]+:5671$`)),
+					resource.TestCheckResourceAttr(resourceName, "logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "true"),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+}
+
+func TestAccAWSMqBroker_rabbitmq_Validation_AuditLog(t *testing.T) {
+	var broker mq.DescribeBrokerResponse
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_mq_broker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			testAccPreCheckAWSMq(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccMqBrokerConfigRabbitAuditLog(rName, true),
+				ExpectError: regexp.MustCompile(`logs.audit: Can not be configured when engine is RabbitMQ`),
+			},
+			{
+				// Special case: allow explicitly setting logs.0.audit to false,
+				// though the AWS API does not accept the parameter.
+				Config: testAccMqBrokerConfigRabbitAuditLog(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMqBrokerExists(resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "true"),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", ""),
+				),
 			},
 		},
 	})
@@ -1018,6 +1109,7 @@ func TestAccAWSMqBroker_clusterRabbitMQ(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -1038,6 +1130,7 @@ func TestAccAWSMqBroker_clusterRabbitMQ(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.time_of_day"),
 					resource.TestCheckResourceAttr(resourceName, "logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "false"),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", ""),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.0.time_zone", "UTC"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
@@ -1078,6 +1171,7 @@ func TestAccAWSMqBroker_ldap(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -1715,6 +1809,57 @@ resource "aws_mq_broker" "test" {
   }
 }
 `, rName)
+}
+
+func testAccMqBrokerConfigRabbitLogs(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_mq_broker" "test" {
+  broker_name        = %[1]q
+  engine_type        = "RabbitMQ"
+  engine_version     = "3.8.6"
+  host_instance_type = "mq.t3.micro"
+  security_groups    = [aws_security_group.test.id]
+
+  logs {
+    general = true
+  }
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+}
+
+resource "aws_security_group" "test" {
+  name = %[1]q
+}
+`, rName)
+}
+
+func testAccMqBrokerConfigRabbitAuditLog(rName string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_mq_broker" "test" {
+  broker_name        = %[1]q
+  engine_type        = "RabbitMQ"
+  engine_version     = "3.8.6"
+  host_instance_type = "mq.t3.micro"
+  security_groups    = [aws_security_group.test.id]
+
+  logs {
+    general = true
+    audit   = %[2]t
+  }
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+}
+
+resource "aws_security_group" "test" {
+  name = %[1]q
+}
+`, rName, enabled)
 }
 
 func testAccRabbitMqClusterBrokerConfig(rName string) string {

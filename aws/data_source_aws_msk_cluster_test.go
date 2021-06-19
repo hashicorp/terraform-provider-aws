@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -15,6 +16,7 @@ func TestAccAWSMskClusterDataSource_Name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
@@ -37,7 +39,7 @@ func TestAccAWSMskClusterDataSource_Name(t *testing.T) {
 }
 
 func testAccMskClusterDataSourceConfigName(rName string) string {
-	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
+	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.2.1"
@@ -58,5 +60,5 @@ resource "aws_msk_cluster" "test" {
 data "aws_msk_cluster" "test" {
   cluster_name = aws_msk_cluster.test.cluster_name
 }
-`, rName)
+`, rName))
 }

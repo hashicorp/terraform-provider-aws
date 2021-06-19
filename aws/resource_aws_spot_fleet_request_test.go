@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -24,12 +25,20 @@ func init() {
 
 func testSweepSpotFleetRequests(region string) error {
 	client, err := sharedClientForRegion(region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).ec2conn
 
-	err = conn.DescribeSpotFleetRequestsPages(&ec2.DescribeSpotFleetRequestsInput{}, func(page *ec2.DescribeSpotFleetRequestsOutput, isLast bool) bool {
+	conn := client.(*AWSClient).ec2conn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
+
+	err = conn.DescribeSpotFleetRequestsPages(&ec2.DescribeSpotFleetRequestsInput{}, func(page *ec2.DescribeSpotFleetRequestsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
 		if len(page.SpotFleetRequestConfigs) == 0 {
 			log.Print("[DEBUG] No Spot Fleet Requests to sweep")
 			return false
@@ -38,22 +47,31 @@ func testSweepSpotFleetRequests(region string) error {
 		for _, config := range page.SpotFleetRequestConfigs {
 			id := aws.StringValue(config.SpotFleetRequestId)
 
-			log.Printf("[INFO] Deleting Spot Fleet Request: %s", id)
-			err := deleteSpotFleetRequest(id, true, 15*time.Minute, conn)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Spot Fleet Request (%s): %s", id, err)
-			}
+			r := resourceAwsSpotFleetRequest()
+			d := r.Data(nil)
+			d.SetId(id)
+			d.Set("terminate_instances_with_expiration", true)
+
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
-		return !isLast
+
+		return !lastPage
 	})
+
 	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 Spot Fleet Requests sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving EC2 Spot Fleet Requests: %s", err)
+		errs = multierror.Append(errs, fmt.Errorf("error describing EC2 Spot Fleet Requests for %s: %w", region, err))
 	}
-	return nil
+
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Spot Fleet Requests for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping EC2 Spot Fleet Requests sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func TestAccAWSSpotFleetRequest_basic(t *testing.T) {
@@ -326,6 +344,107 @@ func TestAccAWSSpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
 					testAccCheckAWSSpotFleetRequestConfigRecreated(t, &before, &after),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSpotFleetRequest_onDemandTargetCapacity(t *testing.T) {
+	var sfr ec2.SpotFleetRequestConfig
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestOnDemandTargetCapacityConfig(rName, validUntil, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_target_capacity", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+			{
+				Config: testAccAWSSpotFleetRequestOnDemandTargetCapacityConfig(rName, validUntil, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_target_capacity", "1"),
+				),
+			},
+			{
+				Config: testAccAWSSpotFleetRequestOnDemandTargetCapacityConfig(rName, validUntil, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_target_capacity", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSpotFleetRequest_onDemandMaxTotalPrice(t *testing.T) {
+	var sfr ec2.SpotFleetRequestConfig
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestOnDemandMaxTotalPriceConfig(rName, validUntil, "0.05"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_max_total_price", "0.05"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+		},
+	})
+}
+
+func TestAccAWSSpotFleetRequest_onDemandAllocationStrategy(t *testing.T) {
+	var sfr ec2.SpotFleetRequestConfig
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestOnDemandAllocationStrategyConfig(rName, validUntil, "prioritized"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_allocation_strategy", "prioritized"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
 			},
 		},
 	})
@@ -2644,4 +2763,100 @@ resource "aws_spot_fleet_request" "test" {
   depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil)
+}
+
+func testAccAWSSpotFleetRequestOnDemandTargetCapacityConfig(rName string, validUntil string, targetCapacity int) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName) +
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  key_name      = aws_key_pair.test.key_name
+}
+
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = aws_iam_role.test.arn
+  spot_price                          = "0.005"
+  target_capacity                     = 2
+  valid_until                         = %[2]q
+  terminate_instances_with_expiration = true
+  instance_interruption_behaviour     = "stop"
+  wait_for_fulfillment                = true
+  on_demand_target_capacity           = %[3]d
+
+  launch_template_config {
+    launch_template_specification {
+      name    = aws_launch_template.test.name
+      version = aws_launch_template.test.latest_version
+    }
+  }
+
+  depends_on = ["aws_iam_policy_attachment.test"]
+}
+`, rName, validUntil, targetCapacity)
+}
+
+func testAccAWSSpotFleetRequestOnDemandMaxTotalPriceConfig(rName, validUntil, price string) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName) +
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  key_name      = aws_key_pair.test.key_name
+}
+
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = aws_iam_role.test.arn
+  spot_price                          = "0.005"
+  target_capacity                     = 2
+  valid_until                         = %[2]q
+  terminate_instances_with_expiration = true
+  instance_interruption_behaviour     = "stop"
+  wait_for_fulfillment                = true
+  on_demand_max_total_price           = %[3]q
+
+  launch_template_config {
+    launch_template_specification {
+      name    = aws_launch_template.test.name
+      version = aws_launch_template.test.latest_version
+    }
+  }
+
+  depends_on = ["aws_iam_policy_attachment.test"]
+}
+`, rName, validUntil, price)
+}
+
+func testAccAWSSpotFleetRequestOnDemandAllocationStrategyConfig(rName, validUntil, strategy string) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName) +
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  key_name      = aws_key_pair.test.key_name
+}
+
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = aws_iam_role.test.arn
+  spot_price                          = "0.005"
+  target_capacity                     = 2
+  valid_until                         = %[2]q
+  terminate_instances_with_expiration = true
+  instance_interruption_behaviour     = "stop"
+  wait_for_fulfillment                = true
+  on_demand_allocation_strategy       = %[3]q
+
+  launch_template_config {
+    launch_template_specification {
+      name    = aws_launch_template.test.name
+      version = aws_launch_template.test.latest_version
+    }
+  }
+
+  depends_on = ["aws_iam_policy_attachment.test"]
+}
+`, rName, validUntil, strategy)
 }

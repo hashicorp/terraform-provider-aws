@@ -25,6 +25,7 @@ func TestAccAWSSESEventDestination_basic(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckAWSSES(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESEventDestinationDestroy,
 		Steps: []resource.TestStep{
@@ -78,6 +79,7 @@ func TestAccAWSSESEventDestination_disappears(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckAWSSES(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESEventDestinationDestroy,
 		Steps: []resource.TestStep{

@@ -100,7 +100,7 @@ The `input_parameter` configuration block supports the following arguments:
 
 ## Attributes Reference
 
-In addition to all arguments above (except for `template_body` and `template_s3_uri`), the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the conformance pack.
 

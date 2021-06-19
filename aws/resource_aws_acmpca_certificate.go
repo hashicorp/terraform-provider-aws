@@ -169,18 +169,24 @@ func resourceAwsAcmpcaCertificateRead(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Reading ACM PCA Certificate: %s", getCertificateInput)
 
 	certificateOutput, err := conn.GetCertificate(getCertificateInput)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] ACM PCA Certificate (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] ACM PCA Certificate (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading ACM PCA Certificate: %s", err)
+		return fmt.Errorf("error reading ACM PCA Certificate (%s): %w", d.Id(), err)
+	}
+
+	if certificateOutput == nil {
+		return fmt.Errorf("error reading ACM PCA Certificate (%s): empty response", d.Id())
 	}
 
 	d.Set("arn", d.Id())
-	d.Set("certificate", aws.StringValue(certificateOutput.Certificate))
-	d.Set("certificate_chain", aws.StringValue(certificateOutput.CertificateChain))
+	d.Set("certificate", certificateOutput.Certificate)
+	d.Set("certificate_chain", certificateOutput.CertificateChain)
 
 	return nil
 }

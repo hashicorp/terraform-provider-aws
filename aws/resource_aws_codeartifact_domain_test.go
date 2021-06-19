@@ -73,6 +73,7 @@ func TestAccAWSCodeArtifactDomain_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codeartifact.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
 		Steps: []resource.TestStep{
@@ -105,6 +106,7 @@ func TestAccAWSCodeArtifactDomain_defaultencryptionkey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("codeartifact", t) },
+		ErrorCheck:   testAccErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
 		Steps: []resource.TestStep{
@@ -136,6 +138,7 @@ func TestAccAWSCodeArtifactDomain_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("codeartifact", t) },
+		ErrorCheck:   testAccErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
 		Steps: []resource.TestStep{
@@ -178,6 +181,7 @@ func TestAccAWSCodeArtifactDomain_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codeartifact.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
 		Steps: []resource.TestStep{

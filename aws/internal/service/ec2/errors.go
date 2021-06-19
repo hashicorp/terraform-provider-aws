@@ -5,11 +5,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/go-multierror"
+	multierror "github.com/hashicorp/go-multierror"
 )
 
 const (
-	ErrCodeInvalidParameterValue = "InvalidParameterValue"
+	ErrCodeGatewayNotAttached           = "Gateway.NotAttached"
+	ErrCodeInvalidAssociationIDNotFound = "InvalidAssociationID.NotFound"
+	ErrCodeInvalidParameter             = "InvalidParameter"
+	ErrCodeInvalidParameterException    = "InvalidParameterException"
+	ErrCodeInvalidParameterValue        = "InvalidParameterValue"
 )
 
 const (
@@ -17,11 +21,21 @@ const (
 )
 
 const (
+	ErrCodeInvalidNetworkInterfaceIDNotFound = "InvalidNetworkInterfaceID.NotFound"
+)
+
+const (
 	ErrCodeInvalidPrefixListIDNotFound = "InvalidPrefixListID.NotFound"
 )
 
 const (
+	ErrCodeInvalidRouteNotFound        = "InvalidRoute.NotFound"
+	ErrCodeInvalidRouteTableIdNotFound = "InvalidRouteTableId.NotFound"
 	ErrCodeInvalidRouteTableIDNotFound = "InvalidRouteTableID.NotFound"
+)
+
+const (
+	ErrCodeInvalidTransitGatewayIDNotFound = "InvalidTransitGatewayID.NotFound"
 )
 
 const (
@@ -41,6 +55,11 @@ const (
 )
 
 const (
+	ErrCodeInvalidSpotInstanceRequestIDNotFound = "InvalidSpotInstanceRequestID.NotFound"
+)
+
+const (
+	ErrCodeInvalidSubnetIdNotFound = "InvalidSubnetId.NotFound"
 	ErrCodeInvalidSubnetIDNotFound = "InvalidSubnetID.NotFound"
 )
 

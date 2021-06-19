@@ -42,6 +42,7 @@ func TestAccAWSDataSourceIAMServerCertificate_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{
@@ -65,6 +66,7 @@ func TestAccAWSDataSourceIAMServerCertificate_basic(t *testing.T) {
 func TestAccAWSDataSourceIAMServerCertificate_matchNamePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{
@@ -86,6 +88,7 @@ func TestAccAWSDataSourceIAMServerCertificate_path(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{

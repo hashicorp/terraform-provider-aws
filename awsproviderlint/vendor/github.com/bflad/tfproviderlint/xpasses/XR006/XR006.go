@@ -32,19 +32,19 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			continue
 		}
 
-		if !resource.DeclaresField(schema.ResourceFieldCreate) && !resource.DeclaresField(schema.ResourceFieldCreateContext) && resource.Resource.Timeouts.Create != nil {
+		if !resource.DeclaresField(schema.ResourceFieldCreate) && !resource.DeclaresField(schema.ResourceFieldCreateContext) && !resource.DeclaresField(schema.ResourceFieldCreateWithoutTimeout) && resource.Resource.Timeouts.Create != nil {
 			pass.Reportf(resource.AstCompositeLit.Pos(), "%s: resource should not configure Timeouts.Create without Create implementation", analyzerName)
 		}
 
-		if !resource.DeclaresField(schema.ResourceFieldDelete) && !resource.DeclaresField(schema.ResourceFieldDeleteContext) && resource.Resource.Timeouts.Delete != nil {
+		if !resource.DeclaresField(schema.ResourceFieldDelete) && !resource.DeclaresField(schema.ResourceFieldDeleteContext) && !resource.DeclaresField(schema.ResourceFieldDeleteWithoutTimeout) && resource.Resource.Timeouts.Delete != nil {
 			pass.Reportf(resource.AstCompositeLit.Pos(), "%s: resource should not configure Timeouts.Delete without Delete implementation", analyzerName)
 		}
 
-		if !resource.DeclaresField(schema.ResourceFieldRead) && !resource.DeclaresField(schema.ResourceFieldReadContext) && resource.Resource.Timeouts.Read != nil {
+		if !resource.DeclaresField(schema.ResourceFieldRead) && !resource.DeclaresField(schema.ResourceFieldReadContext) && !resource.DeclaresField(schema.ResourceFieldReadWithoutTimeout) && resource.Resource.Timeouts.Read != nil {
 			pass.Reportf(resource.AstCompositeLit.Pos(), "%s: resource should not configure Timeouts.Read without Read implementation", analyzerName)
 		}
 
-		if !resource.DeclaresField(schema.ResourceFieldUpdate) && !resource.DeclaresField(schema.ResourceFieldUpdateContext) && resource.Resource.Timeouts.Update != nil {
+		if !resource.DeclaresField(schema.ResourceFieldUpdate) && !resource.DeclaresField(schema.ResourceFieldUpdateContext) && !resource.DeclaresField(schema.ResourceFieldUpdateWithoutTimeout) && resource.Resource.Timeouts.Update != nil {
 			pass.Reportf(resource.AstCompositeLit.Pos(), "%s: resource should not configure Timeouts.Update without Update implementation", analyzerName)
 		}
 	}

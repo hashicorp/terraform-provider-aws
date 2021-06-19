@@ -22,6 +22,7 @@ func TestAccAWSAccessKey_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAccessKeyDestroy,
 		Steps: []resource.TestStep{
@@ -50,6 +51,7 @@ func TestAccAWSAccessKey_encrypted(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAccessKeyDestroy,
 		Steps: []resource.TestStep{
@@ -83,6 +85,7 @@ func TestAccAWSAccessKey_Status(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAccessKeyDestroy,
 		Steps: []resource.TestStep{

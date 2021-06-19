@@ -104,6 +104,7 @@ func TestAccAWSEcsCapacityProvider_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsCapacityProviderDestroy,
 		Steps: []resource.TestStep{
@@ -141,6 +142,7 @@ func TestAccAWSEcsCapacityProvider_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsCapacityProviderDestroy,
 		Steps: []resource.TestStep{
@@ -163,6 +165,7 @@ func TestAccAWSEcsCapacityProvider_ManagedScaling(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsCapacityProviderDestroy,
 		Steps: []resource.TestStep{
@@ -197,6 +200,7 @@ func TestAccAWSEcsCapacityProvider_ManagedScalingPartial(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsCapacityProviderDestroy,
 		Steps: []resource.TestStep{
@@ -231,6 +235,7 @@ func TestAccAWSEcsCapacityProvider_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsCapacityProviderDestroy,
 		Steps: []resource.TestStep{

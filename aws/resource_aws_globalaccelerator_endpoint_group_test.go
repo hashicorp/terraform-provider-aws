@@ -23,6 +23,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
@@ -59,6 +60,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
@@ -84,6 +86,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_ALBEndpoint_ClientIP(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
@@ -157,6 +160,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_InstanceEndpoint(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
@@ -207,6 +211,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_MultiRegion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccMultipleRegionPreCheck(t, 2); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:        testAccErrorCheck(t, globalaccelerator.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
@@ -248,6 +253,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_PortOverrides(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
@@ -314,6 +320,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_TCPHealthCheckProtocol(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
@@ -356,6 +363,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_Update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{

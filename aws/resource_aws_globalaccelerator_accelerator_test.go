@@ -157,6 +157,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
@@ -195,6 +196,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
@@ -217,6 +219,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
@@ -260,6 +263,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
@@ -318,6 +322,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
@@ -439,7 +444,9 @@ resource "aws_globalaccelerator_accelerator" "test" {
 func testAccGlobalAcceleratorAcceleratorConfigAttributes(rName string, flowLogsEnabled bool, flowLogsPrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  acl           = "private"
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_globalaccelerator_accelerator" "test" {

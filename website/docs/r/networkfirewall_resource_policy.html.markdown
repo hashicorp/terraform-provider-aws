@@ -71,7 +71,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attribute is exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Amazon Resource Name (ARN) of the rule group or firewall policy associated with the resource policy.
 

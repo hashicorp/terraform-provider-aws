@@ -47,9 +47,9 @@ func testSweepEc2ClientVpnEndpoints(region string) error {
 	var sweeperErrs *multierror.Error
 
 	input := &ec2.DescribeClientVpnEndpointsInput{}
-	err = conn.DescribeClientVpnEndpointsPages(input, func(page *ec2.DescribeClientVpnEndpointsOutput, isLast bool) bool {
+	err = conn.DescribeClientVpnEndpointsPages(input, func(page *ec2.DescribeClientVpnEndpointsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, clientVpnEndpoint := range page.ClientVpnEndpoints {
@@ -64,7 +64,7 @@ func testSweepEc2ClientVpnEndpoints(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Client VPN endpoint sweep for %s: %s", region, err)
@@ -101,9 +101,10 @@ func TestAccAwsEc2ClientVpn_serial(t *testing.T) {
 			"disappears": testAccAwsEc2ClientVpnAuthorizationRule_disappears,
 		},
 		"NetworkAssociation": {
-			"basic":          testAccAwsEc2ClientVpnNetworkAssociation_basic,
-			"disappears":     testAccAwsEc2ClientVpnNetworkAssociation_disappears,
-			"securityGroups": testAccAwsEc2ClientVpnNetworkAssociation_securityGroups,
+			"basic":           testAccAwsEc2ClientVpnNetworkAssociation_basic,
+			"multipleSubnets": testAccAwsEc2ClientVpnNetworkAssociation_multipleSubnets,
+			"disappears":      testAccAwsEc2ClientVpnNetworkAssociation_disappears,
+			"securityGroups":  testAccAwsEc2ClientVpnNetworkAssociation_securityGroups,
 		},
 		"Route": {
 			"basic":       testAccAwsEc2ClientVpnRoute_basic,

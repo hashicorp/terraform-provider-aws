@@ -66,6 +66,7 @@ func TestAccAWSGlueTrigger_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -105,6 +106,7 @@ func TestAccAWSGlueTrigger_Crawler(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -152,6 +154,7 @@ func TestAccAWSGlueTrigger_Description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -187,6 +190,7 @@ func TestAccAWSGlueTrigger_Enabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -229,6 +233,7 @@ func TestAccAWSGlueTrigger_Predicate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -272,6 +277,7 @@ func TestAccAWSGlueTrigger_Schedule(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -307,6 +313,7 @@ func TestAccAWSGlueTrigger_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -353,6 +360,7 @@ func TestAccAWSGlueTrigger_WorkflowName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -381,6 +389,7 @@ func TestAccAWSGlueTrigger_actions_notify(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -432,6 +441,7 @@ func TestAccAWSGlueTrigger_actions_securityConfig(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -462,6 +472,7 @@ func TestAccAWSGlueTrigger_onDemandDisable(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{
@@ -507,6 +518,7 @@ func TestAccAWSGlueTrigger_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
 		Steps: []resource.TestStep{

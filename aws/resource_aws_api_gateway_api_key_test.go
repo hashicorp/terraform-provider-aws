@@ -20,6 +20,7 @@ func TestAccAWSAPIGatewayApiKey_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
 		Steps: []resource.TestStep{
@@ -52,6 +53,7 @@ func TestAccAWSAPIGatewayApiKey_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
 		Steps: []resource.TestStep{
@@ -96,6 +98,7 @@ func TestAccAWSAPIGatewayApiKey_Description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
 		Steps: []resource.TestStep{
@@ -130,6 +133,7 @@ func TestAccAWSAPIGatewayApiKey_Enabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
 		Steps: []resource.TestStep{
@@ -164,6 +168,7 @@ func TestAccAWSAPIGatewayApiKey_Value(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
 		Steps: []resource.TestStep{
@@ -190,6 +195,7 @@ func TestAccAWSAPIGatewayApiKey_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
 		Steps: []resource.TestStep{

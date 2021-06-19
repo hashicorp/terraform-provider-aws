@@ -17,6 +17,7 @@ func TestAccAWSKmsGrant_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
@@ -48,6 +49,7 @@ func TestAccAWSKmsGrant_withConstraints(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
@@ -95,6 +97,7 @@ func TestAccAWSKmsGrant_withRetiringPrincipal(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
@@ -121,6 +124,7 @@ func TestAccAWSKmsGrant_bare(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
@@ -149,6 +153,7 @@ func TestAccAWSKmsGrant_ARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
@@ -180,6 +185,7 @@ func TestAccAWSKmsGrant_AsymmetricKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
@@ -205,6 +211,7 @@ func TestAccAWSKmsGrant_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{

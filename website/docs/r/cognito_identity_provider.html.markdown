@@ -48,6 +48,10 @@ The following arguments are supported:
 * `idp_identifiers` (Optional) - The list of identity providers.
 * `provider_details` (Optional) - The map of identity details, such as access token
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 `aws_cognito_identity_provider` resources can be imported using their User Pool ID and Provider Name, e.g.

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -17,6 +18,7 @@ func TestAccAwsGlobalAcceleratorListener_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorListenerDestroy,
 		Steps: []resource.TestStep{
@@ -48,6 +50,7 @@ func TestAccAwsGlobalAcceleratorListener_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorListenerDestroy,
 		Steps: []resource.TestStep{
@@ -69,6 +72,7 @@ func TestAccAwsGlobalAcceleratorListener_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorListenerDestroy,
 		Steps: []resource.TestStep{

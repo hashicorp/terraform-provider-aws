@@ -38,6 +38,7 @@ func testAccAWSSESActiveReceiptRuleSet_basic(t *testing.T) {
 			testAccPreCheckAWSSES(t)
 			testAccPreCheckSESReceiptRule(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESActiveReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
@@ -62,6 +63,7 @@ func testAccAWSSESActiveReceiptRuleSet_disappears(t *testing.T) {
 			testAccPreCheckAWSSES(t)
 			testAccPreCheckSESReceiptRule(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESActiveReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{

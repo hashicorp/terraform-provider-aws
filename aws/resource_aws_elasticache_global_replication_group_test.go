@@ -5,6 +5,7 @@ import (
 	"log"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
@@ -26,6 +27,12 @@ func init() {
 	})
 }
 
+// These timeouts are lower to fail faster during sweepers
+const (
+	sweeperGlobalReplicationGroupDisassociationReadyTimeout = 10 * time.Minute
+	sweeperGlobalReplicationGroupDefaultUpdatedTimeout      = 10 * time.Minute
+)
+
 func testSweepElasticacheGlobalReplicationGroups(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
@@ -33,40 +40,83 @@ func testSweepElasticacheGlobalReplicationGroups(region string) error {
 	}
 	conn := client.(*AWSClient).elasticacheconn
 
-	var sweeperErrs *multierror.Error
+	var grgGroup multierror.Group
 
-	input := &elasticache.DescribeGlobalReplicationGroupsInput{}
+	input := &elasticache.DescribeGlobalReplicationGroupsInput{
+		ShowMemberInfo: aws.Bool(true),
+	}
 	err = conn.DescribeGlobalReplicationGroupsPages(input, func(page *elasticache.DescribeGlobalReplicationGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, globalReplicationGroup := range page.GlobalReplicationGroups {
-			id := aws.StringValue(globalReplicationGroup.GlobalReplicationGroupId)
+			globalReplicationGroup := globalReplicationGroup
 
-			log.Printf("[INFO] Deleting ElastiCache Global Replication Group: %s", id)
-			err := deleteElasticacheGlobalReplicationGroup(conn, id)
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting ElastiCache Global Replication Group (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			grgGroup.Go(func() error {
+				id := aws.StringValue(globalReplicationGroup.GlobalReplicationGroupId)
+
+				disassociationErrors := disassociateMembers(conn, globalReplicationGroup)
+				if disassociationErrors != nil {
+					sweeperErr := fmt.Errorf("failed to disassociate ElastiCache Global Replication Group (%s) members: %w", id, disassociationErrors)
+					log.Printf("[ERROR] %s", sweeperErr)
+					return sweeperErr
+				}
+
+				log.Printf("[INFO] Deleting ElastiCache Global Replication Group: %s", id)
+				err := deleteElasticacheGlobalReplicationGroup(conn, id, sweeperGlobalReplicationGroupDefaultUpdatedTimeout)
+				if err != nil {
+					sweeperErr := fmt.Errorf("error deleting ElastiCache Global Replication Group (%s): %w", id, err)
+					log.Printf("[ERROR] %s", sweeperErr)
+					return sweeperErr
+				}
+				return nil
+			})
 		}
 
 		return !lastPage
 	})
 
+	grgErrs := grgGroup.Wait()
+
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping ElastiCache Global Replication Group sweep for %q: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		return grgErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing ElastiCache Global Replication Groups: %w", err))
+		grgErrs = multierror.Append(grgErrs, fmt.Errorf("error listing ElastiCache Global Replication Groups: %w", err))
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return grgErrs.ErrorOrNil()
+}
+
+func disassociateMembers(conn *elasticache.ElastiCache, globalReplicationGroup *elasticache.GlobalReplicationGroup) error {
+	var membersGroup multierror.Group
+
+	for _, member := range globalReplicationGroup.Members {
+		member := member
+
+		if aws.StringValue(member.Role) == GlobalReplicationGroupMemberRolePrimary {
+			continue
+		}
+
+		id := aws.StringValue(globalReplicationGroup.GlobalReplicationGroupId)
+
+		membersGroup.Go(func() error {
+			if err := disassociateElasticacheReplicationGroup(conn, id, aws.StringValue(member.ReplicationGroupId), aws.StringValue(member.ReplicationGroupRegion), sweeperGlobalReplicationGroupDisassociationReadyTimeout); err != nil {
+				sweeperErr := fmt.Errorf(
+					"error disassociating ElastiCache Replication Group (%s) in %s from Global Group (%s): %w",
+					aws.StringValue(member.ReplicationGroupId), aws.StringValue(member.ReplicationGroupRegion), id, err,
+				)
+				log.Printf("[ERROR] %s", sweeperErr)
+				return sweeperErr
+			}
+			return nil
+		})
+	}
+
+	return membersGroup.Wait().ErrorOrNil()
 }
 
 func TestAccAWSElasticacheGlobalReplicationGroup_basic(t *testing.T) {
@@ -81,6 +131,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticacheGlobalReplicationGroup(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheGlobalReplicationGroupDestroy,
 		Steps: []resource.TestStep{
@@ -95,6 +146,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "cache_node_type", primaryReplicationGroupResourceName, "node_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_enabled", primaryReplicationGroupResourceName, "cluster_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine", primaryReplicationGroupResourceName, "engine"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "actual_engine_version", primaryReplicationGroupResourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "global_replication_group_id_suffix", rName),
 					resource.TestMatchResourceAttr(resourceName, "global_replication_group_id", regexp.MustCompile(elasticacheGlobalReplicationGroupRegionPrefixFormat+rName)),
@@ -122,6 +174,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_Description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticacheGlobalReplicationGroup(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheGlobalReplicationGroupDestroy,
 		Steps: []resource.TestStep{
@@ -156,6 +209,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticacheGlobalReplicationGroup(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheGlobalReplicationGroupDestroy,
 		Steps: []resource.TestStep{
@@ -182,6 +236,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_MultipleSecondaries(t *testing.
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 3)
 		},
+		ErrorCheck:        testAccErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3),
 		CheckDestroy:      testAccCheckAWSElasticacheReplicationDestroy,
 		Steps: []resource.TestStep{
@@ -206,6 +261,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_ReplaceSecondary_DifferentRegio
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 3)
 		},
+		ErrorCheck:        testAccErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3),
 		CheckDestroy:      testAccCheckAWSElasticacheReplicationDestroy,
 		Steps: []resource.TestStep{

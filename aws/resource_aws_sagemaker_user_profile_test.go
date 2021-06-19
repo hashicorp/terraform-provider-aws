@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -72,6 +73,7 @@ func testAccAWSSagemakerUserProfile_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -103,6 +105,7 @@ func testAccAWSSagemakerUserProfile_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -147,6 +150,7 @@ func testAccAWSSagemakerUserProfile_tensorboardAppSettings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -176,6 +180,7 @@ func testAccAWSSagemakerUserProfile_tensorboardAppSettingsWithImage(t *testing.T
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -206,6 +211,7 @@ func testAccAWSSagemakerUserProfile_kernelGatewayAppSettings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -235,6 +241,7 @@ func testAccAWSSagemakerUserProfile_jupyterServerAppSettings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -264,6 +271,7 @@ func testAccAWSSagemakerUserProfile_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -291,8 +299,13 @@ func testAccCheckAWSSagemakerUserProfileDestroy(s *terraform.State) error {
 		userProfileName := rs.Primary.Attributes["user_profile_name"]
 
 		userProfile, err := finder.UserProfileByName(conn, domainID, userProfileName)
+
+		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+			continue
+		}
+
 		if err != nil {
-			return nil
+			return fmt.Errorf("error reading Sagemaker User Profile (%s): %w", rs.Primary.ID, err)
 		}
 
 		userProfileArn := aws.StringValue(userProfile.UserProfileArn)
