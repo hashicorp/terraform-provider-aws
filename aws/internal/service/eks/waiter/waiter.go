@@ -54,6 +54,32 @@ func ClusterDeleted(conn *eks.EKS, name string, timeout time.Duration) (*eks.Clu
 	return nil, err
 }
 
+func ClusterUpdateSuccessful(conn *eks.EKS, name, id string, timeout time.Duration) (*eks.Update, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{eks.UpdateStatusInProgress},
+		Target:  []string{eks.UpdateStatusSuccessful},
+		Refresh: ClusterUpdateStatus(conn, name, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*eks.Update); ok {
+		if status := aws.StringValue(output.Status); status == eks.UpdateStatusCancelled || status == eks.UpdateStatusFailed {
+			var errs *multierror.Error
+
+			for _, e := range output.Errors {
+				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(e.ErrorCode), aws.StringValue(e.ErrorMessage)))
+			}
+			tfresource.SetLastError(err, errs.ErrorOrNil())
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func FargateProfileCreated(conn *eks.EKS, clusterName, fargateProfileName string, timeout time.Duration) (*eks.FargateProfile, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{eks.FargateProfileStatusCreating},
@@ -127,32 +153,6 @@ func NodegroupUpdateSuccessful(conn *eks.EKS, clusterName, nodeGroupName, id str
 		Pending: []string{eks.UpdateStatusInProgress},
 		Target:  []string{eks.UpdateStatusSuccessful},
 		Refresh: NodegroupUpdateStatus(conn, clusterName, nodeGroupName, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*eks.Update); ok {
-		if status := aws.StringValue(output.Status); status == eks.UpdateStatusCancelled || status == eks.UpdateStatusFailed {
-			var errs *multierror.Error
-
-			for _, e := range output.Errors {
-				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(e.ErrorCode), aws.StringValue(e.ErrorMessage)))
-			}
-			tfresource.SetLastError(err, errs.ErrorOrNil())
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func UpdateSuccessful(conn *eks.EKS, name, id string, timeout time.Duration) (*eks.Update, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{eks.UpdateStatusInProgress},
-		Target:  []string{eks.UpdateStatusSuccessful},
-		Refresh: UpdateStatus(conn, name, id),
 		Timeout: timeout,
 	}
 

@@ -400,7 +400,7 @@ func resourceAwsEksClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = waiter.UpdateSuccessful(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+		_, err = waiter.ClusterUpdateSuccessful(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return fmt.Errorf("error waiting for EKS Cluster (%s) version update (%s): %w", d.Id(), updateID, err)
@@ -422,7 +422,7 @@ func resourceAwsEksClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = waiter.UpdateSuccessful(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+		_, err = waiter.ClusterUpdateSuccessful(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return fmt.Errorf("error waiting for EKS Cluster (%s) encryption config association (%s): %w", d.Id(), updateID, err)
@@ -444,7 +444,7 @@ func resourceAwsEksClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = waiter.UpdateSuccessful(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+		_, err = waiter.ClusterUpdateSuccessful(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return fmt.Errorf("error waiting for EKS Cluster (%s) logging update (%s): %w", d.Id(), updateID, err)
@@ -466,7 +466,7 @@ func resourceAwsEksClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = waiter.UpdateSuccessful(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+		_, err = waiter.ClusterUpdateSuccessful(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return fmt.Errorf("error waiting for EKS Cluster (%s) VPC config update (%s): %w", d.Id(), updateID, err)

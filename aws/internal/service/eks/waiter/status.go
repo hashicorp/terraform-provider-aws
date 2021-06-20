@@ -28,6 +28,22 @@ func ClusterStatus(conn *eks.EKS, name string) resource.StateRefreshFunc {
 	}
 }
 
+func ClusterUpdateStatus(conn *eks.EKS, name, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.ClusterUpdateByNameAndID(conn, name, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
 func FargateProfileStatus(conn *eks.EKS, clusterName, fargateProfileName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := finder.FargateProfileByClusterNameAndFargateProfileName(conn, clusterName, fargateProfileName)
@@ -63,22 +79,6 @@ func NodegroupStatus(conn *eks.EKS, clusterName, nodeGroupName string) resource.
 func NodegroupUpdateStatus(conn *eks.EKS, clusterName, nodeGroupName, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := finder.NodegroupUpdateByClusterNameNodegroupNameAndID(conn, clusterName, nodeGroupName, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Status), nil
-	}
-}
-
-func UpdateStatus(conn *eks.EKS, name, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := finder.UpdateByNameAndID(conn, name, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
