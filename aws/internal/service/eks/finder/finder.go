@@ -37,6 +37,35 @@ func ClusterByName(conn *eks.EKS, name string) (*eks.Cluster, error) {
 	return output.Cluster, nil
 }
 
+func FargateProfileByClusterNameAndFargateProfileName(conn *eks.EKS, clusterName, fargateProfileName string) (*eks.FargateProfile, error) {
+	input := &eks.DescribeFargateProfileInput{
+		ClusterName:        aws.String(clusterName),
+		FargateProfileName: aws.String(fargateProfileName),
+	}
+
+	output, err := conn.DescribeFargateProfile(input)
+
+	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.FargateProfile == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output.FargateProfile, nil
+}
+
 func UpdateByNameAndID(conn *eks.EKS, name, id string) (*eks.Update, error) {
 	input := &eks.DescribeUpdateInput{
 		Name:     aws.String(name),

@@ -23,7 +23,6 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 		Read:   resourceAwsEksNodeGroupRead,
 		Update: resourceAwsEksNodeGroupUpdate,
 		Delete: resourceAwsEksNodeGroupDelete,
-
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

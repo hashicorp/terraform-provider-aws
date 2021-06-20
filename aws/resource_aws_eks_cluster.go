@@ -508,7 +508,7 @@ func resourceAwsEksClusterDelete(d *schema.ResourceData, meta interface{}) error
 	_, err = waiter.ClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EKS Cluster (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for EKS Cluster (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil

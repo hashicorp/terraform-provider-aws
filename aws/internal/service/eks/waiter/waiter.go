@@ -54,6 +54,40 @@ func ClusterDeleted(conn *eks.EKS, name string, timeout time.Duration) (*eks.Clu
 	return nil, err
 }
 
+func FargateProfileCreated(conn *eks.EKS, clusterName, fargateProfileName string, timeout time.Duration) (*eks.FargateProfile, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{eks.FargateProfileStatusCreating},
+		Target:  []string{eks.FargateProfileStatusActive},
+		Refresh: FargateProfileStatus(conn, clusterName, fargateProfileName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*eks.FargateProfile); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func FargateProfileDeleted(conn *eks.EKS, clusterName, fargateProfileName string, timeout time.Duration) (*eks.FargateProfile, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{eks.FargateProfileStatusActive, eks.FargateProfileStatusDeleting},
+		Target:  []string{},
+		Refresh: FargateProfileStatus(conn, clusterName, fargateProfileName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*eks.FargateProfile); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func UpdateSuccessful(conn *eks.EKS, name, id string, timeout time.Duration) (*eks.Update, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{eks.UpdateStatusInProgress},
