@@ -174,36 +174,6 @@ func TestAccAWSCloudFormationStackSet_AdministrationRoleArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStackSet_CallAs(t *testing.T) {
-	var stackSet1, stackSet2 cloudformation.StackSet
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_cloudformation_stack_set.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudFormationStackSetDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSCloudFormationStackSetConfigCallAs(rName, "description1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet1),
-					resource.TestCheckResourceAttr(resourceName, "call_as", "SELF"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"template_url",
-				},
-			},
-		},
-	})
-}
-
 func TestAccAWSCloudFormationStackSet_Description(t *testing.T) {
 	var stackSet1, stackSet2 cloudformation.StackSet
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -989,43 +959,6 @@ resource "aws_cloudformation_stack_set" "test" {
 TEMPLATE
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName))
-}
-
-func testAccAWSCloudFormationStackSetConfigCallAs(rName, description string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "cloudformation.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-
-  name = %[1]q
-}
-
-resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = aws_iam_role.test.arn
-  description             = %[3]q
-  name                    = %[1]q
-
-  template_body = <<TEMPLATE
-%[2]s
-TEMPLATE
-}
-`, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName), description)
 }
 
 func testAccAWSCloudFormationStackSetConfigDescription(rName, description string) string {
