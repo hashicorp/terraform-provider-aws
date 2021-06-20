@@ -66,6 +66,65 @@ func FargateProfileByClusterNameAndFargateProfileName(conn *eks.EKS, clusterName
 	return output.FargateProfile, nil
 }
 
+func NodegroupByClusterNameAndNodegroupName(conn *eks.EKS, clusterName, nodeGroupName string) (*eks.Nodegroup, error) {
+	input := &eks.DescribeNodegroupInput{
+		ClusterName:   aws.String(clusterName),
+		NodegroupName: aws.String(nodeGroupName),
+	}
+
+	output, err := conn.DescribeNodegroup(input)
+
+	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Nodegroup == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output.Nodegroup, nil
+}
+
+func NodegroupUpdateByClusterNameNodegroupNameAndID(conn *eks.EKS, clusterName, nodeGroupName, id string) (*eks.Update, error) {
+	input := &eks.DescribeUpdateInput{
+		Name:          aws.String(clusterName),
+		NodegroupName: aws.String(nodeGroupName),
+		UpdateId:      aws.String(id),
+	}
+
+	output, err := conn.DescribeUpdate(input)
+
+	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Update == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output.Update, nil
+}
+
 func UpdateByNameAndID(conn *eks.EKS, name, id string) (*eks.Update, error) {
 	input := &eks.DescribeUpdateInput{
 		Name:     aws.String(name),
