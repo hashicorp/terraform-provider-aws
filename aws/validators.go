@@ -2404,7 +2404,7 @@ var validateCloudWatchEventArchiveName = validation.All(
 
 var validateMQBrokerName = validation.All(
 	validation.StringLenBetween(1, 50),
-	validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z._~-]+$`), ""),
+	validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z_-]+$`), ""),
 )
 
 var validateServiceDiscoveryNamespaceName = validation.All(

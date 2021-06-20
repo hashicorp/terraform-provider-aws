@@ -3209,12 +3209,10 @@ func TestCloudWatchEventCustomEventBusEventSourceName(t *testing.T) {
 func TestValidateMQBrokerName(t *testing.T) {
 	validNames := []string{
 		"ValidName",
-		"V_-.~dN01e",
+		"V_-dN01e",
 		"0",
-		".",
 		"-",
 		"_",
-		"~",
 		strings.Repeat("x", 50),
 	}
 	for _, v := range validNames {
@@ -3225,7 +3223,7 @@ func TestValidateMQBrokerName(t *testing.T) {
 	}
 
 	invalidNames := []string{
-		"Inval:dName",
+		"Inval:d.~Name",
 		"Invalid Name",
 		"*",
 		"",
