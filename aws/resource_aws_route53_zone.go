@@ -411,7 +411,7 @@ func dnsSECStatus(conn *route53.Route53, hostedZoneID string) (string, error) {
 	}
 
 	var output *route53.GetDNSSECOutput
-	err := RetryConfigContext(context.Background(), 0*time.Millisecond, 1*time.Minute, 0*time.Millisecond, 30*time.Second, 10*time.Minute, func() *resource.RetryError {
+	err := RetryConfigContext(context.Background(), 0*time.Millisecond, 1*time.Minute, 0*time.Millisecond, 30*time.Second, 3*time.Minute, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.GetDNSSEC(input)
