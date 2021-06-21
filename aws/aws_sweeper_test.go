@@ -4,12 +4,18 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/envvar"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+)
+
+const (
+	SweepThrottlingRetryTimeout = 5 * time.Minute
 )
 
 // sweeperAwsClients is a shared cache of regional AWSClient
@@ -77,7 +83,25 @@ func testSweepResourceOrchestrator(sweepResources []*testSweepResource) error {
 		sweepResource := sweepResource
 
 		g.Go(func() error {
-			return testAccDeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
+			err := resource.Retry(SweepThrottlingRetryTimeout, func() *resource.RetryError {
+				err := testAccDeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
+
+				if err != nil {
+					if tfawserr.ErrCodeContains(err, "ThrottlingException: Rate exceeded") {
+						return resource.RetryableError(err)
+					}
+
+					return resource.NonRetryableError(err)
+				}
+
+				return nil
+			})
+
+			if tfresource.TimedOut(err) {
+				err = testAccDeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
+			}
+
+			return err
 		})
 	}
 

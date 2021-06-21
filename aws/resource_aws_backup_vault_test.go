@@ -2,14 +2,93 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_backup_vault", &resource.Sweeper{
+		Name: "aws_backup_vault",
+		F:    testSweepBackupVaults,
+		Dependencies: []string{
+			"aws_backup_vault_notifications",
+			"aws_backup_vault_policy",
+		},
+	})
+}
+
+func testSweepBackupVaults(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("Error getting client: %w", err)
+	}
+
+	conn := client.(*AWSClient).backupconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
+
+	input := &backup.ListBackupVaultsInput{}
+
+	err = conn.ListBackupVaultsPages(input, func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, vault := range page.BackupVaultList {
+			if vault == nil {
+				continue
+			}
+
+			name := aws.StringValue(vault.BackupVaultName)
+
+			// Ignore Default Backup Vault in region (cannot be deleted)
+			// and automated Backups that result in AccessDeniedException when deleted
+			if name == "Default" || strings.Contains(name, "automatic-backup-vault") {
+				log.Printf("[INFO] Skipping Backup Vault: %s", name)
+				continue
+			}
+
+			// Backup Vault deletion only supported when empty
+			// Reference: https://docs.aws.amazon.com/aws-backup/latest/devguide/API_DeleteBackupVault.html
+			if aws.Int64Value(vault.NumberOfRecoveryPoints) != 0 {
+				log.Printf("[INFO] Skipping Backup Vault (%s): not empty", name)
+				continue
+			}
+
+			r := resourceAwsBackupVault()
+			d := r.Data(nil)
+			d.SetId(name)
+
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing Backup Vaults for %s: %w", region, err))
+	}
+
+	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Backup Vaults for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping Backup Vaults sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
 
 func TestAccAwsBackupVault_basic(t *testing.T) {
 	var vault backup.DescribeBackupVaultOutput

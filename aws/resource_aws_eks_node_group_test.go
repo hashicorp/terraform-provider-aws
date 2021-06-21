@@ -318,10 +318,10 @@ func TestAccAWSEksNodeGroup_ForceUpdateVersion(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigForceUpdateVersion(rName, "1.15"),
+				Config: testAccAWSEksNodeGroupConfigForceUpdateVersion(rName, "1.19"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.15"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.19"),
 				),
 			},
 			{
@@ -331,10 +331,10 @@ func TestAccAWSEksNodeGroup_ForceUpdateVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_update_version"},
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigForceUpdateVersion(rName, "1.16"),
+				Config: testAccAWSEksNodeGroupConfigForceUpdateVersion(rName, "1.20"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.16"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.20"),
 				),
 			},
 		},
@@ -772,6 +772,57 @@ func TestAccAWSEksNodeGroup_ScalingConfig_MinSize(t *testing.T) {
 	})
 }
 
+func TestAccAWSEksNodeGroup_ScalingConfig_Zero_DesiredSize_MinSize(t *testing.T) {
+	var nodeGroup1, nodeGroup2 eks.Nodegroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_eks_node_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEksNodeGroupConfigScalingConfigSizes(rName, 0, 1, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.min_size", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEksNodeGroupConfigScalingConfigSizes(rName, 1, 2, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup2),
+					testAccCheckAWSEksNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.min_size", "1"),
+				),
+			},
+			{
+				Config: testAccAWSEksNodeGroupConfigScalingConfigSizes(rName, 0, 1, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.min_size", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEksNodeGroup_Tags(t *testing.T) {
 	var nodeGroup1, nodeGroup2, nodeGroup3 eks.Nodegroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -894,10 +945,10 @@ func TestAccAWSEksNodeGroup_Version(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigVersion(rName, "1.15"),
+				Config: testAccAWSEksNodeGroupConfigVersion(rName, "1.19"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.15"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.19"),
 				),
 			},
 			{
@@ -906,11 +957,11 @@ func TestAccAWSEksNodeGroup_Version(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigVersion(rName, "1.16"),
+				Config: testAccAWSEksNodeGroupConfigVersion(rName, "1.20"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup2),
 					testAccCheckAWSEksNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.16"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.20"),
 				),
 			},
 		},

@@ -3,9 +3,9 @@ package servicecatalog
 const (
 	// If AWS adds these to the API, we should use those and remove these.
 
-	ServiceCatalogAcceptLanguageEnglish  = "en"
-	ServiceCatalogAcceptLanguageJapanese = "jp"
-	ServiceCatalogAcceptLanguageChinese  = "zh"
+	AcceptLanguageEnglish  = "en"
+	AcceptLanguageJapanese = "jp"
+	AcceptLanguageChinese  = "zh"
 
 	ConstraintTypeLaunch         = "LAUNCH"
 	ConstraintTypeNotification   = "NOTIFICATION"
@@ -16,9 +16,9 @@ const (
 
 func AcceptLanguage_Values() []string {
 	return []string{
-		ServiceCatalogAcceptLanguageEnglish,
-		ServiceCatalogAcceptLanguageJapanese,
-		ServiceCatalogAcceptLanguageChinese,
+		AcceptLanguageEnglish,
+		AcceptLanguageJapanese,
+		AcceptLanguageChinese,
 	}
 }
 

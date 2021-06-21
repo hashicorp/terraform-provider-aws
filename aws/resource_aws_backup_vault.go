@@ -140,7 +140,7 @@ func resourceAwsBackupVaultDelete(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*AWSClient).backupconn
 
 	input := &backup.DeleteBackupVaultInput{
-		BackupVaultName: aws.String(d.Get("name").(string)),
+		BackupVaultName: aws.String(d.Id()),
 	}
 
 	_, err := conn.DeleteBackupVault(input)

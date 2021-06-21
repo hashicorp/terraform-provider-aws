@@ -121,6 +121,7 @@ func TestAccAWSTransferServer_basic(t *testing.T) {
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexp.MustCompile(`server/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "certificate", ""),
+					resource.TestCheckResourceAttr(resourceName, "domain", "S3"),
 					testAccMatchResourceAttrRegionalHostname(resourceName, "endpoint", "server.transfer", regexp.MustCompile(`s-[a-z0-9]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "PUBLIC"),
@@ -136,6 +137,33 @@ func TestAccAWSTransferServer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "url", ""),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSTransferServer_domain(t *testing.T) {
+	var conf transfer.DescribedServer
+	resourceName := "aws_transfer_server.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSTransferServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSTransferServerDomainConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "domain", "EFS"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -676,6 +704,14 @@ resource "aws_api_gateway_deployment" "test" {
 func testAccAWSTransferServerBasicConfig() string {
 	return `
 resource "aws_transfer_server" "test" {}
+`
+}
+
+func testAccAWSTransferServerDomainConfig() string {
+	return `
+resource "aws_transfer_server" "test" {
+  domain = "EFS"
+}
 `
 }
 
