@@ -3,6 +3,7 @@ package waiter
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -19,13 +20,16 @@ const (
 )
 
 func ChangeInfoStatusInsync(conn *route53.Route53, changeID string) (*route53.ChangeInfo, error) {
+	rand.Seed(time.Now().UTC().UnixNano())
+
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{route53.ChangeStatusPending},
-		Target:     []string{route53.ChangeStatusInsync},
-		Refresh:    ChangeInfoStatus(conn, changeID),
-		Delay:      30 * time.Second,
-		MinTimeout: 5 * time.Second,
-		Timeout:    ChangeTimeout,
+		Pending:      []string{route53.ChangeStatusPending},
+		Target:       []string{route53.ChangeStatusInsync},
+		Delay:        time.Duration(rand.Int63n(20)+10) * time.Second,
+		MinTimeout:   5 * time.Second,
+		PollInterval: 30 * time.Second,
+		Refresh:      ChangeInfoStatus(conn, changeID),
+		Timeout:      ChangeTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
