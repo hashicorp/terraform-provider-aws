@@ -27,7 +27,7 @@ data "aws_iam_policy_document" "test" {
       "events:PutEvents",
     ]
     resources = [
-      "arn:aws:events:eu-west-1:111111111111:event-bus/default"
+      "arn:aws:events:eu-west-1:123456789012:event-bus/default"
     ]
 
     principals {
@@ -38,7 +38,7 @@ data "aws_iam_policy_document" "test" {
 }
 
 resource "aws_cloudwatch_event_bus_policy" "test" {
-  policy         = data.aws_iam_policy_document.access.json
+  policy         = data.aws_iam_policy_document.test.json
   event_bus_name = aws_cloudwatch_event_bus.test.name
 }
 ```
@@ -57,8 +57,8 @@ data "aws_iam_policy_document" "test" {
       "events:ListTagsForResource",
     ]
     resources = [
-      "arn:aws:events:eu-west-1:11111111111111:rule/*",
-      "arn:aws:events:eu-west-1:111111111111:event-bus/default"
+      "arn:aws:events:eu-west-1:123456789012:rule/*",
+      "arn:aws:events:eu-west-1:123456789012:event-bus/default"
     ]
 
     principals {
@@ -75,7 +75,7 @@ data "aws_iam_policy_document" "test" {
 }
 
 resource "aws_cloudwatch_event_bus_policy" "test" {
-  policy         = data.aws_iam_policy_document.access.json
+  policy         = data.aws_iam_policy_document.test.json
   event_bus_name = aws_cloudwatch_event_bus.test.name
 }
 ```
@@ -92,7 +92,7 @@ data "aws_iam_policy_document" "test" {
       "events:PutEvents",
     ]
     resources = [
-      "arn:aws:events:eu-west-1:111111111111:event-bus/default"
+      "arn:aws:events:eu-west-1:123456789012:event-bus/default"
     ]
 
     principals {
@@ -111,8 +111,8 @@ data "aws_iam_policy_document" "test" {
       "events:ListTagsForResource",
     ]
     resources = [
-      "arn:aws:events:eu-west-1:11111111111111:rule/*",
-      "arn:aws:events:eu-west-1:111111111111:event-bus/default"
+      "arn:aws:events:eu-west-1:123456789012:rule/*",
+      "arn:aws:events:eu-west-1:123456789012:event-bus/default"
     ]
 
     principals {
@@ -129,7 +129,7 @@ data "aws_iam_policy_document" "test" {
 }
 
 resource "aws_cloudwatch_event_bus_policy" "test" {
-  policy         = data.aws_iam_policy_document.access.json
+  policy         = data.aws_iam_policy_document.test.json
   event_bus_name = aws_cloudwatch_event_bus.test.name
 }
 ```
