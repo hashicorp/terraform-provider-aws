@@ -46,6 +46,7 @@ func testSweepRoute53KeySigningKeys(region string) error {
 			return !lastPage
 		}
 
+	MAIN:
 		for _, detail := range page.HostedZones {
 			if detail == nil {
 				continue
@@ -56,7 +57,7 @@ func testSweepRoute53KeySigningKeys(region string) error {
 			for _, domain := range hostedZonesToPreserve() {
 				if strings.Contains(aws.StringValue(detail.Name), domain) {
 					log.Printf("[DEBUG] Skipping Route53 Hosted Zone (%s): %s", domain, id)
-					continue
+					continue MAIN
 				}
 			}
 
