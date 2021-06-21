@@ -2,8 +2,10 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"sort"
 	"strings"
 	"time"
@@ -318,7 +320,7 @@ func resourceAwsRoute53ZoneDelete(d *schema.ResourceData, meta interface{}) erro
 			return fmt.Errorf("error while force deleting Route53 Hosted Zone (%s), deleting records: %w", d.Id(), err)
 		}
 
-		if err := deleteDNSSECForZone(conn, d.Id()); err != nil {
+		if err := disableDNSSECForZone(conn, d.Id()); err != nil {
 			return fmt.Errorf("error while force deleting Route53 Hosted Zone (%s), disabling DNSSEC: %w", d.Id(), err)
 		}
 	}
@@ -364,6 +366,11 @@ func deleteAllRecordsInHostedZoneId(hostedZoneId, hostedZoneName string, conn *r
 				ResourceRecordSet: set,
 			})
 		}
+
+		if len(changes) == 0 {
+			return !lastPage
+		}
+
 		log.Printf("[DEBUG] Deleting %d records (page %d) from %s", len(changes), pageNum, hostedZoneId)
 
 		req := &route53.ChangeResourceRecordSetsInput{
@@ -389,6 +396,7 @@ func deleteAllRecordsInHostedZoneId(hostedZoneId, hostedZoneName string, conn *r
 
 		return !lastPage
 	})
+
 	if err != nil {
 		return fmt.Errorf("Failed listing/deleting record sets: %s\nLast error from deletion: %s\nLast error from waiter: %s",
 			err, lastDeleteErr, lastErrorFromWaiter)
@@ -397,20 +405,72 @@ func deleteAllRecordsInHostedZoneId(hostedZoneId, hostedZoneName string, conn *r
 	return nil
 }
 
-func deleteDNSSECForZone(conn *route53.Route53, hostedZoneId string) error {
+func dnsSECStatus(conn *route53.Route53, hostedZoneID string) (string, error) {
+	input := &route53.GetDNSSECInput{
+		HostedZoneId: aws.String(hostedZoneID),
+	}
+
+	var output *route53.GetDNSSECOutput
+	err := RetryConfigContext(context.Background(), 0*time.Millisecond, 1*time.Minute, 0*time.Millisecond, 30*time.Second, 10*time.Minute, func() *resource.RetryError {
+		var err error
+
+		output, err = conn.GetDNSSEC(input)
+
+		if err != nil {
+			if strings.Contains(err.Error(), "Throttling") {
+				log.Printf("[DEBUG] Retrying to get DNS SEC for zone %s: %s", hostedZoneID, err)
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		output, err = conn.GetDNSSEC(input)
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	if output == nil || output.Status == nil {
+		return "", fmt.Errorf("getting DNS SEC for hosted zone (%s): empty response (%v)", hostedZoneID, output)
+	}
+
+	return aws.StringValue(output.Status.ServeSignature), nil
+}
+
+func disableDNSSECForZone(conn *route53.Route53, hostedZoneId string) error {
 	// hosted zones cannot be deleted if DNSSEC Key Signing Keys exist
+	log.Printf("[DEBUG] Disabling DNS SEC for zone %s", hostedZoneId)
+
+	status, err := dnsSECStatus(conn, hostedZoneId)
+
+	if err != nil {
+		return fmt.Errorf("could not get DNS SEC status for hosted zone (%s): %w", hostedZoneId, err)
+	}
+
+	if status != "SIGNING" {
+		log.Printf("[DEBUG] Not necessary to disable DNS SEC for hosted zone (%s): %s (status)", hostedZoneId, status)
+		return nil
+	}
+
 	input := &route53.DisableHostedZoneDNSSECInput{
 		HostedZoneId: aws.String(hostedZoneId),
 	}
 
 	var output *route53.DisableHostedZoneDNSSECOutput
-	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+	err = RetryConfigContext(context.Background(), 0*time.Millisecond, 1*time.Minute, 0*time.Millisecond, 30*time.Second, 10*time.Minute, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.DisableHostedZoneDNSSEC(input)
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, route53.ErrCodeKeySigningKeyInParentDSRecord) {
+				log.Printf("[DEBUG] Unable to disable DNS SEC for zone %s because key-signing key in parent DS record. Retrying...", hostedZoneId)
 				return resource.RetryableError(err)
 			}
 
@@ -605,12 +665,15 @@ func route53HostedZoneVPCHash(v interface{}) int {
 }
 
 func route53WaitForChangeSynchronization(conn *route53.Route53, changeID string) error {
+	rand.Seed(time.Now().UTC().UnixNano())
+
 	conf := resource.StateChangeConf{
-		Delay:      30 * time.Second,
-		Pending:    []string{route53.ChangeStatusPending},
-		Target:     []string{route53.ChangeStatusInsync},
-		Timeout:    15 * time.Minute,
-		MinTimeout: 2 * time.Second,
+		Pending:      []string{route53.ChangeStatusPending},
+		Target:       []string{route53.ChangeStatusInsync},
+		Delay:        time.Duration(rand.Int63n(20)+10) * time.Second,
+		MinTimeout:   5 * time.Second,
+		PollInterval: 30 * time.Second,
+		Timeout:      15 * time.Minute,
 		Refresh: func() (result interface{}, state string, err error) {
 			input := &route53.GetChangeInput{
 				Id: aws.String(changeID),
