@@ -95,7 +95,7 @@ func testSweepRoute53KeySigningKeys(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error getting Route53 Key-Signing Keys for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestratorContext(context.Background(), sweepResources, 0*time.Millisecond, 1*time.Minute, 30*time.Second, 2*time.Minute, 10*time.Minute); err != nil {
+	if err = testSweepResourceOrchestratorContext(context.Background(), sweepResources, 0*time.Millisecond, 1*time.Minute, 30*time.Second, 30*time.Second, 10*time.Minute); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Route53 Key-Signing Keys for %s: %w", region, err))
 	}
 

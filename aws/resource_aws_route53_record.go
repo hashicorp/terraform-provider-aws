@@ -496,7 +496,7 @@ func waitForRoute53RecordSetToSync(conn *route53.Route53, requestId string) erro
 		Target:       []string{route53.ChangeStatusInsync},
 		Delay:        time.Duration(rand.Int63n(20)+10) * time.Second,
 		MinTimeout:   5 * time.Second,
-		PollInterval: 30 * time.Second,
+		PollInterval: 20 * time.Second,
 		Timeout:      30 * time.Minute,
 		Refresh: func() (result interface{}, state string, err error) {
 			changeRequest := &route53.GetChangeInput{

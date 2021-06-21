@@ -150,7 +150,7 @@ func testSweepRoute53Zones(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Route53 Hosted Zones for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestratorContext(context.Background(), sweepResources, 0*time.Minute, 2*time.Minute, 30*time.Second, 30*time.Second, 10*time.Minute); err != nil {
+	if err = testSweepResourceOrchestratorContext(context.Background(), sweepResources, 0*time.Minute, 1*time.Minute, 10*time.Second, 18*time.Second, 10*time.Minute); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Route53 Hosted Zones for %s: %w", region, err))
 	}
 

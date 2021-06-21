@@ -467,14 +467,14 @@ func disableDNSSECForZone(conn *route53.Route53, hostedZoneId string) error {
 	}
 
 	var output *route53.DisableHostedZoneDNSSECOutput
-	err = RetryConfigContext(context.Background(), 0*time.Millisecond, 1*time.Minute, 0*time.Millisecond, 30*time.Second, 10*time.Minute, func() *resource.RetryError {
+	err = RetryConfigContext(context.Background(), 0*time.Millisecond, 1*time.Minute, 0*time.Millisecond, 20*time.Second, 5*time.Minute, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.DisableHostedZoneDNSSEC(input)
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, route53.ErrCodeKeySigningKeyInParentDSRecord) {
-				log.Printf("[DEBUG] Unable to disable DNS SEC for zone %s because key-signing key in parent DS record. Retrying...", hostedZoneId)
+				log.Printf("[DEBUG] Unable to disable DNS SEC for zone %s because key-signing key in parent DS record. Retrying... (%s)", hostedZoneId, err)
 				return resource.RetryableError(err)
 			}
 
@@ -676,7 +676,7 @@ func route53WaitForChangeSynchronization(conn *route53.Route53, changeID string)
 		Target:       []string{route53.ChangeStatusInsync},
 		Delay:        time.Duration(rand.Int63n(20)+10) * time.Second,
 		MinTimeout:   5 * time.Second,
-		PollInterval: 30 * time.Second,
+		PollInterval: time.Duration(rand.Int63n(15)+15) * time.Second,
 		Timeout:      15 * time.Minute,
 		Refresh: func() (result interface{}, state string, err error) {
 			input := &route53.GetChangeInput{
