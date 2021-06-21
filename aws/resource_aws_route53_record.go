@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math/rand"
 	"regexp"
 	"strconv"
 	"strings"
@@ -488,12 +489,15 @@ func changeRoute53RecordSet(conn *route53.Route53, input *route53.ChangeResource
 }
 
 func waitForRoute53RecordSetToSync(conn *route53.Route53, requestId string) error {
+	rand.Seed(time.Now().UTC().UnixNano())
+
 	wait := resource.StateChangeConf{
-		Delay:      30 * time.Second,
-		Pending:    []string{route53.ChangeStatusPending},
-		Target:     []string{route53.ChangeStatusInsync},
-		Timeout:    30 * time.Minute,
-		MinTimeout: 5 * time.Second,
+		Pending:      []string{route53.ChangeStatusPending},
+		Target:       []string{route53.ChangeStatusInsync},
+		Delay:        time.Duration(rand.Int63n(20)+10) * time.Second,
+		MinTimeout:   5 * time.Second,
+		PollInterval: 30 * time.Second,
+		Timeout:      30 * time.Minute,
 		Refresh: func() (result interface{}, state string, err error) {
 			changeRequest := &route53.GetChangeInput{
 				Id: aws.String(requestId),
