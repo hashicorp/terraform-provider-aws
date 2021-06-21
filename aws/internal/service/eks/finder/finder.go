@@ -1,11 +1,72 @@
 package finder
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
+
+func AddonByClusterNameAndAddonName(ctx context.Context, conn *eks.EKS, clusterName, addonName string) (*eks.Addon, error) {
+	input := &eks.DescribeAddonInput{
+		AddonName:   aws.String(addonName),
+		ClusterName: aws.String(clusterName),
+	}
+
+	output, err := conn.DescribeAddonWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Addon == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output.Addon, nil
+}
+
+func AddonUpdateByClusterNameAddonNameAndID(ctx context.Context, conn *eks.EKS, clusterName, addonName, id string) (*eks.Update, error) {
+	input := &eks.DescribeUpdateInput{
+		AddonName: aws.String(addonName),
+		Name:      aws.String(clusterName),
+		UpdateId:  aws.String(id),
+	}
+
+	output, err := conn.DescribeUpdateWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Update == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output.Update, nil
+}
 
 func ClusterByName(conn *eks.EKS, name string) (*eks.Cluster, error) {
 	input := &eks.DescribeClusterInput{
