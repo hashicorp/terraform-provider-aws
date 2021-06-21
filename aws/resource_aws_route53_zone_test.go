@@ -1,11 +1,13 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -84,9 +86,19 @@ func init() {
 			"aws_service_discovery_public_dns_namespace",
 			"aws_service_discovery_private_dns_namespace",
 			"aws_elb",
+			"aws_route53_key_signing_key",
 		},
 		F: testSweepRoute53Zones,
 	})
+}
+
+func hostedZonesToPreserve() []string {
+	return []string{
+		"acmetest.hashicorp.engineering",
+		"tfacc.hashicorptest.com",
+		"aws.tfacc.hashicorptest.com",
+		"hashicorp.com",
+	}
 }
 
 func testSweepRoute53Zones(region string) error {
@@ -102,13 +114,6 @@ func testSweepRoute53Zones(region string) error {
 
 	input := &route53.ListHostedZonesInput{}
 
-	hostedZonesToPreserve := []string{
-		"acmetest.hashicorp.engineering",
-		"tfacc.hashicorptest.com",
-		"aws.tfacc.hashicorptest.com",
-		"hashicorp.com",
-	}
-
 	err = conn.ListHostedZonesPages(input, func(page *route53.ListHostedZonesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -121,7 +126,7 @@ func testSweepRoute53Zones(region string) error {
 
 			id := aws.StringValue(detail.Id)
 
-			for _, domain := range hostedZonesToPreserve {
+			for _, domain := range hostedZonesToPreserve() {
 				if strings.Contains(aws.StringValue(detail.Name), domain) {
 					log.Printf("[DEBUG] Skipping Route53 Hosted Zone (%s): %s", domain, id)
 					continue
@@ -144,7 +149,7 @@ func testSweepRoute53Zones(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Route53 Hosted Zones for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = testSweepResourceOrchestratorContext(context.Background(), sweepResources, 0*time.Minute, 2*time.Minute, 30*time.Second, 30*time.Second, 10*time.Minute); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Route53 Hosted Zones for %s: %w", region, err))
 	}
 
