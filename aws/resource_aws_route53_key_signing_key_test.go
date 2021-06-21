@@ -98,7 +98,7 @@ func testSweepRoute53KeySigningKeys(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Route53 Key-Signing Keys for %s: %w", region, err))
 	}
 
-	if strings.Contains(errs.ErrorOrNil().Error(), "cannot be deleted because") {
+	if errs.ErrorOrNil() != nil && strings.Contains(errs.ErrorOrNil().Error(), "cannot be deleted because") {
 		log.Printf("[WARN] Skipping Route53 Key-Signing Keys sweep for %s: %s", region, errs)
 		return nil
 	}

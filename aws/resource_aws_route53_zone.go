@@ -432,6 +432,10 @@ func dnsSECStatus(conn *route53.Route53, hostedZoneID string) (string, error) {
 		output, err = conn.GetDNSSEC(input)
 	}
 
+	if tfawserr.ErrMessageContains(err, route53.ErrCodeInvalidArgument, "Operation is unsupported for private") {
+		return "NOT_SIGNING", nil
+	}
+
 	if err != nil {
 		return "", err
 	}

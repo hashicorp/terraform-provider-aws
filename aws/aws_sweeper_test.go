@@ -155,6 +155,14 @@ func testSweepSkipSweepError(err error) bool {
 	if isAWSErr(err, "InvalidAction", "Unavailable Operation") {
 		return true
 	}
+	// For example from us-west-2 Route53 key signing key
+	if isAWSErr(err, "InvalidKeySigningKeyStatus", "cannot be deleted because") {
+		return true
+	}
+	// For example from us-west-2 Route53 zone
+	if isAWSErr(err, "KeySigningKeyInParentDSRecord", "Due to DNS lookup failure") {
+		return true
+	}
 	return false
 }
 
