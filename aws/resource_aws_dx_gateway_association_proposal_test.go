@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -209,6 +210,18 @@ func TestAccAwsDxGatewayAssociationProposal_endOfLife(t *testing.T) {
 					testAccCheckAwsDxGatewayAssociationProposalDisappears(&proposal1),
 				),
 			},
+			{
+				ResourceName: resourceName,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					return strings.Join([]string{
+						aws.StringValue(proposal1.ProposalId),
+						aws.StringValue(proposal1.DirectConnectGatewayId),
+						aws.StringValue(proposal1.AssociatedGateway.Id),
+					}, "/"), nil
+				},
+				ImportState:       true,
+				ImportStateVerify: false, // proposal attributes not applicable when it does not exist
+			},
 		},
 	})
 }
@@ -327,6 +340,42 @@ func testAccCheckAwsDxGatewayAssociationProposalRecreated(i, j *directconnect.Ga
 	}
 }
 
+func testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).dxconn
+
+		proposal, err := describeDirectConnectGatewayAssociationProposal(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		if proposal == nil {
+			return fmt.Errorf("Direct Connect Gateway Association Proposal (%s) not found", rs.Primary.ID)
+		}
+
+		if aws.StringValue(proposal.ProposalState) != "accepted" {
+			return fmt.Errorf("Direct Connect Gateway Association Proposal (%s) not accepted", rs.Primary.ID)
+		}
+		return nil
+	}
+}
+
+func testAccDxGatewayAssociationProposalImportStateIdFunc(proposal *directconnect.GatewayAssociationProposal) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		return strings.Join([]string{
+			aws.StringValue(proposal.ProposalId),
+			aws.StringValue(proposal.DirectConnectGatewayId),
+			aws.StringValue(proposal.AssociatedGateway.Id),
+		}, "/"), nil
+	}
+}
+
 func testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName string, rBgpAsn int) string {
 	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
@@ -426,30 +475,4 @@ resource "aws_dx_gateway_association_proposal" "test" {
   associated_gateway_id       = aws_vpn_gateway.test.id
 }
 `
-}
-
-func testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).dxconn
-
-		proposal, err := describeDirectConnectGatewayAssociationProposal(conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		if proposal == nil {
-			return fmt.Errorf("Direct Connect Gateway Association Proposal (%s) not found", rs.Primary.ID)
-		}
-
-		if aws.StringValue(proposal.ProposalState) != "accepted" {
-			return fmt.Errorf("Direct Connect Gateway Association Proposal (%s) not accepted", rs.Primary.ID)
-		}
-		return nil
-	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
@@ -18,7 +19,7 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 		Read:   resourceAwsDxGatewayAssociationProposalRead,
 		Delete: resourceAwsDxGatewayAssociationProposalDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: dxGatewayAssociationProposalImport,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -269,6 +270,67 @@ func flattenDirectConnectGatewayAssociationProposalAllowedPrefixes(routeFilterPr
 	}
 
 	return allowedPrefixes
+}
+
+func dxGatewayAssociationProposalImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	// example: c2ede9b4-bbc6-4d33-923c-bc4feEXAMPLE/186c8187-36f4-472e-9268-107aaEXAMPLE/0d95359280EXAMPLE
+
+	errStr := "unexpected format of import string (%q), expected PROPOSALID/DXGATEWAYID/TARGETGATEWAYID]*: %s"
+	importStr := d.Id()
+	log.Printf("[DEBUG] Validating import string %s", importStr)
+
+	parts := strings.Split(strings.ToLower(importStr), "/")
+	if len(parts) < 1 {
+		return nil, fmt.Errorf(errStr, importStr, "too few parts")
+	}
+	var propId, dxgwId, gwId string
+	propId = parts[0]
+
+	conn := meta.(*AWSClient).dxconn
+	if propId != "" {
+		p, err := describeDirectConnectGatewayAssociationProposal(conn, propId)
+		if err != nil {
+			return nil, err
+		}
+		if p != nil {
+			// proposal still exists normal import
+			return schema.ImportStatePassthrough(d, meta)
+		}
+		// proposal may not exist, but that's fine
+	}
+	d.SetId(propId)
+
+	if len(parts) == 1 {
+		// requesting just the prop id
+		return schema.ImportStatePassthrough(d, meta)
+	} else if len(parts) < 3 {
+		return nil, fmt.Errorf(errStr, importStr, "too few parts")
+	}
+
+	dxgwId = parts[1]
+	gwId = parts[2]
+
+	if gwId != "" && dxgwId != "" {
+		input := directconnect.DescribeDirectConnectGatewayAssociationsInput{
+			AssociatedGatewayId:    aws.String(gwId),
+			DirectConnectGatewayId: aws.String(dxgwId),
+		}
+		resp, err := conn.DescribeDirectConnectGatewayAssociations(&input)
+		if err != nil {
+			return nil, err
+		}
+
+		id := dxGatewayAssociationId(dxgwId, gwId)
+		if n := len(resp.DirectConnectGatewayAssociations); n != 1 {
+			return nil, fmt.Errorf("Found %d Direct Connect gateway associations for %s, expected 1", n, id)
+		}
+		d.Set("associated_gateway_id", gwId)
+		d.Set("dx_gateway_id", dxgwId)
+	} else {
+		return nil, fmt.Errorf(errStr, importStr, "missing parts")
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func getDxGatewayAssociation(conn *directconnect.DirectConnect, associatedGatewayId string) resource.StateRefreshFunc {
