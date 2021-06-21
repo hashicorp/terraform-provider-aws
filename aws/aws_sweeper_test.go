@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -79,13 +80,17 @@ func NewTestSweepResource(resource *schema.Resource, d *schema.ResourceData, met
 }
 
 func testSweepResourceOrchestrator(sweepResources []*testSweepResource) error {
+	return testSweepResourceOrchestratorContext(context.Background(), sweepResources, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, SweepThrottlingRetryTimeout)
+}
+
+func testSweepResourceOrchestratorContext(ctx context.Context, sweepResources []*testSweepResource, delay time.Duration, delayRand time.Duration, minTimeout time.Duration, pollInterval time.Duration, timeout time.Duration) error {
 	var g multierror.Group
 
 	for _, sweepResource := range sweepResources {
 		sweepResource := sweepResource
 
 		g.Go(func() error {
-			err := resource.Retry(SweepThrottlingRetryTimeout, func() *resource.RetryError {
+			err := RetryConfigContext(ctx, delay, delayRand, minTimeout, pollInterval, timeout, func() *resource.RetryError {
 				err := testAccDeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
 
 				if err != nil {
