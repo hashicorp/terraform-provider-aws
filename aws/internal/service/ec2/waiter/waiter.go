@@ -727,6 +727,10 @@ func VpcEndpointAvailable(conn *ec2.EC2, vpcEndpointID string, timeout time.Dura
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.VpcEndpoint); ok {
+		if state, lastError := aws.StringValue(output.State), output.LastError; state == tfec2.VpcEndpointStateFailed && lastError != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(lastError.Code), aws.StringValue(lastError.Message)))
+		}
+
 		return output, err
 	}
 
