@@ -736,6 +736,7 @@ func Provider() *schema.Provider {
 			"aws_elastic_beanstalk_environment":                       resourceAwsElasticBeanstalkEnvironment(),
 			"aws_elasticsearch_domain":                                resourceAwsElasticSearchDomain(),
 			"aws_elasticsearch_domain_policy":                         resourceAwsElasticSearchDomainPolicy(),
+			"aws_elasticsearch_domain_saml_options":                   resourceAwsElasticSearchDomainSAMLOptions(),
 			"aws_elastictranscoder_pipeline":                          resourceAwsElasticTranscoderPipeline(),
 			"aws_elastictranscoder_preset":                            resourceAwsElasticTranscoderPreset(),
 			"aws_elb":                                                 resourceAwsElb(),
