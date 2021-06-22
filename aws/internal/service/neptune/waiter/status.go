@@ -4,6 +4,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/neptune/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -18,6 +20,9 @@ const (
 
 	// Cluster Unknown
 	ClusterStatusUnknown = "Unknown"
+
+	// DBClusterEndpoint Unknown
+	DBClusterEndpointStatusUnknown = "Unknown"
 )
 
 // EventSubscriptionStatus fetches the EventSubscription and its Status
@@ -59,6 +64,24 @@ func ClusterStatus(conn *neptune.Neptune, id string) resource.StateRefreshFunc {
 		}
 
 		cluster := output.DBClusters[0]
+
 		return cluster, aws.StringValue(cluster.Status), nil
+	}
+}
+
+// DBClusterEndpointStatus fetches the DBClusterEndpoint and its Status
+func DBClusterEndpointStatus(conn *neptune.Neptune, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.EndpointById(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, DBClusterEndpointStatusUnknown, err
+		}
+
+		return output, aws.StringValue(output.Status), nil
 	}
 }
