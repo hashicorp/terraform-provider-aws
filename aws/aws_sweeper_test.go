@@ -90,7 +90,7 @@ func testSweepResourceOrchestratorContext(ctx context.Context, sweepResources []
 		sweepResource := sweepResource
 
 		g.Go(func() error {
-			err := RetryConfigContext(ctx, delay, delayRand, minTimeout, pollInterval, timeout, func() *resource.RetryError {
+			err := tfresource.RetryConfigContext(ctx, delay, delayRand, minTimeout, pollInterval, timeout, func() *resource.RetryError {
 				err := testAccDeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
 
 				if err != nil {
