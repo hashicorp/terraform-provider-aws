@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecs/finder"
 )
 
 const (
@@ -23,6 +24,9 @@ const (
 
 	ServiceStatusError = "ERROR"
 	ServiceStatusNone  = "NONE"
+
+	ClusterStatusError = "ERROR"
+	ClusterStatusNone  = "NONE"
 )
 
 // CapacityProviderStatus fetches the Capacity Provider and its Status
@@ -69,5 +73,25 @@ func ServiceStatus(conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc 
 
 		log.Printf("[DEBUG] ECS service (%s) is currently %q", id, *output.Services[0].Status)
 		return output, aws.StringValue(output.Services[0].Status), err
+	}
+}
+
+func ClusterStatus(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.ClusterByARN(conn, arn)
+
+		if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
+			return nil, ClusterStatusNone, nil
+		}
+
+		if err != nil {
+			return nil, ClusterStatusError, err
+		}
+
+		if len(output.Clusters) == 0 {
+			return nil, ClusterStatusNone, nil
+		}
+
+		return output, aws.StringValue(output.Clusters[0].Status), err
 	}
 }

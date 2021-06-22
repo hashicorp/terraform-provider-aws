@@ -17,6 +17,10 @@ const (
 	ServiceInactiveTimeoutMin = 1 * time.Second
 	ServiceDescribeTimeout    = 2 * time.Minute
 	ServiceUpdateTimeout      = 2 * time.Minute
+
+	ClusterAvailableTimeout = 10 * time.Minute
+	ClusterDeleteTimeout    = 10 * time.Minute
+	ClusterAvailableDelay   = 10 * time.Second
 )
 
 // CapacityProviderInactive waits for a Capacity Provider to return INACTIVE
@@ -93,6 +97,41 @@ func ServiceDescribeReady(conn *ecs.ECS, id, cluster string) (*ecs.DescribeServi
 	outputRaw, err := stateConf.WaitForState()
 
 	if v, ok := outputRaw.(*ecs.DescribeServicesOutput); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+func ClusterAvailable(conn *ecs.ECS, arn string) (*ecs.Cluster, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PROVISIONING"},
+		Target:  []string{"ACTIVE"},
+		Refresh: ClusterStatus(conn, arn),
+		Timeout: ClusterAvailableTimeout,
+		Delay:   ClusterAvailableDelay,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*ecs.Cluster); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+func ClusterDeleted(conn *ecs.ECS, arn string) (*ecs.Cluster, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"ACTIVE", "DEPROVISIONING"},
+		Target:  []string{"INACTIVE"},
+		Refresh: ClusterStatus(conn, arn),
+		Timeout: ClusterDeleteTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*ecs.Cluster); ok {
 		return v, err
 	}
 
