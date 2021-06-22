@@ -34,9 +34,9 @@ func resourceAwsCognitoUser() *schema.Resource {
 							Required: true,
 						},
 						"value": {
-							Type:     schema.TypeString,
-							Optional: true,
-							// Sensitive: true,
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
 						},
 					},
 				},
