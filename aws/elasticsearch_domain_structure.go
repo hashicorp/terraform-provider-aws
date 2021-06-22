@@ -45,8 +45,12 @@ func expandAdvancedSecurityOptions(m []interface{}) *elasticsearch.AdvancedSecur
 }
 
 func expandESSAMLOptions(data []interface{}) *elasticsearch.SAMLOptionsInput {
-	if len(data) == 0 || data[0] == nil {
+	if len(data) == 0 {
 		return nil
+	}
+
+	if data[0] == nil {
+		return &elasticsearch.SAMLOptionsInput{}
 	}
 
 	options := elasticsearch.SAMLOptionsInput{}
@@ -119,15 +123,9 @@ func flattenESSAMLOptions(d *schema.ResourceData, samlOptions *elasticsearch.SAM
 		"idp":     flattenESSAMLIdpOptions(samlOptions.Idp),
 	}
 
-	if samlOptions.RolesKey != nil {
-		m["roles_key"] = aws.StringValue(samlOptions.RolesKey)
-	}
-	if samlOptions.SessionTimeoutMinutes != nil {
-		m["session_timeout_minutes"] = aws.Int64Value(samlOptions.SessionTimeoutMinutes)
-	}
-	if samlOptions.SubjectKey != nil {
-		m["subject_key"] = aws.StringValue(samlOptions.SubjectKey)
-	}
+	m["roles_key"] = aws.StringValue(samlOptions.RolesKey)
+	m["session_timeout_minutes"] = aws.Int64Value(samlOptions.SessionTimeoutMinutes)
+	m["subject_key"] = aws.StringValue(samlOptions.SubjectKey)
 
 	// samlOptions.master_backend_role and samlOptions.master_user_name will be added to the
 	// all_access role in kibana's security manager.  These values cannot be read or

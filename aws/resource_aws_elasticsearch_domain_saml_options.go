@@ -19,6 +19,12 @@ func resourceAwsElasticSearchDomainSAMLOptions() *schema.Resource {
 		Read:   resourceAwsElasticSearchDomainSAMLOptionsRead,
 		Update: resourceAwsElasticSearchDomainSAMLOptionsPut,
 		Delete: resourceAwsElasticSearchDomainSAMLOptionsDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("domain_name", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"domain_name": {
@@ -71,20 +77,31 @@ func resourceAwsElasticSearchDomainSAMLOptions() *schema.Resource {
 							Optional: true,
 						},
 						"session_timeout_minutes": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      60,
-							ValidateFunc: validation.IntBetween(1, 1440),
+							Type:             schema.TypeInt,
+							Optional:         true,
+							Default:          60,
+							ValidateFunc:     validation.IntBetween(1, 1440),
+							DiffSuppressFunc: elasticsearchDomainSamlOptionsDiffSupress,
 						},
 						"subject_key": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          "NameID",
+							DiffSuppressFunc: elasticsearchDomainSamlOptionsDiffSupress,
 						},
 					},
 				},
 			},
 		},
 	}
+}
+func elasticsearchDomainSamlOptionsDiffSupress(k, old, new string, d *schema.ResourceData) bool {
+	if v, ok := d.Get("saml_options").([]interface{}); ok && len(v) > 0 {
+		if enabled, ok := v[0].(map[string]interface{})["enabled"].(bool); ok && !enabled {
+			return true
+		}
+	}
+	return false
 }
 
 func resourceAwsElasticSearchDomainSAMLOptionsRead(d *schema.ResourceData, meta interface{}) error {
@@ -97,12 +114,10 @@ func resourceAwsElasticSearchDomainSAMLOptionsRead(d *schema.ResourceData, meta 
 	domain, err := conn.DescribeElasticsearchDomain(input)
 
 	if err != nil {
-		if !d.IsNewResource() {
-			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-				log.Printf("[WARN] ElasticSearch Domain %q not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+			log.Printf("[WARN] ElasticSearch Domain %q not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
 		}
 		return err
 	}
@@ -137,7 +152,7 @@ func resourceAwsElasticSearchDomainSAMLOptionsPut(d *schema.ResourceData, meta i
 		return err
 	}
 
-	d.SetId("esd-saml-options-" + domainName)
+	d.SetId(domainName)
 
 	input := &elasticsearch.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
