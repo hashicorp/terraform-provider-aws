@@ -1,12 +1,15 @@
 package tfresource_test
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -69,5 +72,28 @@ func TestRetryWhenAwsErrCodeEquals(t *testing.T) {
 				t.Fatalf("unexpected error: %s", err)
 			}
 		})
+	}
+}
+
+func TestRetryConfigContext_error(t *testing.T) {
+	t.Parallel()
+
+	expected := fmt.Errorf("nope")
+	f := func() *resource.RetryError {
+		return resource.NonRetryableError(expected)
+	}
+
+	errCh := make(chan error)
+	go func() {
+		errCh <- tfresource.RetryConfigContext(context.Background(), 0*time.Second, 0*time.Second, 0*time.Second, 0*time.Second, 1*time.Second, f)
+	}()
+
+	select {
+	case err := <-errCh:
+		if err != expected {
+			t.Fatalf("bad: %#v", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("timeout")
 	}
 }
