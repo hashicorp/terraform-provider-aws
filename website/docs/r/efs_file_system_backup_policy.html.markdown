@@ -12,7 +12,7 @@ Provides an Elastic File System (EFS) File System Backup Policy resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_efs_file_system" "fs" {
   creation_token = "my-product"
 }
@@ -49,5 +49,5 @@ In addition to all arguments above, the following attributes are exported:
 The EFS file system backup policies can be imported using the `id`, e.g.
 
 ```
-$ terraform import aws_efs_file_system_backup_policy.foo fs-6fa144c6
+$ terraform import aws_efs_file_system_backup_policy.example fs-6fa144c6
 ```
