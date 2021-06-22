@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -79,7 +80,6 @@ func resourceAwsNeptuneClusterEndpointCreate(d *schema.ResourceData, meta interf
 		DBClusterEndpointIdentifier: aws.String(d.Get("cluster_endpoint_identifier").(string)),
 		DBClusterIdentifier:         aws.String(d.Get("cluster_identifier").(string)),
 		EndpointType:                aws.String(d.Get("endpoint_type").(string)),
-		Tags:                        tags.IgnoreAws().NeptuneTags(),
 	}
 
 	if attr := d.Get("static_members").(*schema.Set); attr.Len() > 0 {
@@ -88,6 +88,11 @@ func resourceAwsNeptuneClusterEndpointCreate(d *schema.ResourceData, meta interf
 
 	if attr := d.Get("excluded_members").(*schema.Set); attr.Len() > 0 {
 		input.ExcludedMembers = expandStringSet(attr)
+	}
+
+	// Tags are currently only supported in AWS Commercial.
+	if len(tags) > 0 && meta.(*AWSClient).partition == endpoints.AwsPartitionID {
+		input.Tags = tags.IgnoreAws().NeptuneTags()
 	}
 
 	out, err := conn.CreateDBClusterEndpoint(input)
@@ -134,22 +139,29 @@ func resourceAwsNeptuneClusterEndpointRead(d *schema.ResourceData, meta interfac
 	arn := aws.StringValue(resp.DBClusterEndpointArn)
 	d.Set("arn", arn)
 
-	tags, err := keyvaluetags.NeptuneListTags(conn, arn)
+	// Tags are currently only supported in AWS Commercial.
+	if meta.(*AWSClient).partition == endpoints.AwsPartitionID {
+		tags, err := keyvaluetags.NeptuneListTags(conn, arn)
 
-	if err != nil {
-		return fmt.Errorf("error listing tags for Neptune Cluster Endpoint (%s): %w", arn, err)
+		if err != nil {
+			return fmt.Errorf("error listing tags for Neptune Cluster Endpoint (%s): %w", arn, err)
+		}
+
+		tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+		//lintignore:AWSR002
+		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+			return fmt.Errorf("error setting tags: %w", err)
+		}
+
+		if err := d.Set("tags_all", tags.Map()); err != nil {
+			return fmt.Errorf("error setting tags_all: %w", err)
+		}
+	} else {
+		d.Set("tags", nil)
+		d.Set("tags_all", nil)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
 	return nil
 }
 
@@ -184,13 +196,13 @@ func resourceAwsNeptuneClusterEndpointUpdate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	if d.HasChange("tags_all") {
+	// Tags are currently only supported in AWS Commercial.
+	if d.HasChange("tags_all") && meta.(*AWSClient).partition == endpoints.AwsPartitionID {
 		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.NeptuneUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Neptune Cluster Endpoint (%s) tags: %w", d.Get("arn").(string), err)
 		}
-
 	}
 
 	return resourceAwsNeptuneClusterEndpointRead(d, meta)

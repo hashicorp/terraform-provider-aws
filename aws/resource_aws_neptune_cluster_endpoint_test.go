@@ -48,6 +48,10 @@ func TestAccAWSNeptuneClusterEndpoint_basic(t *testing.T) {
 }
 
 func TestAccAWSNeptuneClusterEndpoint_tags(t *testing.T) {
+	if testAccGetPartition() == "aws-us-gov" {
+		t.Skip("Neptune Cluster Endpoint tags are not supported in GovCloud partition")
+	}
+
 	var v neptune.DBClusterEndpoint
 	rName := acctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster_endpoint.test"
