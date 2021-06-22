@@ -366,16 +366,6 @@ func testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName string) re
 	}
 }
 
-func testAccDxGatewayAssociationProposalImportStateIdFunc(proposal *directconnect.GatewayAssociationProposal) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		return strings.Join([]string{
-			aws.StringValue(proposal.ProposalId),
-			aws.StringValue(proposal.DirectConnectGatewayId),
-			aws.StringValue(proposal.AssociatedGateway.Id),
-		}, "/"), nil
-	}
-}
-
 func testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName string, rBgpAsn int) string {
 	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
