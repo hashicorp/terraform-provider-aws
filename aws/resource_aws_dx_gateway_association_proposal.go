@@ -26,6 +26,15 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 			// Accepting the proposal with overridden prefixes changes the returned RequestedAllowedPrefixesToDirectConnectGateway value (allowed_prefixes attribute).
 			// We only want to force a new resource if this value changes and the current proposal state is "requested".
 			customdiff.ForceNewIf("allowed_prefixes", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+
+				log.Printf("[DEBUG] Checking diff for Direct Connect Gateway Association Proposal (%s) allowed_prefixes", d.Id())
+
+				if len(strings.Join(strings.Fields(d.Id()), "")) < 1 {
+					log.Printf("[WARN] Direct Connect Gateway Association Proposal Id not available (%s)", d.Id())
+					// assume proposal is end-of-life, rely on Read func to test
+					return false
+				}
+
 				conn := meta.(*AWSClient).dxconn
 
 				proposal, err := describeDirectConnectGatewayAssociationProposal(conn, d.Id())
@@ -35,23 +44,8 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 				}
 
 				if proposal == nil {
-					// Don't report as a diff when the proposal is gone unless the association is gone too.
-					associatedGatewayId, ok := d.GetOk("associated_gateway_id")
-
-					if !ok || associatedGatewayId == nil {
-						return false
-					}
-
-					_, state, err := getDxGatewayAssociation(conn, associatedGatewayId.(string))()
-
-					if err != nil {
-						return false
-					}
-
-					if state == gatewayAssociationStateDeleted {
-						return false
-					}
-					return true
+					// proposal maybe end-of-life and removed by AWS, existence checked in Read func
+					return false
 				}
 
 				return aws.StringValue(proposal.ProposalState) == directconnect.GatewayAssociationProposalStateRequested
@@ -117,27 +111,50 @@ func resourceAwsDxGatewayAssociationProposalCreate(d *schema.ResourceData, meta 
 }
 
 func resourceAwsDxGatewayAssociationProposalRead(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] Read Direct Connect Gateway Association Proposal: %s", d.Id())
+
+	var proposal *directconnect.GatewayAssociationProposal
+
 	conn := meta.(*AWSClient).dxconn
 
-	proposal, err := describeDirectConnectGatewayAssociationProposal(conn, d.Id())
+	trimmedId := strings.Join(strings.Fields(d.Id()), "")
+	if len(trimmedId) > 0 {
+		var err error
+		proposal, err = describeDirectConnectGatewayAssociationProposal(conn, d.Id())
 
-	if err != nil {
-		return fmt.Errorf("error reading Direct Connect Gateway Association Proposal (%s): %s", d.Id(), err)
+		if err != nil {
+			return fmt.Errorf("error reading Direct Connect Gateway Association Proposal (%s): %s", d.Id(), err)
+		}
+	} else {
+		log.Printf("[WARN] Direct Connect Gateway Association Proposal Id not available (%s)", d.Id())
+		d.SetId("0xda5e") // placeholder value
 	}
 
-	if proposal == nil {
-		associatedGatewayId, ok := d.GetOk("associated_gateway_id")
+	if proposal == nil || len(trimmedId) < 1 {
+		log.Printf("[WARN] Direct Connect Gateway Association Proposal (%s) not found, checking for associated gateway", d.Id())
 
-		if !ok || associatedGatewayId == nil {
+		var dxGatewayId string
+		if rawDGId, ok := d.GetOk("dx_gateway_id"); ok {
+			dxGatewayId = rawDGId.(string)
+		} else if rawDGId == nil {
 			d.SetId("")
-			return fmt.Errorf("error reading Direct Connect Associated Gateway Id (%s): %s", d.Id(), err)
+			return fmt.Errorf("error reading dx_gateway_id (%s) from Proposal state", d.Id())
 		}
 
-		assocRaw, state, err := getDxGatewayAssociation(conn, associatedGatewayId.(string))()
+		var associatedGatewayId string
+		if rawAGId, ok := d.GetOk("associated_gateway_id"); ok {
+			associatedGatewayId = rawAGId.(string)
+		} else if rawAGId == nil {
+			d.SetId("")
+			return fmt.Errorf("error reading associated_gateway_id (%s) from Proposal state", d.Id())
+		}
+
+		log.Printf("[DEBUG] looking for Direct Connect Gateway Association using dx_gateway_id (%s) and associated_gateway_id (%s) to validate Proposal state data", dxGatewayId, associatedGatewayId)
+		assocRaw, state, err := getDxGatewayAssociation(conn, dxGatewayId, associatedGatewayId)()
 
 		if err != nil {
 			d.SetId("")
-			return fmt.Errorf("error reading Direct Connect gateway association (%s): %s", d.Id(), err)
+			return fmt.Errorf("error reading Direct Connect gateway association (%s) from Proposal state: %s", d.Id(), err)
 		}
 
 		if state == gatewayAssociationStateDeleted {
@@ -149,7 +166,7 @@ func resourceAwsDxGatewayAssociationProposalRead(d *schema.ResourceData, meta in
 		// once accepted, AWS will delete the proposal after after some time (days?)
 		// in this case we don't need to create a new proposal, use metadata from the association
 		// to artificially populate the missing proposal in state as if it was still there.
-		log.Printf("[INFO] Direct Connect Gateway Association Proposal (%s) has been accepted", d.Id())
+		log.Printf("[INFO] Direct Connect Gateway Association Proposal (%s) has reached end-of-life and has been removed by AWS.", d.Id())
 		assoc := assocRaw.(*directconnect.GatewayAssociation)
 		d.Set("associated_gateway_id", assoc.AssociatedGateway.Id)
 		d.Set("dx_gateway_id", assoc.DirectConnectGatewayId)
@@ -333,11 +350,14 @@ func dxGatewayAssociationProposalImport(d *schema.ResourceData, meta interface{}
 	return []*schema.ResourceData{d}, nil
 }
 
-func getDxGatewayAssociation(conn *directconnect.DirectConnect, associatedGatewayId string) resource.StateRefreshFunc {
+func getDxGatewayAssociation(conn *directconnect.DirectConnect, dxGatewayId, associatedGatewayId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
+
 		resp, err := conn.DescribeDirectConnectGatewayAssociations(&directconnect.DescribeDirectConnectGatewayAssociationsInput{
-			AssociatedGatewayId: aws.String(associatedGatewayId),
+			AssociatedGatewayId:    &associatedGatewayId,
+			DirectConnectGatewayId: &dxGatewayId,
 		})
+
 		if err != nil {
 			return nil, "", err
 		}
