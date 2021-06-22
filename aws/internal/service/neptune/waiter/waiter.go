@@ -29,3 +29,55 @@ func EventSubscriptionDeleted(conn *neptune.Neptune, subscriptionName string) (*
 
 	return nil, err
 }
+
+// DBClusterDeleted waits for a Cluster to return Deleted
+func DBClusterDeleted(conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBCluster, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			"available",
+			"deleting",
+			"backing-up",
+			"modifying",
+		},
+		Target:     []string{ClusterStatusNotFound},
+		Refresh:    ClusterStatus(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*neptune.DBCluster); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+// DBClusterAvailable waits for a Cluster to return Available
+func DBClusterAvailable(conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBCluster, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			"creating",
+			"backing-up",
+			"modifying",
+			"preparing-data-migration",
+			"migrating",
+			"configuring-iam-database-auth",
+		},
+		Target:     []string{"available"},
+		Refresh:    ClusterStatus(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*neptune.DBCluster); ok {
+		return v, err
+	}
+
+	return nil, err
+}
