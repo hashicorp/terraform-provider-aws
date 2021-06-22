@@ -36,7 +36,7 @@ The following arguments are supported:
 ### Backup Policy Arguments
 For **backup_policy** the following attributes are supported:
 
-* `status` - (Required) A status of the backup policy. Valid values: `Enabled`.
+* `status` - (Required) A status of the backup policy. Valid values: `ENABLED`, `DISABLED`.
 
 ## Attributes Reference
 

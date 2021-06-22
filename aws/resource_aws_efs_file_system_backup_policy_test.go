@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/efs/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSEFSFileSystemBackupPolicy_basic(t *testing.T) {
-	var out efs.DescribeBackupPolicyOutput
+	var v efs.BackupPolicy
 	resourceName := "aws_efs_file_system_backup_policy.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -25,7 +27,7 @@ func TestAccAWSEFSFileSystemBackupPolicy_basic(t *testing.T) {
 			{
 				Config: testAccAWSEFSFileSystemBackupPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEFSFileSystemBackupPolicyExists(resourceName, &out),
+					testAccCheckEFSFileSystemBackupPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.0.status", "ENABLED"),
 				),
@@ -40,7 +42,7 @@ func TestAccAWSEFSFileSystemBackupPolicy_basic(t *testing.T) {
 }
 
 func TestAccAWSEFSFileSystemBackupPolicy_disappears(t *testing.T) {
-	var out efs.DescribeBackupPolicyOutput
+	var v efs.BackupPolicy
 	resourceName := "aws_efs_file_system_backup_policy.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -53,7 +55,7 @@ func TestAccAWSEFSFileSystemBackupPolicy_disappears(t *testing.T) {
 			{
 				Config: testAccAWSEFSFileSystemBackupPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEFSFileSystemBackupPolicyExists(resourceName, &out),
+					testAccCheckEFSFileSystemBackupPolicyExists(resourceName, &v),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsEfsFileSystemBackupPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -62,7 +64,31 @@ func TestAccAWSEFSFileSystemBackupPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckEFSFileSystemBackupPolicyExists(name string, bp *efs.DescribeBackupPolicyOutput) resource.TestCheckFunc {
+func TestAccAWSEFSFileSystemBackupPolicy_disappears_fs(t *testing.T) {
+	var v efs.BackupPolicy
+	resourceName := "aws_efs_file_system_backup_policy.test"
+	fsResourceName := "aws_efs_file_system.text"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEfsFileSystemBackupPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEFSFileSystemBackupPolicyConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEFSFileSystemBackupPolicyExists(resourceName, &v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEfsFileSystem(), fsResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckEFSFileSystemBackupPolicyExists(name string, v *efs.BackupPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -74,15 +100,14 @@ func testAccCheckEFSFileSystemBackupPolicyExists(name string, bp *efs.DescribeBa
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).efsconn
-		fs, err := conn.DescribeBackupPolicy(&efs.DescribeBackupPolicyInput{
-			FileSystemId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := finder.BackupPolicyByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*bp = *fs
+		*v = *output
 
 		return nil
 	}
@@ -90,27 +115,27 @@ func testAccCheckEFSFileSystemBackupPolicyExists(name string, bp *efs.DescribeBa
 
 func testAccCheckEfsFileSystemBackupPolicyDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).efsconn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_efs_file_system_backup_policy" {
 			continue
 		}
 
-		resp, err := conn.DescribeBackupPolicy(&efs.DescribeBackupPolicyInput{
-			FileSystemId: aws.String(rs.Primary.ID),
-		})
+		output, err := finder.BackupPolicyByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
 		if err != nil {
-			if isAWSErr(err, efs.ErrCodeFileSystemNotFound, "") ||
-				isAWSErr(err, efs.ErrCodePolicyNotFound, "") {
-				return nil
-			}
-			return fmt.Errorf("error describing EFS file system backup policy in tests: %s", err)
+			return err
 		}
 
-		if resp == nil || resp.BackupPolicy == nil || aws.StringValue(resp.BackupPolicy.Status) == efs.StatusDisabled {
-			return nil
+		if aws.StringValue(output.Status) == efs.StatusDisabled {
+			continue
 		}
 
-		return fmt.Errorf("EFS file system backup policy %q still exists", rs.Primary.ID)
+		return fmt.Errorf("Transfer Server %s still exists", rs.Primary.ID)
 	}
 
 	return nil

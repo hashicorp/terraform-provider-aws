@@ -6,32 +6,28 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/efs/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/efs/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsEfsFileSystemBackupPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEfsFileSystemBackupPolicyPut,
+		Create: resourceAwsEfsFileSystemBackupPolicyCreate,
 		Read:   resourceAwsEfsFileSystemBackupPolicyRead,
+		Update: resourceAwsEfsFileSystemBackupPolicyUpdate,
 		Delete: resourceAwsEfsFileSystemBackupPolicyDelete,
-
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"file_system_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"backup_policy": {
 				Type:     schema.TypeList,
 				Required: true,
-				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -39,39 +35,33 @@ func resourceAwsEfsFileSystemBackupPolicy() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
+								efs.StatusDisabled,
 								efs.StatusEnabled,
 							}, false),
 						},
 					},
 				},
 			},
+
+			"file_system_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
 
-func resourceAwsEfsFileSystemBackupPolicyPut(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEfsFileSystemBackupPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).efsconn
 
-	fsId := d.Get("file_system_id").(string)
-	input := &efs.PutBackupPolicyInput{
-		FileSystemId: aws.String(fsId),
+	fsID := d.Get("file_system_id").(string)
+
+	if err := efsBackupPolicyPut(conn, fsID, d.Get("backup_policy").([]interface{})[0].(map[string]interface{})); err != nil {
+		return err
 	}
 
-	if v, ok := d.GetOk("backup_policy"); ok {
-		input.BackupPolicy = expandEfsFileSystemBackupPolicy(v.([]interface{}))
-	}
-
-	log.Printf("[DEBUG] Adding EFS File System Backup Policy: %#v", input)
-	_, err := conn.PutBackupPolicy(input)
-	if err != nil {
-		return fmt.Errorf("error creating EFS File System Backup Policy %q: %s", fsId, err.Error())
-	}
-
-	d.SetId(fsId)
-
-	if _, err := waiter.FileSystemBackupPolicyCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EFS File System Backup Policy (%q) creation : %s", d.Id(), err)
-	}
+	d.SetId(fsID)
 
 	return resourceAwsEfsFileSystemBackupPolicyRead(d, meta)
 }
@@ -79,65 +69,107 @@ func resourceAwsEfsFileSystemBackupPolicyPut(d *schema.ResourceData, meta interf
 func resourceAwsEfsFileSystemBackupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).efsconn
 
-	bp, err := finder.FileSystemBackupPolicyById(conn, d.Id())
-	if err != nil {
-		if isAWSErr(err, efs.ErrCodeFileSystemNotFound, "") {
-			log.Printf("[WARN] EFS File System (%q) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		if isAWSErr(err, efs.ErrCodePolicyNotFound, "") {
-			log.Printf("[WARN] EFS File System Backup Policy (%q) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error describing policy for EFS File System Backup Policy (%q): %s", d.Id(), err)
-	}
+	output, err := finder.BackupPolicyByID(conn, d.Id())
 
-	if bp == nil || aws.StringValue(bp.Status) == efs.StatusDisabled {
-		log.Printf("[WARN] EFS File System Backup Policy (%q) is disabled, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EFS Backup Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("file_system_id", d.Id())
-	if err := d.Set("backup_policy", flattenEfsFileSystemBackupPolicy(bp)); err != nil {
-		return fmt.Errorf("error setting backup_policy: %s", err)
+	if err != nil {
+		return fmt.Errorf("error reading EFS Backup Policy (%s): %w", d.Id(), err)
 	}
 
+	if err := d.Set("backup_policy", []interface{}{flattenEfsBackupPolicy(output)}); err != nil {
+		return fmt.Errorf("error setting backup_policy: %w", err)
+	}
+
+	d.Set("file_system_id", d.Id())
+
 	return nil
+}
+
+func resourceAwsEfsFileSystemBackupPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).efsconn
+
+	if err := efsBackupPolicyPut(conn, d.Id(), d.Get("backup_policy").([]interface{})[0].(map[string]interface{})); err != nil {
+		return err
+	}
+
+	return resourceAwsEfsFileSystemBackupPolicyRead(d, meta)
 }
 
 func resourceAwsEfsFileSystemBackupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).efsconn
 
-	log.Printf("[DEBUG] Deleting EFS File System Backup Policy: %s", d.Id())
-	_, err := conn.PutBackupPolicy(&efs.PutBackupPolicyInput{
-		FileSystemId: aws.String(d.Id()),
-		BackupPolicy: &efs.BackupPolicy{
-			Status: aws.String(efs.StatusDisabled),
-		},
+	err := efsBackupPolicyPut(conn, d.Id(), map[string]interface{}{
+		"status": efs.StatusDisabled,
 	})
 
+	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("error deleting EFS File System Backup Policy: %s with err %s", d.Id(), err.Error())
+		return err
 	}
-
-	if _, err := waiter.FileSystemBackupPolicyDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EFS File System Backup Policy (%q) deletion : %s", d.Id(), err)
-	}
-
-	log.Printf("[DEBUG] EFS File System Backup Policy %q deleted.", d.Id())
 
 	return nil
 }
 
-func expandEfsFileSystemBackupPolicy(tfList []interface{}) *efs.BackupPolicy {
-	return &efs.BackupPolicy{
-		Status: aws.String(tfList[0].(map[string]interface{})["status"].(string)),
+// efsBackupPolicyPut attempts to update the file system's backup policy.
+// Any error is returned.
+func efsBackupPolicyPut(conn *efs.EFS, fsID string, tfMap map[string]interface{}) error {
+	input := &efs.PutBackupPolicyInput{
+		BackupPolicy: expandEfsBackupPolicy(tfMap),
+		FileSystemId: aws.String(fsID),
 	}
+
+	log.Printf("[DEBUG] Putting EFS Backup Policy: %s", input)
+	_, err := conn.PutBackupPolicy(input)
+
+	if err != nil {
+		return fmt.Errorf("error putting EFS Backup Policy (%s): %w", fsID, err)
+	}
+
+	if aws.StringValue(input.BackupPolicy.Status) == efs.StatusEnabled {
+		if _, err := waiter.BackupPolicyEnabled(conn, fsID); err != nil {
+			return fmt.Errorf("error waiting for EFS Backup Policy (%s) to enable: %w", fsID, err)
+		}
+	} else {
+		if _, err := waiter.BackupPolicyDisabled(conn, fsID); err != nil {
+			return fmt.Errorf("error waiting for EFS Backup Policy (%s) to disable: %w", fsID, err)
+		}
+	}
+
+	return nil
 }
 
-func flattenEfsFileSystemBackupPolicy(apiObjects *efs.BackupPolicy) []interface{} {
-	return []interface{}{map[string]interface{}{"status": apiObjects.Status}}
+func expandEfsBackupPolicy(tfMap map[string]interface{}) *efs.BackupPolicy {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &efs.BackupPolicy{}
+
+	if v, ok := tfMap["status"].(string); ok && v != "" {
+		apiObject.Status = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenEfsBackupPolicy(apiObject *efs.BackupPolicy) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Status; v != nil {
+		tfMap["status"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }

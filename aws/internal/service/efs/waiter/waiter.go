@@ -18,9 +18,8 @@ const (
 	FileSystemDeletedDelayTimeout   = 2 * time.Second
 	FileSystemDeletedMinTimeout     = 3 * time.Second
 
-	// Maximum amount of time to wait for an EFS Backup policy operation
-	FileSystemBackupPolicyCreatedTimeout = 10 * time.Minute
-	FileSystemBackupPolicyDeletedTimeout = 10 * time.Minute
+	BackupPolicyDisabledTimeout = 10 * time.Minute
+	BackupPolicyEnabledTimeout  = 10 * time.Minute
 )
 
 // AccessPointCreated waits for an Operation to return Success
@@ -99,13 +98,12 @@ func FileSystemDeleted(conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescr
 	return nil, err
 }
 
-// FileSystemBackupPolicyCreated waits for a EFS Backup Policy creation
-func FileSystemBackupPolicyCreated(conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
+func BackupPolicyDisabled(conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{efs.StatusEnabling},
-		Target:  []string{efs.StatusEnabled},
-		Refresh: FileSystemBackupPolicyStatus(conn, id),
-		Timeout: FileSystemBackupPolicyCreatedTimeout,
+		Pending: []string{efs.StatusDisabling},
+		Target:  []string{efs.StatusDisabled},
+		Refresh: BackupPolicyStatus(conn, id),
+		Timeout: BackupPolicyDisabledTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -117,13 +115,12 @@ func FileSystemBackupPolicyCreated(conn *efs.EFS, id string) (*efs.BackupPolicy,
 	return nil, err
 }
 
-// FileSystemBackupPolicyDeleted waits for a EFS Backup Policy deletion
-func FileSystemBackupPolicyDeleted(conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
+func BackupPolicyEnabled(conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{efs.StatusDisabling},
-		Target:  []string{efs.StatusDisabled},
-		Refresh: FileSystemBackupPolicyStatus(conn, id),
-		Timeout: FileSystemBackupPolicyDeletedTimeout,
+		Pending: []string{efs.StatusEnabling},
+		Target:  []string{efs.StatusEnabled},
+		Refresh: BackupPolicyStatus(conn, id),
+		Timeout: BackupPolicyEnabledTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
