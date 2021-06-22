@@ -74,6 +74,7 @@ func resourceAwsEksCluster() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringInSlice(eks.LogType_Values(), true),
 				},
+				Set: schema.HashString,
 			},
 			"encryption_config": {
 				Type:     schema.TypeList,

@@ -153,7 +153,7 @@ func TestAccAWSEksAddon_disappears_Cluster(t *testing.T) {
 	var addon eks.Addon
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_addon.test"
-	clusterResourceName := "aws_eks_cluster"
+	clusterResourceName := "aws_eks_cluster.test"
 	addonName := "vpc-cni"
 	ctx := context.TODO()
 
