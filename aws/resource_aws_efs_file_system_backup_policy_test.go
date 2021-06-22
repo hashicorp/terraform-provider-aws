@@ -18,6 +18,7 @@ func TestAccAWSEFSFileSystemBackupPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEfsFileSystemBackupPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -45,6 +46,7 @@ func TestAccAWSEFSFileSystemBackupPolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEfsFileSystemBackupPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -117,7 +119,7 @@ func testAccCheckEfsFileSystemBackupPolicyDestroy(s *terraform.State) error {
 func testAccAWSEFSFileSystemBackupPolicyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
-  creation_token = %q
+  creation_token = %[1]q
 }
 
 resource "aws_efs_file_system_backup_policy" "test" {
