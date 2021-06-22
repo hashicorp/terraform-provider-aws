@@ -36,7 +36,10 @@ func dataSourceAwsLbTargetGroup() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-
+						"healthy_threshold": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 						"interval": {
 							Type:     schema.TypeInt,
 							Computed: true,

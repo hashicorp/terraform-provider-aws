@@ -212,6 +212,33 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"app_cookie": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								switch d.Get("protocol").(string) {
+								case elbv2.ProtocolEnumTcp, elbv2.ProtocolEnumUdp, elbv2.ProtocolEnumTcpUdp, elbv2.ProtocolEnumTls:
+									return true
+								}
+								return false
+							},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cookie_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"duration_seconds": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      86400,
+										ValidateFunc: validation.IntBetween(0, 604800),
+									},
+								},
+							},
+						},
 						"cookie_duration": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -247,33 +274,6 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 									}
 								}
 								return false
-							},
-						},
-						"app_cookie": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								switch d.Get("protocol").(string) {
-								case elbv2.ProtocolEnumTcp, elbv2.ProtocolEnumUdp, elbv2.ProtocolEnumTcpUdp, elbv2.ProtocolEnumTls:
-									return true
-								}
-								return false
-							},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cookie_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"duration_seconds": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      86400,
-										ValidateFunc: validation.IntBetween(0, 604800),
-									},
-								},
 							},
 						},
 					},
@@ -580,13 +580,14 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 
 					switch d.Get("protocol").(string) {
 					case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
-						if stickiness["type"].(string) == "lb_cookie" {
+						switch stickiness["type"].(string) {
+						case "lb_cookie":
 							attrs = append(attrs,
 								&elbv2.TargetGroupAttribute{
 									Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
 									Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
 								})
-						} else {
+						case "app_cookie":
 							appCookieBlocks := stickiness["app_cookie"].([]interface{})
 							if len(appCookieBlocks) == 1 {
 								appStickiness := appCookieBlocks[0].(map[string]interface{})
@@ -600,8 +601,9 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 										Value: aws.String(appStickiness["cookie_name"].(string)),
 									})
 							}
+						default:
+							log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
 						}
-
 					}
 				}
 			} else if len(stickinessBlocks) == 0 {
@@ -860,9 +862,7 @@ func flattenAwsLbTargetGroupStickiness(attributes []*elbv2.TargetGroupAttribute)
 			appStickinessMap["duration_seconds"] = duration
 		}
 	}
-	if len(appStickinessMap) > 0 {
-		m["app_cookie"] = []interface{}{appStickinessMap}
-	}
+	m["app_cookie"] = []interface{}{appStickinessMap}
 
 	return []interface{}{m}, nil
 }

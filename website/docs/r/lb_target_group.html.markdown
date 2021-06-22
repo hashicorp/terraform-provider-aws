@@ -96,13 +96,13 @@ The following arguments are supported:
 
 * `cookie_duration` - (Optional) Only used when the type is `lb_cookie`. The time period, in seconds, during which requests from a client should be routed to the same target. After this time period expires, the load balancer-generated cookie is considered stale. The range is 1 second to 1 week (604800 seconds). The default value is 1 day (86400 seconds).
 * `enabled` - (Optional) Boolean to enable / disable `stickiness`. Default is `true`.
-* `type` - (Required) The type of sticky sessions. The only current possible values are `lb_cookie` and `app_cookie` for ALBs and `source_ip` for NLBs.
+* `type` - (Required) The type of sticky sessions. The only current possible values are `lb_cookie`, `app_cookie` for ALBs, and `source_ip` for NLBs.
 * `app_cookie` - (Option) An Application Cookie block. Application Cookie blocks are documented below.
 
-Application Cookie Blocks (`app_coookie`) support the following:
+#### app_cookie
 
-* `cookie_name` - (Required). Name of the application based cookie. Name of the cookie should not start with the following names: AWSALB, AWSALBAPP, and AWSALBTG. They're reserved for use by the load balancer.
-* `duration_seconds` - (Optional). The time period, in seconds, during which requests from a client should be routed to the same target. The range is 1 second to 1 week (604800 seconds). The default value is 1 day (86400 seconds).
+* `cookie_name` - (Required) Name of the application based cookie. AWSALB, AWSALBAPP, and AWSALBTG prefixes are reserved and cannot be used.
+* `duration_seconds` - (Optional) The time period, in seconds, during which requests from a client should be routed to the same target. The range is 1 to 604800 seconds. The default value is 86400.
 
 ## Attributes Reference
 

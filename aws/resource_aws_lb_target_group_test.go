@@ -994,11 +994,10 @@ func TestAccAWSLBTargetGroup_updateAppSticknessEnabled(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		ErrorCheck:    testAccErrorCheck(t, elbv2.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBTargetGroupConfig_appStickiness(targetGroupName, false, false),
@@ -2375,7 +2374,7 @@ func testAccAWSLBTargetGroupConfig_appStickiness(targetGroupName string, addAppS
 	if addAppStickinessBlock {
 		appSstickinessBlock = fmt.Sprintf(`
 stickiness {
-  enabled         = "%t"
+  enabled         = "%[1]t"
   type            = "app_cookie"
   app_cookie  {
 		cookie_name = "Cookie"
@@ -2387,14 +2386,14 @@ stickiness {
 
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name     = "%s"
+  name     = %[1]q
   port     = 443
   protocol = "HTTPS"
   vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
 
-  %s
+  %[2]s
 
   health_check {
     path                = "/health2"
