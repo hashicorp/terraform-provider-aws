@@ -43,6 +43,10 @@ func RetryWhenAwsErrCodeEquals(timeout time.Duration, f func() (interface{}, err
 	return output, nil
 }
 
+// RetryConfigContext allows configuration of StateChangeConf's various time arguments.
+// This is especially useful for AWS services that are prone to throttling, such as Route53, where
+// the default durations cause problems. To not use a StateChangeConf argument and revert to the
+// default, pass in a zero value (i.e., 0*time.Second).
 func RetryConfigContext(ctx context.Context, delay time.Duration, delayRand time.Duration, minTimeout time.Duration, pollInterval time.Duration, timeout time.Duration, f resource.RetryFunc) error {
 	// These are used to pull the error out of the function; need a mutex to
 	// avoid a data race.
