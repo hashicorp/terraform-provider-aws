@@ -32,13 +32,16 @@ resource "aws_elasticsearch_domain" "example" {
   }
 }
 
-saml_options {                                                                 
-  enabled = true                                                               
-  idp {                                                                        
-    entity_id        = "https://example.com"            
-    metadata_content = file("./saml-metadata.xml")               
-  }                                                                            
-}                                                                              
+resource "aws_elasticsearch_domain_saml_options" "example" {
+  domain_name = aws_elasticsearch_domain.example.domain_name
+  saml_options {
+    enabled = true
+    idp {
+      entity_id        = "https://example.com"
+      metadata_content = file("./saml-metadata.xml")
+    }
+  }
+}
 ```
 
 ## Argument Reference
@@ -67,10 +70,16 @@ The following arguments are optional:
 * `entity_id` - (Required) The unique Entity ID of the application in SAML Identity Provider.
 * `metadata_content` - (Required) The Metadata of the SAML application in xml format.
 
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - The name of the domain the SAML options are associated with.
+
 ## Import
 
 Elasticsearch domains can be imported using the `domain_name`, e.g.
 
 ```
-$ terraform import aws_elasticsearch_domain.example domain_name
+$ terraform import aws_elasticsearch_domain_saml_options.example domain_name
 ```

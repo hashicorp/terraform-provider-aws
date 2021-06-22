@@ -373,7 +373,7 @@ resource "aws_elasticsearch_domain_saml_options" "main" {
   domain_name = aws_elasticsearch_domain.example.domain_name
 
   saml_options {
-    enabled                 = false
+    enabled = false
   }
 }
 `, userName, domainName)
