@@ -1,8 +1,11 @@
 package aws
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -15,7 +18,7 @@ import (
 )
 
 const (
-	SweepThrottlingRetryTimeout = 5 * time.Minute
+	SweepThrottlingRetryTimeout = 10 * time.Minute
 )
 
 // sweeperAwsClients is a shared cache of regional AWSClient
@@ -77,17 +80,22 @@ func NewTestSweepResource(resource *schema.Resource, d *schema.ResourceData, met
 }
 
 func testSweepResourceOrchestrator(sweepResources []*testSweepResource) error {
+	return testSweepResourceOrchestratorContext(context.Background(), sweepResources, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, SweepThrottlingRetryTimeout)
+}
+
+func testSweepResourceOrchestratorContext(ctx context.Context, sweepResources []*testSweepResource, delay time.Duration, delayRand time.Duration, minTimeout time.Duration, pollInterval time.Duration, timeout time.Duration) error {
 	var g multierror.Group
 
 	for _, sweepResource := range sweepResources {
 		sweepResource := sweepResource
 
 		g.Go(func() error {
-			err := resource.Retry(SweepThrottlingRetryTimeout, func() *resource.RetryError {
+			err := tfresource.RetryConfigContext(ctx, delay, delayRand, minTimeout, pollInterval, timeout, func() *resource.RetryError {
 				err := testAccDeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
 
 				if err != nil {
-					if tfawserr.ErrCodeContains(err, "ThrottlingException: Rate exceeded") {
+					if strings.Contains(err.Error(), "Throttling") {
+						log.Printf("[INFO] While sweeping resource (%s), encountered throttling error (%s). Retrying...", sweepResource.d.Id(), err)
 						return resource.RetryableError(err)
 					}
 
@@ -145,6 +153,14 @@ func testSweepSkipSweepError(err error) bool {
 	}
 	// For example from GovCloud SES.SetActiveReceiptRuleSet.
 	if isAWSErr(err, "InvalidAction", "Unavailable Operation") {
+		return true
+	}
+	// For example from us-west-2 Route53 key signing key
+	if isAWSErr(err, "InvalidKeySigningKeyStatus", "cannot be deleted because") {
+		return true
+	}
+	// For example from us-west-2 Route53 zone
+	if isAWSErr(err, "KeySigningKeyInParentDSRecord", "Due to DNS lookup failure") {
 		return true
 	}
 	return false
