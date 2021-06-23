@@ -3,12 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/go-multierror"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -31,12 +30,10 @@ func testSweepBackupVaults(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-
 	conn := client.(*AWSClient).backupconn
-	sweepResources := make([]*testSweepResource, 0)
-	var errs *multierror.Error
-
 	input := &backup.ListBackupVaultsInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]*testSweepResource, 0)
 
 	err = conn.ListBackupVaultsPages(input, func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
 		if page == nil {
@@ -44,22 +41,48 @@ func testSweepBackupVaults(region string) error {
 		}
 
 		for _, vault := range page.BackupVaultList {
-			if vault == nil {
-				continue
+			failedToDeleteRecoveryPoint := false
+			name := aws.StringValue(vault.BackupVaultName)
+			input := &backup.ListRecoveryPointsByBackupVaultInput{
+				BackupVaultName: aws.String(name),
 			}
 
-			name := aws.StringValue(vault.BackupVaultName)
+			err := conn.ListRecoveryPointsByBackupVaultPages(input, func(page *backup.ListRecoveryPointsByBackupVaultOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
 
-			// Ignore Default Backup Vault in region (cannot be deleted)
-			// and automated Backups that result in AccessDeniedException when deleted
-			if name == "Default" || strings.Contains(name, "automatic-backup-vault") {
+				for _, recoveryPoint := range page.RecoveryPoints {
+					arn := aws.StringValue(recoveryPoint.RecoveryPointArn)
+
+					log.Printf("[INFO] Deleting Recovery Point (%s) in Backup Vault (%s)", arn, name)
+					_, err := conn.DeleteRecoveryPoint(&backup.DeleteRecoveryPointInput{
+						BackupVaultName:  aws.String(name),
+						RecoveryPointArn: aws.String(arn),
+					})
+
+					if err != nil {
+						log.Printf("[WARN] Failed to delete Recovery Point (%s) in Backup Vault (%s): %s", arn, name, err)
+						failedToDeleteRecoveryPoint = true
+					}
+				}
+
+				return !lastPage
+			})
+
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Reovery Points in Backup Vault (%s) for %s: %w", name, region, err))
+			}
+
+			// Ignore Default and Automatic EFS Backup Vaults in region (cannot be deleted)
+			if name == "Default" || name == "aws/efs/automatic-backup-vault" {
 				log.Printf("[INFO] Skipping Backup Vault: %s", name)
 				continue
 			}
 
 			// Backup Vault deletion only supported when empty
 			// Reference: https://docs.aws.amazon.com/aws-backup/latest/devguide/API_DeleteBackupVault.html
-			if aws.Int64Value(vault.NumberOfRecoveryPoints) != 0 {
+			if failedToDeleteRecoveryPoint {
 				log.Printf("[INFO] Skipping Backup Vault (%s): not empty", name)
 				continue
 			}
@@ -74,20 +97,20 @@ func testSweepBackupVaults(region string) error {
 		return !lastPage
 	})
 
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Backup Vaults sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing Backup Vaults for %s: %w", region, err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Backup Vaults for %s: %w", region, err))
 	}
 
 	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Backup Vaults for %s: %w", region, err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Backup Vaults for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Backup Vaults sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAwsBackupVault_basic(t *testing.T) {
