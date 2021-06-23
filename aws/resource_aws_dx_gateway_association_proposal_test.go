@@ -186,7 +186,7 @@ func TestAccAwsDxGatewayAssociationProposal_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxGatewayAssociationProposal_endOfLife(t *testing.T) {
+func TestAccAwsDxGatewayAssociationProposal_endOfLifeVpn(t *testing.T) {
 	var proposal1 directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
@@ -203,7 +203,47 @@ func TestAccAwsDxGatewayAssociationProposal_endOfLife(t *testing.T) {
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationProposalDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationProposalConfig_endOfLife(rName, rBgpAsn),
+				Config: testAccDxGatewayAssociationProposalConfig_endOfLifeVpn(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal1),
+					testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName),
+					testAccCheckAwsDxGatewayAssociationProposalDisappears(&proposal1),
+				),
+			},
+			{
+				ResourceName: resourceName,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					return strings.Join([]string{
+						aws.StringValue(proposal1.ProposalId),
+						aws.StringValue(proposal1.DirectConnectGatewayId),
+						aws.StringValue(proposal1.AssociatedGateway.Id),
+					}, "/"), nil
+				},
+				ImportState:       true,
+				ImportStateVerify: false, // proposal attributes not applicable when it does not exist
+			},
+		},
+	})
+}
+
+func TestAccAwsDxGatewayAssociationProposal_endOfLifeTgw(t *testing.T) {
+	var proposal1 directconnect.GatewayAssociationProposal
+	var providers []*schema.Provider
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_dx_gateway_association_proposal.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckAwsDxGatewayAssociationProposalDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDxGatewayAssociationProposalConfig_endOfLifeTgw(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal1),
 					testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName),
@@ -403,8 +443,22 @@ resource "aws_dx_gateway_association_proposal" "test" {
 `
 }
 
-func testAccDxGatewayAssociationProposalConfig_endOfLife(rName string, rBgpAsn int) string {
+func testAccDxGatewayAssociationProposalConfig_endOfLifeVpn(rName string, rBgpAsn int) string {
 	return testAccDxGatewayAssociationProposalConfig_basicVpnGateway(rName, rBgpAsn) + `
+data "aws_caller_identity" "current" {}
+
+resource "aws_dx_gateway_association" "test" {
+provider = "awsalternate"
+
+proposal_id                         = aws_dx_gateway_association_proposal.test.id
+dx_gateway_id                       = aws_dx_gateway.test.id
+associated_gateway_owner_account_id = data.aws_caller_identity.current.account_id
+}
+`
+}
+
+func testAccDxGatewayAssociationProposalConfig_endOfLifeTgw(rName string, rBgpAsn int) string {
+	return testAccDxGatewayAssociationProposalConfig_basicTransitGateway(rName, rBgpAsn) + `
 data "aws_caller_identity" "current" {}
 
 resource "aws_dx_gateway_association" "test" {
