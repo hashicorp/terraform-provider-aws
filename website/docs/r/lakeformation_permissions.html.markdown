@@ -10,7 +10,7 @@ description: |-
 
 Grants permissions to the principal to access metadata in the Data Catalog and data organized in underlying data storage such as Amazon S3. Permissions are granted to a principal, in a Data Catalog, relative to a Lake Formation resource, which includes the Data Catalog, databases, and tables. For more information, see [Security and Access Control to Metadata and Data in Lake Formation](https://docs.aws.amazon.com/lake-formation/latest/dg/security-data-access.html).
 
-~> **NOTE:** In general, the `principal` should _not_ be a Lake Formation administrator or the entity (e.g., IAM role) that is running Terraform. Administrator's have implicit permissions. These should be managed by granting or not granting administrator rights using `aws_lakeformation_data_lake_settings` _not_ with this resource.
+~> **NOTE:** In general, the `principal` should _NOT_ be a Lake Formation administrator or the entity (e.g., IAM role) that is running Terraform. Administrators have implicit permissions. These should be managed by granting or not granting administrator rights using `aws_lakeformation_data_lake_settings`, _not_ with this resource.
 
 ## Using Lake Formation Permissions
 
