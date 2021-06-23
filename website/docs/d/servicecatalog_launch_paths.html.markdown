@@ -1,23 +1,22 @@
 ---
 subcategory: "Service Catalog"
 layout: "aws"
-page_title: "AWS: aws_servicecatalog_constraint"
+page_title: "AWS: aws_servicecatalog_launch_paths"
 description: |-
-  Provides information on a Service Catalog Constraint
+  Provides information on Service Catalog Launch Paths
 ---
 
-# Data source: aws_servicecatalog_constraint
+# Data Source: aws_servicecatalog_launch_paths
 
-Provides information on a Service Catalog Constraint.
+Lists the paths to the specified product. A path is how the user has access to a specified product, and is necessary when provisioning a product. A path also determines the constraints put on the product.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-data "aws_servicecatalog_constraint" "example" {
-  accept_language = "en"
-  id              = "cons-hrvy0335"
+data "aws_servicecatalog_launch_paths" "example" {
+  product_id = "prod-yakog5pdriver"
 }
 ```
 
@@ -25,7 +24,7 @@ data "aws_servicecatalog_constraint" "example" {
 
 The following arguments are required:
 
-* `id` - Constraint identifier.
+* `product_id` - Product identifier.
 
 The following arguments are optional:
 
@@ -35,10 +34,16 @@ The following arguments are optional:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `summaries` - Block with information about the launch path. See details below.
+
+### summaries
+
+* `constraint_summaries` - Block for constraints on the portfolio-product relationship. See details below.
+* `path_id` - Identifier of the product path.
+* `name` - Name of the portfolio to which the path was assigned.
+* `tags` - Tags associated with this product path.
+
+### constraint_summaries
+
 * `description` - Description of the constraint.
-* `owner` - Owner of the constraint.
-* `parameters` - Constraint parameters in JSON format.
-* `portfolio_id` - Portfolio identifier.
-* `product_id` - Product identifier.
-* `status` - Constraint status.
-* `type` - Type of constraint. Valid values are `LAUNCH`, `NOTIFICATION`, `RESOURCE_UPDATE`, `STACKSET`, and `TEMPLATE`.
+* `type` - Type of constraint. Valid values are `LAUNCH`, `NOTIFICATION`, `STACKSET`, and `TEMPLATE`.
