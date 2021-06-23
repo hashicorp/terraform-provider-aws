@@ -13,8 +13,8 @@ import (
 )
 
 func TestAccAWSEcrPublicRepositoryPolicy_basic(t *testing.T) {
-	randString := acctest.RandString(10)
-	resourceName := "aws_ecrpublic_repository_policy.default"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecrpublic_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
@@ -22,7 +22,7 @@ func TestAccAWSEcrPublicRepositoryPolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsEcrPublicRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrPublicRepositoryPolicy(randString),
+				Config: testAccAWSEcrPublicRepositoryPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrPublicRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -38,8 +38,8 @@ func TestAccAWSEcrPublicRepositoryPolicy_basic(t *testing.T) {
 }
 
 func TestAccAWSEcrPublicRepositoryPolicy_policy(t *testing.T) {
-	randString := acctest.RandString(10)
-	resourceName := "aws_ecrpublic_repository_policy.default"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecrpublic_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
@@ -47,7 +47,7 @@ func TestAccAWSEcrPublicRepositoryPolicy_policy(t *testing.T) {
 		CheckDestroy: testAccCheckAwsEcrPublicRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrPublicRepositoryPolicy(randString),
+				Config: testAccAWSEcrPublicRepositoryPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrPublicRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -59,7 +59,7 @@ func TestAccAWSEcrPublicRepositoryPolicy_policy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEcrPublicRepositoryPolicyUpdated(randString),
+				Config: testAccAWSEcrPublicRepositoryPolicyUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrPublicRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -70,8 +70,8 @@ func TestAccAWSEcrPublicRepositoryPolicy_policy(t *testing.T) {
 }
 
 func TestAccAWSEcrPublicRepositoryPolicy_iam(t *testing.T) {
-	randString := acctest.RandString(10)
-	resourceName := "aws_ecrpublic_repository_policy.default"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecrpublic_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
@@ -79,7 +79,7 @@ func TestAccAWSEcrPublicRepositoryPolicy_iam(t *testing.T) {
 		CheckDestroy: testAccCheckAwsEcrPublicRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrPublicRepositoryPolicyWithIAMRole(randString),
+				Config: testAccAWSEcrPublicRepositoryPolicyWithIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrPublicRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -91,7 +91,7 @@ func TestAccAWSEcrPublicRepositoryPolicy_iam(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEcrPublicRepositoryPolicyWithIAMRoleUpdated(randString),
+				Config: testAccAWSEcrPublicRepositoryPolicyWithIAMRoleUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrPublicRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -137,12 +137,12 @@ func testAccCheckAWSEcrPublicRepositoryPolicyExists(name string) resource.TestCh
 
 func testAccAWSEcrPublicRepositoryPolicy(randString string) string {
 	return fmt.Sprintf(`
-resource "aws_ecrpublic_repository" "foo" {
-  repository_name = "tf-acc-test-ecr-%s"
+resource "aws_ecrpublic_repository" "test" {
+  repository_name = %[1]q
 }
 
-resource "aws_ecrpublic_repository_policy" "default" {
-  repository_name = aws_ecrpublic_repository.foo.repository_name
+resource "aws_ecrpublic_repository_policy" "test" {
+  repository_name = aws_ecrpublic_repository.test.repository_name
 
   policy = <<EOF
 {
@@ -165,12 +165,12 @@ EOF
 
 func testAccAWSEcrPublicRepositoryPolicyUpdated(randString string) string {
 	return fmt.Sprintf(`
-resource "aws_ecrpublic_repository" "foo" {
-  repository_name = "tf-acc-test-ecr-%s"
+resource "aws_ecrpublic_repository" "test" {
+  repository_name = %[1]q
 }
 
-resource "aws_ecrpublic_repository_policy" "default" {
-  repository_name = aws_ecrpublic_repository.foo.repository_name
+resource "aws_ecrpublic_repository_policy" "test" {
+  repository_name = aws_ecrpublic_repository.test.repository_name
 
   policy = <<EOF
 {
@@ -198,12 +198,12 @@ EOF
 // exercise our retry logic, since we try to use the new resource instantly.
 func testAccAWSEcrPublicRepositoryPolicyWithIAMRole(randString string) string {
 	return fmt.Sprintf(`
-resource "aws_ecrpublic_repository" "foo" {
-  repository_name = "tf-acc-test-ecr-%s"
+resource "aws_ecrpublic_repository" "test" {
+  repository_name = %[1]q
 }
 
-resource "aws_iam_role" "foo" {
-  name = "tf-acc-test-ecr-%s"
+resource "aws_iam_role" "test" {
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -221,8 +221,8 @@ resource "aws_iam_role" "foo" {
 EOF
 }
 
-resource "aws_ecrpublic_repository_policy" "default" {
-  repository_name = aws_ecrpublic_repository.foo.repository_name
+resource "aws_ecrpublic_repository_policy" "test" {
+  repository_name = aws_ecrpublic_repository.test.repository_name
 
   policy = <<EOF
 {
@@ -232,7 +232,7 @@ resource "aws_ecrpublic_repository_policy" "default" {
             "Sid": "testpolicy",
             "Effect": "Allow",
             "Principal": {
-              "AWS": "${aws_iam_role.foo.arn}"
+              "AWS": "${aws_iam_role.test.arn}"
             },
             "Action": [
                 "ecr-public:ListImages"
@@ -247,12 +247,12 @@ EOF
 
 func testAccAWSEcrPublicRepositoryPolicyWithIAMRoleUpdated(randString string) string {
 	return fmt.Sprintf(`
-resource "aws_ecrpublic_repository" "foo" {
-  repository_name = "tf-acc-test-ecr-%s"
+resource "aws_ecrpublic_repository" "test" {
+  repository_name = %[1]q
 }
 
-resource "aws_iam_role" "foo" {
-  name = "tf-acc-test-ecr-%s"
+resource "aws_iam_role" "test" {
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -270,8 +270,8 @@ resource "aws_iam_role" "foo" {
 EOF
 }
 
-resource "aws_ecrpublic_repository_policy" "default" {
-  repository_name = aws_ecrpublic_repository.foo.repository_name
+resource "aws_ecrpublic_repository_policy" "test" {
+  repository_name = aws_ecrpublic_repository.test.repository_name
 
   policy = <<EOF
 {
@@ -281,7 +281,7 @@ resource "aws_ecrpublic_repository_policy" "default" {
             "Sid": "testpolicy",
             "Effect": "Allow",
             "Principal": {
-              "AWS": "${aws_iam_role.foo.arn}"
+              "AWS": "${aws_iam_role.test.arn}"
             },
             "Action": [
                 "ecr-public:ListImages",

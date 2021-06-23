@@ -69,19 +69,16 @@ func resourceAwsEcrPublicRepositoryPolicyCreate(d *schema.ResourceData, meta int
 		out, err = conn.SetRepositoryPolicy(&input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating ECR Public Repository Policy: %s", err)
+		return fmt.Errorf("error creating ECR Public Repository Policy: %w", err)
 	}
 
 	if out == nil {
 		return fmt.Errorf("error creating ECR Public Repository Policy: empty response")
 	}
 
-	repositoryPolicy := *out
-
 	log.Printf("[DEBUG] ECR Public repository policy created: %s", *repositoryPolicy.RepositoryName)
 
-	d.SetId(aws.StringValue(repositoryPolicy.RepositoryName))
-	d.Set("registry_id", repositoryPolicy.RegistryId)
+	d.SetId(aws.StringValue(out.RepositoryName))
 
 	return resourceAwsEcrPublicRepositoryPolicyRead(d, meta)
 }
@@ -100,7 +97,7 @@ func resourceAwsEcrPublicRepositoryPolicyRead(d *schema.ResourceData, meta inter
 				d.SetId("")
 				return nil
 			default:
-				return err
+				return fmt.Errorf("error reading ECR Public Repository Policy (%s): %w", d.Id(), err)
 			}
 		}
 		return err
@@ -112,22 +109,15 @@ func resourceAwsEcrPublicRepositoryPolicyRead(d *schema.ResourceData, meta inter
 
 	log.Printf("[DEBUG] Received repository policy %s", out)
 
-	repositoryPolicy := out
-
-	d.SetId(aws.StringValue(repositoryPolicy.RepositoryName))
-	d.Set("repository_name", repositoryPolicy.RepositoryName)
-	d.Set("registry_id", repositoryPolicy.RegistryId)
-	d.Set("policy", repositoryPolicy.PolicyText)
+	d.Set("repository_name", out.RepositoryName)
+	d.Set("registry_id", out.RegistryId)
+	d.Set("policy", out.PolicyText)
 
 	return nil
 }
 
 func resourceAwsEcrPublicRepositoryPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecrpublicconn
-
-	if !d.HasChange("policy") {
-		return nil
-	}
 
 	input := ecrpublic.SetRepositoryPolicyInput{
 		RepositoryName: aws.String(d.Get("repository_name").(string)),
@@ -155,7 +145,7 @@ func resourceAwsEcrPublicRepositoryPolicyUpdate(d *schema.ResourceData, meta int
 		out, err = conn.SetRepositoryPolicy(&input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error updating ECR Repository Policy: %s", err)
+		return fmt.Errorf("error updating ECR Public Repository Policy (%s): %w", d.Id(), err)
 	}
 
 	repositoryPolicy := *out
@@ -163,7 +153,7 @@ func resourceAwsEcrPublicRepositoryPolicyUpdate(d *schema.ResourceData, meta int
 	d.SetId(aws.StringValue(repositoryPolicy.RepositoryName))
 	d.Set("registry_id", repositoryPolicy.RegistryId)
 
-	return nil
+	return resourceAwsEcrPublicRepositoryPolicyRead(d, meta)
 }
 
 func resourceAwsEcrPublicRepositoryPolicyDelete(d *schema.ResourceData, meta interface{}) error {
@@ -179,7 +169,7 @@ func resourceAwsEcrPublicRepositoryPolicyDelete(d *schema.ResourceData, meta int
 			case "RepositoryNotFoundException", "RepositoryPolicyNotFoundException":
 				return nil
 			default:
-				return err
+				return fmt.Errorf("error deleting ECR Public Repository Policy (%s): %w", d.Id(), err)
 			}
 		}
 		return err
