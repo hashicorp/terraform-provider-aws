@@ -25,7 +25,7 @@ func TestAccAWSEFSFileSystemBackupPolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckEfsFileSystemBackupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEFSFileSystemBackupPolicyConfig(rName),
+				Config: testAccAWSEFSFileSystemBackupPolicyConfig(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEFSFileSystemBackupPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
@@ -41,9 +41,10 @@ func TestAccAWSEFSFileSystemBackupPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSFileSystemBackupPolicy_disappears(t *testing.T) {
+func TestAccAWSEFSFileSystemBackupPolicy_disappears_fs(t *testing.T) {
 	var v efs.BackupPolicy
 	resourceName := "aws_efs_file_system_backup_policy.test"
+	fsResourceName := "aws_efs_file_system.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -53,10 +54,10 @@ func TestAccAWSEFSFileSystemBackupPolicy_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckEfsFileSystemBackupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEFSFileSystemBackupPolicyConfig(rName),
+				Config: testAccAWSEFSFileSystemBackupPolicyConfig(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEFSFileSystemBackupPolicyExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEfsFileSystemBackupPolicy(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEfsFileSystem(), fsResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -64,10 +65,9 @@ func TestAccAWSEFSFileSystemBackupPolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSFileSystemBackupPolicy_disappears_fs(t *testing.T) {
+func TestAccAWSEFSFileSystemBackupPolicy_update(t *testing.T) {
 	var v efs.BackupPolicy
 	resourceName := "aws_efs_file_system_backup_policy.test"
-	fsResourceName := "aws_efs_file_system.text"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -77,12 +77,33 @@ func TestAccAWSEFSFileSystemBackupPolicy_disappears_fs(t *testing.T) {
 		CheckDestroy: testAccCheckEfsFileSystemBackupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEFSFileSystemBackupPolicyConfig(rName),
+				Config: testAccAWSEFSFileSystemBackupPolicyConfig(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEFSFileSystemBackupPolicyExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEfsFileSystem(), fsResourceName),
+					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "backup_policy.0.status", "DISABLED"),
 				),
-				ExpectNonEmptyPlan: true,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEFSFileSystemBackupPolicyConfig(rName, "ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEFSFileSystemBackupPolicyExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "backup_policy.0.status", "ENABLED"),
+				),
+			},
+			{
+				Config: testAccAWSEFSFileSystemBackupPolicyConfig(rName, "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEFSFileSystemBackupPolicyExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "backup_policy.0.status", "DISABLED"),
+				),
 			},
 		},
 	})
@@ -141,7 +162,7 @@ func testAccCheckEfsFileSystemBackupPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSEFSFileSystemBackupPolicyConfig(rName string) string {
+func testAccAWSEFSFileSystemBackupPolicyConfig(rName, status string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
@@ -151,8 +172,8 @@ resource "aws_efs_file_system_backup_policy" "test" {
   file_system_id = aws_efs_file_system.test.id
 
   backup_policy {
-    status = "ENABLED"
+    status = %[2]q
   }
 }
-`, rName)
+`, rName, status)
 }
