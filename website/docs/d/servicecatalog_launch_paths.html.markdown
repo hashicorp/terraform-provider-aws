@@ -24,7 +24,7 @@ data "aws_servicecatalog_launch_paths" "example" {
 
 The following arguments are required:
 
-* `product_id` - Product identifier.
+* `product_id` - (Required) Product identifier.
 
 The following arguments are optional:
 
