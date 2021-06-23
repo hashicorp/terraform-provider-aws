@@ -145,6 +145,7 @@ func TestAccAwsAppsyncFunction_multipleFunctions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
 		Steps: []resource.TestStep{

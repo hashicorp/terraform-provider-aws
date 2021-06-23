@@ -113,13 +113,14 @@ func TestAccAWSAppsyncApiKey_Expires(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncApiKey_multipleApiKeys(t *testing.T) {
+func TestAccAWSAppsyncApiKey_multipleApiKeys(t *testing.T) {
 	var apiKey appsync.ApiKey
 	rName := fmt.Sprintf("tfacctest%d", acctest.RandInt())
 	resourceName := "aws_appsync_api_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncApiKeyDestroy,
 		Steps: []resource.TestStep{
