@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic File System (EFS) Backup Policy resource.
 ---
 
-# Resource: aws_efs_file_system_backup_policy
+# Resource: aws_efs_backup_policy
 
 Provides an Elastic File System (EFS) Backup Policy resource.
 Backup policies turn automatic backups on or off for an existing file system.
@@ -50,5 +50,5 @@ In addition to all arguments above, the following attributes are exported:
 The EFS backup policies can be imported using the `id`, e.g.
 
 ```
-$ terraform import aws_efs_file_system_backup_policy.example fs-6fa144c6
+$ terraform import aws_efs_backup_policy.example fs-6fa144c6
 ```
