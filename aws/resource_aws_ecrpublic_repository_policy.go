@@ -23,7 +23,7 @@ func resourceAwsEcrPublicRepositoryPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"repository": {
+			"repository_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -45,7 +45,7 @@ func resourceAwsEcrPublicRepositoryPolicyCreate(d *schema.ResourceData, meta int
 	conn := meta.(*AWSClient).ecrpublicconn
 
 	input := ecrpublic.SetRepositoryPolicyInput{
-		RepositoryName: aws.String(d.Get("repository").(string)),
+		RepositoryName: aws.String(d.Get("repository_name").(string)),
 		PolicyText:     aws.String(d.Get("policy").(string)),
 	}
 
@@ -115,7 +115,7 @@ func resourceAwsEcrPublicRepositoryPolicyRead(d *schema.ResourceData, meta inter
 	repositoryPolicy := out
 
 	d.SetId(aws.StringValue(repositoryPolicy.RepositoryName))
-	d.Set("repository", repositoryPolicy.RepositoryName)
+	d.Set("repository_name", repositoryPolicy.RepositoryName)
 	d.Set("registry_id", repositoryPolicy.RegistryId)
 	d.Set("policy", repositoryPolicy.PolicyText)
 
@@ -130,7 +130,7 @@ func resourceAwsEcrPublicRepositoryPolicyUpdate(d *schema.ResourceData, meta int
 	}
 
 	input := ecrpublic.SetRepositoryPolicyInput{
-		RepositoryName: aws.String(d.Get("repository").(string)),
+		RepositoryName: aws.String(d.Get("repository_name").(string)),
 		RegistryId:     aws.String(d.Get("registry_id").(string)),
 		PolicyText:     aws.String(d.Get("policy").(string)),
 	}

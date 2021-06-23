@@ -111,7 +111,7 @@ func testAccCheckAwsEcrPublicRepositoryPolicyDestroy(s *terraform.State) error {
 
 		_, err := conn.GetRepositoryPolicy(&ecr.GetRepositoryPolicyInput{
 			RegistryId:     aws.String(rs.Primary.Attributes["registry_id"]),
-			RepositoryName: aws.String(rs.Primary.Attributes["repository"]),
+			RepositoryName: aws.String(rs.Primary.Attributes["repository_name"]),
 		})
 		if err != nil {
 			if ecrerr, ok := err.(awserr.Error); ok && ecrerr.Code() == "RepositoryNotFoundException" {
@@ -142,7 +142,7 @@ resource "aws_ecrpublic_repository" "foo" {
 }
 
 resource "aws_ecrpublic_repository_policy" "default" {
-  repository = aws_ecrpublic_repository.foo.repository_name
+  repository_name = aws_ecrpublic_repository.foo.repository_name
 
   policy = <<EOF
 {
@@ -170,7 +170,7 @@ resource "aws_ecrpublic_repository" "foo" {
 }
 
 resource "aws_ecrpublic_repository_policy" "default" {
-  repository = aws_ecrpublic_repository.foo.repository_name
+  repository_name = aws_ecrpublic_repository.foo.repository_name
 
   policy = <<EOF
 {
@@ -222,7 +222,7 @@ EOF
 }
 
 resource "aws_ecrpublic_repository_policy" "default" {
-  repository = aws_ecrpublic_repository.foo.repository_name
+  repository_name = aws_ecrpublic_repository.foo.repository_name
 
   policy = <<EOF
 {
@@ -271,7 +271,7 @@ EOF
 }
 
 resource "aws_ecrpublic_repository_policy" "default" {
-  repository = aws_ecrpublic_repository.foo.repository_name
+  repository_name = aws_ecrpublic_repository.foo.repository_name
 
   policy = <<EOF
 {
