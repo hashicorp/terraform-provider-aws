@@ -254,9 +254,9 @@ resource "aws_appsync_api_key" "test" {
 }
 
 func testAccAppsyncApiKey_multipleApiKeys(rName string) string {
-	var datasourceResources string
+	var resources string
 	for i := 1; i <= 10; i++ {
-		datasourceResources = datasourceResources + fmt.Sprintf(`
+		resources = resources + fmt.Sprintf(`
 		resource "aws_appsync_api_key" "test%d" {
 			api_id = aws_appsync_graphql_api.test.id
 		}
@@ -271,5 +271,5 @@ resource "aws_appsync_graphql_api" "test" {
 
 %s
 
-`, rName, datasourceResources)
+`, rName, resources)
 }
