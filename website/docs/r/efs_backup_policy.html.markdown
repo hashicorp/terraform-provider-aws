@@ -1,14 +1,15 @@
 ---
 subcategory: "EFS"
 layout: "aws"
-page_title: "AWS: aws_efs_file_system_backup_policy"
+page_title: "AWS: aws_efs_backup_policy"
 description: |-
-  Provides an Elastic File System (EFS) File System Backup Policy resource.
+  Provides an Elastic File System (EFS) Backup Policy resource.
 ---
 
 # Resource: aws_efs_file_system_backup_policy
 
-Provides an Elastic File System (EFS) File System Backup Policy resource.
+Provides an Elastic File System (EFS) Backup Policy resource.
+Backup policies turn automatic backups on or off for an existing file system.
 
 ## Example Usage
 
@@ -17,7 +18,7 @@ resource "aws_efs_file_system" "fs" {
   creation_token = "my-product"
 }
 
-resource "aws_efs_file_system_backup_policy" "policy" {
+resource "aws_efs_backup_policy" "policy" {
   file_system_id = aws_efs_file_system.fs.id
 
   backup_policy {
@@ -31,7 +32,7 @@ resource "aws_efs_file_system_backup_policy" "policy" {
 The following arguments are supported:
 
 * `file_system_id` - (Required) The ID of the EFS file system.
-* `backup_policy` - (Required) A file system backup_policy object (documented below).
+* `backup_policy` - (Required) A backup_policy object (documented below).
 
 ### Backup Policy Arguments
 For **backup_policy** the following attributes are supported:
@@ -46,7 +47,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The EFS file system backup policies can be imported using the `id`, e.g.
+The EFS backup policies can be imported using the `id`, e.g.
 
 ```
 $ terraform import aws_efs_file_system_backup_policy.example fs-6fa144c6

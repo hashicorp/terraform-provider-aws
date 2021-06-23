@@ -14,12 +14,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
-func resourceAwsEfsFileSystemBackupPolicy() *schema.Resource {
+func resourceAwsEfsBackupPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEfsFileSystemBackupPolicyCreate,
-		Read:   resourceAwsEfsFileSystemBackupPolicyRead,
-		Update: resourceAwsEfsFileSystemBackupPolicyUpdate,
-		Delete: resourceAwsEfsFileSystemBackupPolicyDelete,
+		Create: resourceAwsEfsBackupPolicyCreate,
+		Read:   resourceAwsEfsBackupPolicyRead,
+		Update: resourceAwsEfsBackupPolicyUpdate,
+		Delete: resourceAwsEfsBackupPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -52,7 +52,7 @@ func resourceAwsEfsFileSystemBackupPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsEfsFileSystemBackupPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEfsBackupPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).efsconn
 
 	fsID := d.Get("file_system_id").(string)
@@ -63,10 +63,10 @@ func resourceAwsEfsFileSystemBackupPolicyCreate(d *schema.ResourceData, meta int
 
 	d.SetId(fsID)
 
-	return resourceAwsEfsFileSystemBackupPolicyRead(d, meta)
+	return resourceAwsEfsBackupPolicyRead(d, meta)
 }
 
-func resourceAwsEfsFileSystemBackupPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEfsBackupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).efsconn
 
 	output, err := finder.BackupPolicyByID(conn, d.Id())
@@ -90,17 +90,17 @@ func resourceAwsEfsFileSystemBackupPolicyRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsEfsFileSystemBackupPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEfsBackupPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).efsconn
 
 	if err := efsBackupPolicyPut(conn, d.Id(), d.Get("backup_policy").([]interface{})[0].(map[string]interface{})); err != nil {
 		return err
 	}
 
-	return resourceAwsEfsFileSystemBackupPolicyRead(d, meta)
+	return resourceAwsEfsBackupPolicyRead(d, meta)
 }
 
-func resourceAwsEfsFileSystemBackupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEfsBackupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).efsconn
 
 	err := efsBackupPolicyPut(conn, d.Id(), map[string]interface{}{
