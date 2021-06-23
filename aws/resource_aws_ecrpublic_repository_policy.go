@@ -76,7 +76,7 @@ func resourceAwsEcrPublicRepositoryPolicyCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error creating ECR Public Repository Policy: empty response")
 	}
 
-	log.Printf("[DEBUG] ECR Public repository policy created: %s", *repositoryPolicy.RepositoryName)
+	log.Printf("[DEBUG] ECR Public repository policy created: %s", *out.RepositoryName)
 
 	d.SetId(aws.StringValue(out.RepositoryName))
 
