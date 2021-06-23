@@ -16,7 +16,7 @@ variable "workflow_labels" {
     "terraform-0.13"                 = "60dea9", # color:nomad
     "terraform-0.14"                 = "60dea9", # color:nomad
     "terraform-0.15"                 = "60dea9", # color:nomad
-    "alpha-testing"                  = "60dea9", # color:nomad
+    "prerelease-tf-testing"          = "60dea9", # color:nomad
     "documentation"                  = "f4ecff", # color:terraform secondary
     "technical-debt"                 = "d1ebff", # color:terraform accent
     "proposal"                       = "d1ebff", # color:terraform accent
