@@ -99,6 +99,7 @@ func hostedZonesToPreserve() []string {
 		"aws.tfacc.hashicorptest.com",
 		"hashicorp.com",
 		"terraformtest.com",
+		"terraform-provider-aws-acctest-acm.com",
 	}
 }
 
