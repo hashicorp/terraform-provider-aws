@@ -21,6 +21,8 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_backup_vault_policy: Correctly handle deleting policy of deleted vault ([#19854](https://github.com/hashicorp/terraform-provider-aws/issues/19854))
+* resource/aws_backup_vault_policy: Correctly handle reading policy of deleted vault ([#19749](https://github.com/hashicorp/terraform-provider-aws/issues/19749))
 * resource/aws_glue_catalog_database: Set `location_uri` as compute to prevent drift when `target_table` has `location_uri` set. ([#19743](https://github.com/hashicorp/terraform-provider-aws/issues/19743))
 * resource/aws_glue_catalog_table: Fix updating `schema_reference` when columns are present. ([#19742](https://github.com/hashicorp/terraform-provider-aws/issues/19742))
 
