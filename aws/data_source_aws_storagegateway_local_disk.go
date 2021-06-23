@@ -22,10 +22,12 @@ func dataSourceAwsStorageGatewayLocalDisk() *schema.Resource {
 			"disk_node": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"disk_path": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"gateway_arn": {
 				Type:         schema.TypeString,

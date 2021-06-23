@@ -20,6 +20,7 @@ func testAccConfigConformancePack_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
@@ -54,6 +55,7 @@ func testAccConfigConformancePack_forceNew(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
@@ -94,6 +96,7 @@ func testAccConfigConformancePack_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
@@ -116,6 +119,7 @@ func testAccConfigConformancePack_inputParameters(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
@@ -151,6 +155,7 @@ func testAccConfigConformancePack_S3Delivery(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
@@ -182,6 +187,7 @@ func testAccConfigConformancePack_S3Template(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
@@ -213,6 +219,7 @@ func testAccConfigConformancePack_updateInputParameters(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
@@ -262,6 +269,7 @@ func testAccConfigConformancePack_updateS3Delivery(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
@@ -300,6 +308,7 @@ func testAccConfigConformancePack_updateS3Template(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
@@ -337,6 +346,7 @@ func testAccConfigConformancePack_updateTemplateBody(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
@@ -376,6 +386,7 @@ func testAccConfigConformancePack_S3TemplateAndTemplateBody(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{

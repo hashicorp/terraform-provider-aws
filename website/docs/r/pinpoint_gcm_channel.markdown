@@ -33,6 +33,10 @@ The following arguments are supported:
 * `api_key` - (Required) Platform credential API key from Google.
 * `enabled` - (Optional) Whether the channel is enabled or disabled. Defaults to `true`.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 Pinpoint GCM Channel can be imported using the `application-id`, e.g.

@@ -21,7 +21,8 @@ func TestAccDataSourceAwsWorkspacesImage_basic(t *testing.T) {
 			testAccPreCheck(t)
 			testAccWorkspacesImagePreCheck(t)
 		},
-		Providers: testAccProviders,
+		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsWorkspacesImageConfig(imageID),

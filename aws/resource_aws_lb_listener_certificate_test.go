@@ -22,6 +22,7 @@ func TestAccAwsLbListenerCertificate_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLbListenerCertificateDestroy,
 		Steps: []resource.TestStep{
@@ -53,6 +54,7 @@ func TestAccAwsLbListenerCertificate_CertificateArn_Underscores(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLbListenerCertificateDestroy,
 		Steps: []resource.TestStep{
@@ -86,6 +88,7 @@ func TestAccAwsLbListenerCertificate_multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLbListenerCertificateDestroy,
 		Steps: []resource.TestStep{
@@ -152,6 +155,7 @@ func TestAccAwsLbListenerCertificate_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLbListenerCertificateDestroy,
 		Steps: []resource.TestStep{

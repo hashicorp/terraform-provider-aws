@@ -14,7 +14,7 @@ For more details, see the [Amazon Kinesis Stream Consumer Documentation][1].
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_kinesis_stream_consumer" "example" {
   name       = "example-consumer"
   stream_arn = aws_kinesis_stream.example.arn

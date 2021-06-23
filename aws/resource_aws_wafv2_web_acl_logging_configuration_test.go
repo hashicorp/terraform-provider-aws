@@ -19,6 +19,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -28,6 +29,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_basic(t *testing.T) {
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
@@ -48,6 +50,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateSingleHeaderRedactedField(t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -105,6 +108,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateMethodRedactedField(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -147,6 +151,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateQueryStringRedactedField(t 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -189,6 +194,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateUriPathRedactedField(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -231,6 +237,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateMultipleRedactedFields(t *t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -297,6 +304,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_changeResourceARNForceNew(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -339,6 +347,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_changeLogDestinationConfigsForceN
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -378,6 +387,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -401,6 +411,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_emptyRedactedFields(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -430,6 +441,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateEmptyRedactedFields(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -471,6 +483,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_disappears_WebAcl(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -481,6 +494,105 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_disappears_WebAcl(t *testing.T) {
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafv2WebACL(), webACLResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2WebACLLoggingConfiguration_loggingFilter(t *testing.T) {
+	var v wafv2.LoggingConfiguration
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2WebACLLoggingConfiguration_loggingFilter(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.0.default_behavior", "KEEP"),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.0.filter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*", map[string]string{
+						"behavior":    wafv2.FilterBehaviorKeep,
+						"condition.#": "1",
+						"requirement": wafv2.FilterRequirementMeetsAll,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*.condition.*", map[string]string{
+						"action_condition.#":        "1",
+						"action_condition.0.action": wafv2.ActionValueAllow,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAwsWafv2WebACLLoggingConfiguration_updateLoggingFilter_twoFilters(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.0.default_behavior", "DROP"),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.0.filter.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*", map[string]string{
+						"behavior":    wafv2.FilterBehaviorKeep,
+						"condition.#": "1",
+						"requirement": wafv2.FilterRequirementMeetsAll,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*.condition.*", map[string]string{
+						"action_condition.#":        "1",
+						"action_condition.0.action": wafv2.ActionValueAllow,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*", map[string]string{
+						"behavior":    wafv2.FilterBehaviorDrop,
+						"condition.#": "2",
+						"requirement": wafv2.FilterRequirementMeetsAny,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*.condition.*", map[string]string{
+						"action_condition.#":        "1",
+						"action_condition.0.action": wafv2.ActionValueBlock,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*.condition.*", map[string]string{
+						"label_name_condition.#":            "1",
+						"label_name_condition.0.label_name": fmt.Sprintf("prefix:test:%s", rName),
+					}),
+				),
+			},
+			{
+				Config: testAccAwsWafv2WebACLLoggingConfiguration_updateLoggingFilter_oneFilter(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.0.default_behavior", "KEEP"),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.0.filter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*", map[string]string{
+						"behavior":    wafv2.FilterBehaviorKeep,
+						"condition.#": "1",
+						"requirement": wafv2.FilterRequirementMeetsAll,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*.condition.*", map[string]string{
+						"action_condition.#":        "1",
+						"action_condition.0.action": wafv2.ActionValueCount,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", "0"),
+				),
 			},
 		},
 	})
@@ -765,6 +877,84 @@ resource "aws_wafv2_web_acl_logging_configuration" "test" {
 }
 `
 
+const testAccWebACLLoggingConfigurationResource_loggingFilterConfig = `
+resource "aws_wafv2_web_acl_logging_configuration" "test" {
+  resource_arn            = aws_wafv2_web_acl.test.arn
+  log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn]
+
+  logging_filter {
+    default_behavior = "KEEP"
+
+    filter {
+      behavior = "KEEP"
+      condition {
+        action_condition {
+          action = "ALLOW"
+        }
+      }
+      requirement = "MEETS_ALL"
+    }
+  }
+}
+`
+
+const testAccWebACLLoggingConfigurationResource_loggingFilterConfig_twoFilters = `
+resource "aws_wafv2_web_acl_logging_configuration" "test" {
+  resource_arn            = aws_wafv2_web_acl.test.arn
+  log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn]
+
+  logging_filter {
+    default_behavior = "DROP"
+
+    filter {
+      behavior = "KEEP"
+      condition {
+        action_condition {
+          action = "ALLOW"
+        }
+      }
+      requirement = "MEETS_ALL"
+    }
+
+    filter {
+      behavior = "DROP"
+      condition {
+        action_condition {
+          action = "BLOCK"
+        }
+      }
+      condition {
+        label_name_condition {
+          label_name = "prefix:test:${aws_wafv2_web_acl.test.name}"
+        }
+      }
+      requirement = "MEETS_ANY"
+    }
+  }
+}
+`
+
+const testAccWebACLLoggingConfigurationResource_loggingFilterConfig_oneFilter = `
+resource "aws_wafv2_web_acl_logging_configuration" "test" {
+  resource_arn            = aws_wafv2_web_acl.test.arn
+  log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn]
+
+  logging_filter {
+    default_behavior = "KEEP"
+
+    filter {
+      behavior = "KEEP"
+      condition {
+        action_condition {
+          action = "COUNT"
+        }
+      }
+      requirement = "MEETS_ALL"
+    }
+  }
+}
+`
+
 func testAccAwsWafv2WebACLLoggingConfiguration_basic(rName string) string {
 	return composeConfig(
 		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
@@ -819,4 +1009,25 @@ func testAccAwsWafv2WebACLLoggingConfiguration_emptyRedactedField(rName string) 
 		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
 		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
 		testAccWebACLLoggingConfigurationResource_emptyRedactedFieldsConfig)
+}
+
+func testAccAwsWafv2WebACLLoggingConfiguration_loggingFilter(rName string) string {
+	return composeConfig(
+		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
+		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
+		testAccWebACLLoggingConfigurationResource_loggingFilterConfig)
+}
+
+func testAccAwsWafv2WebACLLoggingConfiguration_updateLoggingFilter_twoFilters(rName string) string {
+	return composeConfig(
+		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
+		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
+		testAccWebACLLoggingConfigurationResource_loggingFilterConfig_twoFilters)
+}
+
+func testAccAwsWafv2WebACLLoggingConfiguration_updateLoggingFilter_oneFilter(rName string) string {
+	return composeConfig(
+		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
+		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
+		testAccWebACLLoggingConfigurationResource_loggingFilterConfig_oneFilter)
 }

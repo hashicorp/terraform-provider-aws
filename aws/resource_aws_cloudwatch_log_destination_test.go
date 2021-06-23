@@ -20,6 +20,7 @@ func TestAccAWSCloudwatchLogDestination_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudwatchLogDestinationDestroy,
 		Steps: []resource.TestStep{
@@ -49,6 +50,7 @@ func TestAccAWSCloudwatchLogDestination_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudwatchLogDestinationDestroy,
 		Steps: []resource.TestStep{
@@ -72,8 +74,9 @@ func testAccCheckAWSCloudwatchLogDestinationDestroy(s *terraform.State) error {
 			continue
 		}
 		_, exists, err := lookupCloudWatchLogDestination(conn, rs.Primary.ID, nil)
+
 		if err != nil {
-			return nil
+			return fmt.Errorf("error reading CloudWatch Log Destination (%s): %w", rs.Primary.ID, err)
 		}
 
 		if exists {
