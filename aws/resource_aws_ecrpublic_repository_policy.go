@@ -150,7 +150,6 @@ func resourceAwsEcrPublicRepositoryPolicyUpdate(d *schema.ResourceData, meta int
 
 	repositoryPolicy := *out
 
-	d.SetId(aws.StringValue(repositoryPolicy.RepositoryName))
 	d.Set("registry_id", repositoryPolicy.RegistryId)
 
 	return resourceAwsEcrPublicRepositoryPolicyRead(d, meta)
