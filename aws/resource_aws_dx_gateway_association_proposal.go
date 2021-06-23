@@ -31,6 +31,7 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 
 				if len(strings.Join(strings.Fields(d.Id()), "")) < 1 {
 					log.Printf("[WARN] Direct Connect Gateway Association Proposal Id not available (%s)", d.Id())
+					log.Printf("[DEBUG] Direct Connect Gateway Association Proposal UpdatedKeys (%s)", strings.Join(d.UpdatedKeys(), "/"))
 					// assume proposal is end-of-life, rely on Read func to test
 					return false
 				}
@@ -127,7 +128,6 @@ func resourceAwsDxGatewayAssociationProposalRead(d *schema.ResourceData, meta in
 		}
 	} else {
 		log.Printf("[WARN] Direct Connect Gateway Association Proposal Id not available (%s)", d.Id())
-		d.SetId("0xda5e") // placeholder value
 	}
 
 	if proposal == nil || len(trimmedId) < 1 {
@@ -158,7 +158,7 @@ func resourceAwsDxGatewayAssociationProposalRead(d *schema.ResourceData, meta in
 		}
 
 		if state == gatewayAssociationStateDeleted {
-			log.Printf("[WARN] Direct Connect gateway association (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] Direct Connect gateway association (%s/%s/%s) not found, removing from state", d.Id(), dxGatewayId, associatedGatewayId)
 			d.SetId("")
 			return nil
 		}
@@ -168,10 +168,17 @@ func resourceAwsDxGatewayAssociationProposalRead(d *schema.ResourceData, meta in
 		// to artificially populate the missing proposal in state as if it was still there.
 		log.Printf("[INFO] Direct Connect Gateway Association Proposal (%s) has reached end-of-life and has been removed by AWS.", d.Id())
 		assoc := assocRaw.(*directconnect.GatewayAssociation)
+
+		err = d.Set("allowed_prefixes", flattenDxRouteFilterPrefixes(assoc.AllowedPrefixesToDirectConnectGateway))
+		if err != nil {
+			return fmt.Errorf("error setting allowed_prefixes: %s", err)
+		}
+
 		d.Set("associated_gateway_id", assoc.AssociatedGateway.Id)
 		d.Set("dx_gateway_id", assoc.DirectConnectGatewayId)
 		d.Set("dx_gateway_owner_account_id", assoc.DirectConnectGatewayOwnerAccount)
 	} else {
+		log.Printf("[DEBUG] Direct Connect Gateway Association Proposal (%s) found, continuing as normal: %s", d.Id(), proposal.String())
 
 		if aws.StringValue(proposal.ProposalState) == directconnect.GatewayAssociationProposalStateDeleted {
 			log.Printf("[WARN] Direct Connect Gateway Association Proposal (%s) deleted, removing from state", d.Id())
@@ -294,7 +301,7 @@ func dxGatewayAssociationProposalImport(d *schema.ResourceData, meta interface{}
 
 	errStr := "unexpected format of import string (%q), expected PROPOSALID/DXGATEWAYID/TARGETGATEWAYID]*: %s"
 	importStr := d.Id()
-	log.Printf("[DEBUG] Validating import string %s", importStr)
+	log.Printf("[DEBUG] Validating import string (%s) for Direct Connect Gateway Association Proposal", importStr)
 
 	parts := strings.Split(strings.ToLower(importStr), "/")
 	if len(parts) < 1 {
