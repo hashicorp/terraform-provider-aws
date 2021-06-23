@@ -8,11 +8,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecs/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecs/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -30,12 +33,8 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 		},
 
 		CustomizeDiff: SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -50,17 +49,8 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 						"auto_scaling_group_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
 							ForceNew:     true,
-						},
-						"managed_termination_protection": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								ecs.ManagedTerminationProtectionEnabled,
-								ecs.ManagedTerminationProtectionDisabled,
-							}, false),
+							ValidateFunc: validateArn,
 						},
 						"managed_scaling": {
 							Type:     schema.TypeList,
@@ -88,13 +78,10 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 										ValidateFunc: validation.IntBetween(1, 10000),
 									},
 									"status": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											ecs.ManagedScalingStatusEnabled,
-											ecs.ManagedScalingStatusDisabled,
-										}, false)},
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.StringInSlice(ecs.ManagedScalingStatus_Values(), false)},
 									"target_capacity": {
 										Type:         schema.TypeInt,
 										Optional:     true,
@@ -104,8 +91,19 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 								},
 							},
 						},
+						"managed_termination_protection": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(ecs.ManagedTerminationProtection_Values(), false),
+						},
 					},
 				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
@@ -118,8 +116,9 @@ func resourceAwsEcsCapacityProviderCreate(d *schema.ResourceData, meta interface
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
+	name := d.Get("name").(string)
 	input := ecs.CreateCapacityProviderInput{
-		Name:                     aws.String(d.Get("name").(string)),
+		Name:                     aws.String(name),
 		AutoScalingGroupProvider: expandAutoScalingGroupProviderCreate(d.Get("auto_scaling_group_provider")),
 	}
 
@@ -128,16 +127,13 @@ func resourceAwsEcsCapacityProviderCreate(d *schema.ResourceData, meta interface
 		input.Tags = tags.IgnoreAws().EcsTags()
 	}
 
-	out, err := conn.CreateCapacityProvider(&input)
+	output, err := conn.CreateCapacityProvider(&input)
 
 	if err != nil {
-		return fmt.Errorf("error creating ECS Capacity Provider: %s", err)
+		return fmt.Errorf("error creating ECS Capacity Provider (%s): %w", name, err)
 	}
 
-	provider := *out.CapacityProvider
-
-	log.Printf("[DEBUG] ECS Capacity Provider created: %s", aws.StringValue(provider.CapacityProviderArn))
-	d.SetId(aws.StringValue(provider.CapacityProviderArn))
+	d.SetId(aws.StringValue(output.CapacityProvider.CapacityProviderArn))
 
 	return resourceAwsEcsCapacityProviderRead(d, meta)
 }
@@ -147,41 +143,27 @@ func resourceAwsEcsCapacityProviderRead(d *schema.ResourceData, meta interface{}
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	input := &ecs.DescribeCapacityProvidersInput{
-		CapacityProviders: []*string{aws.String(d.Id())},
-		Include:           []*string{aws.String(ecs.CapacityProviderFieldTags)},
-	}
+	output, err := finder.CapacityProviderByARN(conn, d.Id())
 
-	output, err := conn.DescribeCapacityProviders(input)
-
-	if err != nil {
-		return fmt.Errorf("error reading ECS Capacity Provider (%s): %s", d.Id(), err)
-	}
-
-	var provider *ecs.CapacityProvider
-	for _, cp := range output.CapacityProviders {
-		if aws.StringValue(cp.CapacityProviderArn) == d.Id() {
-			provider = cp
-			break
-		}
-	}
-
-	if provider == nil {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ECS Capacity Provider (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	if aws.StringValue(provider.Status) == ecs.CapacityProviderStatusInactive {
-		log.Printf("[WARN] ECS Capacity Provider (%s) is INACTIVE, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	if err != nil {
+		return fmt.Errorf("error reading ECS Capacity Provider (%s): %w", d.Id(), err)
 	}
 
-	d.Set("arn", provider.CapacityProviderArn)
-	d.Set("name", provider.Name)
+	d.Set("arn", output.CapacityProviderArn)
 
-	tags := keyvaluetags.EcsKeyValueTags(provider.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	if err := d.Set("auto_scaling_group_provider", flattenAutoScalingGroupProvider(output.AutoScalingGroupProvider)); err != nil {
+		return fmt.Errorf("error setting auto_scaling_group_provider: %w", err)
+	}
+
+	d.Set("name", output.Name)
+
+	tags := keyvaluetags.EcsKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -190,10 +172,6 @@ func resourceAwsEcsCapacityProviderRead(d *schema.ResourceData, meta interface{}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	if err := d.Set("auto_scaling_group_provider", flattenAutoScalingGroupProvider(provider.AutoScalingGroupProvider)); err != nil {
-		return fmt.Errorf("error setting autoscaling group provider: %s", err)
 	}
 
 	return nil
@@ -245,17 +223,21 @@ func resourceAwsEcsCapacityProviderUpdate(d *schema.ResourceData, meta interface
 func resourceAwsEcsCapacityProviderDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
 
-	input := &ecs.DeleteCapacityProviderInput{
+	log.Printf("[DEBUG] Deleting ECS Capacity Provider (%s)", d.Id())
+	_, err := conn.DeleteCapacityProvider(&ecs.DeleteCapacityProviderInput{
 		CapacityProvider: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteCapacityProvider(input)
+	// "An error occurred (ClientException) when calling the DeleteCapacityProvider operation: The specified capacity provider does not exist. Specify a valid name or ARN and try again."
+	if tfawserr.ErrMessageContains(err, ecs.ErrCodeClientException, "capacity provider does not exist") {
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("error deleting ECS Capacity Provider (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.CapacityProviderInactive(conn, d.Id()); err != nil {
+	if _, err := waiter.CapacityProviderDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for ECS Capacity Provider (%s) to delete: %w", d.Id(), err)
 	}
 

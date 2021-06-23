@@ -11,7 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecs/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecs/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecs/lister"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -27,71 +29,48 @@ func init() {
 
 func testSweepEcsCapacityProviders(region string) error {
 	client, err := sharedClientForRegion(region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.(*AWSClient).ecsconn
 	input := &ecs.DescribeCapacityProvidersInput{}
 	var sweeperErrs *multierror.Error
+	sweepResources := make([]*testSweepResource, 0)
 
-	for {
-		output, err := conn.DescribeCapacityProviders(input)
-
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping ECS Capacity Provider sweep for %s: %s", region, err)
-			return sweeperErrs.ErrorOrNil()
+	err = lister.DescribeCapacityProvidersPages(conn, input, func(page *ecs.DescribeCapacityProvidersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving ECS Capacity Provider: %w", err))
-			return sweeperErrs
-		}
-
-		for _, capacityProvider := range output.CapacityProviders {
-			if capacityProvider == nil {
-				continue
-			}
-
+		for _, capacityProvider := range page.CapacityProviders {
 			arn := aws.StringValue(capacityProvider.CapacityProviderArn)
-			input := &ecs.DeleteCapacityProviderInput{
-				CapacityProvider: capacityProvider.CapacityProviderArn,
-			}
 
-			if aws.StringValue(capacityProvider.Name) == "FARGATE" || aws.StringValue(capacityProvider.Name) == "FARGATE_SPOT" {
+			if name := aws.StringValue(capacityProvider.Name); name == "FARGATE" || name == "FARGATE_SPOT" {
 				log.Printf("[INFO] Skipping AWS managed ECS Capacity Provider: %s", arn)
 				continue
 			}
 
-			if aws.StringValue(capacityProvider.Status) == ecs.CapacityProviderStatusInactive {
-				log.Printf("[INFO] Skipping ECS Capacity Provider with INACTIVE status: %s", arn)
-				continue
-			}
+			r := resourceAwsEcsCapacityProvider()
+			d := r.Data(nil)
+			d.SetId(arn)
 
-			log.Printf("[INFO] Deleting ECS Capacity Provider: %s", arn)
-			_, err := conn.DeleteCapacityProvider(input)
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting ECS Capacity Provider (%s): %w", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-
-			if _, err := waiter.CapacityProviderInactive(conn, arn); err != nil {
-				sweeperErr := fmt.Errorf("error waiting for ECS Capacity Provider (%s) to delete: %w", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = output.NextToken
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping ECS Capacity Providers sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing ECS Capacity Providers for %s: %w", region, err))
+	}
+
+	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping ECS Capacity Providers for %s: %w", region, err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -296,21 +275,17 @@ func testAccCheckAWSEcsCapacityProviderDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &ecs.DescribeCapacityProvidersInput{
-			CapacityProviders: aws.StringSlice([]string{rs.Primary.ID}),
-		}
+		_, err := finder.CapacityProviderByARN(conn, rs.Primary.ID)
 
-		output, err := conn.DescribeCapacityProviders(input)
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
 			return err
 		}
 
-		for _, capacityProvider := range output.CapacityProviders {
-			if aws.StringValue(capacityProvider.CapacityProviderArn) == rs.Primary.ID && aws.StringValue(capacityProvider.Status) != ecs.CapacityProviderStatusInactive {
-				return fmt.Errorf("ECS Capacity Provider (%s) still exists", rs.Primary.ID)
-			}
-		}
+		return fmt.Errorf("ECS Capacity Provider ID %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -323,27 +298,21 @@ func testAccCheckAWSEcsCapacityProviderExists(resourceName string, provider *ecs
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ECS Capacity Provider ID is set")
+		}
+
 		conn := testAccProvider.Meta().(*AWSClient).ecsconn
 
-		input := &ecs.DescribeCapacityProvidersInput{
-			CapacityProviders: []*string{aws.String(rs.Primary.ID)},
-			Include:           []*string{aws.String(ecs.CapacityProviderFieldTags)},
-		}
-
-		output, err := conn.DescribeCapacityProviders(input)
+		output, err := finder.CapacityProviderByARN(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error reading ECS Capacity Provider (%s): %s", rs.Primary.ID, err)
+			return err
 		}
 
-		for _, cp := range output.CapacityProviders {
-			if aws.StringValue(cp.CapacityProviderArn) == rs.Primary.ID {
-				*provider = *cp
-				return nil
-			}
-		}
+		*provider = *output
 
-		return fmt.Errorf("ECS Capacity Provider (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
