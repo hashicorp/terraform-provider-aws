@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sts"
@@ -20,6 +21,11 @@ func dataSourceAwsCallerIdentity() *schema.Resource {
 			},
 
 			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"source_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,6 +54,14 @@ func dataSourceAwsCallerIdentityRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("account_id", res.Account)
 	d.Set("arn", res.Arn)
 	d.Set("user_id", res.UserId)
+
+	sourceARN := aws.StringValue(res.Arn)
+
+	if strings.Contains(aws.StringValue(res.Arn), "assumed-role") {
+		sourceARN := strings.Replace(sourceARN, "assumed-role", "role", 1)
+	}
+
+	d.Set("source_arn", sourceARN)
 
 	return nil
 }
