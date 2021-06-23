@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -16,10 +15,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecs/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecs/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
-)
-
-const (
-	ecsCapacityProviderTimeoutUpdate = 10 * time.Minute
 )
 
 func resourceAwsEcsCapacityProvider() *schema.Resource {
@@ -127,6 +122,7 @@ func resourceAwsEcsCapacityProviderCreate(d *schema.ResourceData, meta interface
 		input.Tags = tags.IgnoreAws().EcsTags()
 	}
 
+	log.Printf("[DEBUG] Creating ECS Capacity Provider: %s", input)
 	output, err := conn.CreateCapacityProvider(&input)
 
 	if err != nil {
@@ -180,40 +176,44 @@ func resourceAwsEcsCapacityProviderRead(d *schema.ResourceData, meta interface{}
 func resourceAwsEcsCapacityProviderUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
 
-	input := &ecs.UpdateCapacityProviderInput{
-		Name: aws.String(d.Get("name").(string)),
-	}
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &ecs.UpdateCapacityProviderInput{
+			AutoScalingGroupProvider: expandAutoScalingGroupProviderUpdate(d.Get("auto_scaling_group_provider")),
+			Name:                     aws.String(d.Get("name").(string)),
+		}
 
-	if d.HasChange("auto_scaling_group_provider") {
-		input.AutoScalingGroupProvider = expandAutoScalingGroupProviderUpdate(d.Get("auto_scaling_group_provider"))
-
-		err := resource.Retry(ecsCapacityProviderTimeoutUpdate, func() *resource.RetryError {
+		log.Printf("[DEBUG] Updating ECS Capacity Provider: %s", input)
+		err := resource.Retry(waiter.CapacityProviderUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateCapacityProvider(input)
+
+			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeUpdateInProgressException) {
+				return resource.RetryableError(err)
+			}
+
 			if err != nil {
-				if isAWSErr(err, ecs.ErrCodeUpdateInProgressException, "") {
-					return resource.RetryableError(err)
-				}
 				return resource.NonRetryableError(err)
 			}
+
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+
+		if tfresource.TimedOut(err) {
 			_, err = conn.UpdateCapacityProvider(input)
 		}
+
 		if err != nil {
-			return fmt.Errorf("error updating ECS Capacity Provider (%s): %s", d.Id(), err)
+			return fmt.Errorf("error updating ECS Capacity Provider (%s): %w", d.Id(), err)
 		}
 
-		if _, err = waiter.CapacityProviderUpdate(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for ECS Capacity Provider (%s) update: %s", d.Id(), err)
+		if _, err = waiter.CapacityProviderUpdated(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for ECS Capacity Provider (%s) to update: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-
 		if err := keyvaluetags.EcsUpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating ECS Capacity Provider (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating ECS Capacity Provider (%s) tags: %w", d.Id(), err)
 		}
 	}
 

@@ -10,8 +10,6 @@ import (
 
 const (
 	CapacityProviderDeleteTimeout = 20 * time.Minute
-
-	// Maximum amount of time to wait for a Capacity Provider to return UPDATE_COMPLETE or UPDATE_FAILED
 	CapacityProviderUpdateTimeout = 10 * time.Minute
 
 	ServiceCreateTimeout      = 2 * time.Minute
@@ -28,7 +26,7 @@ const (
 func CapacityProviderDeleted(conn *ecs.ECS, arn string) (*ecs.CapacityProvider, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ecs.CapacityProviderStatusActive},
-		Target:  []string{""},
+		Target:  []string{},
 		Refresh: CapacityProviderStatus(conn, arn),
 		Timeout: CapacityProviderDeleteTimeout,
 	}
@@ -42,12 +40,11 @@ func CapacityProviderDeleted(conn *ecs.ECS, arn string) (*ecs.CapacityProvider, 
 	return nil, err
 }
 
-// CapacityProviderUpdate waits for a Capacity Provider to return UPDATE_COMPLETE or UPDATE_FAILED
-func CapacityProviderUpdate(conn *ecs.ECS, capacityProvider string) (*ecs.CapacityProvider, error) {
+func CapacityProviderUpdated(conn *ecs.ECS, arn string) (*ecs.CapacityProvider, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ecs.CapacityProviderUpdateStatusUpdateInProgress},
 		Target:  []string{ecs.CapacityProviderUpdateStatusUpdateComplete},
-		Refresh: CapacityProviderUpdateStatus(conn, capacityProvider),
+		Refresh: CapacityProviderUpdateStatus(conn, arn),
 		Timeout: CapacityProviderUpdateTimeout,
 	}
 

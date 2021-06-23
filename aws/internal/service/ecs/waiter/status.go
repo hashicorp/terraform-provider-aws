@@ -1,7 +1,6 @@
 package waiter
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -41,24 +40,19 @@ func CapacityProviderStatus(conn *ecs.ECS, arn string) resource.StateRefreshFunc
 	}
 }
 
-// CapacityProviderUpdateStatus fetches the Capacity Provider and its Update Status
-func CapacityProviderUpdateStatus(conn *ecs.ECS, capacityProvider string) resource.StateRefreshFunc {
+func CapacityProviderUpdateStatus(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := conn.DescribeCapacityProviders(&ecs.DescribeCapacityProvidersInput{
-			CapacityProviders: []*string{aws.String(capacityProvider)},
-		})
+		output, err := finder.CapacityProviderByARN(conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
 			return nil, "", err
 		}
 
-		if len(output.CapacityProviders) == 0 {
-			return nil, "", fmt.Errorf("ECS Capacity Provider %q missing", capacityProvider)
-		}
-
-		c := output.CapacityProviders[0]
-
-		return c, aws.StringValue(c.UpdateStatus), nil
+		return output, aws.StringValue(output.UpdateStatus), nil
 	}
 }
 

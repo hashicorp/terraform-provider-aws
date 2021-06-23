@@ -380,17 +380,17 @@ resource "aws_ecs_capacity_provider" "test" {
 func testAccAWSEcsCapacityProviderConfigManagedScaling(rName, status string, warmup, max, min, cap int) string {
 	return testAccAWSEcsCapacityProviderConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
-  name = %q
+  name = %[1]q
 
   auto_scaling_group_provider {
     auto_scaling_group_arn         = aws_autoscaling_group.test.arn
 
     managed_scaling {
-      instance_warmup_period    = %v
-      maximum_scaling_step_size = %v
-      minimum_scaling_step_size = %v
-      status                    = %q
-      target_capacity           = %v
+      instance_warmup_period    = %[2]d
+      maximum_scaling_step_size = %[3]d
+      minimum_scaling_step_size = %[4]d
+      status                    = %[5]q
+      target_capacity           = %[6]d
     }
   }
 }
@@ -400,7 +400,7 @@ resource "aws_ecs_capacity_provider" "test" {
 func testAccAWSEcsCapacityProviderConfigManagedScalingPartial(rName string) string {
 	return testAccAWSEcsCapacityProviderConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
-  name = %q
+  name = %[1]q
 
   auto_scaling_group_provider {
     auto_scaling_group_arn = aws_autoscaling_group.test.arn
@@ -420,7 +420,7 @@ resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
   tags = {
-    %[2]q = %[3]q,
+    %[2]q = %[3]q
   }
 
   auto_scaling_group_provider {
@@ -433,11 +433,11 @@ resource "aws_ecs_capacity_provider" "test" {
 func testAccAWSEcsCapacityProviderConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return testAccAWSEcsCapacityProviderConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
-  name = %q
+  name = %[1]q
 
   tags = {
-    %q = %q,
-    %q = %q,
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 
   auto_scaling_group_provider {
