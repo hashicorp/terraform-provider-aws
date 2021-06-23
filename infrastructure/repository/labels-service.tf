@@ -220,5 +220,5 @@ resource "github_issue_label" "service" {
 
   repository = "terraform-provider-aws"
   name       = "service/${each.value}"
-  color      = "7b42bc"
+  color      = "7b42bc" # color:terraform (logomark)
 }
