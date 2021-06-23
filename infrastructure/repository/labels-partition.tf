@@ -14,5 +14,5 @@ resource "github_issue_label" "partition" {
 
   repository = "terraform-provider-aws"
   name       = "partition/${each.value}"
-  color      = "491dd7"
+  color      = "844fba"
 }
