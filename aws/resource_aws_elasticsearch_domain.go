@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
@@ -32,30 +31,30 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 			Update: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIf("elasticsearch_version", func(d *schema.ResourceDiff, meta interface{}) bool {
-				newVersion := d.Get("elasticsearch_version").(string)
-				domainName := d.Get("domain_name").(string)
+		// CustomizeDiff: customdiff.Sequence(
+		// 	customdiff.ForceNewIf("elasticsearch_version", func(d *schema.ResourceDiff, meta interface{}) bool {
+		// 		newVersion := d.Get("elasticsearch_version").(string)
+		// 		domainName := d.Get("domain_name").(string)
 
-				conn := meta.(*AWSClient).esconn
-				resp, err := conn.GetCompatibleElasticsearchVersions(&elasticsearch.GetCompatibleElasticsearchVersionsInput{
-					DomainName: aws.String(domainName),
-				})
-				if err != nil {
-					log.Printf("[ERROR] Failed to get compatible ElasticSearch versions %s", domainName)
-					return false
-				}
-				if len(resp.CompatibleElasticsearchVersions) != 1 {
-					return true
-				}
-				for _, targetVersion := range resp.CompatibleElasticsearchVersions[0].TargetVersions {
-					if aws.StringValue(targetVersion) == newVersion {
-						return false
-					}
-				}
-				return true
-			}),
-		),
+		// 		conn := meta.(*AWSClient).esconn
+		// 		resp, err := conn.GetCompatibleElasticsearchVersions(&elasticsearch.GetCompatibleElasticsearchVersionsInput{
+		// 			DomainName: aws.String(domainName),
+		// 		})
+		// 		if err != nil {
+		// 			log.Printf("[ERROR] Failed to get compatible ElasticSearch versions %s", domainName)
+		// 			return false
+		// 		}
+		// 		if len(resp.CompatibleElasticsearchVersions) != 1 {
+		// 			return true
+		// 		}
+		// 		for _, targetVersion := range resp.CompatibleElasticsearchVersions[0].TargetVersions {
+		// 			if aws.StringValue(targetVersion) == newVersion {
+		// 				return false
+		// 			}
+		// 		}
+		// 		return true
+		// 	}),
+		// ),
 
 		Schema: map[string]*schema.Schema{
 			"access_policies": {
