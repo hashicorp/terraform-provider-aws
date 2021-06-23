@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/backup/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -73,9 +75,9 @@ func testSweepBackupVaultPolicies(region string) error {
 
 func TestAccAwsBackupVaultPolicy_basic(t *testing.T) {
 	var vault backup.GetBackupVaultAccessPolicyOutput
-
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_backup_vault_policy.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
@@ -107,9 +109,9 @@ func TestAccAwsBackupVaultPolicy_basic(t *testing.T) {
 
 func TestAccAwsBackupVaultPolicy_disappears(t *testing.T) {
 	var vault backup.GetBackupVaultAccessPolicyOutput
-
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_backup_vault_policy.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
@@ -130,22 +132,23 @@ func TestAccAwsBackupVaultPolicy_disappears(t *testing.T) {
 
 func testAccCheckAwsBackupVaultPolicyDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).backupconn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_backup_vault_policy" {
 			continue
 		}
 
-		input := &backup.GetBackupVaultAccessPolicyInput{
-			BackupVaultName: aws.String(rs.Primary.ID),
+		_, err := finder.BackupVaultAccessPolicyByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		resp, err := conn.GetBackupVaultAccessPolicy(input)
-
-		if err == nil {
-			if aws.StringValue(resp.BackupVaultName) == rs.Primary.ID {
-				return fmt.Errorf("Backup Plan Policies '%s' was not deleted properly", rs.Primary.ID)
-			}
+		if err != nil {
+			return err
 		}
+
+		return fmt.Errorf("Backup Vault Policy %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -158,16 +161,19 @@ func testAccCheckAwsBackupVaultPolicyExists(name string, vault *backup.GetBackup
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).backupconn
-		params := &backup.GetBackupVaultAccessPolicyInput{
-			BackupVaultName: aws.String(rs.Primary.ID),
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Backup Vault Policy ID is set")
 		}
-		resp, err := conn.GetBackupVaultAccessPolicy(params)
+
+		conn := testAccProvider.Meta().(*AWSClient).backupconn
+
+		output, err := finder.BackupVaultAccessPolicyByName(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*vault = *resp
+		*vault = *output
 
 		return nil
 	}
