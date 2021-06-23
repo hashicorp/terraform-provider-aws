@@ -346,7 +346,7 @@ func LaunchPathsStatus(conn *servicecatalog.ServiceCatalog, acceptLanguage, prod
 		})
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			return nil, StatusNotFound, err
+			return nil, StatusNotFound, nil
 		}
 
 		if err != nil {
