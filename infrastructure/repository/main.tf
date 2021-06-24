@@ -9,7 +9,7 @@ terraform {
 
   required_providers {
     github = {
-      source  = "hashicorp/github"
+      source  = "integrations/github"
       version = "4.12.0"
     }
   }
@@ -18,5 +18,5 @@ terraform {
 }
 
 provider "github" {
-  organization = "hashicorp"
+  owner = "hashicorp"
 }
