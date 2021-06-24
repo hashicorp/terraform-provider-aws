@@ -1013,9 +1013,8 @@ func TestAccAWSLBTargetGroup_updateAppSticknessEnabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "app_cookie"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.app_cookie.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.app_cookie.0.cookie_name", "Cookie"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.app_cookie.0.duration_seconds", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_name", "Cookie"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
@@ -1040,9 +1039,8 @@ func TestAccAWSLBTargetGroup_updateAppSticknessEnabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "app_cookie"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.app_cookie.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.app_cookie.0.cookie_name", "Cookie"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.app_cookie.0.duration_seconds", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_name", "Cookie"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
@@ -2350,10 +2348,8 @@ func testAccAWSLBTargetGroupConfig_appStickiness(targetGroupName string, addAppS
 stickiness {
   enabled         = "%[1]t"
   type            = "app_cookie"
-  app_cookie  {
-		cookie_name = "Cookie"
-		duration_seconds = 10000
-	}
+  cookie_name     = "Cookie"
+  cookie_duration = 10000
 }
 `, enabled)
 	}
