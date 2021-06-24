@@ -331,11 +331,11 @@ resource "aws_lb_target_group" "test" {
     matcher             = "200-299"
   }
 
-	stickiness {
-	  type            = "app_cookie"
-	  cookie_name     = "cookieName"
-		cookie_duration = 600
-	}
+  stickiness {
+    type            = "app_cookie"
+    cookie_name     = "cookieName"
+    cookie_duration = 600
+  }
 
   tags = {
     TestName = %[1]q
