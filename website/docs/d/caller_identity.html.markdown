@@ -36,7 +36,8 @@ There are no arguments available for this data source.
 
 ## Attributes Reference
 
-* `account_id` - The AWS Account ID number of the account that owns or contains the calling entity.
-* `arn` - The AWS ARN associated with the calling entity.
-* `id` - The AWS Account ID number of the account that owns or contains the calling entity.
-* `user_id` - The unique identifier of the calling entity.
+* `account_id` - AWS Account ID number of the account that owns or contains the calling entity.
+* `arn` - ARN associated with the calling entity.
+* `id` - Account ID number of the account that owns or contains the calling entity.
+* `source_arn` - Same as `arn` unless `arn` is an assumed role ARN, in which case, `source_arn` is the ARN of source role of the assumed role.
+* `user_id` - Unique identifier of the calling entity.
