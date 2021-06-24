@@ -45,6 +45,32 @@ func resourceAwsGuardDutyDetector() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+
+			"datasources": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"s3_logs": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enable": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
 			"tags": tagsSchema(),
 
 			"tags_all": tagsSchemaComputed(),
@@ -65,6 +91,10 @@ func resourceAwsGuardDutyDetectorCreate(d *schema.ResourceData, meta interface{}
 
 	if v, ok := d.GetOk("finding_publishing_frequency"); ok {
 		input.FindingPublishingFrequency = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("datasources"); ok {
+		input.DataSources = expandDataSourceConfigurations(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -114,6 +144,10 @@ func resourceAwsGuardDutyDetectorRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("enable", *gdo.Status == guardduty.DetectorStatusEnabled)
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 
+	if err := d.Set("datasources", flattenDataSourceConfigurations(gdo.DataSources)); err != nil {
+		return fmt.Errorf("error setting datasources: %s", err)
+	}
+
 	tags := keyvaluetags.GuarddutyKeyValueTags(gdo.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -131,11 +165,15 @@ func resourceAwsGuardDutyDetectorRead(d *schema.ResourceData, meta interface{}) 
 func resourceAwsGuardDutyDetectorUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).guarddutyconn
 
-	if d.HasChanges("enable", "finding_publishing_frequency") {
+	if d.HasChanges("enable", "finding_publishing_frequency", "datasources") {
 		input := guardduty.UpdateDetectorInput{
 			DetectorId:                 aws.String(d.Id()),
 			Enable:                     aws.Bool(d.Get("enable").(bool)),
 			FindingPublishingFrequency: aws.String(d.Get("finding_publishing_frequency").(string)),
+		}
+
+		if d.HasChange("datasources") {
+			input.DataSources = expandDataSourceConfigurations(d.Get("datasources").([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Update GuardDuty Detector: %s", input)
@@ -186,4 +224,58 @@ func resourceAwsGuardDutyDetectorDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	return nil
+}
+
+func expandDataSourceConfigurations(dsc []interface{}) *guardduty.DataSourceConfigurations {
+	if len(dsc) < 1 || dsc[0] == nil {
+		return nil
+	}
+
+	m := dsc[0].(map[string]interface{})
+
+	dataSourceConfigurations := &guardduty.DataSourceConfigurations{}
+
+	if v, ok := m["s3_logs"]; ok && v != "" && (len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil) {
+		dataSourceConfigurations.S3Logs = expandS3LogsConfiguration(v.([]interface{}))
+	}
+
+	return dataSourceConfigurations
+}
+
+func expandS3LogsConfiguration(slc []interface{}) *guardduty.S3LogsConfiguration {
+	if len(slc) < 1 || slc[0] == nil {
+		return nil
+	}
+
+	m := slc[0].(map[string]interface{})
+
+	s3LogsConfiguration := &guardduty.S3LogsConfiguration{
+		Enable: aws.Bool(m["enable"].(bool)),
+	}
+
+	return s3LogsConfiguration
+}
+
+func flattenDataSourceConfigurations(dsc *guardduty.DataSourceConfigurationsResult) []interface{} {
+	if dsc == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"s3_logs": flattenS3LogsConfiguration(dsc.S3Logs),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenS3LogsConfiguration(slc *guardduty.S3LogsConfigurationResult) []interface{} {
+	if slc == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"enable": aws.StringValue(slc.Status) == guardduty.DataSourceStatusEnabled,
+	}
+
+	return []interface{}{m}
 }

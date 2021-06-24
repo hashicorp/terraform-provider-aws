@@ -8,10 +8,11 @@ import (
 func TestAccAWSGuardDuty_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Detector": {
-			"basic":            testAccAwsGuardDutyDetector_basic,
-			"tags":             testAccAwsGuardDutyDetector_tags,
-			"datasource_basic": testAccAWSGuarddutyDetectorDataSource_basic,
-			"datasource_id":    testAccAWSGuarddutyDetectorDataSource_Id,
+			"basic":              testAccAwsGuardDutyDetector_basic,
+			"datasources_s3logs": testAccAwsGuardDutyDetector_datasources_s3logs,
+			"tags":               testAccAwsGuardDutyDetector_tags,
+			"datasource_basic":   testAccAWSGuarddutyDetectorDataSource_basic,
+			"datasource_id":      testAccAWSGuarddutyDetectorDataSource_Id,
 		},
 		"Filter": {
 			"basic":      testAccAwsGuardDutyFilter_basic,
