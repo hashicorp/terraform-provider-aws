@@ -19,7 +19,7 @@ resource "aws_ecrpublic_repository" "example" {
   repository_name = "Example"
 }
 
-resource "aws_ecr_repository_policy" "example" {
+resource "aws_ecrpublic_repository_policy" "example" {
   repository_name = aws_ecrpublic_repository.example.repository_name
 
   policy = <<EOF
