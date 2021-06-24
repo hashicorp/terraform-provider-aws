@@ -22,38 +22,38 @@ func TestSourceARN(t *testing.T) {
 		},
 		{
 			Name:     "regular ARN",
-			ARN:      "arn:aws:iam::111122223333:role/role_name",
-			Expected: "arn:aws:iam::111122223333:role/role_name",
+			ARN:      "arn:aws:iam::111122223333:role/role_name", //lintignore:AWSAT005
+			Expected: "arn:aws:iam::111122223333:role/role_name", //lintignore:AWSAT005
 		},
 		{
 			Name:     "assumed role ARN",
-			ARN:      "arn:aws:sts::444433332222:assumed-role/something_something-admin/sessionIDNotPartOfRoleARN",
-			Expected: "arn:aws:iam::444433332222:role/something_something-admin",
+			ARN:      "arn:aws:sts::444433332222:assumed-role/something_something-admin/sessionIDNotPartOfRoleARN", //lintignore:AWSAT005
+			Expected: "arn:aws:iam::444433332222:role/something_something-admin",                                   //lintignore:AWSAT005
 		},
 		{
 			Name:     "'assumed-role' part of ARN resource",
-			ARN:      "arn:aws:iam::444433332222:user/assumed-role-but-not-really",
-			Expected: "arn:aws:iam::444433332222:user/assumed-role-but-not-really",
+			ARN:      "arn:aws:iam::444433332222:user/assumed-role-but-not-really", //lintignore:AWSAT005
+			Expected: "arn:aws:iam::444433332222:user/assumed-role-but-not-really", //lintignore:AWSAT005
 		},
 		{
 			Name:     "user ARN",
-			ARN:      "arn:aws:iam::123456789012:user/Bob",
-			Expected: "arn:aws:iam::123456789012:user/Bob",
+			ARN:      "arn:aws:iam::123456789012:user/Bob", //lintignore:AWSAT005
+			Expected: "arn:aws:iam::123456789012:user/Bob", //lintignore:AWSAT005
 		},
 		{
 			Name:     "assumed role from AWS example",
-			ARN:      "arn:aws:sts::123456789012:assumed-role/example-role/AWSCLI-Session",
-			Expected: "arn:aws:iam::123456789012:role/example-role",
+			ARN:      "arn:aws:sts::123456789012:assumed-role/example-role/AWSCLI-Session", //lintignore:AWSAT005
+			Expected: "arn:aws:iam::123456789012:role/example-role",                        //lintignore:AWSAT005
 		},
 		{
-			Name:     "multiple slashes in resource", // not sure this is even valid
-			ARN:      "arn:aws:sts::123456789012:assumed-role/example-role/also-part-of-role-or-no/AWSCLI-Session",
-			Expected: "arn:aws:iam::123456789012:role/example-role/also-part-of-role-or-no",
+			Name:     "multiple slashes in resource",                                                               // not sure this is even valid
+			ARN:      "arn:aws:sts::123456789012:assumed-role/example-role/also-part-of-role-or-no/AWSCLI-Session", //lintignore:AWSAT005
+			Expected: "arn:aws:iam::123456789012:role/example-role/also-part-of-role-or-no",                        //lintignore:AWSAT005
 		},
 		{
 			Name:     "not an sts ARN",
-			ARN:      "arn:aws:iam::123456789012:assumed-role/example-role/AWSCLI-Session",
-			Expected: "arn:aws:iam::123456789012:assumed-role/example-role/AWSCLI-Session",
+			ARN:      "arn:aws:iam::123456789012:assumed-role/example-role/AWSCLI-Session", //lintignore:AWSAT005
+			Expected: "arn:aws:iam::123456789012:assumed-role/example-role/AWSCLI-Session", //lintignore:AWSAT005
 		},
 	}
 
