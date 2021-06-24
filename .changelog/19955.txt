@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_lb_target_group: Add cookie_name attribute for app_cookie support
+```
