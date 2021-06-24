@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/aws/aws-sdk-go/service/ecrpublic"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -18,6 +19,7 @@ func TestAccAWSEcrPublicRepositoryPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEcrPublicRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -43,6 +45,7 @@ func TestAccAWSEcrPublicRepositoryPolicy_policy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEcrPublicRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -75,6 +78,7 @@ func TestAccAWSEcrPublicRepositoryPolicy_iam(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEcrPublicRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
