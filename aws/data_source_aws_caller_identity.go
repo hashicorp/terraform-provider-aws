@@ -3,9 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -45,7 +47,7 @@ func dataSourceAwsCallerIdentityRead(d *schema.ResourceData, meta interface{}) e
 	res, err := client.GetCallerIdentity(&sts.GetCallerIdentityInput{})
 
 	if err != nil {
-		return fmt.Errorf("Error getting Caller Identity: %w", err)
+		return fmt.Errorf("getting Caller Identity: %w", err)
 	}
 
 	log.Printf("[DEBUG] Received Caller Identity: %s", res)
@@ -54,14 +56,38 @@ func dataSourceAwsCallerIdentityRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("account_id", res.Account)
 	d.Set("arn", res.Arn)
 	d.Set("user_id", res.UserId)
-
-	sourceARN := aws.StringValue(res.Arn)
-
-	if strings.Contains(aws.StringValue(res.Arn), "assumed-role") {
-		sourceARN := strings.Replace(sourceARN, "assumed-role", "role", 1)
-	}
-
-	d.Set("source_arn", sourceARN)
+	d.Set("source_arn", sourceARN(aws.StringValue(res.Arn)))
 
 	return nil
+}
+
+// sourceARN returns the same string passed in unless it appears to be an assumed role ARN.
+// In that case, it attempts to return the source role ARN associated with an assumed role ARN.
+func sourceARN(rawARN string) string {
+	result := rawARN
+
+	if strings.Contains(result, ":assumed-role/") && strings.Contains(result, ":sts:") {
+		parsedARN, err := arn.Parse(result)
+
+		if err != nil {
+			return result
+		}
+
+		if parsedARN.Service != "sts" {
+			// not an assumed role
+			return result
+		}
+
+		re := regexp.MustCompile(`^assumed-role/`)
+		parsedARN.Resource = re.ReplaceAllString(parsedARN.Resource, "role/")
+		parsedARN.Service = "iam"
+
+		if v := strings.LastIndex(parsedARN.Resource, "/"); v > 0 {
+			parsedARN.Resource = parsedARN.Resource[0:v]
+		}
+
+		result = parsedARN.String()
+	}
+
+	return result
 }
