@@ -279,11 +279,11 @@ resource "aws_guardduty_detector" "test" {
 func testAccGuardDutyDetectorConfigDatasourcesS3Logs(enable bool) string {
 	return fmt.Sprintf(`
 resource "aws_guardduty_detector" "test" {
- datasources {
-   s3_logs {
-     enable = %[1]t
-   }
- }
+  datasources {
+    s3_logs {
+      enable = %[1]t
+    }
+  }
 }
 `, enable)
 }
