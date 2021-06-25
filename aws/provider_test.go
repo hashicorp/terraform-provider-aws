@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -2282,4 +2283,15 @@ func composeConfig(config ...string) string {
 	}
 
 	return str.String()
+}
+
+const defaultRootLevelDomain = "example.com"
+const defaultRootLevelDomainWildcard = "*." + defaultRootLevelDomain
+
+// testAccRandomSubdomain creates a random three-level domain name of the form
+// "<random>.example.com"
+// The second level domain name "example.com" is reserved by IANA for testing and
+// documentation purposes: https://datatracker.ietf.org/doc/html/rfc2606
+func testAccRandomSubdomain() string {
+	return fmt.Sprintf("%s.%s", acctest.RandString(8), defaultRootLevelDomain)
 }
