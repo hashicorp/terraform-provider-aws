@@ -298,6 +298,7 @@ func Provider() *schema.Provider {
 			"aws_glue_script":                                dataSourceAwsGlueScript(),
 			"aws_guardduty_detector":                         dataSourceAwsGuarddutyDetector(),
 			"aws_iam_account_alias":                          dataSourceAwsIamAccountAlias(),
+			"aws_iam_assumed_role_source":                    dataSourceAwsIAMAssumedRoleSource(),
 			"aws_iam_group":                                  dataSourceAwsIAMGroup(),
 			"aws_iam_instance_profile":                       dataSourceAwsIAMInstanceProfile(),
 			"aws_iam_policy":                                 dataSourceAwsIAMPolicy(),
