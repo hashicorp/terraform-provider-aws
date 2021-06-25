@@ -9,29 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-/*
-arn:aws:iam::123456789012:root
-arn:aws:iam::123456789012:user/JohnDoe
-arn:aws:iam::123456789012:user/division_abc/subdivision_xyz/JaneDoe
-arn:aws:iam::123456789012:group/Developers
-arn:aws:iam::123456789012:group/division_abc/subdivision_xyz/product_A/Developers
-arn:aws:iam::123456789012:role/S3Access
-arn:aws:iam::123456789012:role/application_abc/component_xyz/RDSAccess
-arn:aws:iam::123456789012:role/aws-service-role/access-analyzer.amazonaws.com/AWSServiceRoleForAccessAnalyzer
-arn:aws:iam::123456789012:role/service-role/QuickSightAction
-arn:aws:iam::123456789012:policy/UsersManageOwnCredentials
-arn:aws:iam::123456789012:policy/division_abc/subdivision_xyz/UsersManageOwnCredentials
-arn:aws:iam::123456789012:instance-profile/Webserver
-arn:aws:sts::123456789012:federated-user/JohnDoe
-arn:aws:sts::123456789012:assumed-role/Accounting-Role/JaneDoe
-arn:aws:iam::123456789012:mfa/JaneDoeMFA
-arn:aws:iam::123456789012:u2f/user/JohnDoe/default (U2F security key)
-arn:aws:iam::123456789012:server-certificate/ProdServerCert
-arn:aws:iam::123456789012:server-certificate/division_abc/subdivision_xyz/ProdServerCert
-arn:aws:iam::123456789012:saml-provider/ADFSProvider
-arn:aws:iam::123456789012:oidc-provider/GoogleProvider
-*/
-
 func TestAssumedRoleRoleSessionName(t *testing.T) {
 	testCases := []struct {
 		Name                string
