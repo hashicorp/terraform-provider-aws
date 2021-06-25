@@ -39,5 +39,4 @@ There are no arguments available for this data source.
 * `account_id` - AWS Account ID number of the account that owns or contains the calling entity.
 * `arn` - ARN associated with the calling entity.
 * `id` - Account ID number of the account that owns or contains the calling entity.
-* `source_arn` - Same as `arn` unless `arn` is an assumed role ARN. In that case, `source_arn` is the ARN of the source role of the assumed role. For example, if `arn` is `arn:aws:sts::123456789012:assumed-role/example-role/AWSCLI-Session`, which corresponds to an assumed role, `source_arn` would be `arn:aws:iam::123456789012:role/example-role`.
 * `user_id` - Unique identifier of the calling entity.
