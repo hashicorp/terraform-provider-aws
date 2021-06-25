@@ -9,65 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestSourceARN(t *testing.T) {
-	testCases := []struct {
-		Name     string
-		ARN      string
-		Expected string
-	}{
-		{
-			Name:     "not an ARN",
-			ARN:      "abcd",
-			Expected: "abcd",
-		},
-		{
-			Name:     "regular ARN",
-			ARN:      "arn:aws:iam::111122223333:role/role_name", //lintignore:AWSAT005
-			Expected: "arn:aws:iam::111122223333:role/role_name", //lintignore:AWSAT005
-		},
-		{
-			Name:     "assumed role ARN",
-			ARN:      "arn:aws:sts::444433332222:assumed-role/something_something-admin/sessionIDNotPartOfRoleARN", //lintignore:AWSAT005
-			Expected: "arn:aws:iam::444433332222:role/something_something-admin",                                   //lintignore:AWSAT005
-		},
-		{
-			Name:     "'assumed-role' part of ARN resource",
-			ARN:      "arn:aws:iam::444433332222:user/assumed-role-but-not-really", //lintignore:AWSAT005
-			Expected: "arn:aws:iam::444433332222:user/assumed-role-but-not-really", //lintignore:AWSAT005
-		},
-		{
-			Name:     "user ARN",
-			ARN:      "arn:aws:iam::123456789012:user/Bob", //lintignore:AWSAT005
-			Expected: "arn:aws:iam::123456789012:user/Bob", //lintignore:AWSAT005
-		},
-		{
-			Name:     "assumed role from AWS example",
-			ARN:      "arn:aws:sts::123456789012:assumed-role/example-role/AWSCLI-Session", //lintignore:AWSAT005
-			Expected: "arn:aws:iam::123456789012:role/example-role",                        //lintignore:AWSAT005
-		},
-		{
-			Name:     "multiple slashes in resource",                                                               // not sure this is even valid
-			ARN:      "arn:aws:sts::123456789012:assumed-role/example-role/also-part-of-role-or-no/AWSCLI-Session", //lintignore:AWSAT005
-			Expected: "arn:aws:iam::123456789012:role/example-role/also-part-of-role-or-no",                        //lintignore:AWSAT005
-		},
-		{
-			Name:     "not an sts ARN",
-			ARN:      "arn:aws:iam::123456789012:assumed-role/example-role/AWSCLI-Session", //lintignore:AWSAT005
-			Expected: "arn:aws:iam::123456789012:assumed-role/example-role/AWSCLI-Session", //lintignore:AWSAT005
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.Name, func(t *testing.T) {
-			got := sourceARN(testCase.ARN)
-
-			if got != testCase.Expected {
-				t.Errorf("for %s: got %s, expected %s", testCase.Name, got, testCase.Expected)
-			}
-		})
-	}
-}
-
 func TestAccAWSCallerIdentity_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
