@@ -1053,6 +1053,47 @@ resource "aws_storagegateway_gateway" "test" {
 `, rName)
 }
 
+func testAccAWSStorageGatewayGatewayConfig_DirectoryServiceSimpleDirectory(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_directory_service_directory" "test" {
+  name     = "terraformtesting.com"
+  password = "SuperSecretPassw0rd"
+  size     = "Small"
+
+  vpc_settings {
+    subnet_ids = aws_subnet.test[*].id
+    vpc_id     = aws_vpc.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+`, rName)
+}
+
+func testAccAWSStorageGatewayGatewayConfig_DirectoryServiceMicrosoftAD(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_directory_service_directory" "test" {
+  edition  = "Standard"
+  name     = "terraformtesting.com"
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+
+  vpc_settings {
+    subnet_ids = aws_subnet.test[*].id
+    vpc_id     = aws_vpc.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+`, rName)
+}
+
 func testAccAWSStorageGatewayGatewayConfigSmbActiveDirectorySettingsBase(rName string) string {
 	return composeConfig(
 		// Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html
@@ -1116,135 +1157,6 @@ resource "aws_security_group" "test" {
   }
 }
 
-resource "aws_directory_service_directory" "test" {
-  name     = "terraformtesting.com"
-  password = "SuperSecretPassw0rd"
-  size     = "Small"
-
-  vpc_settings {
-    subnet_ids = aws_subnet.test[*].id
-    vpc_id     = aws_vpc.test.id
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc_dhcp_options" "test" {
-  domain_name         = aws_directory_service_directory.test.name
-  domain_name_servers = aws_directory_service_directory.test.dns_ip_addresses
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc_dhcp_options_association" "test" {
-  dhcp_options_id = aws_vpc_dhcp_options.test.id
-  vpc_id          = aws_vpc.test.id
-}
-
-# Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/ec2-gateway-file.html
-data "aws_ssm_parameter" "aws_service_storagegateway_ami_FILE_S3_latest" {
-  name = "/aws/service/storagegateway/ami/FILE_S3/latest"
-}
-
-resource "aws_instance" "test" {
-  depends_on = [aws_route.test, aws_vpc_dhcp_options_association.test]
-
-  ami                         = data.aws_ssm_parameter.aws_service_storagegateway_ami_FILE_S3_latest.value
-  associate_public_ip_address = true
-  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
-  vpc_security_group_ids      = [aws_security_group.test.id]
-  subnet_id                   = aws_subnet.test[0].id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName))
-}
-
-func testAccAWSStorageGatewayGatewayConfigSmbMicrosoftActiveDirectorySettingsBase(rName string) string {
-	return composeConfig(
-		// Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html
-		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test[0].availability_zone", "m5.xlarge", "m4.xlarge"),
-		testAccAvailableAZsNoOptInConfig(),
-		fmt.Sprintf(`
-# Directory Service Directories must be deployed across multiple EC2 Availability Zones
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route" "test" {
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.test.id
-  route_table_id         = aws_vpc.test.main_route_table_id
-}
-
-resource "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_directory_service_directory" "test" {
-  edition  = "Standard"
-  name     = "terraformtesting.com"
-  password = "SuperSecretPassw0rd"
-  type     = "MicrosoftAD"
-
-  vpc_settings {
-    subnet_ids = aws_subnet.test[*].id
-    vpc_id     = aws_vpc.test.id
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_vpc_dhcp_options" "test" {
   domain_name         = aws_directory_service_directory.test.name
   domain_name_servers = aws_directory_service_directory.test.dns_ip_addresses
@@ -1283,6 +1195,7 @@ resource "aws_instance" "test" {
 func testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettings(rName string) string {
 	return composeConfig(
 		testAccAWSStorageGatewayGatewayConfigSmbActiveDirectorySettingsBase(rName),
+		testAccAWSStorageGatewayGatewayConfig_DirectoryServiceSimpleDirectory(rName),
 		fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address = aws_instance.test.public_ip
@@ -1302,6 +1215,7 @@ resource "aws_storagegateway_gateway" "test" {
 func testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettingsTimeout(rName string, timeout int) string {
 	return composeConfig(
 		testAccAWSStorageGatewayGatewayConfigSmbActiveDirectorySettingsBase(rName),
+		testAccAWSStorageGatewayGatewayConfig_DirectoryServiceSimpleDirectory(rName),
 		fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address = aws_instance.test.public_ip
@@ -1321,7 +1235,8 @@ resource "aws_storagegateway_gateway" "test" {
 
 func testAccAWSStorageGatewayGatewayConfig_SmbMicrosoftActiveDirectorySettings(rName string) string {
 	return composeConfig(
-		testAccAWSStorageGatewayGatewayConfigSmbMicrosoftActiveDirectorySettingsBase(rName),
+		testAccAWSStorageGatewayGatewayConfigSmbActiveDirectorySettingsBase(rName),
+		testAccAWSStorageGatewayGatewayConfig_DirectoryServiceMicrosoftAD(rName),
 		fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address = aws_instance.test.public_ip
@@ -1340,7 +1255,8 @@ resource "aws_storagegateway_gateway" "test" {
 
 func testAccAWSStorageGatewayGatewayConfig_SmbMicrosoftActiveDirectorySettingsTimeout(rName string, timeout int) string {
 	return composeConfig(
-		testAccAWSStorageGatewayGatewayConfigSmbMicrosoftActiveDirectorySettingsBase(rName),
+		testAccAWSStorageGatewayGatewayConfigSmbActiveDirectorySettingsBase(rName),
+		testAccAWSStorageGatewayGatewayConfig_DirectoryServiceMicrosoftAD(rName),
 		fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address = aws_instance.test.public_ip
