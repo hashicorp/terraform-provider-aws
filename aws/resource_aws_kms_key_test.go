@@ -84,6 +84,8 @@ func TestAccAWSKmsKey_basic(t *testing.T) {
 					testAccCheckAWSKmsKeyExists(resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "customer_master_key_spec", "SYMMETRIC_DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "ENCRYPT_DECRYPT"),
+					resource.TestCheckResourceAttr(resourceName, "multi_region", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -134,7 +136,7 @@ func TestAccAWSKmsKey_disappears(t *testing.T) {
 				Config: testAccAWSKmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsKeyExists(resourceName, &key),
-					testAccCheckAWSKmsKeyDisappears(&key),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsKmsKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -315,6 +317,34 @@ func TestAccAWSKmsKey_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSKmsKey_multiRegion(t *testing.T) {
+	var key kms.KeyMetadata
+	rName := fmt.Sprintf("tf-testacc-kms-key-%s", acctest.RandString(13))
+	resourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSKmsKeyMultiRegionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsKeyExists(resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "multi_region", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days"},
+			},
+		},
+	})
+}
+
 func testAccCheckAWSKmsKeyHasPolicy(name string, expectedPolicyText string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -414,19 +444,6 @@ func testAccCheckAWSKmsKeyIsEnabled(key *kms.KeyMetadata, isEnabled bool) resour
 		}
 
 		return nil
-	}
-}
-
-func testAccCheckAWSKmsKeyDisappears(key *kms.KeyMetadata) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).kmsconn
-
-		_, err := conn.ScheduleKeyDeletion(&kms.ScheduleKeyDeletionInput{
-			KeyId:               key.KeyId,
-			PendingWindowInDays: aws.Int64(int64(7)),
-		})
-
-		return err
 	}
 }
 
@@ -653,6 +670,16 @@ resource "aws_kms_key" "test" {
     Key1        = "Value One"
     Description = "Very interesting"
   }
+}
+`, rName)
+}
+
+func testAccAWSKmsKeyMultiRegionConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+  multi_region            = true
 }
 `, rName)
 }
