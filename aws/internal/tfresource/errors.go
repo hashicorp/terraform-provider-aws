@@ -25,6 +25,7 @@ func TimedOut(err error) bool {
 }
 
 // SetLastError sets the LastError field on the error if supported.
+// If lastErr is nil it is ignored.
 func SetLastError(err, lastErr error) {
 	var te *resource.TimeoutError
 	var use *resource.UnexpectedStateError
