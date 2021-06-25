@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -48,13 +48,23 @@ func testSweepWafv2WebAcls(region string) error {
 				continue
 			}
 
+			name := aws.StringValue(webAcl.Name)
+
+			// Exclude WebACLs managed by Firewall Manager as deletion returns AccessDeniedException.
+			// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19149
+			// Prefix Reference: https://docs.aws.amazon.com/waf/latest/developerguide/get-started-fms-create-security-policy.html
+			if strings.HasPrefix(name, "FMManagedWebACLV2") {
+				log.Printf("[WARN] Skipping WAFv2 Web ACL: %s", name)
+				continue
+			}
+
 			id := aws.StringValue(webAcl.Id)
 
 			r := resourceAwsWafv2WebACL()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("lock_token", webAcl.LockToken)
-			d.Set("name", webAcl.Name)
+			d.Set("name", name)
 			d.Set("scope", input.Scope)
 
 			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
@@ -67,16 +77,7 @@ func testSweepWafv2WebAcls(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing WAFv2 Web ACLs for %s: %w", region, err))
 	}
 
-	err = testSweepResourceOrchestrator(sweepResources)
-
-	// Since we cannot exclude Firewall Manager WebACLs from the sweepResources var above,
-	// we instead catch and ignore the following expected AccessDeniedException.
-	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19149
-	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "managed by Firewall Manager") {
-		return errs.ErrorOrNil()
-	}
-
-	if err != nil {
+	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAFv2 Web ACLs for %s: %w", region, err))
 	}
 
