@@ -2287,6 +2287,7 @@ func composeConfig(config ...string) string {
 
 const defaultRootLevelDomain = "example.com"
 const defaultRootLevelDomainWildcard = "*." + defaultRootLevelDomain
+const testingTopLevelDomain = "test"
 
 // testAccRandomSubdomain creates a random three-level domain name of the form
 // "<random>.example.com"
@@ -2294,4 +2295,12 @@ const defaultRootLevelDomainWildcard = "*." + defaultRootLevelDomain
 // documentation purposes: https://datatracker.ietf.org/doc/html/rfc2606
 func testAccRandomSubdomain() string {
 	return fmt.Sprintf("%s.%s", acctest.RandString(8), defaultRootLevelDomain)
+}
+
+// testAccRandomDomainName creates a random second level domain name in the form
+// "<random>.test"
+// The top level domain ".test" is reserved by IANA for testing purposes:
+// https://datatracker.ietf.org/doc/html/rfc6761
+func testAccRandomDomainName() string {
+	return fmt.Sprintf("%s.%s", acctest.RandString(8), testingTopLevelDomain)
 }
