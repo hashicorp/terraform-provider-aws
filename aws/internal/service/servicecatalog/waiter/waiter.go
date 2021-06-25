@@ -41,6 +41,8 @@ const (
 	PrincipalPortfolioAssociationReadyTimeout  = 3 * time.Minute
 	PrincipalPortfolioAssociationDeleteTimeout = 3 * time.Minute
 
+	LaunchPathsReadyTimeout = 3 * time.Minute
+
 	StatusNotFound    = "NOT_FOUND"
 	StatusUnavailable = "UNAVAILABLE"
 
@@ -442,4 +444,21 @@ func PrincipalPortfolioAssociationDeleted(conn *servicecatalog.ServiceCatalog, a
 	_, err := stateConf.WaitForState()
 
 	return err
+}
+
+func LaunchPathsReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, productID string) ([]*servicecatalog.LaunchPathSummary, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{StatusNotFound},
+		Target:  []string{servicecatalog.StatusAvailable},
+		Refresh: LaunchPathsStatus(conn, acceptLanguage, productID),
+		Timeout: LaunchPathsReadyTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.([]*servicecatalog.LaunchPathSummary); ok {
+		return output, err
+	}
+
+	return nil, err
 }
