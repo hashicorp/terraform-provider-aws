@@ -822,7 +822,7 @@ resource "aws_redshift_cluster" "default" {
   automated_snapshot_retention_period = 0
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
-	maintenance_track_name              = "cluster-maintenance-track"
+  maintenance_track_name              = "cluster-maintenance-track"
 }
 `, rInt))
 }
@@ -1486,7 +1486,7 @@ resource "aws_redshift_cluster" "default" {
   automated_snapshot_retention_period = 0
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
-	maintenance_track_name              = "new-cluster-maintenance-track"
+  maintenance_track_name              = "new-cluster-maintenance-track"
 }
 `, rInt))
 }
