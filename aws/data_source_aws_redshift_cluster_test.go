@@ -94,7 +94,7 @@ resource "aws_redshift_cluster" "test" {
   node_type              = "dc1.large"
   cluster_type           = "single-node"
   skip_final_snapshot    = true
-	maintenance_track_name = "cluster-maintenance-track"
+  maintenance_track_name = "cluster-maintenance-track"
 }
 
 data "aws_redshift_cluster" "test" {
