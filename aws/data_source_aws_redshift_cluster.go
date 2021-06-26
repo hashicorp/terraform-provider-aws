@@ -118,6 +118,11 @@ func dataSourceAwsRedshiftCluster() *schema.Resource {
 				Computed: true,
 			},
 
+			"maintenance_track_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"master_username": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -244,6 +249,7 @@ func dataSourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Set("kms_key_id", rsc.KmsKeyId)
+	d.Set("maintenance_track_name", rsc.MaintenanceTrackName)
 	d.Set("master_username", rsc.MasterUsername)
 	d.Set("node_type", rsc.NodeType)
 	d.Set("number_of_nodes", rsc.NumberOfNodes)

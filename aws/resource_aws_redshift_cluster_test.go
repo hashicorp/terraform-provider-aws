@@ -330,6 +330,40 @@ func TestAccAWSRedshiftCluster_iamRoles(t *testing.T) {
 	})
 }
 
+func TestAccAWSRedshiftCluster_maintenanceTrackName(t *testing.T) {
+	var v redshift.Cluster
+
+	ri := acctest.RandInt()
+	preConfig := testAccAWSRedshiftClusterConfig_basic(ri)
+	postConfig := testAccAWSRedshiftClusterConfig_updateMaintenanceTrackName(ri)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: preConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "maintenance_track_name", "cluster-maintenance-track"),
+				),
+			},
+
+			{
+				Config: postConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "maintenance_track_name", "new-cluster-maintenance-track"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRedshiftCluster_publiclyAccessible(t *testing.T) {
 	var v redshift.Cluster
 	rInt := acctest.RandInt()
@@ -788,6 +822,7 @@ resource "aws_redshift_cluster" "default" {
   automated_snapshot_retention_period = 0
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
+	maintenance_track_name              = "cluster-maintenance-track"
 }
 `, rInt))
 }
@@ -1435,6 +1470,23 @@ resource "aws_redshift_cluster" "default" {
   automated_snapshot_retention_period = 0
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
+}
+`, rInt))
+}
+
+func testAccAWSRedshiftClusterConfig_updateMaintenanceTrackName(rInt int) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+resource "aws_redshift_cluster" "default" {
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = data.aws_availability_zones.available.names[0]
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+	maintenance_track_name              = "new-cluster-maintenance-track"
 }
 `, rInt))
 }

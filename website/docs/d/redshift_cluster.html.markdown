@@ -70,6 +70,7 @@ In addition to all arguments above, the following attributes are exported:
 * `enhanced_vpc_routing` - Whether enhanced VPC routing is enabled
 * `iam_roles` - The IAM roles associated to the cluster
 * `kms_key_id` - The KMS encryption key associated to the cluster
+* `maintenance_track_name` - The name of the maintenance track for the cluster
 * `master_username` - Username for the master DB user
 * `node_type` - The cluster node type
 * `number_of_nodes` - The number of nodes in the cluster

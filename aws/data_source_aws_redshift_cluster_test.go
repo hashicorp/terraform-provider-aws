@@ -36,6 +36,7 @@ func TestAccAWSDataSourceRedshiftCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.aws_redshift_cluster.test", "number_of_nodes"),
 					resource.TestCheckResourceAttrSet("data.aws_redshift_cluster.test", "port"),
 					resource.TestCheckResourceAttrSet("data.aws_redshift_cluster.test", "preferred_maintenance_window"),
+					resource.TestCheckResourceAttrSet("data.aws_redshift_cluster.test", "maintenance_track_name"),
 					resource.TestCheckResourceAttrSet("data.aws_redshift_cluster.test", "publicly_accessible"),
 				),
 			},
@@ -87,12 +88,13 @@ func testAccAWSDataSourceRedshiftClusterConfig(rInt int) string {
 resource "aws_redshift_cluster" "test" {
   cluster_identifier = "tf-redshift-cluster-%d"
 
-  database_name       = "testdb"
-  master_username     = "foo"
-  master_password     = "Password1"
-  node_type           = "dc1.large"
-  cluster_type        = "single-node"
-  skip_final_snapshot = true
+  database_name          = "testdb"
+  master_username        = "foo"
+  master_password        = "Password1"
+  node_type              = "dc1.large"
+  cluster_type           = "single-node"
+  skip_final_snapshot    = true
+	maintenance_track_name = "cluster-maintenance-track"
 }
 
 data "aws_redshift_cluster" "test" {

@@ -71,6 +71,11 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 				Required: true,
 			},
 
+			"maintenance_track_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"master_username": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -401,6 +406,10 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 			restoreOpts.IamRoles = expandStringSet(v.(*schema.Set))
 		}
 
+		if v, ok := d.GetOk("maintenance_track_name"); ok {
+			restoreOpts.MaintenanceTrackName = aws.String(v.(string))
+		}
+
 		log.Printf("[DEBUG] Redshift Cluster restore cluster options: %s", restoreOpts)
 
 		resp, err := conn.RestoreFromClusterSnapshot(restoreOpts)
@@ -483,6 +492,10 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 
 		if v, ok := d.GetOk("iam_roles"); ok {
 			createOpts.IamRoles = expandStringSet(v.(*schema.Set))
+		}
+
+		if v, ok := d.GetOk("maintenance_track_name"); ok {
+			createOpts.MaintenanceTrackName = aws.String(v.(string))
 		}
 
 		log.Printf("[DEBUG] Redshift Cluster create options: %s", createOpts)
@@ -581,6 +594,7 @@ func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("kms_key_id", rsc.KmsKeyId)
 	d.Set("automated_snapshot_retention_period", rsc.AutomatedSnapshotRetentionPeriod)
 	d.Set("preferred_maintenance_window", rsc.PreferredMaintenanceWindow)
+	d.Set("maintenance_track_name", rsc.MaintenanceTrackName)
 	if rsc.Endpoint != nil && rsc.Endpoint.Address != nil {
 		endpoint := *rsc.Endpoint.Address
 		if rsc.Endpoint.Port != nil {
@@ -713,6 +727,11 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if d.HasChange("preferred_maintenance_window") {
 		req.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("maintenance_track_name") {
+		req.MaintenanceTrackName = aws.String(d.Get("maintenance_track_name").(string))
 		requestUpdate = true
 	}
 

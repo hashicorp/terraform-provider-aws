@@ -17,12 +17,13 @@ Provides a Redshift Cluster Resource.
 
 ```terraform
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier = "tf-redshift-cluster"
-  database_name      = "mydb"
-  master_username    = "foo"
-  master_password    = "Mustbe8characters"
-  node_type          = "dc1.large"
-  cluster_type       = "single-node"
+  cluster_identifier     = "tf-redshift-cluster"
+  database_name          = "mydb"
+  master_username        = "foo"
+  master_password        = "Mustbe8characters"
+  node_type              = "dc1.large"
+  cluster_type           = "single-node"
+  maintenance_track_name = "cluster-maintenance-track"
 }
 ```
 
