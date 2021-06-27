@@ -7,14 +7,13 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/docdb"
 )
 
 func TestAccAWSDocDBCluster_basic(t *testing.T) {
@@ -24,6 +23,7 @@ func TestAccAWSDocDBCluster_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
@@ -33,7 +33,7 @@ func TestAccAWSDocDBCluster_basic(t *testing.T) {
 					testAccCheckDocDBClusterExists(resourceName, &dbCluster),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`cluster:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.docdb3.6"),
+					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.docdb4.0"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "docdb"),
@@ -67,6 +67,7 @@ func TestAccAWSDocDBCluster_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
@@ -99,6 +100,7 @@ func TestAccAWSDocDBCluster_generatedName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
@@ -132,6 +134,7 @@ func TestAccAWSDocDBCluster_takeFinalSnapshot(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDocDBClusterSnapshot(rInt),
 		Steps: []resource.TestStep{
@@ -162,6 +165,7 @@ func TestAccAWSDocDBCluster_takeFinalSnapshot(t *testing.T) {
 func TestAccAWSDocDBCluster_missingUserNameCausesError(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
@@ -179,6 +183,7 @@ func TestAccAWSDocDBCluster_updateTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
@@ -220,6 +225,7 @@ func TestAccAWSDocDBCluster_updateCloudwatchLogsExports(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
@@ -258,6 +264,7 @@ func TestAccAWSDocDBCluster_kmsKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
@@ -289,6 +296,7 @@ func TestAccAWSDocDBCluster_encrypted(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
@@ -299,7 +307,7 @@ func TestAccAWSDocDBCluster_encrypted(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_docdb_cluster.default", "storage_encrypted", "true"),
 					resource.TestCheckResourceAttr(
-						"aws_docdb_cluster.default", "db_cluster_parameter_group_name", "default.docdb3.6"),
+						"aws_docdb_cluster.default", "db_cluster_parameter_group_name", "default.docdb4.0"),
 				),
 			},
 			{
@@ -324,6 +332,7 @@ func TestAccAWSDocDBCluster_backupsUpdate(t *testing.T) {
 	ri := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
@@ -374,6 +383,7 @@ func TestAccAWSDocDBCluster_Port(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
@@ -414,6 +424,7 @@ func TestAccAWSDocDBCluster_deleteProtection(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDocDBClusterDestroy,
 		Steps: []resource.TestStep{
@@ -538,7 +549,7 @@ func testAccCheckDocDBClusterExistsWithProvider(n string, v *docdb.DBCluster, pr
 
 func testAccCheckDocDBClusterRecreated(i, j *docdb.DBCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.ClusterCreateTime) == aws.TimeValue(j.ClusterCreateTime) {
+		if aws.TimeValue(i.ClusterCreateTime).Equal(aws.TimeValue(j.ClusterCreateTime)) {
 			return errors.New("DocDB Cluster was not recreated")
 		}
 
@@ -609,7 +620,7 @@ resource "aws_docdb_cluster" "default" {
 
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.docdb3.6"
+  db_cluster_parameter_group_name = "default.docdb4.0"
   skip_final_snapshot             = true
 
   tags = {
@@ -658,7 +669,7 @@ resource "aws_docdb_cluster" "default" {
 
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.docdb3.6"
+  db_cluster_parameter_group_name = "default.docdb4.0"
   final_snapshot_identifier       = "tf-acctest-docdbcluster-snapshot-%[1]d"
 
   tags = {
@@ -697,7 +708,7 @@ resource "aws_docdb_cluster" "default" {
 
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.docdb3.6"
+  db_cluster_parameter_group_name = "default.docdb4.0"
   skip_final_snapshot             = true
 
   tags = {
@@ -721,7 +732,7 @@ resource "aws_docdb_cluster" "default" {
 
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.docdb3.6"
+  db_cluster_parameter_group_name = "default.docdb4.0"
   skip_final_snapshot             = true
 
   tags = {
@@ -765,7 +776,7 @@ resource "aws_docdb_cluster" "default" {
 
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.docdb3.6"
+  db_cluster_parameter_group_name = "default.docdb4.0"
   storage_encrypted               = true
   kms_key_id                      = aws_kms_key.foo.arn
   skip_final_snapshot             = true
@@ -845,7 +856,7 @@ resource "aws_docdb_cluster" "test" {
   ]
 
   cluster_identifier              = "tf-acc-test-%d"
-  db_cluster_parameter_group_name = "default.docdb3.6"
+  db_cluster_parameter_group_name = "default.docdb4.0"
   engine                          = "docdb"
   master_password                 = "mustbeeightcharaters"
   master_username                 = "foo"

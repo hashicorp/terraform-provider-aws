@@ -2,17 +2,73 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_lex_intent", &resource.Sweeper{
+		Name:         "aws_lex_intent",
+		F:            testSweepLexIntents,
+		Dependencies: []string{"aws_lex_bot"},
+	})
+}
+
+func testSweepLexIntents(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*AWSClient).lexmodelconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
+
+	input := &lexmodelbuildingservice.GetIntentsInput{}
+
+	err = conn.GetIntentsPages(input, func(page *lexmodelbuildingservice.GetIntentsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, intent := range page.Intents {
+			r := resourceAwsLexIntent()
+			d := r.Data(nil)
+
+			d.SetId(aws.StringValue(intent.Name))
+
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing Lex Intent for %s: %w", region, err))
+	}
+
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Lex Intent for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping Lex Intent sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
 
 func TestAccAwsLexIntent_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
@@ -20,7 +76,8 @@ func TestAccAwsLexIntent_basic(t *testing.T) {
 	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("models.lex", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexIntentDestroy,
 		Steps: []resource.TestStep{
@@ -65,7 +122,8 @@ func TestAccAwsLexIntent_createVersion(t *testing.T) {
 	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("models.lex", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexIntentDestroy,
 		Steps: []resource.TestStep{
@@ -106,7 +164,8 @@ func TestAccAwsLexIntent_conclusionStatement(t *testing.T) {
 	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("models.lex", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexIntentDestroy,
 		Steps: []resource.TestStep{
@@ -158,7 +217,8 @@ func TestAccAwsLexIntent_confirmationPromptAndRejectionStatement(t *testing.T) {
 	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("models.lex", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexIntentDestroy,
 		Steps: []resource.TestStep{
@@ -220,7 +280,8 @@ func TestAccAwsLexIntent_dialogCodeHook(t *testing.T) {
 	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("models.lex", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexIntentDestroy,
 		Steps: []resource.TestStep{
@@ -252,7 +313,8 @@ func TestAccAwsLexIntent_followUpPrompt(t *testing.T) {
 	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("models.lex", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexIntentDestroy,
 		Steps: []resource.TestStep{
@@ -320,7 +382,8 @@ func TestAccAwsLexIntent_fulfillmentActivity(t *testing.T) {
 	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("models.lex", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexIntentDestroy,
 		Steps: []resource.TestStep{
@@ -354,7 +417,8 @@ func TestAccAwsLexIntent_sampleUtterances(t *testing.T) {
 	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("models.lex", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexIntentDestroy,
 		Steps: []resource.TestStep{
@@ -395,7 +459,8 @@ func TestAccAwsLexIntent_slots(t *testing.T) {
 	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("models.lex", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexIntentDestroy,
 		Steps: []resource.TestStep{
@@ -447,7 +512,8 @@ func TestAccAwsLexIntent_slotsCustom(t *testing.T) {
 	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("models.lex", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexIntentDestroy,
 		Steps: []resource.TestStep{
@@ -490,7 +556,8 @@ func TestAccAwsLexIntent_disappears(t *testing.T) {
 	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("models.lex", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexIntentDestroy,
 		Steps: []resource.TestStep{
@@ -549,7 +616,8 @@ func TestAccAwsLexIntent_updateWithExternalChange(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("models.lex", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexIntentDestroy,
 		Steps: []resource.TestStep{

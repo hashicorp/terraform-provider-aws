@@ -31,6 +31,8 @@ func resourceAwsElb() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		CustomizeDiff: SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:          schema.TypeString,
@@ -246,14 +248,16 @@ func resourceAwsElb() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Expand the "listener" set to aws-sdk-go compat []*elb.Listener
 	listeners, err := expandListeners(d.Get("listener").(*schema.Set).List())
@@ -273,8 +277,6 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 		d.Set("name", elbName)
 	}
 
-	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ElbTags()
-
 	// Provision the elb
 	elbOpts := &elb.CreateLoadBalancerInput{
 		LoadBalancerName: aws.String(elbName),
@@ -282,7 +284,7 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		elbOpts.Tags = tags
+		elbOpts.Tags = tags.IgnoreAws().ElbTags()
 	}
 
 	if _, ok := d.GetOk("internal"); ok {
@@ -290,15 +292,15 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("availability_zones"); ok {
-		elbOpts.AvailabilityZones = expandStringList(v.(*schema.Set).List())
+		elbOpts.AvailabilityZones = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("security_groups"); ok {
-		elbOpts.SecurityGroups = expandStringList(v.(*schema.Set).List())
+		elbOpts.SecurityGroups = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("subnets"); ok {
-		elbOpts.Subnets = expandStringList(v.(*schema.Set).List())
+		elbOpts.Subnets = expandStringSet(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] ELB create configuration: %#v", elbOpts)
@@ -328,15 +330,12 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(elbName)
 	log.Printf("[INFO] ELB ID: %s", d.Id())
 
-	if err := d.Set("tags", keyvaluetags.ElbKeyValueTags(tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
-	}
-
 	return resourceAwsElbUpdate(d, meta)
 }
 
 func resourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	elbName := d.Id()
@@ -369,11 +368,11 @@ func resourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Unable to find ELB: %#v", describeResp.LoadBalancerDescriptions)
 	}
 
-	return flattenAwsELbResource(d, meta.(*AWSClient).ec2conn, elbconn, describeResp.LoadBalancerDescriptions[0], ignoreTagsConfig)
+	return flattenAwsELbResource(d, meta.(*AWSClient).ec2conn, elbconn, describeResp.LoadBalancerDescriptions[0], ignoreTagsConfig, defaultTagsConfig)
 }
 
 // flattenAwsELbResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
-func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *elb.ELB, lb *elb.LoadBalancerDescription, ignoreTagsConfig *keyvaluetags.IgnoreConfig) error {
+func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *elb.ELB, lb *elb.LoadBalancerDescription, ignoreTagsConfig *keyvaluetags.IgnoreConfig, defaultTagsConfig *keyvaluetags.DefaultConfig) error {
 	describeAttrsOpts := &elb.DescribeLoadBalancerAttributesInput{
 		LoadBalancerName: aws.String(d.Id()),
 	}
@@ -397,6 +396,7 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 	d.Set("instances", flattenInstances(lb.Instances))
 	d.Set("listener", flattenListeners(lb.ListenerDescriptions))
 	d.Set("security_groups", flattenStringList(lb.SecurityGroups))
+
 	if lb.SourceSecurityGroup != nil {
 		group := lb.SourceSecurityGroup.GroupName
 		if lb.SourceSecurityGroup.OwnerAlias != nil && *lb.SourceSecurityGroup.OwnerAlias != "" {
@@ -454,8 +454,15 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 		return fmt.Errorf("error listing tags for ELB (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	// There's only one health check, so save that to state as we
@@ -669,11 +676,9 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("security_groups") {
-		groups := d.Get("security_groups").(*schema.Set).List()
-
 		applySecurityGroupsOpts := elb.ApplySecurityGroupsToLoadBalancerInput{
 			LoadBalancerName: aws.String(d.Id()),
-			SecurityGroups:   expandStringList(groups),
+			SecurityGroups:   expandStringSet(d.Get("security_groups").(*schema.Set)),
 		}
 
 		_, err := elbconn.ApplySecurityGroupsToLoadBalancer(&applySecurityGroupsOpts)
@@ -687,8 +692,8 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		removed := expandStringList(os.Difference(ns).List())
-		added := expandStringList(ns.Difference(os).List())
+		removed := expandStringSet(os.Difference(ns))
+		added := expandStringSet(ns.Difference(os))
 
 		if len(added) > 0 {
 			enableOpts := &elb.EnableAvailabilityZonesForLoadBalancerInput{
@@ -722,8 +727,8 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		removed := expandStringList(os.Difference(ns).List())
-		added := expandStringList(ns.Difference(os).List())
+		removed := expandStringSet(os.Difference(ns))
+		added := expandStringSet(ns.Difference(os))
 
 		if len(removed) > 0 {
 			detachOpts := &elb.DetachLoadBalancerFromSubnetsInput{
@@ -767,8 +772,8 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.ElbUpdateTags(elbconn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating ELB(%s) tags: %s", d.Id(), err)

@@ -36,13 +36,15 @@ from the validation resource where it will be available after the resource creat
 `regional_certificate_arn = aws_acm_certificate_validation.cert.certificate_arn`.
 
 ~> **Note:** All arguments including the private key will be stored in the raw state as plain-text.
-[Read more about sensitive data in state](/docs/state/sensitive-data.html).
+[Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
 ## Example Usage
 
+An end-to-end example of a REST API configured with OpenAPI can be found in the [`/examples/api-gateway-rest-api-openapi` directory within the GitHub repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/api-gateway-rest-api-openapi).
+
 ### Edge Optimized (ACM Certificate)
 
-```hcl
+```terraform
 resource "aws_api_gateway_domain_name" "example" {
   certificate_arn = aws_acm_certificate_validation.example.certificate_arn
   domain_name     = "api.example.com"
@@ -65,7 +67,7 @@ resource "aws_route53_record" "example" {
 
 ### Edge Optimized (IAM Certificate)
 
-```hcl
+```terraform
 resource "aws_api_gateway_domain_name" "example" {
   domain_name = "api.example.com"
 
@@ -93,7 +95,7 @@ resource "aws_route53_record" "example" {
 
 ### Regional (ACM Certificate)
 
-```hcl
+```terraform
 resource "aws_api_gateway_domain_name" "example" {
   domain_name              = "api.example.com"
   regional_certificate_arn = aws_acm_certificate_validation.example.certificate_arn
@@ -120,7 +122,7 @@ resource "aws_route53_record" "example" {
 
 ### Regional (IAM Certificate)
 
-```hcl
+```terraform
 resource "aws_api_gateway_domain_name" "example" {
   certificate_body          = file("${path.module}/example.com/example.crt")
   certificate_chain         = file("${path.module}/example.com/ca.crt")
@@ -154,8 +156,9 @@ The following arguments are supported:
 
 * `domain_name` - (Required) The fully-qualified domain name to register
 * `endpoint_configuration` - (Optional) Configuration block defining API endpoint information including type. Defined below.
+* `mutual_tls_authentication` - (Optional) The mutual TLS authentication configuration for the domain name. Defined below.
 * `security_policy` - (Optional) The Transport Layer Security (TLS) version + cipher suite for this DomainName. The valid values are `TLS_1_0` and `TLS_1_2`. Must be configured to perform drift detection.
-* `tags` - (Optional) Key-value map of resource tags
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 When referencing an AWS-managed certificate, the following arguments are supported:
 
@@ -183,9 +186,15 @@ When uploading a certificate, the following arguments are supported:
 
 * `types` - (Required) A list of endpoint types. This resource currently only supports managing a single value. Valid values: `EDGE` or `REGIONAL`. If unspecified, defaults to `EDGE`. Must be declared as `REGIONAL` in non-Commercial partitions. Refer to the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/create-regional-api.html) for more information on the difference between edge-optimized and regional APIs.
 
+### mutual_tls_authentication
+
+* `truststore_uri` - (Required) An Amazon S3 URL that specifies the truststore for mutual TLS authentication, for example, `s3://bucket-name/key-name`.
+The truststore can contain certificates from public or private certificate authorities. To update the truststore, upload a new version to S3, and then update your custom domain name to use the new version.
+* `truststore_version` - (Optional) The version of the S3 object that contains the truststore. To specify a version, you must have versioning enabled for the S3 bucket.
+
 ## Attributes Reference
 
-In addition to the arguments, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The internal id assigned to this domain name by API Gateway.
 * `certificate_upload_date` - The upload date associated with the domain certificate.
@@ -196,6 +205,7 @@ In addition to the arguments, the following attributes are exported:
 * `regional_domain_name` - The hostname for the custom domain's regional endpoint.
 * `regional_zone_id` - The hosted zone ID that can be used to create a Route53 alias record for the regional endpoint.
 * `arn` - Amazon Resource Name (ARN)
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 

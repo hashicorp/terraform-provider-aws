@@ -93,6 +93,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
@@ -100,7 +101,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_basic(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 				),
 			},
 			{
@@ -140,6 +141,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
@@ -164,6 +166,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
@@ -171,7 +174,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basic(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 				),
 			},
 		},
@@ -188,6 +191,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSE(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
@@ -195,7 +199,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSE(t *testing.T) {
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSE(rName, rInt, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", "AWS_OWNED_CMK"),
@@ -205,7 +209,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSE(t *testing.T) {
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSE(rName, rInt, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "false"),
 				),
@@ -218,7 +222,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSE(t *testing.T) {
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSE(rName, rInt, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", "AWS_OWNED_CMK"),
@@ -236,6 +240,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSEAndKeyArn(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
@@ -243,7 +248,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSEAndKeyArn(t *testing.
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSEAndKeyArn(rName, rInt, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", firehose.KeyTypeCustomerManagedCmk),
@@ -254,7 +259,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSEAndKeyArn(t *testing.
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSE(rName, rInt, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "false"),
 				),
@@ -263,7 +268,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSEAndKeyArn(t *testing.
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSEAndKeyArn(rName, rInt, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", firehose.KeyTypeCustomerManagedCmk),
@@ -282,6 +287,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSEAndKeyType(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
@@ -289,7 +295,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSEAndKeyType(t *testing
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSEAndKeyType(rName, rInt, true, firehose.KeyTypeAwsOwnedCmk),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", firehose.KeyTypeAwsOwnedCmk),
@@ -299,7 +305,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSEAndKeyType(t *testing
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSE(rName, rInt, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "false"),
 				),
@@ -308,7 +314,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSEAndKeyType(t *testing
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSEAndKeyType(rName, rInt, true, firehose.KeyTypeAwsOwnedCmk),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", firehose.KeyTypeAwsOwnedCmk),
@@ -328,6 +334,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
@@ -335,7 +342,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithTags(t *testing.T) {
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTags(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
 				),
@@ -344,7 +351,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithTags(t *testing.T) {
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTagsChanged(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "changed"),
 				),
@@ -353,7 +360,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithTags(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -370,6 +377,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3KinesisStreamSource(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
@@ -377,7 +385,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3KinesisStreamSource(t *testing.T)
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 				),
 			},
 		},
@@ -391,6 +399,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3WithCloudwatchLogging(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
@@ -398,7 +407,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3WithCloudwatchLogging(t *testing.
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3WithCloudwatchLogging(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 				),
 			},
 		},
@@ -424,6 +433,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3ConfigUpdates(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
@@ -431,14 +441,14 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3ConfigUpdates(t *testing.T) {
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 				),
 			},
 			{
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, updatedS3DestinationConfig, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, updatedS3DestinationConfig, nil, nil, nil, nil, nil),
 				),
 			},
 		},
@@ -460,6 +470,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
@@ -467,7 +478,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3basic(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.error_output_prefix", ""),
 				),
@@ -489,6 +500,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConf
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
@@ -536,6 +548,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_ExternalUpdate(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
@@ -595,6 +608,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConf
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
@@ -637,6 +651,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConf
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
@@ -668,6 +683,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConf
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
@@ -699,6 +715,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConf
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
@@ -730,6 +747,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConf
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
@@ -761,6 +779,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConf
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
@@ -803,6 +822,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_ErrorOutputPrefix(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
@@ -831,7 +851,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_ErrorOutputPrefix(t *tes
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/12600
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12600
 func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_ProcessingConfiguration_Empty(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rInt := acctest.RandInt()
@@ -840,6 +860,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_ProcessingConfiguration_
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
@@ -875,6 +896,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3KmsKeyArn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
@@ -882,7 +904,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3KmsKeyArn(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 					resource.TestCheckResourceAttrPair(resourceName, "extended_s3_configuration.0.kms_key_arn", "aws_kms_key.test", "arn"),
 				),
 			},
@@ -951,6 +973,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3Updates(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
@@ -958,7 +981,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3Updates(t *testing.T) {
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 				),
 			},
 			{
@@ -970,14 +993,14 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3Updates(t *testing.T) {
 				Config: firstUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, firstUpdateExtendedS3DestinationConfig, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, firstUpdateExtendedS3DestinationConfig, nil, nil, nil, nil),
 				),
 			},
 			{
 				Config: removeProcessorsConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, removeProcessorsExtendedS3DestinationConfig, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, removeProcessorsExtendedS3DestinationConfig, nil, nil, nil, nil),
 				),
 			},
 		},
@@ -993,6 +1016,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_KinesisStreamSource(t *t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
@@ -1000,7 +1024,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_KinesisStreamSource(t *t
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 				),
 			},
 			{
@@ -1041,6 +1065,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_RedshiftConfigUpdates(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
@@ -1048,7 +1073,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_RedshiftConfigUpdates(t *testing.T)
 				Config: testAccKinesisFirehoseDeliveryStreamRedshiftConfig(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 				),
 			},
 			{
@@ -1061,7 +1086,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_RedshiftConfigUpdates(t *testing.T)
 				Config: testAccKinesisFirehoseDeliveryStreamRedshiftConfigUpdates(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, updatedRedshiftConfig, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, updatedRedshiftConfig, nil, nil, nil),
 				),
 			},
 		},
@@ -1106,6 +1131,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_SplunkConfigUpdates(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
@@ -1113,7 +1139,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_SplunkConfigUpdates(t *testing.T) {
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 				),
 			},
 			{
@@ -1125,7 +1151,106 @@ func TestAccAWSKinesisFirehoseDeliveryStream_SplunkConfigUpdates(t *testing.T) {
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, updatedSplunkConfig),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, updatedSplunkConfig, nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisFirehoseDeliveryStream_HttpEndpointConfiguration(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+
+	ri := acctest.RandInt()
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
+
+	preConfig := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpointBasic,
+		ri, ri, ri, ri)
+	postConfig := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpointUpdates,
+			ri, ri, ri, ri)
+
+	updatedHTTPEndpointConfig := &firehose.HttpEndpointDestinationDescription{
+		EndpointConfiguration: &firehose.HttpEndpointDescription{
+			Url:  aws.String("https://input-test.com:443"),
+			Name: aws.String("HTTP_test"),
+		},
+		S3BackupMode: aws.String("FailedDataOnly"),
+		ProcessingConfiguration: &firehose.ProcessingConfiguration{
+			Enabled: aws.Bool(true),
+			Processors: []*firehose.Processor{
+				{
+					Type: aws.String("Lambda"),
+					Parameters: []*firehose.ProcessorParameter{
+						{
+							ParameterName:  aws.String("LambdaArn"),
+							ParameterValue: aws.String("valueNotTested"),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: preConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: postConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, updatedHTTPEndpointConfig),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisFirehoseDeliveryStream_HttpEndpointConfiguration_RetryDuration(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rInt := acctest.RandInt()
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpoint_RetryDuration(rInt, 301),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpoint_RetryDuration(rInt, 302),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 				),
 			},
 		},
@@ -1169,6 +1294,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigUpdates(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
@@ -1176,7 +1302,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigUpdates(t *testi
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 				),
 			},
 			{
@@ -1188,7 +1314,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigUpdates(t *testi
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticSearchConfig, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticSearchConfig, nil, nil),
 				),
 			},
 		},
@@ -1232,6 +1358,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigEndpointUpdates(
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
@@ -1239,7 +1366,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigEndpointUpdates(
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 				),
 			},
 			{
@@ -1251,7 +1378,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigEndpointUpdates(
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticSearchConfig, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticSearchConfig, nil, nil),
 				),
 			},
 		},
@@ -1292,6 +1419,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchWithVpcConfigUpdates(t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
@@ -1299,7 +1427,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchWithVpcConfigUpdates(t
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchVpcBasic(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.vpc_id", "aws_vpc.elasticsearch_in_vpc", "id"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.security_group_ids.#", "2"),
@@ -1315,7 +1443,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchWithVpcConfigUpdates(t
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchVpcUpdate(funcName, policyName, roleName, ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticSearchConfig, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticSearchConfig, nil, nil),
 					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.vpc_id", "aws_vpc.elasticsearch_in_vpc", "id"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.security_group_ids.#", "2"),
@@ -1326,7 +1454,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchWithVpcConfigUpdates(t
 	})
 }
 
-// Regression test for https://github.com/terraform-providers/terraform-provider-aws/issues/1657
+// Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/1657
 func TestAccAWSKinesisFirehoseDeliveryStream_missingProcessingConfiguration(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	ri := acctest.RandInt()
@@ -1334,6 +1462,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_missingProcessingConfiguration(t *t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, firehose.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
@@ -1341,7 +1470,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_missingProcessingConfiguration(t *t
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_missingProcessingConfiguration(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 				),
 			},
 			{
@@ -1380,7 +1509,7 @@ func testAccCheckKinesisFirehoseDeliveryStreamExists(n string, stream *firehose.
 	}
 }
 
-func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.DeliveryStreamDescription, s3config interface{}, extendedS3config interface{}, redshiftConfig interface{}, elasticsearchConfig interface{}, splunkConfig interface{}) resource.TestCheckFunc {
+func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.DeliveryStreamDescription, s3config interface{}, extendedS3config interface{}, redshiftConfig interface{}, elasticsearchConfig interface{}, splunkConfig interface{}, httpEndpointConfig interface{}) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !strings.HasPrefix(*stream.DeliveryStreamName, "terraform-kinesis-firehose") && !strings.HasPrefix(*stream.DeliveryStreamName, "tf-acc-test") {
 			return fmt.Errorf("Bad Stream name: %s", *stream.DeliveryStreamName)
@@ -1516,6 +1645,38 @@ func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.Del
 					return fmt.Errorf("Mismatch extended splunk ProcessingConfiguration.Processors count, expected: %s, got: %s", s, stream.Destinations)
 				}
 			}
+
+			if httpEndpointConfig != nil {
+				s := httpEndpointConfig.(*firehose.HttpEndpointDestinationDescription)
+				// Range over the Stream Destinations, looking for the matching HttpEndpoint destination
+				var matchS3BackupMode, matchUrl, matchName, processingConfigMatch bool
+				for _, d := range stream.Destinations {
+					if d.HttpEndpointDestinationDescription != nil {
+						if *d.HttpEndpointDestinationDescription.S3BackupMode == *s.S3BackupMode {
+							matchS3BackupMode = true
+						}
+						if *d.HttpEndpointDestinationDescription.EndpointConfiguration.Url == *s.EndpointConfiguration.Url {
+							matchUrl = true
+						}
+						if *d.HttpEndpointDestinationDescription.EndpointConfiguration.Name == *s.EndpointConfiguration.Name {
+							matchName = true
+						}
+						if s.ProcessingConfiguration != nil && d.HttpEndpointDestinationDescription.ProcessingConfiguration != nil {
+							processingConfigMatch = len(s.ProcessingConfiguration.Processors) == len(d.HttpEndpointDestinationDescription.ProcessingConfiguration.Processors)
+						}
+					}
+				}
+				if !matchS3BackupMode {
+					return fmt.Errorf("Mismatch HTTP Endpoint S3BackupMode, expected: %s, got: %s", s, stream.Destinations)
+				}
+				if !matchUrl || !matchName {
+					return fmt.Errorf("Mismatch HTTP Endpoint EndpointConfiguration, expected: %s, got: %s", s, stream.Destinations)
+				}
+				if !processingConfigMatch {
+					return fmt.Errorf("Mismatch HTTP Endpoint ProcessingConfiguration.Processors count, expected: %s, got: %s", s, stream.Destinations)
+				}
+			}
+
 		}
 		return nil
 	}
@@ -1704,11 +1865,21 @@ resource "aws_iam_role_policy" "firehose" {
       "Sid": "GlueAccess",
       "Effect": "Allow",
       "Action": [
+        "glue:GetTable",
+        "glue:GetTableVersion",
         "glue:GetTableVersions"
       ],
       "Resource": [
         "*"
       ]
+    },
+    {
+      "Sid": "LakeFormationDataAccess",
+      "Effect": "Allow",
+      "Action": [
+        "lakeformation:GetDataAccess"
+      ],
+      "Resource": "*"
     }
   ]
 }
@@ -2097,6 +2268,16 @@ resource "aws_glue_catalog_table" "test" {
   }
 }
 
+resource "aws_lakeformation_permissions" "test" {
+  permissions = ["ALL"]
+  principal   = aws_iam_role.firehose.arn
+
+  table {
+    database_name = aws_glue_catalog_database.test.name
+    name          = aws_glue_catalog_table.test.name
+  }
+}
+
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   destination = "extended_s3"
   name        = %[1]q
@@ -2130,7 +2311,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     }
   }
 
-  depends_on = [aws_iam_role_policy.firehose]
+  depends_on = [aws_iam_role_policy.firehose, aws_lakeformation_permissions.test]
 }
 `, rName, enabled)
 }
@@ -2150,6 +2331,16 @@ resource "aws_glue_catalog_table" "test" {
       name = "test"
       type = "string"
     }
+  }
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions = ["ALL"]
+  principal   = aws_iam_role.firehose.arn
+
+  table {
+    database_name = aws_glue_catalog_database.test.name
+    name          = aws_glue_catalog_table.test.name
   }
 }
 
@@ -2184,7 +2375,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     }
   }
 
-  depends_on = [aws_iam_role_policy.firehose]
+  depends_on = [aws_iam_role_policy.firehose, aws_lakeformation_permissions.test]
 }
 `, rName)
 }
@@ -2221,6 +2412,16 @@ resource "aws_glue_catalog_table" "test" {
   }
 }
 
+resource "aws_lakeformation_permissions" "test" {
+  permissions = ["ALL"]
+  principal   = aws_iam_role.firehose.arn
+
+  table {
+    database_name = aws_glue_catalog_database.test.name
+    name          = aws_glue_catalog_table.test.name
+  }
+}
+
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   destination = "extended_s3"
   name        = %[1]q
@@ -2252,7 +2453,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     }
   }
 
-  depends_on = [aws_iam_role_policy.firehose]
+  depends_on = [aws_iam_role_policy.firehose, aws_lakeformation_permissions.test]
 }
 `, rName)
 }
@@ -2272,6 +2473,16 @@ resource "aws_glue_catalog_table" "test" {
       name = "test"
       type = "string"
     }
+  }
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions = ["ALL"]
+  principal   = aws_iam_role.firehose.arn
+
+  table {
+    database_name = aws_glue_catalog_database.test.name
+    name          = aws_glue_catalog_table.test.name
   }
 }
 
@@ -2306,7 +2517,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     }
   }
 
-  depends_on = [aws_iam_role_policy.firehose]
+  depends_on = [aws_iam_role_policy.firehose, aws_lakeformation_permissions.test]
 }
 `, rName)
 }
@@ -2326,6 +2537,16 @@ resource "aws_glue_catalog_table" "test" {
       name = "test"
       type = "string"
     }
+  }
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions = ["ALL"]
+  principal   = aws_iam_role.firehose.arn
+
+  table {
+    database_name = aws_glue_catalog_database.test.name
+    name          = aws_glue_catalog_table.test.name
   }
 }
 
@@ -2360,7 +2581,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     }
   }
 
-  depends_on = [aws_iam_role_policy.firehose]
+  depends_on = [aws_iam_role_policy.firehose, aws_lakeformation_permissions.test]
 }
 `, rName)
 }
@@ -2668,6 +2889,96 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
         parameters {
           parameter_name  = "RoleArn"
           parameter_value = aws_iam_role.firehose.arn
+        }
+
+        parameters {
+          parameter_name  = "BufferSizeInMBs"
+          parameter_value = 1
+        }
+
+        parameters {
+          parameter_name  = "BufferIntervalInSeconds"
+          parameter_value = 120
+        }
+      }
+    }
+  }
+}
+`
+
+var testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpointBasic = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = "terraform-kinesis-firehose-httpendpoint-%d"
+  destination = "http_endpoint"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  http_endpoint_configuration {
+    url      = "https://input-test.com:443"
+    name     = "HTTP_test"
+    role_arn = aws_iam_role.firehose.arn
+  }
+}
+`
+
+func testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpoint_RetryDuration(rInt, retryDuration int) string {
+	return composeConfig(
+		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = "terraform-kinesis-firehose-httpendpoint-%[1]d"
+  destination = "http_endpoint"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  http_endpoint_configuration {
+    url            = "https://input-test.com:443"
+    name           = "HTTP_test"
+    retry_duration = %[2]d
+    role_arn       = aws_iam_role.firehose.arn
+  }
+}
+`, rInt, retryDuration))
+}
+
+var testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpointUpdates = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = "terraform-kinesis-firehose-httpendpoint-%d"
+  destination = "http_endpoint"
+
+  s3_configuration {
+    role_arn           = aws_iam_role.firehose.arn
+    bucket_arn         = aws_s3_bucket.bucket.arn
+    buffer_size        = 10
+    buffer_interval    = 400
+    compression_format = "GZIP"
+  }
+
+  http_endpoint_configuration {
+    url            = "https://input-test.com:443"
+    name           = "HTTP_test"
+    access_key     = "test_key"
+    role_arn       = aws_iam_role.firehose.arn
+    s3_backup_mode = "FailedDataOnly"
+
+    processing_configuration {
+      enabled = true
+
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
         }
 
         parameters {

@@ -68,6 +68,7 @@ func resourceAwsAutoscalingAttachmentCreate(d *schema.ResourceData, meta interfa
 		}
 	}
 
+	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
 	d.SetId(resource.PrefixedUniqueId(fmt.Sprintf("%s-", asgName)))
 
 	return resourceAwsAutoscalingAttachmentRead(d, meta)
@@ -92,7 +93,7 @@ func resourceAwsAutoscalingAttachmentRead(d *schema.ResourceData, meta interface
 	if v, ok := d.GetOk("elb"); ok {
 		found := false
 		for _, i := range asg.LoadBalancerNames {
-			if v.(string) == *i {
+			if v.(string) == aws.StringValue(i) {
 				d.Set("elb", v.(string))
 				found = true
 				break
@@ -108,7 +109,7 @@ func resourceAwsAutoscalingAttachmentRead(d *schema.ResourceData, meta interface
 	if v, ok := d.GetOk("alb_target_group_arn"); ok {
 		found := false
 		for _, i := range asg.TargetGroupARNs {
-			if v.(string) == *i {
+			if v.(string) == aws.StringValue(i) {
 				d.Set("alb_target_group_arn", v.(string))
 				found = true
 				break

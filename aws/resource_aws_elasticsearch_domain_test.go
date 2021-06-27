@@ -11,10 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -26,36 +26,84 @@ func init() {
 
 func testSweepElasticSearchDomains(region string) error {
 	client, err := sharedClientForRegion(region)
+
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
+
 	conn := client.(*AWSClient).esconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
 
-	out, err := conn.ListDomainNames(&elasticsearch.ListDomainNamesInput{})
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Elasticsearch Domains: %s", err)
+	input := &elasticsearch.ListDomainNamesInput{}
+
+	// ListDomainNames has no pagination support whatsoever
+	output, err := conn.ListDomainNames(input)
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, err)
+		return errs.ErrorOrNil()
 	}
-	for _, domain := range out.DomainNames {
-		log.Printf("[INFO] Deleting Elasticsearch Domain: %s", *domain.DomainName)
 
-		_, err := conn.DeleteElasticsearchDomain(&elasticsearch.DeleteElasticsearchDomainInput{
-			DomainName: domain.DomainName,
-		})
-		if err != nil {
-			log.Printf("[ERROR] Failed to delete Elasticsearch Domain %s: %s", *domain.DomainName, err)
+	if err != nil {
+		sweeperErr := fmt.Errorf("error listing Elasticsearch Domains: %w", err)
+		log.Printf("[ERROR] %s", sweeperErr)
+		errs = multierror.Append(errs, sweeperErr)
+		return errs.ErrorOrNil()
+	}
+
+	if output == nil {
+		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: empty response", region)
+		return errs.ErrorOrNil()
+	}
+
+	for _, domainInfo := range output.DomainNames {
+		if domainInfo == nil {
 			continue
 		}
-		err = resourceAwsElasticSearchDomainDeleteWaiter(*domain.DomainName, conn)
-		if err != nil {
-			log.Printf("[ERROR] Failed to wait for deletion of Elasticsearch Domain %s: %s", *domain.DomainName, err)
+
+		name := aws.StringValue(domainInfo.DomainName)
+
+		// Elasticsearch Domains have regularly gotten stuck in a "being deleted" state
+		// e.g. Deleted and Processing are both true for days in the API
+		// Filter out domains that are Deleted already.
+
+		input := &elasticsearch.DescribeElasticsearchDomainInput{
+			DomainName: domainInfo.DomainName,
 		}
+
+		output, err := conn.DescribeElasticsearchDomain(input)
+
+		if err != nil {
+			sweeperErr := fmt.Errorf("error describing Elasticsearch Domain (%s): %w", name, err)
+			log.Printf("[ERROR] %s", sweeperErr)
+			errs = multierror.Append(errs, sweeperErr)
+			continue
+		}
+
+		if output != nil && output.DomainStatus != nil && aws.BoolValue(output.DomainStatus.Deleted) {
+			log.Printf("[INFO] Skipping Elasticsearch Domain (%s) with deleted status", name)
+			continue
+		}
+
+		r := resourceAwsElasticSearchDomain()
+		d := r.Data(nil)
+		d.SetId(name)
+		d.Set("domain_name", name)
+
+		sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 	}
 
-	return nil
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping ElasticSearch Domains for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
@@ -66,6 +114,7 @@ func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -95,6 +144,7 @@ func TestAccAWSElasticSearchDomain_RequireHTTPS(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -122,13 +172,66 @@ func TestAccAWSElasticSearchDomain_RequireHTTPS(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_CustomEndpoint(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+	resourceId := fmt.Sprintf("tf-test-%d", ri)
+	resourceName := "aws_elasticsearch_domain.example"
+	customEndpoint := fmt.Sprintf("%s.example.com", resourceId)
+	certResourceName := "aws_acm_certificate.example"
+	certKey := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(certKey, customEndpoint)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_CustomEndpoint(ri, true, "Policy-Min-TLS-1-0-2019-07", true, customEndpoint, certKey, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.0.custom_endpoint_enabled", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_endpoint_options.0.custom_endpoint"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_endpoint_options.0.custom_endpoint_certificate_arn", certResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     resourceId,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccESDomainConfig_CustomEndpoint(ri, true, "Policy-Min-TLS-1-0-2019-07", true, customEndpoint, certKey, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					testAccCheckESDomainEndpointOptions(true, "Policy-Min-TLS-1-0-2019-07", &domain),
+					testAccCheckESCustomEndpoint(resourceName, true, customEndpoint, &domain),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_CustomEndpoint(ri, true, "Policy-Min-TLS-1-0-2019-07", false, customEndpoint, certKey, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					testAccCheckESDomainEndpointOptions(true, "Policy-Min-TLS-1-0-2019-07", &domain),
+					testAccCheckESCustomEndpoint(resourceName, false, customEndpoint, &domain),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticSearchDomain_ClusterConfig_ZoneAwarenessConfig(t *testing.T) {
 	var domain1, domain2, domain3, domain4 elasticsearch.ElasticsearchDomainStatus
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum)) // len = 28
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(16)) // len = 28
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -182,11 +285,12 @@ func TestAccAWSElasticSearchDomain_ClusterConfig_ZoneAwarenessConfig(t *testing.
 
 func TestAccAWSElasticSearchDomain_warm(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum)) // len = 28
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(16)) // len = 28
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -244,6 +348,7 @@ func TestAccAWSElasticSearchDomain_withDedicatedMaster(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -282,8 +387,9 @@ func TestAccAWSElasticSearchDomain_duplicate(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck: testAccErrorCheck(t, elasticsearch.EndpointsID),
+		Providers:  testAccProviders,
 		CheckDestroy: func(s *terraform.State) error {
 			conn := testAccProvider.Meta().(*AWSClient).esconn
 			_, err := conn.DeleteElasticsearchDomain(&elasticsearch.DeleteElasticsearchDomainInput{
@@ -332,6 +438,7 @@ func TestAccAWSElasticSearchDomain_v23(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -361,6 +468,7 @@ func TestAccAWSElasticSearchDomain_complex(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -388,6 +496,7 @@ func TestAccAWSElasticSearchDomain_vpc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -415,6 +524,7 @@ func TestAccAWSElasticSearchDomain_vpc_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -450,6 +560,7 @@ func TestAccAWSElasticSearchDomain_internetToVpcEndpoint(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -482,6 +593,7 @@ func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_UserDB(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -514,6 +626,7 @@ func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_IAM(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -546,6 +659,7 @@ func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_Disabled(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -579,6 +693,7 @@ func TestAccAWSElasticSearchDomain_LogPublishingOptions_IndexSlowLogs(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -587,7 +702,7 @@ func TestAccAWSElasticSearchDomain_LogPublishingOptions_IndexSlowLogs(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
 						"log_type": elasticsearch.LogTypeIndexSlowLogs,
 					}),
 				),
@@ -610,6 +725,7 @@ func TestAccAWSElasticSearchDomain_LogPublishingOptions_SearchSlowLogs(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -618,7 +734,7 @@ func TestAccAWSElasticSearchDomain_LogPublishingOptions_SearchSlowLogs(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
 						"log_type": elasticsearch.LogTypeSearchSlowLogs,
 					}),
 				),
@@ -641,6 +757,7 @@ func TestAccAWSElasticSearchDomain_LogPublishingOptions_EsApplicationLogs(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -649,7 +766,7 @@ func TestAccAWSElasticSearchDomain_LogPublishingOptions_EsApplicationLogs(t *tes
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
 						"log_type": elasticsearch.LogTypeEsApplicationLogs,
 					}),
 				),
@@ -672,6 +789,7 @@ func TestAccAWSElasticSearchDomain_LogPublishingOptions_AuditLogs(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -680,7 +798,7 @@ func TestAccAWSElasticSearchDomain_LogPublishingOptions_AuditLogs(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
 						"log_type": elasticsearch.LogTypeAuditLogs,
 					}),
 				),
@@ -709,6 +827,7 @@ func TestAccAWSElasticSearchDomain_CognitoOptionsCreateAndRemove(t *testing.T) {
 			testAccPreCheckAWSCognitoIdentityProvider(t)
 			testAccPreCheckIamServiceLinkedRoleEs(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -748,6 +867,7 @@ func TestAccAWSElasticSearchDomain_CognitoOptionsUpdate(t *testing.T) {
 			testAccPreCheckAWSCognitoIdentityProvider(t)
 			testAccPreCheckIamServiceLinkedRoleEs(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -783,6 +903,7 @@ func TestAccAWSElasticSearchDomain_policy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -810,6 +931,7 @@ func TestAccAWSElasticSearchDomain_encrypt_at_rest_default_key(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -838,6 +960,7 @@ func TestAccAWSElasticSearchDomain_encrypt_at_rest_specify_key(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -866,6 +989,7 @@ func TestAccAWSElasticSearchDomain_NodeToNodeEncryption(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -894,6 +1018,7 @@ func TestAccAWSElasticSearchDomain_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
@@ -931,6 +1056,7 @@ func TestAccAWSElasticSearchDomain_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -967,6 +1093,7 @@ func TestAccAWSElasticSearchDomain_update_volume_type(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -1002,14 +1129,15 @@ func TestAccAWSElasticSearchDomain_update_volume_type(t *testing.T) {
 		}})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13867
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13867
 func TestAccAWSElasticSearchDomain_WithVolumeType_Missing(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(16))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -1044,6 +1172,7 @@ func TestAccAWSElasticSearchDomain_update_version(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -1092,6 +1221,29 @@ func testAccCheckESDomainEndpointOptions(enforceHTTPS bool, tls string, status *
 	}
 }
 
+func testAccCheckESCustomEndpoint(n string, customEndpointEnabled bool, customEndpoint string, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+		options := status.DomainEndpointOptions
+		if *options.CustomEndpointEnabled != customEndpointEnabled {
+			return fmt.Errorf("CustomEndpointEnabled differ. Given: %t, Expected: %t", *options.CustomEndpointEnabled, customEndpointEnabled)
+		}
+		if *options.CustomEndpointEnabled {
+			if *options.CustomEndpoint != customEndpoint {
+				return fmt.Errorf("CustomEndpoint differ. Given: %s, Expected: %s", *options.CustomEndpoint, customEndpoint)
+			}
+			customEndpointCertificateArn := rs.Primary.Attributes["domain_endpoint_options.0.custom_endpoint_certificate_arn"]
+			if *options.CustomEndpointCertificateArn != customEndpointCertificateArn {
+				return fmt.Errorf("CustomEndpointCertificateArn differ. Given: %s, Expected: %s", *options.CustomEndpointCertificateArn, customEndpointCertificateArn)
+			}
+		}
+		return nil
+	}
+}
+
 func testAccCheckESNumberOfSecurityGroups(numberOfSecurityGroups int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		count := len(status.VPCOptions.SecurityGroupIds)
@@ -1111,6 +1263,7 @@ func testAccCheckESEBSVolumeSize(ebsVolumeSize int, status *elasticsearch.Elasti
 		return nil
 	}
 }
+
 func testAccCheckESEBSVolumeEnabled(ebsEnabled bool, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.EBSOptions
@@ -1241,7 +1394,7 @@ func testAccCheckAWSESDomainNotRecreated(i, j *elasticsearch.ElasticsearchDomain
 			return err
 		}
 
-		if aws.TimeValue(iConfig.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate) != aws.TimeValue(jConfig.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate) {
+		if !aws.TimeValue(iConfig.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate).Equal(aws.TimeValue(jConfig.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate)) {
 			return fmt.Errorf("ES Domain was recreated")
 		}
 
@@ -1353,6 +1506,32 @@ resource "aws_elasticsearch_domain" "example" {
   }
 }
 `, randInt, enforceHttps, tlsSecurityPolicy)
+}
+
+func testAccESDomainConfig_CustomEndpoint(randInt int, enforceHttps bool, tlsSecurityPolicy string, customEndpointEnabled bool, customEndpoint string, certKey string, certBody string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "example" {
+  private_key      = "%[6]s"
+  certificate_body = "%[7]s"
+}
+
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test-%[1]d"
+
+  domain_endpoint_options {
+    enforce_https                   = %[2]t
+    tls_security_policy             = %[3]q
+    custom_endpoint_enabled         = %[4]t
+    custom_endpoint                 = "%[5]s"
+    custom_endpoint_certificate_arn = aws_acm_certificate.example.arn
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, randInt, enforceHttps, tlsSecurityPolicy, customEndpointEnabled, customEndpoint, tlsPemEscapeNewlines(certKey), tlsPemEscapeNewlines(certBody))
 }
 
 func testAccESDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName string, availabilityZoneCount int) string {

@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -32,7 +31,7 @@ func testSweepELBs(region string) error {
 	}
 	conn := client.(*AWSClient).elbconn
 
-	err = conn.DescribeLoadBalancersPages(&elb.DescribeLoadBalancersInput{}, func(out *elb.DescribeLoadBalancersOutput, isLast bool) bool {
+	err = conn.DescribeLoadBalancersPages(&elb.DescribeLoadBalancersInput{}, func(out *elb.DescribeLoadBalancersOutput, lastPage bool) bool {
 		if len(out.LoadBalancerDescriptions) == 0 {
 			log.Println("[INFO] No ELBs found for sweeping")
 			return false
@@ -53,7 +52,7 @@ func testSweepELBs(region string) error {
 				log.Printf("[WARN] Failed to cleanup ENIs for ELB %q: %s", *lb.LoadBalancerName, err)
 			}
 		}
-		return !isLast
+		return !lastPage
 	})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -70,10 +69,10 @@ func TestAccAWSELB_basic(t *testing.T) {
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSELBConfig,
@@ -83,7 +82,7 @@ func TestAccAWSELB_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
 						"instance_protocol": "http",
 						"lb_port":           "80",
@@ -108,6 +107,7 @@ func TestAccAWSELB_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
@@ -129,10 +129,10 @@ func TestAccAWSELB_fullCharacterRange(t *testing.T) {
 	lbName := fmt.Sprintf("Tf-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testAccAWSELBFullRangeOfCharacters, lbName),
@@ -151,10 +151,10 @@ func TestAccAWSELB_AccessLogs_enabled(t *testing.T) {
 	rName := fmt.Sprintf("tf-test-access-logs-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSELBAccessLogs,
@@ -191,10 +191,10 @@ func TestAccAWSELB_AccessLogs_disabled(t *testing.T) {
 	rName := fmt.Sprintf("tf-test-access-logs-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSELBAccessLogs,
@@ -230,10 +230,10 @@ func TestAccAWSELB_namePrefix(t *testing.T) {
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSELB_namePrefix,
@@ -252,10 +252,10 @@ func TestAccAWSELB_generatedName(t *testing.T) {
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSELBGeneratedName,
@@ -274,10 +274,10 @@ func TestAccAWSELB_generatesNameForZeroValue(t *testing.T) {
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSELB_zeroValueName,
@@ -295,10 +295,10 @@ func TestAccAWSELB_availabilityZones(t *testing.T) {
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSELBConfig,
@@ -324,10 +324,10 @@ func TestAccAWSELB_tags(t *testing.T) {
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSELBConfigTags1("key1", "value1"),
@@ -384,6 +384,7 @@ func TestAccAWSELB_Listener_SSLCertificateID_IAMServerCertificate(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
@@ -411,10 +412,10 @@ func TestAccAWSELB_swap_subnets(t *testing.T) {
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSELBConfig_subnets,
@@ -449,10 +450,10 @@ func TestAccAWSELB_InstanceAttaching(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSELBConfig,
@@ -478,17 +479,17 @@ func TestAccAWSELB_listener(t *testing.T) {
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSELBConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
 						"instance_protocol": "http",
 						"lb_port":           "80",
@@ -501,13 +502,13 @@ func TestAccAWSELB_listener(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "listener.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
 						"instance_protocol": "http",
 						"lb_port":           "80",
 						"lb_protocol":       "http",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "22",
 						"instance_protocol": "tcp",
 						"lb_port":           "22",
@@ -520,7 +521,7 @@ func TestAccAWSELB_listener(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
 						"instance_protocol": "http",
 						"lb_port":           "80",
@@ -533,7 +534,7 @@ func TestAccAWSELB_listener(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8080",
 						"instance_protocol": "http",
 						"lb_port":           "80",
@@ -557,7 +558,7 @@ func TestAccAWSELB_listener(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
 						"instance_protocol": "http",
 						"lb_port":           "80",
@@ -588,7 +589,7 @@ func TestAccAWSELB_listener(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
 						"instance_protocol": "http",
 						"lb_port":           "80",
@@ -601,39 +602,13 @@ func TestAccAWSELB_listener(t *testing.T) {
 }
 
 func TestAccAWSELB_HealthCheck(t *testing.T) {
-	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSELBConfigHealthCheck,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSELBExists(resourceName, &conf),
-					testAccCheckAWSELBAttributesHealthCheck(&conf),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "5"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "5"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.target", "HTTP:8000/"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "30"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "60"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSELBUpdate_HealthCheck(t *testing.T) {
-	resourceName := "aws_elb.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSELBConfigHealthCheck,
@@ -653,34 +628,13 @@ func TestAccAWSELBUpdate_HealthCheck(t *testing.T) {
 }
 
 func TestAccAWSELB_Timeout(t *testing.T) {
-	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSELBConfigIdleTimeout,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "200"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSELBUpdate_Timeout(t *testing.T) {
-	resourceName := "aws_elb.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSELBConfigIdleTimeout,
@@ -702,32 +656,10 @@ func TestAccAWSELB_ConnectionDraining(t *testing.T) {
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSELBConfigConnectionDraining,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						resourceName, "connection_draining", "true",
-					),
-					resource.TestCheckResourceAttr(resourceName, "connection_draining_timeout", "400"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSELBUpdate_ConnectionDraining(t *testing.T) {
-	resourceName := "aws_elb.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSELBConfigConnectionDraining,
@@ -757,10 +689,10 @@ func TestAccAWSELB_SecurityGroups(t *testing.T) {
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSELBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSELBConfig,
@@ -1045,31 +977,6 @@ func testAccCheckAWSELBAttributes(conf *elb.LoadBalancerDescription) resource.Te
 				"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
 				conf.ListenerDescriptions[0].Listener,
 				l)
-		}
-
-		if *conf.DNSName == "" {
-			return fmt.Errorf("empty dns_name")
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckAWSELBAttributesHealthCheck(conf *elb.LoadBalancerDescription) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		check := &elb.HealthCheck{
-			Timeout:            aws.Int64(int64(30)),
-			UnhealthyThreshold: aws.Int64(int64(5)),
-			HealthyThreshold:   aws.Int64(int64(5)),
-			Interval:           aws.Int64(int64(60)),
-			Target:             aws.String("HTTP:8000/"),
-		}
-
-		if !reflect.DeepEqual(conf.HealthCheck, check) {
-			return fmt.Errorf(
-				"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-				conf.HealthCheck,
-				check)
 		}
 
 		if *conf.DNSName == "" {
@@ -1411,7 +1318,7 @@ resource "aws_elb" "test" {
   }
 }
 
-# See https://github.com/terraform-providers/terraform-provider-aws/issues/2498
+# See https://github.com/hashicorp/terraform-provider-aws/issues/2498
 output "lb_name" {
   value = aws_elb.test.name
 }

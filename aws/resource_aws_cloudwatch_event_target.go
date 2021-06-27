@@ -5,16 +5,15 @@ import (
 	"log"
 	"math"
 	"regexp"
-	"strings"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/lister"
+	tfevents "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
 )
 
 func resourceAwsCloudWatchEventTarget() *schema.Resource {
@@ -28,12 +27,29 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 			State: resourceAwsCloudWatchEventTargetImport,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceAwsCloudWatchEventTargetV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAwsCloudWatchEventTargetStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
+			"event_bus_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateCloudWatchEventBusNameOrARN,
+				Default:      tfevents.DefaultEventBusName,
+			},
+
 			"rule": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateCloudWatchEventRuleName,
+				ValidateFunc: validateCloudWatchEventBusNameOrARN,
 			},
 
 			"target_id": {
@@ -45,14 +61,15 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 			},
 
 			"arn": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"input": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"input_path"},
+				ConflictsWith: []string{"input_path", "input_transformer"},
 				// We could be normalizing the JSON here,
 				// but for built-in targets input may not be JSON
 			},
@@ -60,12 +77,13 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 			"input_path": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"input"},
+				ConflictsWith: []string{"input", "input_transformer"},
 			},
 
 			"role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"run_command_targets": {
@@ -88,6 +106,31 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 				},
 			},
 
+			"http_target": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"header_parameters": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"query_string_parameters": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"path_parameter_values": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
+
 			"ecs_target": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -102,7 +145,11 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 						"launch_type": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "EC2",
+							Default:  events.LaunchTypeEc2,
+							ValidateFunc: validation.Any(
+								validation.StringIsEmpty,
+								validation.StringInSlice(events.LaunchType_Values(), false),
+							),
 						},
 						"network_configuration": {
 							Type:     schema.TypeList,
@@ -114,13 +161,11 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
-										Set:      schema.HashString,
 									},
 									"subnets": {
 										Type:     schema.TypeSet,
 										Required: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
-										Set:      schema.HashString,
 									},
 									"assign_public_ip": {
 										Type:     schema.TypeBool,
@@ -144,7 +189,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 						"task_definition_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1600),
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -208,9 +253,10 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 			},
 
 			"input_transformer": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"input", "input_path"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"input_paths": {
@@ -218,7 +264,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							ValidateFunc: validation.All(
-								MapMaxItems(10),
+								MapMaxItems(100),
 								MapKeysDoNotMatch(regexp.MustCompile(`^AWS.*$`), "input_path must not start with \"AWS\""),
 							),
 						},
@@ -226,6 +272,40 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 8192),
+						},
+					},
+				},
+			},
+
+			"retry_policy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"maximum_event_age_in_seconds": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntAtLeast(60),
+						},
+						"maximum_retry_attempts": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+					},
+				},
+			},
+
+			"dead_letter_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -239,31 +319,34 @@ func resourceAwsCloudWatchEventTargetCreate(d *schema.ResourceData, meta interfa
 
 	rule := d.Get("rule").(string)
 
-	var targetId string
+	var targetID string
 	if v, ok := d.GetOk("target_id"); ok {
-		targetId = v.(string)
+		targetID = v.(string)
 	} else {
-		targetId = resource.UniqueId()
-		d.Set("target_id", targetId)
+		targetID = resource.UniqueId()
+		d.Set("target_id", targetID)
+	}
+	var busName string
+	if v, ok := d.GetOk("event_bus_name"); ok {
+		busName = v.(string)
 	}
 
 	input := buildPutTargetInputStruct(d)
 
-	log.Printf("[DEBUG] Creating CloudWatch Event Target: %s", input)
+	log.Printf("[DEBUG] Creating CloudWatch Events Target: %s", input)
 	out, err := conn.PutTargets(input)
 	if err != nil {
-		return fmt.Errorf("Creating CloudWatch Event Target failed: %s", err)
+		return fmt.Errorf("Creating CloudWatch Events Target failed: %w", err)
 	}
 
 	if len(out.FailedEntries) > 0 {
-		return fmt.Errorf("Creating CloudWatch Event Target failed: %s",
-			out.FailedEntries)
+		return fmt.Errorf("Creating CloudWatch Events Target failed: %s", out.FailedEntries)
 	}
 
-	id := rule + "-" + targetId
+	id := tfevents.TargetCreateID(busName, rule, targetID)
 	d.SetId(id)
 
-	log.Printf("[INFO] CloudWatch Event Target %q created", d.Id())
+	log.Printf("[INFO] CloudWatch Events Target (%s) created", d.Id())
 
 	return resourceAwsCloudWatchEventTargetRead(d, meta)
 }
@@ -271,28 +354,16 @@ func resourceAwsCloudWatchEventTargetCreate(d *schema.ResourceData, meta interfa
 func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
-	t, err := findEventTargetById(conn, d.Get("target_id").(string), d.Get("rule").(string))
+	busName := d.Get("event_bus_name").(string)
+
+	t, err := finder.Target(conn, busName, d.Get("rule").(string), d.Get("target_id").(string))
 	if err != nil {
-		if regexp.MustCompile(" not found$").MatchString(err.Error()) {
-			log.Printf("[WARN] Removing CloudWatch Event Target %q because it's gone.", d.Id())
+		if tfawserr.ErrCodeEquals(err, "ValidationException") ||
+			tfawserr.ErrCodeEquals(err, events.ErrCodeResourceNotFoundException) ||
+			regexp.MustCompile(" not found$").MatchString(err.Error()) {
+			log.Printf("[WARN] CloudWatch Events Target (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
-		}
-		if awsErr, ok := err.(awserr.Error); ok {
-			// This should never happen, but it's useful
-			// for recovering from https://github.com/hashicorp/terraform/issues/5389
-			if awsErr.Code() == "ValidationException" {
-				log.Printf("[WARN] Removing CloudWatch Event Target %q because it never existed.", d.Id())
-				d.SetId("")
-				return nil
-			}
-
-			if awsErr.Code() == "ResourceNotFoundException" {
-				log.Printf("[WARN] CloudWatch Event Target (%q) not found. Removing it from state.", d.Id())
-				d.SetId("")
-				return nil
-			}
-
 		}
 		return err
 	}
@@ -303,75 +374,65 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 	d.Set("input", t.Input)
 	d.Set("input_path", t.InputPath)
 	d.Set("role_arn", t.RoleArn)
+	d.Set("event_bus_name", busName)
 
 	if t.RunCommandParameters != nil {
 		if err := d.Set("run_command_targets", flattenAwsCloudWatchEventTargetRunParameters(t.RunCommandParameters)); err != nil {
-			return fmt.Errorf("Error setting run_command_targets error: %#v", err)
+			return fmt.Errorf("Error setting run_command_targets error: %w", err)
 		}
+	}
+
+	if t.HttpParameters != nil {
+		if err := d.Set("http_target", []interface{}{flattenAwsCloudWatchEventTargetHttpParameters(t.HttpParameters)}); err != nil {
+			return fmt.Errorf("error setting http_target: %w", err)
+		}
+	} else {
+		d.Set("http_target", nil)
 	}
 
 	if t.EcsParameters != nil {
 		if err := d.Set("ecs_target", flattenAwsCloudWatchEventTargetEcsParameters(t.EcsParameters)); err != nil {
-			return fmt.Errorf("Error setting ecs_target error: %#v", err)
+			return fmt.Errorf("Error setting ecs_target error: %w", err)
 		}
 	}
 
 	if t.BatchParameters != nil {
 		if err := d.Set("batch_target", flattenAwsCloudWatchEventTargetBatchParameters(t.BatchParameters)); err != nil {
-			return fmt.Errorf("Error setting batch_target error: %#v", err)
+			return fmt.Errorf("Error setting batch_target error: %w", err)
 		}
 	}
 
 	if t.KinesisParameters != nil {
 		if err := d.Set("kinesis_target", flattenAwsCloudWatchEventTargetKinesisParameters(t.KinesisParameters)); err != nil {
-			return fmt.Errorf("Error setting kinesis_target error: %#v", err)
+			return fmt.Errorf("Error setting kinesis_target error: %w", err)
 		}
 	}
 
 	if t.SqsParameters != nil {
 		if err := d.Set("sqs_target", flattenAwsCloudWatchEventTargetSqsParameters(t.SqsParameters)); err != nil {
-			return fmt.Errorf("Error setting sqs_target error: %#v", err)
+			return fmt.Errorf("Error setting sqs_target error: %w", err)
 		}
 	}
 
 	if t.InputTransformer != nil {
 		if err := d.Set("input_transformer", flattenAwsCloudWatchInputTransformer(t.InputTransformer)); err != nil {
-			return fmt.Errorf("Error setting input_transformer error: %#v", err)
+			return fmt.Errorf("Error setting input_transformer error: %w", err)
+		}
+	}
+
+	if t.RetryPolicy != nil {
+		if err := d.Set("retry_policy", flatternAwsCloudWatchEventTargetRetryPolicy(t.RetryPolicy)); err != nil {
+			return fmt.Errorf("Error setting retry_policy error: #{err}")
+		}
+	}
+
+	if t.DeadLetterConfig != nil {
+		if err := d.Set("dead_letter_config", flatternAwsCloudWatchEventTargetDeadLetterConfig(t.DeadLetterConfig)); err != nil {
+			return fmt.Errorf("Error setting dead_letter_config error: #{err}")
 		}
 	}
 
 	return nil
-}
-
-func findEventTargetById(conn *events.CloudWatchEvents, id, rule string) (*events.Target, error) {
-	input := &events.ListTargetsByRuleInput{
-		Rule:  aws.String(rule),
-		Limit: aws.Int64(100), // Set limit to allowed maximum to prevent API throttling
-	}
-	var result *events.Target
-
-	err := lister.ListTargetsByRulePages(conn, input, func(page *events.ListTargetsByRuleOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, t := range page.Targets {
-			if id == aws.StringValue(t.Id) {
-				result = t
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if result == nil {
-		return nil, fmt.Errorf("CloudWatch Event Target %q (%q) not found", id, rule)
-	}
-	return result, nil
 }
 
 func resourceAwsCloudWatchEventTargetUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -379,10 +440,10 @@ func resourceAwsCloudWatchEventTargetUpdate(d *schema.ResourceData, meta interfa
 
 	input := buildPutTargetInputStruct(d)
 
-	log.Printf("[DEBUG] Updating CloudWatch Event Target: %s", input)
+	log.Printf("[DEBUG] Updating CloudWatch Events Target: %s", input)
 	_, err := conn.PutTargets(input)
 	if err != nil {
-		return fmt.Errorf("Updating CloudWatch Event Target failed: %s", err)
+		return fmt.Errorf("error updating CloudWatch Events Target (%s): %w", d.Id(), err)
 	}
 
 	return resourceAwsCloudWatchEventTargetRead(d, meta)
@@ -396,15 +457,21 @@ func resourceAwsCloudWatchEventTargetDelete(d *schema.ResourceData, meta interfa
 		Rule: aws.String(d.Get("rule").(string)),
 	}
 
-	output, err := conn.RemoveTargets(input)
+	if v, ok := d.GetOk("event_bus_name"); ok {
+		input.EventBusName = aws.String(v.(string))
+	}
 
+	output, err := conn.RemoveTargets(input)
 	if err != nil {
-		return fmt.Errorf("error deleting CloudWatch Event Target (%s): %s", d.Id(), err)
+		if tfawserr.ErrCodeEquals(err, events.ErrCodeResourceNotFoundException) {
+			return nil
+		}
+		return fmt.Errorf("error deleting CloudWatch Events Target (%s): %w", d.Id(), err)
 	}
 
 	if output != nil && len(output.FailedEntries) > 0 && output.FailedEntries[0] != nil {
 		failedEntry := output.FailedEntries[0]
-		return fmt.Errorf("error deleting CloudWatch Event Target (%s): failure entry: %s: %s", d.Id(), aws.StringValue(failedEntry.ErrorCode), aws.StringValue(failedEntry.ErrorMessage))
+		return fmt.Errorf("error deleting CloudWatch Events Target (%s): failure entry: %s: %s", d.Id(), aws.StringValue(failedEntry.ErrorCode), aws.StringValue(failedEntry.ErrorMessage))
 	}
 
 	return nil
@@ -430,9 +497,15 @@ func buildPutTargetInputStruct(d *schema.ResourceData) *events.PutTargetsInput {
 	if v, ok := d.GetOk("run_command_targets"); ok {
 		e.RunCommandParameters = expandAwsCloudWatchEventTargetRunParameters(v.([]interface{}))
 	}
+
 	if v, ok := d.GetOk("ecs_target"); ok {
 		e.EcsParameters = expandAwsCloudWatchEventTargetEcsParameters(v.([]interface{}))
 	}
+
+	if v, ok := d.GetOk("http_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		e.HttpParameters = expandAwsCloudWatchEventTargetHttpParameters(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("batch_target"); ok {
 		e.BatchParameters = expandAwsCloudWatchEventTargetBatchParameters(v.([]interface{}))
 	}
@@ -449,25 +522,33 @@ func buildPutTargetInputStruct(d *schema.ResourceData) *events.PutTargetsInput {
 		e.InputTransformer = expandAwsCloudWatchEventTransformerParameters(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("retry_policy"); ok {
+		e.RetryPolicy = expandAwsCloudWatchEventRetryPolicyParameters(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("dead_letter_config"); ok {
+		e.DeadLetterConfig = expandAwsCloudWatchEventDeadLetterConfigParameters(v.([]interface{}))
+	}
+
 	input := events.PutTargetsInput{
 		Rule:    aws.String(d.Get("rule").(string)),
 		Targets: []*events.Target{e},
+	}
+	if v, ok := d.GetOk("event_bus_name"); ok {
+		input.EventBusName = aws.String(v.(string))
 	}
 
 	return &input
 }
 
 func expandAwsCloudWatchEventTargetRunParameters(config []interface{}) *events.RunCommandParameters {
-
 	commands := make([]*events.RunCommandTarget, 0)
-
 	for _, c := range config {
 		param := c.(map[string]interface{})
 		command := &events.RunCommandTarget{
 			Key:    aws.String(param["key"].(string)),
 			Values: expandStringList(param["values"].([]interface{})),
 		}
-
 		commands = append(commands, command)
 	}
 
@@ -500,6 +581,39 @@ func expandAwsCloudWatchEventTargetEcsParameters(config []interface{}) *events.E
 
 	return ecsParameters
 }
+
+func expandAwsCloudWatchEventRetryPolicyParameters(rp []interface{}) *events.RetryPolicy {
+	retryPolicy := &events.RetryPolicy{}
+
+	for _, v := range rp {
+		params := v.(map[string]interface{})
+
+		if val, ok := params["maximum_event_age_in_seconds"].(int); ok {
+			retryPolicy.MaximumEventAgeInSeconds = aws.Int64(int64(val))
+		}
+
+		if val, ok := params["maximum_retry_attempts"].(int); ok {
+			retryPolicy.MaximumRetryAttempts = aws.Int64(int64(val))
+		}
+	}
+
+	return retryPolicy
+}
+
+func expandAwsCloudWatchEventDeadLetterConfigParameters(dlp []interface{}) *events.DeadLetterConfig {
+	deadLetterConfig := &events.DeadLetterConfig{}
+
+	for _, v := range dlp {
+		params := v.(map[string]interface{})
+
+		if val, ok := params["arn"].(string); ok && val != "" {
+			deadLetterConfig.Arn = aws.String(val)
+		}
+	}
+
+	return deadLetterConfig
+}
+
 func expandAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(nc []interface{}) *events.NetworkConfiguration {
 	if len(nc) == 0 {
 		return nil
@@ -565,6 +679,28 @@ func expandAwsCloudWatchEventTargetSqsParameters(config []interface{}) *events.S
 	return sqsParameters
 }
 
+func expandAwsCloudWatchEventTargetHttpParameters(tfMap map[string]interface{}) *events.HttpParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &events.HttpParameters{}
+
+	if v, ok := tfMap["header_parameters"].(map[string]interface{}); ok && len(v) > 0 {
+		apiObject.HeaderParameters = expandStringMap(v)
+	}
+
+	if v, ok := tfMap["path_parameter_values"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.PathParameterValues = expandStringSet(v)
+	}
+
+	if v, ok := tfMap["query_string_parameters"].(map[string]interface{}); ok && len(v) > 0 {
+		apiObject.QueryStringParameters = expandStringMap(v)
+	}
+
+	return apiObject
+}
+
 func expandAwsCloudWatchEventTransformerParameters(config []interface{}) *events.InputTransformer {
 	transformerParameters := &events.InputTransformer{}
 
@@ -590,7 +726,7 @@ func flattenAwsCloudWatchEventTargetRunParameters(runCommand *events.RunCommandP
 	for _, x := range runCommand.RunCommandTargets {
 		config := make(map[string]interface{})
 
-		config["key"] = *x.Key
+		config["key"] = aws.StringValue(x.Key)
 		config["values"] = flattenStringList(x.Values)
 
 		result = append(result, config)
@@ -598,34 +734,36 @@ func flattenAwsCloudWatchEventTargetRunParameters(runCommand *events.RunCommandP
 
 	return result
 }
+
 func flattenAwsCloudWatchEventTargetEcsParameters(ecsParameters *events.EcsParameters) []map[string]interface{} {
 	config := make(map[string]interface{})
 	if ecsParameters.Group != nil {
-		config["group"] = *ecsParameters.Group
+		config["group"] = aws.StringValue(ecsParameters.Group)
 	}
 	if ecsParameters.LaunchType != nil {
-		config["launch_type"] = *ecsParameters.LaunchType
+		config["launch_type"] = aws.StringValue(ecsParameters.LaunchType)
 	}
 	config["network_configuration"] = flattenAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(ecsParameters.NetworkConfiguration)
 	if ecsParameters.PlatformVersion != nil {
-		config["platform_version"] = *ecsParameters.PlatformVersion
+		config["platform_version"] = aws.StringValue(ecsParameters.PlatformVersion)
 	}
-	config["task_count"] = *ecsParameters.TaskCount
-	config["task_definition_arn"] = *ecsParameters.TaskDefinitionArn
+	config["task_count"] = aws.Int64Value(ecsParameters.TaskCount)
+	config["task_definition_arn"] = aws.StringValue(ecsParameters.TaskDefinitionArn)
 	result := []map[string]interface{}{config}
 	return result
 }
+
 func flattenAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(nc *events.NetworkConfiguration) []interface{} {
 	if nc == nil {
 		return nil
 	}
 
 	result := make(map[string]interface{})
-	result["security_groups"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.SecurityGroups))
-	result["subnets"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.Subnets))
+	result["security_groups"] = flattenStringSet(nc.AwsvpcConfiguration.SecurityGroups)
+	result["subnets"] = flattenStringSet(nc.AwsvpcConfiguration.Subnets)
 
 	if nc.AwsvpcConfiguration.AssignPublicIp != nil {
-		result["assign_public_ip"] = *nc.AwsvpcConfiguration.AssignPublicIp == events.AssignPublicIpEnabled
+		result["assign_public_ip"] = aws.StringValue(nc.AwsvpcConfiguration.AssignPublicIp) == events.AssignPublicIpEnabled
 	}
 
 	return []interface{}{result}
@@ -647,43 +785,83 @@ func flattenAwsCloudWatchEventTargetBatchParameters(batchParameters *events.Batc
 
 func flattenAwsCloudWatchEventTargetKinesisParameters(kinesisParameters *events.KinesisParameters) []map[string]interface{} {
 	config := make(map[string]interface{})
-	config["partition_key_path"] = *kinesisParameters.PartitionKeyPath
+	config["partition_key_path"] = aws.StringValue(kinesisParameters.PartitionKeyPath)
 	result := []map[string]interface{}{config}
 	return result
 }
 
 func flattenAwsCloudWatchEventTargetSqsParameters(sqsParameters *events.SqsParameters) []map[string]interface{} {
 	config := make(map[string]interface{})
-	config["message_group_id"] = *sqsParameters.MessageGroupId
+	config["message_group_id"] = aws.StringValue(sqsParameters.MessageGroupId)
 	result := []map[string]interface{}{config}
 	return result
+}
+
+func flattenAwsCloudWatchEventTargetHttpParameters(apiObject *events.HttpParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.HeaderParameters; v != nil {
+		tfMap["header_parameters"] = aws.StringValueMap(v)
+	}
+
+	if v := apiObject.PathParameterValues; v != nil {
+		tfMap["path_parameter_values"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.QueryStringParameters; v != nil {
+		tfMap["query_string_parameters"] = aws.StringValueMap(v)
+	}
+
+	return tfMap
 }
 
 func flattenAwsCloudWatchInputTransformer(inputTransformer *events.InputTransformer) []map[string]interface{} {
 	config := make(map[string]interface{})
 	inputPathsMap := make(map[string]string)
 	for k, v := range inputTransformer.InputPathsMap {
-		inputPathsMap[k] = *v
+		inputPathsMap[k] = aws.StringValue(v)
 	}
-	config["input_template"] = *inputTransformer.InputTemplate
+	config["input_template"] = aws.StringValue(inputTransformer.InputTemplate)
 	config["input_paths"] = inputPathsMap
 
 	result := []map[string]interface{}{config}
 	return result
 }
 
+func flatternAwsCloudWatchEventTargetRetryPolicy(rp *events.RetryPolicy) []map[string]interface{} {
+	config := make(map[string]interface{})
+
+	config["maximum_event_age_in_seconds"] = aws.Int64Value(rp.MaximumEventAgeInSeconds)
+	config["maximum_retry_attempts"] = aws.Int64Value(rp.MaximumRetryAttempts)
+
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flatternAwsCloudWatchEventTargetDeadLetterConfig(dlc *events.DeadLetterConfig) []map[string]interface{} {
+	config := make(map[string]interface{})
+
+	config["arn"] = aws.StringValue(dlc.Arn)
+
+	result := []map[string]interface{}{config}
+	return result
+}
+
 func resourceAwsCloudWatchEventTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	idParts := strings.SplitN(d.Id(), "/", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format (%q), expected <rule-name>/<target-id>", d.Id())
+	busName, ruleName, targetID, err := tfevents.TargetParseImportID(d.Id())
+	if err != nil {
+		return []*schema.ResourceData{}, err
 	}
 
-	ruleName := idParts[0]
-	targetName := idParts[1]
-
-	d.Set("target_id", targetName)
+	id := tfevents.TargetCreateID(busName, ruleName, targetID)
+	d.SetId(id)
+	d.Set("target_id", targetID)
 	d.Set("rule", ruleName)
-	d.SetId(ruleName + "-" + targetName)
+	d.Set("event_bus_name", busName)
 
 	return []*schema.ResourceData{d}, nil
 }

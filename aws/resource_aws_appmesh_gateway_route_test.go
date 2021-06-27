@@ -30,25 +30,25 @@ func testSweepAppmeshGatewayRoutes(region string) error {
 
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, isLast bool) bool {
+	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, mesh := range page.Meshes {
 			meshName := aws.StringValue(mesh.MeshName)
 
-			err = conn.ListVirtualGatewaysPages(&appmesh.ListVirtualGatewaysInput{MeshName: mesh.MeshName}, func(page *appmesh.ListVirtualGatewaysOutput, isLast bool) bool {
+			err = conn.ListVirtualGatewaysPages(&appmesh.ListVirtualGatewaysInput{MeshName: mesh.MeshName}, func(page *appmesh.ListVirtualGatewaysOutput, lastPage bool) bool {
 				if page == nil {
-					return !isLast
+					return !lastPage
 				}
 
 				for _, virtualGateway := range page.VirtualGateways {
 					virtualGatewayName := aws.StringValue(virtualGateway.VirtualGatewayName)
 
-					err = conn.ListGatewayRoutesPages(&appmesh.ListGatewayRoutesInput{MeshName: mesh.MeshName, VirtualGatewayName: virtualGateway.VirtualGatewayName}, func(page *appmesh.ListGatewayRoutesOutput, isLast bool) bool {
+					err = conn.ListGatewayRoutesPages(&appmesh.ListGatewayRoutesInput{MeshName: mesh.MeshName, VirtualGatewayName: virtualGateway.VirtualGatewayName}, func(page *appmesh.ListGatewayRoutesOutput, lastPage bool) bool {
 						if page == nil {
-							return !isLast
+							return !lastPage
 						}
 
 						for _, gatewayRoute := range page.GatewayRoutes {
@@ -70,7 +70,7 @@ func testSweepAppmeshGatewayRoutes(region string) error {
 							}
 						}
 
-						return !isLast
+						return !lastPage
 					})
 
 					if err != nil {
@@ -78,7 +78,7 @@ func testSweepAppmeshGatewayRoutes(region string) error {
 					}
 				}
 
-				return !isLast
+				return !lastPage
 			})
 
 			if err != nil {
@@ -86,7 +86,7 @@ func testSweepAppmeshGatewayRoutes(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Appmesh virtual gateway sweep for %s: %s", region, err)
@@ -108,7 +108,8 @@ func testAccAwsAppmeshGatewayRoute_basic(t *testing.T) {
 	grName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appmesh", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -154,7 +155,8 @@ func testAccAwsAppmeshGatewayRoute_disappears(t *testing.T) {
 	grName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appmesh", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -180,7 +182,8 @@ func testAccAwsAppmeshGatewayRoute_GrpcRoute(t *testing.T) {
 	grName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appmesh", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -252,7 +255,8 @@ func testAccAwsAppmeshGatewayRoute_HttpRoute(t *testing.T) {
 	grName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appmesh", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -324,7 +328,8 @@ func testAccAwsAppmeshGatewayRoute_Http2Route(t *testing.T) {
 	grName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appmesh", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -394,7 +399,8 @@ func testAccAwsAppmeshGatewayRoute_Tags(t *testing.T) {
 	grName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appmesh", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{

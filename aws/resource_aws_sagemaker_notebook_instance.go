@@ -29,6 +29,7 @@ func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 			customdiff.ForceNewIfChange("volume_size", func(_ context.Context, old, new, meta interface{}) bool {
 				return new.(int) < old.(int)
 			}),
+			SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -54,6 +55,12 @@ func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(sagemaker.InstanceType_Values(), false),
+			},
+			"additional_code_repositories": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 3,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"volume_size": {
@@ -108,14 +115,24 @@ func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
-			"tags": tagsSchema(),
+			"url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"network_interface_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceAwsSagemakerNotebookInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 
@@ -154,8 +171,12 @@ func resourceAwsSagemakerNotebookInstanceCreate(d *schema.ResourceData, meta int
 		createOpts.LifecycleConfigName = aws.String(l.(string))
 	}
 
-	if v, ok := d.GetOk("tags"); ok {
-		createOpts.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SagemakerTags()
+	if len(tags) > 0 {
+		createOpts.Tags = tags.IgnoreAws().SagemakerTags()
+	}
+
+	if v, ok := d.GetOk("additional_code_repositories"); ok && v.(*schema.Set).Len() > 0 {
+		createOpts.AdditionalCodeRepositories = expandStringSet(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] sagemaker notebook instance create config: %#v", *createOpts)
@@ -176,6 +197,7 @@ func resourceAwsSagemakerNotebookInstanceCreate(d *schema.ResourceData, meta int
 
 func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	describeNotebookInput := &sagemaker.DescribeNotebookInstanceInput{
@@ -236,14 +258,33 @@ func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error setting default_code_repository for sagemaker notebook instance (%s): %s", d.Id(), err)
 	}
 
+	if err := d.Set("url", notebookInstance.Url); err != nil {
+		return fmt.Errorf("error setting url for sagemaker notebook instance (%s): %w", d.Id(), err)
+	}
+
+	if err := d.Set("network_interface_id", notebookInstance.NetworkInterfaceId); err != nil {
+		return fmt.Errorf("error setting network_interface_id for sagemaker notebook instance (%s): %w", d.Id(), err)
+	}
+
+	if err := d.Set("additional_code_repositories", flattenStringSet(notebookInstance.AdditionalCodeRepositories)); err != nil {
+		return fmt.Errorf("error setting additional_code_repositories for sagemaker notebook instance (%s): %s", d.Id(), err)
+	}
+
 	tags, err := keyvaluetags.SagemakerListTags(conn, aws.StringValue(notebookInstance.NotebookInstanceArn))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Sagemaker Notebook Instance (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -252,8 +293,8 @@ func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta inter
 func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Sagemaker Notebook Instance (%s) tags: %s", d.Id(), err)
@@ -301,6 +342,15 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 
 	if d.HasChange("root_access") {
 		updateOpts.RootAccess = aws.String(d.Get("root_access").(string))
+		hasChanged = true
+	}
+
+	if d.HasChange("additional_code_repositories") {
+		if v, ok := d.GetOk("additional_code_repositories"); ok {
+			updateOpts.AdditionalCodeRepositories = expandStringSet(v.(*schema.Set))
+		} else {
+			updateOpts.DisassociateAdditionalCodeRepositories = aws.Bool(true)
+		}
 		hasChanged = true
 	}
 

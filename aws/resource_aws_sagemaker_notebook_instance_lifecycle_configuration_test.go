@@ -6,13 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const SagemakerNotebookInstanceLifecycleConfigurationResourcePrefix = "tf-acc-test"
@@ -75,6 +73,7 @@ func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_basic(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -105,6 +104,7 @@ func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_Update(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{

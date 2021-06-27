@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/securityhub"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -15,6 +14,7 @@ import (
 func testAccAWSSecurityHubProductSubscription_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityHubAccountDestroy,
 		Steps: []resource.TestStep{

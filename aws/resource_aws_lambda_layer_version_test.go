@@ -69,6 +69,7 @@ func TestAccAWSLambdaLayerVersion_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
@@ -83,6 +84,8 @@ func TestAccAWSLambdaLayerVersion_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "license_info", ""),
 					testAccCheckResourceAttrRegionalARN(resourceName, "layer_arn", "lambda", fmt.Sprintf("layer:%s", layerName)),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "signing_profile_version_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "signing_job_arn", ""),
 				),
 			},
 
@@ -102,6 +105,7 @@ func TestAccAWSLambdaLayerVersion_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
@@ -133,6 +137,7 @@ func TestAccAWSLambdaLayerVersion_s3(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
@@ -158,6 +163,7 @@ func TestAccAWSLambdaLayerVersion_compatibleRuntimes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
@@ -187,6 +193,7 @@ func TestAccAWSLambdaLayerVersion_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
@@ -216,6 +223,7 @@ func TestAccAWSLambdaLayerVersion_licenseInfo(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{

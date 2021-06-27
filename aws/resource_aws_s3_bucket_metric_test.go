@@ -9,12 +9,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 func TestExpandS3MetricsFilter(t *testing.T) {
@@ -272,6 +271,7 @@ func TestAccAWSS3BucketMetric_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
 		Steps: []resource.TestStep{
@@ -293,7 +293,7 @@ func TestAccAWSS3BucketMetric_basic(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/11813
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11813
 // Disallow Empty filter block
 func TestAccAWSS3BucketMetric_WithEmptyFilter(t *testing.T) {
 	var conf s3.MetricsConfiguration
@@ -305,6 +305,7 @@ func TestAccAWSS3BucketMetric_WithEmptyFilter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
 		Steps: []resource.TestStep{
@@ -331,6 +332,7 @@ func TestAccAWSS3BucketMetric_WithFilterPrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
 		Steps: []resource.TestStep{
@@ -377,6 +379,7 @@ func TestAccAWSS3BucketMetric_WithFilterPrefixAndMultipleTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
 		Steps: []resource.TestStep{
@@ -425,6 +428,7 @@ func TestAccAWSS3BucketMetric_WithFilterPrefixAndSingleTag(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
 		Steps: []resource.TestStep{
@@ -471,6 +475,7 @@ func TestAccAWSS3BucketMetric_WithFilterMultipleTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
 		Steps: []resource.TestStep{
@@ -517,6 +522,7 @@ func TestAccAWSS3BucketMetric_WithFilterSingleTag(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
 		Steps: []resource.TestStep{

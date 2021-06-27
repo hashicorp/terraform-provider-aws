@@ -20,7 +20,8 @@ func TestAccAWSAppsyncApiKey_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appsync", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncApiKeyDestroy,
 		Steps: []resource.TestStep{
@@ -48,7 +49,8 @@ func TestAccAWSAppsyncApiKey_Description(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appsync", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncApiKeyDestroy,
 		Steps: []resource.TestStep{
@@ -83,7 +85,8 @@ func TestAccAWSAppsyncApiKey_Expires(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appsync", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncApiKeyDestroy,
 		Steps: []resource.TestStep{

@@ -8,9 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appmesh/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsAppmeshVirtualNode() *schema.Resource {
@@ -61,7 +65,7 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							MinItems: 0,
-							MaxItems: 25,
+							MaxItems: 50,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"virtual_service": {
@@ -103,6 +107,110 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"connection_pool": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 0,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"grpc": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max_requests": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+													ExactlyOneOf: []string{
+														"spec.0.listener.0.connection_pool.0.grpc",
+														"spec.0.listener.0.connection_pool.0.http",
+														"spec.0.listener.0.connection_pool.0.http2",
+														"spec.0.listener.0.connection_pool.0.tcp",
+													},
+												},
+
+												"http": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max_connections": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+
+															"max_pending_requests": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+													ExactlyOneOf: []string{
+														"spec.0.listener.0.connection_pool.0.grpc",
+														"spec.0.listener.0.connection_pool.0.http",
+														"spec.0.listener.0.connection_pool.0.http2",
+														"spec.0.listener.0.connection_pool.0.tcp",
+													},
+												},
+
+												"http2": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max_requests": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+													ExactlyOneOf: []string{
+														"spec.0.listener.0.connection_pool.0.grpc",
+														"spec.0.listener.0.connection_pool.0.http",
+														"spec.0.listener.0.connection_pool.0.http2",
+														"spec.0.listener.0.connection_pool.0.tcp",
+													},
+												},
+
+												"tcp": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max_connections": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+													ExactlyOneOf: []string{
+														"spec.0.listener.0.connection_pool.0.grpc",
+														"spec.0.listener.0.connection_pool.0.http",
+														"spec.0.listener.0.connection_pool.0.http2",
+														"spec.0.listener.0.connection_pool.0.tcp",
+													},
+												},
+											},
+										},
+									},
+
 									"health_check": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -150,6 +258,70 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 													Type:         schema.TypeInt,
 													Required:     true,
 													ValidateFunc: validation.IntBetween(2, 10),
+												},
+											},
+										},
+									},
+
+									"outlier_detection": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 0,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"base_ejection_duration": {
+													Type:     schema.TypeList,
+													Required: true,
+													MinItems: 1,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"unit": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+															},
+
+															"value": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+														},
+													},
+												},
+
+												"interval": {
+													Type:     schema.TypeList,
+													Required: true,
+													MinItems: 1,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"unit": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+															},
+
+															"value": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+														},
+													},
+												},
+
+												"max_ejection_percent": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntBetween(0, 100),
+												},
+
+												"max_server_errors": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntAtLeast(1),
 												},
 											},
 										},
@@ -234,6 +406,12 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 															},
 														},
 													},
+													ExactlyOneOf: []string{
+														"spec.0.listener.0.timeout.0.grpc",
+														"spec.0.listener.0.timeout.0.http",
+														"spec.0.listener.0.timeout.0.http2",
+														"spec.0.listener.0.timeout.0.tcp",
+													},
 												},
 
 												"http": {
@@ -285,6 +463,12 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 																},
 															},
 														},
+													},
+													ExactlyOneOf: []string{
+														"spec.0.listener.0.timeout.0.grpc",
+														"spec.0.listener.0.timeout.0.http",
+														"spec.0.listener.0.timeout.0.http2",
+														"spec.0.listener.0.timeout.0.tcp",
 													},
 												},
 
@@ -338,6 +522,12 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 															},
 														},
 													},
+													ExactlyOneOf: []string{
+														"spec.0.listener.0.timeout.0.grpc",
+														"spec.0.listener.0.timeout.0.http",
+														"spec.0.listener.0.timeout.0.http2",
+														"spec.0.listener.0.timeout.0.tcp",
+													},
 												},
 
 												"tcp": {
@@ -368,6 +558,12 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 																},
 															},
 														},
+													},
+													ExactlyOneOf: []string{
+														"spec.0.listener.0.timeout.0.grpc",
+														"spec.0.listener.0.timeout.0.http",
+														"spec.0.listener.0.timeout.0.http2",
+														"spec.0.listener.0.timeout.0.tcp",
 													},
 												},
 											},
@@ -402,6 +598,11 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 																		},
 																	},
 																},
+																ExactlyOneOf: []string{
+																	"spec.0.listener.0.tls.0.certificate.0.acm",
+																	"spec.0.listener.0.tls.0.certificate.0.file",
+																	"spec.0.listener.0.tls.0.certificate.0.sds",
+																},
 															},
 
 															"file": {
@@ -424,6 +625,31 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 																		},
 																	},
 																},
+																ExactlyOneOf: []string{
+																	"spec.0.listener.0.tls.0.certificate.0.acm",
+																	"spec.0.listener.0.tls.0.certificate.0.file",
+																	"spec.0.listener.0.tls.0.certificate.0.sds",
+																},
+															},
+
+															"sds": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"secret_name": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																	},
+																},
+																ExactlyOneOf: []string{
+																	"spec.0.listener.0.tls.0.certificate.0.acm",
+																	"spec.0.listener.0.tls.0.certificate.0.file",
+																	"spec.0.listener.0.tls.0.certificate.0.sds",
+																},
 															},
 														},
 													},
@@ -433,6 +659,93 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(appmesh.ListenerTlsMode_Values(), false),
+												},
+
+												"validation": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"subject_alternative_names": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"match": {
+																			Type:     schema.TypeList,
+																			Required: true,
+																			MinItems: 1,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"exact": {
+																						Type:     schema.TypeSet,
+																						Required: true,
+																						Elem:     &schema.Schema{Type: schema.TypeString},
+																						Set:      schema.HashString,
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+
+															"trust": {
+																Type:     schema.TypeList,
+																Required: true,
+																MinItems: 1,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"file": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			MinItems: 0,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"certificate_chain": {
+																						Type:         schema.TypeString,
+																						Required:     true,
+																						ValidateFunc: validation.StringLenBetween(1, 255),
+																					},
+																				},
+																			},
+																			ExactlyOneOf: []string{
+																				"spec.0.listener.0.tls.0.validation.0.trust.0.file",
+																				"spec.0.listener.0.tls.0.validation.0.trust.0.sds",
+																			},
+																		},
+
+																		"sds": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			MinItems: 0,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"secret_name": {
+																						Type:         schema.TypeString,
+																						Required:     true,
+																						ValidateFunc: validation.StringLenBetween(1, 255),
+																					},
+																				},
+																			},
+																			ExactlyOneOf: []string{
+																				"spec.0.listener.0.tls.0.validation.0.trust.0.file",
+																				"spec.0.listener.0.tls.0.validation.0.trust.0.sds",
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
 												},
 											},
 										},
@@ -557,7 +870,11 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
+
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
@@ -577,6 +894,53 @@ func appmeshVirtualNodeClientPolicySchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"certificate": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 0,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"file": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"certificate_chain": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 255),
+													},
+
+													"private_key": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 255),
+													},
+												},
+											},
+										},
+
+										"sds": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"secret_name": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+
 							"enforce": {
 								Type:     schema.TypeBool,
 								Optional: true,
@@ -597,6 +961,33 @@ func appmeshVirtualNodeClientPolicySchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
+										"subject_alternative_names": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"match": {
+														Type:     schema.TypeList,
+														Required: true,
+														MinItems: 1,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"exact": {
+																	Type:     schema.TypeSet,
+																	Required: true,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
+																	Set:      schema.HashString,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+
 										"trust": {
 											Type:     schema.TypeList,
 											Required: true,
@@ -636,6 +1027,22 @@ func appmeshVirtualNodeClientPolicySchema() *schema.Schema {
 															},
 														},
 													},
+
+													"sds": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 0,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"secret_name": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 255),
+																},
+															},
+														},
+													},
 												},
 											},
 										},
@@ -652,21 +1059,24 @@ func appmeshVirtualNodeClientPolicySchema() *schema.Schema {
 
 func resourceAwsAppmeshVirtualNodeCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appmeshconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &appmesh.CreateVirtualNodeInput{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
 		VirtualNodeName: aws.String(d.Get("name").(string)),
 		Spec:            expandAppmeshVirtualNodeSpec(d.Get("spec").([]interface{})),
-		Tags:            keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().AppmeshTags(),
+		Tags:            tags.IgnoreAws().AppmeshTags(),
 	}
 	if v, ok := d.GetOk("mesh_owner"); ok {
 		req.MeshOwner = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating App Mesh virtual node: %#v", req)
+	log.Printf("[DEBUG] Creating App Mesh virtual node: %s", req)
 	resp, err := conn.CreateVirtualNode(req)
+
 	if err != nil {
-		return fmt.Errorf("error creating App Mesh virtual node: %s", err)
+		return fmt.Errorf("error creating App Mesh virtual node: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.VirtualNode.Metadata.Uid))
@@ -676,6 +1086,7 @@ func resourceAwsAppmeshVirtualNodeCreate(d *schema.ResourceData, meta interface{
 
 func resourceAwsAppmeshVirtualNodeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appmeshconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &appmesh.DescribeVirtualNodeInput{
@@ -686,17 +1097,48 @@ func resourceAwsAppmeshVirtualNodeRead(d *schema.ResourceData, meta interface{})
 		req.MeshOwner = aws.String(v.(string))
 	}
 
-	resp, err := conn.DescribeVirtualNode(req)
-	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
-		log.Printf("[WARN] App Mesh virtual node (%s) not found, removing from state", d.Id())
+	var resp *appmesh.DescribeVirtualNodeOutput
+
+	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+		var err error
+
+		resp, err = conn.DescribeVirtualNode(req)
+
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		resp, err = conn.DescribeVirtualNode(req)
+	}
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+		log.Printf("[WARN] App Mesh Virtual Node (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("error reading App Mesh virtual node: %s", err)
+		return fmt.Errorf("error reading App Mesh Virtual Node: %w", err)
 	}
+
+	if resp == nil || resp.VirtualNode == nil {
+		return fmt.Errorf("error reading App Mesh Virtual Node: empty response")
+	}
+
 	if aws.StringValue(resp.VirtualNode.Status.Status) == appmesh.VirtualNodeStatusCodeDeleted {
-		log.Printf("[WARN] App Mesh virtual node (%s) not found, removing from state", d.Id())
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading App Mesh Virtual Node: %s after creation", aws.StringValue(resp.VirtualNode.Status.Status))
+		}
+
+		log.Printf("[WARN] App Mesh Virtual Node (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -711,17 +1153,24 @@ func resourceAwsAppmeshVirtualNodeRead(d *schema.ResourceData, meta interface{})
 	d.Set("resource_owner", resp.VirtualNode.Metadata.ResourceOwner)
 	err = d.Set("spec", flattenAppmeshVirtualNodeSpec(resp.VirtualNode.Spec))
 	if err != nil {
-		return fmt.Errorf("error setting spec: %s", err)
+		return fmt.Errorf("error setting spec: %w", err)
 	}
 
 	tags, err := keyvaluetags.AppmeshListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for App Mesh virtual node (%s): %s", arn, err)
+		return fmt.Errorf("error listing tags for App Mesh virtual node (%s): %w", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -741,19 +1190,20 @@ func resourceAwsAppmeshVirtualNodeUpdate(d *schema.ResourceData, meta interface{
 			req.MeshOwner = aws.String(v.(string))
 		}
 
-		log.Printf("[DEBUG] Updating App Mesh virtual node: %#v", req)
+		log.Printf("[DEBUG] Updating App Mesh virtual node: %s", req)
 		_, err := conn.UpdateVirtualNode(req)
+
 		if err != nil {
-			return fmt.Errorf("error updating App Mesh virtual node: %s", err)
+			return fmt.Errorf("error updating App Mesh virtual node (%s): %w", d.Id(), err)
 		}
 	}
 
 	arn := d.Get("arn").(string)
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.AppmeshUpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating App Mesh virtual node (%s) tags: %s", arn, err)
+			return fmt.Errorf("error updating App Mesh virtual node (%s) tags: %w", arn, err)
 		}
 	}
 
@@ -768,11 +1218,13 @@ func resourceAwsAppmeshVirtualNodeDelete(d *schema.ResourceData, meta interface{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
 		VirtualNodeName: aws.String(d.Get("name").(string)),
 	})
+
 	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("error deleting App Mesh virtual node: %s", err)
+		return fmt.Errorf("error deleting App Mesh virtual node (%s): %w", d.Id(), err)
 	}
 
 	return nil

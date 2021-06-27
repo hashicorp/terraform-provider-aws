@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	testing "github.com/mitchellh/go-testing-interface"
 
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/addrs"
@@ -257,6 +258,9 @@ type ImportStateCheckFunc func([]*terraform.InstanceState) error
 // generation for ImportState tests.
 type ImportStateIdFunc func(*terraform.State) (string, error)
 
+// ErrorCheckFunc is a function providers can use to handle errors.
+type ErrorCheckFunc func(error) error
+
 // TestCase is a single acceptance test case used to test the apply/destroy
 // lifecycle of a resource in a specific configuration.
 //
@@ -296,6 +300,11 @@ type TestCase struct {
 	//  }
 	ProviderFactories map[string]func() (*schema.Provider, error)
 
+	// ProtoV5ProviderFactories serves the same purpose as ProviderFactories,
+	// but for protocol v5 providers defined using the terraform-plugin-go
+	// ProviderServer interface.
+	ProtoV5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error)
+
 	// Providers is the ResourceProvider that will be under test.
 	//
 	// Deprecated: Providers is deprecated, please use ProviderFactories
@@ -316,6 +325,10 @@ type TestCase struct {
 	// CheckDestroy is called after the resource is finally destroyed
 	// to allow the tester to test that the resource is truly gone.
 	CheckDestroy TestCheckFunc
+
+	// ErrorCheck allows providers the option to handle errors such as skipping
+	// tests based on certain errors.
+	ErrorCheck ErrorCheckFunc
 
 	// Steps are the apply sequences done within the context of the
 	// same state. Each step can have its own check to verify correctness.

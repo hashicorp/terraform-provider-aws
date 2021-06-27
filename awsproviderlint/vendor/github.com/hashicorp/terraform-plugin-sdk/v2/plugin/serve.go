@@ -1,15 +1,15 @@
 package plugin
 
 import (
-	"context"
+	"log"
 
 	hclog "github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
+	tf5server "github.com/hashicorp/terraform-plugin-go/tfprotov5/server"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	grpcplugin "github.com/hashicorp/terraform-plugin-sdk/v2/internal/helper/plugin"
-	proto "github.com/hashicorp/terraform-plugin-sdk/v2/internal/tfplugin5"
 )
 
 const (
@@ -26,7 +26,7 @@ var Handshake = plugin.HandshakeConfig{
 }
 
 type ProviderFunc func() *schema.Provider
-type GRPCProviderFunc func() proto.ProviderServer
+type GRPCProviderFunc func() tfprotov5.ProviderServer
 
 // ServeOpts are the configurations to serve a plugin.
 type ServeOpts struct {
@@ -45,16 +45,36 @@ type ServeOpts struct {
 	// plugin's lifecycle and communicate connection information. See the
 	// go-plugin GoDoc for more information.
 	TestConfig *plugin.ServeTestConfig
+
+	// Set NoLogOutputOverride to not override the log output with an hclog
+	// adapter. This should only be used when running the plugin in
+	// acceptance tests.
+	NoLogOutputOverride bool
 }
 
 // Serve serves a plugin. This function never returns and should be the final
 // function called in the main function of the plugin.
 func Serve(opts *ServeOpts) {
+	if !opts.NoLogOutputOverride {
+		// In order to allow go-plugin to correctly pass log-levels through to
+		// terraform, we need to use an hclog.Logger with JSON output. We can
+		// inject this into the std `log` package here, so existing providers will
+		// make use of it automatically.
+		logger := hclog.New(&hclog.LoggerOptions{
+			// We send all output to terraform. Go-plugin will take the output and
+			// pass it through another hclog.Logger on the client side where it can
+			// be filtered.
+			Level:      hclog.Trace,
+			JSONFormat: true,
+		})
+		log.SetOutput(logger.StandardWriter(&hclog.StandardLoggerOptions{InferLevels: true}))
+	}
+
 	// since the plugins may not yet be aware of the new protocol, we
 	// automatically wrap the plugins in the grpc shims.
 	if opts.GRPCProviderFunc == nil && opts.ProviderFunc != nil {
-		opts.GRPCProviderFunc = func() proto.ProviderServer {
-			return grpcplugin.NewGRPCProviderServer(opts.ProviderFunc())
+		opts.GRPCProviderFunc = func() tfprotov5.ProviderServer {
+			return schema.NewGRPCProviderServer(opts.ProviderFunc())
 		}
 	}
 
@@ -63,18 +83,15 @@ func Serve(opts *ServeOpts) {
 		HandshakeConfig: Handshake,
 		VersionedPlugins: map[int]plugin.PluginSet{
 			5: {
-				ProviderPluginName: &gRPCProviderPlugin{
-					GRPCProvider: func() proto.ProviderServer {
+				ProviderPluginName: &tf5server.GRPCProviderPlugin{
+					GRPCProvider: func() tfprotov5.ProviderServer {
 						return provider
 					},
 				},
 			},
 		},
 		GRPCServer: func(opts []grpc.ServerOption) *grpc.Server {
-			return grpc.NewServer(append(opts, grpc.UnaryInterceptor(func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-				ctx = provider.(*grpcplugin.GRPCProviderServer).StopContext(ctx)
-				return handler(ctx, req)
-			}))...)
+			return grpc.NewServer(opts...)
 		},
 		Logger: opts.Logger,
 		Test:   opts.TestConfig,

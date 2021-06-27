@@ -29,8 +29,9 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
+			Create: schema.DefaultTimeout(45 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(45 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -146,7 +147,6 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 			"storage_capacity": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(32, 65536),
 			},
 			"subnet_ids": {
@@ -156,11 +156,11 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 				MinItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"throughput_capacity": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(8, 2048),
 			},
 			"vpc_id": {
@@ -212,11 +212,15 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 				}, false),
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).fsxconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateFileSystemInput{
 		ClientRequestToken: aws.String(resource.UniqueId()),
@@ -258,8 +262,8 @@ func resourceAwsFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interfac
 		input.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandFsxSelfManagedActiveDirectoryConfigurationCreate(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().FsxTags()
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().FsxTags()
 	}
 
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
@@ -275,7 +279,7 @@ func resourceAwsFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error creating FSx filesystem: %s", err)
 	}
 
-	d.SetId(*result.FileSystem.FileSystemId)
+	d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
 
 	log.Println("[DEBUG] Waiting for filesystem to become available")
 
@@ -289,8 +293,8 @@ func resourceAwsFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interfac
 func resourceAwsFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).fsxconn
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.FsxUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating FSx Windows File System (%s) tags: %s", d.Get("arn").(string), err)
@@ -306,6 +310,16 @@ func resourceAwsFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interfac
 
 	if d.HasChange("automatic_backup_retention_days") {
 		input.WindowsConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(d.Get("automatic_backup_retention_days").(int)))
+		requestUpdate = true
+	}
+
+	if d.HasChange("throughput_capacity") {
+		input.WindowsConfiguration.ThroughputCapacity = aws.Int64(int64(d.Get("throughput_capacity").(int)))
+		requestUpdate = true
+	}
+
+	if d.HasChange("storage_capacity") {
+		input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
 		requestUpdate = true
 	}
 
@@ -326,8 +340,13 @@ func resourceAwsFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interfac
 
 	if requestUpdate {
 		_, err := conn.UpdateFileSystem(input)
+
 		if err != nil {
-			return fmt.Errorf("error updating FSX File System (%s): %s", d.Id(), err)
+			return fmt.Errorf("error updating FSx Windows File System (%s): %w", d.Id(), err)
+		}
+
+		if err := waitForFsxFileSystemUpdateAdministrativeActionsStatusFileSystemUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for FSx Windows File System (%s) update: %w", d.Id(), err)
 		}
 	}
 
@@ -336,6 +355,7 @@ func resourceAwsFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interfac
 
 func resourceAwsFsxWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).fsxconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	filesystem, err := describeFsxFileSystem(conn, d.Id())
@@ -393,8 +413,15 @@ func resourceAwsFsxWindowsFileSystemRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error setting subnet_ids: %s", err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.FsxKeyValueTags(filesystem.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	tags := keyvaluetags.FsxKeyValueTags(filesystem.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %s", err)
 	}
 
 	d.Set("throughput_capacity", filesystem.WindowsConfiguration.ThroughputCapacity)

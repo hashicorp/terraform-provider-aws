@@ -17,7 +17,8 @@ func TestAccAWSCodeArtifactDomainPermissionsPolicy_basic(t *testing.T) {
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("codeartifact", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codeartifact.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainPermissionsDestroy,
 		Steps: []resource.TestStep{
@@ -56,7 +57,8 @@ func TestAccAWSCodeArtifactDomainPermissionsPolicy_owner(t *testing.T) {
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("codeartifact", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codeartifact.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainPermissionsDestroy,
 		Steps: []resource.TestStep{
@@ -84,7 +86,8 @@ func TestAccAWSCodeArtifactDomainPermissionsPolicy_disappears(t *testing.T) {
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("codeartifact", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codeartifact.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainPermissionsDestroy,
 		Steps: []resource.TestStep{
@@ -105,7 +108,8 @@ func TestAccAWSCodeArtifactDomainPermissionsPolicy_disappears_domain(t *testing.
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("codeartifact", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codeartifact.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainPermissionsDestroy,
 		Steps: []resource.TestStep{

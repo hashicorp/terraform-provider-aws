@@ -18,6 +18,7 @@ func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		ErrorCheck:   testAccErrorCheck(t, elastictranscoder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
@@ -43,6 +44,7 @@ func TestAccAWSElasticTranscoderPreset_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		ErrorCheck:   testAccErrorCheck(t, elastictranscoder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
@@ -58,7 +60,7 @@ func TestAccAWSElasticTranscoderPreset_disappears(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/14087
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14087
 func TestAccAWSElasticTranscoderPreset_AudioCodecOptions_empty(t *testing.T) {
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
@@ -66,6 +68,7 @@ func TestAccAWSElasticTranscoderPreset_AudioCodecOptions_empty(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		ErrorCheck:   testAccErrorCheck(t, elastictranscoder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
@@ -92,6 +95,7 @@ func TestAccAWSElasticTranscoderPreset_Description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		ErrorCheck:   testAccErrorCheck(t, elastictranscoder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
@@ -119,6 +123,7 @@ func TestAccAWSElasticTranscoderPreset_Full(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		ErrorCheck:   testAccErrorCheck(t, elastictranscoder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
@@ -160,7 +165,7 @@ func TestAccAWSElasticTranscoderPreset_Full(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/695
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/695
 func TestAccAWSElasticTranscoderPreset_Video_FrameRate(t *testing.T) {
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
@@ -168,6 +173,7 @@ func TestAccAWSElasticTranscoderPreset_Video_FrameRate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		ErrorCheck:   testAccErrorCheck(t, elastictranscoder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{

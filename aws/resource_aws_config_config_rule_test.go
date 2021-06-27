@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func testAccConfigConfigRule_basic(t *testing.T) {
@@ -20,6 +19,7 @@ func testAccConfigConfigRule_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
@@ -45,6 +45,7 @@ func testAccConfigConfigRule_ownerAws(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
@@ -64,7 +65,7 @@ func testAccConfigConfigRule_ownerAws(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.compliance_resource_id", "blablah"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.compliance_resource_types.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "scope.0.compliance_resource_types.*", "AWS::EC2::Instance"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "scope.0.compliance_resource_types.*", "AWS::EC2::Instance"),
 				),
 			},
 		},
@@ -81,6 +82,7 @@ func testAccConfigConfigRule_customlambda(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
@@ -98,7 +100,7 @@ func testAccConfigConfigRule_customlambda(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source.0.owner", "CUSTOM_LAMBDA"),
 					resource.TestCheckResourceAttrPair(resourceName, "source.0.source_identifier", "aws_lambda_function.f", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "source.0.source_detail.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "source.0.source_detail.*", map[string]string{
 						"event_source":                "aws.config",
 						"message_type":                "ConfigurationSnapshotDeliveryCompleted",
 						"maximum_execution_frequency": "",
@@ -118,6 +120,7 @@ func testAccConfigConfigRule_importAws(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
@@ -142,6 +145,7 @@ func testAccConfigConfigRule_importLambda(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
@@ -165,6 +169,7 @@ func testAccConfigConfigRule_Scope_TagKey(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
@@ -195,6 +200,7 @@ func testAccConfigConfigRule_Scope_TagKey_Empty(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
@@ -215,6 +221,7 @@ func testAccConfigConfigRule_Scope_TagValue(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
@@ -245,6 +252,7 @@ func testAccConfigConfigRule_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
