@@ -536,6 +536,43 @@ func TestAccAWSCloudWatchEventTarget_ecsWithBlankTaskCount(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudWatchEventTarget_ecsFull(t *testing.T) {
+	resourceName := "aws_cloudwatch_event_target.test"
+	var v events.Target
+	rName := acctest.RandomWithPrefix("tf_ecs_target")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchEventTargetConfigEcsWithBlankTaskCountFull(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", "FARGATE"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.enable_execute_command", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.enable_ecs_managed_tags", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.propagate_tags", "TASK_DEFINITION"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.placement_constraints.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.placement_constraints.0.type", "distinctInstance"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.tags.test", "test1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudWatchEventTarget_batch(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	batchJobDefinitionResourceName := "aws_batch_job_definition.test"
@@ -1212,15 +1249,8 @@ data "aws_partition" "current" {}
 `, rName)
 }
 
-func testAccAWSCloudWatchEventTargetConfigEcs(rName string) string {
+func testAccAWSCloudWatchEventTargetConfigEcsBase(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_rule" "test" {
-  name        = %[1]q
-  description = "schedule_ecs_test"
-
-  schedule_expression = "rate(5 minutes)"
-}
-
 resource "aws_vpc" "vpc" {
   cidr_block = "10.1.0.0/16"
 }
@@ -1228,22 +1258,6 @@ resource "aws_vpc" "vpc" {
 resource "aws_subnet" "subnet" {
   vpc_id     = aws_vpc.vpc.id
   cidr_block = "10.1.1.0/24"
-}
-
-resource "aws_cloudwatch_event_target" "test" {
-  arn      = aws_ecs_cluster.test.id
-  rule     = aws_cloudwatch_event_rule.test.id
-  role_arn = aws_iam_role.test.arn
-
-  ecs_target {
-    task_count          = 1
-    task_definition_arn = aws_ecs_task_definition.task.arn
-    launch_type         = "FARGATE"
-
-    network_configuration {
-      subnets = [aws_subnet.subnet.id]
-    }
-  }
 }
 
 resource "aws_iam_role" "test" {
@@ -1313,27 +1327,38 @@ EOF
 }
 
 data "aws_partition" "current" {}
-`, rName)
-}
 
-func testAccAWSCloudWatchEventTargetConfigEcsWithBlankLaunchType(rName string) string {
-	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name        = %[1]q
   description = "schedule_ecs_test"
 
   schedule_expression = "rate(5 minutes)"
 }
-
-resource "aws_vpc" "vpc" {
-  cidr_block = "10.1.0.0/16"
+`, rName)
 }
 
-resource "aws_subnet" "subnet" {
-  vpc_id     = aws_vpc.vpc.id
-  cidr_block = "10.1.1.0/24"
+func testAccAWSCloudWatchEventTargetConfigEcs(rName string) string {
+	return testAccAWSCloudWatchEventTargetConfigEcsBase(rName) + `
+resource "aws_cloudwatch_event_target" "test" {
+  arn      = aws_ecs_cluster.test.id
+  rule     = aws_cloudwatch_event_rule.test.id
+  role_arn = aws_iam_role.test.arn
+
+  ecs_target {
+    task_count          = 1
+    task_definition_arn = aws_ecs_task_definition.task.arn
+    launch_type         = "FARGATE"
+
+    network_configuration {
+      subnets = [aws_subnet.subnet.id]
+    }
+  }
+}
+`
 }
 
+func testAccAWSCloudWatchEventTargetConfigEcsWithBlankLaunchType(rName string) string {
+	return testAccAWSCloudWatchEventTargetConfigEcsBase(rName) + `
 resource "aws_cloudwatch_event_target" "test" {
   arn      = aws_ecs_cluster.test.id
   rule     = aws_cloudwatch_event_rule.test.id
@@ -1349,95 +1374,11 @@ resource "aws_cloudwatch_event_target" "test" {
     }
   }
 }
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "events.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
-
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "ecs:RunTask"
-            ],
-            "Resource": [
-                "*"
-            ]
-        }
-    ]
-}
-EOF
-}
-
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-}
-
-resource "aws_ecs_task_definition" "task" {
-  family                   = %[1]q
-  cpu                      = 256
-  memory                   = 512
-  requires_compatibilities = ["FARGATE"]
-  network_mode             = "awsvpc"
-
-  container_definitions = <<EOF
-[
-  {
-    "name": "first",
-    "image": "service-first",
-    "cpu": 10,
-    "memory": 512,
-    "essential": true
-  }
-]
-EOF
-}
-
-data "aws_partition" "current" {}
-`, rName)
+`
 }
 
 func testAccAWSCloudWatchEventTargetConfigEcsWithBlankTaskCount(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_rule" "test" {
-  name        = "%[1]s"
-  description = "schedule_ecs_test"
-
-  schedule_expression = "rate(5 minutes)"
-}
-
-resource "aws_vpc" "vpc" {
-  cidr_block = "10.1.0.0/16"
-}
-
-resource "aws_subnet" "subnet" {
-  vpc_id     = aws_vpc.vpc.id
-  cidr_block = "10.1.1.0/24"
-}
-
+	return testAccAWSCloudWatchEventTargetConfigEcsBase(rName) + `
 resource "aws_cloudwatch_event_target" "test" {
   arn      = aws_ecs_cluster.test.id
   rule     = aws_cloudwatch_event_rule.test.id
@@ -1452,75 +1393,37 @@ resource "aws_cloudwatch_event_target" "test" {
     }
   }
 }
+`
+}
 
-resource "aws_iam_role" "test" {
-  name = "%[1]s"
+func testAccAWSCloudWatchEventTargetConfigEcsWithBlankTaskCountFull(rName string) string {
+	return testAccAWSCloudWatchEventTargetConfigEcsBase(rName) + `
+resource "aws_cloudwatch_event_target" "test" {
+  arn      = aws_ecs_cluster.test.id
+  rule     = aws_cloudwatch_event_rule.test.id
+  role_arn = aws_iam_role.test.arn
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "events.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+  ecs_target {
+    task_definition_arn     = aws_ecs_task_definition.task.arn
+    launch_type             = "FARGATE"
+    enable_execute_command  = true
+    enable_ecs_managed_tags = true
+    propagate_tags          = "TASK_DEFINITION"
+
+    placement_constraints {
+      type = "distinctInstance"
     }
-  ]
-}
-EOF
-}
 
-resource "aws_iam_role_policy" "test" {
-  name = "%[1]s"
-  role = aws_iam_role.test.id
+	tags = {
+      test = "test1"
+	}
 
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "ecs:RunTask"
-            ],
-            "Resource": [
-                "*"
-            ]
-        }
-    ]
-}
-EOF
-}
-
-resource "aws_ecs_cluster" "test" {
-  name = "%[1]s"
-}
-
-resource "aws_ecs_task_definition" "task" {
-  family                   = "%[1]s"
-  cpu                      = 256
-  memory                   = 512
-  requires_compatibilities = ["FARGATE"]
-  network_mode             = "awsvpc"
-
-  container_definitions = <<EOF
-[
-  {
-    "name": "first",
-    "image": "service-first",
-    "cpu": 10,
-    "memory": 512,
-    "essential": true
+    network_configuration {
+      subnets = [aws_subnet.subnet.id]
+    }
   }
-]
-EOF
 }
-
-data "aws_partition" "current" {}
-`, rName)
+`
 }
 
 func testAccAWSCloudWatchEventTargetConfigBatch(rName string) string {
