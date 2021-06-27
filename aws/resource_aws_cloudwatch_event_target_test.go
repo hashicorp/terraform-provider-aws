@@ -1414,9 +1414,9 @@ resource "aws_cloudwatch_event_target" "test" {
       type = "distinctInstance"
     }
 
-	tags = {
+    tags = {
       test = "test1"
-	}
+    }
 
     network_configuration {
       subnets = [aws_subnet.subnet.id]
