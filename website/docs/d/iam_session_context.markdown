@@ -38,10 +38,13 @@ data "aws_iam_session_context" "example" {
 
 * `arn` - (Required) ARN for an assumed role.
 
-~> If `arn` is a non-role ARN (or non-ARN), Terraform gives no error and `issuer_arn` will be equal to the `arn` value. For IAM role and STS assumed-role ARNs, Terraform gives an error if the identified IAM role does not exist.
+~> If `arn` is a non-role ARN (or non-ARN), Terraform gives no error and `issuer_arn` will be equal to the `arn` value. For STS assumed-role ARNs, Terraform gives an error if the identified IAM role does not exist.
 
 ## Attributes Reference
 
-* `role_name` - Name of the source role. Only available if `arn` corresponds to an IAM role or STS assumed role.
+~> With the exception of `issuer_arn`, the attributes will not be populated unless the `arn` corresponds to an STS assumed role.
+
 * `issuer_arn` - IAM source role ARN if `arn` corresponds to an STS assumed role. Otherwise, `issuer_arn` is equal to `arn`.
+* `issuer_id` - Unique identifier of the IAM role that issues the STS assumed role.
+* `issuer_name` - Name of the source role. Only available if `arn` corresponds to an STS assumed role.
 * `session_name` - Name of the STS session. Only available if `arn` corresponds to an STS assumed role.
