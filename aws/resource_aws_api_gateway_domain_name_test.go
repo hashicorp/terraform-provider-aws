@@ -157,12 +157,14 @@ func TestAccAWSAPIGatewayDomainName_RegionalCertificateName(t *testing.T) {
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
 
-	rName := testAccRandomSubdomain()
+	domain := testAccRandomDomainName()
+	domainWildcard := fmt.Sprintf("*.%s", domain)
+	rName := fmt.Sprintf("%s.%s", acctest.RandString(8), domain)
 
 	caKey := tlsRsaPrivateKeyPem(2048)
 	caCertificate := tlsRsaX509SelfSignedCaCertificatePem(caKey)
 	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509LocallySignedCertificatePem(caKey, caCertificate, key, defaultRootLevelDomainWildcard)
+	certificate := tlsRsaX509LocallySignedCertificatePem(caKey, caCertificate, key, domainWildcard)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
