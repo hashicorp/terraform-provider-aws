@@ -90,6 +90,7 @@ func testSweepSagemakerDomains(region string) error {
 			r := resourceAwsSagemakerDomain()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(domain.DomainId))
+			d.Set("retention_policy.0.home_efs_file_system", "Delete")
 			err = r.Delete(d, client)
 			if err != nil {
 				log.Printf("[ERROR] %s", err)
