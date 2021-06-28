@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -156,7 +155,7 @@ func findConnectionRoute(conn *ec2.EC2, cidrBlock, vpnConnectionId string) (*ec2
 	vpnConnection := resp.VpnConnections[0]
 
 	for _, r := range vpnConnection.Routes {
-		if *r.DestinationCidrBlock == cidrBlock && *r.State != "deleted" {
+		if aws.StringValue(r.DestinationCidrBlock) == cidrBlock && aws.StringValue(r.State) != "deleted" {
 			return r, nil
 		}
 	}

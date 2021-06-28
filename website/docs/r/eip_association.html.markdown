@@ -18,7 +18,7 @@ pre-existing or distributed to customers or users and therefore cannot be change
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_eip_association" "eip_assoc" {
   instance_id   = aws_instance.web.id
   allocation_id = aws_eip.example.id
@@ -60,6 +60,8 @@ address.
 * `public_ip` - (Optional) The Elastic IP address. This is required for EC2-Classic.
 
 ## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `association_id` - The ID that represents the association of the Elastic IP
 address with an instance.

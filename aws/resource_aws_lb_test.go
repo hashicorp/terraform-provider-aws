@@ -8,13 +8,18 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elbv2/finder"
 )
 
 func init() {
+	RegisterServiceErrorCheckFunc(elbv2.EndpointsID, testAccErrorCheckSkipELBv2)
+
 	resource.AddTestSweepers("aws_lb", &resource.Sweeper{
 		Name: "aws_lb",
 		F:    testSweepLBs,
@@ -25,6 +30,13 @@ func init() {
 	})
 }
 
+func testAccErrorCheckSkipELBv2(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"ValidationError: Type must be one of: 'application, network'",
+		"ValidationError: Action type 'authenticate-cognito' must be one of 'redirect,fixed-response,forward,authenticate-oidc'",
+	)
+}
+
 func testSweepLBs(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
@@ -32,7 +44,7 @@ func testSweepLBs(region string) error {
 	}
 	conn := client.(*AWSClient).elbv2conn
 
-	err = conn.DescribeLoadBalancersPages(&elbv2.DescribeLoadBalancersInput{}, func(page *elbv2.DescribeLoadBalancersOutput, isLast bool) bool {
+	err = conn.DescribeLoadBalancersPages(&elbv2.DescribeLoadBalancersInput{}, func(page *elbv2.DescribeLoadBalancersOutput, lastPage bool) bool {
 		if page == nil || len(page.LoadBalancers) == 0 {
 			log.Print("[DEBUG] No LBs to sweep")
 			return false
@@ -49,7 +61,7 @@ func testSweepLBs(region string) error {
 				log.Printf("[ERROR] Failed to delete LB (%s): %s", name, err)
 			}
 		}
-		return !isLast
+		return !lastPage
 	})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -94,14 +106,14 @@ func TestLBCloudwatchSuffixFromARN(t *testing.T) {
 
 func TestAccAWSLB_ALB_basic(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfig_basic(lbName),
@@ -131,14 +143,14 @@ func TestAccAWSLB_ALB_basic(t *testing.T) {
 
 func TestAccAWSLB_NLB_basic(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfig_networkLoadbalancer(lbName, false),
@@ -162,16 +174,126 @@ func TestAccAWSLB_NLB_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSLB_LoadBalancerType_Gateway(t *testing.T) {
+	var conf elbv2.LoadBalancer
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
+		ErrorCheck:        testAccErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSLBDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBConfig_LoadBalancerType_Gateway(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf("loadbalancer/gwy/%s/.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_type", elbv2.LoadBalancerTypeEnumGateway),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"drop_invalid_header_fields",
+					"enable_http2",
+					"idle_timeout",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSLB_IPv6SubnetMapping(t *testing.T) {
+	var conf elbv2.LoadBalancer
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ErrorCheck:        testAccErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSLBDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBConfig_IPv6(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists(resourceName, &conf),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "subnet_mapping.*", map[string]*regexp.Regexp{
+						"ipv6_address": regexp.MustCompile("[a-f0-6]+:[a-f0-6:]+"),
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"drop_invalid_header_fields",
+					"enable_http2",
+					"idle_timeout",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSLB_LoadBalancerType_Gateway_EnableCrossZoneLoadBalancing(t *testing.T) {
+	var conf elbv2.LoadBalancer
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
+		ErrorCheck:        testAccErrorCheck(t, elbv2.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSLBDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBConfig_LoadBalancerType_Gateway_EnableCrossZoneLoadBalancing(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf("loadbalancer/gwy/%s/.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_type", elbv2.LoadBalancerTypeEnumGateway),
+					resource.TestCheckResourceAttr(resourceName, "enable_cross_zone_load_balancing", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"drop_invalid_header_fields",
+					"enable_http2",
+					"idle_timeout",
+				},
+			},
+			{
+				Config: testAccAWSLBConfig_LoadBalancerType_Gateway_EnableCrossZoneLoadBalancing(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf("loadbalancer/gwy/%s/.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_type", elbv2.LoadBalancerTypeEnumGateway),
+					resource.TestCheckResourceAttr(resourceName, "enable_cross_zone_load_balancing", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLB_ALB_outpost(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	lbName := fmt.Sprintf("testaccawslb-outpost-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-outpost-%s", acctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfig_outpost(lbName),
@@ -204,10 +326,11 @@ func TestAccAWSLB_ALB_outpost(t *testing.T) {
 func TestAccAWSLB_networkLoadbalancerEIP(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	resourceName := "aws_lb.lb_test"
-	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
@@ -232,14 +355,14 @@ func TestAccAWSLB_networkLoadbalancerEIP(t *testing.T) {
 
 func TestAccAWSLB_NLB_privateipv4address(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	lbName := fmt.Sprintf("testaccawslb-pipv4a-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-pipv4a-%s", acctest.RandString(10))
 	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfig_networkLoadBalancerPrivateIPV4Address(lbName),
@@ -261,14 +384,14 @@ func TestAccAWSLB_NLB_privateipv4address(t *testing.T) {
 
 func TestAccAWSLB_BackwardsCompatibility(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandString(10))
 	resourceName := "aws_alb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfigBackwardsCompatibility(lbName),
@@ -299,10 +422,10 @@ func TestAccAWSLB_generatedName(t *testing.T) {
 	resourceName := "aws_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfig_generatedName(),
@@ -320,10 +443,10 @@ func TestAccAWSLB_generatesNameForZeroValue(t *testing.T) {
 	resourceName := "aws_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfig_zeroValueName(),
@@ -341,10 +464,10 @@ func TestAccAWSLB_namePrefix(t *testing.T) {
 	resourceName := "aws_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfig_namePrefix(),
@@ -361,14 +484,14 @@ func TestAccAWSLB_namePrefix(t *testing.T) {
 
 func TestAccAWSLB_tags(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfig_basic(lbName),
@@ -401,14 +524,14 @@ func TestAccAWSLB_tags(t *testing.T) {
 
 func TestAccAWSLB_networkLoadbalancer_updateCrossZone(t *testing.T) {
 	var pre, mid, post elbv2.LoadBalancer
-	lbName := fmt.Sprintf("testaccawslb-nlbcz-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-nlbcz-%s", acctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfig_networkLoadbalancer(lbName, true),
@@ -442,14 +565,14 @@ func TestAccAWSLB_networkLoadbalancer_updateCrossZone(t *testing.T) {
 
 func TestAccAWSLB_applicationLoadBalancer_updateHttp2(t *testing.T) {
 	var pre, mid, post elbv2.LoadBalancer
-	lbName := fmt.Sprintf("testaccawsalb-http2-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawsalb-http2-%s", acctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfig_enableHttp2(lbName, false),
@@ -483,13 +606,13 @@ func TestAccAWSLB_applicationLoadBalancer_updateHttp2(t *testing.T) {
 
 func TestAccAWSLB_applicationLoadBalancer_updateDropInvalidHeaderFields(t *testing.T) {
 	var pre, mid, post elbv2.LoadBalancer
-	lbName := fmt.Sprintf("testaccawsalb-headers-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawsalb-headers-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb.lb_test",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfig_enableDropInvalidHeaderFields(lbName, false),
@@ -523,14 +646,14 @@ func TestAccAWSLB_applicationLoadBalancer_updateDropInvalidHeaderFields(t *testi
 
 func TestAccAWSLB_applicationLoadBalancer_updateDeletionProtection(t *testing.T) {
 	var pre, mid, post elbv2.LoadBalancer
-	lbName := fmt.Sprintf("testaccawsalb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawsalb-basic-%s", acctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfig_enableDeletionProtection(lbName, false),
@@ -564,14 +687,14 @@ func TestAccAWSLB_applicationLoadBalancer_updateDeletionProtection(t *testing.T)
 
 func TestAccAWSLB_updatedSecurityGroups(t *testing.T) {
 	var pre, post elbv2.LoadBalancer
-	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfig_basic(lbName),
@@ -594,14 +717,14 @@ func TestAccAWSLB_updatedSecurityGroups(t *testing.T) {
 
 func TestAccAWSLB_updatedSubnets(t *testing.T) {
 	var pre, post elbv2.LoadBalancer
-	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfig_basic(lbName),
@@ -624,14 +747,14 @@ func TestAccAWSLB_updatedSubnets(t *testing.T) {
 
 func TestAccAWSLB_updatedIpAddressType(t *testing.T) {
 	var pre, post elbv2.LoadBalancer
-	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfigWithIpAddressType(lbName),
@@ -656,14 +779,14 @@ func TestAccAWSLB_updatedIpAddressType(t *testing.T) {
 // is assigned.
 func TestAccAWSLB_noSecurityGroup(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	lbName := fmt.Sprintf("testaccawslb-nosg-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-nosg-%s", acctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfig_nosg(lbName),
@@ -688,15 +811,15 @@ func TestAccAWSLB_noSecurityGroup(t *testing.T) {
 
 func TestAccAWSLB_ALB_AccessLogs(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	bucketName := fmt.Sprintf("tf-test-access-logs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
-	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
+	bucketName := fmt.Sprintf("tf-test-access-logs-%s", acctest.RandString(6))
+	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandString(4))
 	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfigALBAccessLogs(true, lbName, bucketName, ""),
@@ -776,15 +899,15 @@ func TestAccAWSLB_ALB_AccessLogs(t *testing.T) {
 
 func TestAccAWSLB_ALB_AccessLogs_Prefix(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	bucketName := fmt.Sprintf("tf-test-access-logs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
-	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
+	bucketName := fmt.Sprintf("tf-test-access-logs-%s", acctest.RandString(6))
+	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandString(4))
 	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfigALBAccessLogs(true, lbName, bucketName, "prefix1"),
@@ -846,15 +969,15 @@ func TestAccAWSLB_ALB_AccessLogs_Prefix(t *testing.T) {
 
 func TestAccAWSLB_NLB_AccessLogs(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	bucketName := fmt.Sprintf("tf-test-access-logs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
-	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
+	bucketName := fmt.Sprintf("tf-test-access-logs-%s", acctest.RandString(6))
+	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandString(4))
 	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfigNLBAccessLogs(true, lbName, bucketName, ""),
@@ -934,15 +1057,15 @@ func TestAccAWSLB_NLB_AccessLogs(t *testing.T) {
 
 func TestAccAWSLB_NLB_AccessLogs_Prefix(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	bucketName := fmt.Sprintf("tf-test-access-logs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
-	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
+	bucketName := fmt.Sprintf("tf-test-access-logs-%s", acctest.RandString(6))
+	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandString(4))
 	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfigNLBAccessLogs(true, lbName, bucketName, "prefix1"),
@@ -1004,14 +1127,14 @@ func TestAccAWSLB_NLB_AccessLogs_Prefix(t *testing.T) {
 
 func TestAccAWSLB_networkLoadbalancer_subnet_change(t *testing.T) {
 	var conf elbv2.LoadBalancer
-	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBConfig_networkLoadbalancer_subnets(lbName),
@@ -1051,21 +1174,18 @@ func testAccCheckAWSLBExists(n string, res *elbv2.LoadBalancer) resource.TestChe
 
 		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
 
-		describe, err := conn.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
-			LoadBalancerArns: []*string{aws.String(rs.Primary.ID)},
-		})
+		lb, err := finder.LoadBalancerByARN(conn, rs.Primary.ID)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("error reading LB (%s): %w", rs.Primary.ID, err)
 		}
 
-		if len(describe.LoadBalancers) != 1 ||
-			aws.StringValue(describe.LoadBalancers[0].LoadBalancerArn) != rs.Primary.ID {
-			return errors.New("LB not found")
+		if lb != nil {
+			*res = *lb
+			return nil
 		}
 
-		*res = *describe.LoadBalancers[0]
-		return nil
+		return fmt.Errorf("LB (%s) not found", rs.Primary.ID)
 	}
 }
 
@@ -1108,26 +1228,54 @@ func testAccCheckAWSLBDestroy(s *terraform.State) error {
 			continue
 		}
 
-		describe, err := conn.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
-			LoadBalancerArns: []*string{aws.String(rs.Primary.ID)},
-		})
+		lb, err := finder.LoadBalancerByARN(conn, rs.Primary.ID)
 
-		if err == nil {
-			if len(describe.LoadBalancers) != 0 &&
-				aws.StringValue(describe.LoadBalancers[0].LoadBalancerArn) == rs.Primary.ID {
-				return fmt.Errorf("LB %q still exists", rs.Primary.ID)
-			}
+		if tfawserr.ErrCodeContains(err, elb.ErrCodeAccessPointNotFoundException) {
+			continue
 		}
 
-		// Verify the error
-		if isLoadBalancerNotFound(err) {
-			return nil
-		} else {
-			return fmt.Errorf("Unexpected error checking LB destroyed: %s", err)
+		if err != nil {
+			return fmt.Errorf("Unexpected error checking LB (%s) destroyed: %w", rs.Primary.ID, err)
+		}
+
+		if lb != nil && aws.StringValue(lb.LoadBalancerArn) == rs.Primary.ID {
+			return fmt.Errorf("LB %q still exists", rs.Primary.ID)
 		}
 	}
 
 	return nil
+}
+
+func testAccPreCheckElbv2GatewayLoadBalancer(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+
+	input := &elbv2.DescribeAccountLimitsInput{}
+
+	output, err := conn.DescribeAccountLimits(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected ELBv2 Gateway Load Balancer PreCheck error: %s", err)
+	}
+
+	if output == nil {
+		t.Fatal("unexpected ELBv2 Gateway Load Balancer PreCheck error: empty response")
+	}
+
+	for _, limit := range output.Limits {
+		if limit == nil {
+			continue
+		}
+
+		if aws.StringValue(limit.Name) == "gateway-load-balancers" {
+			return
+		}
+	}
+
+	t.Skip("skipping acceptance testing: region does not support ELBv2 Gateway Load Balancers")
 }
 
 func testAccAWSLBConfigWithIpAddressTypeUpdated(lbName string) string {
@@ -1374,7 +1522,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -1530,7 +1678,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -1599,7 +1747,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -1666,7 +1814,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -1817,6 +1965,124 @@ resource "aws_subnet" "alb_test" {
 `, lbName, cz))
 }
 
+func testAccAWSLBConfig_LoadBalancerType_Gateway(rName string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.10.0/25"
+
+  tags = {
+    Name = "tf-acc-test-load-balancer"
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 0)
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-test-load-balancer"
+  }
+}
+
+resource "aws_lb" "test" {
+  load_balancer_type = "gateway"
+  name               = %[1]q
+
+  subnet_mapping {
+    subnet_id = aws_subnet.test.id
+  }
+}
+`, rName))
+}
+
+func testAccAWSLBConfig_IPv6(rName string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  assign_generated_ipv6_cidr_block = true
+  cidr_block                       = "10.10.10.0/25"
+
+  tags = {
+    Name = "tf-acc-test-load-balancer"
+  }
+}
+
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = "main"
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 0)
+  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 16)
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-test-load-balancer"
+  }
+}
+
+resource "aws_lb" "test" {
+  name                       = %[1]q
+  load_balancer_type         = "network"
+  enable_deletion_protection = false
+
+  subnet_mapping {
+    subnet_id    = aws_subnet.test.id
+    ipv6_address = cidrhost(cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 16), 5)
+  }
+
+  tags = {
+    Name = "TestAccAWSALB_ipv6address"
+  }
+
+  depends_on = [aws_internet_gateway.gw]
+}
+`, rName))
+}
+
+func testAccAWSLBConfig_LoadBalancerType_Gateway_EnableCrossZoneLoadBalancing(rName string, enableCrossZoneLoadBalancing bool) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.10.0/25"
+
+  tags = {
+    Name = "tf-acc-test-load-balancer"
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 0)
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-test-load-balancer"
+  }
+}
+
+resource "aws_lb" "test" {
+  enable_cross_zone_load_balancing = %[2]t
+  load_balancer_type               = "gateway"
+  name                             = %[1]q
+
+  subnet_mapping {
+    subnet_id = aws_subnet.test.id
+  }
+}
+`, rName, enableCrossZoneLoadBalancing))
+}
+
 func testAccAWSLBConfig_networkLoadBalancerEIP(lbName string) string {
 	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "main" {
@@ -1828,7 +2094,7 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "public" {
-  count             = length(data.aws_availability_zones.available.names)
+  count             = 2
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.10.${count.index}.0/24"
   vpc_id            = aws_vpc.main.id
@@ -1852,8 +2118,8 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table_association" "a" {
-  count          = length(data.aws_availability_zones.available.names)
-  subnet_id      = aws_subnet.public[*].id[count.index]
+  count          = 2
+  subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
 
@@ -1937,7 +2203,7 @@ resource "aws_alb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2004,7 +2270,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2070,7 +2336,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2143,14 +2409,14 @@ resource "aws_lb" "lb_test" {
   }
 }
 
-# See https://github.com/terraform-providers/terraform-provider-aws/issues/2498
+# See https://github.com/hashicorp/terraform-provider-aws/issues/2498
 output "lb_name" {
   value = aws_lb.lb_test.name
 }
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2225,7 +2491,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2293,7 +2559,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2522,7 +2788,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2565,7 +2831,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {

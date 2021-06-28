@@ -10,10 +10,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsDbInstance() *schema.Resource {
@@ -38,7 +40,7 @@ func resourceAwsDbInstance() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(40 * time.Minute),
 			Update: schema.DefaultTimeout(80 * time.Minute),
-			Delete: schema.DefaultTimeout(40 * time.Minute),
+			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -190,6 +192,11 @@ func resourceAwsDbInstance() *schema.Resource {
 				Optional: true,
 			},
 
+			"latest_restorable_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"license_model": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -257,19 +264,49 @@ func resourceAwsDbInstance() *schema.Resource {
 			"final_snapshot_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-					value := v.(string)
-					if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
-						es = append(es, fmt.Errorf(
-							"only alphanumeric characters and hyphens allowed in %q", k))
-					}
-					if regexp.MustCompile(`--`).MatchString(value) {
-						es = append(es, fmt.Errorf("%q cannot contain two consecutive hyphens", k))
-					}
-					if regexp.MustCompile(`-$`).MatchString(value) {
-						es = append(es, fmt.Errorf("%q cannot end in a hyphen", k))
-					}
-					return
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+					validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z-]+$`), "must only contain alphanumeric characters and hyphens"),
+					validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end in a hyphen"),
+				),
+			},
+
+			"restore_to_point_in_time": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				ForceNew: true,
+				ConflictsWith: []string{
+					"s3_import",
+					"snapshot_identifier",
+					"replicate_source_db",
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"restore_time": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ValidateFunc:  validateUTCTimestamp,
+							ConflictsWith: []string{"restore_to_point_in_time.0.use_latest_restorable_time"},
+						},
+
+						"source_db_instance_identifier": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
+						"source_dbi_resource_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
+						"use_latest_restorable_time": {
+							Type:          schema.TypeBool,
+							Optional:      true,
+							ConflictsWith: []string{"restore_to_point_in_time.0.restore_time"},
+						},
+					},
 				},
 			},
 
@@ -378,6 +415,7 @@ func resourceAwsDbInstance() *schema.Resource {
 
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
+				Computed: true,
 				Optional: true,
 				ForceNew: true,
 			},
@@ -491,13 +529,18 @@ func resourceAwsDbInstance() *schema.Resource {
 				Default:  true,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Some API calls (e.g. CreateDBInstanceReadReplica and
 	// RestoreDBInstanceFromDBSnapshot do not support all parameters to
@@ -511,11 +554,9 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	// Some ModifyDBInstance parameters (e.g. DBParameterGroupName) require
-	// a database instance reboot to take affect. During resource creation,
+	// a database instance reboot to take effect. During resource creation,
 	// we expect everything to be in sync before returning completion.
 	var requiresRebootDbInstance bool
-
-	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().RdsTags()
 
 	var identifier string
 	if v, ok := d.GetOk("identifier"); ok {
@@ -539,7 +580,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			DBInstanceIdentifier:       aws.String(identifier),
 			PubliclyAccessible:         aws.Bool(d.Get("publicly_accessible").(bool)),
 			SourceDBInstanceIdentifier: aws.String(v.(string)),
-			Tags:                       tags,
+			Tags:                       tags.IgnoreAws().RdsTags(),
 		}
 
 		if attr, ok := d.GetOk("allocated_storage"); ok {
@@ -701,7 +742,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
 			SourceEngine:            aws.String(s3_bucket["source_engine"].(string)),
 			SourceEngineVersion:     aws.String(s3_bucket["source_engine_version"].(string)),
-			Tags:                    tags,
+			Tags:                    tags.IgnoreAws().RdsTags(),
 		}
 
 		if attr, ok := d.GetOk("multi_az"); ok {
@@ -795,7 +836,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[DEBUG] DB Instance S3 Restore configuration: %#v", opts)
 		var err error
 		// Retry for IAM eventual consistency
-		err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+		err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err = conn.RestoreDBInstanceFromS3(&opts)
 			if err != nil {
 				if isAWSErr(err, "InvalidParameterValue", "ENHANCED_MONITORING") {
@@ -854,7 +895,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			DBSnapshotIdentifier:    aws.String(d.Get("snapshot_identifier").(string)),
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-			Tags:                    tags,
+			Tags:                    tags.IgnoreAws().RdsTags(),
 		}
 
 		if attr, ok := d.GetOk("name"); ok {
@@ -1035,6 +1076,95 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		if err != nil {
 			return fmt.Errorf("Error creating DB Instance: %s", err)
 		}
+	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok {
+		if input := expandRestoreToPointInTime(v.([]interface{})); input != nil {
+			input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
+			input.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
+			input.DBInstanceClass = aws.String(d.Get("instance_class").(string))
+			input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+			input.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
+			input.Tags = tags.IgnoreAws().RdsTags()
+			input.TargetDBInstanceIdentifier = aws.String(d.Get("identifier").(string))
+
+			if v, ok := d.GetOk("availability_zone"); ok {
+				input.AvailabilityZone = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("domain"); ok {
+				input.Domain = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("domain_iam_role_name"); ok {
+				input.DomainIAMRoleName = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
+				input.EnableCloudwatchLogsExports = expandStringSet(v.(*schema.Set))
+			}
+
+			if v, ok := d.GetOk("engine"); ok {
+				input.Engine = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
+				input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
+			}
+
+			if v, ok := d.GetOk("iops"); ok {
+				input.Iops = aws.Int64(int64(v.(int)))
+			}
+
+			if v, ok := d.GetOk("license_model"); ok {
+				input.LicenseModel = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("max_allocated_storage"); ok {
+				input.MaxAllocatedStorage = aws.Int64(int64(v.(int)))
+			}
+
+			if v, ok := d.GetOk("multi_az"); ok {
+				input.MultiAZ = aws.Bool(v.(bool))
+			}
+
+			if v, ok := d.GetOk("name"); ok {
+				input.DBName = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("option_group_name"); ok {
+				input.OptionGroupName = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("parameter_group_name"); ok {
+				input.DBParameterGroupName = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("port"); ok {
+				input.Port = aws.Int64(int64(v.(int)))
+			}
+
+			if v, ok := d.GetOk("storage_type"); ok {
+				input.StorageType = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("db_subnet_group_name"); ok {
+				input.DBSubnetGroupName = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("tde_credential_arn"); ok {
+				input.TdeCredentialArn = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+				input.VpcSecurityGroupIds = expandStringSet(v.(*schema.Set))
+			}
+
+			log.Printf("[DEBUG] DB Instance restore to point in time configuration: %s", input)
+
+			_, err := conn.RestoreDBInstanceToPointInTime(input)
+			if err != nil {
+				return fmt.Errorf("error creating DB Instance: %w", err)
+			}
+		}
 	} else {
 		if _, ok := d.GetOk("allocated_storage"); !ok {
 			return fmt.Errorf(`provider.aws: aws_db_instance: %s: "allocated_storage": required field is not set`, d.Get("name").(string))
@@ -1062,7 +1192,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
 			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-			Tags:                    tags,
+			Tags:                    tags.IgnoreAws().RdsTags(),
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		}
 
@@ -1258,6 +1388,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	v, err := resourceAwsDbInstanceRetrieve(d.Id(), conn)
@@ -1286,6 +1417,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("availability_zone", v.AvailabilityZone)
 	d.Set("backup_retention_period", v.BackupRetentionPeriod)
 	d.Set("backup_window", v.PreferredBackupWindow)
+	d.Set("latest_restorable_time", aws.TimeValue(v.LatestRestorableTime).Format(time.RFC3339))
 	d.Set("license_model", v.LicenseModel)
 	d.Set("maintenance_window", v.PreferredMaintenanceWindow)
 	d.Set("max_allocated_storage", v.MaxAllocatedStorage)
@@ -1350,8 +1482,15 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for RDS DB Instance (%s): %s", d.Get("arn").(string), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	// Create an empty schema.Set to hold all vpc security group ids
@@ -1411,6 +1550,10 @@ func resourceAwsDbInstanceDelete(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] DB Instance destroy configuration: %v", opts)
 	_, err := conn.DeleteDBInstance(&opts)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
+		return nil
+	}
 
 	// InvalidDBInstanceState: Instance XXX is already being deleted.
 	if err != nil && !isAWSErr(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
@@ -1627,7 +1770,7 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 	if requestUpdate {
 		log.Printf("[DEBUG] DB Instance Modification request: %s", req)
 
-		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.ModifyDBInstance(req)
 
 			// Retry for IAM eventual consistency
@@ -1679,8 +1822,8 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating RDS DB Instance (%s) tags: %s", d.Get("arn").(string), err)
@@ -1815,4 +1958,38 @@ var resourceAwsDbInstanceUpdatePendingStates = []string{
 	"stopping",
 	"storage-full",
 	"upgrading",
+}
+
+func expandRestoreToPointInTime(l []interface{}) *rds.RestoreDBInstanceToPointInTimeInput {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	input := &rds.RestoreDBInstanceToPointInTimeInput{}
+
+	if v, ok := tfMap["restore_time"].(string); ok && v != "" {
+		parsedTime, err := time.Parse(time.RFC3339, v)
+		if err == nil {
+			input.RestoreTime = aws.Time(parsedTime)
+		}
+	}
+
+	if v, ok := tfMap["source_db_instance_identifier"].(string); ok && v != "" {
+		input.SourceDBInstanceIdentifier = aws.String(v)
+	}
+
+	if v, ok := tfMap["source_dbi_resource_id"].(string); ok && v != "" {
+		input.SourceDbiResourceId = aws.String(v)
+	}
+
+	if v, ok := tfMap["use_latest_restorable_time"].(bool); ok && v {
+		input.UseLatestRestorableTime = aws.Bool(v)
+	}
+
+	return input
 }

@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ram"
 )
 
 func TestAccAwsRamResourceAssociation_basic(t *testing.T) {
@@ -19,6 +18,7 @@ func TestAccAwsRamResourceAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ram.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRamResourceAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -44,6 +44,7 @@ func TestAccAwsRamResourceAssociation_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ram.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRamResourceAssociationDestroy,
 		Steps: []resource.TestStep{

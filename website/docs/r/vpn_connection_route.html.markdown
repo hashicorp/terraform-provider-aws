@@ -12,7 +12,7 @@ Provides a static route between a VPN connection and a customer gateway.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_vpc" "vpc" {
   cidr_block = "10.0.0.0/16"
 }
@@ -47,7 +47,7 @@ The following arguments are supported:
 * `destination_cidr_block` - (Required) The CIDR block associated with the local subnet of the customer network.
 * `vpn_connection_id` - (Required) The ID of the VPN connection.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

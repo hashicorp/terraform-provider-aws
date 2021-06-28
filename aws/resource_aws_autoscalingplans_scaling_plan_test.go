@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscalingplans/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -79,6 +78,7 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscalingplans.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAutoScalingPlansScalingPlanDestroy,
 		Steps: []resource.TestStep{
@@ -94,7 +94,7 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
 						rName: {rName},
 					}),
 					resource.TestCheckResourceAttr(resourceName, "scaling_instruction.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": "0",
 						"disable_dynamic_scaling":                "false",
 						"max_capacity":                           "3",
@@ -130,6 +130,7 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) 
 			testAccPreCheck(t)
 			testAccPreCheckIamServiceLinkedRole(t, "/aws-service-role/autoscaling-plans")
 		},
+		ErrorCheck:   testAccErrorCheck(t, autoscalingplans.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAutoScalingPlansScalingPlanDestroy,
 		Steps: []resource.TestStep{
@@ -145,7 +146,7 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) 
 						rName: {rName},
 					}),
 					resource.TestCheckResourceAttr(resourceName, "scaling_instruction.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": "0",
 						"disable_dynamic_scaling":                "true",
 						"max_capacity":                           "3",
@@ -185,6 +186,7 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckIamServiceLinkedRole(t, "/aws-service-role/autoscaling-plans")
 		},
+		ErrorCheck:   testAccErrorCheck(t, autoscalingplans.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAutoScalingPlansScalingPlanDestroy,
 		Steps: []resource.TestStep{
@@ -200,7 +202,7 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 						rName: {rName},
 					}),
 					resource.TestCheckResourceAttr(resourceName, "scaling_instruction.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": "0",
 						"disable_dynamic_scaling":                "false",
 						"max_capacity":                           "3",
@@ -226,7 +228,7 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 						rNameUpdated: {rNameUpdated},
 					}),
 					resource.TestCheckResourceAttr(resourceName, "scaling_instruction.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": "0",
 						"disable_dynamic_scaling":                "true",
 						"max_capacity":                           "3",
@@ -262,6 +264,7 @@ func TestAccAwsAutoScalingPlansScalingPlan_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscalingplans.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAutoScalingPlansScalingPlanDestroy,
 		Steps: []resource.TestStep{

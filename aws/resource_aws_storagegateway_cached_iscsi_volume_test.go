@@ -75,6 +75,7 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -114,6 +115,7 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_kms(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -141,6 +143,7 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -188,6 +191,7 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_SnapshotId(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -226,6 +230,7 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_SourceVolumeArn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -263,6 +268,7 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -400,7 +406,7 @@ resource "aws_storagegateway_cached_iscsi_volume" "test" {
 
 func testAccAWSStorageGatewayCachedIscsiVolumeConfigKMSEncrypted(rName string) string {
 	return testAccAWSStorageGatewayCachedIscsiVolumeConfigBase(rName) + fmt.Sprintf(`
- resource "aws_kms_key" "test" {
+resource "aws_kms_key" "test" {
   description = "Terraform acc test %[1]s"
   policy      = <<POLICY
  {

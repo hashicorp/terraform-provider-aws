@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -23,6 +24,7 @@ func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAccountDestroy,
 		Steps: []resource.TestStep{
@@ -112,6 +114,25 @@ func testAccCheckAWSAPIGatewayAccountDestroy(s *terraform.State) error {
 	// Intentionally noop
 	// as there is no API method for deleting or resetting account settings
 	return nil
+}
+
+// testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn checks whether a CloudWatch role ARN has been configured in the current AWS region.
+func testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+
+	output, err := conn.GetAccount(&apigateway.GetAccountInput{})
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping tests: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("error reading API Gateway Account: %s", err)
+	}
+
+	if output == nil || aws.StringValue(output.CloudwatchRoleArn) == "" {
+		t.Skip("skipping tests; no API Gateway CloudWatch role ARN has been configured in this region")
+	}
 }
 
 const testAccAWSAPIGatewayAccountConfig_empty = `

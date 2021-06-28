@@ -74,28 +74,33 @@ func resourceAwsDmsEventSubscription() *schema.Resource {
 					"replication-task",
 				}, false),
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsDmsEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dmsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &dms.CreateEventSubscriptionInput{
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
 		SubscriptionName: aws.String(d.Get("name").(string)),
 		SourceType:       aws.String(d.Get("source_type").(string)),
-		Tags:             keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DatabasemigrationserviceTags(),
+		Tags:             tags.IgnoreAws().DatabasemigrationserviceTags(),
 	}
 
 	if v, ok := d.GetOk("event_categories"); ok {
-		request.EventCategories = expandStringList(v.(*schema.Set).List())
+		request.EventCategories = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("source_ids"); ok {
-		request.SourceIds = expandStringList(v.(*schema.Set).List())
+		request.SourceIds = expandStringSet(v.(*schema.Set))
 	}
 
 	_, err := conn.CreateEventSubscription(request)
@@ -135,7 +140,7 @@ func resourceAwsDmsEventSubscriptionUpdate(d *schema.ResourceData, meta interfac
 		}
 
 		if v, ok := d.GetOk("event_categories"); ok {
-			request.EventCategories = expandStringList(v.(*schema.Set).List())
+			request.EventCategories = expandStringSet(v.(*schema.Set))
 		}
 
 		_, err := conn.ModifyEventSubscription(request)
@@ -159,8 +164,8 @@ func resourceAwsDmsEventSubscriptionUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.DatabasemigrationserviceUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating DMS Event Subscription (%s) tags: %s", d.Get("arn").(string), err)
@@ -172,6 +177,7 @@ func resourceAwsDmsEventSubscriptionUpdate(d *schema.ResourceData, meta interfac
 
 func resourceAwsDmsEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dmsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	request := &dms.DescribeEventSubscriptionsInput{
@@ -220,8 +226,15 @@ func resourceAwsDmsEventSubscriptionRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error listing tags for DMS Event Subscription (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil

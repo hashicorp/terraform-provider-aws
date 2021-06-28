@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSRedshiftParameterGroup_basic(t *testing.T) {
@@ -20,6 +19,7 @@ func TestAccAWSRedshiftParameterGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -45,6 +45,7 @@ func TestAccAWSRedshiftParameterGroup_withParameters(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -58,15 +59,15 @@ func TestAccAWSRedshiftParameterGroup_withParameters(t *testing.T) {
 						resourceName, "family", "redshift-1.0"),
 					resource.TestCheckResourceAttr(
 						resourceName, "description", "Managed by Terraform"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "require_ssl",
 						"value": "true",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "query_group",
 						"value": "example",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "enable_user_activity_logging",
 						"value": "true",
 					}),
@@ -88,6 +89,7 @@ func TestAccAWSRedshiftParameterGroup_withoutParameters(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -119,6 +121,7 @@ func TestAccAWSRedshiftParameterGroup_withTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftParameterGroupDestroy,
 		Steps: []resource.TestStep{

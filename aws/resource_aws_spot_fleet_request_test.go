@@ -10,10 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -25,12 +25,20 @@ func init() {
 
 func testSweepSpotFleetRequests(region string) error {
 	client, err := sharedClientForRegion(region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).ec2conn
 
-	err = conn.DescribeSpotFleetRequestsPages(&ec2.DescribeSpotFleetRequestsInput{}, func(page *ec2.DescribeSpotFleetRequestsOutput, isLast bool) bool {
+	conn := client.(*AWSClient).ec2conn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
+
+	err = conn.DescribeSpotFleetRequestsPages(&ec2.DescribeSpotFleetRequestsInput{}, func(page *ec2.DescribeSpotFleetRequestsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
 		if len(page.SpotFleetRequestConfigs) == 0 {
 			log.Print("[DEBUG] No Spot Fleet Requests to sweep")
 			return false
@@ -39,22 +47,31 @@ func testSweepSpotFleetRequests(region string) error {
 		for _, config := range page.SpotFleetRequestConfigs {
 			id := aws.StringValue(config.SpotFleetRequestId)
 
-			log.Printf("[INFO] Deleting Spot Fleet Request: %s", id)
-			err := deleteSpotFleetRequest(id, true, 15*time.Minute, conn)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Spot Fleet Request (%s): %s", id, err)
-			}
+			r := resourceAwsSpotFleetRequest()
+			d := r.Data(nil)
+			d.SetId(id)
+			d.Set("terminate_instances_with_expiration", true)
+
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
-		return !isLast
+
+		return !lastPage
 	})
+
 	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 Spot Fleet Requests sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving EC2 Spot Fleet Requests: %s", err)
+		errs = multierror.Append(errs, fmt.Errorf("error describing EC2 Spot Fleet Requests for %s: %w", region, err))
 	}
-	return nil
+
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Spot Fleet Requests for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping EC2 Spot Fleet Requests sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func TestAccAWSSpotFleetRequest_basic(t *testing.T) {
@@ -65,6 +82,7 @@ func TestAccAWSSpotFleetRequest_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -96,6 +114,7 @@ func TestAccAWSSpotFleetRequest_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -142,6 +161,7 @@ func TestAccAWSSpotFleetRequest_associatePublicIpAddress(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -151,7 +171,7 @@ func TestAccAWSSpotFleetRequest_associatePublicIpAddress(t *testing.T) {
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
 						"associate_public_ip_address": "true",
 					}),
 				),
@@ -174,6 +194,7 @@ func TestAccAWSSpotFleetRequest_launchTemplate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -204,6 +225,7 @@ func TestAccAWSSpotFleetRequest_launchTemplate_multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -228,6 +250,7 @@ func TestAccAWSSpotFleetRequest_launchTemplateWithOverrides(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -258,6 +281,7 @@ func TestAccAWSSpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -298,6 +322,7 @@ func TestAccAWSSpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -324,6 +349,107 @@ func TestAccAWSSpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 	})
 }
 
+func TestAccAWSSpotFleetRequest_onDemandTargetCapacity(t *testing.T) {
+	var sfr ec2.SpotFleetRequestConfig
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestOnDemandTargetCapacityConfig(rName, validUntil, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_target_capacity", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+			{
+				Config: testAccAWSSpotFleetRequestOnDemandTargetCapacityConfig(rName, validUntil, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_target_capacity", "1"),
+				),
+			},
+			{
+				Config: testAccAWSSpotFleetRequestOnDemandTargetCapacityConfig(rName, validUntil, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_target_capacity", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSpotFleetRequest_onDemandMaxTotalPrice(t *testing.T) {
+	var sfr ec2.SpotFleetRequestConfig
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestOnDemandMaxTotalPriceConfig(rName, validUntil, "0.05"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_max_total_price", "0.05"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+		},
+	})
+}
+
+func TestAccAWSSpotFleetRequest_onDemandAllocationStrategy(t *testing.T) {
+	var sfr ec2.SpotFleetRequestConfig
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestOnDemandAllocationStrategyConfig(rName, validUntil, "prioritized"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_allocation_strategy", "prioritized"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+		},
+	})
+}
+
 func TestAccAWSSpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -332,6 +458,7 @@ func TestAccAWSSpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -361,6 +488,7 @@ func TestAccAWSSpotFleetRequest_fleetType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -390,6 +518,7 @@ func TestAccAWSSpotFleetRequest_iamInstanceProfileArn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -419,6 +548,7 @@ func TestAccAWSSpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -459,6 +589,7 @@ func TestAccAWSSpotFleetRequest_updateTargetCapacity(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -503,6 +634,7 @@ func TestAccAWSSpotFleetRequest_updateExcessCapacityTerminationPolicy(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -539,6 +671,7 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzOrSubnetInRegion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -569,6 +702,7 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -578,8 +712,8 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.availability_zone", availabilityZonesDataSource, "names.0"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.availability_zone", availabilityZonesDataSource, "names.1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.availability_zone", availabilityZonesDataSource, "names.0"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.availability_zone", availabilityZonesDataSource, "names.1"),
 				),
 			},
 			{
@@ -600,6 +734,7 @@ func TestAccAWSSpotFleetRequest_lowestPriceSubnetInGivenList(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -631,6 +766,7 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -640,9 +776,9 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.availability_zone", availabilityZonesDataSource, "names.0"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.instance_type", instanceTypeDataSource, "instance_type"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.availability_zone", availabilityZonesDataSource, "names.0"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.instance_type", instanceTypeDataSource, "instance_type"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
 						"instance_type": "m3.large",
 					}),
 				),
@@ -665,6 +801,7 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameSubnet(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -695,6 +832,7 @@ func TestAccAWSSpotFleetRequest_overriddingSpotPrice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -705,11 +843,11 @@ func TestAccAWSSpotFleetRequest_overriddingSpotPrice(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
 						"spot_price":    "0.05",
 						"instance_type": "m3.large",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.instance_type", instanceTypeDataSourceName, "instance_type"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.instance_type", instanceTypeDataSourceName, "instance_type"),
 				),
 			},
 			{
@@ -730,6 +868,7 @@ func TestAccAWSSpotFleetRequest_withoutSpotPrice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -759,6 +898,7 @@ func TestAccAWSSpotFleetRequest_diversifiedAllocation(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -789,6 +929,7 @@ func TestAccAWSSpotFleetRequest_multipleInstancePools(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -834,6 +975,7 @@ func TestAccAWSSpotFleetRequest_withWeightedCapacity(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -844,11 +986,11 @@ func TestAccAWSSpotFleetRequest_withWeightedCapacity(t *testing.T) {
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
 						"weighted_capacity": "3",
 						"instance_type":     "r3.large",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
 						"weighted_capacity": "6",
 						"instance_type":     "m3.large",
 					}),
@@ -872,6 +1014,7 @@ func TestAccAWSSpotFleetRequest_withEBSDisk(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -900,6 +1043,7 @@ func TestAccAWSSpotFleetRequest_LaunchSpecification_EbsBlockDevice_KmsKeyId(t *t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -927,6 +1071,7 @@ func TestAccAWSSpotFleetRequest_LaunchSpecification_RootBlockDevice_KmsKeyId(t *
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -934,6 +1079,73 @@ func TestAccAWSSpotFleetRequest_LaunchSpecification_RootBlockDevice_KmsKeyId(t *
 				Config: testAccAWSSpotFleetRequestLaunchSpecificationRootBlockDeviceKmsKeyId(rName, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &config),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+		},
+	})
+}
+
+func TestAccAWSSpotFleetRequest_LaunchSpecification_EbsBlockDeviceGp3(t *testing.T) {
+	var config ec2.SpotFleetRequestConfig
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestLaunchSpecificationEbsBlockDeviceGp3(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &config),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*.ebs_block_device.*", map[string]string{
+						"device_name": "/dev/xvdcz",
+						"iops":        "4000",
+						"throughput":  "500",
+						"volume_size": "15",
+						"volume_type": "gp3",
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+		},
+	})
+}
+
+func TestAccAWSSpotFleetRequest_LaunchSpecification_RootBlockDeviceGp3(t *testing.T) {
+	var config ec2.SpotFleetRequestConfig
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestLaunchSpecificationRootBlockDeviceGp3(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &config),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*.root_block_device.*", map[string]string{
+						"iops":        "4000",
+						"throughput":  "500",
+						"volume_size": "15",
+						"volume_type": "gp3",
+					}),
 				),
 			},
 			{
@@ -954,6 +1166,7 @@ func TestAccAWSSpotFleetRequest_withTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -961,7 +1174,7 @@ func TestAccAWSSpotFleetRequest_withTags(t *testing.T) {
 				Config: testAccAWSSpotFleetRequestTagsConfig(rName, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &config),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
 						"tags.%":      "2",
 						"tags.First":  "TfAccTest",
 						"tags.Second": "Terraform",
@@ -986,6 +1199,7 @@ func TestAccAWSSpotFleetRequest_placementTenancyAndGroup(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -1015,6 +1229,7 @@ func TestAccAWSSpotFleetRequest_WithELBs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -1044,6 +1259,7 @@ func TestAccAWSSpotFleetRequest_WithTargetGroups(t *testing.T) {
 	resourceName := "aws_spot_fleet_request.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -1074,6 +1290,7 @@ func TestAccAWSSpotFleetRequest_zero_capacity(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -1108,6 +1325,35 @@ func TestAccAWSSpotFleetRequest_zero_capacity(t *testing.T) {
 	})
 }
 
+func TestAccAWSSpotFleetRequest_CapacityRebalance(t *testing.T) {
+	var sfr ec2.SpotFleetRequestConfig
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestCapacityRebalance(rName, validUntil),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "spot_maintenance_strategies.0.capacity_rebalance.0.replacement_strategy", "launch"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+		},
+	})
+}
+
 func TestAccAWSSpotFleetRequest_WithInstanceStoreAmi(t *testing.T) {
 	TestAccSkip(t, "Test fails due to test harness constraints")
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1115,6 +1361,7 @@ func TestAccAWSSpotFleetRequest_WithInstanceStoreAmi(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -1134,6 +1381,7 @@ func TestAccAWSSpotFleetRequest_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
@@ -2331,6 +2579,69 @@ resource "aws_spot_fleet_request" "test" {
 `, validUntil, rName)
 }
 
+func testAccAWSSpotFleetRequestLaunchSpecificationEbsBlockDeviceGp3(rName string) string {
+	return composeConfig(
+		testAccAWSSpotFleetRequestConfigBase(rName),
+		`
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = aws_iam_role.test.arn
+  spot_price                          = "0.05"
+  target_capacity                     = 1
+  terminate_instances_with_expiration = true
+  wait_for_fulfillment                = true
+
+  launch_specification {
+    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    instance_type = "t2.micro"
+
+    ebs_block_device {
+      device_name = "/dev/xvda"
+      volume_type = "gp2"
+      volume_size = 8
+    }
+
+    ebs_block_device {
+      device_name = "/dev/xvdcz"
+      iops        = 4000
+      throughput  = 500
+      volume_size = 15
+      volume_type = "gp3"
+    }
+  }
+
+  depends_on = [aws_iam_policy_attachment.test]
+}
+`)
+}
+
+func testAccAWSSpotFleetRequestLaunchSpecificationRootBlockDeviceGp3(rName string) string {
+	return composeConfig(
+		testAccAWSSpotFleetRequestConfigBase(rName),
+		`
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = aws_iam_role.test.arn
+  spot_price                          = "0.05"
+  target_capacity                     = 1
+  terminate_instances_with_expiration = true
+  wait_for_fulfillment                = true
+
+  launch_specification {
+    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    instance_type = "t2.micro"
+
+    root_block_device {
+      iops        = 4000
+      throughput  = 500
+      volume_size = 15
+      volume_type = "gp3"
+    }
+  }
+
+  depends_on = [aws_iam_policy_attachment.test]
+}
+`)
+}
+
 func testAccAWSSpotFleetRequestLaunchSpecificationWithInstanceStoreAmi(rName string, validUntil string) string {
 	return testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig() +
 		testAccAWSSpotFleetRequestConfigBase(rName) +
@@ -2425,4 +2736,127 @@ resource "aws_spot_fleet_request" "test" {
   depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil)
+}
+
+func testAccAWSSpotFleetRequestCapacityRebalance(rName string, validUntil string) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName) + fmt.Sprintf(`
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = aws_iam_role.test.arn
+  spot_price                          = "0.05"
+  target_capacity                     = 2
+  valid_until                         = %[1]q
+  terminate_instances_with_expiration = true
+  wait_for_fulfillment                = true
+
+  spot_maintenance_strategies {
+    capacity_rebalance {
+      replacement_strategy = "launch"
+    }
+  }
+
+  launch_specification {
+    instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    key_name      = aws_key_pair.test.key_name
+  }
+
+  depends_on = [aws_iam_policy_attachment.test]
+}
+`, validUntil)
+}
+
+func testAccAWSSpotFleetRequestOnDemandTargetCapacityConfig(rName string, validUntil string, targetCapacity int) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName) +
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  key_name      = aws_key_pair.test.key_name
+}
+
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = aws_iam_role.test.arn
+  spot_price                          = "0.005"
+  target_capacity                     = 2
+  valid_until                         = %[2]q
+  terminate_instances_with_expiration = true
+  instance_interruption_behaviour     = "stop"
+  wait_for_fulfillment                = true
+  on_demand_target_capacity           = %[3]d
+
+  launch_template_config {
+    launch_template_specification {
+      name    = aws_launch_template.test.name
+      version = aws_launch_template.test.latest_version
+    }
+  }
+
+  depends_on = ["aws_iam_policy_attachment.test"]
+}
+`, rName, validUntil, targetCapacity)
+}
+
+func testAccAWSSpotFleetRequestOnDemandMaxTotalPriceConfig(rName, validUntil, price string) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName) +
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  key_name      = aws_key_pair.test.key_name
+}
+
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = aws_iam_role.test.arn
+  spot_price                          = "0.005"
+  target_capacity                     = 2
+  valid_until                         = %[2]q
+  terminate_instances_with_expiration = true
+  instance_interruption_behaviour     = "stop"
+  wait_for_fulfillment                = true
+  on_demand_max_total_price           = %[3]q
+
+  launch_template_config {
+    launch_template_specification {
+      name    = aws_launch_template.test.name
+      version = aws_launch_template.test.latest_version
+    }
+  }
+
+  depends_on = ["aws_iam_policy_attachment.test"]
+}
+`, rName, validUntil, price)
+}
+
+func testAccAWSSpotFleetRequestOnDemandAllocationStrategyConfig(rName, validUntil, strategy string) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName) +
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  key_name      = aws_key_pair.test.key_name
+}
+
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = aws_iam_role.test.arn
+  spot_price                          = "0.005"
+  target_capacity                     = 2
+  valid_until                         = %[2]q
+  terminate_instances_with_expiration = true
+  instance_interruption_behaviour     = "stop"
+  wait_for_fulfillment                = true
+  on_demand_allocation_strategy       = %[3]q
+
+  launch_template_config {
+    launch_template_specification {
+      name    = aws_launch_template.test.name
+      version = aws_launch_template.test.latest_version
+    }
+  }
+
+  depends_on = ["aws_iam_policy_attachment.test"]
+}
+`, rName, validUntil, strategy)
 }

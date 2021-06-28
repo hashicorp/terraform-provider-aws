@@ -21,6 +21,7 @@ func TestAccAWSVPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
@@ -75,10 +76,10 @@ func TestAccAWSVPCPeeringConnectionAccepter_differentRegionSameAccount(t *testin
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccMultipleRegionsPreCheck(t)
-			testAccAlternateRegionPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccAwsVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -123,7 +124,8 @@ func TestAccAWSVPCPeeringConnectionAccepter_sameRegionDifferentAccount(t *testin
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccAwsVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -157,11 +159,11 @@ func TestAccAWSVPCPeeringConnectionAccepter_differentRegionDifferentAccount(t *t
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccMultipleRegionsPreCheck(t)
-			testAccAlternateRegionPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccAwsVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{

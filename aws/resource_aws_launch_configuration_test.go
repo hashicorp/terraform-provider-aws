@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
 func init() {
@@ -70,14 +70,14 @@ func TestAccAWSLaunchConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationNoNameConfig(),
+				Config: testAccAWSLaunchConfigurationConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
-					testAccCheckAWSLaunchConfigurationGeneratedNamePrefix(resourceName, "terraform-"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(`launchConfiguration:.+`)),
 				),
 			},
@@ -87,12 +87,61 @@ func TestAccAWSLaunchConfiguration_basic(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
 			},
+		},
+	})
+}
+
+func TestAccAWSLaunchConfiguration_Name_Generated(t *testing.T) {
+	var conf autoscaling.LaunchConfiguration
+	resourceName := "aws_launch_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationPrefixNameConfig(),
+				Config: testAccAWSLaunchConfigurationConfigNameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
-					testAccCheckAWSLaunchConfigurationGeneratedNamePrefix(resourceName, "tf-acc-test-"),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchConfiguration_NamePrefix(t *testing.T) {
+	var conf autoscaling.LaunchConfiguration
+	resourceName := "aws_launch_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchConfigurationConfigNamePrefix("tf-acc-test-prefix-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
 			},
 		},
 	})
@@ -104,6 +153,7 @@ func TestAccAWSLaunchConfiguration_withBlockDevices(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -135,6 +185,7 @@ func TestAccAWSLaunchConfiguration_withInstanceStoreAMI(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -163,6 +214,7 @@ func TestAccAWSLaunchConfiguration_RootBlockDevice_AmiDisappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -192,6 +244,7 @@ func TestAccAWSLaunchConfiguration_RootBlockDevice_VolumeSize(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -206,7 +259,7 @@ func TestAccAWSLaunchConfiguration_RootBlockDevice_VolumeSize(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"associate_public_ip_address", "name_prefix"},
+				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
 			},
 			{
 				Config: testAccAWSLaunchConfigurationConfigWithRootBlockDeviceVolumeSize(rName, 20),
@@ -226,6 +279,7 @@ func TestAccAWSLaunchConfiguration_encryptedRootBlockDevice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -240,7 +294,7 @@ func TestAccAWSLaunchConfiguration_encryptedRootBlockDevice(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"associate_public_ip_address", "name_prefix"},
+				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
 			},
 		},
 	})
@@ -252,6 +306,7 @@ func TestAccAWSLaunchConfiguration_withSpotPrice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -281,6 +336,7 @@ func TestAccAWSLaunchConfiguration_withVpcClassicLink(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -308,6 +364,7 @@ func TestAccAWSLaunchConfiguration_withIAMProfile(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -333,6 +390,7 @@ func TestAccAWSLaunchConfiguration_withEncryption(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -353,12 +411,45 @@ func TestAccAWSLaunchConfiguration_withEncryption(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchConfiguration_withGP3(t *testing.T) {
+	var conf autoscaling.LaunchConfiguration
+	resourceName := "aws_launch_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchConfigurationWithGP3(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.test", &conf),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"volume_type": "gp3",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"throughput": "150",
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchConfiguration_updateEbsBlockDevices(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -366,7 +457,7 @@ func TestAccAWSLaunchConfiguration_updateEbsBlockDevices(t *testing.T) {
 				Config: testAccAWSLaunchConfigurationWithEncryption(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"volume_size": "9",
 					}),
 				),
@@ -381,10 +472,40 @@ func TestAccAWSLaunchConfiguration_updateEbsBlockDevices(t *testing.T) {
 				Config: testAccAWSLaunchConfigurationWithEncryptionUpdated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"volume_size": "10",
 					}),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchConfiguration_metadataOptions(t *testing.T) {
+	var conf autoscaling.LaunchConfiguration
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_launch_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchConfigurationConfigMetadataOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -397,6 +518,7 @@ func TestAccAWSLaunchConfiguration_ebs_noDevice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -405,7 +527,7 @@ func TestAccAWSLaunchConfiguration_ebs_noDevice(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"device_name": "/dev/sda2",
 						"no_device":   "true",
 					}),
@@ -415,17 +537,19 @@ func TestAccAWSLaunchConfiguration_ebs_noDevice(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"associate_public_ip_address", "name_prefix"},
+				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
 			},
 		},
 	})
 }
+
 func TestAccAWSLaunchConfiguration_userData(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -475,24 +599,6 @@ func testAccCheckAWSLaunchConfigurationWithEncryption(conf *autoscaling.LaunchCo
 			return fmt.Errorf("block device isn't encrypted as expected: /dev/sdb")
 		}
 
-		return nil
-	}
-}
-
-func testAccCheckAWSLaunchConfigurationGeneratedNamePrefix(
-	resource, prefix string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		r, ok := s.RootModule().Resources[resource]
-		if !ok {
-			return fmt.Errorf("Resource not found")
-		}
-		name, ok := r.Primary.Attributes["name"]
-		if !ok {
-			return fmt.Errorf("Name attr not found: %#v", r.Primary.Attributes)
-		}
-		if !strings.HasPrefix(name, prefix) {
-			return fmt.Errorf("Name: %q, does not have prefix: %q", name, prefix)
-		}
 		return nil
 	}
 }
@@ -686,6 +792,23 @@ resource "aws_launch_configuration" "test" {
 `, rInt))
 }
 
+func testAccAWSLaunchConfigurationConfigMetadataOptions(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		fmt.Sprintf(`
+resource "aws_launch_configuration" "test" {
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t3.nano"
+  name          = %[1]q
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2
+  }
+}
+`, rName))
+}
+
 func testAccAWSLaunchConfigurationConfig() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
@@ -731,27 +854,23 @@ resource "aws_launch_configuration" "test" {
 `, acctest.RandInt()))
 }
 
-func testAccAWSLaunchConfigurationNoNameConfig() string {
+func testAccAWSLaunchConfigurationConfigNameGenerated() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_launch_configuration" "test" {
-  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type               = "t2.micro"
-  user_data                   = "testtest-user-data-change"
-  associate_public_ip_address = false
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
 }
 `)
 }
 
-func testAccAWSLaunchConfigurationPrefixNameConfig() string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+func testAccAWSLaunchConfigurationConfigNamePrefix(namePrefix string) string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name_prefix                 = "tf-acc-test-"
-  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type               = "t2.micro"
-  user_data                   = "testtest-user-data-change"
-  associate_public_ip_address = false
+  name_prefix   = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
 }
-`)
+`, namePrefix))
 }
 
 func testAccAWSLaunchConfigurationWithEncryption() string {
@@ -770,6 +889,29 @@ resource "aws_launch_configuration" "test" {
     device_name = "/dev/sdb"
     volume_size = 9
     encrypted   = true
+  }
+}
+`)
+}
+
+func testAccAWSLaunchConfigurationWithGP3() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+resource "aws_launch_configuration" "test" {
+  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type               = "t2.micro"
+  associate_public_ip_address = false
+
+  root_block_device {
+    volume_type = "gp3"
+    volume_size = 11
+  }
+
+  ebs_block_device {
+    volume_type = "gp3"
+    device_name = "/dev/sdb"
+    volume_size = 9
+    encrypted   = true
+    throughput  = 150
   }
 }
 `)

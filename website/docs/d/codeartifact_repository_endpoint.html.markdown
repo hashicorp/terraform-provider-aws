@@ -12,7 +12,7 @@ The CodeArtifact Repository Endpoint data source returns the endpoint of a repos
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_codeartifact_repository_endpoint" "test" {
   domain     = aws_codeartifact_domain.test.domain
   repository = aws_codeartifact_repository.test.repository
@@ -26,7 +26,7 @@ The following arguments are supported:
 
 * `domain` - (Required) The name of the domain that contains the repository.
 * `repository` - (Required) The name of the repository.
-* `format` - (Required) Which endpoint of a repository to return. A repository has one endpoint for each package format: `npm`, `pypi`, and `maven`.
+* `format` - (Required) Which endpoint of a repository to return. A repository has one endpoint for each package format: `npm`, `pypi`, `maven`, and `nuget`.
 * `domain_owner` - (Optional) The account number of the AWS account that owns the domain.
 
 ## Attributes Reference

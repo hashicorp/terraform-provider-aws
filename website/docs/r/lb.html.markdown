@@ -16,7 +16,7 @@ Provides a Load Balancer resource.
 
 ### Application Load Balancer
 
-```hcl
+```terraform
 resource "aws_lb" "test" {
   name               = "test-lb-tf"
   internal           = false
@@ -40,7 +40,7 @@ resource "aws_lb" "test" {
 
 ### Network Load Balancer
 
-```hcl
+```terraform
 resource "aws_lb" "test" {
   name               = "test-lb-tf"
   internal           = false
@@ -57,7 +57,7 @@ resource "aws_lb" "test" {
 
 ### Specifying Elastic IPs
 
-```hcl
+```terraform
 resource "aws_lb" "example" {
   name               = "example"
   load_balancer_type = "network"
@@ -76,7 +76,7 @@ resource "aws_lb" "example" {
 
 ### Specifying private IP addresses for an internal-facing load balancer
 
-```hcl
+```terraform
 resource "aws_lb" "example" {
   name               = "example"
   load_balancer_type = "network"
@@ -106,7 +106,7 @@ must contain only alphanumeric characters or hyphens, and must not begin or end 
 Terraform will autogenerate a name beginning with `tf-lb`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `internal` - (Optional) If true, the LB will be internal.
-* `load_balancer_type` - (Optional) The type of load balancer to create. Possible values are `application` or `network`. The default value is `application`.
+* `load_balancer_type` - (Optional) The type of load balancer to create. Possible values are `application`, `gateway`, or `network`. The default value is `application`.
 * `security_groups` - (Optional) A list of security group IDs to assign to the LB. Only valid for Load Balancers of type `application`.
 * `drop_invalid_header_fields` - (Optional) Indicates whether HTTP headers with header fields that are not valid are removed by the load balancer (true) or routed to targets (false). The default is false. Elastic Load Balancing requires that message header names contain only alphanumeric characters and hyphens. Only valid for Load Balancers of type `application`.
 * `access_logs` - (Optional) An Access Logs block. Access Logs documented below.
@@ -122,7 +122,7 @@ for load balancers of type `network` will force a recreation of the resource.
 * `enable_http2` - (Optional) Indicates whether HTTP/2 is enabled in `application` load balancers. Defaults to `true`.
 * `customer_owned_ipv4_pool` - (Optional) The ID of the customer owned ipv4 pool to use for this load balancer.
 * `ip_address_type` - (Optional) The type of IP addresses used by the subnets for your load balancer. The possible values are `ipv4` and `dualstack`
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Access Logs (`access_logs`) support the following:
 
@@ -135,22 +135,24 @@ Subnet Mapping (`subnet_mapping`) blocks support the following:
 * `subnet_id` - (Required) The id of the subnet of which to attach to the load balancer. You can specify only one subnet per Availability Zone.
 * `allocation_id` - (Optional) The allocation ID of the Elastic IP address.
 * `private_ipv4_address` - (Optional) A private ipv4 address within the subnet to assign to the internal-facing load balancer.
+* `ipv6_address` - (Optional) An ipv6 address within the subnet to assign to the internet-facing load balancer.
 
 ## Attributes Reference
 
-The following attributes are exported in addition to the arguments listed above:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ARN of the load balancer (matches `arn`).
 * `arn` - The ARN of the load balancer (matches `id`).
 * `arn_suffix` - The ARN suffix for use with CloudWatch Metrics.
 * `dns_name` - The DNS name of the load balancer.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `zone_id` - The canonical hosted zone ID of the load balancer (to be used in a Route 53 Alias record).
 * `subnet_mapping.*.outpost_id` - ID of the Outpost containing the load balancer.
 
 ## Timeouts
 
 `aws_lb` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `10 minutes`) Used for Creating LB
 - `update` - (Default `10 minutes`) Used for LB modifications

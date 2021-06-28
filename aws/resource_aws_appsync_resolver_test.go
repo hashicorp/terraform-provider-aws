@@ -18,7 +18,8 @@ func TestAccAwsAppsyncResolver_basic(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appsync", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
@@ -48,7 +49,8 @@ func TestAccAwsAppsyncResolver_disappears(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appsync", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
@@ -71,7 +73,8 @@ func TestAccAwsAppsyncResolver_DataSource(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appsync", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
@@ -98,13 +101,41 @@ func TestAccAwsAppsyncResolver_DataSource(t *testing.T) {
 	})
 }
 
+func TestAccAwsAppsyncResolver_DataSource_lambda(t *testing.T) {
+	var resolver appsync.Resolver
+	rName := fmt.Sprintf("tfacctest%d", acctest.RandInt())
+	resourceName := "aws_appsync_resolver.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncResolver_DataSource_lambda(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver),
+					resource.TestCheckResourceAttr(resourceName, "data_source", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAwsAppsyncResolver_RequestTemplate(t *testing.T) {
 	var resolver1, resolver2 appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", acctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appsync", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
@@ -137,7 +168,8 @@ func TestAccAwsAppsyncResolver_ResponseTemplate(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appsync", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
@@ -170,7 +202,8 @@ func TestAccAwsAppsyncResolver_multipleResolvers(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appsync", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
@@ -199,7 +232,8 @@ func TestAccAwsAppsyncResolver_PipelineConfig(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appsync", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
@@ -226,7 +260,8 @@ func TestAccAwsAppsyncResolver_CachingConfig(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appsync", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
@@ -453,6 +488,53 @@ EOF
 EOF
 }
 `, rName, dataSource)
+}
+
+func testAccAppsyncResolver_DataSource_lambda(rName string) string {
+	return testAccAppsyncDatasourceConfig_base_Lambda(rName) + fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %q
+
+  schema = <<EOF
+type Mutation {
+	putPost(id: ID!, title: String!): Post
+}
+
+type Post {
+	id: ID!
+	title: String!
+}
+
+type Query {
+	singlePost(id: ID!): Post
+}
+
+schema {
+	query: Query
+	mutation: Mutation
+}
+EOF
+}
+
+resource "aws_appsync_datasource" "test" {
+  api_id           = aws_appsync_graphql_api.test.id
+  name             = %q
+  service_role_arn = aws_iam_role.test.arn
+  type             = "AWS_LAMBDA"
+
+  lambda_config {
+    function_arn = aws_lambda_function.test.arn
+  }
+}
+
+resource "aws_appsync_resolver" "test" {
+  api_id      = aws_appsync_graphql_api.test.id
+  field       = "singlePost"
+  type        = "Query"
+  data_source = aws_appsync_datasource.test.name
+}
+`, rName, rName)
 }
 
 func testAccAppsyncResolver_RequestTemplate(rName, resourcePath string) string {

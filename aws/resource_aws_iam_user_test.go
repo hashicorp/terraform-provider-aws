@@ -3,11 +3,10 @@ package aws
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"testing"
 	"time"
-
-	"io/ioutil"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -206,6 +205,7 @@ func TestAccAWSUser_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -242,6 +242,7 @@ func TestAccAWSUser_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -265,6 +266,7 @@ func TestAccAWSUser_ForceDestroy_AccessKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -294,6 +296,7 @@ func TestAccAWSUser_ForceDestroy_LoginProfile(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -323,6 +326,7 @@ func TestAccAWSUser_ForceDestroy_MFADevice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -352,6 +356,7 @@ func TestAccAWSUser_ForceDestroy_SSHKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -381,6 +386,7 @@ func TestAccAWSUser_ForceDestroy_SigningCertificate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -412,6 +418,7 @@ func TestAccAWSUser_nameChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -448,6 +455,7 @@ func TestAccAWSUser_pathChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -485,6 +493,7 @@ func TestAccAWSUser_permissionsBoundary(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -559,6 +568,7 @@ func TestAccAWSUser_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -766,7 +776,7 @@ func testAccCheckAWSUserCreatesMFADevice(getUserOutput *iam.GetUserOutput) resou
 func testAccCheckAWSUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
-		sshKey, err := ioutil.ReadFile("./test-fixtures/public-ssh-key.pub")
+		sshKey, err := os.ReadFile("./test-fixtures/public-ssh-key.pub")
 		if err != nil {
 			return fmt.Errorf("error reading SSH fixture: %s", err)
 		}
@@ -791,7 +801,7 @@ func testAccCheckAWSUserUploadSigningCertificate(getUserOutput *iam.GetUserOutpu
 	return func(s *terraform.State) error {
 		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
 
-		signingCertificate, err := ioutil.ReadFile("./test-fixtures/iam-ssl-unix-line-endings.pem")
+		signingCertificate, err := os.ReadFile("./test-fixtures/iam-ssl-unix-line-endings.pem")
 		if err != nil {
 			return fmt.Errorf("error reading signing certificate fixture: %s", err)
 		}

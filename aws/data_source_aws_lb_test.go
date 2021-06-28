@@ -4,19 +4,21 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAWSLB_basic(t *testing.T) {
-	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandString(10))
 	dataSourceName := "data.aws_lb.alb_test_with_arn"
 	dataSourceName2 := "data.aws_lb.alb_test_with_name"
 	resourceName := "aws_lb.alb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLBConfigBasic(lbName),
@@ -56,13 +58,14 @@ func TestAccDataSourceAWSLB_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAWSLB_outpost(t *testing.T) {
-	lbName := fmt.Sprintf("testaccawslb-outpost-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawslb-outpost-%s", acctest.RandString(10))
 	dataSourceName := "data.aws_lb.alb_test_with_arn"
 	resourceName := "aws_lb.alb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck: testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLBConfigOutpost(lbName),
@@ -89,14 +92,15 @@ func TestAccDataSourceAWSLB_outpost(t *testing.T) {
 }
 
 func TestAccDataSourceAWSLB_BackwardsCompatibility(t *testing.T) {
-	lbName := fmt.Sprintf("testaccawsalb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawsalb-basic-%s", acctest.RandString(10))
 	dataSourceName1 := "data.aws_alb.alb_test_with_arn"
 	dataSourceName2 := "data.aws_alb.alb_test_with_name"
 	resourceName := "aws_alb.alb_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLBConfigBackardsCompatibility(lbName),
@@ -159,7 +163,7 @@ resource "aws_lb" "alb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -314,7 +318,7 @@ resource "aws_alb" "alb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {

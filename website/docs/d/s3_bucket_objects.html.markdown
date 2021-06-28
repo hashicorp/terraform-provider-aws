@@ -16,7 +16,7 @@ The bucket-objects data source returns keys (i.e., file names) and other metadat
 
 The following example retrieves a list of all object keys in an S3 bucket and creates corresponding Terraform object data sources:
 
-```hcl
+```terraform
 data "aws_s3_bucket_objects" "my_objects" {
   bucket = "ourcorp"
 }
@@ -46,4 +46,5 @@ In addition to all arguments above, the following attributes are exported:
 
 * `keys` - List of strings representing object keys
 * `common_prefixes` - List of any keys between `prefix` and the next occurrence of `delimiter` (i.e., similar to subdirectories of the `prefix` "directory"); the list is only returned when you specify `delimiter`
+* `id` - S3 Bucket.
 * `owners` - List of strings representing object owner IDs (see `fetch_owner` above)

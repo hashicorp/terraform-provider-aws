@@ -20,6 +20,7 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
 		Steps: []resource.TestStep{
@@ -77,7 +78,7 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/12756
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12756
 func TestAccAWSAPIGatewayStage_disappears_ReferencingDeployment(t *testing.T) {
 	var stage apigateway.Stage
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -85,6 +86,7 @@ func TestAccAWSAPIGatewayStage_disappears_ReferencingDeployment(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
 		Steps: []resource.TestStep{
@@ -111,6 +113,7 @@ func TestAccAWSAPIGatewayStage_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
 		Steps: []resource.TestStep{
@@ -138,6 +141,7 @@ func TestAccAWSAPIGatewayStage_accessLogSettings(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
 		Steps: []resource.TestStep{
@@ -205,6 +209,7 @@ func TestAccAWSAPIGatewayStage_accessLogSettings_kinesis(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
 		Steps: []resource.TestStep{

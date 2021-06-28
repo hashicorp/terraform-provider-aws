@@ -4,15 +4,17 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sync"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/waf/lister"
 )
 
 func init() {
@@ -27,41 +29,76 @@ func init() {
 
 func testSweepWafRuleGroups(region string) error {
 	client, err := sharedClientForRegion(region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).wafconn
 
-	req := &waf.ListRuleGroupsInput{}
-	resp, err := conn.ListRuleGroups(req)
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping WAF Rule Group sweep for %s: %s", region, err)
-			return nil
+	conn := client.(*AWSClient).wafconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
+	var g multierror.Group
+	var mutex = &sync.Mutex{}
+
+	input := &waf.ListRuleGroupsInput{}
+
+	err = lister.ListRuleGroupsPages(conn, input, func(page *waf.ListRuleGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		return fmt.Errorf("Error describing WAF Rule Groups: %s", err)
+
+		for _, ruleGroup := range page.RuleGroups {
+			r := resourceAwsWafRuleGroup()
+			d := r.Data(nil)
+
+			id := aws.StringValue(ruleGroup.RuleGroupId)
+			d.SetId(id)
+
+			// read concurrently and gather errors
+			g.Go(func() error {
+				// Need to Read first to fill in activated_rule attribute
+				err := r.Read(d, client)
+
+				if err != nil {
+					sweeperErr := fmt.Errorf("error reading WAF Rule Group (%s): %w", id, err)
+					log.Printf("[ERROR] %s", sweeperErr)
+					return sweeperErr
+				}
+
+				// In case it was already deleted
+				if d.Id() == "" {
+					return nil
+				}
+
+				mutex.Lock()
+				defer mutex.Unlock()
+				sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+
+				return nil
+			})
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Rule Group for %s: %w", region, err))
 	}
 
-	if len(resp.RuleGroups) == 0 {
-		log.Print("[DEBUG] No AWS WAF Rule Groups to sweep")
+	if err = g.Wait().ErrorOrNil(); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Rule Groups: %w", err))
+	}
+
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Rule Group for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping WAF Rule Group sweep for %s: %s", region, errs)
 		return nil
 	}
 
-	for _, group := range resp.RuleGroups {
-		rResp, err := conn.ListActivatedRulesInRuleGroup(&waf.ListActivatedRulesInRuleGroupInput{
-			RuleGroupId: group.RuleGroupId,
-		})
-		if err != nil {
-			return err
-		}
-		oldRules := flattenWafActivatedRules(rResp.ActivatedRules)
-		err = deleteWafRuleGroup(*group.RuleGroupId, oldRules, conn)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return errs.ErrorOrNil()
 }
 
 func TestAccAWSWafRuleGroup_basic(t *testing.T) {
@@ -75,6 +112,7 @@ func TestAccAWSWafRuleGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -87,7 +125,7 @@ func TestAccAWSWafRuleGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", groupName),
 					computeWafActivatedRuleWithRuleId(&rule, "COUNT", 50, &idx),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "COUNT",
 						"priority":      "50",
 						"type":          waf.WafRuleTypeRegular,
@@ -114,6 +152,7 @@ func TestAccAWSWafRuleGroup_changeNameForceNew(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -152,6 +191,7 @@ func TestAccAWSWafRuleGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -180,6 +220,7 @@ func TestAccAWSWafRuleGroup_changeActivatedRules(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -191,7 +232,7 @@ func TestAccAWSWafRuleGroup_changeActivatedRules(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
 					computeWafActivatedRuleWithRuleId(&rule0, "COUNT", 50, &idx0),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "COUNT",
 						"priority":      "50",
 						"type":          waf.WafRuleTypeRegular,
@@ -207,7 +248,7 @@ func TestAccAWSWafRuleGroup_changeActivatedRules(t *testing.T) {
 
 					testAccCheckAWSWafRuleExists("aws_waf_rule.test", &rule1),
 					computeWafActivatedRuleWithRuleId(&rule1, "BLOCK", 10, &idx1),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "BLOCK",
 						"priority":      "10",
 						"type":          waf.WafRuleTypeRegular,
@@ -215,7 +256,7 @@ func TestAccAWSWafRuleGroup_changeActivatedRules(t *testing.T) {
 
 					testAccCheckAWSWafRuleExists("aws_waf_rule.test2", &rule2),
 					computeWafActivatedRuleWithRuleId(&rule2, "COUNT", 1, &idx2),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "COUNT",
 						"priority":      "1",
 						"type":          waf.WafRuleTypeRegular,
@@ -223,7 +264,7 @@ func TestAccAWSWafRuleGroup_changeActivatedRules(t *testing.T) {
 
 					testAccCheckAWSWafRuleExists("aws_waf_rule.test3", &rule3),
 					computeWafActivatedRuleWithRuleId(&rule3, "BLOCK", 15, &idx3),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "BLOCK",
 						"priority":      "15",
 						"type":          waf.WafRuleTypeRegular,
@@ -270,6 +311,7 @@ func TestAccAWSWafRuleGroup_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
@@ -320,6 +362,7 @@ func TestAccAWSWafRuleGroup_noActivatedRules(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
 		Steps: []resource.TestStep{

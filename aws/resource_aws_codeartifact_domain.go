@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCodeArtifactDomain() *schema.Resource {
@@ -17,6 +18,7 @@ func resourceAwsCodeArtifactDomain() *schema.Resource {
 		Create: resourceAwsCodeArtifactDomainCreate,
 		Read:   resourceAwsCodeArtifactDomainRead,
 		Delete: resourceAwsCodeArtifactDomainDelete,
+		Update: resourceAwsCodeArtifactDomainUpdate,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -33,7 +35,8 @@ func resourceAwsCodeArtifactDomain() *schema.Resource {
 			},
 			"encryption_key": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
+				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
@@ -53,17 +56,27 @@ func resourceAwsCodeArtifactDomain() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsCodeArtifactDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codeartifactconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	log.Print("[DEBUG] Creating CodeArtifact Domain")
 
 	params := &codeartifact.CreateDomainInput{
-		Domain:        aws.String(d.Get("domain").(string)),
-		EncryptionKey: aws.String(d.Get("encryption_key").(string)),
+		Domain: aws.String(d.Get("domain").(string)),
+		Tags:   tags.IgnoreAws().CodeartifactTags(),
+	}
+
+	if v, ok := d.GetOk("encryption_key"); ok {
+		params.EncryptionKey = aws.String(v.(string))
 	}
 
 	domain, err := conn.CreateDomain(params)
@@ -78,6 +91,8 @@ func resourceAwsCodeArtifactDomainCreate(d *schema.ResourceData, meta interface{
 
 func resourceAwsCodeArtifactDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codeartifactconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading CodeArtifact Domain: %s", d.Id())
 
@@ -99,15 +114,46 @@ func resourceAwsCodeArtifactDomainRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error reading CodeArtifact Domain (%s): %w", d.Id(), err)
 	}
 
+	arn := aws.StringValue(sm.Domain.Arn)
 	d.Set("domain", sm.Domain.Name)
-	d.Set("arn", sm.Domain.Arn)
+	d.Set("arn", arn)
 	d.Set("encryption_key", sm.Domain.EncryptionKey)
 	d.Set("owner", sm.Domain.Owner)
 	d.Set("asset_size_bytes", sm.Domain.AssetSizeBytes)
 	d.Set("repository_count", sm.Domain.RepositoryCount)
 	d.Set("created_time", sm.Domain.CreatedTime.Format(time.RFC3339))
 
+	tags, err := keyvaluetags.CodeartifactListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for CodeArtifact Domain (%s): %w", arn, err)
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
 	return nil
+}
+
+func resourceAwsCodeArtifactDomainUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).codeartifactconn
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := keyvaluetags.CodeartifactUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating CodeArtifact Domain (%s) tags: %w", d.Id(), err)
+		}
+	}
+
+	return resourceAwsCodeArtifactDomainRead(d, meta)
 }
 
 func resourceAwsCodeArtifactDomainDelete(d *schema.ResourceData, meta interface{}) error {

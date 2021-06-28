@@ -2,11 +2,12 @@ package aws
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
-	"testing"
 )
 
 func CreateTablePolicy(action string) string {
@@ -31,6 +32,7 @@ func testAccAWSGlueResourcePolicy_basic(t *testing.T) {
 	resourceName := "aws_glue_resource_policy.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueResourcePolicyDestroy,
 		Steps: []resource.TestStep{
@@ -53,6 +55,7 @@ func testAccAWSGlueResourcePolicy_disappears(t *testing.T) {
 	resourceName := "aws_glue_resource_policy.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueResourcePolicyDestroy,
 		Steps: []resource.TestStep{
@@ -97,6 +100,7 @@ func testAccAWSGlueResourcePolicy_update(t *testing.T) {
 	resourceName := "aws_glue_resource_policy.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueResourcePolicyDestroy,
 		Steps: []resource.TestStep{

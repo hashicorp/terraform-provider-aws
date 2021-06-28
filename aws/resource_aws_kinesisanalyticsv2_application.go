@@ -11,8 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -29,6 +29,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 		Delete: resourceAwsKinesisAnalyticsV2ApplicationDelete,
 
 		CustomizeDiff: customdiff.Sequence(
+			SetTagsDiff,
 			customdiff.ForceNewIfChange("application_configuration.0.sql_application_configuration.0.input", func(_ context.Context, old, new, meta interface{}) bool {
 				// An existing input configuration cannot be deleted.
 				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
@@ -268,6 +269,55 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 							ConflictsWith: []string{"application_configuration.0.sql_application_configuration"},
 						},
 
+						"run_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"application_restore_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"application_restore_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.StringInSlice(kinesisanalyticsv2.ApplicationRestoreType_Values(), false),
+												},
+
+												"snapshot_name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+
+									"flink_run_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"allow_non_restored_state": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+							ConflictsWith: []string{"application_configuration.0.sql_application_configuration"},
+						},
+
 						"sql_application_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -339,7 +389,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"record_column": {
-																Type:     schema.TypeSet,
+																Type:     schema.TypeList,
 																Required: true,
 																MaxItems: 1000,
 																Elem: &schema.Resource{
@@ -438,12 +488,15 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 
 												"input_starting_position_configuration": {
 													Type:     schema.TypeList,
+													Optional: true,
 													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"input_starting_position": {
-																Type:     schema.TypeString,
-																Computed: true,
+																Type:         schema.TypeString,
+																Optional:     true,
+																Computed:     true,
+																ValidateFunc: validation.StringInSlice(kinesisanalyticsv2.InputStartingPosition_Values(), false),
 															},
 														},
 													},
@@ -600,7 +653,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"record_column": {
-																Type:     schema.TypeSet,
+																Type:     schema.TypeList,
 																Required: true,
 																MaxItems: 1000,
 																Elem: &schema.Resource{
@@ -731,6 +784,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 								"application_configuration.0.application_snapshot_configuration",
 								"application_configuration.0.environment_properties",
 								"application_configuration.0.flink_application_configuration",
+								"application_configuration.0.run_configuration",
 								"application_configuration.0.vpc_configuration",
 							},
 						},
@@ -811,6 +865,11 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 
+			"force_stop": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"last_update_timestamp": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -839,12 +898,19 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 
+			"start_application": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
 			"tags": tagsSchema(),
+
+			"tags_all": tagsSchemaComputed(),
 
 			"version_id": {
 				Type:     schema.TypeInt,
@@ -856,44 +922,56 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 
 func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kinesisanalyticsv2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
+	applicationName := d.Get("name").(string)
 	input := &kinesisanalyticsv2.CreateApplicationInput{
 		ApplicationConfiguration: expandKinesisAnalyticsV2ApplicationConfiguration(d.Get("application_configuration").([]interface{})),
 		ApplicationDescription:   aws.String(d.Get("description").(string)),
-		ApplicationName:          aws.String(d.Get("name").(string)),
+		ApplicationName:          aws.String(applicationName),
 		CloudWatchLoggingOptions: expandKinesisAnalyticsV2CloudWatchLoggingOptions(d.Get("cloudwatch_logging_options").([]interface{})),
 		RuntimeEnvironment:       aws.String(d.Get("runtime_environment").(string)),
 		ServiceExecutionRole:     aws.String(d.Get("service_execution_role").(string)),
 	}
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		input.Tags = keyvaluetags.New(v).IgnoreAws().Kinesisanalyticsv2Tags()
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().Kinesisanalyticsv2Tags()
 	}
 
 	log.Printf("[DEBUG] Creating Kinesis Analytics v2 Application: %s", input)
 
-	outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+	outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 		return conn.CreateApplication(input)
 	})
 
 	if err != nil {
-		return fmt.Errorf("error creating Kinesis Analytics v2 Application: %w", err)
+		return fmt.Errorf("error creating Kinesis Analytics v2 Application (%s): %w", applicationName, err)
 	}
 
 	output := outputRaw.(*kinesisanalyticsv2.CreateApplicationOutput)
 
 	d.SetId(aws.StringValue(output.ApplicationDetail.ApplicationARN))
+	// CreateTimestamp is required for deletion, so persist to state now in case of subsequent errors and destroy being called without refresh.
+	d.Set("create_timestamp", aws.TimeValue(output.ApplicationDetail.CreateTimestamp).Format(time.RFC3339))
+
+	if _, ok := d.GetOk("start_application"); ok {
+		if err := kinesisAnalyticsV2StartApplication(conn, expandKinesisAnalyticsV2StartApplicationInput(d)); err != nil {
+			return err
+		}
+	}
 
 	return resourceAwsKinesisAnalyticsV2ApplicationRead(d, meta)
 }
 
 func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kinesisanalyticsv2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	application, err := finder.ApplicationByName(conn, d.Get("name").(string))
+	application, err := finder.ApplicationDetailByName(conn, d.Get("name").(string))
 
-	if isAWSErr(err, kinesisanalyticsv2.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kinesis Analytics v2 Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -906,13 +984,13 @@ func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta i
 	arn := aws.StringValue(application.ApplicationARN)
 	d.Set("arn", arn)
 	d.Set("create_timestamp", aws.TimeValue(application.CreateTimestamp).Format(time.RFC3339))
-	d.Set("description", aws.StringValue(application.ApplicationDescription))
+	d.Set("description", application.ApplicationDescription)
 	d.Set("last_update_timestamp", aws.TimeValue(application.LastUpdateTimestamp).Format(time.RFC3339))
 	d.Set("name", application.ApplicationName)
 	d.Set("runtime_environment", application.RuntimeEnvironment)
-	d.Set("service_execution_role", aws.StringValue(application.ServiceExecutionRole))
-	d.Set("status", aws.StringValue(application.ApplicationStatus))
-	d.Set("version_id", int(aws.Int64Value(application.ApplicationVersionId)))
+	d.Set("service_execution_role", application.ServiceExecutionRole)
+	d.Set("status", application.ApplicationStatus)
+	d.Set("version_id", application.ApplicationVersionId)
 
 	if err := d.Set("application_configuration", flattenKinesisAnalyticsV2ApplicationConfigurationDescription(application.ApplicationConfigurationDescription)); err != nil {
 		return fmt.Errorf("error setting application_configuration: %w", err)
@@ -928,8 +1006,15 @@ func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta i
 		return fmt.Errorf("error listing tags for Kinesis Analytics v2 Application (%s): %w", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -937,9 +1022,9 @@ func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta i
 
 func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kinesisanalyticsv2conn
+	applicationName := d.Get("name").(string)
 
 	if d.HasChanges("application_configuration", "cloudwatch_logging_options", "service_execution_role") {
-		applicationName := d.Get("name").(string)
 		currentApplicationVersionId := int64(d.Get("version_id").(int))
 		updateApplication := false
 
@@ -990,7 +1075,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 						log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) input: %s", d.Id(), input)
 
-						outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+						outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 							return conn.AddApplicationInput(input)
 						})
 
@@ -999,6 +1084,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 						}
 
 						output := outputRaw.(*kinesisanalyticsv2.AddApplicationInputOutput)
+
+						if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+							return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+						}
 
 						currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 					} else if len(n.([]interface{})) == 0 {
@@ -1025,7 +1114,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 								log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) input processing configuration: %s", d.Id(), input)
 
-								outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+								outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 									return conn.AddApplicationInputProcessingConfiguration(input)
 								})
 
@@ -1034,6 +1123,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 								}
 
 								output := outputRaw.(*kinesisanalyticsv2.AddApplicationInputProcessingConfigurationOutput)
+
+								if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+									return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+								}
 
 								currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 							} else if len(n.([]interface{})) == 0 {
@@ -1046,7 +1139,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 								log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) input processing configuration: %s", d.Id(), input)
 
-								outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+								outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 									return conn.DeleteApplicationInputProcessingConfiguration(input)
 								})
 
@@ -1055,6 +1148,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 								}
 
 								output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationInputProcessingConfigurationOutput)
+
+								if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+									return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+								}
 
 								currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 							}
@@ -1104,7 +1201,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 						log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) output: %s", d.Id(), input)
 
-						outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+						outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 							return conn.DeleteApplicationOutput(input)
 						})
 
@@ -1113,6 +1210,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 						}
 
 						output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationOutputOutput)
+
+						if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+							return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+						}
 
 						currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 					}
@@ -1127,7 +1228,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 						log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) output: %s", d.Id(), input)
 
-						outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+						outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 							return conn.AddApplicationOutput(input)
 						})
 
@@ -1136,6 +1237,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 						}
 
 						output := outputRaw.(*kinesisanalyticsv2.AddApplicationOutputOutput)
+
+						if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+							return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+						}
 
 						currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 					}
@@ -1154,7 +1259,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 						log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) reference data source: %s", d.Id(), input)
 
-						outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+						outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 							return conn.AddApplicationReferenceDataSource(input)
 						})
 
@@ -1164,18 +1269,24 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 						output := outputRaw.(*kinesisanalyticsv2.AddApplicationReferenceDataSourceOutput)
 
+						if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+							return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+						}
+
 						currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 					} else if len(n.([]interface{})) == 0 {
 						// Delete existing reference data source.
+						mOldReferenceDataSource := o.([]interface{})[0].(map[string]interface{})
+
 						input := &kinesisanalyticsv2.DeleteApplicationReferenceDataSourceInput{
 							ApplicationName:             aws.String(applicationName),
 							CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
-							ReferenceId:                 aws.String(o.([]interface{})[0].(map[string]interface{})["reference_id"].(string)),
+							ReferenceId:                 aws.String(mOldReferenceDataSource["reference_id"].(string)),
 						}
 
 						log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) reference data source: %s", d.Id(), input)
 
-						outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+						outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 							return conn.DeleteApplicationReferenceDataSource(input)
 						})
 
@@ -1184,6 +1295,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 						}
 
 						output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationReferenceDataSourceOutput)
+
+						if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+							return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+						}
 
 						currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 					} else {
@@ -1212,7 +1327,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 					log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) VPC configuration: %s", d.Id(), input)
 
-					outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+					outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 						return conn.AddApplicationVpcConfiguration(input)
 					})
 
@@ -1222,18 +1337,24 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 					output := outputRaw.(*kinesisanalyticsv2.AddApplicationVpcConfigurationOutput)
 
+					if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+						return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+					}
+
 					currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 				} else if len(n.([]interface{})) == 0 {
 					// Delete existing VPC configuration.
+					mOldVpcConfiguration := o.([]interface{})[0].(map[string]interface{})
+
 					input := &kinesisanalyticsv2.DeleteApplicationVpcConfigurationInput{
 						ApplicationName:             aws.String(applicationName),
 						CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
-						VpcConfigurationId:          aws.String(o.([]interface{})[0].(map[string]interface{})["vpc_configuration_id"].(string)),
+						VpcConfigurationId:          aws.String(mOldVpcConfiguration["vpc_configuration_id"].(string)),
 					}
 
 					log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) VPC configuration: %s", d.Id(), input)
 
-					outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+					outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 						return conn.DeleteApplicationVpcConfiguration(input)
 					})
 
@@ -1242,6 +1363,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 					}
 
 					output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationVpcConfigurationOutput)
+
+					if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+						return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+					}
 
 					currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 				} else {
@@ -1262,17 +1387,19 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 			if len(o.([]interface{})) == 0 {
 				// Add new CloudWatch logging options.
+				mNewCloudWatchLoggingOption := n.([]interface{})[0].(map[string]interface{})
+
 				input := &kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionInput{
 					ApplicationName: aws.String(applicationName),
 					CloudWatchLoggingOption: &kinesisanalyticsv2.CloudWatchLoggingOption{
-						LogStreamARN: aws.String(n.([]interface{})[0].(map[string]interface{})["log_stream_arn"].(string)),
+						LogStreamARN: aws.String(mNewCloudWatchLoggingOption["log_stream_arn"].(string)),
 					},
 					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
 				}
 
 				log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) CloudWatch logging option: %s", d.Id(), input)
 
-				outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+				outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 					return conn.AddApplicationCloudWatchLoggingOption(input)
 				})
 
@@ -1282,18 +1409,24 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 				output := outputRaw.(*kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionOutput)
 
+				if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+					return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+				}
+
 				currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 			} else if len(n.([]interface{})) == 0 {
 				// Delete existing CloudWatch logging options.
+				mOldCloudWatchLoggingOption := o.([]interface{})[0].(map[string]interface{})
+
 				input := &kinesisanalyticsv2.DeleteApplicationCloudWatchLoggingOptionInput{
 					ApplicationName:             aws.String(applicationName),
-					CloudWatchLoggingOptionId:   aws.String(o.([]interface{})[0].(map[string]interface{})["cloudwatch_logging_option_id"].(string)),
+					CloudWatchLoggingOptionId:   aws.String(mOldCloudWatchLoggingOption["cloudwatch_logging_option_id"].(string)),
 					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
 				}
 
 				log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) CloudWatch logging option: %s", d.Id(), input)
 
-				outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+				outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 					return conn.DeleteApplicationCloudWatchLoggingOption(input)
 				})
 
@@ -1303,13 +1436,20 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 				output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationCloudWatchLoggingOptionOutput)
 
+				if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+					return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+				}
+
 				currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 			} else {
 				// Update existing CloudWatch logging options.
+				mOldCloudWatchLoggingOption := o.([]interface{})[0].(map[string]interface{})
+				mNewCloudWatchLoggingOption := n.([]interface{})[0].(map[string]interface{})
+
 				input.CloudWatchLoggingOptionUpdates = []*kinesisanalyticsv2.CloudWatchLoggingOptionUpdate{
 					{
-						CloudWatchLoggingOptionId: aws.String(o.([]interface{})[0].(map[string]interface{})["cloudwatch_logging_option_id"].(string)),
-						LogStreamARNUpdate:        aws.String(n.([]interface{})[0].(map[string]interface{})["log_stream_arn"].(string)),
+						CloudWatchLoggingOptionId: aws.String(mOldCloudWatchLoggingOption["cloudwatch_logging_option_id"].(string)),
+						LogStreamARNUpdate:        aws.String(mNewCloudWatchLoggingOption["log_stream_arn"].(string)),
 					},
 				}
 
@@ -1328,21 +1468,37 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 			log.Printf("[DEBUG] Updating Kinesis Analytics v2 Application (%s): %s", d.Id(), input)
 
-			_, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+			_, err := waiter.IAMPropagation(func() (interface{}, error) {
 				return conn.UpdateApplication(input)
 			})
 
 			if err != nil {
 				return fmt.Errorf("error updating Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
 			}
+
+			if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+				return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+			}
 		}
 	}
 
-	if d.HasChange("tags") {
+	if d.HasChange("tags_all") {
 		arn := d.Get("arn").(string)
-		o, n := d.GetChange("tags")
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.Kinesisanalyticsv2UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Kinesis Analytics Application (%s) tags: %s", arn, err)
+			return fmt.Errorf("error updating Kinesis Analytics v2 Application (%s) tags: %s", arn, err)
+		}
+	}
+
+	if d.HasChange("start_application") {
+		if _, ok := d.GetOk("start_application"); ok {
+			if err := kinesisAnalyticsV2StartApplication(conn, expandKinesisAnalyticsV2StartApplicationInput(d)); err != nil {
+				return err
+			}
+		} else {
+			if err := kinesisAnalyticsV2StopApplication(conn, expandKinesisAnalyticsV2StopApplicationInput(d)); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -1365,7 +1521,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationDelete(d *schema.ResourceData, meta
 		CreateTimestamp: aws.Time(createTimestamp),
 	})
 
-	if isAWSErr(err, kinesisanalyticsv2.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, kinesisanalyticsv2.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -1373,7 +1529,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationDelete(d *schema.ResourceData, meta
 		return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.ApplicationDeleted(conn, applicationName, d.Timeout(schema.TimeoutDelete))
+	_, err = waiter.ApplicationDeleted(conn, applicationName)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) deletion: %w", d.Id(), err)
@@ -1397,6 +1553,74 @@ func resourceAwsKinesisAnalyticsV2ApplicationImport(d *schema.ResourceData, meta
 	d.Set("name", parts[1])
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func kinesisAnalyticsV2StartApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.StartApplicationInput) error {
+	applicationName := aws.StringValue(input.ApplicationName)
+
+	application, err := finder.ApplicationDetailByName(conn, applicationName)
+
+	if err != nil {
+		return fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", applicationName, err)
+	}
+
+	applicationARN := aws.StringValue(application.ApplicationARN)
+
+	if actual, expected := aws.StringValue(application.ApplicationStatus), kinesisanalyticsv2.ApplicationStatusReady; actual != expected {
+		log.Printf("[DEBUG] Kinesis Analytics v2 Application (%s) has status %s. An application can only be started if it's in the %s state", applicationARN, actual, expected)
+		return nil
+	}
+
+	if len(input.RunConfiguration.SqlRunConfigurations) > 0 {
+		if application.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription != nil &&
+			len(application.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.InputDescriptions) == 0 {
+			log.Printf("[DEBUG] Kinesis Analytics v2 Application (%s) has no input description", applicationARN)
+			return nil
+		}
+
+		input.RunConfiguration.SqlRunConfigurations[0].InputId = application.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.InputDescriptions[0].InputId
+	}
+
+	log.Printf("[DEBUG] Starting Kinesis Analytics v2 Application (%s): %s", applicationARN, input)
+
+	if _, err := conn.StartApplication(input); err != nil {
+		return fmt.Errorf("error starting Kinesis Analytics v2 Application (%s): %w", applicationARN, err)
+	}
+
+	if _, err := waiter.ApplicationStarted(conn, applicationName); err != nil {
+		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to start: %w", applicationARN, err)
+	}
+
+	return nil
+}
+
+func kinesisAnalyticsV2StopApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.StopApplicationInput) error {
+	applicationName := aws.StringValue(input.ApplicationName)
+
+	application, err := finder.ApplicationDetailByName(conn, applicationName)
+
+	if err != nil {
+		return fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", applicationName, err)
+	}
+
+	applicationARN := aws.StringValue(application.ApplicationARN)
+
+	if actual, expected := aws.StringValue(application.ApplicationStatus), kinesisanalyticsv2.ApplicationStatusRunning; actual != expected {
+		log.Printf("[DEBUG] Kinesis Analytics v2 Application (%s) has status %s. An application can only be stopped if it's in the %s state", applicationARN, actual, expected)
+		return nil
+	}
+
+	log.Printf("[DEBUG] Stopping Kinesis Analytics v2 Application (%s): %s", applicationARN, input)
+
+	if _, err := conn.StopApplication(input); err != nil {
+		return fmt.Errorf("error stopping Kinesis Analytics v2 Application (%s): %w", applicationARN, err)
+	}
+
+	if _, err := waiter.ApplicationStopped(conn, applicationName); err != nil {
+		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to stop: %w", applicationARN, err)
+	}
+
+	return nil
 }
 
 func expandKinesisAnalyticsV2ApplicationConfiguration(vApplicationConfiguration []interface{}) *kinesisanalyticsv2.ApplicationConfiguration {
@@ -1560,7 +1784,7 @@ func expandKinesisAnalyticsV2ApplicationConfiguration(vApplicationConfiguration 
 			sqlApplicationConfiguration.Inputs = []*kinesisanalyticsv2.Input{expandKinesisAnalyticsV2Input(vInput)}
 		}
 
-		if vOutputs, ok := mSqlApplicationConfiguration["output"].(*schema.Set); ok && vOutputs.Len() > 0 {
+		if vOutputs, ok := mSqlApplicationConfiguration["output"].(*schema.Set); ok {
 			sqlApplicationConfiguration.Outputs = expandKinesisAnalyticsV2Outputs(vOutputs.List())
 		}
 
@@ -1576,255 +1800,6 @@ func expandKinesisAnalyticsV2ApplicationConfiguration(vApplicationConfiguration 
 	}
 
 	return applicationConfiguration
-}
-
-func flattenKinesisAnalyticsV2ApplicationConfigurationDescription(applicationConfigurationDescription *kinesisanalyticsv2.ApplicationConfigurationDescription) []interface{} {
-	if applicationConfigurationDescription == nil {
-		return []interface{}{}
-	}
-
-	mApplicationConfiguration := map[string]interface{}{}
-
-	if applicationCodeConfigurationDescription := applicationConfigurationDescription.ApplicationCodeConfigurationDescription; applicationCodeConfigurationDescription != nil {
-		mApplicationCodeConfiguration := map[string]interface{}{
-			"code_content_type": aws.StringValue(applicationCodeConfigurationDescription.CodeContentType),
-		}
-
-		if codeContentDescription := applicationCodeConfigurationDescription.CodeContentDescription; codeContentDescription != nil {
-			mCodeContent := map[string]interface{}{
-				"text_content": aws.StringValue(codeContentDescription.TextContent),
-			}
-
-			if s3ApplicationCodeLocationDescription := codeContentDescription.S3ApplicationCodeLocationDescription; s3ApplicationCodeLocationDescription != nil {
-				mS3ContentLocation := map[string]interface{}{
-					"bucket_arn":     aws.StringValue(s3ApplicationCodeLocationDescription.BucketARN),
-					"file_key":       aws.StringValue(s3ApplicationCodeLocationDescription.FileKey),
-					"object_version": aws.StringValue(s3ApplicationCodeLocationDescription.ObjectVersion),
-				}
-
-				mCodeContent["s3_content_location"] = []interface{}{mS3ContentLocation}
-			}
-
-			mApplicationCodeConfiguration["code_content"] = []interface{}{mCodeContent}
-		}
-
-		mApplicationConfiguration["application_code_configuration"] = []interface{}{mApplicationCodeConfiguration}
-	}
-
-	if applicationSnapshotConfigurationDescription := applicationConfigurationDescription.ApplicationSnapshotConfigurationDescription; applicationSnapshotConfigurationDescription != nil {
-		mApplicationSnapshotConfiguration := map[string]interface{}{
-			"snapshots_enabled": aws.BoolValue(applicationSnapshotConfigurationDescription.SnapshotsEnabled),
-		}
-
-		mApplicationConfiguration["application_snapshot_configuration"] = []interface{}{mApplicationSnapshotConfiguration}
-	}
-
-	if environmentPropertyDescriptions := applicationConfigurationDescription.EnvironmentPropertyDescriptions; environmentPropertyDescriptions != nil && len(environmentPropertyDescriptions.PropertyGroupDescriptions) > 0 {
-		mEnvironmentProperties := map[string]interface{}{}
-
-		vPropertyGroups := []interface{}{}
-
-		for _, propertyGroup := range environmentPropertyDescriptions.PropertyGroupDescriptions {
-			if propertyGroup != nil {
-				mPropertyGroup := map[string]interface{}{
-					"property_group_id": aws.StringValue(propertyGroup.PropertyGroupId),
-					"property_map":      pointersMapToStringList(propertyGroup.PropertyMap),
-				}
-
-				vPropertyGroups = append(vPropertyGroups, mPropertyGroup)
-			}
-		}
-
-		mEnvironmentProperties["property_group"] = vPropertyGroups
-
-		mApplicationConfiguration["environment_properties"] = []interface{}{mEnvironmentProperties}
-	}
-
-	if flinkApplicationConfigurationDescription := applicationConfigurationDescription.FlinkApplicationConfigurationDescription; flinkApplicationConfigurationDescription != nil {
-		mFlinkApplicationConfiguration := map[string]interface{}{}
-
-		if checkpointConfigurationDescription := flinkApplicationConfigurationDescription.CheckpointConfigurationDescription; checkpointConfigurationDescription != nil {
-			mCheckpointConfiguration := map[string]interface{}{
-				"checkpointing_enabled":         aws.BoolValue(checkpointConfigurationDescription.CheckpointingEnabled),
-				"checkpoint_interval":           int(aws.Int64Value(checkpointConfigurationDescription.CheckpointInterval)),
-				"configuration_type":            aws.StringValue(checkpointConfigurationDescription.ConfigurationType),
-				"min_pause_between_checkpoints": int(aws.Int64Value(checkpointConfigurationDescription.MinPauseBetweenCheckpoints)),
-			}
-
-			mFlinkApplicationConfiguration["checkpoint_configuration"] = []interface{}{mCheckpointConfiguration}
-		}
-
-		if monitoringConfigurationDescription := flinkApplicationConfigurationDescription.MonitoringConfigurationDescription; monitoringConfigurationDescription != nil {
-			mMonitoringConfiguration := map[string]interface{}{
-				"configuration_type": aws.StringValue(monitoringConfigurationDescription.ConfigurationType),
-				"log_level":          aws.StringValue(monitoringConfigurationDescription.LogLevel),
-				"metrics_level":      aws.StringValue(monitoringConfigurationDescription.MetricsLevel),
-			}
-
-			mFlinkApplicationConfiguration["monitoring_configuration"] = []interface{}{mMonitoringConfiguration}
-		}
-
-		if parallelismConfigurationDescription := flinkApplicationConfigurationDescription.ParallelismConfigurationDescription; parallelismConfigurationDescription != nil {
-			mParallelismConfiguration := map[string]interface{}{
-				"auto_scaling_enabled": aws.BoolValue(parallelismConfigurationDescription.AutoScalingEnabled),
-				"configuration_type":   aws.StringValue(parallelismConfigurationDescription.ConfigurationType),
-				"parallelism":          int(aws.Int64Value(parallelismConfigurationDescription.Parallelism)),
-				"parallelism_per_kpu":  int(aws.Int64Value(parallelismConfigurationDescription.ParallelismPerKPU)),
-			}
-
-			mFlinkApplicationConfiguration["parallelism_configuration"] = []interface{}{mParallelismConfiguration}
-		}
-
-		mApplicationConfiguration["flink_application_configuration"] = []interface{}{mFlinkApplicationConfiguration}
-	}
-
-	if sqlApplicationConfigurationDescription := applicationConfigurationDescription.SqlApplicationConfigurationDescription; sqlApplicationConfigurationDescription != nil {
-		mSqlApplicationConfiguration := map[string]interface{}{}
-
-		if inputDescriptions := sqlApplicationConfigurationDescription.InputDescriptions; len(inputDescriptions) > 0 && inputDescriptions[0] != nil {
-			inputDescription := inputDescriptions[0]
-
-			mInput := map[string]interface{}{
-				"in_app_stream_names": flattenStringList(inputDescription.InAppStreamNames),
-				"input_id":            aws.StringValue(inputDescription.InputId),
-				"name_prefix":         aws.StringValue(inputDescription.NamePrefix),
-			}
-
-			if inputParallelism := inputDescription.InputParallelism; inputParallelism != nil {
-				mInputParallelism := map[string]interface{}{
-					"count": int(aws.Int64Value(inputParallelism.Count)),
-				}
-
-				mInput["input_parallelism"] = []interface{}{mInputParallelism}
-			}
-
-			if inputSchema := inputDescription.InputSchema; inputSchema != nil {
-				mInput["input_schema"] = flattenKinesisAnalyticsV2SourceSchema(inputSchema)
-			}
-
-			if inputProcessingConfigurationDescription := inputDescription.InputProcessingConfigurationDescription; inputProcessingConfigurationDescription != nil {
-				mInputProcessingConfiguration := map[string]interface{}{}
-
-				if inputLambdaProcessorDescription := inputProcessingConfigurationDescription.InputLambdaProcessorDescription; inputLambdaProcessorDescription != nil {
-					mInputLambdaProcessor := map[string]interface{}{
-						"resource_arn": aws.StringValue(inputLambdaProcessorDescription.ResourceARN),
-					}
-
-					mInputProcessingConfiguration["input_lambda_processor"] = []interface{}{mInputLambdaProcessor}
-				}
-
-				mInput["input_processing_configuration"] = []interface{}{mInputProcessingConfiguration}
-			}
-
-			if kinesisFirehoseInputDescription := inputDescription.KinesisFirehoseInputDescription; kinesisFirehoseInputDescription != nil {
-				mKinesisFirehoseInput := map[string]interface{}{
-					"resource_arn": aws.StringValue(kinesisFirehoseInputDescription.ResourceARN),
-				}
-
-				mInput["kinesis_firehose_input"] = []interface{}{mKinesisFirehoseInput}
-			}
-
-			if kinesisStreamsInputDescription := inputDescription.KinesisStreamsInputDescription; kinesisStreamsInputDescription != nil {
-				mKinesisStreamsInput := map[string]interface{}{
-					"resource_arn": aws.StringValue(kinesisStreamsInputDescription.ResourceARN),
-				}
-
-				mInput["kinesis_streams_input"] = []interface{}{mKinesisStreamsInput}
-			}
-
-			mSqlApplicationConfiguration["input"] = []interface{}{mInput}
-		}
-
-		if outputDescriptions := sqlApplicationConfigurationDescription.OutputDescriptions; len(outputDescriptions) > 0 {
-			vOutputs := []interface{}{}
-
-			for _, outputDescription := range outputDescriptions {
-				if outputDescription != nil {
-					mOutput := map[string]interface{}{
-						"name":      aws.StringValue(outputDescription.Name),
-						"output_id": aws.StringValue(outputDescription.OutputId),
-					}
-
-					if destinationSchema := outputDescription.DestinationSchema; destinationSchema != nil {
-						mDestinationSchema := map[string]interface{}{
-							"record_format_type": aws.StringValue(destinationSchema.RecordFormatType),
-						}
-
-						mOutput["destination_schema"] = []interface{}{mDestinationSchema}
-					}
-
-					if kinesisFirehoseOutputDescription := outputDescription.KinesisFirehoseOutputDescription; kinesisFirehoseOutputDescription != nil {
-						mKinesisFirehoseOutput := map[string]interface{}{
-							"resource_arn": aws.StringValue(kinesisFirehoseOutputDescription.ResourceARN),
-						}
-
-						mOutput["kinesis_firehose_output"] = []interface{}{mKinesisFirehoseOutput}
-					}
-
-					if kinesisStreamsOutputDescription := outputDescription.KinesisStreamsOutputDescription; kinesisStreamsOutputDescription != nil {
-						mKinesisStreamsOutput := map[string]interface{}{
-							"resource_arn": aws.StringValue(kinesisStreamsOutputDescription.ResourceARN),
-						}
-
-						mOutput["kinesis_streams_output"] = []interface{}{mKinesisStreamsOutput}
-					}
-
-					if lambdaOutputDescription := outputDescription.LambdaOutputDescription; lambdaOutputDescription != nil {
-						mLambdaOutput := map[string]interface{}{
-							"resource_arn": aws.StringValue(lambdaOutputDescription.ResourceARN),
-						}
-
-						mOutput["lambda_output"] = []interface{}{mLambdaOutput}
-					}
-
-					vOutputs = append(vOutputs, mOutput)
-				}
-			}
-
-			mSqlApplicationConfiguration["output"] = vOutputs
-		}
-
-		if referenceDataSourceDescriptions := sqlApplicationConfigurationDescription.ReferenceDataSourceDescriptions; len(referenceDataSourceDescriptions) > 0 && referenceDataSourceDescriptions[0] != nil {
-			referenceDataSourceDescription := referenceDataSourceDescriptions[0]
-
-			mReferenceDataSource := map[string]interface{}{
-				"reference_id": aws.StringValue(referenceDataSourceDescription.ReferenceId),
-				"table_name":   aws.StringValue(referenceDataSourceDescription.TableName),
-			}
-
-			if referenceSchema := referenceDataSourceDescription.ReferenceSchema; referenceSchema != nil {
-				mReferenceDataSource["reference_schema"] = flattenKinesisAnalyticsV2SourceSchema(referenceSchema)
-			}
-
-			if s3ReferenceDataSource := referenceDataSourceDescription.S3ReferenceDataSourceDescription; s3ReferenceDataSource != nil {
-				mS3ReferenceDataSource := map[string]interface{}{
-					"bucket_arn": aws.StringValue(s3ReferenceDataSource.BucketARN),
-					"file_key":   aws.StringValue(s3ReferenceDataSource.FileKey),
-				}
-
-				mReferenceDataSource["s3_reference_data_source"] = []interface{}{mS3ReferenceDataSource}
-			}
-
-			mSqlApplicationConfiguration["reference_data_source"] = []interface{}{mReferenceDataSource}
-		}
-
-		mApplicationConfiguration["sql_application_configuration"] = []interface{}{mSqlApplicationConfiguration}
-	}
-
-	if vpcConfigurationDescriptions := applicationConfigurationDescription.VpcConfigurationDescriptions; len(vpcConfigurationDescriptions) > 0 && vpcConfigurationDescriptions[0] != nil {
-		vpcConfigurationDescription := vpcConfigurationDescriptions[0]
-
-		mVpcConfiguration := map[string]interface{}{
-			"security_group_ids":   flattenStringSet(vpcConfigurationDescription.SecurityGroupIds),
-			"subnet_ids":           flattenStringSet(vpcConfigurationDescription.SubnetIds),
-			"vpc_configuration_id": aws.StringValue(vpcConfigurationDescription.VpcConfigurationId),
-			"vpc_id":               aws.StringValue(vpcConfigurationDescription.VpcId),
-		}
-
-		mApplicationConfiguration["vpc_configuration"] = []interface{}{mVpcConfiguration}
-	}
-
-	return []interface{}{mApplicationConfiguration}
 }
 
 func expandKinesisAnalyticsV2ApplicationCodeConfigurationUpdate(vApplicationCodeConfiguration []interface{}) *kinesisanalyticsv2.ApplicationCodeConfigurationUpdate {
@@ -1986,37 +1961,6 @@ func expandKinesisAnalyticsV2CloudWatchLoggingOptions(vCloudWatchLoggingOptions 
 	return []*kinesisanalyticsv2.CloudWatchLoggingOption{cloudWatchLoggingOption}
 }
 
-func flattenKinesisAnalyticsV2CloudWatchLoggingOptionDescriptions(cloudWatchLoggingOptionDescriptions []*kinesisanalyticsv2.CloudWatchLoggingOptionDescription) []interface{} {
-	if len(cloudWatchLoggingOptionDescriptions) == 0 || cloudWatchLoggingOptionDescriptions[0] == nil {
-		return []interface{}{}
-	}
-
-	cloudWatchLoggingOptionDescription := cloudWatchLoggingOptionDescriptions[0]
-
-	mCloudWatchLoggingOption := map[string]interface{}{
-		"cloudwatch_logging_option_id": aws.StringValue(cloudWatchLoggingOptionDescription.CloudWatchLoggingOptionId),
-		"log_stream_arn":               aws.StringValue(cloudWatchLoggingOptionDescription.LogStreamARN),
-	}
-
-	return []interface{}{mCloudWatchLoggingOption}
-}
-
-func expandKinesisAnalyticsV2DestinationSchema(vDestinationSchema []interface{}) *kinesisanalyticsv2.DestinationSchema {
-	if len(vDestinationSchema) == 0 || vDestinationSchema[0] == nil {
-		return nil
-	}
-
-	destinationSchema := &kinesisanalyticsv2.DestinationSchema{}
-
-	mDestinationSchema := vDestinationSchema[0].(map[string]interface{})
-
-	if vRecordFormatType, ok := mDestinationSchema["record_format_type"].(string); ok && vRecordFormatType != "" {
-		destinationSchema.RecordFormatType = aws.String(vRecordFormatType)
-	}
-
-	return destinationSchema
-}
-
 func expandKinesisAnalyticsV2EnvironmentPropertyUpdates(vEnvironmentProperties []interface{}) *kinesisanalyticsv2.EnvironmentPropertyUpdates {
 	if len(vEnvironmentProperties) == 0 || vEnvironmentProperties[0] == nil {
 		// Return empty updates to remove all existing property groups.
@@ -2118,30 +2062,6 @@ func expandKinesisAnalyticsV2InputProcessingConfiguration(vInputProcessingConfig
 	return inputProcessingConfiguration
 }
 
-func expandKinesisAnalyticsV2InputSchemaUpdate(vInputSchema []interface{}) *kinesisanalyticsv2.InputSchemaUpdate {
-	if len(vInputSchema) == 0 || vInputSchema[0] == nil {
-		return nil
-	}
-
-	inputSchemaUpdate := &kinesisanalyticsv2.InputSchemaUpdate{}
-
-	mInputSchema := vInputSchema[0].(map[string]interface{})
-
-	if vRecordColumns, ok := mInputSchema["record_column"].(*schema.Set); ok && vRecordColumns.Len() > 0 {
-		inputSchemaUpdate.RecordColumnUpdates = expandKinesisAnalyticsV2RecordColumns(vRecordColumns.List())
-	}
-
-	if vRecordEncoding, ok := mInputSchema["record_encoding"].(string); ok && vRecordEncoding != "" {
-		inputSchemaUpdate.RecordEncodingUpdate = aws.String(vRecordEncoding)
-	}
-
-	if vRecordFormat, ok := mInputSchema["record_format"].([]interface{}); ok {
-		inputSchemaUpdate.RecordFormatUpdate = expandKinesisAnalyticsV2RecordFormat(vRecordFormat)
-	}
-
-	return inputSchemaUpdate
-}
-
 func expandKinesisAnalyticsV2InputUpdate(vInput []interface{}) *kinesisanalyticsv2.InputUpdate {
 	if len(vInput) == 0 || vInput[0] == nil {
 		return nil
@@ -2187,8 +2107,24 @@ func expandKinesisAnalyticsV2InputUpdate(vInput []interface{}) *kinesisanalytics
 		inputUpdate.InputProcessingConfigurationUpdate = inputProcessingConfigurationUpdate
 	}
 
-	if vInputSchema, ok := mInput["input_schema"].([]interface{}); ok {
-		inputUpdate.InputSchemaUpdate = expandKinesisAnalyticsV2InputSchemaUpdate(vInputSchema)
+	if vInputSchema, ok := mInput["input_schema"].([]interface{}); ok && len(vInputSchema) > 0 && vInputSchema[0] != nil {
+		inputSchemaUpdate := &kinesisanalyticsv2.InputSchemaUpdate{}
+
+		mInputSchema := vInputSchema[0].(map[string]interface{})
+
+		if vRecordColumns, ok := mInputSchema["record_column"].([]interface{}); ok {
+			inputSchemaUpdate.RecordColumnUpdates = expandKinesisAnalyticsV2RecordColumns(vRecordColumns)
+		}
+
+		if vRecordEncoding, ok := mInputSchema["record_encoding"].(string); ok && vRecordEncoding != "" {
+			inputSchemaUpdate.RecordEncodingUpdate = aws.String(vRecordEncoding)
+		}
+
+		if vRecordFormat, ok := mInputSchema["record_format"].([]interface{}); ok {
+			inputSchemaUpdate.RecordFormatUpdate = expandKinesisAnalyticsV2RecordFormat(vRecordFormat)
+		}
+
+		inputUpdate.InputSchemaUpdate = inputSchemaUpdate
 	}
 
 	if vKinesisFirehoseInput, ok := mInput["kinesis_firehose_input"].([]interface{}); ok && len(vKinesisFirehoseInput) > 0 && vKinesisFirehoseInput[0] != nil {
@@ -2231,8 +2167,16 @@ func expandKinesisAnalyticsV2Output(vOutput interface{}) *kinesisanalyticsv2.Out
 
 	mOutput := vOutput.(map[string]interface{})
 
-	if vDestinationSchema, ok := mOutput["destination_schema"].([]interface{}); ok {
-		output.DestinationSchema = expandKinesisAnalyticsV2DestinationSchema(vDestinationSchema)
+	if vDestinationSchema, ok := mOutput["destination_schema"].([]interface{}); ok && len(vDestinationSchema) > 0 && vDestinationSchema[0] != nil {
+		destinationSchema := &kinesisanalyticsv2.DestinationSchema{}
+
+		mDestinationSchema := vDestinationSchema[0].(map[string]interface{})
+
+		if vRecordFormatType, ok := mDestinationSchema["record_format_type"].(string); ok && vRecordFormatType != "" {
+			destinationSchema.RecordFormatType = aws.String(vRecordFormatType)
+		}
+
+		output.DestinationSchema = destinationSchema
 	}
 
 	if vKinesisFirehoseOutput, ok := mOutput["kinesis_firehose_output"].([]interface{}); ok && len(vKinesisFirehoseOutput) > 0 && vKinesisFirehoseOutput[0] != nil {
@@ -2279,6 +2223,10 @@ func expandKinesisAnalyticsV2Output(vOutput interface{}) *kinesisanalyticsv2.Out
 }
 
 func expandKinesisAnalyticsV2Outputs(vOutputs []interface{}) []*kinesisanalyticsv2.Output {
+	if len(vOutputs) == 0 {
+		return nil
+	}
+
 	outputs := []*kinesisanalyticsv2.Output{}
 
 	for _, vOutput := range vOutputs {
@@ -2308,7 +2256,7 @@ func expandKinesisAnalyticsV2PropertyGroups(vPropertyGroups []interface{}) []*ki
 		}
 
 		if vPropertyMap, ok := mPropertyGroup["property_map"].(map[string]interface{}); ok && len(vPropertyMap) > 0 {
-			propertyGroup.PropertyMap = stringMapToPointers(vPropertyMap)
+			propertyGroup.PropertyMap = expandStringMap(vPropertyMap)
 		}
 
 		propertyGroups = append(propertyGroups, propertyGroup)
@@ -2475,8 +2423,8 @@ func expandKinesisAnalyticsV2SourceSchema(vSourceSchema []interface{}) *kinesisa
 
 	mSourceSchema := vSourceSchema[0].(map[string]interface{})
 
-	if vRecordColumns, ok := mSourceSchema["record_column"].(*schema.Set); ok && vRecordColumns.Len() > 0 {
-		sourceSchema.RecordColumns = expandKinesisAnalyticsV2RecordColumns(vRecordColumns.List())
+	if vRecordColumns, ok := mSourceSchema["record_column"].([]interface{}); ok {
+		sourceSchema.RecordColumns = expandKinesisAnalyticsV2RecordColumns(vRecordColumns)
 	}
 
 	if vRecordEncoding, ok := mSourceSchema["record_encoding"].(string); ok && vRecordEncoding != "" {
@@ -2488,6 +2436,345 @@ func expandKinesisAnalyticsV2SourceSchema(vSourceSchema []interface{}) *kinesisa
 	}
 
 	return sourceSchema
+}
+
+func expandKinesisAnalyticsV2VpcConfiguration(vVpcConfiguration []interface{}) *kinesisanalyticsv2.VpcConfiguration {
+	if len(vVpcConfiguration) == 0 || vVpcConfiguration[0] == nil {
+		return nil
+	}
+
+	vpcConfiguration := &kinesisanalyticsv2.VpcConfiguration{}
+
+	mVpcConfiguration := vVpcConfiguration[0].(map[string]interface{})
+
+	if vSecurityGroupIds, ok := mVpcConfiguration["security_group_ids"].(*schema.Set); ok && vSecurityGroupIds.Len() > 0 {
+		vpcConfiguration.SecurityGroupIds = expandStringSet(vSecurityGroupIds)
+	}
+
+	if vSubnetIds, ok := mVpcConfiguration["subnet_ids"].(*schema.Set); ok && vSubnetIds.Len() > 0 {
+		vpcConfiguration.SubnetIds = expandStringSet(vSubnetIds)
+	}
+
+	return vpcConfiguration
+}
+
+func expandKinesisAnalyticsV2VpcConfigurationUpdate(vVpcConfiguration []interface{}) *kinesisanalyticsv2.VpcConfigurationUpdate {
+	if len(vVpcConfiguration) == 0 || vVpcConfiguration[0] == nil {
+		return nil
+	}
+
+	vpcConfigurationUpdate := &kinesisanalyticsv2.VpcConfigurationUpdate{}
+
+	mVpcConfiguration := vVpcConfiguration[0].(map[string]interface{})
+
+	if vSecurityGroupIds, ok := mVpcConfiguration["security_group_ids"].(*schema.Set); ok && vSecurityGroupIds.Len() > 0 {
+		vpcConfigurationUpdate.SecurityGroupIdUpdates = expandStringSet(vSecurityGroupIds)
+	}
+
+	if vSubnetIds, ok := mVpcConfiguration["subnet_ids"].(*schema.Set); ok && vSubnetIds.Len() > 0 {
+		vpcConfigurationUpdate.SubnetIdUpdates = expandStringSet(vSubnetIds)
+	}
+
+	if vVpcConfigurationId, ok := mVpcConfiguration["vpc_configuration_id"].(string); ok && vVpcConfigurationId != "" {
+		vpcConfigurationUpdate.VpcConfigurationId = aws.String(vVpcConfigurationId)
+	}
+
+	return vpcConfigurationUpdate
+}
+
+func flattenKinesisAnalyticsV2ApplicationConfigurationDescription(applicationConfigurationDescription *kinesisanalyticsv2.ApplicationConfigurationDescription) []interface{} {
+	if applicationConfigurationDescription == nil {
+		return []interface{}{}
+	}
+
+	mApplicationConfiguration := map[string]interface{}{}
+
+	if applicationCodeConfigurationDescription := applicationConfigurationDescription.ApplicationCodeConfigurationDescription; applicationCodeConfigurationDescription != nil {
+		mApplicationCodeConfiguration := map[string]interface{}{
+			"code_content_type": aws.StringValue(applicationCodeConfigurationDescription.CodeContentType),
+		}
+
+		if codeContentDescription := applicationCodeConfigurationDescription.CodeContentDescription; codeContentDescription != nil {
+			mCodeContent := map[string]interface{}{
+				"text_content": aws.StringValue(codeContentDescription.TextContent),
+			}
+
+			if s3ApplicationCodeLocationDescription := codeContentDescription.S3ApplicationCodeLocationDescription; s3ApplicationCodeLocationDescription != nil {
+				mS3ContentLocation := map[string]interface{}{
+					"bucket_arn":     aws.StringValue(s3ApplicationCodeLocationDescription.BucketARN),
+					"file_key":       aws.StringValue(s3ApplicationCodeLocationDescription.FileKey),
+					"object_version": aws.StringValue(s3ApplicationCodeLocationDescription.ObjectVersion),
+				}
+
+				mCodeContent["s3_content_location"] = []interface{}{mS3ContentLocation}
+			}
+
+			mApplicationCodeConfiguration["code_content"] = []interface{}{mCodeContent}
+		}
+
+		mApplicationConfiguration["application_code_configuration"] = []interface{}{mApplicationCodeConfiguration}
+	}
+
+	if applicationSnapshotConfigurationDescription := applicationConfigurationDescription.ApplicationSnapshotConfigurationDescription; applicationSnapshotConfigurationDescription != nil {
+		mApplicationSnapshotConfiguration := map[string]interface{}{
+			"snapshots_enabled": aws.BoolValue(applicationSnapshotConfigurationDescription.SnapshotsEnabled),
+		}
+
+		mApplicationConfiguration["application_snapshot_configuration"] = []interface{}{mApplicationSnapshotConfiguration}
+	}
+
+	if environmentPropertyDescriptions := applicationConfigurationDescription.EnvironmentPropertyDescriptions; environmentPropertyDescriptions != nil && len(environmentPropertyDescriptions.PropertyGroupDescriptions) > 0 {
+		mEnvironmentProperties := map[string]interface{}{}
+
+		vPropertyGroups := []interface{}{}
+
+		for _, propertyGroup := range environmentPropertyDescriptions.PropertyGroupDescriptions {
+			if propertyGroup != nil {
+				mPropertyGroup := map[string]interface{}{
+					"property_group_id": aws.StringValue(propertyGroup.PropertyGroupId),
+					"property_map":      pointersMapToStringList(propertyGroup.PropertyMap),
+				}
+
+				vPropertyGroups = append(vPropertyGroups, mPropertyGroup)
+			}
+		}
+
+		mEnvironmentProperties["property_group"] = vPropertyGroups
+
+		mApplicationConfiguration["environment_properties"] = []interface{}{mEnvironmentProperties}
+	}
+
+	if flinkApplicationConfigurationDescription := applicationConfigurationDescription.FlinkApplicationConfigurationDescription; flinkApplicationConfigurationDescription != nil {
+		mFlinkApplicationConfiguration := map[string]interface{}{}
+
+		if checkpointConfigurationDescription := flinkApplicationConfigurationDescription.CheckpointConfigurationDescription; checkpointConfigurationDescription != nil {
+			mCheckpointConfiguration := map[string]interface{}{
+				"checkpointing_enabled":         aws.BoolValue(checkpointConfigurationDescription.CheckpointingEnabled),
+				"checkpoint_interval":           int(aws.Int64Value(checkpointConfigurationDescription.CheckpointInterval)),
+				"configuration_type":            aws.StringValue(checkpointConfigurationDescription.ConfigurationType),
+				"min_pause_between_checkpoints": int(aws.Int64Value(checkpointConfigurationDescription.MinPauseBetweenCheckpoints)),
+			}
+
+			mFlinkApplicationConfiguration["checkpoint_configuration"] = []interface{}{mCheckpointConfiguration}
+		}
+
+		if monitoringConfigurationDescription := flinkApplicationConfigurationDescription.MonitoringConfigurationDescription; monitoringConfigurationDescription != nil {
+			mMonitoringConfiguration := map[string]interface{}{
+				"configuration_type": aws.StringValue(monitoringConfigurationDescription.ConfigurationType),
+				"log_level":          aws.StringValue(monitoringConfigurationDescription.LogLevel),
+				"metrics_level":      aws.StringValue(monitoringConfigurationDescription.MetricsLevel),
+			}
+
+			mFlinkApplicationConfiguration["monitoring_configuration"] = []interface{}{mMonitoringConfiguration}
+		}
+
+		if parallelismConfigurationDescription := flinkApplicationConfigurationDescription.ParallelismConfigurationDescription; parallelismConfigurationDescription != nil {
+			mParallelismConfiguration := map[string]interface{}{
+				"auto_scaling_enabled": aws.BoolValue(parallelismConfigurationDescription.AutoScalingEnabled),
+				"configuration_type":   aws.StringValue(parallelismConfigurationDescription.ConfigurationType),
+				"parallelism":          int(aws.Int64Value(parallelismConfigurationDescription.Parallelism)),
+				"parallelism_per_kpu":  int(aws.Int64Value(parallelismConfigurationDescription.ParallelismPerKPU)),
+			}
+
+			mFlinkApplicationConfiguration["parallelism_configuration"] = []interface{}{mParallelismConfiguration}
+		}
+
+		mApplicationConfiguration["flink_application_configuration"] = []interface{}{mFlinkApplicationConfiguration}
+	}
+
+	if runConfigurationDescription := applicationConfigurationDescription.RunConfigurationDescription; runConfigurationDescription != nil {
+		mRunConfiguration := map[string]interface{}{}
+
+		if applicationRestoreConfigurationDescription := runConfigurationDescription.ApplicationRestoreConfigurationDescription; applicationRestoreConfigurationDescription != nil {
+			mApplicationRestoreConfiguration := map[string]interface{}{
+				"application_restore_type": aws.StringValue(applicationRestoreConfigurationDescription.ApplicationRestoreType),
+				"snapshot_name":            aws.StringValue(applicationRestoreConfigurationDescription.SnapshotName),
+			}
+
+			mRunConfiguration["application_restore_configuration"] = []interface{}{mApplicationRestoreConfiguration}
+		}
+
+		if flinkRunConfigurationDescription := runConfigurationDescription.FlinkRunConfigurationDescription; flinkRunConfigurationDescription != nil {
+			mFlinkRunConfiguration := map[string]interface{}{
+				"allow_non_restored_state": aws.BoolValue(flinkRunConfigurationDescription.AllowNonRestoredState),
+			}
+
+			mRunConfiguration["flink_run_configuration"] = []interface{}{mFlinkRunConfiguration}
+		}
+
+		mApplicationConfiguration["run_configuration"] = []interface{}{mRunConfiguration}
+	}
+
+	if sqlApplicationConfigurationDescription := applicationConfigurationDescription.SqlApplicationConfigurationDescription; sqlApplicationConfigurationDescription != nil {
+		mSqlApplicationConfiguration := map[string]interface{}{}
+
+		if inputDescriptions := sqlApplicationConfigurationDescription.InputDescriptions; len(inputDescriptions) > 0 && inputDescriptions[0] != nil {
+			inputDescription := inputDescriptions[0]
+
+			mInput := map[string]interface{}{
+				"in_app_stream_names": flattenStringList(inputDescription.InAppStreamNames),
+				"input_id":            aws.StringValue(inputDescription.InputId),
+				"name_prefix":         aws.StringValue(inputDescription.NamePrefix),
+			}
+
+			if inputParallelism := inputDescription.InputParallelism; inputParallelism != nil {
+				mInputParallelism := map[string]interface{}{
+					"count": int(aws.Int64Value(inputParallelism.Count)),
+				}
+
+				mInput["input_parallelism"] = []interface{}{mInputParallelism}
+			}
+
+			if inputSchema := inputDescription.InputSchema; inputSchema != nil {
+				mInput["input_schema"] = flattenKinesisAnalyticsV2SourceSchema(inputSchema)
+			}
+
+			if inputProcessingConfigurationDescription := inputDescription.InputProcessingConfigurationDescription; inputProcessingConfigurationDescription != nil {
+				mInputProcessingConfiguration := map[string]interface{}{}
+
+				if inputLambdaProcessorDescription := inputProcessingConfigurationDescription.InputLambdaProcessorDescription; inputLambdaProcessorDescription != nil {
+					mInputLambdaProcessor := map[string]interface{}{
+						"resource_arn": aws.StringValue(inputLambdaProcessorDescription.ResourceARN),
+					}
+
+					mInputProcessingConfiguration["input_lambda_processor"] = []interface{}{mInputLambdaProcessor}
+				}
+
+				mInput["input_processing_configuration"] = []interface{}{mInputProcessingConfiguration}
+			}
+
+			if inputStartingPositionConfiguration := inputDescription.InputStartingPositionConfiguration; inputStartingPositionConfiguration != nil {
+				mInputStartingPositionConfiguration := map[string]interface{}{
+					"input_starting_position": aws.StringValue(inputStartingPositionConfiguration.InputStartingPosition),
+				}
+
+				mInput["input_starting_position_configuration"] = []interface{}{mInputStartingPositionConfiguration}
+			}
+
+			if kinesisFirehoseInputDescription := inputDescription.KinesisFirehoseInputDescription; kinesisFirehoseInputDescription != nil {
+				mKinesisFirehoseInput := map[string]interface{}{
+					"resource_arn": aws.StringValue(kinesisFirehoseInputDescription.ResourceARN),
+				}
+
+				mInput["kinesis_firehose_input"] = []interface{}{mKinesisFirehoseInput}
+			}
+
+			if kinesisStreamsInputDescription := inputDescription.KinesisStreamsInputDescription; kinesisStreamsInputDescription != nil {
+				mKinesisStreamsInput := map[string]interface{}{
+					"resource_arn": aws.StringValue(kinesisStreamsInputDescription.ResourceARN),
+				}
+
+				mInput["kinesis_streams_input"] = []interface{}{mKinesisStreamsInput}
+			}
+
+			mSqlApplicationConfiguration["input"] = []interface{}{mInput}
+		}
+
+		if outputDescriptions := sqlApplicationConfigurationDescription.OutputDescriptions; len(outputDescriptions) > 0 {
+			vOutputs := []interface{}{}
+
+			for _, outputDescription := range outputDescriptions {
+				if outputDescription != nil {
+					mOutput := map[string]interface{}{
+						"name":      aws.StringValue(outputDescription.Name),
+						"output_id": aws.StringValue(outputDescription.OutputId),
+					}
+
+					if destinationSchema := outputDescription.DestinationSchema; destinationSchema != nil {
+						mDestinationSchema := map[string]interface{}{
+							"record_format_type": aws.StringValue(destinationSchema.RecordFormatType),
+						}
+
+						mOutput["destination_schema"] = []interface{}{mDestinationSchema}
+					}
+
+					if kinesisFirehoseOutputDescription := outputDescription.KinesisFirehoseOutputDescription; kinesisFirehoseOutputDescription != nil {
+						mKinesisFirehoseOutput := map[string]interface{}{
+							"resource_arn": aws.StringValue(kinesisFirehoseOutputDescription.ResourceARN),
+						}
+
+						mOutput["kinesis_firehose_output"] = []interface{}{mKinesisFirehoseOutput}
+					}
+
+					if kinesisStreamsOutputDescription := outputDescription.KinesisStreamsOutputDescription; kinesisStreamsOutputDescription != nil {
+						mKinesisStreamsOutput := map[string]interface{}{
+							"resource_arn": aws.StringValue(kinesisStreamsOutputDescription.ResourceARN),
+						}
+
+						mOutput["kinesis_streams_output"] = []interface{}{mKinesisStreamsOutput}
+					}
+
+					if lambdaOutputDescription := outputDescription.LambdaOutputDescription; lambdaOutputDescription != nil {
+						mLambdaOutput := map[string]interface{}{
+							"resource_arn": aws.StringValue(lambdaOutputDescription.ResourceARN),
+						}
+
+						mOutput["lambda_output"] = []interface{}{mLambdaOutput}
+					}
+
+					vOutputs = append(vOutputs, mOutput)
+				}
+			}
+
+			mSqlApplicationConfiguration["output"] = vOutputs
+		}
+
+		if referenceDataSourceDescriptions := sqlApplicationConfigurationDescription.ReferenceDataSourceDescriptions; len(referenceDataSourceDescriptions) > 0 && referenceDataSourceDescriptions[0] != nil {
+			referenceDataSourceDescription := referenceDataSourceDescriptions[0]
+
+			mReferenceDataSource := map[string]interface{}{
+				"reference_id": aws.StringValue(referenceDataSourceDescription.ReferenceId),
+				"table_name":   aws.StringValue(referenceDataSourceDescription.TableName),
+			}
+
+			if referenceSchema := referenceDataSourceDescription.ReferenceSchema; referenceSchema != nil {
+				mReferenceDataSource["reference_schema"] = flattenKinesisAnalyticsV2SourceSchema(referenceSchema)
+			}
+
+			if s3ReferenceDataSource := referenceDataSourceDescription.S3ReferenceDataSourceDescription; s3ReferenceDataSource != nil {
+				mS3ReferenceDataSource := map[string]interface{}{
+					"bucket_arn": aws.StringValue(s3ReferenceDataSource.BucketARN),
+					"file_key":   aws.StringValue(s3ReferenceDataSource.FileKey),
+				}
+
+				mReferenceDataSource["s3_reference_data_source"] = []interface{}{mS3ReferenceDataSource}
+			}
+
+			mSqlApplicationConfiguration["reference_data_source"] = []interface{}{mReferenceDataSource}
+		}
+
+		mApplicationConfiguration["sql_application_configuration"] = []interface{}{mSqlApplicationConfiguration}
+	}
+
+	if vpcConfigurationDescriptions := applicationConfigurationDescription.VpcConfigurationDescriptions; len(vpcConfigurationDescriptions) > 0 && vpcConfigurationDescriptions[0] != nil {
+		vpcConfigurationDescription := vpcConfigurationDescriptions[0]
+
+		mVpcConfiguration := map[string]interface{}{
+			"security_group_ids":   flattenStringSet(vpcConfigurationDescription.SecurityGroupIds),
+			"subnet_ids":           flattenStringSet(vpcConfigurationDescription.SubnetIds),
+			"vpc_configuration_id": aws.StringValue(vpcConfigurationDescription.VpcConfigurationId),
+			"vpc_id":               aws.StringValue(vpcConfigurationDescription.VpcId),
+		}
+
+		mApplicationConfiguration["vpc_configuration"] = []interface{}{mVpcConfiguration}
+	}
+
+	return []interface{}{mApplicationConfiguration}
+}
+
+func flattenKinesisAnalyticsV2CloudWatchLoggingOptionDescriptions(cloudWatchLoggingOptionDescriptions []*kinesisanalyticsv2.CloudWatchLoggingOptionDescription) []interface{} {
+	if len(cloudWatchLoggingOptionDescriptions) == 0 || cloudWatchLoggingOptionDescriptions[0] == nil {
+		return []interface{}{}
+	}
+
+	cloudWatchLoggingOptionDescription := cloudWatchLoggingOptionDescriptions[0]
+
+	mCloudWatchLoggingOption := map[string]interface{}{
+		"cloudwatch_logging_option_id": aws.StringValue(cloudWatchLoggingOptionDescription.CloudWatchLoggingOptionId),
+		"log_stream_arn":               aws.StringValue(cloudWatchLoggingOptionDescription.LogStreamARN),
+	}
+
+	return []interface{}{mCloudWatchLoggingOption}
 }
 
 func flattenKinesisAnalyticsV2SourceSchema(sourceSchema *kinesisanalyticsv2.SourceSchema) []interface{} {
@@ -2551,90 +2838,75 @@ func flattenKinesisAnalyticsV2SourceSchema(sourceSchema *kinesisanalyticsv2.Sour
 	return []interface{}{mSourceSchema}
 }
 
-func expandKinesisAnalyticsV2VpcConfiguration(vVpcConfiguration []interface{}) *kinesisanalyticsv2.VpcConfiguration {
-	if len(vVpcConfiguration) == 0 || vVpcConfiguration[0] == nil {
-		return nil
+func expandKinesisAnalyticsV2StartApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.StartApplicationInput {
+	apiObject := &kinesisanalyticsv2.StartApplicationInput{
+		ApplicationName:  aws.String(d.Get("name").(string)),
+		RunConfiguration: &kinesisanalyticsv2.RunConfiguration{},
 	}
 
-	vpcConfiguration := &kinesisanalyticsv2.VpcConfiguration{}
+	if v, ok := d.GetOk("application_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
 
-	mVpcConfiguration := vVpcConfiguration[0].(map[string]interface{})
+		if v, ok := tfMap["sql_application_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			tfMap := v[0].(map[string]interface{})
 
-	if vSecurityGroupIds, ok := mVpcConfiguration["security_group_ids"].(*schema.Set); ok && vSecurityGroupIds.Len() > 0 {
-		vpcConfiguration.SecurityGroupIds = expandStringSet(vSecurityGroupIds)
+			if v, ok := tfMap["input"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+				tfMap := v[0].(map[string]interface{})
+
+				if v, ok := tfMap["input_starting_position_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+					tfMap := v[0].(map[string]interface{})
+
+					if v, ok := tfMap["input_starting_position"].(string); ok && v != "" {
+						apiObject.RunConfiguration.SqlRunConfigurations = []*kinesisanalyticsv2.SqlRunConfiguration{{
+							InputStartingPositionConfiguration: &kinesisanalyticsv2.InputStartingPositionConfiguration{
+								InputStartingPosition: aws.String(v),
+							},
+						}}
+					}
+				}
+			}
+		}
+
+		if v, ok := tfMap["run_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			tfMap := v[0].(map[string]interface{})
+
+			if v, ok := tfMap["application_restore_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+				tfMap := v[0].(map[string]interface{})
+
+				apiObject.RunConfiguration.ApplicationRestoreConfiguration = &kinesisanalyticsv2.ApplicationRestoreConfiguration{}
+
+				if v, ok := tfMap["application_restore_type"].(string); ok && v != "" {
+					apiObject.RunConfiguration.ApplicationRestoreConfiguration.ApplicationRestoreType = aws.String(v)
+				}
+
+				if v, ok := tfMap["snapshot_name"].(string); ok && v != "" {
+					apiObject.RunConfiguration.ApplicationRestoreConfiguration.SnapshotName = aws.String(v)
+				}
+			}
+
+			if v, ok := tfMap["flink_run_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+				tfMap := v[0].(map[string]interface{})
+
+				if v, ok := tfMap["allow_non_restored_state"].(bool); ok {
+					apiObject.RunConfiguration.FlinkRunConfiguration = &kinesisanalyticsv2.FlinkRunConfiguration{
+						AllowNonRestoredState: aws.Bool(v),
+					}
+				}
+			}
+		}
 	}
 
-	if vSubnetIds, ok := mVpcConfiguration["subnet_ids"].(*schema.Set); ok && vSubnetIds.Len() > 0 {
-		vpcConfiguration.SubnetIds = expandStringSet(vSubnetIds)
-	}
-
-	return vpcConfiguration
+	return apiObject
 }
 
-func expandKinesisAnalyticsV2VpcConfigurationUpdate(vVpcConfiguration []interface{}) *kinesisanalyticsv2.VpcConfigurationUpdate {
-	if len(vVpcConfiguration) == 0 || vVpcConfiguration[0] == nil {
-		return nil
+func expandKinesisAnalyticsV2StopApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.StopApplicationInput {
+	apiObject := &kinesisanalyticsv2.StopApplicationInput{
+		ApplicationName: aws.String(d.Get("name").(string)),
 	}
 
-	vpcConfigurationUpdate := &kinesisanalyticsv2.VpcConfigurationUpdate{}
-
-	mVpcConfiguration := vVpcConfiguration[0].(map[string]interface{})
-
-	if vSecurityGroupIds, ok := mVpcConfiguration["security_group_ids"].(*schema.Set); ok && vSecurityGroupIds.Len() > 0 {
-		vpcConfigurationUpdate.SecurityGroupIdUpdates = expandStringSet(vSecurityGroupIds)
+	if v, ok := d.GetOk("force_stop"); ok {
+		apiObject.Force = aws.Bool(v.(bool))
 	}
 
-	if vSubnetIds, ok := mVpcConfiguration["subnet_ids"].(*schema.Set); ok && vSubnetIds.Len() > 0 {
-		vpcConfigurationUpdate.SubnetIdUpdates = expandStringSet(vSubnetIds)
-	}
-
-	if vVpcConfigurationId, ok := mVpcConfiguration["vpc_configuration_id"].(string); ok && vVpcConfigurationId != "" {
-		vpcConfigurationUpdate.VpcConfigurationId = aws.String(vVpcConfigurationId)
-	}
-
-	return vpcConfigurationUpdate
-}
-
-// kinesisAnalyticsV2RetryIAMEventualConsistency retries the specified function for 1 minute
-// if the returned error indicates an IAM eventual consistency issue.
-// If the retries time out the specified function is called one last time.
-func kinesisAnalyticsV2RetryIAMEventualConsistency(f func() (interface{}, error)) (interface{}, error) {
-	var output interface{}
-
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
-
-		output, err = f()
-
-		// Kinesis Stream: https://github.com/terraform-providers/terraform-provider-aws/issues/7032
-		if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
-			return resource.RetryableError(err)
-		}
-
-		// Kinesis Firehose: https://github.com/terraform-providers/terraform-provider-aws/issues/7394
-		if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics doesn't have sufficient privileges") {
-			return resource.RetryableError(err)
-		}
-
-		// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
-		if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "does not provide Invoke permissions on the Lambda resource") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = f()
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
+	return apiObject
 }

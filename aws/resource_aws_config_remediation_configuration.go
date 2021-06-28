@@ -5,14 +5,13 @@ import (
 	"log"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/configservice"
 )
 
 const (
@@ -120,11 +119,11 @@ func flattenRemediationConfigurationParameters(parameters map[string]*configserv
 	for key, value := range parameters {
 		item := make(map[string]interface{})
 		item["name"] = key
-		if value.ResourceValue != nil {
-			item["resource_value"] = *value.ResourceValue.Value
+		if v := value.ResourceValue; v != nil {
+			item["resource_value"] = aws.StringValue(v.Value)
 		}
-		if value.StaticValue != nil && len(value.StaticValue.Values) > 0 {
-			item["static_value"] = *value.StaticValue.Values[0]
+		if v := value.StaticValue; v != nil && len(v.Values) > 0 {
+			item["static_value"] = aws.StringValue(v.Values[0])
 		}
 
 		items = append(items, item)
@@ -208,7 +207,7 @@ func resourceAwsConfigRemediationConfigurationRead(d *schema.ResourceData, meta 
 	d.Set("target_type", remediationConfiguration.TargetType)
 	d.Set("target_version", remediationConfiguration.TargetVersion)
 	d.Set("parameter", flattenRemediationConfigurationParameters(remediationConfiguration.Parameters))
-	d.SetId(*remediationConfiguration.ConfigRuleName)
+	d.SetId(aws.StringValue(remediationConfiguration.ConfigRuleName))
 
 	return nil
 }

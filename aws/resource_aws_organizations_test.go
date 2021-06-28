@@ -10,7 +10,9 @@ func TestAccAWSOrganizations_serial(t *testing.T) {
 			"basic":                      testAccAwsOrganizationsOrganization_basic,
 			"AwsServiceAccessPrincipals": testAccAwsOrganizationsOrganization_AwsServiceAccessPrincipals,
 			"EnabledPolicyTypes":         testAccAwsOrganizationsOrganization_EnabledPolicyTypes,
-			"FeatureSet":                 testAccAwsOrganizationsOrganization_FeatureSet,
+			"FeatureSet_Basic":           testAccAwsOrganizationsOrganization_FeatureSet,
+			"FeatureSet_Update":          testAccAwsOrganizationsOrganization_FeatureSetUpdate,
+			"FeatureSet_ForcesNew":       testAccAwsOrganizationsOrganization_FeatureSetForcesNew,
 			"DataSource":                 testAccDataSourceAwsOrganizationsOrganization_basic,
 		},
 		"Account": {
@@ -19,8 +21,10 @@ func TestAccAWSOrganizations_serial(t *testing.T) {
 			"Tags":     testAccAwsOrganizationsAccount_Tags,
 		},
 		"OrganizationalUnit": {
-			"basic": testAccAwsOrganizationsOrganizationalUnit_basic,
-			"Name":  testAccAwsOrganizationsOrganizationalUnit_Name,
+			"basic":      testAccAwsOrganizationsOrganizationalUnit_basic,
+			"disappears": testAccAwsOrganizationsOrganizationalUnit_disappears,
+			"Name":       testAccAwsOrganizationsOrganizationalUnit_Name,
+			"Tags":       testAccAwsOrganizationsOrganizationalUnit_Tags,
 		},
 		"OrganizationalUnits": {
 			"DataSource": testAccDataSourceAwsOrganizationsOrganizationalUnits_basic,
@@ -41,6 +45,10 @@ func TestAccAWSOrganizations_serial(t *testing.T) {
 			"Account":            testAccAwsOrganizationsPolicyAttachment_Account,
 			"OrganizationalUnit": testAccAwsOrganizationsPolicyAttachment_OrganizationalUnit,
 			"Root":               testAccAwsOrganizationsPolicyAttachment_Root,
+		},
+		"DelegatedAdministrator": {
+			"basic":      testAccAwsOrganizationsDelegatedAdministrator_basic,
+			"disappears": testAccAwsOrganizationsDelegatedAdministrator_disappears,
 		},
 	}
 

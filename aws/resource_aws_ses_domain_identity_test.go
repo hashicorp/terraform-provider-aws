@@ -34,9 +34,9 @@ func testSweepSesIdentities(region, identityType string) error {
 	}
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListIdentitiesPages(input, func(page *ses.ListIdentitiesOutput, isLast bool) bool {
+	err = conn.ListIdentitiesPages(input, func(page *ses.ListIdentitiesOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, identity := range page.Identities {
@@ -54,7 +54,7 @@ func testSweepSesIdentities(region, identityType string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping SES Identities sweep for %s: %s", region, err)
@@ -70,10 +70,11 @@ func testSweepSesIdentities(region, identityType string) error {
 func TestAccAWSSESDomainIdentity_basic(t *testing.T) {
 	domain := fmt.Sprintf(
 		"%s.terraformtesting.com",
-		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+		acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -91,10 +92,11 @@ func TestAccAWSSESDomainIdentity_basic(t *testing.T) {
 func TestAccAWSSESDomainIdentity_disappears(t *testing.T) {
 	domain := fmt.Sprintf(
 		"%s.terraformtesting.com",
-		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+		acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -111,14 +113,15 @@ func TestAccAWSSESDomainIdentity_disappears(t *testing.T) {
 }
 
 // TestAccAWSSESDomainIdentity_trailingPeriod updated in 3.0 to account for domain plan-time validation
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13510
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13510
 func TestAccAWSSESDomainIdentity_trailingPeriod(t *testing.T) {
 	domain := fmt.Sprintf(
 		"%s.terraformtesting.com.",
-		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+		acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{

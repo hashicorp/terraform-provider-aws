@@ -74,6 +74,7 @@ func TestAccAWSGlueMLTransform_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
@@ -121,6 +122,7 @@ func TestAccAWSGlueMLTransform_typeFindMatchesFull(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
@@ -180,6 +182,7 @@ func TestAccAWSGlueMLTransform_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
@@ -214,6 +217,7 @@ func TestAccAWSGlueMLTransform_glueVersion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
@@ -248,6 +252,7 @@ func TestAccAWSGlueMLTransform_maxRetries(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
@@ -278,7 +283,7 @@ func TestAccAWSGlueMLTransform_maxRetries(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueMLTransform_tags(t *testing.T) {
+func TestAccAWSGlueMLTransform_Tags(t *testing.T) {
 	var transform1, transform2, transform3 glue.GetMLTransformOutput
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -286,6 +291,7 @@ func TestAccAWSGlueMLTransform_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
@@ -331,6 +337,7 @@ func TestAccAWSGlueMLTransform_timeout(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
@@ -365,6 +372,7 @@ func TestAccAWSGlueMLTransform_workerType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
@@ -401,6 +409,7 @@ func TestAccAWSGlueMLTransform_maxCapacity(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
@@ -435,6 +444,7 @@ func TestAccAWSGlueMLTransform_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
@@ -514,8 +524,10 @@ func testAccCheckAWSGlueMLTransformDestroy(s *terraform.State) error {
 
 func testAccAWSGlueMLTransformConfigBase(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_iam_policy" "AWSGlueServiceRole" {
-  arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+  arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
 }
 
 resource "aws_iam_role" "test" {
@@ -528,7 +540,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "glue.amazonaws.com"
+        "Service": "glue.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
