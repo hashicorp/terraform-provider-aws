@@ -90,6 +90,10 @@ func dataSourceAwsIAMAssumedRoleSourceRead(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("unable to get role (%s): %w", roleName, err)
 	}
 
+	if role == nil || role.Arn == nil {
+		return fmt.Errorf("empty role returned (%s)", roleName)
+	}
+
 	d.Set("session_name", sessionName)
 	d.Set("role_name", roleName)
 	d.Set("source_arn", role.Arn)
