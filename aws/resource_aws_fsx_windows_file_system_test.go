@@ -724,7 +724,7 @@ func TestAccAWSFsxWindowsFileSystem_auditConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_access_audit_log_level", "SUCCESS_ONLY"),
 					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_share_access_audit_log_level", "SUCCESS_ONLY"),
-					resource.TestCheckResourceAttrSet(resourceName, "audit_log_configuration.0.audit_log_destionation"),
+					resource.TestCheckResourceAttrSet(resourceName, "audit_log_configuration.0.audit_log_destination"),
 				),
 			},
 			{
@@ -743,7 +743,7 @@ func TestAccAWSFsxWindowsFileSystem_auditConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_access_audit_log_level", "SUCCESS_AND_FAILURE"),
 					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_share_access_audit_log_level", "SUCCESS_AND_FAILURE"),
-					resource.TestCheckResourceAttrSet(resourceName, "audit_log_configuration.0.audit_log_destionation"),
+					resource.TestCheckResourceAttrSet(resourceName, "audit_log_configuration.0.audit_log_destination"),
 				),
 			},
 		},
@@ -1192,7 +1192,7 @@ resource "aws_fsx_windows_file_system" "test" {
   throughput_capacity = 32
 
   audit_log_configuration {
-    audit_log_destionation            = aws_cloudwatch_log_group.test.arn
+    audit_log_destination            = aws_cloudwatch_log_group.test.arn
     file_access_audit_log_level       = %[2]q
     file_share_access_audit_log_level = %[2]q
   }

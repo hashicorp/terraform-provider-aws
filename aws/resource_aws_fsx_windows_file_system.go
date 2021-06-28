@@ -54,7 +54,7 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"audit_log_destionation": {
+						"audit_log_destination": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -574,7 +574,7 @@ func expandFsxWindowsAuditLogCreateConfiguration(l []interface{}) *fsx.WindowsAu
 		FileShareAccessAuditLogLevel: aws.String(data["file_share_access_audit_log_level"].(string)),
 	}
 
-	if v, ok := data["audit_log_destionation"].(string); ok && v != "" {
+	if v, ok := data["audit_log_destination"].(string); ok && v != "" {
 		req.AuditLogDestination = aws.String(fsxWindowsAuditLogStateFunc(v))
 	}
 
@@ -592,7 +592,7 @@ func flattenFsxWindowsAuditLogConfiguration(adopts *fsx.WindowsAuditLogConfigura
 	}
 
 	if adopts.AuditLogDestination != nil {
-		m["audit_log_destionation"] = aws.StringValue(adopts.AuditLogDestination)
+		m["audit_log_destination"] = aws.StringValue(adopts.AuditLogDestination)
 	}
 
 	return []map[string]interface{}{m}
