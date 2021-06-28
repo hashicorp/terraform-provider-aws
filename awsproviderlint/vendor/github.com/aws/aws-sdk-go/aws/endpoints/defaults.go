@@ -5138,6 +5138,7 @@ var awsPartition = partition{
 				"ap-southeast-2": endpoint{},
 				"eu-central-1":   endpoint{},
 				"eu-west-1":      endpoint{},
+				"eu-west-2":      endpoint{},
 				"fips-us-east-1": endpoint{
 					Hostname: "qldb-fips.us-east-1.amazonaws.com",
 					CredentialScope: credentialScope{
@@ -6300,6 +6301,7 @@ var awsPartition = partition{
 				"ap-southeast-2": endpoint{},
 				"eu-central-1":   endpoint{},
 				"eu-west-1":      endpoint{},
+				"eu-west-2":      endpoint{},
 				"fips-us-east-1": endpoint{
 					Hostname: "session.qldb-fips.us-east-1.amazonaws.com",
 					CredentialScope: credentialScope{
