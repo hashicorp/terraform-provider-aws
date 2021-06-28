@@ -90,9 +90,9 @@ func TestAssumedRoleRoleSessionName(t *testing.T) {
 	}
 }
 
-func TestAccAWSDataSourceIAMAssumedRoleSource_basic(t *testing.T) {
+func TestAccAWSDataSourceIAMSessionContext_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	dataSourceName := "data.aws_iam_assumed_role_source.test"
+	dataSourceName := "data.aws_iam_session_context.test"
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -101,11 +101,10 @@ func TestAccAWSDataSourceIAMAssumedRoleSource_basic(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsIAMAssumedRoleSourceConfig(rName, "/", "session-id"),
+				Config: testAccAwsIAMSessionContextConfig(rName, "/", "session-id"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "source_arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "role_name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "role_path", resourceName, "path"),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", "session-id"),
 				),
 			},
@@ -113,9 +112,9 @@ func TestAccAWSDataSourceIAMAssumedRoleSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMAssumedRoleSource_withPath(t *testing.T) {
+func TestAccAWSDataSourceIAMSessionContext_withPath(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	dataSourceName := "data.aws_iam_assumed_role_source.test"
+	dataSourceName := "data.aws_iam_session_context.test"
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -124,11 +123,10 @@ func TestAccAWSDataSourceIAMAssumedRoleSource_withPath(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsIAMAssumedRoleSourceConfig(rName, "/this/is/a/long/path/", "session-id"),
+				Config: testAccAwsIAMSessionContextConfig(rName, "/this/is/a/long/path/", "session-id"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "source_arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "role_name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "role_path", resourceName, "path"),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", "session-id"),
 				),
 			},
@@ -136,9 +134,9 @@ func TestAccAWSDataSourceIAMAssumedRoleSource_withPath(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMAssumedRoleSource_notAssumedRole(t *testing.T) {
+func TestAccAWSDataSourceIAMSessionContext_notAssumedRole(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	dataSourceName := "data.aws_iam_assumed_role_source.test"
+	dataSourceName := "data.aws_iam_session_context.test"
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -147,11 +145,10 @@ func TestAccAWSDataSourceIAMAssumedRoleSource_notAssumedRole(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsIAMAssumedRoleSourceNotAssumedConfig(rName, "/"),
+				Config: testAccAwsIAMSessionContextNotAssumedConfig(rName, "/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "source_arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "role_name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "role_path", resourceName, "path"),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", ""),
 				),
 			},
@@ -159,9 +156,9 @@ func TestAccAWSDataSourceIAMAssumedRoleSource_notAssumedRole(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSourceIAMAssumedRoleSource_notAssumedRoleWithPath(t *testing.T) {
+func TestAccAWSDataSourceIAMSessionContext_notAssumedRoleWithPath(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	dataSourceName := "data.aws_iam_assumed_role_source.test"
+	dataSourceName := "data.aws_iam_session_context.test"
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -170,11 +167,10 @@ func TestAccAWSDataSourceIAMAssumedRoleSource_notAssumedRoleWithPath(t *testing.
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsIAMAssumedRoleSourceNotAssumedConfig(rName, "/this/is/a/long/path/"),
+				Config: testAccAwsIAMSessionContextNotAssumedConfig(rName, "/this/is/a/long/path/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "source_arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "role_name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "role_path", resourceName, "path"),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", ""),
 				),
 			},
@@ -182,9 +178,9 @@ func TestAccAWSDataSourceIAMAssumedRoleSource_notAssumedRoleWithPath(t *testing.
 	})
 }
 
-func TestAccAWSDataSourceIAMAssumedRoleSource_notAssumedRoleUser(t *testing.T) {
+func TestAccAWSDataSourceIAMSessionContext_notAssumedRoleUser(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	dataSourceName := "data.aws_iam_assumed_role_source.test"
+	dataSourceName := "data.aws_iam_session_context.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
@@ -192,11 +188,10 @@ func TestAccAWSDataSourceIAMAssumedRoleSource_notAssumedRoleUser(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsIAMAssumedRoleSourceUserConfig(rName),
+				Config: testAccAwsIAMSessionContextUserConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceAttrGlobalARN(dataSourceName, "arn", "iam", fmt.Sprintf("user/division/extra-division/not-assumed-role/%[1]s", rName)),
 					resource.TestCheckResourceAttr(dataSourceName, "role_name", ""),
-					resource.TestCheckResourceAttr(dataSourceName, "role_path", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", ""),
 				),
 			},
@@ -204,7 +199,7 @@ func TestAccAWSDataSourceIAMAssumedRoleSource_notAssumedRoleUser(t *testing.T) {
 	})
 }
 
-func testAccAwsIAMAssumedRoleSourceConfig(rName, path, sessionID string) string {
+func testAccAwsIAMSessionContextConfig(rName, path, sessionID string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -226,13 +221,13 @@ resource "aws_iam_role" "test" {
 data "aws_partition" "current" {}
 data "aws_caller_identity" "current" {}
 
-data "aws_iam_assumed_role_source" "test" {
+data "aws_iam_session_context" "test" {
   arn = "arn:${data.aws_partition.current.partition}:sts::${data.aws_caller_identity.current.account_id}:assumed-role/${aws_iam_role.test.name}/%[3]s"
 }
 `, rName, path, sessionID)
 }
 
-func testAccAwsIAMAssumedRoleSourceNotAssumedConfig(rName, path string) string {
+func testAccAwsIAMSessionContextNotAssumedConfig(rName, path string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -253,18 +248,18 @@ resource "aws_iam_role" "test" {
   })
 }
 
-data "aws_iam_assumed_role_source" "test" {
+data "aws_iam_session_context" "test" {
   arn = aws_iam_role.test.arn
 }
 `, rName, path)
 }
 
-func testAccAwsIAMAssumedRoleSourceUserConfig(rName string) string {
+func testAccAwsIAMSessionContextUserConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_caller_identity" "current" {}
 
-data "aws_iam_assumed_role_source" "test" {
+data "aws_iam_session_context" "test" {
   arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:user/division/extra-division/not-assumed-role/%[1]s"
 }
 `, rName)

@@ -112,8 +112,8 @@ func Policies(conn *iam.IAM, arn, name, pathPrefix string) ([]*iam.Policy, error
 	return results, err
 }
 
-// RoleByName returns a role's ARN given the role name
-func RoleByName(conn *iam.IAM, name string) (*iam.Role, error) {
+// Role returns a role's ARN given the role name
+func Role(conn *iam.IAM, name string) (*iam.Role, error) {
 	input := &iam.GetRoleInput{
 		RoleName: aws.String(name),
 	}

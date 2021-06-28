@@ -15,18 +15,15 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
-func dataSourceAwsIAMAssumedRoleSource() *schema.Resource {
+func dataSourceAwsIAMSessionContext() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIAMAssumedRoleSourceRead,
+		Read: dataSourceAwsIAMSessionContextRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"role_path": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
 			},
 			"role_name": {
 				Type:     schema.TypeString,
@@ -44,7 +41,7 @@ func dataSourceAwsIAMAssumedRoleSource() *schema.Resource {
 	}
 }
 
-func dataSourceAwsIAMAssumedRoleSourceRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsIAMSessionContextRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iamconn
 
 	arn := d.Get("arn").(string)
@@ -59,7 +56,6 @@ func dataSourceAwsIAMAssumedRoleSourceRead(d *schema.ResourceData, meta interfac
 		d.Set("source_arn", arn)
 		d.Set("session_name", "")
 		d.Set("role_name", "")
-		d.Set("role_path", "")
 
 		return nil
 	}
@@ -69,7 +65,7 @@ func dataSourceAwsIAMAssumedRoleSourceRead(d *schema.ResourceData, meta interfac
 	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		role, err = finder.RoleByName(conn, roleName)
+		role, err = finder.Role(conn, roleName)
 
 		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return resource.RetryableError(err)
@@ -83,7 +79,7 @@ func dataSourceAwsIAMAssumedRoleSourceRead(d *schema.ResourceData, meta interfac
 	})
 
 	if tfresource.TimedOut(err) {
-		role, err = finder.RoleByName(conn, roleName)
+		role, err = finder.Role(conn, roleName)
 	}
 
 	if err != nil {
@@ -97,7 +93,6 @@ func dataSourceAwsIAMAssumedRoleSourceRead(d *schema.ResourceData, meta interfac
 	d.Set("session_name", sessionName)
 	d.Set("role_name", roleName)
 	d.Set("source_arn", role.Arn)
-	d.Set("role_path", role.Path)
 
 	return nil
 }
@@ -120,7 +115,7 @@ func roleNameSessionFromARN(rawARN string) (string, string) {
 		return "", ""
 	}
 
-	if reRole.MatchString(parsedARN.Resource) && parsedARN.Service != "iam" {
+	if reRole.MatchString(parsedARN.Resource) && parsedARN.Service != iam.ServiceName {
 		return "", ""
 	}
 

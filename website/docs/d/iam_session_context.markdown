@@ -1,12 +1,12 @@
 ---
 subcategory: "IAM"
 layout: "aws"
-page_title: "AWS: aws_iam_assumed_role_source"
+page_title: "AWS: aws_iam_session_context"
 description: |-
   Get information on the IAM source role of an STS assumed role
 ---
 
-# Data Source: aws_iam_assumed_role_source
+# Data Source: aws_iam_session_context
 
 This data source provides information on the IAM source role of an STS assumed role. For non-role ARNs, this data source simply passes the ARN through.
 
@@ -17,7 +17,7 @@ For some AWS resources, multiple types of principals are allowed in the same arg
 ### Basic Example
 
 ```terraform
-data "aws_iam_assumed_role_source" "example" {
+data "aws_iam_session_context" "example" {
   arn = "arn:aws:sts::123456789012:assumed-role/Audien-Heaven/MatyNoyes"
 }
 ```
@@ -29,7 +29,7 @@ Combined with `aws_caller_identity`, you can get the current user's source IAM r
 ```terraform
 data "aws_caller_identity" "current" {}
 
-data "aws_iam_assumed_role_source" "example" {
+data "aws_iam_session_context" "example" {
   arn = data.aws_called_identity.current.arn
 }
 ```
@@ -42,7 +42,6 @@ data "aws_iam_assumed_role_source" "example" {
 
 ## Attributes Reference
 
-* `role_path` - Path of the source role. Only available if `arn` corresponds to an IAM role or STS assumed role.
 * `role_name` - Name of the source role. Only available if `arn` corresponds to an IAM role or STS assumed role.
 * `source_arn` - IAM source role ARN if `arn` corresponds to an STS assumed role. Otherwise, `source_arn` is equal to `arn`.
 * `session_name` - Name of the STS session. Only available if `arn` corresponds to an STS assumed role.
