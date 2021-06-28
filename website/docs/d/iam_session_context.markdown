@@ -30,7 +30,7 @@ Combined with `aws_caller_identity`, you can get the current user's source IAM r
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_session_context" "example" {
-  arn = data.aws_called_identity.current.arn
+  arn = data.aws_caller_identity.current.arn
 }
 ```
 
