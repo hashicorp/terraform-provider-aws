@@ -55,8 +55,7 @@ func dataSourceAwsIAMAssumedRoleSourceRead(d *schema.ResourceData, meta interfac
 	sessionName := ""
 	var err error
 
-	if roleName, sessionName, err = roleSessionNameFromARN(arn); err != nil {
-		// errors purposely eaten to pass through ARN
+	if roleName, sessionName = roleNameSessionFromARN(arn); roleName == "" {
 		d.Set("source_arn", arn)
 		d.Set("session_name", "")
 		d.Set("role_name", "")
@@ -70,7 +69,7 @@ func dataSourceAwsIAMAssumedRoleSourceRead(d *schema.ResourceData, meta interfac
 	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		role, err = finder.RoleARNByName(conn, roleName)
+		role, err = finder.RoleByName(conn, roleName)
 
 		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return resource.RetryableError(err)
@@ -84,7 +83,7 @@ func dataSourceAwsIAMAssumedRoleSourceRead(d *schema.ResourceData, meta interfac
 	})
 
 	if tfresource.TimedOut(err) {
-		role, err = finder.RoleARNByName(conn, roleName)
+		role, err = finder.RoleByName(conn, roleName)
 	}
 
 	if err != nil {
@@ -99,11 +98,13 @@ func dataSourceAwsIAMAssumedRoleSourceRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func roleSessionNameFromARN(rawARN string) (string, string, error) {
+// roleNameSessionFromARN returns the role and session names in an ARN if any.
+// Otherwise, it returns empty strings.
+func roleNameSessionFromARN(rawARN string) (string, string) {
 	parsedARN, err := arn.Parse(rawARN)
 
 	if err != nil {
-		return "", "", fmt.Errorf("could not parse ARN (%s)", rawARN)
+		return "", ""
 	}
 
 	parts := strings.Split(parsedARN.Resource, "/")
@@ -112,24 +113,24 @@ func roleSessionNameFromARN(rawARN string) (string, string, error) {
 	reRole := regexp.MustCompile(`^role/.{1,}`)
 
 	if reAssume.MatchString(parsedARN.Resource) && parsedARN.Service != "sts" {
-		return "", "", fmt.Errorf("assume role service must be STS (%s)", rawARN)
+		return "", ""
 	}
 
 	if reRole.MatchString(parsedARN.Resource) && parsedARN.Service != "iam" {
-		return "", "", fmt.Errorf("role service must be IAM (%s)", rawARN)
+		return "", ""
 	}
 
 	if !reAssume.MatchString(parsedARN.Resource) && !reRole.MatchString(parsedARN.Resource) {
-		return "", "", fmt.Errorf("not a role nor assumed role (%s)", rawARN)
+		return "", ""
 	}
 
 	if reRole.MatchString(parsedARN.Resource) && len(parts) > 1 {
-		return parts[len(parts)-1], "", nil
+		return parts[len(parts)-1], ""
 	}
 
 	if len(parts) < 3 {
-		return "", "", fmt.Errorf("not a valid assumed role (%s)", rawARN)
+		return "", ""
 	}
 
-	return parts[len(parts)-2], parts[len(parts)-1], nil
+	return parts[len(parts)-2], parts[len(parts)-1]
 }
