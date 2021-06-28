@@ -22,84 +22,66 @@ func TestAssumedRoleRoleSessionName(t *testing.T) {
 			ARN:                 "abcd",
 			ExpectedRoleName:    "",
 			ExpectedSessionName: "",
-			ExpectedError:       true,
 		},
 		{
 			Name:                "regular role ARN",
 			ARN:                 "arn:aws:iam::111122223333:role/role_name", //lintignore:AWSAT005
 			ExpectedRoleName:    "role_name",
 			ExpectedSessionName: "",
-			ExpectedError:       false,
 		},
 		{
 			Name:                "assumed role ARN",
 			ARN:                 "arn:aws:sts::444433332222:assumed-role/something_something-admin/sessionIDNotPartOfRoleARN", //lintignore:AWSAT005
 			ExpectedRoleName:    "something_something-admin",
 			ExpectedSessionName: "sessionIDNotPartOfRoleARN",
-			ExpectedError:       false,
 		},
 		{
 			Name:                "'assumed-role' part of ARN resource",
 			ARN:                 "arn:aws:iam::444433332222:user/assumed-role-but-not-really", //lintignore:AWSAT005
 			ExpectedRoleName:    "",
 			ExpectedSessionName: "",
-			ExpectedError:       true,
 		},
 		{
 			Name:                "user ARN",
 			ARN:                 "arn:aws:iam::123456789012:user/Bob", //lintignore:AWSAT005
 			ExpectedRoleName:    "",
 			ExpectedSessionName: "",
-			ExpectedError:       true,
 		},
 		{
 			Name:                "assumed role from AWS example",
 			ARN:                 "arn:aws:sts::123456789012:assumed-role/example-role/AWSCLI-Session", //lintignore:AWSAT005
 			ExpectedRoleName:    "example-role",
 			ExpectedSessionName: "AWSCLI-Session",
-			ExpectedError:       false,
 		},
 		{
 			Name:                "multiple slashes in resource",                                         // not sure this is even valid
 			ARN:                 "arn:aws:sts::123456789012:assumed-role/path/role-name/AWSCLI-Session", //lintignore:AWSAT005
 			ExpectedRoleName:    "role-name",
 			ExpectedSessionName: "AWSCLI-Session",
-			ExpectedError:       false,
 		},
 		{
 			Name:                "not an sts ARN",
 			ARN:                 "arn:aws:iam::123456789012:assumed-role/example-role/AWSCLI-Session", //lintignore:AWSAT005
 			ExpectedRoleName:    "",
 			ExpectedSessionName: "",
-			ExpectedError:       true,
 		},
 		{
 			Name:                "role with path",
 			ARN:                 "arn:aws:iam::123456789012:role/this/is/the/path/role-name", //lintignore:AWSAT005
 			ExpectedRoleName:    "role-name",
 			ExpectedSessionName: "",
-			ExpectedError:       false,
 		},
 		{
 			Name:                "wrong service",
 			ARN:                 "arn:aws:ec2::123456789012:role/role-name", //lintignore:AWSAT005
 			ExpectedRoleName:    "",
 			ExpectedSessionName: "",
-			ExpectedError:       true,
 		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
-			role, session, err := roleSessionNameFromARN(testCase.ARN)
-
-			if err != nil && !testCase.ExpectedError {
-				t.Errorf("for %s: got error (%s), expected none", testCase.ARN, err)
-			}
-
-			if err == nil && testCase.ExpectedError {
-				t.Errorf("for %s: got no error, expected an error", testCase.ARN)
-			}
+			role, session := roleNameSessionFromARN(testCase.ARN)
 
 			if testCase.ExpectedRoleName != role || testCase.ExpectedSessionName != session {
 				t.Errorf("for %s: got role %s, session %s; expected role %s, session %s", testCase.ARN, role, session, testCase.ExpectedRoleName, testCase.ExpectedSessionName)
