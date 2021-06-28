@@ -26,7 +26,7 @@ func TestAssumedRoleRoleSessionName(t *testing.T) {
 		{
 			Name:                "regular role ARN",
 			ARN:                 "arn:aws:iam::111122223333:role/role_name", //lintignore:AWSAT005
-			ExpectedRoleName:    "role_name",
+			ExpectedRoleName:    "",
 			ExpectedSessionName: "",
 		},
 		{
@@ -68,7 +68,7 @@ func TestAssumedRoleRoleSessionName(t *testing.T) {
 		{
 			Name:                "role with path",
 			ARN:                 "arn:aws:iam::123456789012:role/this/is/the/path/role-name", //lintignore:AWSAT005
-			ExpectedRoleName:    "role-name",
+			ExpectedRoleName:    "",
 			ExpectedSessionName: "",
 		},
 		{
@@ -149,7 +149,7 @@ func TestAccAWSDataSourceIAMSessionContext_notAssumedRole(t *testing.T) {
 				Config: testAccAwsIAMSessionContextNotAssumedConfig(rName, "/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_name", resourceName, "name"),
+					resource.TestCheckResourceAttr(dataSourceName, "issuer_name", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", ""),
 				),
 			},
@@ -171,7 +171,7 @@ func TestAccAWSDataSourceIAMSessionContext_notAssumedRoleWithPath(t *testing.T) 
 				Config: testAccAwsIAMSessionContextNotAssumedConfig(rName, "/this/is/a/long/path/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_name", resourceName, "name"),
+					resource.TestCheckResourceAttr(dataSourceName, "issuer_name", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", ""),
 				),
 			},

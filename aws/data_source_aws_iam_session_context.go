@@ -112,26 +112,13 @@ func roleNameSessionFromARN(rawARN string) (string, string) {
 		return "", ""
 	}
 
-	parts := strings.Split(parsedARN.Resource, "/")
-
 	reAssume := regexp.MustCompile(`^assumed-role/.{1,}/.{2,}`)
-	reRole := regexp.MustCompile(`^role/.{1,}`)
 
-	if reAssume.MatchString(parsedARN.Resource) && parsedARN.Service != "sts" {
+	if !reAssume.MatchString(parsedARN.Resource) || parsedARN.Service != "sts" {
 		return "", ""
 	}
 
-	if reRole.MatchString(parsedARN.Resource) && parsedARN.Service != iam.ServiceName {
-		return "", ""
-	}
-
-	if !reAssume.MatchString(parsedARN.Resource) && !reRole.MatchString(parsedARN.Resource) {
-		return "", ""
-	}
-
-	if reRole.MatchString(parsedARN.Resource) && len(parts) > 1 {
-		return parts[len(parts)-1], ""
-	}
+	parts := strings.Split(parsedARN.Resource, "/")
 
 	if len(parts) < 3 {
 		return "", ""
