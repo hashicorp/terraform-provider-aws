@@ -1,4 +1,13 @@
 ## 3.48.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_iam_session_context` ([#19957](https://github.com/hashicorp/terraform-provider-aws/issues/19957))
+
+BUG FIXES:
+
+* resource/aws_cloudwatch_event_target: Don't crash if `sqs_target` configuration block is empty. ([#19946](https://github.com/hashicorp/terraform-provider-aws/issues/19946))
+
 ## 3.47.0 (June 24, 2021)
 
 FEATURES:
