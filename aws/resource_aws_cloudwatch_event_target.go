@@ -215,8 +215,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 							Default:      events.PropagateTagsTaskDefinition,
 							ValidateFunc: validation.StringInSlice(events.PropagateTags_Values(), false),
 						},
-						"tags":     tagsSchema(),
-						"tags_all": tagsSchemaComputed(),
+						"tags": tagsSchema(),
 						"task_count": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -428,7 +427,7 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 	}
 
 	if t.EcsParameters != nil {
-		if err := d.Set("ecs_target", flattenAwsCloudWatchEventTargetEcsParameters(t.EcsParameters, meta)); err != nil {
+		if err := d.Set("ecs_target", flattenAwsCloudWatchEventTargetEcsParameters(t.EcsParameters)); err != nil {
 			return fmt.Errorf("Error setting ecs_target error: %w", err)
 		}
 	}
@@ -536,7 +535,7 @@ func buildPutTargetInputStruct(d *schema.ResourceData, meta interface{}) *events
 	}
 
 	if v, ok := d.GetOk("ecs_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.EcsParameters = expandAwsCloudWatchEventTargetEcsParameters(v.([]interface{}), meta)
+		e.EcsParameters = expandAwsCloudWatchEventTargetEcsParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("http_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -596,13 +595,11 @@ func expandAwsCloudWatchEventTargetRunParameters(config []interface{}) *events.R
 	return command
 }
 
-func expandAwsCloudWatchEventTargetEcsParameters(config []interface{}, meta interface{}) *events.EcsParameters {
-
+func expandAwsCloudWatchEventTargetEcsParameters(config []interface{}) *events.EcsParameters {
 	ecsParameters := &events.EcsParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
-		defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-		tags := defaultTagsConfig.MergeTags(keyvaluetags.New(param["tags"].(map[string]interface{})))
+		tags := keyvaluetags.New(param["tags"].(map[string]interface{}))
 
 		if val, ok := param["group"].(string); ok && val != "" {
 			ecsParameters.Group = aws.String(val)
@@ -794,10 +791,7 @@ func flattenAwsCloudWatchEventTargetRunParameters(runCommand *events.RunCommandP
 	return result
 }
 
-func flattenAwsCloudWatchEventTargetEcsParameters(ecsParameters *events.EcsParameters, meta interface{}) []map[string]interface{} {
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
-
+func flattenAwsCloudWatchEventTargetEcsParameters(ecsParameters *events.EcsParameters) []map[string]interface{} {
 	config := make(map[string]interface{})
 	if ecsParameters.Group != nil {
 		config["group"] = aws.StringValue(ecsParameters.Group)
@@ -820,10 +814,7 @@ func flattenAwsCloudWatchEventTargetEcsParameters(ecsParameters *events.EcsParam
 		config["placement_constraint"] = flattenAwsCloudWatchEventTargetPlacementConstraints(ecsParameters.PlacementConstraints)
 	}
 
-	tags := keyvaluetags.CloudwatcheventsKeyValueTags(ecsParameters.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
-	config["tags"] = tags.RemoveDefaultConfig(defaultTagsConfig).Map()
-	config["tags_all"] = tags.Map()
-
+	config["tags"] = keyvaluetags.CloudwatcheventsKeyValueTags(ecsParameters.Tags).IgnoreAws().Map()
 	config["enable_execute_command"] = aws.BoolValue(ecsParameters.EnableExecuteCommand)
 	config["enable_ecs_managed_tags"] = aws.BoolValue(ecsParameters.EnableECSManagedTags)
 	config["task_count"] = aws.Int64Value(ecsParameters.TaskCount)
