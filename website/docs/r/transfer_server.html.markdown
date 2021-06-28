@@ -104,11 +104,11 @@ The following arguments are supported:
 
 **endpoint_details** requires the following:
 
-* `vpc_endpoint_id` - (Optional) The ID of the VPC endpoint. This property can only be used when `endpoint_type` is set to `VPC_ENDPOINT`
 * `address_allocation_ids` - (Optional) A list of address allocation IDs that are required to attach an Elastic IP address to your SFTP server's endpoint. This property can only be used when `endpoint_type` is set to `VPC`.
+* `security_group_ids` - (Optional) A list of security groups IDs that are available to attach to your server's endpoint. If no security groups are specified, the VPC's default security groups are automatically assigned to your endpoint. This property can only be used when `endpoint_type` is set to `VPC`.
 * `subnet_ids` - (Optional) A list of subnet IDs that are required to host your SFTP server endpoint in your VPC. This property can only be used when `endpoint_type` is set to `VPC`.
+* `vpc_endpoint_id` - (Optional) The ID of the VPC endpoint. This property can only be used when `endpoint_type` is set to `VPC_ENDPOINT`
 * `vpc_id` - (Optional) The VPC ID of the virtual private cloud in which the SFTP server's endpoint will be hosted. This property can only be used when `endpoint_type` is set to `VPC`.
-* `security_group_ids` - (Optional) A list of Security Groups Ids. This property can only be used when `endpoint_type` is set to `VPC`. It can't be change after transfer server creation.
 
 ## Attributes Reference
 In addition to all arguments above, the following attributes are exported:

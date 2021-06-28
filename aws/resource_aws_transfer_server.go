@@ -40,6 +40,7 @@ func resourceAwsTransferServer() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validateArn,
 			},
+
 			"domain": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -269,6 +270,10 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 			return err
 		}
 
+		// TODO
+		// TODO You can edit the SecurityGroupIds property in the UpdateServer API only if you are changing the EndpointType from PUBLIC or VPC_ENDPOINT to VPC. To change security groups associated with your server's VPC endpoint after creation, use the Amazon EC2 ModifyVpcEndpoint API.
+		// TODO
+
 		input := &transfer.UpdateServerInput{
 			ServerId:        aws.String(d.Id()),
 			EndpointDetails: expandTransferEndpointDetails(d.Get("endpoint_details").([]interface{})[0].(map[string]interface{})),
@@ -398,6 +403,10 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 			if d.HasChange("endpoint_details.0.address_allocation_ids") {
 				stopFlag = true
 			}
+
+			// TODO
+			// TODO You can edit the SecurityGroupIds property in the UpdateServer API only if you are changing the EndpointType from PUBLIC or VPC_ENDPOINT to VPC. To change security groups associated with your server's VPC endpoint after creation, use the Amazon EC2 ModifyVpcEndpoint API.
+			// TODO
 		}
 
 		if d.HasChange("host_key") {
@@ -509,6 +518,10 @@ func expandTransferEndpointDetails(tfMap map[string]interface{}) *transfer.Endpo
 		apiObject.AddressAllocationIds = expandStringSet(v)
 	}
 
+	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SecurityGroupIds = expandStringSet(v)
+	}
+
 	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SubnetIds = expandStringSet(v)
 	}
@@ -533,6 +546,10 @@ func flattenTransferEndpointDetails(apiObject *transfer.EndpointDetails) map[str
 
 	if v := apiObject.AddressAllocationIds; v != nil {
 		tfMap["address_allocation_ids"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.SecurityGroupIds; v != nil {
+		tfMap["security_group_ids"] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
