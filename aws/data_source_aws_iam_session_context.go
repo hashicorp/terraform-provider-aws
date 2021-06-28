@@ -25,11 +25,15 @@ func dataSourceAwsIAMSessionContext() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validateArn,
 			},
-			"role_name": {
+			"issuer_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"issuer_arn": {
+			"issuer_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"issuer_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,8 +58,9 @@ func dataSourceAwsIAMSessionContextRead(d *schema.ResourceData, meta interface{}
 
 	if roleName, sessionName = roleNameSessionFromARN(arn); roleName == "" {
 		d.Set("issuer_arn", arn)
+		d.Set("issuer_id", "")
+		d.Set("issuer_name", "")
 		d.Set("session_name", "")
-		d.Set("role_name", "")
 
 		return nil
 	}
@@ -90,9 +95,10 @@ func dataSourceAwsIAMSessionContextRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("empty role returned (%s)", roleName)
 	}
 
-	d.Set("session_name", sessionName)
-	d.Set("role_name", roleName)
 	d.Set("issuer_arn", role.Arn)
+	d.Set("issuer_id", role.RoleId)
+	d.Set("issuer_name", roleName)
+	d.Set("session_name", sessionName)
 
 	return nil
 }
