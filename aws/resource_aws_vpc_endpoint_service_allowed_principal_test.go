@@ -13,7 +13,8 @@ import (
 )
 
 func TestAccAWSVpcEndpointServiceAllowedPrincipal_basic(t *testing.T) {
-	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandString(10))
+	resourceName := "aws_vpc_endpoint_service_allowed_principal.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,9 +23,9 @@ func TestAccAWSVpcEndpointServiceAllowedPrincipal_basic(t *testing.T) {
 		CheckDestroy: testAccCheckVpcEndpointServiceAllowedPrincipalDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointServiceAllowedPrincipalBasicConfig(lbName),
+				Config: testAccVpcEndpointServiceAllowedPrincipalConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointServiceAllowedPrincipalExists("aws_vpc_endpoint_service_allowed_principal.foo"),
+					testAccCheckVpcEndpointServiceAllowedPrincipalExists(resourceName),
 				),
 			},
 		},
@@ -94,23 +95,23 @@ func testAccCheckVpcEndpointServiceAllowedPrincipalExists(n string) resource.Tes
 	}
 }
 
-func testAccVpcEndpointServiceAllowedPrincipalBasicConfig(lbName string) string {
+func testAccVpcEndpointServiceAllowedPrincipalConfig(rName string) string {
 	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(
 		`
-resource "aws_vpc" "nlb_test" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-vpc-endpoint-service-allowed-principal"
+    Name = %[1]q
   }
 }
 
-resource "aws_lb" "nlb_test_1" {
-  name = "%s"
+resource "aws_lb" "test" {
+  name = %[1]q
 
   subnets = [
-    aws_subnet.nlb_test_1.id,
-    aws_subnet.nlb_test_2.id,
+    aws_subnet.test[0].id,
+    aws_subnet.test[1].id,
   ]
 
   load_balancer_type         = "network"
@@ -119,44 +120,40 @@ resource "aws_lb" "nlb_test_1" {
   enable_deletion_protection = false
 
   tags = {
-    Name = "testAccVpcEndpointServiceBasicConfig_nlb1"
+    Name = %[1]q
   }
 }
 
-resource "aws_subnet" "nlb_test_1" {
-  vpc_id            = aws_vpc.nlb_test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
+resource "aws_subnet" "test" {
+  count = 2
+
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, count.index)
+  availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = {
-    Name = "tf-acc-vpc-endpoint-service-allowed-principal-1"
-  }
-}
-
-resource "aws_subnet" "nlb_test_2" {
-  vpc_id            = aws_vpc.nlb_test.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = "tf-acc-vpc-endpoint-service-allowed-principal-2"
+    Name = %[1]q
   }
 }
 
 data "aws_caller_identity" "current" {}
 
-resource "aws_vpc_endpoint_service" "foo" {
+resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
 
   network_load_balancer_arns = [
-    aws_lb.nlb_test_1.id,
+    aws_lb.test.arn,
   ]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_vpc_endpoint_service_allowed_principal" "foo" {
-  vpc_endpoint_service_id = aws_vpc_endpoint_service.foo.id
+resource "aws_vpc_endpoint_service_allowed_principal" "test" {
+  vpc_endpoint_service_id = aws_vpc_endpoint_service.test.id
 
   principal_arn = data.aws_caller_identity.current.arn
 }
-`, lbName))
+`, rName))
 }
