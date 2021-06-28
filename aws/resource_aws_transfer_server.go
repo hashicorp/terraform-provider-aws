@@ -269,9 +269,6 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 			return err
 		}
 
-		// Here we ansure that SecurityGroupsids is nil. We can't update this
-		createOpts.EndpointDetails.SecurityGroupIds = nil
-
 		input := &transfer.UpdateServerInput{
 			ServerId:        aws.String(d.Id()),
 			EndpointDetails: expandTransferEndpointDetails(d.Get("endpoint_details").([]interface{})[0].(map[string]interface{})),
