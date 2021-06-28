@@ -29,7 +29,7 @@ func dataSourceAwsIAMSessionContext() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"source_arn": {
+			"issuer_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +53,7 @@ func dataSourceAwsIAMSessionContextRead(d *schema.ResourceData, meta interface{}
 	var err error
 
 	if roleName, sessionName = roleNameSessionFromARN(arn); roleName == "" {
-		d.Set("source_arn", arn)
+		d.Set("issuer_arn", arn)
 		d.Set("session_name", "")
 		d.Set("role_name", "")
 
@@ -92,7 +92,7 @@ func dataSourceAwsIAMSessionContextRead(d *schema.ResourceData, meta interface{}
 
 	d.Set("session_name", sessionName)
 	d.Set("role_name", roleName)
-	d.Set("source_arn", role.Arn)
+	d.Set("issuer_arn", role.Arn)
 
 	return nil
 }

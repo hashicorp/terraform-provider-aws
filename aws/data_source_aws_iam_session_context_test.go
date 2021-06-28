@@ -103,7 +103,7 @@ func TestAccAWSDataSourceIAMSessionContext_basic(t *testing.T) {
 			{
 				Config: testAccAwsIAMSessionContextConfig(rName, "/", "session-id"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "source_arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "role_name", resourceName, "name"),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", "session-id"),
 				),
@@ -125,7 +125,7 @@ func TestAccAWSDataSourceIAMSessionContext_withPath(t *testing.T) {
 			{
 				Config: testAccAwsIAMSessionContextConfig(rName, "/this/is/a/long/path/", "session-id"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "source_arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "role_name", resourceName, "name"),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", "session-id"),
 				),
@@ -147,7 +147,7 @@ func TestAccAWSDataSourceIAMSessionContext_notAssumedRole(t *testing.T) {
 			{
 				Config: testAccAwsIAMSessionContextNotAssumedConfig(rName, "/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "source_arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "role_name", resourceName, "name"),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", ""),
 				),
@@ -169,7 +169,7 @@ func TestAccAWSDataSourceIAMSessionContext_notAssumedRoleWithPath(t *testing.T) 
 			{
 				Config: testAccAwsIAMSessionContextNotAssumedConfig(rName, "/this/is/a/long/path/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "source_arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "role_name", resourceName, "name"),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", ""),
 				),
