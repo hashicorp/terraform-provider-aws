@@ -1192,7 +1192,7 @@ resource "aws_fsx_windows_file_system" "test" {
   throughput_capacity = 32
 
   audit_log_configuration {
-    audit_log_destination            = aws_cloudwatch_log_group.test.arn
+    audit_log_destination             = aws_cloudwatch_log_group.test.arn
     file_access_audit_log_level       = %[2]q
     file_share_access_audit_log_level = %[2]q
   }
