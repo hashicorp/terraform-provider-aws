@@ -1410,7 +1410,7 @@ resource "aws_cloudwatch_event_target" "test" {
     enable_ecs_managed_tags = true
     propagate_tags          = "TASK_DEFINITION"
 
-    placement_constraints {
+    placement_constraint {
       type = "distinctInstance"
     }
 

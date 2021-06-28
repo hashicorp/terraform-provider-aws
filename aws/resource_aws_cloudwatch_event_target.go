@@ -186,7 +186,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 								},
 							},
 						},
-						"placement_constraints": {
+						"placement_constraint": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 10,
@@ -620,7 +620,7 @@ func expandAwsCloudWatchEventTargetEcsParameters(config []interface{}, meta inte
 			ecsParameters.PlatformVersion = aws.String(val)
 		}
 
-		if v, ok := param["placement_constraints"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := param["placement_constraint"].(*schema.Set); ok && v.Len() > 0 {
 			ecsParameters.PlacementConstraints = expandAwsCloudWatchEventTargetPlacementConstraints(v.List())
 		}
 
@@ -817,7 +817,7 @@ func flattenAwsCloudWatchEventTargetEcsParameters(ecsParameters *events.EcsParam
 	}
 
 	if ecsParameters.PlacementConstraints != nil {
-		config["placement_constraints"] = flattenAwsCloudWatchEventTargetPlacementConstraints(ecsParameters.PlacementConstraints)
+		config["placement_constraint"] = flattenAwsCloudWatchEventTargetPlacementConstraints(ecsParameters.PlacementConstraints)
 	}
 
 	tags := keyvaluetags.CloudwatcheventsKeyValueTags(ecsParameters.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
