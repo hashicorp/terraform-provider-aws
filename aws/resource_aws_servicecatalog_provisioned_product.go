@@ -28,68 +28,59 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		//i without u is ForceNew
-		//o 	= computed=true	forcenew=nil
-		//u 	= computed=nil	forcenew=nil (strange)
-		//uo	= computed=true	forcenew=nil (strange)
-		//i		= computed=nil	forcenew=true
-		//io	= computed=true	forcenew=true
-		//iu	= computed=nil	forcenew=nil
-		//iuo	= computed=true	forcenew=nil
-
 		Schema: map[string]*schema.Schema{
-			"accept_language": { //iu
+			"accept_language": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "en",
 				ValidateFunc: validation.StringInSlice(tfservicecatalog.AcceptLanguage_Values(), false),
 			},
-			"arn": { //o=ppd
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cloudwatch_dashboard_names": { //o=ppd
+			"cloudwatch_dashboard_names": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"created_time": { //o=ppd,o=rd
+			"created_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ignore_errors": { //d
+			"ignore_errors": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"last_provisioning_record_id": { //o=ppd
+			"last_provisioning_record_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"last_record_id": { //o=ppd
+			"last_record_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"last_successful_provisioning_record_id": { //o=ppd
+			"last_successful_provisioning_record_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"launch_role_arn": { //o=ppd,o=rd
+			"launch_role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": { //io=ppd,o=rd
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"notification_arns": { //i
+			"notification_arns": {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"path_id": { //iuo=rd
+			"path_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -97,14 +88,14 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 					"path_name",
 				},
 			},
-			"path_name": { //iu
+			"path_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ConflictsWith: []string{
 					"path_id",
 				},
 			},
-			"product_id": { //iuo=ppd,o=rd
+			"product_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -113,7 +104,7 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 					"product_name",
 				},
 			},
-			"product_name": { //iu
+			"product_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ExactlyOneOf: []string{
@@ -121,7 +112,7 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 					"product_name",
 				},
 			},
-			"provisioning_artifact_id": { //iuo=ppd,o=rd
+			"provisioning_artifact_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -130,7 +121,7 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 					"provisioning_artifact_name",
 				},
 			},
-			"provisioning_artifact_name": { //iu
+			"provisioning_artifact_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ExactlyOneOf: []string{
@@ -138,38 +129,38 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 					"provisioning_artifact_name",
 				},
 			},
-			"provisioning_parameters": { //iu
+			"provisioning_parameters": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": { //iu
+						"key": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"use_previous_value": { //u
+						"use_previous_value": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"value": { //iu
+						"value": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 					},
 				},
 			},
-			"provisioning_preferences": { //iu
+			"provisioning_preferences": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"accounts": { //iu
+						"accounts": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"failure_tolerance_count": { //iu
+						"failure_tolerance_count": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ExactlyOneOf: []string{
@@ -177,7 +168,7 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 								"provisioning_preferences.0.failure_tolerance_percentage",
 							},
 						},
-						"failure_tolerance_percentage": { //iu
+						"failure_tolerance_percentage": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ExactlyOneOf: []string{
@@ -185,7 +176,7 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 								"provisioning_preferences.0.failure_tolerance_percentage",
 							},
 						},
-						"max_concurrency_count": { //iu
+						"max_concurrency_count": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ExactlyOneOf: []string{
@@ -193,7 +184,7 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 								"provisioning_preferences.0.max_concurrency_percentage",
 							},
 						},
-						"max_concurrency_percentage": { //iu
+						"max_concurrency_percentage": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ExactlyOneOf: []string{
@@ -201,7 +192,7 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 								"provisioning_preferences.0.max_concurrency_percentage",
 							},
 						},
-						"regions": { //iu
+						"regions": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -209,22 +200,22 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 					},
 				},
 			},
-			"retain_physical_resources": { //d
+			"retain_physical_resources": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"status": { //o=ppd,o=rd
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_message": { //o=ppd
+			"status_message": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),         //iuo=rd
-			"tags_all": tagsSchemaComputed(), //iuo=rd
-			"type": { //o=ppd,o=rd
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
+			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -431,26 +422,20 @@ func resourceAwsServiceCatalogProvisionedProductUpdate(d *schema.ResourceData, m
 
 	if v, ok := d.GetOk("path_id"); ok {
 		input.PathId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("path_name"); ok {
+	} else if v, ok := d.GetOk("path_name"); ok {
 		input.PathName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("product_id"); ok {
 		input.ProductId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("product_name"); ok {
+	} else if v, ok := d.GetOk("product_name"); ok {
 		input.ProductName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("provisioning_artifact_id"); ok {
-		input.ProvisionedProductId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("provisioning_artifact_name"); ok {
-		input.ProvisionedProductName = aws.String(v.(string))
+		input.ProvisioningArtifactId = aws.String(v.(string))
+	} else if v, ok := d.GetOk("provisioning_artifact_name"); ok {
+		input.ProvisioningArtifactName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("provisioning_parameters"); ok && len(v.([]interface{})) > 0 {
