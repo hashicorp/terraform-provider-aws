@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	ec2finder "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 	tftransfer "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer/waiter"
@@ -83,6 +84,7 @@ func resourceAwsTransferServer() *schema.Resource {
 						"security_group_ids": {
 							Type:          schema.TypeSet,
 							Optional:      true,
+							Computed:      true,
 							Elem:          &schema.Schema{Type: schema.TypeString},
 							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
 						},
@@ -317,7 +319,23 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("domain", output.Domain)
 	d.Set("endpoint", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.server.transfer", d.Id())))
 	if output.EndpointDetails != nil {
-		if err := d.Set("endpoint_details", []interface{}{flattenTransferEndpointDetails(output.EndpointDetails)}); err != nil {
+		securityGroupIDs := make([]*string, 0)
+
+		// Security Group IDs are not returned for VPC endpoints.
+		if aws.StringValue(output.EndpointType) == transfer.EndpointTypeVpc && len(output.EndpointDetails.SecurityGroupIds) == 0 {
+			vpcEndpointID := aws.StringValue(output.EndpointDetails.VpcEndpointId)
+			output, err := ec2finder.VpcEndpointByID(meta.(*AWSClient).ec2conn, vpcEndpointID)
+
+			if err != nil {
+				return fmt.Errorf("error reading Transfer Server (%s) VPC Endpoint (%s): %w", d.Id(), vpcEndpointID, err)
+			}
+
+			for _, group := range output.Groups {
+				securityGroupIDs = append(securityGroupIDs, group.GroupId)
+			}
+		}
+
+		if err := d.Set("endpoint_details", []interface{}{flattenTransferEndpointDetails(output.EndpointDetails, securityGroupIDs)}); err != nil {
 			return fmt.Errorf("error setting endpoint_details: %w", err)
 		}
 	} else {
@@ -538,7 +556,7 @@ func expandTransferEndpointDetails(tfMap map[string]interface{}) *transfer.Endpo
 	return apiObject
 }
 
-func flattenTransferEndpointDetails(apiObject *transfer.EndpointDetails) map[string]interface{} {
+func flattenTransferEndpointDetails(apiObject *transfer.EndpointDetails, securityGroupIDs []*string) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -549,8 +567,10 @@ func flattenTransferEndpointDetails(apiObject *transfer.EndpointDetails) map[str
 		tfMap["address_allocation_ids"] = aws.StringValueSlice(v)
 	}
 
-	if v := apiObject.SecurityGroupIds; v != nil {
+	if v := apiObject.SecurityGroupIds; len(v) > 0 {
 		tfMap["security_group_ids"] = aws.StringValueSlice(v)
+	} else if len(securityGroupIDs) > 0 {
+		tfMap["security_group_ids"] = aws.StringValueSlice(securityGroupIDs)
 	}
 
 	if v := apiObject.SubnetIds; v != nil {

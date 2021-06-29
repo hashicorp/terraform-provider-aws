@@ -229,8 +229,7 @@ func testAccAWSTransferServer_securityPolicy(t *testing.T) {
 func testAccAWSTransferServer_vpc(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
-	eip1ResourceName := "aws_eip.test.0"
-	eip2ResourceName := "aws_eip.test.1"
+	defaultSecurityGroupResourceName := "aws_default_security_group.test"
 	subnetResourceName := "aws_subnet.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -242,13 +241,65 @@ func testAccAWSTransferServer_vpc(t *testing.T) {
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTransferServerVpcNoSecurityGroupsConfig(rName),
+				Config: testAccAWSTransferServerVpcConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+			{
+				Config: testAccAWSTransferServerVpcUpdateConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAWSTransferServer_vpcAddressAllocationIds(t *testing.T) {
+	var conf transfer.DescribedServer
+	resourceName := "aws_transfer_server.test"
+	eip1ResourceName := "aws_eip.test.0"
+	eip2ResourceName := "aws_eip.test.1"
+	defaultSecurityGroupResourceName := "aws_default_security_group.test"
+	subnetResourceName := "aws_subnet.test"
+	vpcResourceName := "aws_vpc.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSTransferServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSTransferServerVpcAddressAllocationIdsNoSecurityGroupsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.address_allocation_ids.*", eip1ResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
@@ -261,15 +312,64 @@ func testAccAWSTransferServer_vpc(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccAWSTransferServerVpcNoSecurityGroupsUpdateConfig(rName),
+				Config: testAccAWSTransferServerVpcAddressAllocationIdsNoSecurityGroupsUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.address_allocation_ids.*", eip2ResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAWSTransferServer_vpcSecurityGroupIds(t *testing.T) {
+	var conf transfer.DescribedServer
+	resourceName := "aws_transfer_server.test"
+	securityGroup1ResourceName := "aws_security_group.test"
+	securityGroup2ResourceName := "aws_security_group.tes2"
+	vpcResourceName := "aws_vpc.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSTransferServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSTransferServerVpcSecurityGroupIdsConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", securityGroup1ResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+			{
+				Config: testAccAWSTransferServerVpcSecurityGroupIdsUpdateConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", securityGroup2ResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
 				),
 			},
@@ -649,6 +749,10 @@ resource "aws_security_group" "test" {
     Name = %[1]q
   }
 }
+
+resource "aws_default_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+}
 `, rName)
 }
 
@@ -887,7 +991,36 @@ resource "aws_transfer_server" "test" {
 `, rName))
 }
 
-func testAccAWSTransferServerVpcNoSecurityGroupsConfig(rName string) string {
+func testAccAWSTransferServerVpcConfig(rName string) string {
+	return composeConfig(
+		testAccAWSTransferServerConfigBaseVpc(rName),
+		`
+resource "aws_transfer_server" "test" {
+  endpoint_type = "VPC"
+
+  endpoint_details {
+    vpc_id = aws_vpc.test.id
+  }
+}
+`)
+}
+
+func testAccAWSTransferServerVpcUpdateConfig(rName string) string {
+	return composeConfig(
+		testAccAWSTransferServerConfigBaseVpc(rName),
+		`
+resource "aws_transfer_server" "test" {
+  endpoint_type = "VPC"
+
+  endpoint_details {
+    subnet_ids = [aws_subnet.test.id]
+    vpc_id     = aws_vpc.test.id
+  }
+}
+`)
+}
+
+func testAccAWSTransferServerVpcAddressAllocationIdsNoSecurityGroupsConfig(rName string) string {
 	return composeConfig(
 		testAccAWSTransferServerConfigBaseVpc(rName),
 		fmt.Sprintf(`
@@ -913,7 +1046,7 @@ resource "aws_transfer_server" "test" {
 `, rName))
 }
 
-func testAccAWSTransferServerVpcNoSecurityGroupsUpdateConfig(rName string) string {
+func testAccAWSTransferServerVpcAddressAllocationIdsNoSecurityGroupsUpdateConfig(rName string) string {
 	return composeConfig(
 		testAccAWSTransferServerConfigBaseVpc(rName),
 		fmt.Sprintf(`
@@ -934,6 +1067,45 @@ resource "aws_transfer_server" "test" {
     address_allocation_ids = [aws_eip.test[1].id]
     subnet_ids             = [aws_subnet.test.id]
     vpc_id                 = aws_vpc.test.id
+  }
+}
+`, rName))
+}
+
+func testAccAWSTransferServerVpcSecurityGroupIdsConfig(rName string) string {
+	return composeConfig(
+		testAccAWSTransferServerConfigBaseVpc(rName),
+		`
+resource "aws_transfer_server" "test" {
+  endpoint_type = "VPC"
+
+  endpoint_details {
+    security_group_ids = [aws_security_group.test.id]
+    vpc_id             = aws_vpc.test.id
+  }
+}
+`)
+}
+
+func testAccAWSTransferServerVpcSecurityGroupIdsUpdateConfig(rName string) string {
+	return composeConfig(
+		testAccAWSTransferServerConfigBaseVpc(rName),
+		fmt.Sprintf(`
+resource "aws_security_group" "test2" {
+  name   = "%[1]s-2"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = "%[1]s-2"
+  }
+}
+
+resource "aws_transfer_server" "test" {
+  endpoint_type = "VPC"
+
+  endpoint_details {
+    security_group_ids = [aws_security_group.test2.id]
+    vpc_id             = aws_vpc.test.id
   }
 }
 `, rName))
