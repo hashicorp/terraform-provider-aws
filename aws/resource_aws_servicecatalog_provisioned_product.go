@@ -149,7 +149,12 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 					},
 				},
 			},
-			"provisioning_preferences": {
+			"retain_physical_resources": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"stack_set_provisioning_preferences": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -164,32 +169,32 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ExactlyOneOf: []string{
-								"provisioning_preferences.0.failure_tolerance_count",
-								"provisioning_preferences.0.failure_tolerance_percentage",
+								"stack_set_provisioning_preferences.0.failure_tolerance_count",
+								"stack_set_provisioning_preferences.0.failure_tolerance_percentage",
 							},
 						},
 						"failure_tolerance_percentage": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ExactlyOneOf: []string{
-								"provisioning_preferences.0.failure_tolerance_count",
-								"provisioning_preferences.0.failure_tolerance_percentage",
+								"stack_set_provisioning_preferences.0.failure_tolerance_count",
+								"stack_set_provisioning_preferences.0.failure_tolerance_percentage",
 							},
 						},
 						"max_concurrency_count": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ExactlyOneOf: []string{
-								"provisioning_preferences.0.max_concurrency_count",
-								"provisioning_preferences.0.max_concurrency_percentage",
+								"stack_set_provisioning_preferences.0.max_concurrency_count",
+								"stack_set_provisioning_preferences.0.max_concurrency_percentage",
 							},
 						},
 						"max_concurrency_percentage": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ExactlyOneOf: []string{
-								"provisioning_preferences.0.max_concurrency_count",
-								"provisioning_preferences.0.max_concurrency_percentage",
+								"stack_set_provisioning_preferences.0.max_concurrency_count",
+								"stack_set_provisioning_preferences.0.max_concurrency_percentage",
 							},
 						},
 						"regions": {
@@ -199,11 +204,6 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 						},
 					},
 				},
-			},
-			"retain_physical_resources": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -272,7 +272,7 @@ func resourceAwsServiceCatalogProvisionedProductCreate(d *schema.ResourceData, m
 		input.ProvisioningParameters = expandServiceCatalogProvisioningParameters(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("provisioning_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("stack_set_provisioning_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.ProvisioningPreferences = expandServiceCatalogProvisioningPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -442,7 +442,7 @@ func resourceAwsServiceCatalogProvisionedProductUpdate(d *schema.ResourceData, m
 		input.ProvisioningParameters = expandServiceCatalogUpdateProvisioningParameters(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("provisioning_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("stack_set_provisioning_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.ProvisioningPreferences = expandServiceCatalogUpdateProvisioningPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
