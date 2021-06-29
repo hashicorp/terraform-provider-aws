@@ -527,7 +527,13 @@ func resourceAwsServiceCatalogProvisionedProductDelete(d *schema.ResourceData, m
 		return fmt.Errorf("error terminating Service Catalog Provisioned Product (%s): %w", d.Id(), err)
 	}
 
-	if err := waiter.ProvisionedProductTerminated(conn, d.Get("accept_language").(string), d.Id(), ""); err != nil {
+	err = waiter.ProvisionedProductTerminated(conn, d.Get("accept_language").(string), d.Id(), "")
+
+	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
 		return fmt.Errorf("error waiting for Service Catalog Provisioned Product (%s) to be terminated: %w", d.Id(), err)
 	}
 
