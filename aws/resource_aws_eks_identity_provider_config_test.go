@@ -53,8 +53,7 @@ func testSweepEksIdentityProviderConfigs(region string) error {
 						continue
 					}
 
-					// TODO - Should I use context.Background here?
-					if err := waitForEksIdentityProviderConfigDisassociation(context.Background(), conn, clusterName, config, 10*time.Minute); err != nil {
+					if err := waitForEksIdentityProviderConfigDisassociation(context.TODO(), conn, clusterName, config, 10*time.Minute); err != nil {
 						errors = multierror.Append(errors, fmt.Errorf("error waiting for EKS Identity Provider Config %q disassociation: %w", configName, err))
 						continue
 					}
@@ -87,6 +86,7 @@ func TestAccAWSEksIdentityProviderConfig_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:        testAccErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
 		Steps: []resource.TestStep{
@@ -123,6 +123,7 @@ func TestAccAWSEksIdentityProviderConfig_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:        testAccErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
 		Steps: []resource.TestStep{
@@ -145,6 +146,7 @@ func TestAccAWSEksIdentityProviderConfig_Oidc_Group(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:        testAccErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
 		Steps: []resource.TestStep{
@@ -173,6 +175,7 @@ func TestAccAWSEksIdentityProviderConfig_Oidc_Username(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:        testAccErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
 		Steps: []resource.TestStep{
@@ -201,6 +204,7 @@ func TestAccAWSEksIdentityProviderConfig_Oidc_RequiredClaims(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:        testAccErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
 		Steps: []resource.TestStep{
@@ -237,6 +241,7 @@ func TestAccAWSEksIdentityProviderConfig_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:        testAccErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
 		Steps: []resource.TestStep{
@@ -365,7 +370,7 @@ func testAccCheckAWSEksIdentityProviderConfigDisappears(clusterName string, conf
 			return err
 		}
 
-		return waitForEksIdentityProviderConfigDisassociation(context.Background(), conn, clusterName, config, 25*time.Minute)
+		return waitForEksIdentityProviderConfigDisassociation(context.TODO(), conn, clusterName, config, 25*time.Minute)
 	}
 }
 
