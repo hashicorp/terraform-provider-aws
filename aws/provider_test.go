@@ -2327,6 +2327,10 @@ func (d domainName) FQDN() domainName {
 	return domainName(fmt.Sprintf("%s.", d))
 }
 
+func (d domainName) String() string {
+	return string(d)
+}
+
 func testAccRandomDomain() domainName {
 	return domainNameTestTopLevelDomain.RandomSubdomain()
 }
