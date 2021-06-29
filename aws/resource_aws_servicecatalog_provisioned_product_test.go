@@ -148,7 +148,7 @@ func testAccCheckAwsServiceCatalogProvisionedProductDestroy(s *terraform.State) 
 			continue
 		}
 
-		err := waiter.ProvisionedProductTerminated(conn, tfservicecatalog.ServiceCatalogAcceptLanguageEnglish, rs.Primary.ID, "")
+		err := waiter.ProvisionedProductTerminated(conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "")
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 			continue
@@ -172,7 +172,7 @@ func testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName string) 
 
 		conn := testAccProvider.Meta().(*AWSClient).scconn
 
-		_, err := waiter.ProvisionedProductReady(conn, tfservicecatalog.ServiceCatalogAcceptLanguageEnglish, rs.Primary.ID, "")
+		_, err := waiter.ProvisionedProductReady(conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "")
 
 		if err != nil {
 			return fmt.Errorf("error describing Service Catalog Provisioned Product (%s): %w", rs.Primary.ID, err)
@@ -239,6 +239,34 @@ resource "aws_servicecatalog_product" "test" {
     Name = %[1]q
   }
 }
+
+resource "aws_servicecatalog_portfolio" "test" {
+  name          = %[1]q
+  description   = %[1]q
+  provider_name = %[1]q
+}
+
+resource "aws_servicecatalog_product_portfolio_association" "test" {
+  portfolio_id = aws_servicecatalog_portfolio.test.id
+  product_id   = aws_servicecatalog_product.test.id
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_servicecatalog_principal_portfolio_association" "test" {
+  portfolio_id  = aws_servicecatalog_portfolio.test.id
+  principal_arn = data.aws_iam_session_context.current.issuer_arn # unfortunately, you cannot get launch_path for arbitrary role - only caller
+}
+
+data "aws_servicecatalog_launch_paths" "test" {
+  product_id = aws_servicecatalog_product_portfolio_association.test.product_id # less depends_on
+
+  depends_on = [aws_servicecatalog_principal_portfolio_association.test]
+}
 `, rName)
 }
 
@@ -248,7 +276,7 @@ resource "aws_servicecatalog_provisioned_product" "test" {
   name                       = %[1]q
   product_id                 = aws_servicecatalog_product.test.id
   provisioning_artifact_name = %[1]q
-  path_name                  = %[1]q
+  path_id                    = data.aws_servicecatalog_launch_paths.test.summaries.0.path_id
 }
 `, rName))
 }
