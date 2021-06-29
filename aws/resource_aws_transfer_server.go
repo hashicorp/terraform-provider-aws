@@ -64,29 +64,25 @@ func resourceAwsTransferServer() *schema.Resource {
 							Type:          schema.TypeSet,
 							Optional:      true,
 							Elem:          &schema.Schema{Type: schema.TypeString},
-							Set:           schema.HashString,
 							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
 						},
 						"security_group_ids": {
 							Type:          schema.TypeSet,
 							Optional:      true,
-							Computed:      true,
 							Elem:          &schema.Schema{Type: schema.TypeString},
-							Set:           schema.HashString,
 							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
 						},
 						"subnet_ids": {
 							Type:          schema.TypeSet,
 							Optional:      true,
 							Elem:          &schema.Schema{Type: schema.TypeString},
-							Set:           schema.HashString,
 							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
 						},
 						"vpc_endpoint_id": {
 							Type:          schema.TypeString,
 							Optional:      true,
-							ConflictsWith: []string{"endpoint_details.0.address_allocation_ids", "endpoint_details.0.security_group_ids", "endpoint_details.0.subnet_ids", "endpoint_details.0.vpc_id"},
 							Computed:      true,
+							ConflictsWith: []string{"endpoint_details.0.address_allocation_ids", "endpoint_details.0.security_group_ids", "endpoint_details.0.subnet_ids", "endpoint_details.0.vpc_id"},
 						},
 						"vpc_id": {
 							Type:          schema.TypeString,
@@ -156,14 +152,10 @@ func resourceAwsTransferServer() *schema.Resource {
 			},
 
 			"security_policy_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "TransferSecurityPolicy-2018-11",
-				ValidateFunc: validation.StringInSlice([]string{
-					"TransferSecurityPolicy-2018-11",
-					"TransferSecurityPolicy-2020-06",
-					"TransferSecurityPolicy-FIPS-2020-06",
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      tftransfer.SecurityPolicyName2018_11,
+				ValidateFunc: validation.StringInSlice(tftransfer.SecurityPolicyName_Values(), false),
 			},
 
 			"tags":     tagsSchema(),
