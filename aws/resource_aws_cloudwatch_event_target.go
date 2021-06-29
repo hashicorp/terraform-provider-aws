@@ -367,7 +367,7 @@ func resourceAwsCloudWatchEventTargetCreate(d *schema.ResourceData, meta interfa
 		busName = v.(string)
 	}
 
-	input := buildPutTargetInputStruct(d, meta)
+	input := buildPutTargetInputStruct(d)
 
 	log.Printf("[DEBUG] Creating CloudWatch Events Target: %s", input)
 	out, err := conn.PutTargets(input)
@@ -474,7 +474,7 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 func resourceAwsCloudWatchEventTargetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
-	input := buildPutTargetInputStruct(d, meta)
+	input := buildPutTargetInputStruct(d)
 
 	log.Printf("[DEBUG] Updating CloudWatch Events Target: %s", input)
 	_, err := conn.PutTargets(input)
@@ -513,7 +513,7 @@ func resourceAwsCloudWatchEventTargetDelete(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func buildPutTargetInputStruct(d *schema.ResourceData, meta interface{}) *events.PutTargetsInput {
+func buildPutTargetInputStruct(d *schema.ResourceData) *events.PutTargetsInput {
 	e := &events.Target{
 		Arn: aws.String(d.Get("arn").(string)),
 		Id:  aws.String(d.Get("target_id").(string)),
