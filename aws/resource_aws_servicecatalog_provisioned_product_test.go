@@ -145,6 +145,36 @@ func TestAccAWSServiceCatalogProvisionedProduct_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSServiceCatalogProvisionedProduct_tags(t *testing.T) {
+	resourceName := "aws_servicecatalog_provisioned_product.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsServiceCatalogProvisionedProductDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSServiceCatalogProvisionedProductConfig_tags(rName, "Name", rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+				),
+			},
+			{
+				Config: testAccAWSServiceCatalogProvisionedProductConfig_tags(rName, "NotName", rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.NotName", rName),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsServiceCatalogProvisionedProductDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).scconn
 
@@ -251,6 +281,20 @@ resource "aws_servicecatalog_portfolio" "test" {
   provider_name = %[1]q
 }
 
+resource "aws_servicecatalog_constraint" "test" {
+  description  = %[1]q
+  portfolio_id = aws_servicecatalog_product_portfolio_association.test.portfolio_id
+  product_id   = aws_servicecatalog_product_portfolio_association.test.product_id
+  type         = "RESOURCE_UPDATE"
+
+  parameters = jsonencode({ 
+    Version = "2.0"
+    Properties = {
+      TagUpdateOnProvisionedProduct = "ALLOWED"
+    }
+  })
+}
+
 resource "aws_servicecatalog_product_portfolio_association" "test" {
   portfolio_id = aws_servicecatalog_portfolio.test.id
   product_id   = aws_servicecatalog_product.test.id
@@ -284,4 +328,19 @@ resource "aws_servicecatalog_provisioned_product" "test" {
   path_id                    = data.aws_servicecatalog_launch_paths.test.summaries[0].path_id
 }
 `, rName))
+}
+
+func testAccAWSServiceCatalogProvisionedProductConfig_tags(rName, tagKey, tagValue string) string {
+	return composeConfig(testAccAWSServiceCatalogProvisionedProductConfigTemplateURLBase(rName), fmt.Sprintf(`
+resource "aws_servicecatalog_provisioned_product" "test" {
+  name                       = %[1]q
+  product_id                 = aws_servicecatalog_constraint.test.product_id
+  provisioning_artifact_name = %[1]q
+  path_id                    = data.aws_servicecatalog_launch_paths.test.summaries[0].path_id
+
+  tags = {
+    %[2]s = %[3]q
+  }
+}
+`, rName, tagKey, tagValue))
 }
