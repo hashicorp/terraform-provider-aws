@@ -56,8 +56,8 @@ The following arguments are optional:
 * `provisioning_artifact_id` - (Optional) Identifier of the provisioning artifact. For example, `pa-4abcdjnxjj6ne`. You must provide the `provisioning_artifact_id` or `provisioning_artifact_name`, but not both.
 * `provisioning_artifact_name` - (Optional) Name of the provisioning artifact. You must provide the `provisioning_artifact_id` or `provisioning_artifact_name`, but not both.
 * `provisioning_parameters` - (Optional) Configuration block with parameters specified by the administrator that are required for provisioning the product. See details below.
-* `provisioning_preferences` - (Optional) Configuration block with information about the provisioning preferences for a stack set. See details below.
 * `retain_physical_resources` - (Optional) _Only applies to deleting._ Whether to delete the Service Catalog provisioned product but leave the CloudFormation stack, stack set, or the underlying resources of the deleted provisioned product. The default value is `false`.
+* `stack_set_provisioning_preferences` - (Optional) Configuration block with information about the provisioning preferences for a stack set. See details below.
 * `tags` - (Optional) Tags to apply to the provisioned product. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### provisioning_parameters
@@ -68,9 +68,9 @@ The following arguments are supported:
 * `use_previous_value` - (Optional) Whether to ignore `value` and keep the previous parameter value. Ignored when initially provisioning a product.
 * `value` - (Optional) Parameter value.
 
-### provisioning_preferences
+### stack_set_provisioning_preferences
 
-All of the `provisioning_preferences` are only applicable to a `CFN_STACKSET` provisioned product type.
+All of the `stack_set_provisioning_preferences` are only applicable to a `CFN_STACKSET` provisioned product type.
 
 The following arguments are supported:
 
