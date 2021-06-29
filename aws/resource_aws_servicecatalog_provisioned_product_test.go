@@ -339,7 +339,7 @@ resource "aws_servicecatalog_provisioned_product" "test" {
   path_id                    = data.aws_servicecatalog_launch_paths.test.summaries[0].path_id
 
   tags = {
-    %[2]s = %[3]q
+    %[2]q = %[3]q
   }
 }
 `, rName, tagKey, tagValue))
