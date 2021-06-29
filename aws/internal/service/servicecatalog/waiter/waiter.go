@@ -501,7 +501,7 @@ func ProvisionedProductTerminated(conn *servicecatalog.ServiceCatalog, acceptLan
 func RecordReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, id string) (*servicecatalog.DescribeRecordOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{StatusNotFound, StatusUnavailable, servicecatalog.ProvisionedProductStatusUnderChange, servicecatalog.ProvisionedProductStatusPlanInProgress},
-		Target:  []string{servicecatalog.StatusAvailable},
+		Target:  []string{servicecatalog.RecordStatusSucceeded, servicecatalog.StatusAvailable},
 		Refresh: RecordStatus(conn, acceptLanguage, id),
 		Timeout: RecordReadyTimeout,
 	}
