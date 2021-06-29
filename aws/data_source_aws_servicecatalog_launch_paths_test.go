@@ -114,9 +114,13 @@ resource "aws_iam_role" "test" {
 
 data "aws_caller_identity" "current" {}
 
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
 resource "aws_servicecatalog_principal_portfolio_association" "test" {
   portfolio_id  = aws_servicecatalog_portfolio.test.id
-  principal_arn = data.aws_caller_identity.current.arn
+  principal_arn = data.aws_iam_session_context.current.issuer_arn
 }
 `, rName)
 }
