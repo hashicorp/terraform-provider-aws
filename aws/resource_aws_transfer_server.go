@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -9,10 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftransfer "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
@@ -27,6 +30,18 @@ func resourceAwsTransferServer() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			SetTagsDiff,
+			customdiff.ForceNewIfChange("endpoint_details.0.vpc_id", func(_ context.Context, old, new, meta interface{}) bool {
+				// "InvalidRequestException: Changing VpcId is not supported".
+				if old, new := old.(string), new.(string); old != "" && new != old {
+					return true
+				}
+
+				return false
+			}),
+		),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -165,8 +180,6 @@ func resourceAwsTransferServer() *schema.Resource {
 				Optional: true,
 			},
 		},
-
-		CustomizeDiff: SetTagsDiff,
 	}
 }
 
