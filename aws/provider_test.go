@@ -2285,24 +2285,48 @@ func composeConfig(config ...string) string {
 	return str.String()
 }
 
-const testingTopLevelDomain = "test"
+type domainName string
+
+// The top level domain ".test" is reserved by IANA for testing purposes:
+// https://datatracker.ietf.org/doc/html/rfc6761
+const domainNameTestTopLevelDomain domainName = "test"
 
 // testAccRandomSubdomain creates a random three-level domain name in the form
 // "<random>.<random>.test"
 // The top level domain ".test" is reserved by IANA for testing purposes:
 // https://datatracker.ietf.org/doc/html/rfc6761
 func testAccRandomSubdomain() string {
-	return testAccSubdomainWithRandomSecondLevel(acctest.RandString(8))
+	return string(testAccRandomDomain().RandomSubdomain())
 }
 
-// testAccRandomDomainName creates a random second level domain name in the form
+// testAccRandomDomainName creates a random two-level domain name in the form
 // "<random>.test"
 // The top level domain ".test" is reserved by IANA for testing purposes:
 // https://datatracker.ietf.org/doc/html/rfc6761
 func testAccRandomDomainName() string {
-	return fmt.Sprintf("%s.%s", acctest.RandString(8), testingTopLevelDomain)
+	return string(testAccRandomDomain())
 }
 
-func testAccSubdomainWithRandomSecondLevel(thing string) string {
-	return fmt.Sprintf("%s.%s", thing, testAccRandomDomainName())
+// testAccRandomFQDomainName creates a random fully-qualified two-level domain name in the form
+// "<random>.test."
+// The top level domain ".test" is reserved by IANA for testing purposes:
+// https://datatracker.ietf.org/doc/html/rfc6761
+func testAccRandomFQDomainName() string {
+	return string(testAccRandomDomain().FQDN())
+}
+
+func (d domainName) Subdomain(name string) domainName {
+	return domainName(fmt.Sprintf("%s.%s", name, d))
+}
+
+func (d domainName) RandomSubdomain() domainName {
+	return d.Subdomain(acctest.RandString(8))
+}
+
+func (d domainName) FQDN() domainName {
+	return domainName(fmt.Sprintf("%s.", d))
+}
+
+func testAccRandomDomain() domainName {
+	return domainNameTestTopLevelDomain.RandomSubdomain()
 }
