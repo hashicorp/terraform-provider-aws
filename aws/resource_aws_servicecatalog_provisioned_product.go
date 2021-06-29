@@ -340,7 +340,7 @@ func resourceAwsServiceCatalogProvisionedProductRead(d *schema.ResourceData, met
 	// They provide some overlapping information. Most of the unique information available from
 	// DescribeRecord is available in the data source aws_servicecatalog_record.
 
-	acceptLanguage := tfservicecatalog.ServiceCatalogAcceptLanguageEnglish
+	acceptLanguage := tfservicecatalog.AcceptLanguageEnglish
 
 	if v, ok := d.GetOk("accept_language"); ok {
 		acceptLanguage = v.(string)
