@@ -281,7 +281,7 @@ resource "aws_servicecatalog_provisioned_product" "test" {
   name                       = %[1]q
   product_id                 = aws_servicecatalog_product.test.id
   provisioning_artifact_name = %[1]q
-  path_id                    = data.aws_servicecatalog_launch_paths.test.summaries.0.path_id
+  path_id                    = data.aws_servicecatalog_launch_paths.test.summaries[0].path_id
 }
 `, rName))
 }
