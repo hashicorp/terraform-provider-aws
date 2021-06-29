@@ -19,7 +19,7 @@ func dataSourceAwsServiceCatalogPortfolioConstraints() *schema.Resource {
 			"accept_language": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "en",
+				Default:      tfservicecatalog.AcceptLanguageEnglish,
 				ValidateFunc: validation.StringInSlice(tfservicecatalog.AcceptLanguage_Values(), false),
 			},
 			"details": {
@@ -36,6 +36,10 @@ func dataSourceAwsServiceCatalogPortfolioConstraints() *schema.Resource {
 							Computed: true,
 						},
 						"owner": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"portfolio_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -75,7 +79,13 @@ func dataSourceAwsServiceCatalogPortfolioConstraintsRead(d *schema.ResourceData,
 		return fmt.Errorf("error getting Service Catalog Portfolio Constraints: no results, change your input")
 	}
 
-	d.Set("accept_language", d.Get("accept_language").(string))
+	acceptLanguage := d.Get("accept_language").(string)
+
+	if acceptLanguage == "" {
+		acceptLanguage = tfservicecatalog.AcceptLanguageEnglish
+	}
+
+	d.Set("accept_language", acceptLanguage)
 	d.Set("portfolio_id", d.Get("portfolio_id").(string))
 	d.Set("product_id", d.Get("product_id").(string))
 
@@ -105,6 +115,10 @@ func flattenServiceCatalogConstraintDetail(apiObject *servicecatalog.ConstraintD
 
 	if v := apiObject.Owner; v != nil {
 		tfMap["owner"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.PortfolioId; v != nil {
+		tfMap["portfolio_id"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.ProductId; v != nil {
