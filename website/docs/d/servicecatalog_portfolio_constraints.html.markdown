@@ -24,7 +24,7 @@ data "aws_servicecatalog_portfolio_constraints" "example" {
 
 The following arguments are required:
 
-* `portfolio_id` - Portfolio identifier.
+* `portfolio_id` - (Required) Portfolio identifier.
 
 The following arguments are optional:
 
@@ -41,5 +41,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `constraint_id` - Identifier of the constraint.
 * `description` - Description of the constraint.
+* `portfolio_id` - Identifier of the portfolio the product resides in. The constraint applies only to the instance of the product that lives within this portfolio.
 * `product_id` - Identifier of the product the constraint applies to. A constraint applies to a specific instance of a product within a certain portfolio.
 * `type` - Type of constraint. Valid values are `LAUNCH`, `NOTIFICATION`, `STACKSET`, and `TEMPLATE`.
