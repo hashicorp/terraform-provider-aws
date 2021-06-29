@@ -9,8 +9,8 @@ import (
 )
 
 func TestAccAWSServiceCatalogPortfolioConstraintDataSource_basic(t *testing.T) {
-	resourceName := "aws_servicecatalog_portfolio_constraint.test"
-	dataSourceName := "data.aws_servicecatalog_portfolio_constraint.test"
+	resourceName := "aws_servicecatalog_constraint.test"
+	dataSourceName := "data.aws_servicecatalog_portfolio_constraints.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -21,14 +21,15 @@ func TestAccAWSServiceCatalogPortfolioConstraintDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAWSServiceCatalogPortfolioConstraintDataSourceConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "accept_language", dataSourceName, "accept_language"),
-					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
-					resource.TestCheckResourceAttrPair(resourceName, "owner", dataSourceName, "owner"),
-					resource.TestCheckResourceAttrPair(resourceName, "parameters", dataSourceName, "parameters"),
-					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", dataSourceName, "portfolio_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "product_id", dataSourceName, "product_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceName, "status"),
-					resource.TestCheckResourceAttrPair(resourceName, "type", dataSourceName, "type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "accept_language", resourceName, "accept_language"),
+					resource.TestCheckResourceAttr(dataSourceName, "details.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "details.0.constraint_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "details.0.description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "details.0.owner", resourceName, "owner"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "details.0.portfolio_id", resourceName, "portfolio_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "details.0.product_id", resourceName, "product_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "details.0.type", resourceName, "type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "portfolio_id", resourceName, "portfolio_id"),
 				),
 			},
 		},
@@ -36,9 +37,9 @@ func TestAccAWSServiceCatalogPortfolioConstraintDataSource_basic(t *testing.T) {
 }
 
 func testAccAWSServiceCatalogPortfolioConstraintDataSourceConfig_basic(rName, description string) string {
-	return composeConfig(testAccAWSServiceCatalogPortfolioConstraintConfig_basic(rName, description), `
+	return composeConfig(testAccAWSServiceCatalogConstraintConfig_basic(rName, description), `
 data "aws_servicecatalog_portfolio_constraints" "test" {
-  id = aws_servicecatalog_portfolio_constraint.test.id
+  portfolio_id = aws_servicecatalog_constraint.test.portfolio_id
 }
 `)
 }
