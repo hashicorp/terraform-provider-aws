@@ -287,7 +287,7 @@ resource "aws_servicecatalog_constraint" "test" {
   product_id   = aws_servicecatalog_product_portfolio_association.test.product_id
   type         = "RESOURCE_UPDATE"
 
-  parameters = jsonencode({ 
+  parameters = jsonencode({
     Version = "2.0"
     Properties = {
       TagUpdateOnProvisionedProduct = "ALLOWED"
