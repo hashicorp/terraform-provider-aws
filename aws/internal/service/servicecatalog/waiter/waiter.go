@@ -59,10 +59,13 @@ const (
 
 func ProductReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, productID string) (*servicecatalog.DescribeProductAsAdminOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{servicecatalog.StatusCreating, StatusNotFound, StatusUnavailable},
-		Target:  []string{servicecatalog.StatusAvailable, StatusCreated},
-		Refresh: ProductStatus(conn, acceptLanguage, productID),
-		Timeout: ProductReadyTimeout,
+		Pending:                   []string{servicecatalog.StatusCreating, StatusNotFound, StatusUnavailable},
+		Target:                    []string{servicecatalog.StatusAvailable, StatusCreated},
+		Refresh:                   ProductStatus(conn, acceptLanguage, productID),
+		Timeout:                   ProductReadyTimeout,
+		ContinuousTargetOccurence: 2,
+		NotFoundChecks:            10,
+		MinTimeout:                10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -228,10 +231,13 @@ func OrganizationsAccessStable(conn *servicecatalog.ServiceCatalog) (string, err
 
 func ConstraintReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, id string) (*servicecatalog.DescribeConstraintOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{StatusNotFound, servicecatalog.StatusCreating, StatusUnavailable},
-		Target:  []string{servicecatalog.StatusAvailable},
-		Refresh: ConstraintStatus(conn, acceptLanguage, id),
-		Timeout: ConstraintReadyTimeout,
+		Pending:                   []string{StatusNotFound, servicecatalog.StatusCreating, StatusUnavailable},
+		Target:                    []string{servicecatalog.StatusAvailable},
+		Refresh:                   ConstraintStatus(conn, acceptLanguage, id),
+		Timeout:                   ConstraintReadyTimeout,
+		ContinuousTargetOccurence: 2,
+		NotFoundChecks:            10,
+		MinTimeout:                10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -258,10 +264,13 @@ func ConstraintDeleted(conn *servicecatalog.ServiceCatalog, acceptLanguage, id s
 
 func ProductPortfolioAssociationReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, portfolioID, productID string) (*servicecatalog.PortfolioDetail, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{StatusNotFound, StatusUnavailable},
-		Target:  []string{servicecatalog.StatusAvailable},
-		Refresh: ProductPortfolioAssociationStatus(conn, acceptLanguage, portfolioID, productID),
-		Timeout: ProductPortfolioAssociationReadyTimeout,
+		Pending:                   []string{StatusNotFound, StatusUnavailable},
+		Target:                    []string{servicecatalog.StatusAvailable},
+		Refresh:                   ProductPortfolioAssociationStatus(conn, acceptLanguage, portfolioID, productID),
+		Timeout:                   ProductPortfolioAssociationReadyTimeout,
+		ContinuousTargetOccurence: 2,
+		NotFoundChecks:            10,
+		MinTimeout:                10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -382,10 +391,13 @@ func TagOptionResourceAssociationDeleted(conn *servicecatalog.ServiceCatalog, ta
 
 func ProvisioningArtifactReady(conn *servicecatalog.ServiceCatalog, id, productID string) (*servicecatalog.DescribeProvisioningArtifactOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{servicecatalog.StatusCreating, StatusNotFound, StatusUnavailable},
-		Target:  []string{servicecatalog.StatusAvailable, StatusCreated},
-		Refresh: ProvisioningArtifactStatus(conn, id, productID),
-		Timeout: ProvisioningArtifactReadyTimeout,
+		Pending:                   []string{servicecatalog.StatusCreating, StatusNotFound, StatusUnavailable},
+		Target:                    []string{servicecatalog.StatusAvailable, StatusCreated},
+		Refresh:                   ProvisioningArtifactStatus(conn, id, productID),
+		Timeout:                   ProvisioningArtifactReadyTimeout,
+		ContinuousTargetOccurence: 2,
+		NotFoundChecks:            10,
+		MinTimeout:                10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -420,12 +432,13 @@ func ProvisioningArtifactDeleted(conn *servicecatalog.ServiceCatalog, id, produc
 
 func PrincipalPortfolioAssociationReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string) (*servicecatalog.Principal, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:        []string{StatusNotFound, StatusUnavailable},
-		Target:         []string{servicecatalog.StatusAvailable},
-		Refresh:        PrincipalPortfolioAssociationStatus(conn, acceptLanguage, principalARN, portfolioID),
-		Timeout:        PrincipalPortfolioAssociationReadyTimeout,
-		NotFoundChecks: 5,
-		MinTimeout:     10 * time.Second,
+		Pending:                   []string{StatusNotFound, StatusUnavailable},
+		Target:                    []string{servicecatalog.StatusAvailable},
+		Refresh:                   PrincipalPortfolioAssociationStatus(conn, acceptLanguage, principalARN, portfolioID),
+		Timeout:                   PrincipalPortfolioAssociationReadyTimeout,
+		ContinuousTargetOccurence: 2,
+		NotFoundChecks:            10,
+		MinTimeout:                10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -453,10 +466,13 @@ func PrincipalPortfolioAssociationDeleted(conn *servicecatalog.ServiceCatalog, a
 
 func LaunchPathsReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, productID string) ([]*servicecatalog.LaunchPathSummary, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{StatusNotFound},
-		Target:  []string{servicecatalog.StatusAvailable},
-		Refresh: LaunchPathsStatus(conn, acceptLanguage, productID),
-		Timeout: LaunchPathsReadyTimeout,
+		Pending:                   []string{StatusNotFound},
+		Target:                    []string{servicecatalog.StatusAvailable},
+		Refresh:                   LaunchPathsStatus(conn, acceptLanguage, productID),
+		Timeout:                   LaunchPathsReadyTimeout,
+		ContinuousTargetOccurence: 2,
+		NotFoundChecks:            10,
+		MinTimeout:                10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -470,10 +486,13 @@ func LaunchPathsReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, produ
 
 func ProvisionedProductReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, id, name string) (*servicecatalog.DescribeProvisionedProductOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{StatusNotFound, StatusUnavailable, servicecatalog.ProvisionedProductStatusUnderChange, servicecatalog.ProvisionedProductStatusPlanInProgress},
-		Target:  []string{servicecatalog.StatusAvailable},
-		Refresh: ProvisionedProductStatus(conn, acceptLanguage, id, name),
-		Timeout: ProvisionedProductReadyTimeout,
+		Pending:                   []string{StatusNotFound, StatusUnavailable, servicecatalog.ProvisionedProductStatusUnderChange, servicecatalog.ProvisionedProductStatusPlanInProgress},
+		Target:                    []string{servicecatalog.StatusAvailable},
+		Refresh:                   ProvisionedProductStatus(conn, acceptLanguage, id, name),
+		Timeout:                   ProvisionedProductReadyTimeout,
+		ContinuousTargetOccurence: 2,
+		NotFoundChecks:            10,
+		MinTimeout:                10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -500,10 +519,13 @@ func ProvisionedProductTerminated(conn *servicecatalog.ServiceCatalog, acceptLan
 
 func RecordReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, id string) (*servicecatalog.DescribeRecordOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{StatusNotFound, StatusUnavailable, servicecatalog.ProvisionedProductStatusUnderChange, servicecatalog.ProvisionedProductStatusPlanInProgress},
-		Target:  []string{servicecatalog.RecordStatusSucceeded, servicecatalog.StatusAvailable},
-		Refresh: RecordStatus(conn, acceptLanguage, id),
-		Timeout: RecordReadyTimeout,
+		Pending:                   []string{StatusNotFound, StatusUnavailable, servicecatalog.ProvisionedProductStatusUnderChange, servicecatalog.ProvisionedProductStatusPlanInProgress},
+		Target:                    []string{servicecatalog.RecordStatusSucceeded, servicecatalog.StatusAvailable},
+		Refresh:                   RecordStatus(conn, acceptLanguage, id),
+		Timeout:                   RecordReadyTimeout,
+		ContinuousTargetOccurence: 2,
+		NotFoundChecks:            10,
+		MinTimeout:                10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
