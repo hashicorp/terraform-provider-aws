@@ -11,6 +11,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_cloudwatch_event_target: Don't crash if `sqs_target` configuration block is empty. ([#19946](https://github.com/hashicorp/terraform-provider-aws/issues/19946))
+* resource/aws_mwaa_environment: Changes to the `kms_key` argument force resource recreation ([#19994](https://github.com/hashicorp/terraform-provider-aws/issues/19994))
 
 ## 3.47.0 (June 24, 2021)
 
