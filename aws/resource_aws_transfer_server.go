@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	ec2finder "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	ec2waiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	tftransfer "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer/waiter"
@@ -186,7 +188,6 @@ func resourceAwsTransferServer() *schema.Resource {
 }
 
 func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) error {
-	updateAfterCreate := false
 	conn := meta.(*AWSClient).transferconn
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -201,15 +202,15 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 		input.Domain = aws.String(v.(string))
 	}
 
+	var addressAllocationIDs []*string
+
 	if v, ok := d.GetOk("endpoint_details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.EndpointDetails = expandTransferEndpointDetails(v.([]interface{})[0].(map[string]interface{}))
 
 		// Prevent the following error: InvalidRequestException: AddressAllocationIds cannot be set in CreateServer
 		// Reference: https://docs.aws.amazon.com/transfer/latest/userguide/API_EndpointDetails.html#TransferFamily-Type-EndpointDetails-AddressAllocationIds
-		if input.EndpointDetails != nil && len(input.EndpointDetails.AddressAllocationIds) > 0 {
-			input.EndpointDetails.AddressAllocationIds = nil
-			updateAfterCreate = true
-		}
+		addressAllocationIDs = input.EndpointDetails.AddressAllocationIds
+		input.EndpointDetails.AddressAllocationIds = nil
 	}
 
 	if v, ok := d.GetOk("endpoint_type"); ok {
@@ -271,18 +272,17 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error waiting for Transfer Server (%s) to create: %w", d.Id(), err)
 	}
 
-	if updateAfterCreate {
+	// AddressAllocationIds is only valid in the UpdateServer API.
+	if len(addressAllocationIDs) > 0 {
 		if err := stopTransferServer(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return err
 		}
 
-		// TODO
-		// TODO You can edit the SecurityGroupIds property in the UpdateServer API only if you are changing the EndpointType from PUBLIC or VPC_ENDPOINT to VPC. To change security groups associated with your server's VPC endpoint after creation, use the Amazon EC2 ModifyVpcEndpoint API.
-		// TODO
-
 		input := &transfer.UpdateServerInput{
-			ServerId:        aws.String(d.Id()),
-			EndpointDetails: expandTransferEndpointDetails(d.Get("endpoint_details").([]interface{})[0].(map[string]interface{})),
+			ServerId: aws.String(d.Id()),
+			EndpointDetails: &transfer.EndpointDetails{
+				AddressAllocationIds: addressAllocationIDs,
+			},
 		}
 
 		if err := updateTransferServer(conn, input); err != nil {
@@ -376,18 +376,96 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).transferconn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		stopFlag := false
+		//TODO var addressAllocationIDs []*string
+		var offlineUpdate bool
 
 		input := &transfer.UpdateServerInput{
 			ServerId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("logging_role") {
-			input.LoggingRole = aws.String(d.Get("logging_role").(string))
+		if d.HasChange("certificate") {
+			input.Certificate = aws.String(d.Get("certificate").(string))
 		}
 
-		if d.HasChange("security_policy_name") {
-			input.SecurityPolicyName = aws.String(d.Get("security_policy_name").(string))
+		if d.HasChange("endpoint_details") {
+			var newEndpointTypeVpc bool
+			var oldEndpointTypeVpc bool
+
+			if v, ok := d.GetOk("endpoint_details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.EndpointDetails = expandTransferEndpointDetails(v.([]interface{})[0].(map[string]interface{}))
+
+				old, new := d.GetChange("endpoint_type")
+
+				if old, new := old.(string), new.(string); new != old && new == transfer.EndpointTypeVpc {
+					newEndpointTypeVpc = true
+				} else if new == old && new == transfer.EndpointTypeVpc {
+					newEndpointTypeVpc = true
+					oldEndpointTypeVpc = true
+				}
+
+				if newEndpointTypeVpc && !oldEndpointTypeVpc {
+					// TODO ????
+					// Prevent the following error: InvalidRequestException: Cannot specify AddressAllocationids when updating server to EndpointType: VPC
+					// addressAllocationIDs = input.EndpointDetails.AddressAllocationIds
+					// input.EndpointDetails.AddressAllocationIds = nil
+
+					// Prevent the following error: InvalidRequestException: VPC Endpoint ID unsupported for EndpointType: VPC
+					input.EndpointDetails.VpcEndpointId = nil
+				} else if newEndpointTypeVpc && oldEndpointTypeVpc {
+					// Prevent the following error: InvalidRequestException: Server must be OFFLINE to change AddressAllocationIds
+					if d.HasChange("endpoint_details.0.address_allocation_ids") {
+						offlineUpdate = true
+					}
+
+					// Prevent the following error: InvalidRequestException: Changing Security Group is not supported
+					input.EndpointDetails.SecurityGroupIds = nil
+				}
+			}
+
+			// You can edit the SecurityGroupIds property in the UpdateServer API only if you are changing the EndpointType from PUBLIC or VPC_ENDPOINT to VPC.
+			// To change security groups associated with your server's VPC endpoint after creation, use the Amazon EC2 ModifyVpcEndpoint API.
+			if d.HasChange("endpoint_details.0.security_group_ids") && newEndpointTypeVpc && oldEndpointTypeVpc {
+				conn := meta.(*AWSClient).ec2conn
+
+				vpcEndpointID := d.Get("endpoint_details.0.vpc_endpoint_id").(string)
+				input := &ec2.ModifyVpcEndpointInput{
+					VpcEndpointId: aws.String(vpcEndpointID),
+				}
+
+				old, new := d.GetChange("endpoint_details.0.security_group_ids")
+
+				if add := expandStringSet(new.(*schema.Set).Difference(old.(*schema.Set))); len(add) > 0 {
+					input.AddSecurityGroupIds = add
+				}
+
+				if del := expandStringSet(old.(*schema.Set).Difference(new.(*schema.Set))); len(del) > 0 {
+					input.RemoveSecurityGroupIds = del
+				}
+
+				log.Printf("[DEBUG] Updating VPC Endpoint: %s", input)
+				if _, err := conn.ModifyVpcEndpoint(input); err != nil {
+					return fmt.Errorf("error updating Transfer Server (%s) VPC Endpoint (%s): %w", d.Id(), vpcEndpointID, err)
+				}
+
+				_, err := ec2waiter.VpcEndpointAvailable(conn, vpcEndpointID, d.Timeout(schema.TimeoutUpdate))
+
+				if err != nil {
+					return fmt.Errorf("error waiting for Transfer Server (%s) VPC Endpoint (%s) to become available: %w", d.Id(), vpcEndpointID, err)
+				}
+			}
+		}
+
+		if d.HasChange("endpoint_type") {
+			input.EndpointType = aws.String(d.Get("endpoint_type").(string))
+
+			// Prevent the following error: InvalidRequestException: Server must be OFFLINE to change EndpointType
+			offlineUpdate = true
+		}
+
+		if d.HasChange("host_key") {
+			if attr, ok := d.GetOk("host_key"); ok {
+				input.HostKey = aws.String(attr.(string))
+			}
 		}
 
 		if d.HasChanges("invocation_role", "url") {
@@ -404,40 +482,19 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 			input.IdentityProviderDetails = identityProviderDetails
 		}
 
-		if d.HasChange("endpoint_type") {
-			input.EndpointType = aws.String(d.Get("endpoint_type").(string))
-		}
-
-		if d.HasChange("certificate") {
-			input.Certificate = aws.String(d.Get("certificate").(string))
+		if d.HasChange("logging_role") {
+			input.LoggingRole = aws.String(d.Get("logging_role").(string))
 		}
 
 		if d.HasChange("protocols") {
 			input.Protocols = expandStringSet(d.Get("protocols").(*schema.Set))
 		}
 
-		if d.HasChange("endpoint_details") {
-			if v, ok := d.GetOk("endpoint_details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.EndpointDetails = expandTransferEndpointDetails(v.([]interface{})[0].(map[string]interface{}))
-			}
-
-			// Prevent the following error: InvalidRequestException: Server must be OFFLINE to change AddressAllocationIds
-			if d.HasChange("endpoint_details.0.address_allocation_ids") {
-				stopFlag = true
-			}
-
-			// TODO
-			// TODO You can edit the SecurityGroupIds property in the UpdateServer API only if you are changing the EndpointType from PUBLIC or VPC_ENDPOINT to VPC. To change security groups associated with your server's VPC endpoint after creation, use the Amazon EC2 ModifyVpcEndpoint API.
-			// TODO
+		if d.HasChange("security_policy_name") {
+			input.SecurityPolicyName = aws.String(d.Get("security_policy_name").(string))
 		}
 
-		if d.HasChange("host_key") {
-			if attr, ok := d.GetOk("host_key"); ok {
-				input.HostKey = aws.String(attr.(string))
-			}
-		}
-
-		if stopFlag {
+		if offlineUpdate {
 			if err := stopTransferServer(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return err
 			}
@@ -448,7 +505,7 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 			return err
 		}
 
-		if stopFlag {
+		if offlineUpdate {
 			if err := startTransferServer(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return err
 			}
