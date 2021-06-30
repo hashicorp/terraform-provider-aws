@@ -2217,6 +2217,7 @@ func TestAccAWSDBInstance_MSSQL_TZ(t *testing.T) {
 
 func TestAccAWSDBInstance_MSSQL_Domain(t *testing.T) {
 	var vBefore, vAfter rds.DBInstance
+	resourceName := "aws_db_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	domain := testAccRandomDomain()
@@ -2232,19 +2233,19 @@ func TestAccAWSDBInstance_MSSQL_Domain(t *testing.T) {
 			{
 				Config: testAccAWSDBInstanceConfig_MSSQLDomain(rName, directory1, directory2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql", &vBefore),
+					testAccCheckAWSDBInstanceExists(resourceName, &vBefore),
 					testAccCheckAWSDBInstanceDomainAttributes(directory1, &vBefore),
-					resource.TestCheckResourceAttrSet("aws_db_instance.mssql", "domain"),
-					resource.TestCheckResourceAttrSet("aws_db_instance.mssql", "domain_iam_role_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
 				),
 			},
 			{
 				Config: testAccAWSDBInstanceConfig_MSSQLUpdateDomain(rName, directory1, directory2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql", &vAfter),
+					testAccCheckAWSDBInstanceExists(resourceName, &vAfter),
 					testAccCheckAWSDBInstanceDomainAttributes(directory2, &vAfter),
-					resource.TestCheckResourceAttrSet("aws_db_instance.mssql", "domain"),
-					resource.TestCheckResourceAttrSet("aws_db_instance.mssql", "domain_iam_role_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
 				),
 			},
 		},
@@ -2253,6 +2254,8 @@ func TestAccAWSDBInstance_MSSQL_Domain(t *testing.T) {
 
 func TestAccAWSDBInstance_MSSQL_DomainSnapshotRestore(t *testing.T) {
 	var v, vRestoredInstance rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	originResourceName := "aws_db_instance.origin"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	domain := testAccRandomDomainName()
@@ -2266,11 +2269,11 @@ func TestAccAWSDBInstance_MSSQL_DomainSnapshotRestore(t *testing.T) {
 			{
 				Config: testAccAWSDBInstanceConfig_MSSQLDomainSnapshotRestore(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql_restore", &vRestoredInstance),
-					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql", &v),
+					testAccCheckAWSDBInstanceExists(resourceName, &vRestoredInstance),
+					testAccCheckAWSDBInstanceExists(originResourceName, &v),
 					testAccCheckAWSDBInstanceDomainAttributes(domain, &vRestoredInstance),
-					resource.TestCheckResourceAttrSet("aws_db_instance.mssql_restore", "domain"),
-					resource.TestCheckResourceAttrSet("aws_db_instance.mssql_restore", "domain_iam_role_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
 				),
 			},
 		},
@@ -4368,7 +4371,7 @@ func testAccAWSDBInstanceConfig_MSSQLUpdateDomain(rName, directory1, directory2 
 	return composeConfig(
 		testAccAWSDBInstanceConfig_MSSQLDomain_SharedConfig(rName, directory1),
 		fmt.Sprintf(`
-resource "aws_db_instance" "mssql" {
+resource "aws_db_instance" "test" {
   allocated_storage       = 20
   apply_immediately       = true
   backup_retention_period = 0
@@ -4404,7 +4407,7 @@ func testAccAWSDBInstanceConfig_MSSQLDomainSnapshotRestore(rName, directory stri
 	return composeConfig(
 		testAccAWSDBInstanceConfig_MSSQLDomain_SharedConfig(rName, directory),
 		fmt.Sprintf(`
-resource "aws_db_instance" "mssql" {
+resource "aws_db_instance" "origin" {
   allocated_storage   = 20
   engine              = data.aws_rds_orderable_db_instance.test.engine
   engine_version      = data.aws_rds_orderable_db_instance.test.engine_version
@@ -4415,29 +4418,29 @@ resource "aws_db_instance" "mssql" {
   username            = "somecrazyusername"
 }
 
-resource "aws_db_snapshot" "mssql-snap" {
-  db_instance_identifier = aws_db_instance.mssql.id
+resource "aws_db_snapshot" "origin" {
+  db_instance_identifier = aws_db_instance.origin.id
   db_snapshot_identifier = %[1]q
 }
 
-resource "aws_db_instance" "mssql_restore" {
+resource "aws_db_instance" "test" {
   allocated_storage       = 20
   apply_immediately       = true
   backup_retention_period = 0
   db_subnet_group_name    = aws_db_subnet_group.test.name
-  engine                  = aws_db_instance.mssql.engine
-  engine_version          = aws_db_instance.mssql.engine_version
+  engine                  = aws_db_instance.origin.engine
+  engine_version          = aws_db_instance.origin.engine_version
   identifier              = "%[1]s-restore"
-  instance_class          = aws_db_instance.mssql.instance_class
+  instance_class          = aws_db_instance.origin.instance_class
   password                = "somecrazypassword"
   skip_final_snapshot     = true
   username                = "somecrazyusername"
   vpc_security_group_ids  = [aws_security_group.test.id]
 
-  domain               = aws_directory_service_directory.foo.id
+  domain               = aws_directory_service_directory.directory.id
   domain_iam_role_name = aws_iam_role.role.name
 
-  snapshot_identifier = aws_db_snapshot.mssql-snap.id
+  snapshot_identifier = aws_db_snapshot.origin.id
 }
 `, rName))
 }
