@@ -291,6 +291,10 @@ func resourceAwsServiceCatalogProvisionedProductCreate(d *schema.ResourceData, m
 			return resource.RetryableError(err)
 		}
 
+		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+			return resource.RetryableError(err)
+		}
+
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
