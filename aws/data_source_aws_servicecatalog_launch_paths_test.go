@@ -90,7 +90,7 @@ resource "aws_servicecatalog_portfolio" "test" {
 }
 
 resource "aws_servicecatalog_product_portfolio_association" "test" {
-  portfolio_id = aws_servicecatalog_portfolio.test.id
+  portfolio_id = aws_servicecatalog_principal_portfolio_association.test.portfolio_id
   product_id   = aws_servicecatalog_product.test.id
 }
 
@@ -114,9 +114,13 @@ resource "aws_iam_role" "test" {
 
 data "aws_caller_identity" "current" {}
 
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
 resource "aws_servicecatalog_principal_portfolio_association" "test" {
   portfolio_id  = aws_servicecatalog_portfolio.test.id
-  principal_arn = data.aws_caller_identity.current.arn
+  principal_arn = data.aws_iam_session_context.current.issuer_arn
 }
 `, rName)
 }
@@ -125,8 +129,6 @@ func testAccAWSServiceCatalogLaunchPathsDataSourceConfig_basic(rName string) str
 	return composeConfig(testAccAWSServiceCatalogLaunchPathsDataSourceConfig_base(rName), `
 data "aws_servicecatalog_launch_paths" "test" {
   product_id = aws_servicecatalog_product_portfolio_association.test.product_id
-
-  depends_on = [aws_servicecatalog_principal_portfolio_association.test]
 }
 `)
 }
