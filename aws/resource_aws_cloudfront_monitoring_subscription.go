@@ -16,9 +16,10 @@ func resourceAwsCloudFrontMonitoringSubscription() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsCloudFrontMonitoringSubscriptionCreate,
 		Read:   resourceAwsCloudFrontMonitoringSubscriptionRead,
+		Update: resourceAwsCloudFrontMonitoringSubscriptionCreate,
 		Delete: resourceAwsCloudFrontMonitoringSubscriptionDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceAwsCloudFrontMonitoringSubscriptionImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -31,7 +32,6 @@ func resourceAwsCloudFrontMonitoringSubscription() *schema.Resource {
 			"monitoring_subscription": {
 				Type:     schema.TypeList,
 				Required: true,
-				ForceNew: true,
 				MinItems: 1,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -39,7 +39,6 @@ func resourceAwsCloudFrontMonitoringSubscription() *schema.Resource {
 						"realtime_metrics_subscription_config": {
 							Type:     schema.TypeList,
 							Required: true,
-							ForceNew: true,
 							MinItems: 1,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -47,7 +46,6 @@ func resourceAwsCloudFrontMonitoringSubscription() *schema.Resource {
 									"realtime_metrics_subscription_status": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ForceNew:     true,
 										ValidateFunc: validation.StringInSlice(cloudfront.RealtimeMetricsSubscriptionStatus_Values(), false),
 									},
 								},
@@ -86,7 +84,7 @@ func resourceAwsCloudFrontMonitoringSubscriptionRead(d *schema.ResourceData, met
 
 	subscription, err := finder.MonitoringSubscriptionByDistributionId(conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
 		log.Printf("[WARN] CloudFront Distribution (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -105,7 +103,6 @@ func resourceAwsCloudFrontMonitoringSubscriptionRead(d *schema.ResourceData, met
 		return nil
 	}
 
-	d.Set("distribution_id", d.Id())
 	if err := d.Set("monitoring_subscription", flattenCloudFrontMonitoringSubscription(subscription)); err != nil {
 		return fmt.Errorf("error setting monitoring_subscription: %w", err)
 	}
@@ -162,4 +159,9 @@ func flattenCloudFrontMonitoringSubscription(subscription *cloudfront.Monitoring
 
 func flattenCloudFrontRealtimeMetricsSubscriptionConfig(config *cloudfront.RealtimeMetricsSubscriptionConfig) []interface{} {
 	return []interface{}{map[string]interface{}{"realtime_metrics_subscription_status": config.RealtimeMetricsSubscriptionStatus}}
+}
+
+func resourceAwsCloudFrontMonitoringSubscriptionImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	d.Set("distribution_id", d.Id())
+	return []*schema.ResourceData{d}, nil
 }

@@ -78,7 +78,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontMonitoringSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontMonitoringSubscriptionConfig(),
+				Config: testAccAWSCloudFrontMonitoringSubscriptionConfig("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontMonitoringSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "distribution_id"),
@@ -106,7 +106,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontMonitoringSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontMonitoringSubscriptionConfig(),
+				Config: testAccAWSCloudFrontMonitoringSubscriptionConfig("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontMonitoringSubscriptionExists(resourceName, &v),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFrontMonitoringSubscription(), resourceName),
@@ -117,7 +117,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFrontMonitoringSubscription_RealtimeMetricsSubscriptionConfig(t *testing.T) {
+func TestAccAWSCloudFrontMonitoringSubscription_update(t *testing.T) {
 	var v cloudfront.MonitoringSubscription
 	resourceName := "aws_cloudfront_monitoring_subscription.test"
 
@@ -127,7 +127,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_RealtimeMetricsSubscriptionConfi
 		CheckDestroy: testAccCheckCloudFrontMonitoringSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontMonitoringSubscriptionRealtimeMetricsSubscriptionConfigConfig("Enabled"),
+				Config: testAccAWSCloudFrontMonitoringSubscriptionConfig("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontMonitoringSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "distribution_id"),
@@ -142,7 +142,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_RealtimeMetricsSubscriptionConfi
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudFrontMonitoringSubscriptionRealtimeMetricsSubscriptionConfigConfig("Disabled"),
+				Config: testAccAWSCloudFrontMonitoringSubscriptionConfig("Disabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontMonitoringSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "distribution_id"),
@@ -249,23 +249,7 @@ resource "aws_cloudfront_distribution" "test" {
 `
 }
 
-func testAccAWSCloudFrontMonitoringSubscriptionConfig() string {
-	return composeConfig(
-		testAccAWSCloudFrontMonitoringSubscriptionConfigBase(),
-		`
-resource "aws_cloudfront_monitoring_subscription" "test" {
-  distribution_id = aws_cloudfront_distribution.test.id
-
-  monitoring_subscription {
-    realtime_metrics_subscription_config {
-      realtime_metrics_subscription_status = "Enabled"
-    }
-  }
-}
-`)
-}
-
-func testAccAWSCloudFrontMonitoringSubscriptionRealtimeMetricsSubscriptionConfigConfig(status string) string {
+func testAccAWSCloudFrontMonitoringSubscriptionConfig(status string) string {
 	return composeConfig(
 		testAccAWSCloudFrontMonitoringSubscriptionConfigBase(),
 		fmt.Sprintf(`
@@ -274,7 +258,7 @@ resource "aws_cloudfront_monitoring_subscription" "test" {
 
   monitoring_subscription {
     realtime_metrics_subscription_config {
-      realtime_metrics_subscription_status = %q
+      realtime_metrics_subscription_status = %[1]q
     }
   }
 }

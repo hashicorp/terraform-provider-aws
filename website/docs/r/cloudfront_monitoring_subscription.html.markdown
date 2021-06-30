@@ -31,13 +31,13 @@ The following arguments are supported:
 * `distribution_id` - (Required) The ID of the distribution that you are enabling metrics for.
 * `monitoring_subscription` - (Required) A monitoring subscription. This structure contains information about whether additional CloudWatch metrics are enabled for a given CloudFront distribution.
 
-The `monitoring_subscription` object supports the following argument:
+### monitoring_subscription
 
-* `realtime_metrics_subscription_config` - (Required) A subscription configuration for additional CloudWatch metrics.
+* `realtime_metrics_subscription_config` - (Required) A subscription configuration for additional CloudWatch metrics. See below.
 
-The `realtime_metrics_subscription_config` object supports the following argument:
+### realtime_metrics_subscription_config
 
-* `realtime_metrics_subscription_status` - (Required) A flag that indicates whether additional CloudWatch metrics are enabled for a given CloudFront distribution. Valid values are `Enabled` and `Disabled`.
+* `realtime_metrics_subscription_status` - (Required) A flag that indicates whether additional CloudWatch metrics are enabled for a given CloudFront distribution. Valid values are `Enabled` and `Disabled`. See below.
 
 ## Attributes Reference
 
