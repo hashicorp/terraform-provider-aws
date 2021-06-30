@@ -1424,7 +1424,7 @@ resource "aws_transfer_server" "test" {
 
   endpoint_details {
     address_allocation_ids = [aws_eip.test[0].id]
-	security_group_ids     = [aws_security_group.test.id]
+    security_group_ids     = [aws_security_group.test.id]
     subnet_ids             = [aws_subnet.test.id]
     vpc_id                 = aws_vpc.test.id
   }
@@ -1460,7 +1460,7 @@ resource "aws_transfer_server" "test" {
 
   endpoint_details {
     address_allocation_ids = [aws_eip.test[1].id]
-	security_group_ids     = [aws_security_group.test2.id]
+    security_group_ids     = [aws_security_group.test2.id]
     subnet_ids             = [aws_subnet.test.id]
     vpc_id                 = aws_vpc.test.id
   }
