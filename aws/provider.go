@@ -550,6 +550,7 @@ func Provider() *schema.Provider {
 			"aws_cloudfront_distribution":                             resourceAwsCloudFrontDistribution(),
 			"aws_cloudfront_function":                                 resourceAwsCloudFrontFunction(),
 			"aws_cloudfront_key_group":                                resourceAwsCloudFrontKeyGroup(),
+			"aws_cloudfront_monitoring_subscription":                  resourceAwsCloudFrontMonitoringSubscription(),
 			"aws_cloudfront_origin_access_identity":                   resourceAwsCloudFrontOriginAccessIdentity(),
 			"aws_cloudfront_origin_request_policy":                    resourceAwsCloudFrontOriginRequestPolicy(),
 			"aws_cloudfront_public_key":                               resourceAwsCloudFrontPublicKey(),
