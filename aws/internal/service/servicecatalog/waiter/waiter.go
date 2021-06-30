@@ -48,6 +48,10 @@ const (
 
 	RecordReadyTimeout = 3 * time.Minute
 
+	MinTimeout                 = 2 * time.Second
+	NotFoundChecks             = 5
+	ContinuousTargetOccurrence = 2
+
 	StatusNotFound    = "NOT_FOUND"
 	StatusUnavailable = "UNAVAILABLE"
 
@@ -63,9 +67,9 @@ func ProductReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, productID
 		Target:                    []string{servicecatalog.StatusAvailable, StatusCreated},
 		Refresh:                   ProductStatus(conn, acceptLanguage, productID),
 		Timeout:                   ProductReadyTimeout,
-		ContinuousTargetOccurence: 2,
-		NotFoundChecks:            10,
-		MinTimeout:                10 * time.Second,
+		ContinuousTargetOccurence: ContinuousTargetOccurrence,
+		NotFoundChecks:            NotFoundChecks,
+		MinTimeout:                MinTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -235,9 +239,9 @@ func ConstraintReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, id str
 		Target:                    []string{servicecatalog.StatusAvailable},
 		Refresh:                   ConstraintStatus(conn, acceptLanguage, id),
 		Timeout:                   ConstraintReadyTimeout,
-		ContinuousTargetOccurence: 2,
-		NotFoundChecks:            10,
-		MinTimeout:                10 * time.Second,
+		ContinuousTargetOccurence: ContinuousTargetOccurrence,
+		NotFoundChecks:            NotFoundChecks,
+		MinTimeout:                MinTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -268,9 +272,9 @@ func ProductPortfolioAssociationReady(conn *servicecatalog.ServiceCatalog, accep
 		Target:                    []string{servicecatalog.StatusAvailable},
 		Refresh:                   ProductPortfolioAssociationStatus(conn, acceptLanguage, portfolioID, productID),
 		Timeout:                   ProductPortfolioAssociationReadyTimeout,
-		ContinuousTargetOccurence: 2,
-		NotFoundChecks:            10,
-		MinTimeout:                10 * time.Second,
+		ContinuousTargetOccurence: ContinuousTargetOccurrence,
+		NotFoundChecks:            NotFoundChecks,
+		MinTimeout:                MinTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -395,9 +399,9 @@ func ProvisioningArtifactReady(conn *servicecatalog.ServiceCatalog, id, productI
 		Target:                    []string{servicecatalog.StatusAvailable, StatusCreated},
 		Refresh:                   ProvisioningArtifactStatus(conn, id, productID),
 		Timeout:                   ProvisioningArtifactReadyTimeout,
-		ContinuousTargetOccurence: 2,
-		NotFoundChecks:            10,
-		MinTimeout:                10 * time.Second,
+		ContinuousTargetOccurence: ContinuousTargetOccurrence,
+		NotFoundChecks:            NotFoundChecks,
+		MinTimeout:                MinTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -436,9 +440,9 @@ func PrincipalPortfolioAssociationReady(conn *servicecatalog.ServiceCatalog, acc
 		Target:                    []string{servicecatalog.StatusAvailable},
 		Refresh:                   PrincipalPortfolioAssociationStatus(conn, acceptLanguage, principalARN, portfolioID),
 		Timeout:                   PrincipalPortfolioAssociationReadyTimeout,
-		ContinuousTargetOccurence: 2,
-		NotFoundChecks:            10,
-		MinTimeout:                10 * time.Second,
+		ContinuousTargetOccurence: ContinuousTargetOccurrence,
+		NotFoundChecks:            NotFoundChecks,
+		MinTimeout:                MinTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -470,9 +474,9 @@ func LaunchPathsReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, produ
 		Target:                    []string{servicecatalog.StatusAvailable},
 		Refresh:                   LaunchPathsStatus(conn, acceptLanguage, productID),
 		Timeout:                   LaunchPathsReadyTimeout,
-		ContinuousTargetOccurence: 2,
-		NotFoundChecks:            10,
-		MinTimeout:                10 * time.Second,
+		ContinuousTargetOccurence: ContinuousTargetOccurrence,
+		NotFoundChecks:            NotFoundChecks,
+		MinTimeout:                MinTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -490,9 +494,9 @@ func ProvisionedProductReady(conn *servicecatalog.ServiceCatalog, acceptLanguage
 		Target:                    []string{servicecatalog.StatusAvailable},
 		Refresh:                   ProvisionedProductStatus(conn, acceptLanguage, id, name),
 		Timeout:                   ProvisionedProductReadyTimeout,
-		ContinuousTargetOccurence: 2,
-		NotFoundChecks:            10,
-		MinTimeout:                10 * time.Second,
+		ContinuousTargetOccurence: ContinuousTargetOccurrence,
+		NotFoundChecks:            NotFoundChecks,
+		MinTimeout:                MinTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -523,9 +527,9 @@ func RecordReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, id string)
 		Target:                    []string{servicecatalog.RecordStatusSucceeded, servicecatalog.StatusAvailable},
 		Refresh:                   RecordStatus(conn, acceptLanguage, id),
 		Timeout:                   RecordReadyTimeout,
-		ContinuousTargetOccurence: 2,
-		NotFoundChecks:            10,
-		MinTimeout:                10 * time.Second,
+		ContinuousTargetOccurence: ContinuousTargetOccurrence,
+		NotFoundChecks:            NotFoundChecks,
+		MinTimeout:                MinTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
