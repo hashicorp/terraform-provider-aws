@@ -76,6 +76,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_basic(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontMonitoringSubscriptionDestroy,
+		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFrontMonitoringSubscriptionConfig("Enabled"),
@@ -104,6 +105,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_disappears(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontMonitoringSubscriptionDestroy,
+		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFrontMonitoringSubscriptionConfig("Enabled"),
@@ -125,6 +127,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_update(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontMonitoringSubscriptionDestroy,
+		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFrontMonitoringSubscriptionConfig("Enabled"),
