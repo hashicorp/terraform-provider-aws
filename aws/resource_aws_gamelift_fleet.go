@@ -70,7 +70,7 @@ func resourceAwsGameliftFleet() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"locations": {
+			"location_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 100,
@@ -231,7 +231,7 @@ func resourceAwsGameliftFleetCreate(d *schema.ResourceData, meta interface{}) er
 	if v, ok := d.GetOk("fleet_type"); ok {
 		input.FleetType = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("locations"); ok {
+	if v, ok := d.GetOk("location_configuration"); ok {
 		input.Locations = expandGameliftLocations(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("ec2_inbound_permission"); ok {
