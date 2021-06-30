@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -38,6 +39,7 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", ""),
 					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.#", "0"),
+					testAccCheckLaunchTemplateHaveNoCreditSpecification(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "latest_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
@@ -635,6 +637,7 @@ func TestAccEC2LaunchTemplate_CreditSpecification_nonBurstable(t *testing.T) {
 				Config: testAccLaunchTemplateConfig_creditSpecification(rName, "m1.small", "standard"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(resourceName, &template),
+					testAccCheckLaunchTemplateHaveNoCreditSpecification(resourceName),
 				),
 			},
 			{
@@ -664,6 +667,7 @@ func TestAccEC2LaunchTemplate_CreditSpecification_t2(t *testing.T) {
 					testAccCheckLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
+					testAccCheckLaunchTemplateHaveCreditSpecification(resourceName, "unlimited"),
 				),
 			},
 			{
@@ -692,6 +696,36 @@ func TestAccEC2LaunchTemplate_CreditSpecification_t3(t *testing.T) {
 					testAccCheckLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
+					testAccCheckLaunchTemplateHaveCreditSpecification(resourceName, "unlimited"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2LaunchTemplate_creditSpecification_noInstanceType(t *testing.T) {
+	var template ec2.LaunchTemplate
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_launch_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_creditSpecification_noInstanceType(rName, "unlimited"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
+					testAccCheckLaunchTemplateHaveCreditSpecification(resourceName, "unlimited"),
 				),
 			},
 			{
@@ -1389,6 +1423,92 @@ func testAccCheckLaunchTemplateDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccCheckLaunchTemplateHaveNoCreditSpecification(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Launch Template ID is set")
+		}
+
+		latestVersion, ok := rs.Primary.Attributes["latest_version"]
+		if !ok {
+			return fmt.Errorf("No latest_version is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+		resp, err := conn.DescribeLaunchTemplateVersions(&ec2.DescribeLaunchTemplateVersionsInput{
+			LaunchTemplateId: aws.String(rs.Primary.ID),
+			Versions:         []*string{aws.String(latestVersion)},
+		})
+		if err != nil {
+			return err
+		}
+
+		if len(resp.LaunchTemplateVersions) != 1 || aws.StringValue(resp.LaunchTemplateVersions[0].LaunchTemplateId) != rs.Primary.ID || strconv.Itoa(int(aws.Int64Value(resp.LaunchTemplateVersions[0].VersionNumber))) != latestVersion {
+			return fmt.Errorf("Launch Template not found")
+		}
+
+		ltData := resp.LaunchTemplateVersions[0].LaunchTemplateData
+		cs := ltData.CreditSpecification
+
+		if cs != nil {
+			return fmt.Errorf("No CreditSpecification expected, but actual is %v", cs)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckLaunchTemplateHaveCreditSpecification(n string, cpuCredits string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Launch Template ID is set")
+		}
+
+		latestVersion, ok := rs.Primary.Attributes["latest_version"]
+		if !ok {
+			return fmt.Errorf("No latest_version is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+		resp, err := conn.DescribeLaunchTemplateVersions(&ec2.DescribeLaunchTemplateVersionsInput{
+			LaunchTemplateId: aws.String(rs.Primary.ID),
+			Versions:         []*string{aws.String(latestVersion)},
+		})
+		if err != nil {
+			return err
+		}
+
+		if len(resp.LaunchTemplateVersions) != 1 || aws.StringValue(resp.LaunchTemplateVersions[0].LaunchTemplateId) != rs.Primary.ID || strconv.Itoa(int(aws.Int64Value(resp.LaunchTemplateVersions[0].VersionNumber))) != latestVersion {
+			return fmt.Errorf("Launch Template not found")
+		}
+
+		ltData := resp.LaunchTemplateVersions[0].LaunchTemplateData
+		cs := ltData.CreditSpecification
+
+		if cs == nil {
+			return fmt.Errorf("No CreditSpecification is set")
+		}
+
+		if aws.StringValue(cs.CpuCredits) != cpuCredits {
+			return fmt.Errorf("Exected CpuCredits is %s, but actual is %s", cpuCredits, aws.StringValue(cs.CpuCredits))
+		}
+
+		return nil
+	}
+}
+
 func testAccLaunchTemplateNameConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
@@ -1754,6 +1874,18 @@ resource "aws_launch_template" "test" {
   }
 }
 `, instanceType, rName, cpuCredits)
+}
+
+func testAccLaunchTemplateConfig_creditSpecification_noInstanceType(rName, cpuCredits string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  credit_specification {
+    cpu_credits = %[2]q
+  }
+}
+`, rName, cpuCredits)
 }
 
 func testAccLaunchTemplateIAMInstanceProfileEmptyConfigurationBlockConfig(rName string) string {

@@ -804,7 +804,7 @@ func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	if strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t3") {
+	if strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t3") || aws.StringValue(ltData.InstanceType) == "" {
 		if err := d.Set("credit_specification", getCreditSpecification(ltData.CreditSpecification)); err != nil {
 			return fmt.Errorf("error setting credit_specification: %s", err)
 		}
@@ -1384,7 +1384,7 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 		}
 	}
 
-	if v, ok := d.GetOk("credit_specification"); ok && (strings.HasPrefix(instanceType, "t2") || strings.HasPrefix(instanceType, "t3")) {
+	if v, ok := d.GetOk("credit_specification"); ok && (strings.HasPrefix(instanceType, "t2") || strings.HasPrefix(instanceType, "t3") || instanceType == "") {
 		cs := v.([]interface{})
 
 		if len(cs) > 0 && cs[0] != nil {
