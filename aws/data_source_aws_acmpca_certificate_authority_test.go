@@ -13,7 +13,7 @@ func TestAccDataSourceAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 	datasourceName := "data.aws_acmpca_certificate_authority.test"
 
-	domainName := testAccRandomDomainName()
+	commonName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
@@ -25,7 +25,7 @@ func TestAccDataSourceAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
 				ExpectError: regexp.MustCompile(`(AccessDeniedException|ResourceNotFoundException)`),
 			},
 			{
-				Config: testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_ARN(domainName),
+				Config: testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_ARN(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
@@ -50,7 +50,7 @@ func TestAccDataSourceAwsAcmpcaCertificateAuthority_S3ObjectAcl(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 	datasourceName := "data.aws_acmpca_certificate_authority.test"
 
-	domainName := testAccRandomDomainName()
+	commonName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
@@ -62,7 +62,7 @@ func TestAccDataSourceAwsAcmpcaCertificateAuthority_S3ObjectAcl(t *testing.T) {
 				ExpectError: regexp.MustCompile(`(AccessDeniedException|ResourceNotFoundException)`),
 			},
 			{
-				Config: testAccDataSourceAwsAcmpcaCertificateAuthorityConfigS3ObjectAcl_ARN(domainName),
+				Config: testAccDataSourceAwsAcmpcaCertificateAuthorityConfigS3ObjectAcl_ARN(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
@@ -87,7 +87,7 @@ func TestAccDataSourceAwsAcmpcaCertificateAuthority_S3ObjectAcl(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_ARN(domainName string) string {
+func testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_ARN(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "wrong" {
   permanent_deletion_time_in_days = 7
@@ -118,10 +118,10 @@ resource "aws_acmpca_certificate_authority" "test" {
 data "aws_acmpca_certificate_authority" "test" {
   arn = aws_acmpca_certificate_authority.test.arn
 }
-`, domainName)
+`, commonName)
 }
 
-func testAccDataSourceAwsAcmpcaCertificateAuthorityConfigS3ObjectAcl_ARN(domainName string) string {
+func testAccDataSourceAwsAcmpcaCertificateAuthorityConfigS3ObjectAcl_ARN(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "wrong" {
   permanent_deletion_time_in_days = 7
@@ -152,7 +152,7 @@ resource "aws_acmpca_certificate_authority" "test" {
 data "aws_acmpca_certificate_authority" "test" {
   arn = aws_acmpca_certificate_authority.test.arn
 }
-`, domainName)
+`, commonName)
 }
 
 //lintignore:AWSAT003,AWSAT005
