@@ -2334,3 +2334,7 @@ func (d domainName) String() string {
 func testAccRandomDomain() domainName {
 	return domainNameTestTopLevelDomain.RandomSubdomain()
 }
+
+// testAccDefaultEmailAddress is the default email address to set as a
+// resource or data source parameter for acceptance tests.
+const testAccDefaultEmailAddress = "no-reply@hashicorp.com"

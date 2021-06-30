@@ -20,7 +20,7 @@ func init() {
 }
 
 func TestAccAWSSESEmailIdentity_basic(t *testing.T) {
-	email := "no-reply@hashicorp.com"
+	email := testAccDefaultEmailAddress
 	resourceName := "aws_ses_email_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -46,7 +46,7 @@ func TestAccAWSSESEmailIdentity_basic(t *testing.T) {
 }
 
 func TestAccAWSSESEmailIdentity_trailingPeriod(t *testing.T) {
-	email := "no-reply@hashicorp.com"
+	email := testAccDefaultEmailAddress
 	resourceName := "aws_ses_email_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
