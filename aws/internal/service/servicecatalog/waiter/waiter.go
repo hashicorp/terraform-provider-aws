@@ -48,6 +48,8 @@ const (
 
 	RecordReadyTimeout = 3 * time.Minute
 
+	PortfolioConstraintsReadyTimeout = 3 * time.Minute
+
 	MinTimeout                 = 2 * time.Second
 	NotFoundChecks             = 5
 	ContinuousTargetOccurrence = 2
@@ -535,6 +537,23 @@ func RecordReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, id string)
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*servicecatalog.DescribeRecordOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func PortfolioConstraintsReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, portfolioID, productID string) ([]*servicecatalog.ConstraintDetail, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{StatusNotFound},
+		Target:  []string{servicecatalog.StatusAvailable},
+		Refresh: PortfolioConstraintsStatus(conn, acceptLanguage, portfolioID, productID),
+		Timeout: PortfolioConstraintsReadyTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.([]*servicecatalog.ConstraintDetail); ok {
 		return output, err
 	}
 
