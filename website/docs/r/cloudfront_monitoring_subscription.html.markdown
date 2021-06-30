@@ -12,7 +12,7 @@ Provides a CloudFront real-time log configuration resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_cloudfront_monitoring_subscription" "example" {
   distribution_id = aws_cloudfront_distribution.example.id
 
