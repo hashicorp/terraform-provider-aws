@@ -16,12 +16,12 @@ Provides a CloudWatch Logs query definition resource.
 resource "aws_cloudwatch_query_definition" "example" {
   name = "custom_query"
 
-  log_groups = [
+  log_group_names = [
     "/aws/logGroup1",
     "/aws/logGroup2"
   ]
 
-  query = <<EOF
+  query_string = <<EOF
 fields @timestamp, @message
 | sort @timestamp desc
 | limit 25

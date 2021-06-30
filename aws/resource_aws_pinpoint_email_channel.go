@@ -46,7 +46,7 @@ func resourceAwsPinpointEmailChannel() *schema.Resource {
 			},
 			"role_arn": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ValidateFunc: validateArn,
 			},
 			"messages_per_second": {
@@ -67,7 +67,10 @@ func resourceAwsPinpointEmailChannelUpsert(d *schema.ResourceData, meta interfac
 	params.Enabled = aws.Bool(d.Get("enabled").(bool))
 	params.FromAddress = aws.String(d.Get("from_address").(string))
 	params.Identity = aws.String(d.Get("identity").(string))
-	params.RoleArn = aws.String(d.Get("role_arn").(string))
+
+	if v, ok := d.GetOk("role_arn"); ok {
+		params.RoleArn = aws.String(v.(string))
+	}
 
 	if v, ok := d.GetOk("configuration_set"); ok {
 		params.ConfigurationSet = aws.String(v.(string))
@@ -113,7 +116,7 @@ func resourceAwsPinpointEmailChannelRead(d *schema.ResourceData, meta interface{
 	d.Set("identity", res.Identity)
 	d.Set("role_arn", res.RoleArn)
 	d.Set("configuration_set", res.ConfigurationSet)
-	d.Set("messages_per_second", aws.Int64Value(res.MessagesPerSecond))
+	d.Set("messages_per_second", res.MessagesPerSecond)
 
 	return nil
 }

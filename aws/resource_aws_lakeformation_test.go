@@ -12,17 +12,24 @@ func TestAccAWSLakeFormation_serial(t *testing.T) {
 			"withoutCatalogId": testAccAWSLakeFormationDataLakeSettings_withoutCatalogId,
 			"dataSource":       testAccAWSLakeFormationDataLakeSettingsDataSource_basic,
 		},
-		"Permissions": {
-			"basic":             testAccAWSLakeFormationPermissions_basic,
-			"dataLocation":      testAccAWSLakeFormationPermissions_dataLocation,
-			"database":          testAccAWSLakeFormationPermissions_database,
-			"selectPermissions": testAccAWSLakeFormationPermissions_selectPermissions,
+		"BasicPermissions": {
+			"basic":        testAccAWSLakeFormationPermissions_basic,
+			"dataLocation": testAccAWSLakeFormationPermissions_dataLocation,
+			"database":     testAccAWSLakeFormationPermissions_database,
+			"disappears":   testAccAWSLakeFormationPermissions_disappears,
 		},
 		"TablePermissions": {
-			"tableName":                testAccAWSLakeFormationPermissions_table_name,
-			"tableWildcard":            testAccAWSLakeFormationPermissions_table_wildcard,
-			"tableWithColumns":         testAccAWSLakeFormationPermissions_tableWithColumns,
-			"tableWithColumnsAndTable": testAccAWSLakeFormationPermissions_tableWithColumnsAndTable,
+			"implicitTablePermissions": testAccAWSLakeFormationPermissions_implicitTablePermissions,
+			"selectPermissions":        testAccAWSLakeFormationPermissions_selectPermissions,
+			"tableName":                testAccAWSLakeFormationPermissions_tableName,
+			"tableWildcard":            testAccAWSLakeFormationPermissions_tableWildcard,
+			"tableWildcardPermissions": testAccAWSLakeFormationPermissions_tableWildcardPermissions,
+		},
+		"TableWithColumnsPermissions": {
+			"columnWildcardExcludedColumnsPermissions": testAccAWSLakeFormationPermissions_columnWildcardExcludedColumnsPermissions,
+			"columnWildcardPermissions":                testAccAWSLakeFormationPermissions_columnWildcardPermissions,
+			"implicitTableWithColumnsPermissions":      testAccAWSLakeFormationPermissions_implicitTableWithColumnsPermissions,
+			"tableWithColumns":                         testAccAWSLakeFormationPermissions_tableWithColumns,
 		},
 		"DataSourcePermissions": {
 			"basicDataSource":            testAccAWSLakeFormationPermissionsDataSource_basic,

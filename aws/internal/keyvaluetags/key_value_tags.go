@@ -55,6 +55,15 @@ func (tags KeyValueTags) IgnoreAws() KeyValueTags {
 	return result
 }
 
+// GetTags is convenience method that returns the DefaultConfig's Tags, if any
+func (dc *DefaultConfig) GetTags() KeyValueTags {
+	if dc == nil {
+		return nil
+	}
+
+	return dc.Tags
+}
+
 // MergeTags returns the result of keyvaluetags.Merge() on the given
 // DefaultConfig.Tags with KeyValueTags provided as an argument,
 // overriding the value of any tag with a matching key.
@@ -491,20 +500,42 @@ func (tags KeyValueTags) UrlEncode() string {
 	return values.Encode()
 }
 
-// New creates KeyValueTags from common Terraform Provider SDK types.
-// Supports map[string]string, map[string]*string, map[string]interface{}, and []interface{}.
+// UrlQueryString returns the KeyValueTags formatted as URL Query parameters without encoding.
+func (tags KeyValueTags) UrlQueryString() string {
+	keys := make([]string, 0, len(tags))
+	for k, v := range tags {
+		if v == nil || v.Value == nil {
+			continue
+		}
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	var buf strings.Builder
+	for _, k := range keys {
+		if buf.Len() > 0 {
+			buf.WriteByte('&')
+		}
+		buf.WriteString(k)
+		buf.WriteByte('=')
+		buf.WriteString(*tags[k].Value)
+	}
+
+	return buf.String()
+}
+
+// New creates KeyValueTags from common types or returns an empty KeyValueTags.
+//
+// Supports various Terraform Plugin SDK types including map[string]string,
+// map[string]*string, map[string]interface{}, and []interface{}.
 // When passed []interface{}, all elements are treated as keys and assigned nil values.
+// When passed KeyValueTags or its underlying type implementation, returns itself.
 func New(i interface{}) KeyValueTags {
 	switch value := i.(type) {
+	case KeyValueTags:
+		return make(KeyValueTags).Merge(value)
 	case map[string]*TagData:
-		kvtm := make(KeyValueTags, len(value))
-
-		for k, v := range value {
-			tagData := v
-			kvtm[k] = tagData
-		}
-
-		return kvtm
+		return make(KeyValueTags).Merge(KeyValueTags(value))
 	case map[string]string:
 		kvtm := make(KeyValueTags, len(value))
 
@@ -533,8 +564,13 @@ func New(i interface{}) KeyValueTags {
 		kvtm := make(KeyValueTags, len(value))
 
 		for k, v := range value {
-			str := v.(string)
-			kvtm[k] = &TagData{Value: &str}
+			kvtm[k] = &TagData{}
+
+			str, ok := v.(string)
+
+			if ok {
+				kvtm[k].Value = &str
+			}
 		}
 
 		return kvtm
