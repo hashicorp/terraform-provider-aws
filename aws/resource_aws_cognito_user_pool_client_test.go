@@ -45,7 +45,7 @@ func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolClient_enableRevokation(t *testing.T) {
+func TestAccAWSCognitoUserPoolClient_enableRevocation(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
 	clientName := acctest.RandString(10)
@@ -58,7 +58,7 @@ func TestAccAWSCognitoUserPoolClient_enableRevokation(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolClientRevokationConfig(userPoolName, clientName, true),
+				Config: testAccAWSCognitoUserPoolClientRevocationConfig(userPoolName, clientName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "name", clientName),
@@ -72,7 +72,7 @@ func TestAccAWSCognitoUserPoolClient_enableRevokation(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCognitoUserPoolClientRevokationConfig(userPoolName, clientName, false),
+				Config: testAccAWSCognitoUserPoolClientRevocationConfig(userPoolName, clientName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "name", clientName),
@@ -80,7 +80,7 @@ func TestAccAWSCognitoUserPoolClient_enableRevokation(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCognitoUserPoolClientRevokationConfig(userPoolName, clientName, true),
+				Config: testAccAWSCognitoUserPoolClientRevocationConfig(userPoolName, clientName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "name", clientName),
@@ -669,7 +669,7 @@ resource "aws_cognito_user_pool_client" "test" {
 `, userPoolName, clientName)
 }
 
-func testAccAWSCognitoUserPoolClientRevokationConfig(userPoolName, clientName string, revoke bool) string {
+func testAccAWSCognitoUserPoolClientRevocationConfig(userPoolName, clientName string, revoke bool) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
