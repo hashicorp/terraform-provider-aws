@@ -275,6 +275,20 @@ func testAccAWSTransferServer_vpc(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
 				),
 			},
+			{
+				Config: testAccAWSTransferServerVpcConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+				),
+			},
 		},
 	})
 }
@@ -333,6 +347,20 @@ func testAccAWSTransferServer_vpcAddressAllocationIds(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
 				),
 			},
+			{
+				Config: testAccAWSTransferServerVpcConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+				),
+			},
 		},
 	})
 }
@@ -342,6 +370,7 @@ func testAccAWSTransferServer_vpcSecurityGroupIds(t *testing.T) {
 	resourceName := "aws_transfer_server.test"
 	securityGroup1ResourceName := "aws_security_group.test"
 	securityGroup2ResourceName := "aws_security_group.test2"
+	defaultSecurityGroupResourceName := "aws_default_security_group.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -380,6 +409,20 @@ func testAccAWSTransferServer_vpcSecurityGroupIds(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", securityGroup2ResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+				),
+			},
+			{
+				Config: testAccAWSTransferServerVpcConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),

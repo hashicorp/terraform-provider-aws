@@ -376,7 +376,7 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).transferconn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		//TODO var addressAllocationIDs []*string
+		var addressAllocationIDs []*string
 		var offlineUpdate bool
 
 		input := &transfer.UpdateServerInput{
@@ -404,10 +404,9 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 				}
 
 				if newEndpointTypeVpc && !oldEndpointTypeVpc {
-					// TODO ????
 					// Prevent the following error: InvalidRequestException: Cannot specify AddressAllocationids when updating server to EndpointType: VPC
-					// addressAllocationIDs = input.EndpointDetails.AddressAllocationIds
-					// input.EndpointDetails.AddressAllocationIds = nil
+					addressAllocationIDs = input.EndpointDetails.AddressAllocationIds
+					input.EndpointDetails.AddressAllocationIds = nil
 
 					// Prevent the following error: InvalidRequestException: VPC Endpoint ID unsupported for EndpointType: VPC
 					input.EndpointDetails.VpcEndpointId = nil
@@ -503,6 +502,20 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 		log.Printf("[DEBUG] Updating Transfer Server: %s", input)
 		if err := updateTransferServer(conn, input); err != nil {
 			return err
+		}
+
+		// Set any AddressAllocationIds if the server has updated endpoint type to VPC.
+		if len(addressAllocationIDs) > 0 {
+			input := &transfer.UpdateServerInput{
+				ServerId: aws.String(d.Id()),
+				EndpointDetails: &transfer.EndpointDetails{
+					AddressAllocationIds: addressAllocationIDs,
+				},
+			}
+
+			if err := updateTransferServer(conn, input); err != nil {
+				return err
+			}
 		}
 
 		if offlineUpdate {
