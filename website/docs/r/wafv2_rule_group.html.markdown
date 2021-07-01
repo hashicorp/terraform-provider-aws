@@ -64,7 +64,7 @@ resource "aws_wafv2_regex_pattern_set" "test" {
   name  = "test"
   scope = "REGIONAL"
 
-  regular_expression_list {
+  regular_expression {
     regex_string = "one"
   }
 }
