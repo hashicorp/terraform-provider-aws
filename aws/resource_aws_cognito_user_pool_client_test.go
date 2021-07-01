@@ -45,6 +45,52 @@ func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPoolClient_enableRevokation(t *testing.T) {
+	var client cognitoidentityprovider.UserPoolClientType
+	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
+	clientName := acctest.RandString(10)
+	resourceName := "aws_cognito_user_pool_client.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolClientRevokationConfig(userPoolName, clientName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "name", clientName),
+					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSCognitoUserPoolClientImportStateIDFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCognitoUserPoolClientRevokationConfig(userPoolName, clientName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "name", clientName),
+					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", "false"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolClientRevokationConfig(userPoolName, clientName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "name", clientName),
+					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoUserPoolClient_refreshTokenValidity(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -621,6 +667,21 @@ resource "aws_cognito_user_pool_client" "test" {
   explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
 }
 `, userPoolName, clientName)
+}
+
+func testAccAWSCognitoUserPoolClientRevokationConfig(userPoolName, clientName string, revoke bool) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+  name                    = %[2]q
+  user_pool_id            = aws_cognito_user_pool.test.id
+  explicit_auth_flows     = ["ADMIN_NO_SRP_AUTH"]
+  enable_token_revocation = %[3]t
+}
+`, userPoolName, clientName, revoke)
 }
 
 func testAccAWSCognitoUserPoolClientConfig_RefreshTokenValidity(rName string, refreshTokenValidity int) string {
