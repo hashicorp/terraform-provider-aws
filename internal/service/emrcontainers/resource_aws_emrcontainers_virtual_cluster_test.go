@@ -154,7 +154,7 @@ func testAccCheckAwsEMRContainersVirtualClusterDestroy(s *terraform.State) error
 			continue
 		}
 
-		_, err := conn.DescribeVirtualCluster(&emrcontainers.DescribeVirtualClusterInput{
+		output, err := conn.DescribeVirtualCluster(&emrcontainers.DescribeVirtualClusterInput{
 			Id: aws.String(rs.Primary.ID),
 		})
 
@@ -165,7 +165,10 @@ func testAccCheckAwsEMRContainersVirtualClusterDestroy(s *terraform.State) error
 			return err
 		}
 
-		return fmt.Errorf("Expected EMR containers virtual cluster to be destroyed, %s found", rs.Primary.ID)
+		virtualClusterState := aws.StringValue(output.VirtualCluster.State)
+		if virtualClusterState != emrcontainers.VirtualClusterStateTerminated {
+			return fmt.Errorf("Expected EMR containers virtual cluster to be destroyed, %s found with state %s", rs.Primary.ID, virtualClusterState)
+		}
 	}
 
 	return nil
