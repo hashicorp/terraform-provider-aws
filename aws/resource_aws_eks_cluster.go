@@ -91,7 +91,6 @@ func resourceAwsEksCluster() *schema.Resource {
 									"key_arn": {
 										Type:     schema.TypeString,
 										Required: true,
-										ForceNew: true,
 									},
 								},
 							},
@@ -99,7 +98,6 @@ func resourceAwsEksCluster() *schema.Resource {
 						"resources": {
 							Type:     schema.TypeSet,
 							Required: true,
-							ForceNew: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringInSlice(tfeks.Resources_Values(), false),
