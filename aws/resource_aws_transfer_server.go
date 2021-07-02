@@ -390,6 +390,7 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 
 		var addressAllocationIDs []*string
 		var offlineUpdate bool
+		var removeAddressAllocationIDs bool
 
 		input := &transfer.UpdateServerInput{
 			ServerId: aws.String(d.Id()),
@@ -414,6 +415,24 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 					// Prevent the following error: InvalidRequestException: Server must be OFFLINE to change AddressAllocationIds
 					if d.HasChange("endpoint_details.0.address_allocation_ids") {
 						offlineUpdate = true
+					}
+
+					// Update to 0 AddressAllocationIds.
+					if input.EndpointDetails.AddressAllocationIds == nil {
+						input.EndpointDetails.AddressAllocationIds = []*string{}
+					}
+
+					// Prevent the following error: InvalidRequestException: AddressAllocationIds must be removed before SubnetIds can be modified
+					if d.HasChange("endpoint_details.0.subnet_ids") {
+						old, _ := d.GetChange("endpoint_details.0.address_allocation_ids")
+
+						if old := old.(*schema.Set); old.Len() > 0 {
+							offlineUpdate = true
+							removeAddressAllocationIDs = true
+
+							addressAllocationIDs = input.EndpointDetails.AddressAllocationIds
+							input.EndpointDetails.AddressAllocationIds = nil
+						}
 					}
 
 					// Prevent the following error: InvalidRequestException: Changing Security Group is not supported
@@ -451,7 +470,7 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 					return fmt.Errorf("error updating Transfer Server (%s) VPC Endpoint (%s): %w", d.Id(), vpcEndpointID, err)
 				}
 
-				_, err := ec2waiter.VpcEndpointAvailable(conn, vpcEndpointID, d.Timeout(schema.TimeoutUpdate))
+				_, err := ec2waiter.VpcEndpointAvailable(conn, vpcEndpointID, Ec2VpcEndpointCreationTimeout)
 
 				if err != nil {
 					return fmt.Errorf("error waiting for Transfer Server (%s) VPC Endpoint (%s) to become available: %w", d.Id(), vpcEndpointID, err)
@@ -504,6 +523,20 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 			}
 		}
 
+		if removeAddressAllocationIDs {
+			input := &transfer.UpdateServerInput{
+				ServerId: aws.String(d.Id()),
+				EndpointDetails: &transfer.EndpointDetails{
+					AddressAllocationIds: []*string{},
+				},
+			}
+
+			log.Printf("[DEBUG] Removing Transfer Server Address Allocation IDs: %s", input)
+			if err := updateTransferServer(conn, input); err != nil {
+				return err
+			}
+		}
+
 		log.Printf("[DEBUG] Updating Transfer Server: %s", input)
 		if err := updateTransferServer(conn, input); err != nil {
 			return err
@@ -526,7 +559,6 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 			}
 		}
 
-		// Set any AddressAllocationIds if the server has updated endpoint type to VPC.
 		if len(addressAllocationIDs) > 0 {
 			input := &transfer.UpdateServerInput{
 				ServerId: aws.String(d.Id()),
@@ -535,6 +567,7 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 				},
 			}
 
+			log.Printf("[DEBUG] Adding Transfer Server Address Allocation IDs: %s", input)
 			if err := updateTransferServer(conn, input); err != nil {
 				return err
 			}
