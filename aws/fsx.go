@@ -8,11 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-const (
-	fsxWindowsFileSystemAliasAvailable = 10 * time.Minute
-	fsxWindowsFileSystemAliasDeleted   = 10 * time.Minute
-)
-
 func describeFsxFileSystem(conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 	input := &fsx.DescribeFileSystemsInput{
 		FileSystemIds: []*string{aws.String(id)},
@@ -53,46 +48,7 @@ func refreshFsxFileSystemLifecycle(conn *fsx.FSx, id string) resource.StateRefre
 	}
 }
 
-func refreshFsxWindowsFileSystemAliasLifecycle(conn *fsx.FSx, id, aliasName string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		filesystem, err := describeFsxFileSystem(conn, id)
-
-		if isAWSErr(err, fsx.ErrCodeFileSystemNotFound, "") {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if filesystem == nil {
-			return nil, "", nil
-		}
-
-		if filesystem.WindowsConfiguration == nil {
-			return nil, "", nil
-		}
-
-		aliases := filesystem.WindowsConfiguration.Aliases
-		if aliases == nil {
-			return nil, "", nil
-		}
-
-		for _, alias := range aliases {
-			if alias == nil {
-				continue
-			}
-
-			if aws.StringValue(alias.Name) == aliasName {
-				return filesystem, aws.StringValue(alias.Lifecycle), nil
-			}
-		}
-
-		return filesystem, "", nil
-	}
-}
-
-func refreshFsxFileSystemAdministrativeActionsStatusFileSystemUpdate(conn *fsx.FSx, id string) resource.StateRefreshFunc {
+func refreshFsxFileSystemAdministrativeActionsStatusFileSystemUpdate(conn *fsx.FSx, id, action string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		filesystem, err := describeFsxFileSystem(conn, id)
 
@@ -113,41 +69,13 @@ func refreshFsxFileSystemAdministrativeActionsStatusFileSystemUpdate(conn *fsx.F
 				continue
 			}
 
-			if aws.StringValue(administrativeAction.AdministrativeActionType) == fsx.AdministrativeActionTypeFileSystemUpdate {
+			if aws.StringValue(administrativeAction.AdministrativeActionType) == action {
 				return filesystem, aws.StringValue(administrativeAction.Status), nil
 			}
 		}
 
 		return filesystem, fsx.StatusCompleted, nil
 	}
-}
-
-func waitForFsxWindowsFileSystemAliasAvailable(conn *fsx.FSx, id, alias string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{fsx.AliasLifecycleCreating},
-		Target:  []string{fsx.AliasLifecycleAvailable},
-		Refresh: refreshFsxWindowsFileSystemAliasLifecycle(conn, id, alias),
-		Timeout: fsxWindowsFileSystemAliasAvailable,
-		Delay:   30 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForFsxWindowsFileSystemAliasDeleted(conn *fsx.FSx, id, alias string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{fsx.AliasLifecycleAvailable, fsx.AliasLifecycleDeleting},
-		Target:  []string{""},
-		Refresh: refreshFsxWindowsFileSystemAliasLifecycle(conn, id, alias),
-		Timeout: fsxWindowsFileSystemAliasDeleted,
-		Delay:   30 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
 }
 
 func waitForFsxFileSystemCreation(conn *fsx.FSx, id string, timeout time.Duration) error {
@@ -192,7 +120,7 @@ func waitForFsxFileSystemUpdate(conn *fsx.FSx, id string, timeout time.Duration)
 	return err
 }
 
-func waitForFsxFileSystemUpdateAdministrativeActionsStatusFileSystemUpdate(conn *fsx.FSx, id string, timeout time.Duration) error {
+func waitForFsxFileSystemUpdateAdministrativeActionsStatusFileSystemUpdate(conn *fsx.FSx, id, action string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			fsx.StatusInProgress,
@@ -202,7 +130,7 @@ func waitForFsxFileSystemUpdateAdministrativeActionsStatusFileSystemUpdate(conn 
 			fsx.StatusCompleted,
 			fsx.StatusUpdatedOptimizing,
 		},
-		Refresh: refreshFsxFileSystemAdministrativeActionsStatusFileSystemUpdate(conn, id),
+		Refresh: refreshFsxFileSystemAdministrativeActionsStatusFileSystemUpdate(conn, id, action),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}

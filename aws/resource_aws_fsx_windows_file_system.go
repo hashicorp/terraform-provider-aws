@@ -351,7 +351,7 @@ func resourceAwsFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interfac
 	if d.HasChange("aliases") {
 		o, n := d.GetChange("aliases")
 
-		if err := updateFsxAliases(conn, d.Id(), o.(*schema.Set), n.(*schema.Set)); err != nil {
+		if err := updateFsxAliases(conn, d.Id(), o.(*schema.Set), n.(*schema.Set), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error updating FSx Windows File System (%s) aliases: %w", d.Id(), err)
 		}
 	}
@@ -397,7 +397,7 @@ func resourceAwsFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interfac
 			return fmt.Errorf("error updating FSx Windows File System (%s): %w", d.Id(), err)
 		}
 
-		if err := waitForFsxFileSystemUpdateAdministrativeActionsStatusFileSystemUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := waitForFsxFileSystemUpdateAdministrativeActionsStatusFileSystemUpdate(conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for FSx Windows File System (%s) update: %w", d.Id(), err)
 		}
 	}
@@ -532,7 +532,7 @@ func expandFsxAliasValues(aliases []*fsx.Alias) []*string {
 	return alternateDNSNames
 }
 
-func updateFsxAliases(conn *fsx.FSx, identifier string, oldSet *schema.Set, newSet *schema.Set) error {
+func updateFsxAliases(conn *fsx.FSx, identifier string, oldSet *schema.Set, newSet *schema.Set, timeout time.Duration) error {
 	if newSet.Len() > 0 {
 		if newAliases := newSet.Difference(oldSet); newAliases.Len() > 0 {
 
@@ -547,10 +547,8 @@ func updateFsxAliases(conn *fsx.FSx, identifier string, oldSet *schema.Set, newS
 				return fmt.Errorf("error associating aliases to FSx file system (%s): %w", identifier, err)
 			}
 
-			for _, alias := range newAliases.List() {
-				if err := waitForFsxWindowsFileSystemAliasAvailable(conn, identifier, alias.(string)); err != nil {
-					return fmt.Errorf("Error waiting for FSX Windows filesystem (%s) alias (%s) to be available: %w", identifier, alias.(string), err)
-				}
+			if err := waitForFsxFileSystemUpdateAdministrativeActionsStatusFileSystemUpdate(conn, identifier, fsx.AdministrativeActionTypeFileSystemAliasAssociation, timeout); err != nil {
+				return fmt.Errorf("Error waiting for FSX Windows filesystem (%s) alias to be associated: %w", identifier, err)
 			}
 		}
 	}
@@ -568,10 +566,8 @@ func updateFsxAliases(conn *fsx.FSx, identifier string, oldSet *schema.Set, newS
 				return fmt.Errorf("error disassociating aliases from FSx file system (%s): %w", identifier, err)
 			}
 
-			for _, alias := range oldAliases.List() {
-				if err := waitForFsxWindowsFileSystemAliasDeleted(conn, identifier, alias.(string)); err != nil {
-					return fmt.Errorf("Error waiting for FSX Windows filesystem (%s) alias (%s) to delete: %w", identifier, alias.(string), err)
-				}
+			if err := waitForFsxFileSystemUpdateAdministrativeActionsStatusFileSystemUpdate(conn, identifier, fsx.AdministrativeActionTypeFileSystemAliasDisassociation, timeout); err != nil {
+				return fmt.Errorf("Error waiting for FSX Windows filesystem (%s) alias to disassociated: %w", identifier, err)
 			}
 		}
 	}
