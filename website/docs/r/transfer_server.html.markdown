@@ -10,6 +10,8 @@ description: |-
 
 Provides a AWS Transfer Server resource.
 
+~> **NOTE on AWS IAM permissions:** If the `endpoint_type` is set to `VPC`, the `ec2:DescribeVpcEndpoints` and `ec2:ModifyVpcEndpoint` [actions](https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonec2.html#amazonec2-actions-as-permissions) are used.
+
 ## Example Usage
 
 ### Basic
@@ -124,7 +126,7 @@ In addition to all arguments above, the following attributes are exported:
 Transfer Servers can be imported using the `server id`, e.g.
 
 ```
-$ terraform import aws_transfer_server.bar s-12345678
+$ terraform import aws_transfer_server.example s-12345678
 ```
 
 Certain resource arguments, such as `host_key`, cannot be read via the API and imported into Terraform. Terraform will display a difference for these arguments the first run after import if declared in the Terraform configuration for an imported resource.
