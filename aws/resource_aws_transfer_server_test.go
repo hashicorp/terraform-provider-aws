@@ -244,7 +244,6 @@ func testAccAWSTransferServer_vpc(t *testing.T) {
 				Config: testAccAWSTransferServerVpcConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
@@ -252,6 +251,7 @@ func testAccAWSTransferServer_vpc(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 				),
 			},
 			{
@@ -264,7 +264,6 @@ func testAccAWSTransferServer_vpc(t *testing.T) {
 				Config: testAccAWSTransferServerVpcUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
@@ -273,13 +272,13 @@ func testAccAWSTransferServer_vpc(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 				),
 			},
 			{
 				Config: testAccAWSTransferServerVpcConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
@@ -287,6 +286,7 @@ func testAccAWSTransferServer_vpc(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 				),
 			},
 		},
@@ -313,7 +313,6 @@ func testAccAWSTransferServer_vpcAddressAllocationIds(t *testing.T) {
 				Config: testAccAWSTransferServerVpcAddressAllocationIdsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.address_allocation_ids.*", eip1ResourceName, "id"),
@@ -323,6 +322,7 @@ func testAccAWSTransferServer_vpcAddressAllocationIds(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 				),
 			},
 			{
@@ -335,7 +335,6 @@ func testAccAWSTransferServer_vpcAddressAllocationIds(t *testing.T) {
 				Config: testAccAWSTransferServerVpcAddressAllocationIdsUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.address_allocation_ids.*", eip2ResourceName, "id"),
@@ -345,13 +344,13 @@ func testAccAWSTransferServer_vpcAddressAllocationIds(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 				),
 			},
 			{
 				Config: testAccAWSTransferServerVpcConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
@@ -359,6 +358,7 @@ func testAccAWSTransferServer_vpcAddressAllocationIds(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 				),
 			},
 		},
@@ -370,7 +370,6 @@ func testAccAWSTransferServer_vpcSecurityGroupIds(t *testing.T) {
 	resourceName := "aws_transfer_server.test"
 	securityGroup1ResourceName := "aws_security_group.test"
 	securityGroup2ResourceName := "aws_security_group.test2"
-	defaultSecurityGroupResourceName := "aws_default_security_group.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -384,7 +383,6 @@ func testAccAWSTransferServer_vpcSecurityGroupIds(t *testing.T) {
 				Config: testAccAWSTransferServerVpcSecurityGroupIdsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
@@ -392,6 +390,7 @@ func testAccAWSTransferServer_vpcSecurityGroupIds(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 				),
 			},
 			{
@@ -404,7 +403,6 @@ func testAccAWSTransferServer_vpcSecurityGroupIds(t *testing.T) {
 				Config: testAccAWSTransferServerVpcSecurityGroupIdsUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
@@ -412,6 +410,7 @@ func testAccAWSTransferServer_vpcSecurityGroupIds(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 				),
 			},
 		},
@@ -439,7 +438,6 @@ func testAccAWSTransferServer_vpcAddressAllocationIds_securityGroupIds(t *testin
 				Config: testAccAWSTransferServerVpcAddressAllocationIdsSecurityGroupIdsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.address_allocation_ids.*", eip1ResourceName, "id"),
@@ -449,6 +447,7 @@ func testAccAWSTransferServer_vpcAddressAllocationIds_securityGroupIds(t *testin
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 				),
 			},
 			{
@@ -461,7 +460,6 @@ func testAccAWSTransferServer_vpcAddressAllocationIds_securityGroupIds(t *testin
 				Config: testAccAWSTransferServerVpcAddressAllocationIdsSecurityGroupIdsUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.address_allocation_ids.*", eip2ResourceName, "id"),
@@ -471,6 +469,7 @@ func testAccAWSTransferServer_vpcAddressAllocationIds_securityGroupIds(t *testin
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 				),
 			},
 		},
@@ -480,8 +479,6 @@ func testAccAWSTransferServer_vpcAddressAllocationIds_securityGroupIds(t *testin
 func testAccAWSTransferServer_updateEndpointType_publicToVpc(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
-	defaultSecurityGroupResourceName := "aws_default_security_group.test"
-	vpcResourceName := "aws_vpc.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
@@ -502,14 +499,8 @@ func testAccAWSTransferServer_updateEndpointType_publicToVpc(t *testing.T) {
 				Config: testAccAWSTransferServerVpcConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 				),
 			},
 			{
@@ -525,10 +516,6 @@ func testAccAWSTransferServer_updateEndpointType_publicToVpc(t *testing.T) {
 func testAccAWSTransferServer_updateEndpointType_publicToVpc_addressAllocationIds(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
-	eipResourceName := "aws_eip.test.0"
-	defaultSecurityGroupResourceName := "aws_default_security_group.test"
-	subnetResourceName := "aws_subnet.test"
-	vpcResourceName := "aws_vpc.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
@@ -549,16 +536,8 @@ func testAccAWSTransferServer_updateEndpointType_publicToVpc_addressAllocationId
 				Config: testAccAWSTransferServerVpcAddressAllocationIdsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.address_allocation_ids.*", eipResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 				),
 			},
 			{
@@ -574,9 +553,6 @@ func testAccAWSTransferServer_updateEndpointType_publicToVpc_addressAllocationId
 func testAccAWSTransferServer_updateEndpointType_vpcEndpointToVpc(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
-	defaultSecurityGroupResourceName := "aws_default_security_group.test"
-	vpcEndpointResourceName := "aws_vpc_endpoint.test"
-	vpcResourceName := "aws_vpc.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
@@ -589,27 +565,16 @@ func testAccAWSTransferServer_updateEndpointType_vpcEndpointToVpc(t *testing.T) 
 				Config: testAccAWSTransferServerVpcEndpointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC_ENDPOINT"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_endpoint_id", vpcEndpointResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.vpc_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC_ENDPOINT"),
 				),
 			},
 			{
 				Config: testAccAWSTransferServerVpcConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 				),
 			},
 			{
@@ -625,11 +590,6 @@ func testAccAWSTransferServer_updateEndpointType_vpcEndpointToVpc(t *testing.T) 
 func testAccAWSTransferServer_updateEndpointType_vpcEndpointToVpc_addressAllocationIds(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
-	eipResourceName := "aws_eip.test.0"
-	defaultSecurityGroupResourceName := "aws_default_security_group.test"
-	subnetResourceName := "aws_subnet.test"
-	vpcEndpointResourceName := "aws_vpc_endpoint.test"
-	vpcResourceName := "aws_vpc.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
@@ -644,11 +604,6 @@ func testAccAWSTransferServer_updateEndpointType_vpcEndpointToVpc_addressAllocat
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC_ENDPOINT"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_endpoint_id", vpcEndpointResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.vpc_id", ""),
 				),
 			},
 			{
@@ -657,14 +612,6 @@ func testAccAWSTransferServer_updateEndpointType_vpcEndpointToVpc_addressAllocat
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.address_allocation_ids.*", eipResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
 				),
 			},
 			{
@@ -680,9 +627,6 @@ func testAccAWSTransferServer_updateEndpointType_vpcEndpointToVpc_addressAllocat
 func testAccAWSTransferServer_updateEndpointType_vpcEndpointToVpc_securityGroupIds(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
-	securityGroupResourceName := "aws_security_group.test"
-	vpcEndpointResourceName := "aws_vpc_endpoint.test"
-	vpcResourceName := "aws_vpc.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
@@ -695,27 +639,16 @@ func testAccAWSTransferServer_updateEndpointType_vpcEndpointToVpc_securityGroupI
 				Config: testAccAWSTransferServerVpcEndpointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC_ENDPOINT"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_endpoint_id", vpcEndpointResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.vpc_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC_ENDPOINT"),
 				),
 			},
 			{
 				Config: testAccAWSTransferServerVpcSecurityGroupIdsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", securityGroupResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 				),
 			},
 			{
@@ -731,8 +664,6 @@ func testAccAWSTransferServer_updateEndpointType_vpcEndpointToVpc_securityGroupI
 func testAccAWSTransferServer_updateEndpointType_vpcToPublic(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
-	defaultSecurityGroupResourceName := "aws_default_security_group.test"
-	vpcResourceName := "aws_vpc.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
@@ -745,14 +676,8 @@ func testAccAWSTransferServer_updateEndpointType_vpcToPublic(t *testing.T) {
 				Config: testAccAWSTransferServerVpcConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 				),
 			},
 			{
@@ -976,13 +901,13 @@ func testAccAWSTransferServer_vpcEndpointId(t *testing.T) {
 				Config: testAccAWSTransferServerVpcEndpointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC_ENDPOINT"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_endpoint_id", vpcEndpointResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.vpc_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC_ENDPOINT"),
 				),
 			},
 			{
