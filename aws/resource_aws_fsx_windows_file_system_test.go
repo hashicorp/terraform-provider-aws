@@ -917,7 +917,7 @@ resource "aws_directory_service_directory" "test" {
 func testAccAwsFsxWindowsFileSystemConfigAliases1(alias1 string) string {
 	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
-	active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true
   storage_capacity    = 32
   subnet_ids          = [aws_subnet.test1.id]
