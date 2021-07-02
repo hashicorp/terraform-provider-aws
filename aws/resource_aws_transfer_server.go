@@ -542,23 +542,6 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 			return err
 		}
 
-		if newEndpointTypeVpc && !oldEndpointTypeVpc {
-			// Wait for newly provisioned VPC Endpoint to become available.
-			output, err := finder.ServerByID(conn, d.Id())
-
-			if err != nil {
-				return fmt.Errorf("error reading Transfer Server (%s): %w", d.Id(), err)
-			}
-
-			vpcEndpointID := aws.StringValue(output.EndpointDetails.VpcEndpointId)
-
-			_, err = ec2waiter.VpcEndpointAvailable(meta.(*AWSClient).ec2conn, vpcEndpointID, d.Timeout(schema.TimeoutUpdate))
-
-			if err != nil {
-				return fmt.Errorf("error waiting for Transfer Server (%s) VPC Endpoint (%s) to become available: %w", d.Id(), vpcEndpointID, err)
-			}
-		}
-
 		if len(addressAllocationIDs) > 0 {
 			input := &transfer.UpdateServerInput{
 				ServerId: aws.String(d.Id()),

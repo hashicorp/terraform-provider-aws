@@ -1040,6 +1040,16 @@ resource "aws_security_group" "test" {
 resource "aws_default_security_group" "test" {
   vpc_id = aws_vpc.test.id
 }
+
+resource "aws_eip" "test" {
+  count = 2
+
+  vpc = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
 `, rName)
 }
 
@@ -1310,17 +1320,7 @@ resource "aws_transfer_server" "test" {
 func testAccAWSTransferServerVpcAddressAllocationIdsConfig(rName string) string {
 	return composeConfig(
 		testAccAWSTransferServerConfigBaseVpc(rName),
-		fmt.Sprintf(`
-resource "aws_eip" "test" {
-  count = 2
-
-  vpc = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+		`
 resource "aws_transfer_server" "test" {
   endpoint_type = "VPC"
 
@@ -1330,23 +1330,13 @@ resource "aws_transfer_server" "test" {
     vpc_id                 = aws_vpc.test.id
   }
 }
-`, rName))
+`)
 }
 
 func testAccAWSTransferServerVpcAddressAllocationIdsUpdateConfig(rName string) string {
 	return composeConfig(
 		testAccAWSTransferServerConfigBaseVpc(rName),
-		fmt.Sprintf(`
-resource "aws_eip" "test" {
-  count = 2
-
-  vpc = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+		`
 resource "aws_transfer_server" "test" {
   endpoint_type = "VPC"
 
@@ -1356,23 +1346,13 @@ resource "aws_transfer_server" "test" {
     vpc_id                 = aws_vpc.test.id
   }
 }
-`, rName))
+`)
 }
 
 func testAccAWSTransferServerVpcAddressAllocationIdsSecurityGroupIdsConfig(rName string) string {
 	return composeConfig(
 		testAccAWSTransferServerConfigBaseVpc(rName),
-		fmt.Sprintf(`
-resource "aws_eip" "test" {
-  count = 2
-
-  vpc = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+		`
 resource "aws_transfer_server" "test" {
   endpoint_type = "VPC"
 
@@ -1383,7 +1363,7 @@ resource "aws_transfer_server" "test" {
     vpc_id                 = aws_vpc.test.id
   }
 }
-`, rName))
+`)
 }
 
 func testAccAWSTransferServerVpcAddressAllocationIdsSecurityGroupIdsUpdateConfig(rName string) string {
@@ -1398,17 +1378,6 @@ resource "aws_security_group" "test2" {
     Name = "%[1]s-2"
   }
 }
-
-resource "aws_eip" "test" {
-  count = 2
-
-  vpc = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_transfer_server" "test" {
   endpoint_type = "VPC"
 
