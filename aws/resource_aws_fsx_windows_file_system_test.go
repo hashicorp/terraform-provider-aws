@@ -922,9 +922,7 @@ resource "aws_fsx_windows_file_system" "test" {
   subnet_ids          = ["subnet-060ab259c291fa28c"]
   throughput_capacity = 8
 
-  aliases = [
-	%[1]q
-  ]
+  aliases = [%[1]q]
 }
 `, alias1)
 }
@@ -938,10 +936,7 @@ resource "aws_fsx_windows_file_system" "test" {
   subnet_ids          = ["subnet-060ab259c291fa28c"]
   throughput_capacity = 8
 
-  aliases = [
-	%[1]q,
-	%[2]q
-  ]
+  aliases = [%[1]q, %[2]q]
 }
 `, alias1, alias2)
 }
