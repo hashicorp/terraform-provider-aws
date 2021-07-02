@@ -276,7 +276,7 @@ func TestAccAWSFsxWindowsFileSystem_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxWindowsFileSystem_Aliases(t *testing.T) {
+func TestAccAWSFsxWindowsFileSystem_aliases(t *testing.T) {
 	var filesystem1, filesystem2, filesystem3 fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
 
@@ -286,11 +286,11 @@ func TestAccAWSFsxWindowsFileSystem_Aliases(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigAliases1("filesystem1.domain.name.com"),
+				Config: testAccAwsFsxWindowsFileSystemConfigAliases1("filesystem1.example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "aliases.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "aliases.0", "filesystem1.domain.name.com"),
+					resource.TestCheckResourceAttr(resourceName, "aliases.0", "filesystem1.example.com"),
 				),
 			},
 			{
@@ -303,22 +303,22 @@ func TestAccAWSFsxWindowsFileSystem_Aliases(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigAliases2("filesystem1.domain.name.com", "filesystem2.domain.name.com"),
+				Config: testAccAwsFsxWindowsFileSystemConfigAliases2("filesystem2.example.com", "filesystem3.example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckFsxWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "aliases.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "aliases.0", "filesystem1.domain.name.com"),
-					resource.TestCheckResourceAttr(resourceName, "aliases.1", "filesystem2.domain.name.com"),
+					resource.TestCheckResourceAttr(resourceName, "aliases.0", "filesystem2.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "aliases.1", "filesystem3.example.com"),
 				),
 			},
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigAliases1("filesystem2.domain.name.com"),
+				Config: testAccAwsFsxWindowsFileSystemConfigAliases1("filesystem3.example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem3),
 					testAccCheckFsxWindowsFileSystemNotRecreated(&filesystem2, &filesystem3),
 					resource.TestCheckResourceAttr(resourceName, "aliases.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "aliases.0", "filesystem2.domain.name.com"),
+					resource.TestCheckResourceAttr(resourceName, "aliases.0", "filesystem3.example.com"),
 				),
 			},
 		},
@@ -914,12 +914,12 @@ resource "aws_directory_service_directory" "test" {
 }
 
 func testAccAwsFsxWindowsFileSystemConfigAliases1(alias1 string) string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = "d-92677185a7"
   skip_final_backup   = true
   storage_capacity    = 32
-  subnet_ids          = [aws_subnet.test1.id]
+  subnet_ids          = ["subnet-060ab259c291fa28c"]
   throughput_capacity = 8
 
   aliases = [
@@ -930,16 +930,16 @@ resource "aws_fsx_windows_file_system" "test" {
 }
 
 func testAccAwsFsxWindowsFileSystemConfigAliases2(alias1, alias2 string) string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = "d-92677185a7"
   skip_final_backup   = true
   storage_capacity    = 32
-  subnet_ids          = [aws_subnet.test1.id]
+  subnet_ids          = ["subnet-060ab259c291fa28c"]
   throughput_capacity = 8
 
   aliases = [
-	%[1]q
+	%[1]q,
 	%[2]q
   ]
 }
