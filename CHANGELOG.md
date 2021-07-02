@@ -1,4 +1,4 @@
-## 3.48.0 (Unreleased)
+## 3.48.0 (July 02, 2021)
 
 FEATURES:
 
