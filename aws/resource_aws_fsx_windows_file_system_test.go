@@ -915,12 +915,12 @@ resource "aws_directory_service_directory" "test" {
 }
 
 func testAccAwsFsxWindowsFileSystemConfigAliases1(alias1 string) string {
-	return fmt.Sprintf(`
+	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = "d-92677185a7"
+	active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true
   storage_capacity    = 32
-  subnet_ids          = ["subnet-060ab259c291fa28c"]
+  subnet_ids          = [aws_subnet.test1.id]
   throughput_capacity = 8
 
   aliases = [%[1]q]
@@ -929,12 +929,12 @@ resource "aws_fsx_windows_file_system" "test" {
 }
 
 func testAccAwsFsxWindowsFileSystemConfigAliases2(alias1, alias2 string) string {
-	return fmt.Sprintf(`
+	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = "d-92677185a7"
+  active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true
   storage_capacity    = 32
-  subnet_ids          = ["subnet-060ab259c291fa28c"]
+  subnet_ids          = [aws_subnet.test1.id]
   throughput_capacity = 8
 
   aliases = [%[1]q, %[2]q]
