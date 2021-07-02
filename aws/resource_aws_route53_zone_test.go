@@ -682,6 +682,7 @@ func testAccCheckDomainName(zone *route53.GetHostedZoneOutput, domain string) re
 		return fmt.Errorf("Invalid domain name. Expected %s is %s", domain, *zone.HostedZone.Name)
 	}
 }
+
 func testAccRoute53ZoneConfig(zoneName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {

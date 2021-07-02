@@ -43,6 +43,8 @@ func TestAccAWSRoute53DelegationSet_withZones(t *testing.T) {
 
 	refName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_delegation_set.test"
+	primaryZoneResourceName := "aws_route53_zone.primary"
+	secondaryZoneResourceName := "aws_route53_zone.secondary"
 
 	domain := testAccRandomDomainName()
 	zoneName1 := fmt.Sprintf("primary.%s", domain)
@@ -58,10 +60,10 @@ func TestAccAWSRoute53DelegationSet_withZones(t *testing.T) {
 				Config: testAccRoute53DelegationSetWithZonesConfig(refName, zoneName1, zoneName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53DelegationSetExists(resourceName),
-					testAccCheckRoute53ZoneExists("aws_route53_zone.primary", &zone),
-					testAccCheckRoute53ZoneExists("aws_route53_zone.secondary", &zone),
-					testAccCheckRoute53NameServersMatch(resourceName, "aws_route53_zone.primary"),
-					testAccCheckRoute53NameServersMatch(resourceName, "aws_route53_zone.secondary"),
+					testAccCheckRoute53ZoneExists(primaryZoneResourceName, &zone),
+					testAccCheckRoute53ZoneExists(secondaryZoneResourceName, &zone),
+					testAccCheckRoute53NameServersMatch(resourceName, primaryZoneResourceName),
+					testAccCheckRoute53NameServersMatch(resourceName, secondaryZoneResourceName),
 				),
 			},
 			{
