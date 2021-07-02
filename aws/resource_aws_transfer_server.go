@@ -376,6 +376,18 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).transferconn
 
 	if d.HasChangesExcept("tags", "tags_all") {
+		var newEndpointTypeVpc bool
+		var oldEndpointTypeVpc bool
+
+		old, new := d.GetChange("endpoint_type")
+
+		if old, new := old.(string), new.(string); new != old && new == transfer.EndpointTypeVpc {
+			newEndpointTypeVpc = true
+		} else if new == old && new == transfer.EndpointTypeVpc {
+			newEndpointTypeVpc = true
+			oldEndpointTypeVpc = true
+		}
+
 		var addressAllocationIDs []*string
 		var offlineUpdate bool
 
@@ -388,20 +400,8 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if d.HasChange("endpoint_details") {
-			var newEndpointTypeVpc bool
-			var oldEndpointTypeVpc bool
-
 			if v, ok := d.GetOk("endpoint_details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.EndpointDetails = expandTransferEndpointDetails(v.([]interface{})[0].(map[string]interface{}))
-
-				old, new := d.GetChange("endpoint_type")
-
-				if old, new := old.(string), new.(string); new != old && new == transfer.EndpointTypeVpc {
-					newEndpointTypeVpc = true
-				} else if new == old && new == transfer.EndpointTypeVpc {
-					newEndpointTypeVpc = true
-					oldEndpointTypeVpc = true
-				}
 
 				if newEndpointTypeVpc && !oldEndpointTypeVpc {
 					// Prevent the following error: InvalidRequestException: Cannot specify AddressAllocationids when updating server to EndpointType: VPC
@@ -507,6 +507,23 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 		log.Printf("[DEBUG] Updating Transfer Server: %s", input)
 		if err := updateTransferServer(conn, input); err != nil {
 			return err
+		}
+
+		if newEndpointTypeVpc && !oldEndpointTypeVpc {
+			// Wait for newly provisioned VPC Endpoint to become available.
+			output, err := finder.ServerByID(conn, d.Id())
+
+			if err != nil {
+				return fmt.Errorf("error reading Transfer Server (%s): %w", d.Id(), err)
+			}
+
+			vpcEndpointID := aws.StringValue(output.EndpointDetails.VpcEndpointId)
+
+			_, err = ec2waiter.VpcEndpointAvailable(meta.(*AWSClient).ec2conn, vpcEndpointID, d.Timeout(schema.TimeoutUpdate))
+
+			if err != nil {
+				return fmt.Errorf("error waiting for Transfer Server (%s) VPC Endpoint (%s) to become available: %w", d.Id(), vpcEndpointID, err)
+			}
 		}
 
 		// Set any AddressAllocationIds if the server has updated endpoint type to VPC.
