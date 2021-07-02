@@ -532,27 +532,7 @@ func expandFsxAliasValues(aliases []*fsx.Alias) []*string {
 	return alternateDNSNames
 }
 
-func updateFsxAliases(conn *fsx.FSx, identifier string, newSet *schema.Set, oldSet *schema.Set) error {
-	// oldAliasValues := expandFsxAliasValues(oldAliases)
-	// newAliasValues := expandFsxAliasValues(newAliases)
-
-	// var removedAliases []*string
-
-	// for _, oldAliasValue := range oldAliasValues {
-	// 	exists := false
-
-	// 	for _, newAliasValue := range newAliasValues {
-	// 		if newAliasValue == oldAliasValue {
-	// 			exists = true
-	// 			break
-	// 		}
-	// 	}
-
-	// 	if !exists {
-	// 		removedAliases = append(removedAliases, oldAliasValue)
-	// 	}
-	// }
-
+func updateFsxAliases(conn *fsx.FSx, identifier string, oldSet *schema.Set, newSet *schema.Set) error {
 	if newSet.Len() > 0 {
 		if newAliases := newSet.Difference(oldSet); newAliases.Len() > 0 {
 
@@ -569,7 +549,7 @@ func updateFsxAliases(conn *fsx.FSx, identifier string, newSet *schema.Set, oldS
 
 			for _, alias := range newAliases.List() {
 				if err := waitForFsxWindowsFileSystemAliasAvailable(conn, identifier, alias.(string)); err != nil {
-					return fmt.Errorf("Error waiting for FSX Windows filesystem alias (%s) to be available: %w", identifier, err)
+					return fmt.Errorf("Error waiting for FSX Windows filesystem (%s) alias (%s) to be available: %w", identifier, alias.(string), err)
 				}
 			}
 		}
@@ -590,28 +570,11 @@ func updateFsxAliases(conn *fsx.FSx, identifier string, newSet *schema.Set, oldS
 
 			for _, alias := range oldAliases.List() {
 				if err := waitForFsxWindowsFileSystemAliasDeleted(conn, identifier, alias.(string)); err != nil {
-					return fmt.Errorf("Error waiting for FSX Windows filesystem alias (%s) to delete: %w", identifier, err)
+					return fmt.Errorf("Error waiting for FSX Windows filesystem (%s) alias (%s) to delete: %w", identifier, alias.(string), err)
 				}
 			}
 		}
 	}
-
-	// var addedAliases []*string
-
-	// for _, newAliasValue := range newAliasValues {
-	// 	exists := false
-
-	// 	for _, oldAliasValue := range oldAliasValues {
-	// 		if oldAliasValue == newAliasValue {
-	// 			exists = true
-	// 			break
-	// 		}
-	// 	}
-
-	// 	if !exists {
-	// 		addedAliases = append(addedAliases, newAliasValue)
-	// 	}
-	// }
 
 	return nil
 }
