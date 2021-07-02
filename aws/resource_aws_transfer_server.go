@@ -418,6 +418,11 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 
 					// Prevent the following error: InvalidRequestException: Changing Security Group is not supported
 					input.EndpointDetails.SecurityGroupIds = nil
+
+					// Update to 0 SubnetIds.
+					if input.EndpointDetails.SubnetIds == nil {
+						input.EndpointDetails.SubnetIds = []*string{}
+					}
 				}
 			}
 
