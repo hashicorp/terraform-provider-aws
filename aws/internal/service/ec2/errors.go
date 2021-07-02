@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	multierror "github.com/hashicorp/go-multierror"
 )
@@ -69,6 +70,7 @@ const (
 
 const (
 	ErrCodeInvalidVpcEndpointIdNotFound        = "InvalidVpcEndpointId.NotFound"
+	ErrCodeInvalidVpcEndpointNotFound          = "InvalidVpcEndpoint.NotFound"
 	ErrCodeInvalidVpcEndpointServiceIdNotFound = "InvalidVpcEndpointServiceId.NotFound"
 )
 
@@ -86,7 +88,7 @@ func UnsuccessfulItemError(apiObject *ec2.UnsuccessfulItemError) error {
 		return nil
 	}
 
-	return fmt.Errorf("%s: %s", aws.StringValue(apiObject.Code), aws.StringValue(apiObject.Message))
+	return awserr.New(aws.StringValue(apiObject.Code), aws.StringValue(apiObject.Message), nil)
 }
 
 func UnsuccessfulItemsError(apiObjects []*ec2.UnsuccessfulItem) error {

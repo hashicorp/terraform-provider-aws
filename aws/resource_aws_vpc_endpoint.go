@@ -377,20 +377,16 @@ func resourceAwsVpcEndpointDelete(d *schema.ResourceData, meta interface{}) erro
 
 	output, err := conn.DeleteVpcEndpoints(input)
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVpcEndpointIdNotFound) {
+	if err == nil && output != nil {
+		err = tfec2.UnsuccessfulItemsError(output.Unsuccessful)
+	}
+
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVpcEndpointNotFound) {
 		return nil
 	}
 
 	if err != nil {
 		return fmt.Errorf("error deleting EC2 VPC Endpoint (%s): %w", d.Id(), err)
-	}
-
-	if output != nil && len(output.Unsuccessful) > 0 {
-		err := tfec2.UnsuccessfulItemsError(output.Unsuccessful)
-
-		if err != nil {
-			return fmt.Errorf("error deleting EC2 VPC Endpoint (%s): %w", d.Id(), err)
-		}
 	}
 
 	_, err = waiter.VpcEndpointDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
