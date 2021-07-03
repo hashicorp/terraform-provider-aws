@@ -46,7 +46,7 @@ func TestAccAWSEcrReplicationConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.0.region", testAccGetAlternateRegion()),
 					testAccCheckResourceAttrAccountID(resourceName, "replication_configuration.0.rule.0.destination.0.registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.1.region", testAccGetThirdRegion()),
-					testAccCheckResourceAttrAccountID(resourceName, "replication_configuration.0.rule.0.destination..registry_id"),
+					testAccCheckResourceAttrAccountID(resourceName, "replication_configuration.0.rule.0.destination.1.registry_id"),
 				),
 			},
 			{
