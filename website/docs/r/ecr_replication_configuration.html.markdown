@@ -47,7 +47,7 @@ resource "aws_ecr_replication_configuration" "example" {
       destination {
         region      = data.aws_regions.example.names[1]
         registry_id = data.aws_caller_identity.current.account_id
-      }      
+      }
     }
   }
 }
