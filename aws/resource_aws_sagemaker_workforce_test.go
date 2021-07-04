@@ -60,7 +60,7 @@ func testSweepSagemakerWorkforces(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSagemakerWorkforce_basic(t *testing.T) {
+func TestAccAWSSagemakerWorkforce_cognitoConfig(t *testing.T) {
 	var workforce sagemaker.Workforce
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_workforce.test"
@@ -72,7 +72,7 @@ func TestAccAWSSagemakerWorkforce_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSagemakerWorkforceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerWorkforceBasicConfig(rName),
+				Config: testAccAWSSagemakerWorkforceCognitoConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerWorkforceExists(resourceName, &workforce),
 					resource.TestCheckResourceAttr(resourceName, "workforce_name", rName),
@@ -95,6 +95,70 @@ func TestAccAWSSagemakerWorkforce_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSagemakerWorkforce_oidcConfig(t *testing.T) {
+	var workforce sagemaker.Workforce
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_workforce.test"
+	endpoint1 := "https://example.com"
+	endpoint2 := "https://test.example.com"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerWorkforceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerWorkforceOidcConfig(rName, endpoint1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerWorkforceExists(resourceName, &workforce),
+					resource.TestCheckResourceAttr(resourceName, "workforce_name", rName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`workforce/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cognito_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "oidc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.authorization_endpoint", endpoint1),
+					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.client_id", rName),
+					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.client_secret", rName),
+					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.issuer", endpoint1),
+					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.jwks_uri", endpoint1),
+					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.logout_endpoint", endpoint1),
+					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.token_endpoint", endpoint1),
+					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.user_info_endpoint", endpoint1),
+					resource.TestCheckResourceAttr(resourceName, "source_ip_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_ip_config.0.cidrs.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "subdomain"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"oidc_config.0.client_secret"},
+			},
+			{
+				Config: testAccAWSSagemakerWorkforceOidcConfig(rName, endpoint2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerWorkforceExists(resourceName, &workforce),
+					resource.TestCheckResourceAttr(resourceName, "workforce_name", rName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`workforce/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cognito_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "oidc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.authorization_endpoint", endpoint2),
+					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.client_id", rName),
+					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.client_secret", rName),
+					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.issuer", endpoint2),
+					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.jwks_uri", endpoint2),
+					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.logout_endpoint", endpoint2),
+					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.token_endpoint", endpoint2),
+					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.user_info_endpoint", endpoint2),
+					resource.TestCheckResourceAttr(resourceName, "source_ip_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_ip_config.0.cidrs.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "subdomain"),
+				),
+			},
+		},
+	})
+}
 func TestAccAWSSagemakerWorkforce_sourceIpConfig(t *testing.T) {
 	var workforce sagemaker.Workforce
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -154,7 +218,7 @@ func TestAccAWSSagemakerWorkforce_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSagemakerWorkforceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerWorkforceBasicConfig(rName),
+				Config: testAccAWSSagemakerWorkforceCognitoConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerWorkforceExists(resourceName, &workforce),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerWorkforce(), resourceName),
@@ -232,7 +296,7 @@ resource "aws_cognito_user_pool_domain" "test" {
 `, rName)
 }
 
-func testAccAWSSagemakerWorkforceBasicConfig(rName string) string {
+func testAccAWSSagemakerWorkforceCognitoConfig(rName string) string {
 	return testAccAWSSagemakerWorkforceBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_workforce" "test" {
   workforce_name = %[1]q
@@ -277,4 +341,23 @@ resource "aws_sagemaker_workforce" "test" {
   }
 }
 `, rName, cidr1, cidr2)
+}
+
+func testAccAWSSagemakerWorkforceOidcConfig(rName, endpoint string) string {
+	return testAccAWSSagemakerWorkforceBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_workforce" "test" {
+  workforce_name = %[1]q
+
+  oidc_config {
+	authorization_endpoint = %[2]q
+    client_id              = %[1]q
+    client_secret          = %[1]q
+	issuer                 = %[2]q
+	jwks_uri               = %[2]q
+	logout_endpoint        = %[2]q
+	token_endpoint         = %[2]q
+	user_info_endpoint     = %[2]q
+  }
+}
+`, rName, endpoint)
 }

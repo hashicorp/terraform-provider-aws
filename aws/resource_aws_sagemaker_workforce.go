@@ -201,8 +201,10 @@ func resourceAwsSagemakerWorkforceRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting cognito_config for Sagemaker Workforce (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("oidc_config", flattenSagemakerWorkforceOidcConfig(workforce.OidcConfig)); err != nil {
-		return fmt.Errorf("error setting oidc_config for Sagemaker Workforce (%s): %w", d.Id(), err)
+	if workforce.OidcConfig != nil {
+		if err := d.Set("oidc_config", flattenSagemakerWorkforceOidcConfig(workforce.OidcConfig, d.Get("oidc_config.0.client_secret").(string))); err != nil {
+			return fmt.Errorf("error setting oidc_config for Sagemaker Workforce (%s): %w", d.Id(), err)
+		}
 	}
 
 	if err := d.Set("source_ip_config", flattenSagemakerWorkforceSourceIpConfig(workforce.SourceIpConfig)); err != nil {
@@ -219,8 +221,12 @@ func resourceAwsSagemakerWorkforceUpdate(d *schema.ResourceData, meta interface{
 		WorkforceName: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("source_ip_config"); ok {
-		input.SourceIpConfig = expandSagemakerWorkforceSourceIpConfig(v.([]interface{}))
+	if d.HasChange("source_ip_config") {
+		input.SourceIpConfig = expandSagemakerWorkforceSourceIpConfig(d.Get("source_ip_config").([]interface{}))
+	}
+
+	if d.HasChange("oidc_config") {
+		input.OidcConfig = expandSagemakerWorkforceOidcConfig(d.Get("oidc_config").([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Sagemaker Workforce update config: %#v", *input)
@@ -240,7 +246,7 @@ func resourceAwsSagemakerWorkforceDelete(d *schema.ResourceData, meta interface{
 	}
 
 	if _, err := conn.DeleteWorkforce(input); err != nil {
-		if isAWSErr(err, "ValidationException", "Cannot find Workforce") {
+		if isAWSErr(err, "ValidationException", "No workforce found for account") {
 			return nil
 		}
 		return fmt.Errorf("error deleting SageMaker workforce (%s): %w", d.Id(), err)
@@ -324,7 +330,7 @@ func expandSagemakerWorkforceOidcConfig(l []interface{}) *sagemaker.OidcConfig {
 	return config
 }
 
-func flattenSagemakerWorkforceOidcConfig(config *sagemaker.OidcConfigForResponse) []map[string]interface{} {
+func flattenSagemakerWorkforceOidcConfig(config *sagemaker.OidcConfigForResponse, clientSecret string) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -332,6 +338,7 @@ func flattenSagemakerWorkforceOidcConfig(config *sagemaker.OidcConfigForResponse
 	m := map[string]interface{}{
 		"authorization_endpoint": aws.StringValue(config.AuthorizationEndpoint),
 		"client_id":              aws.StringValue(config.ClientId),
+		"client_secret":          clientSecret,
 		"issuer":                 aws.StringValue(config.Issuer),
 		"jwks_uri":               aws.StringValue(config.JwksUri),
 		"logout_endpoint":        aws.StringValue(config.LogoutEndpoint),
