@@ -95,6 +95,53 @@ func TestAccAWSSagemakerWorkforce_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSagemakerWorkforce_sourceIpConfig(t *testing.T) {
+	var workforce sagemaker.Workforce
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_workforce.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerWorkforceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerWorkforceSourceIpConfig1(rName, "1.1.1.1/32"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerWorkforceExists(resourceName, &workforce),
+					resource.TestCheckResourceAttr(resourceName, "source_ip_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_ip_config.0.cidrs.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "source_ip_config.0.cidrs.*", "1.1.1.1/32"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSagemakerWorkforceSourceIpConfig2(rName, "2.2.2.2/32", "3.3.3.3/32"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerWorkforceExists(resourceName, &workforce),
+					resource.TestCheckResourceAttr(resourceName, "source_ip_config.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "source_ip_config.0.cidrs.*", "2.2.2.2/32"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "source_ip_config.0.cidrs.*", "3.3.3.3/32"),
+				),
+			},
+			{
+				Config: testAccAWSSagemakerWorkforceSourceIpConfig1(rName, "2.2.2.2/32"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerWorkforceExists(resourceName, &workforce),
+					resource.TestCheckResourceAttr(resourceName, "source_ip_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_ip_config.0.cidrs.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "source_ip_config.0.cidrs.*", "2.2.2.2/32"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSagemakerWorkforce_disappears(t *testing.T) {
 	var workforce sagemaker.Workforce
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -196,4 +243,38 @@ resource "aws_sagemaker_workforce" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAWSSagemakerWorkforceSourceIpConfig1(rName, cidr1 string) string {
+	return testAccAWSSagemakerWorkforceBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_workforce" "test" {
+  workforce_name = %[1]q
+
+  cognito_config {
+    client_id = aws_cognito_user_pool_client.test.id
+    user_pool = aws_cognito_user_pool_domain.test.user_pool_id
+  }
+
+  source_ip_config {
+    cidrs = [%[2]q]
+  }
+}
+`, rName, cidr1)
+}
+
+func testAccAWSSagemakerWorkforceSourceIpConfig2(rName, cidr1, cidr2 string) string {
+	return testAccAWSSagemakerWorkforceBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_workforce" "test" {
+  workforce_name = %[1]q
+
+  cognito_config {
+    client_id = aws_cognito_user_pool_client.test.id
+    user_pool = aws_cognito_user_pool_domain.test.user_pool_id
+  }
+
+  source_ip_config {
+    cidrs = [%[2]q, %[3]q]
+  }
+}
+`, rName, cidr1, cidr2)
 }
