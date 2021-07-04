@@ -47,6 +47,7 @@ The following arguments are supported:
 * `name` - (Optional) The name of the model (must be unique). If omitted, Terraform will assign a random, unique name.
 * `primary_container` - (Optional) The primary docker image containing inference code that is used when the model is deployed for predictions.  If not specified, the `container` argument is required. Fields are documented below.
 * `execution_role_arn` - (Required) A role that SageMaker can assume to access model artifacts and docker images for deployment.
+* `inference_execution_config` - (Optional) Specifies details of how containers in a multi-container endpoint are called. see [Inference Execution Config](#inference-execution-config).
 * `container` (Optional) -  Specifies containers in the inference pipeline. If not specified, the `primary_container` argument is required. Fields are documented below.
 * `enable_network_isolation` (Optional) - Isolates the model container. No inbound or outbound network calls can be made to or from the model container.
 * `vpc_config` (Optional) - Specifies the VPC that you want your model to connect to. VpcConfig is used in hosting services and in batch transform.
@@ -65,6 +66,10 @@ The `primary_container` and `container` block both support:
 ### Image Config
 
 * `repository_access_mode` - (Required) Specifies whether the model container is in Amazon ECR or a private Docker registry accessible from your Amazon Virtual Private Cloud (VPC). Allowed values are: `Platform` and `Vpc`.
+
+## Inference Execution Config
+
+* `mode` - (Required) How containers in a multi-container are run. The following values are valid `Serial` and `Direct`.
 
 ## Attributes Reference
 
