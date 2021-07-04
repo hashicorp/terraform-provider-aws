@@ -349,14 +349,14 @@ resource "aws_sagemaker_workforce" "test" {
   workforce_name = %[1]q
 
   oidc_config {
-	authorization_endpoint = %[2]q
+    authorization_endpoint = %[2]q
     client_id              = %[1]q
     client_secret          = %[1]q
-	issuer                 = %[2]q
-	jwks_uri               = %[2]q
-	logout_endpoint        = %[2]q
-	token_endpoint         = %[2]q
-	user_info_endpoint     = %[2]q
+    issuer                 = %[2]q
+    jwks_uri               = %[2]q
+    logout_endpoint        = %[2]q
+    token_endpoint         = %[2]q
+    user_info_endpoint     = %[2]q
   }
 }
 `, rName, endpoint)
