@@ -20,7 +20,7 @@ resource "aws_sagemaker_model" "example" {
   execution_role_arn = aws_iam_role.example.arn
 
   primary_container {
-    image = "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
+    image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 }
 
@@ -37,6 +37,10 @@ data "aws_iam_policy_document" "assume_role" {
       identifiers = ["sagemaker.amazonaws.com"]
     }
   }
+}
+
+data "aws_sagemaker_prebuilt_ecr_image" "test" {
+  repository_name = "kmeans"
 }
 ```
 
