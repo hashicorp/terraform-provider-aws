@@ -838,7 +838,7 @@ func testAccCheckVpcNetACLTagged(n string, tags_nb int, tag_key string, tag_valu
 			if len(v[0].Tags) != tags_nb {
 				return fmt.Errorf("VPC default Network ACL has bad number of tags [%d, expected %d]", len(v[0].Tags), tags_nb)
 			}
-			if (tags_nb > 0) {
+			if tags_nb > 0 {
 				if *v[0].Tags[0].Key != tag_key {
 					return fmt.Errorf("VPC default Network ACL bad tag key [%s, expected %s]", *v[0].Tags[0].Key, tag_key)
 				}
@@ -886,7 +886,7 @@ func testAccCheckVpcSecGrpTagged(n string, tags_nb int, tag_key string, tag_valu
 			if len(v[0].Tags) != tags_nb {
 				return fmt.Errorf("VPC default Security Group has bad number of tags [%d, %d expected]", len(v[0].Tags), tags_nb)
 			}
-			if (tags_nb > 0) {
+			if tags_nb > 0 {
 				if *v[0].Tags[0].Key != tag_key {
 					return fmt.Errorf("VPC default Security Group bad tag key [%s, expected %s]", *v[0].Tags[0].Key, tag_key)
 				}
@@ -935,7 +935,7 @@ func testAccCheckVpcRtTblTagged(n string, tags_nb int, tag_key string, tag_value
 			if len(v[0].Tags) != tags_nb {
 				return fmt.Errorf("VPC default Route Table has bad number of tags [%d, %d expected]", len(v[0].Tags), tags_nb)
 			}
-			if (tags_nb > 0) {
+			if tags_nb > 0 {
 				if *v[0].Tags[0].Key != tag_key {
 					return fmt.Errorf("VPC default Route Table bad tag key [%s, expected %s]", *v[0].Tags[0].Key, tag_key)
 				}
