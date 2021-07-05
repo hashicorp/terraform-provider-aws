@@ -12,7 +12,7 @@ Manages an EKS Identity Provider Configuration.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_eks_identity_provider_config" "example" {
   cluster_name = aws_eks_cluster.example.name
   oidc {
