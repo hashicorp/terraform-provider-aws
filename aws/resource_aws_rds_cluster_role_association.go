@@ -19,11 +19,11 @@ const (
 	rdsDbClusterRoleStatusPending = "PENDING"
 )
 
-func resourceAwsDbClusterRoleAssociation() *schema.Resource {
+func resourceAwsRDSClusterRoleAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbClusterRoleAssociationCreate,
-		Read:   resourceAwsDbClusterRoleAssociationRead,
-		Delete: resourceAwsDbClusterRoleAssociationDelete,
+		Create: resourceAwsRDSClusterRoleAssociationCreate,
+		Read:   resourceAwsRDSClusterRoleAssociationRead,
+		Delete: resourceAwsRDSClusterRoleAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -50,7 +50,7 @@ func resourceAwsDbClusterRoleAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsDbClusterRoleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsRDSClusterRoleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
 	dbClusterIdentifier := d.Get("db_cluster_identifier").(string)
@@ -75,10 +75,10 @@ func resourceAwsDbClusterRoleAssociationCreate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error waiting for RDS DB Cluster (%s) IAM Role (%s) association: %s", dbClusterIdentifier, roleArn, err)
 	}
 
-	return resourceAwsDbClusterRoleAssociationRead(d, meta)
+	return resourceAwsRDSClusterRoleAssociationRead(d, meta)
 }
 
-func resourceAwsDbClusterRoleAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsRDSClusterRoleAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
 	dbClusterIdentifier, roleArn, err := resourceAwsDbClusterRoleAssociationDecodeID(d.Id())
@@ -112,7 +112,7 @@ func resourceAwsDbClusterRoleAssociationRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsDbClusterRoleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsRDSClusterRoleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
 	dbClusterIdentifier, roleArn, err := resourceAwsDbClusterRoleAssociationDecodeID(d.Id())

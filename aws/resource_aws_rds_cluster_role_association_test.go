@@ -11,23 +11,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSDbClusterRoleAssociation_basic(t *testing.T) {
-	var dbClusterRole1 rds.DBClusterRole
+func TestAccAWSRDSClusterRoleAssociation_basic(t *testing.T) {
+	var dbClusterRole rds.DBClusterRole
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dbClusterResourceName := "aws_rds_cluster.test"
 	iamRoleResourceName := "aws_iam_role.test"
-	resourceName := "aws_db_cluster_role_association.test"
+	resourceName := "aws_rds_cluster_role_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDbClusterRoleAssociationDestroy,
+		CheckDestroy: testAccCheckAWSRDSClusterRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDbClusterRoleAssociationConfig(rName),
+				Config: testAccAWSRDSClusterRoleAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDbClusterRoleAssociationExists(resourceName, &dbClusterRole1),
+					testAccCheckAWSRDSClusterRoleAssociationExists(resourceName, &dbClusterRole),
 					resource.TestCheckResourceAttrPair(resourceName, "db_cluster_identifier", dbClusterResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "feature_name", "s3Import"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
@@ -42,25 +42,22 @@ func TestAccAWSDbClusterRoleAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDbClusterRoleAssociation_disappears(t *testing.T) {
-	var dbCluster1 rds.DBCluster
-	var dbClusterRole1 rds.DBClusterRole
+func TestAccAWSRDSClusterRoleAssociation_disappears(t *testing.T) {
+	var dbClusterRole rds.DBClusterRole
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	dbClusterResourceName := "aws_rds_cluster.test"
-	resourceName := "aws_db_cluster_role_association.test"
+	resourceName := "aws_rds_cluster_role_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDbClusterRoleAssociationDestroy,
+		CheckDestroy: testAccCheckAWSRDSClusterRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDbClusterRoleAssociationConfig(rName),
+				Config: testAccAWSRDSClusterRoleAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSClusterExists(dbClusterResourceName, &dbCluster1),
-					testAccCheckAWSDbClusterRoleAssociationExists(resourceName, &dbClusterRole1),
-					testAccCheckAWSDbClusterRoleAssociationDisappears(&dbCluster1, &dbClusterRole1),
+					testAccCheckAWSRDSClusterRoleAssociationExists(resourceName, &dbClusterRole),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRDSClusterRoleAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -68,7 +65,7 @@ func TestAccAWSDbClusterRoleAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSDbClusterRoleAssociationExists(resourceName string, dbClusterRole *rds.DBClusterRole) resource.TestCheckFunc {
+func testAccCheckAWSRDSClusterRoleAssociationExists(resourceName string, dbClusterRole *rds.DBClusterRole) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -104,7 +101,7 @@ func testAccCheckAWSDbClusterRoleAssociationExists(resourceName string, dbCluste
 	}
 }
 
-func testAccCheckAWSDbClusterRoleAssociationDestroy(s *terraform.State) error {
+func testAccCheckAWSRDSClusterRoleAssociationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).rdsconn
 
 	for _, rs := range s.RootModule().Resources {
@@ -138,27 +135,7 @@ func testAccCheckAWSDbClusterRoleAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSDbClusterRoleAssociationDisappears(dbCluster *rds.DBCluster, dbClusterRole *rds.DBClusterRole) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
-
-		input := &rds.RemoveRoleFromDBClusterInput{
-			DBClusterIdentifier: dbCluster.DBClusterIdentifier,
-			FeatureName:         dbClusterRole.FeatureName,
-			RoleArn:             dbClusterRole.RoleArn,
-		}
-
-		_, err := conn.RemoveRoleFromDBCluster(input)
-
-		if err != nil {
-			return err
-		}
-
-		return waitForRdsDbClusterRoleDisassociation(conn, aws.StringValue(dbCluster.DBClusterIdentifier), aws.StringValue(dbClusterRole.RoleArn))
-	}
-}
-
-func testAccAWSDbClusterRoleAssociationConfig(rName string) string {
+func testAccAWSRDSClusterRoleAssociationConfig(rName string) string {
 	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 data "aws_iam_policy_document" "rds_assume_role_policy" {
   statement {
@@ -189,7 +166,7 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot     = true
 }
 
-resource "aws_db_cluster_role_association" "test" {
+resource "aws_rds_cluster_role_association" "test" {
   db_cluster_identifier = aws_rds_cluster.test.id
   feature_name          = "s3Import"
   role_arn              = aws_iam_role.test.arn
