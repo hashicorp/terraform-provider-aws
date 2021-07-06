@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -8,6 +9,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -17,10 +20,11 @@ import (
 
 func resourceAwsStorageGatewayFsxAssociateFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsStorageGatewayFsxAssociateFileSystemCreate,
-		Read:   resourceAwsStorageGatewayFsxAssociateFileSystemRead,
-		Update: resourceAwsStorageGatewayFsxAssociateFileSystemUpdate,
-		Delete: resourceAwsStorageGatewayFsxAssociateFileSystemDelete,
+		Create:        resourceAwsStorageGatewayFsxAssociateFileSystemCreate,
+		Read:          resourceAwsStorageGatewayFsxAssociateFileSystemRead,
+		Update:        resourceAwsStorageGatewayFsxAssociateFileSystemUpdate,
+		Delete:        resourceAwsStorageGatewayFsxAssociateFileSystemDelete,
+		CustomizeDiff: customdiff.Sequence(SetTagsDiff),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -120,11 +124,19 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemCreate(d *schema.ResourceDat
 	log.Printf("[DEBUG] Associating File System to Storage Gateway: %s", input)
 	output, err := conn.AssociateFileSystem(input)
 	if err != nil {
-		if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified fsx file system was not found.") {
-			log.Printf("[WARN] FSX File System %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
+		if tfawserr.ErrCodeEquals(err, storagegateway.ErrCodeInvalidGatewayRequestException) {
+			var igrex *storagegateway.InvalidGatewayRequestException
+			if ok := errors.As(err, &igrex); ok {
+				if err := igrex.Error_; err != nil {
+					if aws.StringValue(err.ErrorCode) == "FileSystemAssociationNotFound" {
+						log.Printf("[WARN] FSX File System %q not found, removing from state", d.Id())
+						d.SetId("")
+						return nil
+					}
+				}
+			}
 		}
+
 		return fmt.Errorf("Error associating file system to storage gateway: %w", err)
 	}
 
@@ -150,11 +162,19 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemRead(d *schema.ResourceData,
 	log.Printf("[DEBUG] Reading Storage Gateway FSx File Systems: %s", input)
 	output, err := conn.DescribeFileSystemAssociations(input)
 	if err != nil {
-		if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified fsx file system was not found.") {
-			log.Printf("[WARN] Storage Gateway FSx File System Assocation %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
+		if tfawserr.ErrCodeEquals(err, storagegateway.ErrCodeInvalidGatewayRequestException) {
+			var igrex *storagegateway.InvalidGatewayRequestException
+			if ok := errors.As(err, &igrex); ok {
+				if err := igrex.Error_; err != nil {
+					if aws.StringValue(err.ErrorCode) == "FileSystemAssociationNotFound" {
+						log.Printf("[WARN] FSX File System %q not found, removing from state", d.Id())
+						d.SetId("")
+						return nil
+					}
+				}
+			}
 		}
+
 		return fmt.Errorf("error reading Storage Gateway FSx File System: %w", err)
 	}
 
@@ -241,8 +261,8 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemDelete(d *schema.ResourceDat
 	log.Printf("[DEBUG] Deleting Storage Gateway File System Association: %s", input)
 	_, err := conn.DisassociateFileSystem(input)
 	if err != nil {
-		if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified fsx file system was not found.") {
-			log.Printf("[WARN] Storage Gateway FSx File System Assocation %q not found, removing from state", d.Id())
+		if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file system association") {
+			log.Printf("[WARN] Storage Gateway FSx File System Association %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}

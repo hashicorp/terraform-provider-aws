@@ -1,6 +1,7 @@
 package waiter
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -149,8 +150,17 @@ func FsxFileSystemStatus(conn *storagegateway.StorageGateway, fileSystemArn stri
 		log.Printf("[DEBUG] Reading Storage Gateway FSx File System: %s", input)
 		output, err := conn.DescribeFileSystemAssociations(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file system association was not found.") {
-				return nil, FsxFileSystemStatusNotFound, nil
+			// currently verbose, can update for clarity pending: https://github.com/hashicorp/aws-sdk-go-base/issues/59
+			if tfawserr.ErrCodeEquals(err, storagegateway.ErrCodeInvalidGatewayRequestException) {
+
+				var igrex *storagegateway.InvalidGatewayRequestException
+				if ok := errors.As(err, &igrex); ok {
+					if err := igrex.Error_; err != nil {
+						if aws.StringValue(err.ErrorCode) == "FileSystemAssociationNotFound" {
+							return nil, FsxFileSystemStatusNotFound, nil
+						}
+					}
+				}
 			}
 			return nil, FsxFileSystemStatusUnknown, fmt.Errorf("error reading Storage Gateway FSx File System: %w", err)
 		}
