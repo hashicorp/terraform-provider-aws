@@ -14,8 +14,8 @@ const (
 	SchemaAvailableTimeout        = 2 * time.Minute
 	SchemaDeleteTimeout           = 2 * time.Minute
 	SchemaVersionAvailableTimeout = 2 * time.Minute
-	TriggerCreateTimeout          = 2 * time.Minute
-	TriggerDeleteTimeout          = 2 * time.Minute
+	TriggerCreateTimeout          = 5 * time.Minute
+	TriggerDeleteTimeout          = 5 * time.Minute
 )
 
 // MLTransformDeleted waits for an MLTransform to return Deleted
@@ -114,6 +114,7 @@ func TriggerCreated(conn *glue.Glue, triggerName string) (*glue.GetTriggerOutput
 		Pending: []string{
 			glue.TriggerStateActivating,
 			glue.TriggerStateCreating,
+			glue.TriggerStateUpdating,
 		},
 		Target: []string{
 			glue.TriggerStateActivated,

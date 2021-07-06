@@ -6,9 +6,11 @@ import (
 	"log"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awspolicy "github.com/jen20/awspolicyequivalence"
+	tfnet "github.com/terraform-providers/terraform-provider-aws/aws/internal/net"
 )
 
 func suppressEquivalentAwsPolicyDiffs(k, old, new string, d *schema.ResourceData) bool {
@@ -81,6 +83,18 @@ func suppressEquivalentJsonDiffs(k, old, new string, d *schema.ResourceData) boo
 	return jsonBytesEqual(ob.Bytes(), nb.Bytes())
 }
 
+func suppressEquivalentJsonEmptyNilDiffs(k, old, new string, d *schema.ResourceData) bool {
+	if old == "[]" && new == "" {
+		return true
+	}
+
+	if old == "" && new == "[]" {
+		return true
+	}
+
+	return suppressEquivalentJsonDiffs(k, old, new, d)
+}
+
 func suppressOpenIdURL(k, old, new string, d *schema.ResourceData) bool {
 	oldUrl, err := url.Parse(old)
 	if err != nil {
@@ -118,5 +132,21 @@ func suppressEquivalentJsonOrYamlDiffs(k, old, new string, d *schema.ResourceDat
 // suppressEqualCIDRBlockDiffs provides custom difference suppression for CIDR blocks
 // that have different string values but represent the same CIDR.
 func suppressEqualCIDRBlockDiffs(k, old, new string, d *schema.ResourceData) bool {
-	return cidrBlocksEqual(old, new)
+	return tfnet.CIDRBlocksEqual(old, new)
+}
+
+// suppressEquivalentTime suppresses differences for time values that represent the same
+// instant in different timezones.
+func suppressEquivalentTime(k, old, new string, d *schema.ResourceData) bool {
+	oldTime, err := time.Parse(time.RFC3339, old)
+	if err != nil {
+		return false
+	}
+
+	newTime, err := time.Parse(time.RFC3339, new)
+	if err != nil {
+		return false
+	}
+
+	return oldTime.Equal(newTime)
 }
