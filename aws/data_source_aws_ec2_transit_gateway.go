@@ -67,6 +67,11 @@ func dataSourceAwsEc2TransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"transit_gateway_cidr_blocks": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -120,6 +125,9 @@ func dataSourceAwsEc2TransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("dns_support", transitGateway.Options.DnsSupport)
 	d.Set("owner_id", transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)
+	if err := d.Set("transit_gateway_cidr_blocks", flattenStringList(transitGateway.Options.TransitGatewayCidrBlocks)); err != nil {
+		return fmt.Errorf("error setting transit_gateway_cidr_blocks: %s", err)
+	}
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGateway.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)

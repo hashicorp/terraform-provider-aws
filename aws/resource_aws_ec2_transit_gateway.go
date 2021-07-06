@@ -109,6 +109,12 @@ func resourceAwsEc2TransitGateway() *schema.Resource {
 					ec2.VpnEcmpSupportValueEnable,
 				}, false),
 			},
+			"transit_gateway_cidr_blocks": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
 		},
 	}
 }
@@ -133,6 +139,10 @@ func resourceAwsEc2TransitGatewayCreate(d *schema.ResourceData, meta interface{}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("transit_gateway_cidr_blocks"); ok {
+		input.Options.TransitGatewayCidrBlocks = expandStringSet(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway: %s", input)
@@ -193,6 +203,10 @@ func resourceAwsEc2TransitGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("owner_id", transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)
 
+	if err := d.Set("transit_gateway_cidr_blocks", flattenStringList(transitGateway.Options.TransitGatewayCidrBlocks)); err != nil {
+		return fmt.Errorf("error setting transit_gateway_cidr_blocks: %s", err)
+	}
+
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGateway.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
@@ -239,6 +253,15 @@ func resourceAwsEc2TransitGatewayUpdate(d *schema.ResourceData, meta interface{}
 		transitGatewayModified = true
 		options.VpnEcmpSupport = aws.String(d.Get("vpn_ecmp_support").(string))
 	}
+
+	if d.HasChange("transit_gateway_cidr_blocks") {
+		oldTransitGatewayCidrBlocks, newTransitGatewayCidrBlocks := d.GetChange("transit_gateway_cidr_blocks")
+
+		transitGatewayModified = true
+		options.AddTransitGatewayCidrBlocks = expandStringSet(newTransitGatewayCidrBlocks.(*schema.Set))
+		options.RemoveTransitGatewayCidrBlocks = expandStringSet(oldTransitGatewayCidrBlocks.(*schema.Set))
+	}
+
 	if transitGatewayModified {
 		modifyTransitGatewayInput.TransitGatewayId = aws.String(d.Id())
 		modifyTransitGatewayInput.Options = options
