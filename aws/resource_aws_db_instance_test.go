@@ -4336,7 +4336,7 @@ func testAccAWSDBInstanceConfig_MSSQLDomain(rName, directory1, directory2 string
 	return composeConfig(
 		testAccAWSDBInstanceConfig_MSSQLDomain_SharedConfig(rName, directory1),
 		fmt.Sprintf(`
-resource "aws_db_instance" "mssql" {
+resource "aws_db_instance" "test" {
   allocated_storage       = 20
   backup_retention_period = 0
   db_subnet_group_name    = aws_db_subnet_group.test.name
