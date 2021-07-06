@@ -63,7 +63,7 @@ func resourceAwsRDSClusterRoleAssociationCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error creating RDS DB Cluster (%s) IAM Role (%s) Association: %w", dbClusterID, roleARN, err)
 	}
 
-	d.SetId(tfrds.DBClusterRoleAssociationCreateResourceID(dbClusterID, roleARN))
+	d.SetId(tfrds.ClusterRoleAssociationCreateResourceID(dbClusterID, roleARN))
 
 	_, err = waiter.DBClusterRoleAssociationCreated(conn, dbClusterID, roleARN)
 
@@ -77,7 +77,7 @@ func resourceAwsRDSClusterRoleAssociationCreate(d *schema.ResourceData, meta int
 func resourceAwsRDSClusterRoleAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
-	dbClusterID, roleARN, err := tfrds.DBClusterRoleAssociationParseResourceID(d.Id())
+	dbClusterID, roleARN, err := tfrds.ClusterRoleAssociationParseResourceID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing RDS DB Cluster IAM Role Association ID: %s", err)
@@ -105,7 +105,7 @@ func resourceAwsRDSClusterRoleAssociationRead(d *schema.ResourceData, meta inter
 func resourceAwsRDSClusterRoleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
-	dbClusterID, roleARN, err := tfrds.DBClusterRoleAssociationParseResourceID(d.Id())
+	dbClusterID, roleARN, err := tfrds.ClusterRoleAssociationParseResourceID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing RDS DB Cluster IAM Role Association ID: %s", err)

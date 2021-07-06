@@ -67,6 +67,54 @@ func TestAccAWSRDSClusterRoleAssociation_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSRDSClusterRoleAssociation_disappears_cluster(t *testing.T) {
+	var dbClusterRole rds.DBClusterRole
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_rds_cluster_role_association.test"
+	clusterResourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRDSClusterRoleAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRDSClusterRoleAssociationConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRDSClusterRoleAssociationExists(resourceName, &dbClusterRole),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRDSCluster(), clusterResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSClusterRoleAssociation_disappears_role(t *testing.T) {
+	var dbClusterRole rds.DBClusterRole
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_rds_cluster_role_association.test"
+	roleResourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRDSClusterRoleAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRDSClusterRoleAssociationConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRDSClusterRoleAssociationExists(resourceName, &dbClusterRole),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsIamRole(), roleResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSRDSClusterRoleAssociationExists(resourceName string, v *rds.DBClusterRole) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -75,7 +123,7 @@ func testAccCheckAWSRDSClusterRoleAssociationExists(resourceName string, v *rds.
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		dbClusterID, roleARN, err := tfrds.DBClusterRoleAssociationParseResourceID(rs.Primary.ID)
+		dbClusterID, roleARN, err := tfrds.ClusterRoleAssociationParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -103,7 +151,7 @@ func testAccCheckAWSRDSClusterRoleAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		dbClusterID, roleARN, err := tfrds.DBClusterRoleAssociationParseResourceID(rs.Primary.ID)
+		dbClusterID, roleARN, err := tfrds.ClusterRoleAssociationParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err

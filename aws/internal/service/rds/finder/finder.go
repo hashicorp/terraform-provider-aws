@@ -109,5 +109,14 @@ func DBClusterByID(conn *rds.RDS, id string) (*rds.DBCluster, error) {
 		}
 	}
 
-	return output.DBClusters[0], nil
+	dbCluster := output.DBClusters[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(dbCluster.DBClusterIdentifier) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return dbCluster, nil
 }
