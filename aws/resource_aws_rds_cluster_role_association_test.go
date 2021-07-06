@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfrds "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSRDSClusterRoleAssociation_basic(t *testing.T) {
@@ -65,37 +67,29 @@ func TestAccAWSRDSClusterRoleAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSRDSClusterRoleAssociationExists(resourceName string, dbClusterRole *rds.DBClusterRole) resource.TestCheckFunc {
+func testAccCheckAWSRDSClusterRoleAssociationExists(resourceName string, v *rds.DBClusterRole) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
 		if !ok {
-			return fmt.Errorf("Resource not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		dbClusterIdentifier, roleArn, err := resourceAwsDbClusterRoleAssociationDecodeID(rs.Primary.ID)
-
-		if err != nil {
-			return fmt.Errorf("error reading resource ID: %s", err)
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
-
-		role, err := rdsDescribeDbClusterRole(conn, dbClusterIdentifier, roleArn)
+		dbClusterID, roleARN, err := tfrds.DBClusterRoleAssociationParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if role == nil {
-			return fmt.Errorf("RDS DB Cluster IAM Role Association not found")
+		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+
+		role, err := finder.DBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
+
+		if err != nil {
+			return err
 		}
 
-		if aws.StringValue(role.Status) != "ACTIVE" {
-			return fmt.Errorf("RDS DB Cluster (%s) IAM Role (%s) association exists in non-ACTIVE (%s) state", dbClusterIdentifier, roleArn, aws.StringValue(role.Status))
-		}
-
-		*dbClusterRole = *role
+		*v = *role
 
 		return nil
 	}
@@ -109,15 +103,15 @@ func testAccCheckAWSRDSClusterRoleAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		dbClusterIdentifier, roleArn, err := resourceAwsDbClusterRoleAssociationDecodeID(rs.Primary.ID)
+		dbClusterID, roleARN, err := tfrds.DBClusterRoleAssociationParseResourceID(rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error reading resource ID: %s", err)
+			return err
 		}
 
-		dbClusterRole, err := rdsDescribeDbClusterRole(conn, dbClusterIdentifier, roleArn)
+		_, err = finder.DBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
 
-		if isAWSErr(err, rds.ErrCodeDBClusterNotFoundFault, "") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -125,11 +119,7 @@ func testAccCheckAWSRDSClusterRoleAssociationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if dbClusterRole == nil {
-			continue
-		}
-
-		return fmt.Errorf("RDS DB Cluster (%s) IAM Role (%s) association still exists in non-deleted (%s) state", dbClusterIdentifier, roleArn, aws.StringValue(dbClusterRole.Status))
+		return fmt.Errorf("RDS DB Cluster IAM Role Association %s still exists", rs.Primary.ID)
 	}
 
 	return nil

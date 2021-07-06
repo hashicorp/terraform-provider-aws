@@ -3,20 +3,15 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-)
-
-// Constants not currently provided by the AWS Go SDK
-const (
-	rdsDbClusterRoleStatusActive  = "ACTIVE"
-	rdsDbClusterRoleStatusDeleted = "DELETED"
-	rdsDbClusterRoleStatusPending = "PENDING"
+	tfrds "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsRDSClusterRoleAssociation() *schema.Resource {
@@ -53,26 +48,27 @@ func resourceAwsRDSClusterRoleAssociation() *schema.Resource {
 func resourceAwsRDSClusterRoleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
-	dbClusterIdentifier := d.Get("db_cluster_identifier").(string)
-	roleArn := d.Get("role_arn").(string)
-
+	dbClusterID := d.Get("db_cluster_identifier").(string)
+	roleARN := d.Get("role_arn").(string)
 	input := &rds.AddRoleToDBClusterInput{
-		DBClusterIdentifier: aws.String(dbClusterIdentifier),
+		DBClusterIdentifier: aws.String(dbClusterID),
 		FeatureName:         aws.String(d.Get("feature_name").(string)),
-		RoleArn:             aws.String(roleArn),
+		RoleArn:             aws.String(roleARN),
 	}
 
-	log.Printf("[DEBUG] RDS DB Cluster (%s) IAM Role associating: %s", dbClusterIdentifier, roleArn)
+	log.Printf("[DEBUG] Creating RDS DB Cluster IAM Role Association: %s", input)
 	_, err := conn.AddRoleToDBCluster(input)
 
 	if err != nil {
-		return fmt.Errorf("error associating RDS DB Cluster (%s) IAM Role (%s): %s", dbClusterIdentifier, roleArn, err)
+		return fmt.Errorf("error creating RDS DB Cluster (%s) IAM Role (%s) Association: %w", dbClusterID, roleARN, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s,%s", dbClusterIdentifier, roleArn))
+	d.SetId(tfrds.DBClusterRoleAssociationCreateResourceID(dbClusterID, roleARN))
 
-	if err := waitForRdsDbClusterRoleAssociation(conn, dbClusterIdentifier, roleArn); err != nil {
-		return fmt.Errorf("error waiting for RDS DB Cluster (%s) IAM Role (%s) association: %s", dbClusterIdentifier, roleArn, err)
+	_, err = waiter.DBClusterRoleAssociationCreated(conn, dbClusterID, roleARN)
+
+	if err != nil {
+		return fmt.Errorf("error waiting for RDS DB Cluster (%s) IAM Role (%s) Association to create: %w", dbClusterID, roleARN, err)
 	}
 
 	return resourceAwsRDSClusterRoleAssociationRead(d, meta)
@@ -81,33 +77,27 @@ func resourceAwsRDSClusterRoleAssociationCreate(d *schema.ResourceData, meta int
 func resourceAwsRDSClusterRoleAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
-	dbClusterIdentifier, roleArn, err := resourceAwsDbClusterRoleAssociationDecodeID(d.Id())
+	dbClusterID, roleARN, err := tfrds.DBClusterRoleAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading resource ID: %s", err)
+		return fmt.Errorf("error parsing RDS DB Cluster IAM Role Association ID: %s", err)
 	}
 
-	dbClusterRole, err := rdsDescribeDbClusterRole(conn, dbClusterIdentifier, roleArn)
+	output, err := finder.DBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
 
-	if isAWSErr(err, rds.ErrCodeDBClusterNotFoundFault, "") {
-		log.Printf("[WARN] RDS DB Cluster (%s) not found, removing from state", dbClusterIdentifier)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] RDS DB Cluster (%s) IAM Role (%s) Association not found, removing from state", dbClusterID, roleARN)
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS DB Cluster (%s) IAM Role (%s) association: %s", dbClusterIdentifier, roleArn, err)
+		return fmt.Errorf("error reading RDS DB Cluster (%s) IAM Role (%s) Association: %w", dbClusterID, roleARN, err)
 	}
 
-	if dbClusterRole == nil {
-		log.Printf("[WARN] RDS DB Cluster (%s) IAM Role (%s) association not found, removing from state", dbClusterIdentifier, roleArn)
-		d.SetId("")
-		return nil
-	}
-
-	d.Set("db_cluster_identifier", dbClusterIdentifier)
-	d.Set("feature_name", dbClusterRole.FeatureName)
-	d.Set("role_arn", dbClusterRole.RoleArn)
+	d.Set("db_cluster_identifier", dbClusterID)
+	d.Set("feature_name", output.FeatureName)
+	d.Set("role_arn", output.RoleArn)
 
 	return nil
 }
@@ -115,140 +105,34 @@ func resourceAwsRDSClusterRoleAssociationRead(d *schema.ResourceData, meta inter
 func resourceAwsRDSClusterRoleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
-	dbClusterIdentifier, roleArn, err := resourceAwsDbClusterRoleAssociationDecodeID(d.Id())
+	dbClusterID, roleARN, err := tfrds.DBClusterRoleAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading resource ID: %s", err)
+		return fmt.Errorf("error parsing RDS DB Cluster IAM Role Association ID: %s", err)
 	}
 
 	input := &rds.RemoveRoleFromDBClusterInput{
-		DBClusterIdentifier: aws.String(dbClusterIdentifier),
+		DBClusterIdentifier: aws.String(dbClusterID),
 		FeatureName:         aws.String(d.Get("feature_name").(string)),
-		RoleArn:             aws.String(roleArn),
+		RoleArn:             aws.String(roleARN),
 	}
 
-	log.Printf("[DEBUG] RDS DB Cluster (%s) IAM Role disassociating: %s", dbClusterIdentifier, roleArn)
+	log.Printf("[DEBUG] Deleting RDS DB Cluster IAM Role Association: %s", d.Id())
 	_, err = conn.RemoveRoleFromDBCluster(input)
 
-	if isAWSErr(err, rds.ErrCodeDBClusterNotFoundFault, "") {
-		return nil
-	}
-
-	if isAWSErr(err, rds.ErrCodeDBClusterRoleNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) || tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterRoleNotFoundFault) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error disassociating RDS DB Cluster (%s) IAM Role (%s): %s", dbClusterIdentifier, roleArn, err)
+		return fmt.Errorf("error deleting RDS DB Cluster (%s) IAM Role (%s) Association: %w", dbClusterID, roleARN, err)
 	}
 
-	if err := waitForRdsDbClusterRoleDisassociation(conn, dbClusterIdentifier, roleArn); err != nil {
-		return fmt.Errorf("error waiting for RDS DB Cluster (%s) IAM Role (%s) disassociation: %s", dbClusterIdentifier, roleArn, err)
+	_, err = waiter.DBClusterRoleAssociationDeleted(conn, dbClusterID, roleARN)
+
+	if err != nil {
+		return fmt.Errorf("error waiting for RDS DB Cluster (%s) IAM Role (%s) Association to delete: %w", dbClusterID, roleARN, err)
 	}
 
 	return nil
-}
-
-func resourceAwsDbClusterRoleAssociationDecodeID(id string) (string, string, error) {
-	parts := strings.SplitN(id, ",", 2)
-
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected DB-CLUSTER-ID,ROLE-ARN", id)
-	}
-
-	return parts[0], parts[1], nil
-}
-
-func rdsDescribeDbClusterRole(conn *rds.RDS, dbClusterIdentifier, roleArn string) (*rds.DBClusterRole, error) {
-	input := &rds.DescribeDBClustersInput{
-		DBClusterIdentifier: aws.String(dbClusterIdentifier),
-	}
-
-	log.Printf("[DEBUG] Describing RDS DB Cluster: %s", input)
-	output, err := conn.DescribeDBClusters(input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	var dbCluster *rds.DBCluster
-
-	for _, outputDbCluster := range output.DBClusters {
-		if aws.StringValue(outputDbCluster.DBClusterIdentifier) == dbClusterIdentifier {
-			dbCluster = outputDbCluster
-			break
-		}
-	}
-
-	if dbCluster == nil {
-		return nil, nil
-	}
-
-	var dbClusterRole *rds.DBClusterRole
-
-	for _, associatedRole := range dbCluster.AssociatedRoles {
-		if aws.StringValue(associatedRole.RoleArn) == roleArn {
-			dbClusterRole = associatedRole
-			break
-		}
-	}
-
-	return dbClusterRole, nil
-}
-
-func waitForRdsDbClusterRoleAssociation(conn *rds.RDS, dbClusterIdentifier, roleArn string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{rdsDbClusterRoleStatusPending},
-		Target:  []string{rdsDbClusterRoleStatusActive},
-		Refresh: func() (interface{}, string, error) {
-			dbClusterRole, err := rdsDescribeDbClusterRole(conn, dbClusterIdentifier, roleArn)
-
-			if err != nil {
-				return nil, "", err
-			}
-
-			return dbClusterRole, aws.StringValue(dbClusterRole.Status), nil
-		},
-		Timeout: 5 * time.Minute,
-		Delay:   5 * time.Second,
-	}
-
-	log.Printf("[DEBUG] Waiting for RDS DB Cluster (%s) IAM Role association: %s", dbClusterIdentifier, roleArn)
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForRdsDbClusterRoleDisassociation(conn *rds.RDS, dbClusterIdentifier, roleArn string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			rdsDbClusterRoleStatusActive,
-			rdsDbClusterRoleStatusPending,
-		},
-		Target: []string{rdsDbClusterRoleStatusDeleted},
-		Refresh: func() (interface{}, string, error) {
-			dbClusterRole, err := rdsDescribeDbClusterRole(conn, dbClusterIdentifier, roleArn)
-
-			if isAWSErr(err, rds.ErrCodeDBClusterNotFoundFault, "") {
-				return &rds.DBClusterRole{}, rdsDbClusterRoleStatusDeleted, nil
-			}
-
-			if err != nil {
-				return nil, "", err
-			}
-
-			if dbClusterRole != nil {
-				return dbClusterRole, aws.StringValue(dbClusterRole.Status), nil
-			}
-
-			return &rds.DBClusterRole{}, rdsDbClusterRoleStatusDeleted, nil
-		},
-		Timeout: 5 * time.Minute,
-		Delay:   5 * time.Second,
-	}
-
-	log.Printf("[DEBUG] Waiting for RDS DB Cluster (%s) IAM Role disassociation: %s", dbClusterIdentifier, roleArn)
-	_, err := stateConf.WaitForState()
-
-	return err
 }
