@@ -1,4 +1,14 @@
 ## 3.49.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_rds_cluster_role_association` ([#12370](https://github.com/hashicorp/terraform-provider-aws/issues/12370))
+
+ENHANCEMENTS:
+
+* aws_rds_cluster: Set `iam_roles` as Computed to prevent drift when the `aws_rds_cluster_role_association` resource is used ([#12370](https://github.com/hashicorp/terraform-provider-aws/issues/12370))
+* resource/aws_transfer_server: Add `security_group_ids` argument to `endpoint_details` configuration block. ([#17539](https://github.com/hashicorp/terraform-provider-aws/issues/17539))
+
 ## 3.48.0 (July 02, 2021)
 
 FEATURES:
