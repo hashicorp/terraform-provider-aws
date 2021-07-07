@@ -32,14 +32,6 @@ resource "aws_transfer_server" "example" {
 }
 ```
 
-### Security Policy Name
-
-```terraform
-resource "aws_transfer_server" "example" {
-  security_policy_name = "TransferSecurityPolicy-2020-06"
-}
-```
-
 ### VPC Endpoint
 
 ```terraform
