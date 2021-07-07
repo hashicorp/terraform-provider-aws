@@ -102,11 +102,11 @@ func TestAccAWSEksIdentityProviderConfig_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSEksIdentityProviderConfigProvider_Oidc_IssuerUrl(rName, "http://example.com"),
+				Config:      testAccAWSEksIdentityProviderConfigConfigIssuerUrl(rName, "http://example.com"),
 				ExpectError: regexp.MustCompile(`expected .* to have a url with schema of: "https", got http://example.com`),
 			},
 			{
-				Config: testAccAWSEksIdentityProviderConfigProviderConfigName(rName),
+				Config: testAccAWSEksIdentityProviderConfigConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksIdentityProviderConfigExists(ctx, resourceName, &config),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("identityproviderconfig/%[1]s/oidc/%[1]s/.+", rName))),
@@ -145,7 +145,7 @@ func TestAccAWSEksIdentityProviderConfig_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksIdentityProviderConfigProviderConfigName(rName),
+				Config: testAccAWSEksIdentityProviderConfigConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksIdentityProviderConfigExists(ctx, resourceName, &config),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsEksIdentityProviderConfig(), resourceName),
@@ -156,7 +156,7 @@ func TestAccAWSEksIdentityProviderConfig_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksIdentityProviderConfig_Oidc_Group(t *testing.T) {
+func TestAccAWSEksIdentityProviderConfig_OIDC_Groups(t *testing.T) {
 	var config eks.OidcIdentityProviderConfig
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_identity_provider_config.test"
@@ -169,7 +169,7 @@ func TestAccAWSEksIdentityProviderConfig_Oidc_Group(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksIdentityProviderConfigProvider_Oidc_Groups(rName, "groups", "oidc:"),
+				Config: testAccAWSEksIdentityProviderConfigConfigGroups(rName, "groups", "oidc:"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksIdentityProviderConfigExists(ctx, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "oidc.#", "1"),
@@ -186,7 +186,7 @@ func TestAccAWSEksIdentityProviderConfig_Oidc_Group(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksIdentityProviderConfig_Oidc_Username(t *testing.T) {
+func TestAccAWSEksIdentityProviderConfig_OIDC_Username(t *testing.T) {
 	var config eks.OidcIdentityProviderConfig
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_identity_provider_config.test"
@@ -199,7 +199,7 @@ func TestAccAWSEksIdentityProviderConfig_Oidc_Username(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksIdentityProviderConfigProvider_Oidc_Username(rName, "email", "-"),
+				Config: testAccAWSEksIdentityProviderConfigConfigUsername(rName, "email", "-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksIdentityProviderConfigExists(ctx, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "oidc.#", "1"),
@@ -216,7 +216,7 @@ func TestAccAWSEksIdentityProviderConfig_Oidc_Username(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksIdentityProviderConfig_Oidc_RequiredClaims(t *testing.T) {
+func TestAccAWSEksIdentityProviderConfig_OIDC_RequiredClaims(t *testing.T) {
 	var config eks.OidcIdentityProviderConfig
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_identity_provider_config.test"
@@ -229,15 +229,15 @@ func TestAccAWSEksIdentityProviderConfig_Oidc_RequiredClaims(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSEksIdentityProviderConfig_Oidc_RequiredClaims(rName, "4qkvw9k2RbpSO6wgCbynY10T6Rc2n89PQblyi6bZ5VhfpMr6V7FVvrA12FiJxarh", "valueOne", "keyTwo", "valueTwo"),
+				Config:      testAccAWSEksIdentityProviderConfigConfigRequiredClaims(rName, "4qkvw9k2RbpSO6wgCbynY10T6Rc2n89PQblyi6bZ5VhfpMr6V7FVvrA12FiJxarh", "valueOne", "keyTwo", "valueTwo"),
 				ExpectError: regexp.MustCompile("Bad map key length"),
 			},
 			{
-				Config:      testAccAWSEksIdentityProviderConfig_Oidc_RequiredClaims(rName, "keyOne", "bUUUiuIXeFGw0M2VwiCVjR8oIIavv0PF49Ba6yNwOOC7IcoLawczSeb6MpEIhqtXKcf9aogW4uc4smLGvdTQ8uTTkVFvQTPyWXQ3F0uZP02YyoSw0d9MZ7laGRjpXSph9oFE2UlT5IyRaXIsTwl1qvItvVXLN40Pd3PDyPa6de4nlYcRNy6YIikZz2P1QUSYuvMGSJxGUzhTKYRUniolIt1vjHsXt3MAsaJtCcWz0tjLWalvG27pQ3Gl5Cs7K1", "keyTwo", "valueTwo"),
+				Config:      testAccAWSEksIdentityProviderConfigConfigRequiredClaims(rName, "keyOne", "bUUUiuIXeFGw0M2VwiCVjR8oIIavv0PF49Ba6yNwOOC7IcoLawczSeb6MpEIhqtXKcf9aogW4uc4smLGvdTQ8uTTkVFvQTPyWXQ3F0uZP02YyoSw0d9MZ7laGRjpXSph9oFE2UlT5IyRaXIsTwl1qvItvVXLN40Pd3PDyPa6de4nlYcRNy6YIikZz2P1QUSYuvMGSJxGUzhTKYRUniolIt1vjHsXt3MAsaJtCcWz0tjLWalvG27pQ3Gl5Cs7K1", "keyTwo", "valueTwo"),
 				ExpectError: regexp.MustCompile("Bad map value length"),
 			},
 			{
-				Config: testAccAWSEksIdentityProviderConfig_Oidc_RequiredClaims(rName, "keyOne", "valueOne", "keyTwo", "valueTwo"),
+				Config: testAccAWSEksIdentityProviderConfigConfigRequiredClaims(rName, "keyOne", "valueOne", "keyTwo", "valueTwo"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksIdentityProviderConfigExists(ctx, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.%", "2"),
@@ -267,18 +267,34 @@ func TestAccAWSEksIdentityProviderConfig_Tags(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksIdentityProviderConfig_Tags(rName, "keyOne", "valueOne", "keyTwo", "valueTwo"),
+				Config: testAccAWSEksIdentityProviderConfigConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksIdentityProviderConfigExists(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.keyOne", "valueOne"),
-					resource.TestCheckResourceAttr(resourceName, "tags.keyTwo", "valueTwo"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEksIdentityProviderConfigConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksIdentityProviderConfigExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSEksIdentityProviderConfigConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksIdentityProviderConfigExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -346,17 +362,8 @@ func testAccCheckAWSEksIdentityProviderConfigDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSEksIdentityProviderConfigBase(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccAWSEksIdentityProviderConfigConfigBase(rName string) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
@@ -413,11 +420,11 @@ resource "aws_eks_cluster" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.cluster-AmazonEKSClusterPolicy]
 }
-`, rName)
+`, rName))
 }
 
-func testAccAWSEksIdentityProviderConfigProviderConfigName(rName string) string {
-	return composeConfig(testAccAWSEksIdentityProviderConfigBase(rName), fmt.Sprintf(`
+func testAccAWSEksIdentityProviderConfigConfigName(rName string) string {
+	return composeConfig(testAccAWSEksIdentityProviderConfigConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_identity_provider_config" "test" {
   cluster_name = aws_eks_cluster.test.name
 
@@ -430,8 +437,8 @@ resource "aws_eks_identity_provider_config" "test" {
 `, rName))
 }
 
-func testAccAWSEksIdentityProviderConfigProvider_Oidc_IssuerUrl(rName, issuerUrl string) string {
-	return composeConfig(testAccAWSEksIdentityProviderConfigBase(rName), fmt.Sprintf(`
+func testAccAWSEksIdentityProviderConfigConfigIssuerUrl(rName, issuerUrl string) string {
+	return composeConfig(testAccAWSEksIdentityProviderConfigConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_identity_provider_config" "test" {
   cluster_name = aws_eks_cluster.test.name
 
@@ -444,8 +451,8 @@ resource "aws_eks_identity_provider_config" "test" {
 `, rName, issuerUrl))
 }
 
-func testAccAWSEksIdentityProviderConfigProvider_Oidc_Groups(rName, groupsClaim, groupsPrefix string) string {
-	return composeConfig(testAccAWSEksIdentityProviderConfigBase(rName), fmt.Sprintf(`
+func testAccAWSEksIdentityProviderConfigConfigGroups(rName, groupsClaim, groupsPrefix string) string {
+	return composeConfig(testAccAWSEksIdentityProviderConfigConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_identity_provider_config" "test" {
   cluster_name = aws_eks_cluster.test.name
 
@@ -460,8 +467,8 @@ resource "aws_eks_identity_provider_config" "test" {
 `, rName, groupsClaim, groupsPrefix))
 }
 
-func testAccAWSEksIdentityProviderConfigProvider_Oidc_Username(rName, usernameClaim, usernamePrefix string) string {
-	return composeConfig(testAccAWSEksIdentityProviderConfigBase(rName), fmt.Sprintf(`
+func testAccAWSEksIdentityProviderConfigConfigUsername(rName, usernameClaim, usernamePrefix string) string {
+	return composeConfig(testAccAWSEksIdentityProviderConfigConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_identity_provider_config" "test" {
   cluster_name = aws_eks_cluster.test.name
 
@@ -476,8 +483,8 @@ resource "aws_eks_identity_provider_config" "test" {
 `, rName, usernameClaim, usernamePrefix))
 }
 
-func testAccAWSEksIdentityProviderConfig_Oidc_RequiredClaims(rName, claimsKeyOne, claimsValueOne, claimsKeyTwo, claimsValueTwo string) string {
-	return composeConfig(testAccAWSEksIdentityProviderConfigBase(rName), fmt.Sprintf(`
+func testAccAWSEksIdentityProviderConfigConfigRequiredClaims(rName, claimsKeyOne, claimsValueOne, claimsKeyTwo, claimsValueTwo string) string {
+	return composeConfig(testAccAWSEksIdentityProviderConfigConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_identity_provider_config" "test" {
   cluster_name = aws_eks_cluster.test.name
 
@@ -494,8 +501,26 @@ resource "aws_eks_identity_provider_config" "test" {
 `, rName, claimsKeyOne, claimsValueOne, claimsKeyTwo, claimsValueTwo))
 }
 
-func testAccAWSEksIdentityProviderConfig_Tags(rName, tagsKeyOne, tagsValueOne, tagsKeyTwo, tagsValueTwo string) string {
-	return composeConfig(testAccAWSEksIdentityProviderConfigBase(rName), fmt.Sprintf(`
+func testAccAWSEksIdentityProviderConfigConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return composeConfig(testAccAWSEksIdentityProviderConfigConfigBase(rName), fmt.Sprintf(`
+resource "aws_eks_identity_provider_config" "test" {
+  cluster_name = aws_eks_cluster.test.name
+
+  oidc {
+    client_id                     = "example.net"
+    identity_provider_config_name = %[1]q
+    issuer_url                    = "https://example.com"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccAWSEksIdentityProviderConfigConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return composeConfig(testAccAWSEksIdentityProviderConfigConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_identity_provider_config" "test" {
   cluster_name = aws_eks_cluster.test.name
 
@@ -510,5 +535,5 @@ resource "aws_eks_identity_provider_config" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagsKeyOne, tagsValueOne, tagsKeyTwo, tagsValueTwo))
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
