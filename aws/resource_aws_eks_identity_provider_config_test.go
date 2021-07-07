@@ -156,7 +156,7 @@ func TestAccAWSEksIdentityProviderConfig_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksIdentityProviderConfig_OIDC_Groups(t *testing.T) {
+func TestAccAWSEksIdentityProviderConfig_AllOidcOptions(t *testing.T) {
 	var config eks.OidcIdentityProviderConfig
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_identity_provider_config.test"
@@ -169,80 +169,20 @@ func TestAccAWSEksIdentityProviderConfig_OIDC_Groups(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksIdentityProviderConfigConfigGroups(rName, "groups", "oidc:"),
+				Config: testAccAWSEksIdentityProviderConfigAllOidcOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksIdentityProviderConfigExists(ctx, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "oidc.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.client_id", "example.net"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.groups_claim", "groups"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.groups_prefix", "oidc:"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSEksIdentityProviderConfig_OIDC_Username(t *testing.T) {
-	var config eks.OidcIdentityProviderConfig
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_eks_identity_provider_config.test"
-	ctx := context.TODO()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:        testAccErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEksIdentityProviderConfigConfigUsername(rName, "email", "-"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksIdentityProviderConfigExists(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "oidc.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_claim", "email"),
-					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_prefix", "-"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSEksIdentityProviderConfig_OIDC_RequiredClaims(t *testing.T) {
-	var config eks.OidcIdentityProviderConfig
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_eks_identity_provider_config.test"
-	ctx := context.TODO()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
-		ErrorCheck:        testAccErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAWSEksIdentityProviderConfigConfigRequiredClaims(rName, "4qkvw9k2RbpSO6wgCbynY10T6Rc2n89PQblyi6bZ5VhfpMr6V7FVvrA12FiJxarh", "valueOne", "keyTwo", "valueTwo"),
-				ExpectError: regexp.MustCompile("Bad map key length"),
-			},
-			{
-				Config:      testAccAWSEksIdentityProviderConfigConfigRequiredClaims(rName, "keyOne", "bUUUiuIXeFGw0M2VwiCVjR8oIIavv0PF49Ba6yNwOOC7IcoLawczSeb6MpEIhqtXKcf9aogW4uc4smLGvdTQ8uTTkVFvQTPyWXQ3F0uZP02YyoSw0d9MZ7laGRjpXSph9oFE2UlT5IyRaXIsTwl1qvItvVXLN40Pd3PDyPa6de4nlYcRNy6YIikZz2P1QUSYuvMGSJxGUzhTKYRUniolIt1vjHsXt3MAsaJtCcWz0tjLWalvG27pQ3Gl5Cs7K1", "keyTwo", "valueTwo"),
-				ExpectError: regexp.MustCompile("Bad map value length"),
-			},
-			{
-				Config: testAccAWSEksIdentityProviderConfigConfigRequiredClaims(rName, "keyOne", "valueOne", "keyTwo", "valueTwo"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksIdentityProviderConfigExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.identity_provider_config_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.issuer_url", "https://example.com"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.keyOne", "valueOne"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.keyTwo", "valueTwo"),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_claim", "email"),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_prefix", "-"),
 				),
 			},
 			{
@@ -451,54 +391,27 @@ resource "aws_eks_identity_provider_config" "test" {
 `, rName, issuerUrl))
 }
 
-func testAccAWSEksIdentityProviderConfigConfigGroups(rName, groupsClaim, groupsPrefix string) string {
+func testAccAWSEksIdentityProviderConfigAllOidcOptions(rName string) string {
 	return composeConfig(testAccAWSEksIdentityProviderConfigConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_identity_provider_config" "test" {
   cluster_name = aws_eks_cluster.test.name
 
   oidc {
     client_id                     = "example.net"
-    groups_claim                  = %[2]q
-    groups_prefix                 = %[3]q
+    groups_claim                  = "groups"
+    groups_prefix                 = "oidc:"
     identity_provider_config_name = %[1]q
     issuer_url                    = "https://example.com"
-  }
-}
-`, rName, groupsClaim, groupsPrefix))
-}
+    username_claim                = "email"
+    username_prefix               = "-"
 
-func testAccAWSEksIdentityProviderConfigConfigUsername(rName, usernameClaim, usernamePrefix string) string {
-	return composeConfig(testAccAWSEksIdentityProviderConfigConfigBase(rName), fmt.Sprintf(`
-resource "aws_eks_identity_provider_config" "test" {
-  cluster_name = aws_eks_cluster.test.name
-
-  oidc {
-    client_id                     = "example.net"
-    identity_provider_config_name = %[1]q
-    issuer_url                    = "https://example.com"
-    username_claim                = %[2]q
-    username_prefix               = %[3]q
-  }
-}
-`, rName, usernameClaim, usernamePrefix))
-}
-
-func testAccAWSEksIdentityProviderConfigConfigRequiredClaims(rName, claimsKeyOne, claimsValueOne, claimsKeyTwo, claimsValueTwo string) string {
-	return composeConfig(testAccAWSEksIdentityProviderConfigConfigBase(rName), fmt.Sprintf(`
-resource "aws_eks_identity_provider_config" "test" {
-  cluster_name = aws_eks_cluster.test.name
-
-  oidc {
-    client_id                     = "example.net"
-    identity_provider_config_name = %[1]q
-    issuer_url                    = "https://example.com"
     required_claims = {
-      %[2]q = %[3]q
-      %[4]q = %[5]q
+      keyOne = "valueOne"
+      keyTwo = "valueTwo"
     }
   }
 }
-`, rName, claimsKeyOne, claimsValueOne, claimsKeyTwo, claimsValueTwo))
+`, rName))
 }
 
 func testAccAWSEksIdentityProviderConfigConfigTags1(rName, tagKey1, tagValue1 string) string {
