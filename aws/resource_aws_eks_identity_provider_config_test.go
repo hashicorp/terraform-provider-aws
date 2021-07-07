@@ -6,14 +6,16 @@ import (
 	"log"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/go-multierror"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfeks "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/eks"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/eks/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -26,63 +28,72 @@ func init() {
 func testSweepEksIdentityProviderConfigs(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
+	ctx := context.TODO()
 	conn := client.(*AWSClient).eksconn
-
-	var errors error
 	input := &eks.ListClustersInput{}
-	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]*testSweepResource, 0)
+
+	err = conn.ListClustersPagesWithContext(ctx, input, func(page *eks.ListClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
 		for _, cluster := range page.Clusters {
-			clusterName := aws.StringValue(cluster)
 			input := &eks.ListIdentityProviderConfigsInput{
 				ClusterName: cluster,
 			}
-			err := conn.ListIdentityProviderConfigsPages(input, func(page *eks.ListIdentityProviderConfigsOutput, lastPage bool) bool {
-				for _, config := range page.IdentityProviderConfigs {
-					configName := aws.StringValue(config.Name)
-					log.Printf("[INFO] Disassociating Identity Provider Config %q", configName)
-					input := &eks.DisassociateIdentityProviderConfigInput{
-						ClusterName:            cluster,
-						IdentityProviderConfig: config,
-					}
-					_, err := conn.DisassociateIdentityProviderConfig(input)
 
-					if err != nil && !isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
-						errors = multierror.Append(errors, fmt.Errorf("error disassociating Identity Provider Config %q: %w", configName, err))
-						continue
-					}
-
-					if err := waitForEksIdentityProviderConfigDisassociation(context.TODO(), conn, clusterName, config, 10*time.Minute); err != nil {
-						errors = multierror.Append(errors, fmt.Errorf("error waiting for EKS Identity Provider Config %q disassociation: %w", configName, err))
-						continue
-					}
+			err := conn.ListIdentityProviderConfigsPagesWithContext(ctx, input, func(page *eks.ListIdentityProviderConfigsOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
 				}
-				return true
+
+				for _, identityProviderConfig := range page.IdentityProviderConfigs {
+					r := resourceAwsEksIdentityProviderConfig()
+					d := r.Data(nil)
+					d.SetId(tfeks.IdentityProviderConfigCreateResourceID(aws.StringValue(cluster), aws.StringValue(identityProviderConfig.Name)))
+
+					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+				}
+
+				return !lastPage
 			})
+
 			if err != nil {
-				errors = multierror.Append(errors, fmt.Errorf("error listing Identity Provider Configs for EKS Cluster %s: %w", clusterName, err))
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Identity Provider Configs (%s): %w", region, err))
 			}
 		}
 
-		return true
+		return !lastPage
 	})
+
 	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
-		return errors // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		errors = multierror.Append(errors, fmt.Errorf("error retrieving EKS Clusters: %w", err))
+		log.Print(fmt.Errorf("[WARN] Skipping EKS Identity Provider Configs sweep for %s: %w", region, err))
+		return sweeperErrs // In case we have completed some pages, but had errors
 	}
 
-	return errors
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
+	}
+
+	err = testSweepResourceOrchestrator(sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EKS Identity Provider Configs (%s): %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSEksIdentityProviderConfig_basic(t *testing.T) {
-	var config eks.IdentityProviderConfig
+	var config eks.OidcIdentityProviderConfig
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	eksClusterResourceName := "aws_eks_cluster.test"
 	resourceName := "aws_eks_identity_provider_config.test"
+	ctx := context.TODO()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
@@ -91,19 +102,24 @@ func TestAccAWSEksIdentityProviderConfig_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSEksIdentityProviderConfigProvider_Oidc_IssuerUrl(rName, "http://accounts.google.com/.well-known/openid-configuration"),
-				ExpectError: regexp.MustCompile(`expected .* to have a url with schema of: "https", got http://accounts.google.com/.well-known/openid-configuration`),
+				Config:      testAccAWSEksIdentityProviderConfigProvider_Oidc_IssuerUrl(rName, "http://example.com"),
+				ExpectError: regexp.MustCompile(`expected .* to have a url with schema of: "https", got http://example.com`),
 			},
 			{
 				Config: testAccAWSEksIdentityProviderConfigProviderConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksIdentityProviderConfigExists(resourceName, &config),
+					testAccCheckAWSEksIdentityProviderConfigExists(ctx, resourceName, &config),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("identityproviderconfig/%[1]s/oidc/%[1]s/.+", rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_name", eksClusterResourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "oidc.0.client_id", "test-url.apps.googleusercontent.com"),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.client_id", "example.net"),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.groups_claim", ""),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.groups_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.identity_provider_config_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "oidc.0.issuer_url", "https://accounts.google.com/.well-known/openid-configuration"),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.issuer_url", "https://example.com"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_claim", ""),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -117,9 +133,10 @@ func TestAccAWSEksIdentityProviderConfig_basic(t *testing.T) {
 }
 
 func TestAccAWSEksIdentityProviderConfig_disappears(t *testing.T) {
-	var config eks.IdentityProviderConfig
+	var config eks.OidcIdentityProviderConfig
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_identity_provider_config.test"
+	ctx := context.TODO()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
@@ -130,8 +147,8 @@ func TestAccAWSEksIdentityProviderConfig_disappears(t *testing.T) {
 			{
 				Config: testAccAWSEksIdentityProviderConfigProviderConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksIdentityProviderConfigExists(resourceName, &config),
-					testAccCheckAWSEksIdentityProviderConfigDisappears(rName, &config),
+					testAccCheckAWSEksIdentityProviderConfigExists(ctx, resourceName, &config),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEksIdentityProviderConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -140,9 +157,10 @@ func TestAccAWSEksIdentityProviderConfig_disappears(t *testing.T) {
 }
 
 func TestAccAWSEksIdentityProviderConfig_Oidc_Group(t *testing.T) {
-	var config eks.IdentityProviderConfig
+	var config eks.OidcIdentityProviderConfig
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_identity_provider_config.test"
+	ctx := context.TODO()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
@@ -153,7 +171,7 @@ func TestAccAWSEksIdentityProviderConfig_Oidc_Group(t *testing.T) {
 			{
 				Config: testAccAWSEksIdentityProviderConfigProvider_Oidc_Groups(rName, "groups", "oidc:"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksIdentityProviderConfigExists(resourceName, &config),
+					testAccCheckAWSEksIdentityProviderConfigExists(ctx, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "oidc.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.groups_claim", "groups"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.groups_prefix", "oidc:"),
@@ -169,9 +187,10 @@ func TestAccAWSEksIdentityProviderConfig_Oidc_Group(t *testing.T) {
 }
 
 func TestAccAWSEksIdentityProviderConfig_Oidc_Username(t *testing.T) {
-	var config eks.IdentityProviderConfig
+	var config eks.OidcIdentityProviderConfig
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_identity_provider_config.test"
+	ctx := context.TODO()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
@@ -182,7 +201,7 @@ func TestAccAWSEksIdentityProviderConfig_Oidc_Username(t *testing.T) {
 			{
 				Config: testAccAWSEksIdentityProviderConfigProvider_Oidc_Username(rName, "email", "-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksIdentityProviderConfigExists(resourceName, &config),
+					testAccCheckAWSEksIdentityProviderConfigExists(ctx, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "oidc.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_claim", "email"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_prefix", "-"),
@@ -198,9 +217,10 @@ func TestAccAWSEksIdentityProviderConfig_Oidc_Username(t *testing.T) {
 }
 
 func TestAccAWSEksIdentityProviderConfig_Oidc_RequiredClaims(t *testing.T) {
-	var config eks.IdentityProviderConfig
+	var config eks.OidcIdentityProviderConfig
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_identity_provider_config.test"
+	ctx := context.TODO()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
@@ -219,7 +239,7 @@ func TestAccAWSEksIdentityProviderConfig_Oidc_RequiredClaims(t *testing.T) {
 			{
 				Config: testAccAWSEksIdentityProviderConfig_Oidc_RequiredClaims(rName, "keyOne", "valueOne", "keyTwo", "valueTwo"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksIdentityProviderConfigExists(resourceName, &config),
+					testAccCheckAWSEksIdentityProviderConfigExists(ctx, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.keyOne", "valueOne"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.keyTwo", "valueTwo"),
@@ -235,9 +255,10 @@ func TestAccAWSEksIdentityProviderConfig_Oidc_RequiredClaims(t *testing.T) {
 }
 
 func TestAccAWSEksIdentityProviderConfig_Tags(t *testing.T) {
-	var config eks.IdentityProviderConfig
+	var config eks.OidcIdentityProviderConfig
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_identity_provider_config.test"
+	ctx := context.TODO()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
@@ -248,7 +269,7 @@ func TestAccAWSEksIdentityProviderConfig_Tags(t *testing.T) {
 			{
 				Config: testAccAWSEksIdentityProviderConfig_Tags(rName, "keyOne", "valueOne", "keyTwo", "valueTwo"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksIdentityProviderConfigExists(resourceName, &config),
+					testAccCheckAWSEksIdentityProviderConfigExists(ctx, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.keyOne", "valueOne"),
 					resource.TestCheckResourceAttr(resourceName, "tags.keyTwo", "valueTwo"),
@@ -263,7 +284,7 @@ func TestAccAWSEksIdentityProviderConfig_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSEksIdentityProviderConfigExists(resourceName string, config *eks.IdentityProviderConfig) resource.TestCheckFunc {
+func testAccCheckAWSEksIdentityProviderConfigExists(ctx context.Context, resourceName string, config *eks.OidcIdentityProviderConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -271,52 +292,31 @@ func testAccCheckAWSEksIdentityProviderConfigExists(resourceName string, config 
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EKS Identity Profile Config is set")
+			return fmt.Errorf("No EKS Identity Profile Config ID is set")
 		}
 
-		clusterName, configName, err := resourceAwsEksIdentityProviderConfigParseId(rs.Primary.ID)
+		clusterName, configName, err := tfeks.IdentityProviderConfigParseResourceID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).eksconn
 
-		input := &eks.DescribeIdentityProviderConfigInput{
-			ClusterName: aws.String(clusterName),
-			IdentityProviderConfig: &eks.IdentityProviderConfig{
-				Name: aws.String(configName),
-				Type: aws.String(typeOidc),
-			},
-		}
-
-		output, err := conn.DescribeIdentityProviderConfig(input)
+		output, err := finder.OidcIdentityProviderConfigByClusterNameAndConfigName(ctx, conn, clusterName, configName)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil || output.IdentityProviderConfig == nil {
-			return fmt.Errorf("EKS Identity Provider Config (%s) not found", rs.Primary.ID)
-		}
-
-		if aws.StringValue(output.IdentityProviderConfig.Oidc.IdentityProviderConfigName) != configName {
-			return fmt.Errorf("EKS OIDC Identity Provider Config (%s) not found", rs.Primary.ID)
-		}
-
-		if got, want := aws.StringValue(output.IdentityProviderConfig.Oidc.Status), eks.ConfigStatusActive; got != want {
-			return fmt.Errorf("EKS OIDC Identity Provider Config (%s) not in %s status, got: %s", rs.Primary.ID, want, got)
-		}
-
-		*config = eks.IdentityProviderConfig{
-			Name: output.IdentityProviderConfig.Oidc.IdentityProviderConfigName,
-			Type: aws.String(typeOidc),
-		}
+		*config = *output
 
 		return nil
 	}
 }
 
 func testAccCheckAWSEksIdentityProviderConfigDestroy(s *terraform.State) error {
+	ctx := context.TODO()
 	conn := testAccProvider.Meta().(*AWSClient).eksconn
 
 	for _, rs := range s.RootModule().Resources {
@@ -324,54 +324,26 @@ func testAccCheckAWSEksIdentityProviderConfigDestroy(s *terraform.State) error {
 			continue
 		}
 
-		clusterName, configName, err := resourceAwsEksIdentityProviderConfigParseId(rs.Primary.ID)
+		clusterName, configName, err := tfeks.IdentityProviderConfigParseResourceID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		input := &eks.DescribeIdentityProviderConfigInput{
-			ClusterName: aws.String(clusterName),
-			IdentityProviderConfig: &eks.IdentityProviderConfig{
-				Name: aws.String(configName),
-				Type: aws.String(typeOidc),
-			},
-		}
+		_, err = finder.OidcIdentityProviderConfigByClusterNameAndConfigName(ctx, conn, clusterName, configName)
 
-		output, err := conn.DescribeIdentityProviderConfig(input)
-
-		if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
-		if output != nil && output.IdentityProviderConfig != nil && aws.StringValue(output.IdentityProviderConfig.Oidc.IdentityProviderConfigName) == configName {
-			return fmt.Errorf("EKS Identity Provider Config (%s) still exists", rs.Primary.ID)
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckAWSEksIdentityProviderConfigDisappears(clusterName string, config *eks.IdentityProviderConfig) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).eksconn
-
-		input := &eks.DisassociateIdentityProviderConfigInput{
-			ClusterName:            aws.String(clusterName),
-			IdentityProviderConfig: config,
-		}
-
-		_, err := conn.DisassociateIdentityProviderConfig(input)
-
-		if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
-
 		if err != nil {
 			return err
 		}
 
-		return waitForEksIdentityProviderConfigDisassociation(context.TODO(), conn, clusterName, config, 25*time.Minute)
+		return fmt.Errorf("EKS Identity Profile Config %s still exists", rs.Primary.ID)
 	}
+
+	return nil
 }
 
 func testAccAWSEksIdentityProviderConfigBase(rName string) string {
@@ -387,8 +359,8 @@ data "aws_availability_zones" "available" {
 
 data "aws_partition" "current" {}
 
-resource "aws_iam_role" "cluster" {
-  name = "%[1]s-cluster"
+resource "aws_iam_role" "test" {
+  name = %[1]q
 
   assume_role_policy = jsonencode({
     Statement = [{
@@ -404,7 +376,7 @@ resource "aws_iam_role" "cluster" {
 
 resource "aws_iam_role_policy_attachment" "cluster-AmazonEKSClusterPolicy" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSClusterPolicy"
-  role       = aws_iam_role.cluster.name
+  role       = aws_iam_role.test.name
 }
 
 resource "aws_vpc" "test" {
@@ -413,7 +385,7 @@ resource "aws_vpc" "test" {
   enable_dns_support   = true
 
   tags = {
-    Name                          = "tf-acc-test-eks-identity-provider-config"
+    Name                          = %[1]q
     "kubernetes.io/cluster/%[1]s" = "shared"
   }
 }
@@ -426,14 +398,14 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name                          = "tf-acc-test-eks-identity-provider-config"
+    Name                          = %[1]q
     "kubernetes.io/cluster/%[1]s" = "shared"
   }
 }
 
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.cluster.arn
+  role_arn = aws_iam_role.test.arn
 
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
@@ -445,91 +417,98 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccAWSEksIdentityProviderConfigProviderConfigName(rName string) string {
-	return testAccAWSEksIdentityProviderConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksIdentityProviderConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_identity_provider_config" "test" {
   cluster_name = aws_eks_cluster.test.name
+
   oidc {
-    client_id                     = "test-url.apps.googleusercontent.com"
+    client_id                     = "example.net"
     identity_provider_config_name = %[1]q
-    issuer_url                    = "https://accounts.google.com/.well-known/openid-configuration"
+    issuer_url                    = "https://example.com"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSEksIdentityProviderConfigProvider_Oidc_IssuerUrl(rName, issuerUrl string) string {
-	return testAccAWSEksIdentityProviderConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksIdentityProviderConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_identity_provider_config" "test" {
   cluster_name = aws_eks_cluster.test.name
+
   oidc {
-    client_id                     = "test-url.apps.googleusercontent.com"
+    client_id                     = "example.net"
     identity_provider_config_name = %[1]q
     issuer_url                    = %[2]q
   }
 }
-`, rName, issuerUrl)
+`, rName, issuerUrl))
 }
 
 func testAccAWSEksIdentityProviderConfigProvider_Oidc_Groups(rName, groupsClaim, groupsPrefix string) string {
-	return testAccAWSEksIdentityProviderConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksIdentityProviderConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_identity_provider_config" "test" {
   cluster_name = aws_eks_cluster.test.name
+
   oidc {
-    client_id                     = "test-url.apps.googleusercontent.com"
+    client_id                     = "example.net"
     groups_claim                  = %[2]q
     groups_prefix                 = %[3]q
     identity_provider_config_name = %[1]q
-    issuer_url                    = "https://accounts.google.com/.well-known/openid-configuration"
+    issuer_url                    = "https://example.com"
   }
 }
-`, rName, groupsClaim, groupsPrefix)
+`, rName, groupsClaim, groupsPrefix))
 }
 
 func testAccAWSEksIdentityProviderConfigProvider_Oidc_Username(rName, usernameClaim, usernamePrefix string) string {
-	return testAccAWSEksIdentityProviderConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksIdentityProviderConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_identity_provider_config" "test" {
   cluster_name = aws_eks_cluster.test.name
+
   oidc {
-    client_id                     = "test-url.apps.googleusercontent.com"
+    client_id                     = "example.net"
     identity_provider_config_name = %[1]q
-    issuer_url                    = "https://accounts.google.com/.well-known/openid-configuration"
+    issuer_url                    = "https://example.com"
     username_claim                = %[2]q
     username_prefix               = %[3]q
   }
 }
-`, rName, usernameClaim, usernamePrefix)
+`, rName, usernameClaim, usernamePrefix))
 }
 
 func testAccAWSEksIdentityProviderConfig_Oidc_RequiredClaims(rName, claimsKeyOne, claimsValueOne, claimsKeyTwo, claimsValueTwo string) string {
-	return testAccAWSEksIdentityProviderConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksIdentityProviderConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_identity_provider_config" "test" {
   cluster_name = aws_eks_cluster.test.name
+
   oidc {
-    client_id                     = "test-url.apps.googleusercontent.com"
+    client_id                     = "example.net"
     identity_provider_config_name = %[1]q
-    issuer_url                    = "https://accounts.google.com/.well-known/openid-configuration"
+    issuer_url                    = "https://example.com"
     required_claims = {
       %[2]q = %[3]q
       %[4]q = %[5]q
     }
   }
 }
-`, rName, claimsKeyOne, claimsValueOne, claimsKeyTwo, claimsValueTwo)
+`, rName, claimsKeyOne, claimsValueOne, claimsKeyTwo, claimsValueTwo))
 }
 
 func testAccAWSEksIdentityProviderConfig_Tags(rName, tagsKeyOne, tagsValueOne, tagsKeyTwo, tagsValueTwo string) string {
-	return testAccAWSEksIdentityProviderConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksIdentityProviderConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_identity_provider_config" "test" {
   cluster_name = aws_eks_cluster.test.name
+
   oidc {
-    client_id                     = "test-url.apps.googleusercontent.com"
+    client_id                     = "example.net"
     identity_provider_config_name = %[1]q
-    issuer_url                    = "https://accounts.google.com/.well-known/openid-configuration"
+    issuer_url                    = "https://example.com"
   }
+
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
 }
-`, rName, tagsKeyOne, tagsValueOne, tagsKeyTwo, tagsValueTwo)
+`, rName, tagsKeyOne, tagsValueOne, tagsKeyTwo, tagsValueTwo))
 }

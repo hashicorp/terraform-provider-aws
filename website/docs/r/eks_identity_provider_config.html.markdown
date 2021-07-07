@@ -3,7 +3,7 @@ subcategory: "EKS"
 layout: "aws"
 page_title: "AWS: aws_eks_identity_provider_config"
 description: |-
-  Manages an EKS Identity Provider Configuration
+  Manages an EKS Identity Provider Configuration.
 ---
 
 # Resource: aws_eks_identity_provider_config
@@ -15,6 +15,7 @@ Manages an EKS Identity Provider Configuration.
 ```terraform
 resource "aws_eks_identity_provider_config" "example" {
   cluster_name = aws_eks_cluster.example.name
+
   oidc {
     client_id                     = "your client_id"
     identity_provider_config_name = "example"
@@ -25,27 +26,28 @@ resource "aws_eks_identity_provider_config" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+The following arguments are supported:
 
-* `cluster_name` – Name of the EKS Cluster.
-* `oidc` - Nested attribute containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster.
-    * `client_id` – Client ID for the OpenID Connect identity provider.
-    * `identity_provider_config_name` – The name of the identity provider config.
-    * `issuer_url` - Issuer URL for the OpenID Connect identity provider.
+* `cluster_name` – (Required) Name of the EKS Cluster.
+* `oidc` - (Required) Nested attribute containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster. Detailed below.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
-The following arguments are optional:
+### oidc Configuration Block
 
-* `oidc`
-    * `groups_claim` - The JWT claim that the provider will use to return groups.
-    * `groups_prefix` - A prefix that is prepended to group claims e.g. `oidc:`.
-    * `required_claims` - The key value pairs that describe required claims in the identity token.
-    * `username_claim` - The JWT claim that the provider will use as the username.
-    * `username_prefix` - A prefix that is prepended to username claims.
-* `tags` - (Optional) Key-value map of resource tags.
+* `client_id` – (Required) Client ID for the OpenID Connect identity provider.
+* `groups_claim` - (Optional) The JWT claim that the provider will use to return groups.
+* `groups_prefix` - (Optional) A prefix that is prepended to group claims e.g. `oidc:`.
+* `identity_provider_config_name` – (Required) The name of the identity provider config.
+* `issuer_url` - (Required) Issuer URL for the OpenID Connect identity provider.
+* `required_claims` - (Optional) The key value pairs that describe required claims in the identity token.
+* `username_claim` - (Optional) The JWT claim that the provider will use as the username.
+* `username_prefix` - (Optional) A prefix that is prepended to username claims.
 
 ## Attributes Reference
+
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of the EKS Identity Provider Configuration.
 * `id` - EKS Cluster name and EKS Identity Provider Configuration name separated by a colon (`:`).
 * `status` - Status of the EKS Identity Provider Configuration.
 
@@ -58,7 +60,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EKS Identity Provider Configuration can be imported using the `cluster_name` and `identity_provider_config_name` separated by a colon (`:`), e.g.
+EKS Identity Provider Configurations can be imported using the `cluster_name` and `identity_provider_config_name` separated by a colon (`:`), e.g.
 
 ```
 $ terraform import aws_eks_identity_provider_config.my_identity_provider_config my_cluster:my_identity_provider_config

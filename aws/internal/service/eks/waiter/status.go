@@ -121,3 +121,19 @@ func NodegroupUpdateStatus(conn *eks.EKS, clusterName, nodeGroupName, id string)
 		return output, aws.StringValue(output.Status), nil
 	}
 }
+
+func OidcIdentityProviderConfigStatus(ctx context.Context, conn *eks.EKS, clusterName, configName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.OidcIdentityProviderConfigByClusterNameAndConfigName(ctx, conn, clusterName, configName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
