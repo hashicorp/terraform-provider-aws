@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -315,17 +317,17 @@ func testAccCheckAwsDxGatewayAssociationProposalDestroy(s *terraform.State) erro
 			continue
 		}
 
-		proposal, err := describeDirectConnectGatewayAssociationProposal(conn, rs.Primary.ID)
+		_, err := finder.GatewayAssociationProposalByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
 			return err
 		}
 
-		if proposal == nil {
-			continue
-		}
-
-		return fmt.Errorf("Direct Connect Gateway Association Proposal (%s) still exists", rs.Primary.ID)
+		return fmt.Errorf("Direct Connect Gateway Association Proposal %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -338,19 +340,19 @@ func testAccCheckAwsDxGatewayAssociationProposalExists(resourceName string, gate
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Direct Connect Gateway Association Proposal ID is set")
+		}
+
 		conn := testAccProvider.Meta().(*AWSClient).dxconn
 
-		proposal, err := describeDirectConnectGatewayAssociationProposal(conn, rs.Primary.ID)
+		output, err := finder.GatewayAssociationProposalByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if proposal == nil {
-			return fmt.Errorf("Direct Connect Gateway Association Proposal (%s) not found", rs.Primary.ID)
-		}
-
-		*gatewayAssociationProposal = *proposal
+		*gatewayAssociationProposal = *output
 
 		return nil
 	}

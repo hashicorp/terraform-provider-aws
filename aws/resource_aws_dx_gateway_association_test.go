@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -543,18 +545,17 @@ func testAccCheckAwsDxGatewayAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := conn.DescribeDirectConnectGatewayAssociations(&directconnect.DescribeDirectConnectGatewayAssociationsInput{
-			AssociationId: aws.String(rs.Primary.Attributes["dx_gateway_association_id"]),
-		})
+		_, err := finder.GatewayAssociationByID(conn, rs.Primary.Attributes["dx_gateway_association_id"])
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
 		if err != nil {
 			return err
 		}
 
-		if len(resp.DirectConnectGatewayAssociations) > 0 {
-			return fmt.Errorf("Direct Connect Gateway (%s) is not dissociated from GW %s",
-				aws.StringValue(resp.DirectConnectGatewayAssociations[0].DirectConnectGatewayId),
-				aws.StringValue(resp.DirectConnectGatewayAssociations[0].AssociatedGateway.Id))
-		}
+		return fmt.Errorf("Direct Connect Gateway Association %s still exists", rs.Primary.ID)
 	}
 	return nil
 }
@@ -565,28 +566,30 @@ func testAccCheckAwsDxGatewayAssociationExists(name string, ga *directconnect.Ga
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+
+		if rs.Primary.Attributes["dx_gateway_association_id"] == "" {
+			return fmt.Errorf("No Direct Connect Gateway Association ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).dxconn
-		resp, err := conn.DescribeDirectConnectGatewayAssociations(&directconnect.DescribeDirectConnectGatewayAssociationsInput{
-			AssociationId: aws.String(rs.Primary.Attributes["dx_gateway_association_id"]),
-		})
+
+		output, err := finder.GatewayAssociationByID(conn, rs.Primary.Attributes["dx_gateway_association_id"])
+
 		if err != nil {
 			return err
 		}
 
-		*ga = *resp.DirectConnectGatewayAssociations[0]
+		if proposalID := rs.Primary.Attributes["proposal_id"]; proposalID != "" {
+			output, err := finder.GatewayAssociationProposalByID(conn, proposalID)
 
-		if proposalId := rs.Primary.Attributes["proposal_id"]; proposalId != "" && gap != nil {
-			v, err := describeDirectConnectGatewayAssociationProposal(conn, proposalId)
 			if err != nil {
 				return err
 			}
 
-			*gap = *v
+			*gap = *output
 		}
+
+		*ga = *output
 
 		return nil
 	}
