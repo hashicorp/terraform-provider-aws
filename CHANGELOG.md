@@ -2,12 +2,17 @@
 
 FEATURES:
 
+* **New Resource:** `aws_eks_identity_provider_config` ([#17959](https://github.com/hashicorp/terraform-provider-aws/issues/17959))
 * **New Resource:** `aws_rds_cluster_role_association` ([#12370](https://github.com/hashicorp/terraform-provider-aws/issues/12370))
 
 ENHANCEMENTS:
 
 * aws_rds_cluster: Set `iam_roles` as Computed to prevent drift when the `aws_rds_cluster_role_association` resource is used ([#12370](https://github.com/hashicorp/terraform-provider-aws/issues/12370))
 * resource/aws_transfer_server: Add `security_group_ids` argument to `endpoint_details` configuration block. ([#17539](https://github.com/hashicorp/terraform-provider-aws/issues/17539))
+
+BUG FIXES:
+
+* resource/aws_eks_cluster: Don't associate an `encryption_config` if there's already one ([#19986](https://github.com/hashicorp/terraform-provider-aws/issues/19986))
 
 ## 3.48.0 (July 02, 2021)
 
