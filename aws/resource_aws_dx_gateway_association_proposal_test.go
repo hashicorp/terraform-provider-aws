@@ -8,11 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect/lister"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -25,59 +27,58 @@ func init() {
 
 func testSweepDirectConnectGatewayAssociationProposals(region string) error {
 	client, err := sharedClientForRegion(region)
-
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.(*AWSClient).dxconn
 	input := &directconnect.DescribeDirectConnectGatewayAssociationProposalsInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]*testSweepResource, 0)
 
-	for {
-		output, err := conn.DescribeDirectConnectGatewayAssociationProposals(input)
-
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Direct Connect Gateway sweep for %s: %s", region, err)
-			return nil
+	lister.DescribeDirectConnectGatewayAssociationProposalsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			return fmt.Errorf("error retrieving Direct Connect Gateway Association Proposals: %s", err)
-		}
+		for _, proposal := range page.DirectConnectGatewayAssociationProposals {
+			proposalID := aws.StringValue(proposal.ProposalId)
 
-		for _, gatewayAssociationProposal := range output.DirectConnectGatewayAssociationProposals {
-			proposalID := aws.StringValue(gatewayAssociationProposal.ProposalId)
-
-			if aws.StringValue(gatewayAssociationProposal.AssociatedGateway.Region) != region {
-				log.Printf("[INFO] Skipping Direct Connect Gateway Association Proposal (%s) in different home region: %s", proposalID, aws.StringValue(gatewayAssociationProposal.AssociatedGateway.Region))
+			if proposalRegion := aws.StringValue(proposal.AssociatedGateway.Region); proposalRegion != region {
+				log.Printf("[INFO] Skipping Direct Connect Gateway Association Proposal (%s) in different home region: %s", proposalID, proposalRegion)
 				continue
 			}
 
-			if aws.StringValue(gatewayAssociationProposal.ProposalState) != directconnect.GatewayAssociationProposalStateAccepted {
-				log.Printf("[INFO] Skipping Direct Connect Gateway Association Proposal (%s) in non-accepted (%s) state", proposalID, aws.StringValue(gatewayAssociationProposal.ProposalState))
+			if state := aws.StringValue(proposal.ProposalState); state != directconnect.GatewayAssociationProposalStateAccepted {
+				log.Printf("[INFO] Skipping Direct Connect Gateway Association Proposal (%s) in non-accepted (%s) state", proposalID, state)
 				continue
 			}
 
-			input := &directconnect.DeleteDirectConnectGatewayAssociationProposalInput{
-				ProposalId: gatewayAssociationProposal.ProposalId,
-			}
+			r := resourceAwsDxGatewayAssociationProposal()
+			d := r.Data(nil)
+			d.SetId(proposalID)
 
-			log.Printf("[INFO] Deleting Direct Connect Gateway Association Proposal: %s", proposalID)
-			_, err := conn.DeleteDirectConnectGatewayAssociationProposal(input)
-
-			if err != nil {
-				return fmt.Errorf("error deleting Direct Connect Gateway Association Proposal (%s): %s", proposalID, err)
-			}
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = output.NextToken
+	if testSweepSkipSweepError(err) {
+		log.Print(fmt.Errorf("[WARN] Skipping Direct Connect Gateway Association Proposal sweep for %s: %w", region, err))
+		return sweeperErrs // In case we have completed some pages, but had errors
 	}
 
-	return nil
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Direct Connect Gateway Association Proposals (%s): %w", region, err))
+	}
+
+	err = testSweepResourceOrchestrator(sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Direct Connect Gateway Association Proposals (%s): %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAwsDxGatewayAssociationProposal_basicVpnGateway(t *testing.T) {

@@ -5,16 +5,18 @@ import (
 	"fmt"
 	"log"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfdirectconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect/lister"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -31,38 +33,31 @@ func init() {
 func testSweepDirectConnectGatewayAssociations(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).dxconn
-	gatewayInput := &directconnect.DescribeDirectConnectGatewaysInput{}
+	input := &directconnect.DescribeDirectConnectGatewaysInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]*testSweepResource, 0)
 
-	for {
-		gatewayOutput, err := conn.DescribeDirectConnectGateways(gatewayInput)
-
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Direct Connect Gateway sweep for %s: %s", region, err)
-			return nil
+	lister.DescribeDirectConnectGatewaysPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewaysOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			return fmt.Errorf("error retrieving Direct Connect Gateways: %s", err)
-		}
-
-		for _, gateway := range gatewayOutput.DirectConnectGateways {
+		for _, gateway := range page.DirectConnectGateways {
 			directConnectGatewayID := aws.StringValue(gateway.DirectConnectGatewayId)
 
-			associationInput := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
-				DirectConnectGatewayId: gateway.DirectConnectGatewayId,
+			input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
+				DirectConnectGatewayId: aws.String(directConnectGatewayID),
 			}
 
-			for {
-				associationOutput, err := conn.DescribeDirectConnectGatewayAssociations(associationInput)
-
-				if err != nil {
-					return fmt.Errorf("error retrieving Direct Connect Gateway (%s) Associations: %s", directConnectGatewayID, err)
+			err := lister.DescribeDirectConnectGatewayAssociationsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
 				}
 
-				for _, association := range associationOutput.DirectConnectGatewayAssociations {
+				for _, association := range page.DirectConnectGatewayAssociations {
 					gatewayID := aws.StringValue(association.AssociatedGateway.Id)
 
 					if aws.StringValue(association.AssociatedGateway.Region) != region {
@@ -70,44 +65,36 @@ func testSweepDirectConnectGatewayAssociations(region string) error {
 						continue
 					}
 
-					if aws.StringValue(association.AssociationState) != directconnect.GatewayAssociationStateAssociated {
-						log.Printf("[INFO] Skipping Direct Connect Gateway (%s) Association in non-available (%s) state: %s", directConnectGatewayID, aws.StringValue(association.AssociationState), gatewayID)
+					if state := aws.StringValue(association.AssociationState); state != directconnect.GatewayAssociationStateAssociated {
+						log.Printf("[INFO] Skipping Direct Connect Gateway (%s) Association in non-available (%s) state: %s", directConnectGatewayID, state, gatewayID)
 						continue
 					}
 
-					input := &directconnect.DeleteDirectConnectGatewayAssociationInput{
-						AssociationId: association.AssociationId,
-					}
+					r := resourceAwsDxGatewayAssociation()
+					d := r.Data(nil)
+					d.SetId(tfdirectconnect.GatewayAssociationCreateResourceID(directConnectGatewayID, gatewayID))
 
-					log.Printf("[INFO] Deleting Direct Connect Gateway (%s) Association: %s", directConnectGatewayID, gatewayID)
-					_, err := conn.DeleteDirectConnectGatewayAssociation(input)
-
-					if isAWSErr(err, directconnect.ErrCodeClientException, "No association exists") {
-						continue
-					}
-
-					if err != nil {
-						return fmt.Errorf("error deleting Direct Connect Gateway (%s) Association (%s): %s", directConnectGatewayID, gatewayID, err)
-					}
-
-					if err := waitForDirectConnectGatewayAssociationDeletion(conn, aws.StringValue(association.AssociationId), 20*time.Minute); err != nil {
-						return fmt.Errorf("error waiting for Direct Connect Gateway (%s) Association (%s) to be deleted: %s", directConnectGatewayID, gatewayID, err)
-					}
+					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 				}
 
-				if aws.StringValue(associationOutput.NextToken) == "" {
-					break
-				}
+				return !lastPage
+			})
 
-				associationInput.NextToken = associationOutput.NextToken
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Direct Connect Gateway Associations (%s): %w", region, err))
 			}
 		}
 
-		if aws.StringValue(gatewayOutput.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		gatewayInput.NextToken = gatewayOutput.NextToken
+	if testSweepSkipSweepError(err) {
+		log.Print(fmt.Errorf("[WARN] Skipping Direct Connect Gateway Association sweep for %s: %w", region, err))
+		return sweeperErrs // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Direct Connect Gateways (%s): %w", region, err))
 	}
 
 	// Handle cross-account EC2 Transit Gateway associations.
@@ -127,61 +114,54 @@ func testSweepDirectConnectGatewayAssociations(region string) error {
 				continue
 			}
 
-			associationInput := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
-				AssociatedGatewayId: transitGateway.TransitGatewayId,
-			}
 			transitGatewayID := aws.StringValue(transitGateway.TransitGatewayId)
 
-			associationOutput, err := conn.DescribeDirectConnectGatewayAssociations(associationInput)
-
-			if err != nil {
-				log.Printf("[ERROR] error retrieving EC2 Transit Gateway (%s) Direct Connect Gateway Associations: %s", transitGatewayID, err)
-				continue
+			input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
+				AssociatedGatewayId: aws.String(transitGatewayID),
 			}
 
-			for _, association := range associationOutput.DirectConnectGatewayAssociations {
-				associationID := aws.StringValue(association.AssociationId)
-
-				if aws.StringValue(association.AssociationState) != directconnect.GatewayAssociationStateAssociated {
-					log.Printf("[INFO] Skipping EC2 Transit Gateway (%s) Direct Connect Gateway Association (%s) in non-available state: %s", transitGatewayID, associationID, aws.StringValue(association.AssociationState))
-					continue
+			err := lister.DescribeDirectConnectGatewayAssociationsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
 				}
 
-				input := &directconnect.DeleteDirectConnectGatewayAssociationInput{
-					AssociationId: association.AssociationId,
+				for _, association := range page.DirectConnectGatewayAssociations {
+					directConnectGatewayID := aws.StringValue(association.DirectConnectGatewayId)
+
+					if state := aws.StringValue(association.AssociationState); state != directconnect.GatewayAssociationStateAssociated {
+						log.Printf("[INFO] Skipping Direct Connect Gateway (%s) Association in non-available (%s) state: %s", directConnectGatewayID, state, transitGatewayID)
+						continue
+					}
+
+					r := resourceAwsDxGatewayAssociation()
+					d := r.Data(nil)
+					d.SetId(tfdirectconnect.GatewayAssociationCreateResourceID(directConnectGatewayID, transitGatewayID))
+
+					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 				}
 
-				log.Printf("[INFO] Deleting EC2 Transit Gateway (%s) Direct Connect Gateway Association: %s", transitGatewayID, associationID)
-				_, err := conn.DeleteDirectConnectGatewayAssociation(input)
+				return !lastPage
+			})
 
-				if isAWSErr(err, directconnect.ErrCodeClientException, "No association exists") {
-					continue
-				}
-
-				if err != nil {
-					log.Printf("[ERROR] error deleting EC2 Transit Gateway (%s) Direct Connect Gateway Association (%s): %s", transitGatewayID, associationID, err)
-					continue
-				}
-
-				if err := waitForDirectConnectGatewayAssociationDeletion(conn, associationID, 30*time.Minute); err != nil {
-					log.Printf("[ERROR] error waiting for EC2 Transit Gateway (%s) Direct Connect Gateway Association (%s) to be deleted: %s", transitGatewayID, associationID, err)
-				}
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Direct Connect Gateway Associations (%s): %w", region, err))
 			}
 		}
 
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Transit Gateway Direct Connect Gateway Association sweep for %s: %s", region, err)
-		return nil
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EC2 Transit Gateways (%s): %w", region, err))
 	}
+
+	err = testSweepResourceOrchestrator(sweepResources)
 
 	if err != nil {
-		return fmt.Errorf("error retrieving EC2 Transit Gateways: %s", err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Direct Connect Gateway Associations (%s): %w", region, err))
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 // V0 state upgrade testing must be done via acceptance testing due to API call
