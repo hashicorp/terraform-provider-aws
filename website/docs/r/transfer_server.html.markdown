@@ -24,16 +24,6 @@ resource "aws_transfer_server" "example" {
 }
 ```
 
-### Basic
-
-```terraform
-resource "aws_transfer_server" "example" {
-  tags = {
-    Name = "Example"
-  }
-}
-```
-
 ### Security Policy Name
 
 ```terraform
