@@ -30,7 +30,7 @@ The following arguments are supported:
 
 * `cluster_name` – (Required) Name of the EKS Cluster.
 * `oidc` - (Required) Nested attribute containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster. Detailed below.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### oidc Configuration Block
 
@@ -50,6 +50,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name (ARN) of the EKS Identity Provider Configuration.
 * `id` - EKS Cluster name and EKS Identity Provider Configuration name separated by a colon (`:`).
 * `status` - Status of the EKS Identity Provider Configuration.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 

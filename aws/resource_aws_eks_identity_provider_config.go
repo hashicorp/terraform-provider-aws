@@ -24,11 +24,14 @@ func resourceAwsEksIdentityProviderConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceAwsEksIdentityProviderConfigCreate,
 		ReadContext:   resourceAwsEksIdentityProviderConfigRead,
+		UpdateContext: resourceAwsEksIdentityProviderConfigUpdate,
 		DeleteContext: resourceAwsEksIdentityProviderConfigDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		CustomizeDiff: SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(25 * time.Minute),
@@ -116,7 +119,8 @@ func resourceAwsEksIdentityProviderConfig() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchemaForceNew(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
@@ -134,8 +138,10 @@ func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValid
 
 func resourceAwsEksIdentityProviderConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).eksconn
-	clusterName := d.Get("cluster_name").(string)
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
+	clusterName := d.Get("cluster_name").(string)
 	configName, oidc := expandEksOidcIdentityProviderConfigRequest(d.Get("oidc").([]interface{})[0].(map[string]interface{}))
 	id := tfeks.IdentityProviderConfigCreateResourceID(clusterName, configName)
 
@@ -145,8 +151,8 @@ func resourceAwsEksIdentityProviderConfigCreate(ctx context.Context, d *schema.R
 		Oidc:               oidc,
 	}
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		input.Tags = keyvaluetags.New(v).IgnoreAws().EksTags()
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().EksTags()
 	}
 
 	_, err := conn.AssociateIdentityProviderConfig(input)
@@ -168,6 +174,7 @@ func resourceAwsEksIdentityProviderConfigCreate(ctx context.Context, d *schema.R
 
 func resourceAwsEksIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).eksconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	clusterName, configName, err := tfeks.IdentityProviderConfigParseResourceID(d.Id())
@@ -197,11 +204,31 @@ func resourceAwsEksIdentityProviderConfigRead(ctx context.Context, d *schema.Res
 
 	d.Set("status", oidc.Status)
 
-	if err := d.Set("tags", keyvaluetags.EksKeyValueTags(oidc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	tags := keyvaluetags.EksKeyValueTags(oidc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.Errorf("error setting tags: %s", err)
 	}
 
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.Errorf("error setting tags_all: %s", err)
+	}
+
 	return nil
+}
+
+func resourceAwsEksIdentityProviderConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*AWSClient).eksconn
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := keyvaluetags.EksUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("error updating tags: %s", err)
+		}
+	}
+
+	return resourceAwsEksIdentityProviderConfigRead(ctx, d, meta)
 }
 
 func resourceAwsEksIdentityProviderConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
