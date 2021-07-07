@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
@@ -18,8 +20,9 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 		Create: resourceAwsDxGatewayAssociationProposalCreate,
 		Read:   resourceAwsDxGatewayAssociationProposalRead,
 		Delete: resourceAwsDxGatewayAssociationProposalDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: dxGatewayAssociationProposalImport,
+			State: resourceAwsDxGatewayAssociationProposalImport,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -296,63 +299,55 @@ func flattenDirectConnectGatewayAssociationProposalAllowedPrefixes(routeFilterPr
 	return allowedPrefixes
 }
 
-func dxGatewayAssociationProposalImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	// example: c2ede9b4-bbc6-4d33-923c-bc4feEXAMPLE/186c8187-36f4-472e-9268-107aaEXAMPLE/0d95359280EXAMPLE
+func resourceAwsDxGatewayAssociationProposalImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	parts := strings.Split(strings.ToLower(d.Id()), "/")
 
-	errStr := "unexpected format of import string (%q), expected PROPOSALID/DXGATEWAYID/TARGETGATEWAYID]*: %s"
-	importStr := d.Id()
-	log.Printf("[DEBUG] Validating import string (%s) for Direct Connect Gateway Association Proposal", importStr)
+	var proposalID, directConnectGatewayID, associatedGatewayID string
+	switch n := len(parts); n {
+	case 1:
+		return []*schema.ResourceData{d}, nil
 
-	parts := strings.Split(strings.ToLower(importStr), "/")
-	if len(parts) < 1 {
-		return nil, fmt.Errorf(errStr, importStr, "too few parts")
+	case 3:
+		proposalID = parts[0]
+		directConnectGatewayID = parts[1]
+		associatedGatewayID = parts[2]
+
+		if directConnectGatewayID == "" || associatedGatewayID == "" {
+			return nil, fmt.Errorf("Incorrect resource ID format: %q. DXGATEWAYID and TARGETGATEWAYID must not be empty strings", d.Id())
+		}
+
+		break
+
+	default:
+		return nil, fmt.Errorf("Incorrect resource ID format: %q. Expected PROPOSALID or PROPOSALID/DXGATEWAYID/TARGETGATEWAYID", d.Id())
 	}
-	var propId, dxgwId, gwId string
-	propId = parts[0]
 
 	conn := meta.(*AWSClient).dxconn
-	if propId != "" {
-		p, err := describeDirectConnectGatewayAssociationProposal(conn, propId)
-		if err != nil {
+
+	if proposalID != "" {
+		_, err := finder.GatewayAssociationProposalByID(conn, proposalID)
+
+		if tfresource.NotFound(err) {
+			// Proposal not found.
+		} else if err != nil {
 			return nil, err
-		}
-		if p != nil {
-			// proposal still exists normal import
-			return schema.ImportStatePassthrough(d, meta)
-		}
-		// proposal may not exist, but that's fine
-	}
-	d.SetId(propId)
+		} else {
+			// Proposal still exists.
+			d.SetId(proposalID)
 
-	if len(parts) == 1 {
-		// requesting just the prop id
-		return schema.ImportStatePassthrough(d, meta)
-	} else if len(parts) < 3 {
-		return nil, fmt.Errorf(errStr, importStr, "too few parts")
+			return []*schema.ResourceData{d}, nil
+		}
 	}
 
-	dxgwId = parts[1]
-	gwId = parts[2]
+	_, err := finder.GatewayAssociationByDirectConnectGatewayIDAndAssociatedGatewayID(conn, directConnectGatewayID, associatedGatewayID)
 
-	if gwId != "" && dxgwId != "" {
-		input := directconnect.DescribeDirectConnectGatewayAssociationsInput{
-			AssociatedGatewayId:    aws.String(gwId),
-			DirectConnectGatewayId: aws.String(dxgwId),
-		}
-		resp, err := conn.DescribeDirectConnectGatewayAssociations(&input)
-		if err != nil {
-			return nil, err
-		}
-
-		id := dxGatewayAssociationId(dxgwId, gwId)
-		if n := len(resp.DirectConnectGatewayAssociations); n != 1 {
-			return nil, fmt.Errorf("Found %d Direct Connect gateway associations for %s, expected 1", n, id)
-		}
-		d.Set("associated_gateway_id", gwId)
-		d.Set("dx_gateway_id", dxgwId)
-	} else {
-		return nil, fmt.Errorf(errStr, importStr, "missing parts")
+	if err != nil {
+		return nil, err
 	}
+
+	d.SetId(proposalID)
+	d.Set("associated_gateway_id", associatedGatewayID)
+	d.Set("dx_gateway_id", directConnectGatewayID)
 
 	return []*schema.ResourceData{d}, nil
 }

@@ -14,7 +14,7 @@ func GatewayAssociationByID(conn *directconnect.DirectConnect, id string) (*dire
 	return GatewayAssociation(conn, input)
 }
 
-func GatewayAssociationByAssociatedGatewayIDAndDirectConnectGatewayID(conn *directconnect.DirectConnect, associatedGatewayID, directConnectGatewayID string) (*directconnect.GatewayAssociation, error) {
+func GatewayAssociationByDirectConnectGatewayIDAndAssociatedGatewayID(conn *directconnect.DirectConnect, directConnectGatewayID, associatedGatewayID string) (*directconnect.GatewayAssociation, error) {
 	input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
 		AssociatedGatewayId:    aws.String(associatedGatewayID),
 		DirectConnectGatewayId: aws.String(directConnectGatewayID),
