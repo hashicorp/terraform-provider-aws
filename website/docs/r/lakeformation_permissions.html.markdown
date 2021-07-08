@@ -50,7 +50,7 @@ For more details, see [Changing the Default Security Settings for Your Data Lake
 
 ### Problem Using `IAMAllowedPrincipals`
 
-AWS does not support combining `IAMAllowedPrincipals` permissions and non-`IAMAllowedPrincipals` permissions. Doing so results in unexpected permissions. For example, this configuration grants a user `SELECT` on a column in a table.
+AWS does not support combining `IAMAllowedPrincipals` permissions and non-`IAMAllowedPrincipals` permissions. Doing so results in unexpected permissions and behaviors. For example, this configuration grants a user `SELECT` on a column in a table.
 
 ```terraform
 resource "aws_glue_catalog_database" "example" {
