@@ -201,7 +201,8 @@ data "aws_caller_identity" "receiver" {}
 func testAccAwsRamResourceShareAccepterResourceAssociation(rName string) string {
 	return composeConfig(testAccAwsRamResourceShareAccepterBasic(rName), fmt.Sprintf(`
 resource "aws_ram_resource_association" "test" {
-  provider           = "awsalternate"
+  provider = "awsalternate"
+
   resource_arn       = aws_codebuild_project.test.arn
   resource_share_arn = aws_ram_resource_share.test.arn
 }
