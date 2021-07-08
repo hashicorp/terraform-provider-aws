@@ -206,11 +206,11 @@ The changelog format requires an entry in the following format, where HEADER cor
 If a pull request should contain multiple changelog entries, then multiple blocks can be added to the same changelog file. For example:
 
 ``````markdown
-```release-notes:note
+```release-note:note
 resource/aws_example_thing: The `broken` attribute has been deprecated. All configurations using `broken` should be updated to use the new `not_broken` attribute instead.
 ```
 
-```release-notes:enhancement
+```release-note:enhancement
 resource/aws_example_thing: Add `not_broken` attribute
 ```
 ``````
