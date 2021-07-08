@@ -1090,8 +1090,8 @@ resource "aws_lakeformation_permissions" "test" {
 }
 
 resource "aws_lakeformation_permissions" "test2" {
-  permissions                   = ["ALTER", "DROP"]
-  principal                     = aws_iam_role.test2.arn
+  permissions = ["ALTER", "DROP"]
+  principal   = aws_iam_role.test2.arn
 
   database {
     name = aws_glue_catalog_database.test.name
@@ -1118,13 +1118,13 @@ resource "aws_iam_role" "test" {
       Principal = {
         Service = "glue.${data.aws_partition.current.dns_suffix}"
       }
-    },{
+      }, {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
         Service = "s3.${data.aws_partition.current.dns_suffix}"
       }
-	}]
+    }]
     Version = "2012-10-17"
   })
 }
