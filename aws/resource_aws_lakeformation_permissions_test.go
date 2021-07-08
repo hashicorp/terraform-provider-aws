@@ -1015,7 +1015,7 @@ resource "aws_glue_catalog_table" "test" {
 resource "aws_lakeformation_permissions" "test" {
   permissions = ["ALL"]
   principal   = "IAM_ALLOWED_PRINCIPALS"
-  
+
   database {
     name = aws_glue_catalog_database.test.name
   }
@@ -1261,7 +1261,7 @@ resource "aws_glue_catalog_table" "test" {
 resource "aws_lakeformation_permissions" "test" {
   permissions = ["ALL"]
   principal   = "IAM_ALLOWED_PRINCIPALS"
-  
+
   table {
     database_name = aws_glue_catalog_database.test.name
     name          = aws_glue_catalog_table.test.name
