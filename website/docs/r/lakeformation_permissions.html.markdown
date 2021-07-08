@@ -85,7 +85,7 @@ The resulting permissions depend on whether the table had `IAMAllowedPrincipals`
 
 | Result With IAP | Result Without IAP |
 | ---- | ---- |
-| `SELECT` on table with columns with column wildcard (i.e., all columns) | `SELECT` on `"event"` (as expected) |
+| `SELECT` column wildcard (i.e., all columns) | `SELECT` on `"event"` (as expected) |
 
 ## Using Lake Formation Permissions
 
