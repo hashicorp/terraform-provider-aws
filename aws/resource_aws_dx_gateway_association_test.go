@@ -490,7 +490,7 @@ func TestAccAwsDxGatewayAssociation_recreateProposal(t *testing.T) {
 				Config: testAccDxGatewayAssociationConfig_basicVpnGatewayCrossAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationExists(resourceName, &ga1, &gap1),
-					testAccCheckAwsDxGatewayAssociationProposalDisappears(&gap1),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsDxGatewayAssociationProposal(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -498,8 +498,8 @@ func TestAccAwsDxGatewayAssociation_recreateProposal(t *testing.T) {
 				Config: testAccDxGatewayAssociationConfig_basicVpnGatewayCrossAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationExists(resourceName, &ga2, &gap2),
-					testAccCheckAwsDxGatewayAssociationSameAssociation(&ga1, &ga2),
-					testAccCheckAwsDxGatewayAssociationDifferentProposal(&gap1, &gap2),
+					testAccCheckAwsDxGatewayAssociationNotRecreated(&ga1, &ga2),
+					testAccCheckAwsDxGatewayAssociationProposalRecreated(&gap1, &gap2),
 				),
 			},
 		},
@@ -575,20 +575,10 @@ func testAccCheckAwsDxGatewayAssociationExists(name string, ga *directconnect.Ga
 	}
 }
 
-func testAccCheckAwsDxGatewayAssociationSameAssociation(ga1, ga2 *directconnect.GatewayAssociation) resource.TestCheckFunc {
+func testAccCheckAwsDxGatewayAssociationNotRecreated(old, new *directconnect.GatewayAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(ga1.AssociationId) != aws.StringValue(ga2.AssociationId) {
-			return fmt.Errorf("Association IDs differ")
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckAwsDxGatewayAssociationDifferentProposal(gap1, gap2 *directconnect.GatewayAssociationProposal) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.StringValue(gap1.ProposalId) == aws.StringValue(gap2.ProposalId) {
-			return fmt.Errorf("Proposals IDs are equal")
+		if old, new := aws.StringValue(old.AssociationId), aws.StringValue(new.AssociationId); old == new {
+			return fmt.Errorf("Direct Connect Gateway Association (%s) recreated (%s)", old, new)
 		}
 
 		return nil
