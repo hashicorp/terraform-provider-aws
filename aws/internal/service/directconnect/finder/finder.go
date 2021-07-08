@@ -6,6 +6,39 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
+func GatewayByID(conn *directconnect.DirectConnect, id string) (*directconnect.Gateway, error) {
+	input := &directconnect.DescribeDirectConnectGatewaysInput{
+		DirectConnectGatewayId: aws.String(id),
+	}
+
+	output, err := conn.DescribeDirectConnectGateways(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.DirectConnectGateways) == 0 || output.DirectConnectGateways[0] == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	// TODO Check for multiple results.
+	// TODO https://github.com/hashicorp/terraform-provider-aws/pull/17613.
+
+	gateway := output.DirectConnectGateways[0]
+
+	if state := aws.StringValue(gateway.DirectConnectGatewayState); state == directconnect.GatewayStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	return gateway, nil
+}
+
 func GatewayAssociationByID(conn *directconnect.DirectConnect, id string) (*directconnect.GatewayAssociation, error) {
 	input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
 		AssociationId: aws.String(id),
