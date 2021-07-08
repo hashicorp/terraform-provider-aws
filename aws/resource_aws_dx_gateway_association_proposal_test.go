@@ -35,7 +35,7 @@ func testSweepDirectConnectGatewayAssociationProposals(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]*testSweepResource, 0)
 
-	lister.DescribeDirectConnectGatewayAssociationProposalsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, lastPage bool) bool {
+	err = lister.DescribeDirectConnectGatewayAssociationProposalsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
