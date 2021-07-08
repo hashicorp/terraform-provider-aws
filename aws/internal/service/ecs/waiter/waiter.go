@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	// Maximum amount of time to wait for a Capacity Provider to return INACTIVE
-	CapacityProviderInactiveTimeout = 20 * time.Minute
+	CapacityProviderDeleteTimeout = 20 * time.Minute
+	CapacityProviderUpdateTimeout = 10 * time.Minute
 
 	ServiceCreateTimeout      = 2 * time.Minute
 	ServiceInactiveTimeout    = 10 * time.Minute
@@ -23,13 +23,29 @@ const (
 	ClusterAvailableDelay   = 10 * time.Second
 )
 
-// CapacityProviderInactive waits for a Capacity Provider to return INACTIVE
-func CapacityProviderInactive(conn *ecs.ECS, capacityProvider string) (*ecs.CapacityProvider, error) {
+func CapacityProviderDeleted(conn *ecs.ECS, arn string) (*ecs.CapacityProvider, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ecs.CapacityProviderStatusActive},
-		Target:  []string{ecs.CapacityProviderStatusInactive},
-		Refresh: CapacityProviderStatus(conn, capacityProvider),
-		Timeout: CapacityProviderInactiveTimeout,
+		Target:  []string{},
+		Refresh: CapacityProviderStatus(conn, arn),
+		Timeout: CapacityProviderDeleteTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*ecs.CapacityProvider); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+func CapacityProviderUpdated(conn *ecs.ECS, arn string) (*ecs.CapacityProvider, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ecs.CapacityProviderUpdateStatusUpdateInProgress},
+		Target:  []string{ecs.CapacityProviderUpdateStatusUpdateComplete},
+		Refresh: CapacityProviderUpdateStatus(conn, arn),
+		Timeout: CapacityProviderUpdateTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
