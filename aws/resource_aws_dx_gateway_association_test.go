@@ -479,9 +479,7 @@ func TestAccAwsDxGatewayAssociation_recreateProposal(t *testing.T) {
 				Config: testAccDxGatewayAssociationConfig_basicVpnGatewayCrossAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationExists(resourceName, &ga1, &gap1),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDxGatewayAssociationProposal(), resourceNameProposal),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testAccDxGatewayAssociationConfig_basicVpnGatewayCrossAccount(rName, rBgpAsn),
@@ -490,6 +488,7 @@ func TestAccAwsDxGatewayAssociation_recreateProposal(t *testing.T) {
 					testAccCheckAwsDxGatewayAssociationNotRecreated(&ga1, &ga2),
 					testAccCheckAwsDxGatewayAssociationProposalRecreated(&gap1, &gap2),
 				),
+				Taint: []string{resourceNameProposal},
 			},
 		},
 	})
@@ -566,7 +565,7 @@ func testAccCheckAwsDxGatewayAssociationExists(name string, ga *directconnect.Ga
 
 func testAccCheckAwsDxGatewayAssociationNotRecreated(old, new *directconnect.GatewayAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if old, new := aws.StringValue(old.AssociationId), aws.StringValue(new.AssociationId); old == new {
+		if old, new := aws.StringValue(old.AssociationId), aws.StringValue(new.AssociationId); old != new {
 			return fmt.Errorf("Direct Connect Gateway Association (%s) recreated (%s)", old, new)
 		}
 
