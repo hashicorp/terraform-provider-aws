@@ -23,6 +23,15 @@ func GatewayAssociationByDirectConnectGatewayIDAndAssociatedGatewayID(conn *dire
 	return GatewayAssociation(conn, input)
 }
 
+func GatewayAssociationByDirectConnectGatewayIDAndVirtualGatewayID(conn *directconnect.DirectConnect, directConnectGatewayID, virtualGatewayID string) (*directconnect.GatewayAssociation, error) {
+	input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
+		DirectConnectGatewayId: aws.String(directConnectGatewayID),
+		VirtualGatewayId:       aws.String(virtualGatewayID),
+	}
+
+	return GatewayAssociation(conn, input)
+}
+
 func GatewayAssociation(conn *directconnect.DirectConnect, input *directconnect.DescribeDirectConnectGatewayAssociationsInput) (*directconnect.GatewayAssociation, error) {
 	output, err := conn.DescribeDirectConnectGatewayAssociations(input)
 

@@ -242,7 +242,7 @@ func resourceAwsDxGatewayAssociationProposalImport(d *schema.ResourceData, meta 
 		associatedGatewayID := parts[2]
 
 		if proposalID == "" || directConnectGatewayID == "" || associatedGatewayID == "" {
-			return nil, fmt.Errorf("Incorrect resource ID format: %q. PROPOSALID, DXGATEWAYID and TARGETGATEWAYID must not be empty strings", d.Id())
+			return nil, fmt.Errorf("Incorrect resource ID format: %q. PROPOSALID, DXGATEWAYID and ASSOCIATEDGATEWAYID must not be empty strings", d.Id())
 		}
 
 		// Use pseudo-proposal ID and actual DirectConnectGatewayId and AssociatedGatewayId.
@@ -251,7 +251,7 @@ func resourceAwsDxGatewayAssociationProposalImport(d *schema.ResourceData, meta 
 		d.Set("dx_gateway_id", directConnectGatewayID)
 
 	default:
-		return nil, fmt.Errorf("Incorrect resource ID format: %q. Expected PROPOSALID or PROPOSALID/DXGATEWAYID/TARGETGATEWAYID", d.Id())
+		return nil, fmt.Errorf("Incorrect resource ID format: %q. Expected PROPOSALID or PROPOSALID/DXGATEWAYID/ASSOCIATEDGATEWAYID", d.Id())
 	}
 
 	return []*schema.ResourceData{d}, nil

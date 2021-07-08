@@ -324,7 +324,7 @@ func testAccCheckAwsDxGatewayAssociationProposalExists(resourceName string, gate
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Direct Connect Gateway Association Proposal ID is set")
+			return fmt.Errorf("No ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).dxconn
