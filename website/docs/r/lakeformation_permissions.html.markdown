@@ -48,7 +48,7 @@ This is Lake Formation's default behavior:
 
 For more details, see [Changing the Default Security Settings for Your Data Lake](https://docs.aws.amazon.com/lake-formation/latest/dg/change-settings.html).
 
-### Example Problem Using `IAMAllowedPrincipals`
+### Problem Using `IAMAllowedPrincipals`
 
 AWS does not support combining `IAMAllowedPrincipals` permissions and non-`IAMAllowedPrincipals` permissions. Doing so results in unexpected permissions. For example, this configuration grants a user `SELECT` on a column in a table.
 
