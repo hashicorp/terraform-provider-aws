@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect/waiter"
 )
 
 const (
@@ -23,6 +24,7 @@ func resourceAwsDxGatewayAssociation() *schema.Resource {
 		Read:   resourceAwsDxGatewayAssociationRead,
 		Update: resourceAwsDxGatewayAssociationUpdate,
 		Delete: resourceAwsDxGatewayAssociationDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDxGatewayAssociationImport,
 		},
@@ -50,6 +52,7 @@ func resourceAwsDxGatewayAssociation() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"associated_gateway_owner_account_id", "proposal_id"},
+				AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
 			},
 
 			"associated_gateway_owner_account_id": {
@@ -59,6 +62,8 @@ func resourceAwsDxGatewayAssociation() *schema.Resource {
 				ForceNew:      true,
 				ValidateFunc:  validateAwsAccountId,
 				ConflictsWith: []string{"associated_gateway_id"},
+				RequiredWith:  []string{"proposal_id"},
+				AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
 			},
 
 			"associated_gateway_type": {
@@ -86,6 +91,7 @@ func resourceAwsDxGatewayAssociation() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"associated_gateway_id", "vpn_gateway_id"},
+				AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
 			},
 
 			"vpn_gateway_id": {
@@ -161,8 +167,8 @@ func resourceAwsDxGatewayAssociationCreate(d *schema.ResourceData, meta interfac
 	}
 	d.Set("dx_gateway_association_id", associationId)
 
-	if err := waitForDirectConnectGatewayAssociationAvailabilityOnCreate(conn, associationId, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Direct Connect gateway association (%s) to become available: %s", d.Id(), err)
+	if _, err := waiter.GatewayAssociationCreated(conn, associationId, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for Direct Connect Gateway Association (%s) to create: %w", d.Id(), err)
 	}
 
 	return resourceAwsDxGatewayAssociationRead(d, meta)
@@ -223,8 +229,8 @@ func resourceAwsDxGatewayAssociationUpdate(d *schema.ResourceData, meta interfac
 			return fmt.Errorf("error updating Direct Connect gateway association (%s): %s", d.Id(), err)
 		}
 
-		if err := waitForDirectConnectGatewayAssociationAvailabilityOnUpdate(conn, associationId, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Direct Connect gateway association (%s) to become available: %s", d.Id(), err)
+		if _, err := waiter.GatewayAssociationUpdated(conn, associationId, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for Direct Connect Gateway Association (%s) to update: %w", d.Id(), err)
 		}
 	}
 
@@ -249,7 +255,7 @@ func resourceAwsDxGatewayAssociationDelete(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error deleting Direct Connect Gateway Association (%s): %w", d.Id(), err)
 	}
 
-	if err := waitForDirectConnectGatewayAssociationDeletion(conn, associationID, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waiter.GatewayAssociationDeleted(conn, associationID, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Direct Connect Gateway Association (%s) to delete: %w", d.Id(), err)
 	}
 
@@ -322,49 +328,4 @@ func dxGatewayAssociationStateRefresh(conn *directconnect.DirectConnect, associa
 // Terraform resource ID.
 func dxGatewayAssociationId(dxgwId, gwId string) string {
 	return fmt.Sprintf("ga-%s%s", dxgwId, gwId)
-}
-
-func waitForDirectConnectGatewayAssociationAvailabilityOnCreate(conn *directconnect.DirectConnect, associationId string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{directconnect.GatewayAssociationStateAssociating},
-		Target:     []string{directconnect.GatewayAssociationStateAssociated},
-		Refresh:    dxGatewayAssociationStateRefresh(conn, associationId),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForDirectConnectGatewayAssociationAvailabilityOnUpdate(conn *directconnect.DirectConnect, associationId string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{directconnect.GatewayAssociationStateUpdating},
-		Target:     []string{directconnect.GatewayAssociationStateAssociated},
-		Refresh:    dxGatewayAssociationStateRefresh(conn, associationId),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForDirectConnectGatewayAssociationDeletion(conn *directconnect.DirectConnect, associationId string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{directconnect.GatewayAssociationStateDisassociating},
-		Target:     []string{directconnect.GatewayAssociationStateDisassociated, gatewayAssociationStateDeleted},
-		Refresh:    dxGatewayAssociationStateRefresh(conn, associationId),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
 }
