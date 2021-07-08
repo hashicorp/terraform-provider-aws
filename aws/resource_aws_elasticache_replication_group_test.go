@@ -1551,6 +1551,8 @@ func TestAccAWSElasticacheReplicationGroup_GlobalReplicationGroupId_Basic(t *tes
 					resource.TestCheckResourceAttrPair(resourceName, "engine", primaryGroupResourceName, "engine"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version", primaryGroupResourceName, "engine_version"),
 					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexp.MustCompile(fmt.Sprintf("^global-datastore-%s-", rName))),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "1"),
+					resource.TestCheckResourceAttr(primaryGroupResourceName, "number_cache_clusters", "2"),
 				),
 			},
 			{
@@ -1571,6 +1573,9 @@ func TestAccAWSElasticacheReplicationGroup_GlobalReplicationGroupId_Full(t *test
 	resourceName := "aws_elasticache_replication_group.test"
 	primaryGroupResourceName := "aws_elasticache_replication_group.primary"
 
+	initialNumCacheClusters := 2
+	updatedNumCacheClusters := 3
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -1581,7 +1586,7 @@ func TestAccAWSElasticacheReplicationGroup_GlobalReplicationGroupId_Full(t *test
 		CheckDestroy:      testAccCheckAWSElasticacheReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticacheReplicationGroupConfig_GlobalReplicationGroupId_Full(rName),
+				Config: testAccAWSElasticacheReplicationGroupConfig_GlobalReplicationGroupId_Full(rName, initialNumCacheClusters),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttrPair(resourceName, "global_replication_group_id", "aws_elasticache_global_replication_group.test", "global_replication_group_id"),
@@ -1590,7 +1595,7 @@ func TestAccAWSElasticacheReplicationGroup_GlobalReplicationGroupId_Full(t *test
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version", primaryGroupResourceName, "engine_version"),
 					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexp.MustCompile(fmt.Sprintf("^global-datastore-%s-", rName))),
 
-					resource.TestCheckResourceAttrPair(resourceName, "number_cache_clusters", primaryGroupResourceName, "number_cache_clusters"),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", strconv.Itoa(initialNumCacheClusters)),
 					resource.TestCheckResourceAttrPair(resourceName, "multi_az_enabled", primaryGroupResourceName, "multi_az_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "automatic_failover_enabled", primaryGroupResourceName, "automatic_failover_enabled"),
 
@@ -1606,6 +1611,13 @@ func TestAccAWSElasticacheReplicationGroup_GlobalReplicationGroupId_Full(t *test
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"apply_immediately"},
+			},
+			{
+				Config: testAccAWSElasticacheReplicationGroupConfig_GlobalReplicationGroupId_Full(rName, updatedNumCacheClusters),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", strconv.Itoa(updatedNumCacheClusters)),
+				),
 			},
 		},
 	})
@@ -2890,12 +2902,12 @@ resource "aws_elasticache_replication_group" "primary" {
 
   engine                = "redis"
   engine_version        = "5.0.6"
-  number_cache_clusters = 1
+  number_cache_clusters = 2
 }
 `, rName))
 }
 
-func testAccAWSElasticacheReplicationGroupConfig_GlobalReplicationGroupId_Full(rName string) string {
+func testAccAWSElasticacheReplicationGroupConfig_GlobalReplicationGroupId_Full(rName string, numCacheClusters int) string {
 	return composeConfig(
 		testAccMultipleRegionProviderConfig(2),
 		testAccElasticacheVpcBaseWithProvider(rName, "test", ProviderNameAws, 2),
@@ -2908,7 +2920,7 @@ resource "aws_elasticache_replication_group" "test" {
 
   subnet_group_name = aws_elasticache_subnet_group.test.name
 
-  number_cache_clusters      = 2
+  number_cache_clusters      = %[2]d
   automatic_failover_enabled = true
   multi_az_enabled           = true
 
@@ -2943,7 +2955,7 @@ resource "aws_elasticache_replication_group" "primary" {
   at_rest_encryption_enabled = true
   transit_encryption_enabled = true
 }
-`, rName))
+`, rName, numCacheClusters))
 }
 
 func testAccAWSElasticacheReplicationGroupConfig_GlobalReplicationGroupId_ClusterMode(rName string, primaryReplicaCount, secondaryReplicaCount int) string {
