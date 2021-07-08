@@ -40,16 +40,23 @@ func GatewayAssociation(conn *directconnect.DirectConnect, input *directconnect.
 	// TODO Check for multiple results.
 	// TODO https://github.com/hashicorp/terraform-provider-aws/pull/17613.
 
-	gatewayAssociation := output.DirectConnectGatewayAssociations[0]
+	association := output.DirectConnectGatewayAssociations[0]
 
-	if state := aws.StringValue(gatewayAssociation.AssociationState); state == directconnect.GatewayAssociationStateDisassociated {
+	if state := aws.StringValue(association.AssociationState); state == directconnect.GatewayAssociationStateDisassociated {
 		return nil, &resource.NotFoundError{
 			Message:     state,
 			LastRequest: input,
 		}
 	}
 
-	return gatewayAssociation, nil
+	if association.AssociatedGateway == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty AssociatedGateway",
+			LastRequest: input,
+		}
+	}
+
+	return association, nil
 }
 
 func GatewayAssociationProposalByID(conn *directconnect.DirectConnect, id string) (*directconnect.GatewayAssociationProposal, error) {
@@ -78,6 +85,13 @@ func GatewayAssociationProposalByID(conn *directconnect.DirectConnect, id string
 	if state := aws.StringValue(proposal.ProposalState); state == directconnect.GatewayAssociationProposalStateDeleted {
 		return nil, &resource.NotFoundError{
 			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	if proposal.AssociatedGateway == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty AssociatedGateway",
 			LastRequest: input,
 		}
 	}

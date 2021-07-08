@@ -373,10 +373,10 @@ func testAccCheckAwsDxGatewayAssociationProposalDisappears(proposal *directconne
 	}
 }
 
-func testAccCheckAwsDxGatewayAssociationProposalRecreated(i, j *directconnect.GatewayAssociationProposal) resource.TestCheckFunc {
+func testAccCheckAwsDxGatewayAssociationProposalRecreated(old, new *directconnect.GatewayAssociationProposal) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.ProposalId) == aws.StringValue(j.ProposalId) {
-			return fmt.Errorf("Direct Connect Gateway Association Proposal not recreated")
+		if old, new := aws.StringValue(old.ProposalId), aws.StringValue(new.ProposalId); old == new {
+			return fmt.Errorf("Direct Connect Gateway Association Proposal (%s) not recreated", old)
 		}
 
 		return nil
@@ -392,19 +392,16 @@ func testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName string) re
 
 		conn := testAccProvider.Meta().(*AWSClient).dxconn
 
-		proposal, err := describeDirectConnectGatewayAssociationProposal(conn, rs.Primary.ID)
+		output, err := finder.GatewayAssociationProposalByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if proposal == nil {
-			return fmt.Errorf("Direct Connect Gateway Association Proposal (%s) not found", rs.Primary.ID)
-		}
-
-		if aws.StringValue(proposal.ProposalState) != "accepted" {
+		if aws.StringValue(output.ProposalState) != directconnect.GatewayAssociationProposalStateAccepted {
 			return fmt.Errorf("Direct Connect Gateway Association Proposal (%s) not accepted", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }

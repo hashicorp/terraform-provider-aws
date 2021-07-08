@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -233,21 +234,23 @@ func resourceAwsDxGatewayAssociationUpdate(d *schema.ResourceData, meta interfac
 func resourceAwsDxGatewayAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
 
-	associationId := d.Get("dx_gateway_association_id").(string)
+	associationID := d.Get("dx_gateway_association_id").(string)
 
-	log.Printf("[DEBUG] Deleting Direct Connect gateway association: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Direct Connect Gateway Association: %s", d.Id())
 	_, err := conn.DeleteDirectConnectGatewayAssociation(&directconnect.DeleteDirectConnectGatewayAssociationInput{
-		AssociationId: aws.String(associationId),
+		AssociationId: aws.String(associationID),
 	})
-	if isAWSErr(err, directconnect.ErrCodeClientException, "No association exists") {
+
+	if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "does not exist") {
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("error deleting Direct Connect gateway association: %s", err)
+		return fmt.Errorf("error deleting Direct Connect Gateway Association (%s): %w", d.Id(), err)
 	}
 
-	if err := waitForDirectConnectGatewayAssociationDeletion(conn, associationId, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Direct Connect gateway association (%s) to be deleted: %s", d.Id(), err)
+	if err := waitForDirectConnectGatewayAssociationDeletion(conn, associationID, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for Direct Connect Gateway Association (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil
