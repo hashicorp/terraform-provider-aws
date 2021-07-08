@@ -1,3 +1,22 @@
+## 3.48.0 (July 02, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_iam_session_context` ([#19957](https://github.com/hashicorp/terraform-provider-aws/issues/19957))
+* **New Data Source:** `aws_servicecatalog_launch_paths` ([#19572](https://github.com/hashicorp/terraform-provider-aws/issues/19572))
+* **New Data Source:** `aws_servicecatalog_portfolio_constraints` ([#19813](https://github.com/hashicorp/terraform-provider-aws/issues/19813))
+* **New Resource:** `aws_cloudfront_monitoring_subscription` ([#18083](https://github.com/hashicorp/terraform-provider-aws/issues/18083))
+* **New Resource:** `aws_servicecatalog_provisioned_product` ([#19459](https://github.com/hashicorp/terraform-provider-aws/issues/19459))
+
+ENHANCEMENTS:
+
+* resource/aws_fsx_windows_file_system: Add `audit_log_configuration` argument. ([#19970](https://github.com/hashicorp/terraform-provider-aws/issues/19970))
+
+BUG FIXES:
+
+* resource/aws_cloudwatch_event_target: Don't crash if `sqs_target` configuration block is empty. ([#19946](https://github.com/hashicorp/terraform-provider-aws/issues/19946))
+* resource/aws_mwaa_environment: Changes to the `kms_key` argument force resource recreation ([#19994](https://github.com/hashicorp/terraform-provider-aws/issues/19994))
+
 ## 3.47.0 (June 24, 2021)
 
 FEATURES:
