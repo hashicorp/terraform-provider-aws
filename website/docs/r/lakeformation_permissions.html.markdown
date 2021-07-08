@@ -21,7 +21,7 @@ Grants permissions to the principal to access metadata in the Data Catalog and d
 When using Lake Formation, choose ONE of the following options as they are mutually exclusive:
 
 1. Use this resource (`aws_lakeformation_permissions`), change the default security settings using [`aws_lakeformation_data_lake_settings`](/docs/providers/aws/r/lakeformation_data_lake_settings.html), and remove existing `IAMAllowedPrincipals` permissions
-2. Use `IAMAllowedPrincipals` without `aws_lakeformation_permissions` ```
+2. Use `IAMAllowedPrincipals` without `aws_lakeformation_permissions`
 
 This example shows removing the `IAMAllowedPrincipals` default security settings and making the caller a Lake Formation admin. Since `create_database_default_permissions` and `create_table_default_permissions` are not set in the [`aws_lakeformation_data_lake_settings`](/docs/providers/aws/r/lakeformation_data_lake_settings.html) resource, they are cleared.
 
