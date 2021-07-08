@@ -78,7 +78,7 @@ func TestAccAwsRamResourceShareAccepter_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsRamResourceShareAccepter_resource_association(t *testing.T) {
+func TestAccAwsRamResourceShareAccepter_resourceAssociation(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_ram_resource_share_accepter.test"
 	principalAssociationResourceName := "aws_ram_principal_association.test"
@@ -207,7 +207,7 @@ resource "aws_ram_resource_association" "test" {
 }
 
 resource "aws_codebuild_project" "test" {
-  provider     = "awsalternate"
+  provider = "awsalternate"
 
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -228,51 +228,43 @@ resource "aws_codebuild_project" "test" {
   }
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   provider = "awsalternate"
 
-  name     = %[1]q
+  name = %[1]q
 
-  assume_role_policy = <<-EOF
-    {
-      "Version": "2012-10-17",
-      "Statement": [
-        {
-          "Effect": "Allow",
-          "Principal": {
-            "Service": "codebuild.amazonaws.com"
-          },
-          "Action": "sts:AssumeRole"
-        }
-      ]
-    }
-    EOF
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "codebuild.${data.aws_partition.current.dns_suffix}"
+      }
+    }]
+    Version = "2012-10-17"
+  })
 }
 
 resource "aws_iam_role_policy" "test" {
   provider = "awsalternate"
 
-  name     = %[1]q
-  role     = aws_iam_role.test.name
+  name = %[1]q
+  role = aws_iam_role.test.name
 
-  policy = <<-POLICY
-    {
-      "Version": "2012-10-17",
-      "Statement": [
-        {
-          "Effect": "Allow",
-          "Resource": [
-            "*"
-          ],
-          "Action": [
-            "logs:CreateLogGroup",
-            "logs:CreateLogStream",
-            "logs:PutLogEvents"
-          ]
-        }
+  policy = jsonencode({
+    Version   = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Resource = ["*"]
+      Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
       ]
-    }
-    POLICY
+    }]
+  })
 }
 `, rName))
 }
