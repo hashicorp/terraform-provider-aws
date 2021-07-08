@@ -2013,7 +2013,7 @@ resource "aws_lakeformation_permissions" "test" {
   table_with_columns {
     database_name = aws_glue_catalog_table.test.database_name
     name          = aws_glue_catalog_table.test.name
-	wildcard      = true
+    wildcard      = true
   }
 
   # for consistency, ensure that admins are setup before testing
