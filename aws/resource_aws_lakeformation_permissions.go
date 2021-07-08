@@ -503,7 +503,6 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 				tableSet = true
 				break
 			}
-
 		}
 	}
 
