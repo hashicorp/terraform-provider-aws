@@ -351,16 +351,6 @@ func testAccCheckAwsDxGatewayAssociationProposalRecreated(old, new *directconnec
 	}
 }
 
-// func testAccCheckAwsDxGatewayAssociationProposalNotRecreated(old, new *directconnect.GatewayAssociationProposal) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		if old, new := aws.StringValue(old.ProposalId), aws.StringValue(new.ProposalId); old != new {
-// 			return fmt.Errorf("Direct Connect Gateway Association Proposal (%s) recreated (%s)", old, new)
-// 		}
-
-// 		return nil
-// 	}
-// }
-
 func testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]

@@ -463,7 +463,6 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewayCrossAccount(t *tes
 func TestAccAwsDxGatewayAssociation_recreateProposal(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_dx_gateway_association.test"
-	resourceNameProposal := "aws_dx_gateway_association_proposal.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	var ga1, ga2 directconnect.GatewayAssociation
@@ -482,13 +481,12 @@ func TestAccAwsDxGatewayAssociation_recreateProposal(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDxGatewayAssociationConfig_basicVpnGatewayCrossAccount(rName, rBgpAsn),
+				Config: testAccDxGatewayAssociationConfig_basicVpnGatewayCrossAccountUpdatedProposal(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationExists(resourceName, &ga2, &gap2),
 					testAccCheckAwsDxGatewayAssociationNotRecreated(&ga1, &ga2),
 					testAccCheckAwsDxGatewayAssociationProposalRecreated(&gap1, &gap2),
 				),
-				Taint: []string{resourceNameProposal},
 			},
 		},
 	})
@@ -695,6 +693,34 @@ resource "aws_dx_gateway_association" "test" {
   provider = "awsalternate"
 
   proposal_id                         = aws_dx_gateway_association_proposal.test.id
+  dx_gateway_id                       = aws_dx_gateway.test.id
+  associated_gateway_owner_account_id = data.aws_caller_identity.creator.account_id
+}
+`)
+}
+
+func testAccDxGatewayAssociationConfig_basicVpnGatewayCrossAccountUpdatedProposal(rName string, rBgpAsn int) string {
+	return composeConfig(
+		testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn),
+		`
+# Creator
+resource "aws_dx_gateway_association_proposal" "test" {
+  dx_gateway_id               = aws_dx_gateway.test.id
+  dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
+  associated_gateway_id       = aws_vpn_gateway_attachment.test.vpn_gateway_id
+}
+
+resource "aws_dx_gateway_association_proposal" "test2" {
+	dx_gateway_id               = aws_dx_gateway.test.id
+	dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
+	associated_gateway_id       = aws_vpn_gateway_attachment.test.vpn_gateway_id
+  }
+
+# Accepter
+resource "aws_dx_gateway_association" "test" {
+  provider = "awsalternate"
+
+  proposal_id                         = aws_dx_gateway_association_proposal.test2.id
   dx_gateway_id                       = aws_dx_gateway.test.id
   associated_gateway_owner_account_id = data.aws_caller_identity.creator.account_id
 }
