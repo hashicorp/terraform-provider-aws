@@ -7,8 +7,8 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_cognito_user_pool_client: Add the `enable_token_revocation` argument to support targeted sign out ([#20031](https://github.com/hashicorp/terraform-provider-aws/issues/20031))
+* resource/aws_fsx_windows_file_system: Add `aliases` argument ([#20054](https://github.com/hashicorp/terraform-provider-aws/issues/20054))
 * resource/aws_guardduty_detector: Add `datasources` argument ([#19954](https://github.com/hashicorp/terraform-provider-aws/issues/19954))
-* resource/fsx_windows_file_system: Add `aliases` argument. ([#20054](https://github.com/hashicorp/terraform-provider-aws/issues/20054))
 
 BUG FIXES:
 
