@@ -578,6 +578,7 @@ func Provider() *schema.Provider {
 			"aws_config_configuration_recorder_status":                resourceAwsConfigConfigurationRecorderStatus(),
 			"aws_config_conformance_pack":                             resourceAwsConfigConformancePack(),
 			"aws_config_delivery_channel":                             resourceAwsConfigDeliveryChannel(),
+			"aws_config_organization_conformance_pack":                resourceAwsConfigOrganizationConformancePack(),
 			"aws_config_organization_custom_rule":                     resourceAwsConfigOrganizationCustomRule(),
 			"aws_config_organization_managed_rule":                    resourceAwsConfigOrganizationManagedRule(),
 			"aws_config_remediation_configuration":                    resourceAwsConfigRemediationConfiguration(),
