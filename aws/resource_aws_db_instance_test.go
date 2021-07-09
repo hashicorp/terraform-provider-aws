@@ -5455,8 +5455,8 @@ resource "aws_db_instance" "source" {
 
 resource "aws_db_instance" "test" {
   identifier          = %q
-  instance_class      = "${aws_db_instance.source.instance_class}"
-  replicate_source_db = "${aws_db_instance.source.id}"
+  instance_class      = aws_db_instance.source.instance_class
+  replicate_source_db = aws_db_instance.source.id
   skip_final_snapshot = true
   iops                = %d
   storage_type        = "io1"
@@ -5482,8 +5482,8 @@ resource "aws_db_instance" "source" {
 resource "aws_db_instance" "test" {
   allocated_storage   = %[2]d
   identifier          = %[1]q
-  instance_class      = "${aws_db_instance.source.instance_class}"
-  replicate_source_db = "${aws_db_instance.source.id}"
+  instance_class      = aws_db_instance.source.instance_class
+  replicate_source_db = aws_db_instance.source.id
   skip_final_snapshot = true
   iops                = %[3]d
   storage_type        = "io1"
