@@ -20,6 +20,8 @@ func TestAccAWSStorageGatewaySmbFileShare_Authentication_ActiveDirectory(t *test
 	bucketResourceName := "aws_s3_bucket.test"
 	iamResourceName := "aws_iam_role.test"
 
+	domain := testAccRandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
@@ -27,7 +29,7 @@ func TestAccAWSStorageGatewaySmbFileShare_Authentication_ActiveDirectory(t *test
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSStorageGatewaySmbFileShareConfig_Authentication_ActiveDirectory(rName),
+				Config: testAccAWSStorageGatewaySmbFileShareConfig_Authentication_ActiveDirectory(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`share/share-.+`)),
@@ -345,6 +347,8 @@ func TestAccAWSStorageGatewaySmbFileShare_InvalidUserList(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
 
+	domain := testAccRandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
@@ -352,21 +356,21 @@ func TestAccAWSStorageGatewaySmbFileShare_InvalidUserList(t *testing.T) {
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSStorageGatewaySmbFileShareConfig_InvalidUserList_Single(rName, "invaliduser1"),
+				Config: testAccAWSStorageGatewaySmbFileShareConfig_InvalidUserList_Single(rName, domain, "invaliduser1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
 					resource.TestCheckResourceAttr(resourceName, "invalid_user_list.#", "1"),
 				),
 			},
 			{
-				Config: testAccAWSStorageGatewaySmbFileShareConfig_InvalidUserList_Multiple(rName, "invaliduser2", "invaliduser3"),
+				Config: testAccAWSStorageGatewaySmbFileShareConfig_InvalidUserList_Multiple(rName, domain, "invaliduser2", "invaliduser3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
 					resource.TestCheckResourceAttr(resourceName, "invalid_user_list.#", "2"),
 				),
 			},
 			{
-				Config: testAccAWSStorageGatewaySmbFileShareConfig_InvalidUserList_Single(rName, "invaliduser4"),
+				Config: testAccAWSStorageGatewaySmbFileShareConfig_InvalidUserList_Single(rName, domain, "invaliduser4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
 					resource.TestCheckResourceAttr(resourceName, "invalid_user_list.#", "1"),
@@ -564,6 +568,8 @@ func TestAccAWSStorageGatewaySmbFileShare_ValidUserList(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
 
+	domain := testAccRandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
@@ -571,21 +577,21 @@ func TestAccAWSStorageGatewaySmbFileShare_ValidUserList(t *testing.T) {
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSStorageGatewaySmbFileShareConfig_ValidUserList_Single(rName, "validuser1"),
+				Config: testAccAWSStorageGatewaySmbFileShareConfig_ValidUserList_Single(rName, domain, "validuser1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
 					resource.TestCheckResourceAttr(resourceName, "valid_user_list.#", "1"),
 				),
 			},
 			{
-				Config: testAccAWSStorageGatewaySmbFileShareConfig_ValidUserList_Multiple(rName, "validuser2", "validuser3"),
+				Config: testAccAWSStorageGatewaySmbFileShareConfig_ValidUserList_Multiple(rName, domain, "validuser2", "validuser3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
 					resource.TestCheckResourceAttr(resourceName, "valid_user_list.#", "2"),
 				),
 			},
 			{
-				Config: testAccAWSStorageGatewaySmbFileShareConfig_ValidUserList_Single(rName, "validuser4"),
+				Config: testAccAWSStorageGatewaySmbFileShareConfig_ValidUserList_Single(rName, domain, "validuser4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
 					resource.TestCheckResourceAttr(resourceName, "valid_user_list.#", "1"),
@@ -605,6 +611,8 @@ func TestAccAWSStorageGatewaySmbFileShare_smb_acl(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
 
+	domain := testAccRandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
@@ -612,7 +620,7 @@ func TestAccAWSStorageGatewaySmbFileShare_smb_acl(t *testing.T) {
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSStorageGatewaySmbFileShareSMBACLConfig(rName, true),
+				Config: testAccAWSStorageGatewaySmbFileShareSMBACLConfig(rName, domain, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
 					resource.TestCheckResourceAttr(resourceName, "smb_acl_enabled", "true"),
@@ -624,14 +632,14 @@ func TestAccAWSStorageGatewaySmbFileShare_smb_acl(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSStorageGatewaySmbFileShareSMBACLConfig(rName, false),
+				Config: testAccAWSStorageGatewaySmbFileShareSMBACLConfig(rName, domain, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
 					resource.TestCheckResourceAttr(resourceName, "smb_acl_enabled", "false"),
 				),
 			},
 			{
-				Config: testAccAWSStorageGatewaySmbFileShareSMBACLConfig(rName, true),
+				Config: testAccAWSStorageGatewaySmbFileShareSMBACLConfig(rName, domain, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
 					resource.TestCheckResourceAttr(resourceName, "smb_acl_enabled", "true"),
@@ -790,6 +798,8 @@ func TestAccAWSStorageGatewaySmbFileShare_AdminUserList(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
 
+	domain := testAccRandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
@@ -797,21 +807,21 @@ func TestAccAWSStorageGatewaySmbFileShare_AdminUserList(t *testing.T) {
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSStorageGatewaySmbFileShareConfig_AdminUserList_Single(rName, "adminuser1"),
+				Config: testAccAWSStorageGatewaySmbFileShareConfig_AdminUserList_Single(rName, domain, "adminuser1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", "1"),
 				),
 			},
 			{
-				Config: testAccAWSStorageGatewaySmbFileShareConfig_AdminUserList_Multiple(rName, "adminuser2", "adminuser3"),
+				Config: testAccAWSStorageGatewaySmbFileShareConfig_AdminUserList_Multiple(rName, domain, "adminuser2", "adminuser3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", "2"),
 				),
 			},
 			{
-				Config: testAccAWSStorageGatewaySmbFileShareConfig_AdminUserList_Single(rName, "adminuser4"),
+				Config: testAccAWSStorageGatewaySmbFileShareConfig_AdminUserList_Single(rName, domain, "adminuser4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", "1"),
@@ -884,10 +894,10 @@ func testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName string, smbFil
 	}
 }
 
-func testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName string) string {
-	return testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettings(rName) + fmt.Sprintf(`
+func testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domain string) string {
+	return testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettings(rName, domain) + fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = %q
+  name = %[1]q
 
   assume_role_policy = <<POLICY
 {
@@ -929,10 +939,10 @@ POLICY
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket        = %q
+  bucket        = %[1]q
   force_destroy = true
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccAWSStorageGateway_SmbFileShare_GuestAccessBase(rName string) string {
@@ -986,8 +996,8 @@ resource "aws_s3_bucket" "test" {
 `, rName, rName)
 }
 
-func testAccAWSStorageGatewaySmbFileShareConfig_Authentication_ActiveDirectory(rName string) string {
-	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName) + `
+func testAccAWSStorageGatewaySmbFileShareConfig_Authentication_ActiveDirectory(rName, domain string) string {
+	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domain) + `
 resource "aws_storagegateway_smb_file_share" "test" {
   authentication = "ActiveDirectory"
   gateway_arn    = aws_storagegateway_gateway.test.arn
@@ -1071,8 +1081,8 @@ resource "aws_storagegateway_smb_file_share" "test" {
 `, guessMimeTypeEnabled)
 }
 
-func testAccAWSStorageGatewaySmbFileShareConfig_InvalidUserList_Single(rName, invalidUser1 string) string {
-	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName) + fmt.Sprintf(`
+func testAccAWSStorageGatewaySmbFileShareConfig_InvalidUserList_Single(rName, domain, invalidUser1 string) string {
+	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domain) + fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
   # Must be ActiveDirectory
   authentication    = "ActiveDirectory"
@@ -1084,8 +1094,8 @@ resource "aws_storagegateway_smb_file_share" "test" {
 `, invalidUser1)
 }
 
-func testAccAWSStorageGatewaySmbFileShareConfig_InvalidUserList_Multiple(rName, invalidUser1, invalidUser2 string) string {
-	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName) + fmt.Sprintf(`
+func testAccAWSStorageGatewaySmbFileShareConfig_InvalidUserList_Multiple(rName, domain, invalidUser1, invalidUser2 string) string {
+	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domain) + fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
   # Must be ActiveDirectory
   authentication    = "ActiveDirectory"
@@ -1191,8 +1201,8 @@ resource "aws_storagegateway_smb_file_share" "test" {
 `, requesterPays)
 }
 
-func testAccAWSStorageGatewaySmbFileShareConfig_ValidUserList_Single(rName, validUser1 string) string {
-	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName) + fmt.Sprintf(`
+func testAccAWSStorageGatewaySmbFileShareConfig_ValidUserList_Single(rName, domain, validUser1 string) string {
+	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domain) + fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
   # Must be ActiveDirectory
   authentication  = "ActiveDirectory"
@@ -1204,8 +1214,8 @@ resource "aws_storagegateway_smb_file_share" "test" {
 `, validUser1)
 }
 
-func testAccAWSStorageGatewaySmbFileShareConfig_ValidUserList_Multiple(rName, validUser1, validUser2 string) string {
-	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName) + fmt.Sprintf(`
+func testAccAWSStorageGatewaySmbFileShareConfig_ValidUserList_Multiple(rName, domain, validUser1, validUser2 string) string {
+	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domain) + fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
   # Must be ActiveDirectory
   authentication  = "ActiveDirectory"
@@ -1217,8 +1227,8 @@ resource "aws_storagegateway_smb_file_share" "test" {
 `, validUser1, validUser2)
 }
 
-func testAccAWSStorageGatewaySmbFileShareConfig_AdminUserList_Single(rName, adminUser1 string) string {
-	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName) + fmt.Sprintf(`
+func testAccAWSStorageGatewaySmbFileShareConfig_AdminUserList_Single(rName, domain, adminUser1 string) string {
+	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domain) + fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
   # Must be ActiveDirectory
   authentication  = "ActiveDirectory"
@@ -1230,8 +1240,8 @@ resource "aws_storagegateway_smb_file_share" "test" {
 `, adminUser1)
 }
 
-func testAccAWSStorageGatewaySmbFileShareConfig_AdminUserList_Multiple(rName, adminUser1, adminUser2 string) string {
-	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName) + fmt.Sprintf(`
+func testAccAWSStorageGatewaySmbFileShareConfig_AdminUserList_Multiple(rName, domain, adminUser1, adminUser2 string) string {
+	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domain) + fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
   # Must be ActiveDirectory
   authentication  = "ActiveDirectory"
@@ -1276,8 +1286,8 @@ resource "aws_storagegateway_smb_file_share" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAWSStorageGatewaySmbFileShareSMBACLConfig(rName string, enabled bool) string {
-	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName) + fmt.Sprintf(`
+func testAccAWSStorageGatewaySmbFileShareSMBACLConfig(rName, domain string, enabled bool) string {
+	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domain) + fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
   authentication  = "ActiveDirectory"
   gateway_arn     = aws_storagegateway_gateway.test.arn
