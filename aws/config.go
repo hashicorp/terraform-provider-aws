@@ -729,8 +729,11 @@ func (c *Config) Client() (interface{}, error) {
 			} else {
 				r.Retryable = aws.Bool(false)
 			}
-		case "PutOrganizationConformancePack", "DeleteOrganizationConformancePack", "DescribeOrganizationConformancePackStatuses":
+		case "DeleteOrganizationConformancePack", "DescribeOrganizationConformancePacks", "DescribeOrganizationConformancePackStatuses", "PutOrganizationConformancePack":
 			if !tfawserr.ErrCodeEquals(r.Error, configservice.ErrCodeOrganizationAccessDeniedException) {
+				if r.Operation.Name == "DeleteOrganizationConformancePack" && tfawserr.ErrCodeEquals(err, configservice.ErrCodeResourceInUseException) {
+					r.Retryable = aws.Bool(true)
+				}
 				return
 			}
 

@@ -17,7 +17,7 @@ const (
 
 	ConfigOrganizationConformancePackCreateTimeout = 10 * time.Minute
 	ConfigOrganizationConformancePackUpdateTimeout = 10 * time.Minute
-	ConfigOrganizationConformancePackDeleteTimeout = 10 * time.Minute
+	ConfigOrganizationConformancePackDeleteTimeout = 20 * time.Minute
 
 	ConfigConformancePackStatusNotFound = "NotFound"
 	ConfigConformancePackStatusUnknown  = "Unknown"
@@ -310,6 +310,37 @@ func configRefreshOrganizationConfigRuleStatus(conn *configservice.ConfigService
 	}
 }
 
+func configRefreshOrganizationConformancePackCreationStatus(conn *configservice.ConfigService, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		status, err := configDescribeOrganizationConformancePackStatus(conn, name)
+
+		// Transient ResourceDoesNotExist error after creation caught here
+		// in cases where the StateChangeConf's delay time is not sufficient
+		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConformancePackException) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if status == nil {
+			return nil, "", nil
+		}
+
+		if status.ErrorCode != nil {
+			return status, aws.StringValue(status.Status), fmt.Errorf("%s: %s", aws.StringValue(status.ErrorCode), aws.StringValue(status.ErrorMessage))
+		}
+
+		switch s := aws.StringValue(status.Status); s {
+		case configservice.OrganizationResourceStatusCreateFailed, configservice.OrganizationResourceStatusDeleteFailed, configservice.OrganizationResourceStatusUpdateFailed:
+			return status, s, configOrganizationConformancePackDetailedStatusError(conn, name, s)
+		}
+
+		return status, aws.StringValue(status.Status), nil
+	}
+}
+
 func configRefreshOrganizationConformancePackStatus(conn *configservice.ConfigService, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		status, err := configDescribeOrganizationConformancePackStatus(conn, name)
@@ -326,26 +357,29 @@ func configRefreshOrganizationConformancePackStatus(conn *configservice.ConfigSe
 			return status, aws.StringValue(status.Status), fmt.Errorf("%s: %s", aws.StringValue(status.ErrorCode), aws.StringValue(status.ErrorMessage))
 		}
 
-		switch aws.StringValue(status.Status) {
+		switch s := aws.StringValue(status.Status); s {
 		case configservice.OrganizationResourceStatusCreateFailed, configservice.OrganizationResourceStatusDeleteFailed, configservice.OrganizationResourceStatusUpdateFailed:
-			// Display detailed errors for failed member accounts
-			memberAccountStatuses, err := configGetOrganizationConformancePackDetailedStatus(conn, name, aws.StringValue(status.Status))
-
-			if err != nil {
-				return status, aws.StringValue(status.Status), fmt.Errorf("unable to get Config Organization Conformance Pack detailed status for showing member account errors: %w", err)
-			}
-
-			var errBuilder strings.Builder
-
-			for _, mas := range memberAccountStatuses {
-				errBuilder.WriteString(fmt.Sprintf("Account ID (%s): %s: %s\n", aws.StringValue(mas.AccountId), aws.StringValue(mas.ErrorCode), aws.StringValue(mas.ErrorMessage)))
-			}
-
-			return status, aws.StringValue(status.Status), fmt.Errorf("Failed in %d account(s):\n\n%s", len(memberAccountStatuses), errBuilder.String())
+			return status, s, configOrganizationConformancePackDetailedStatusError(conn, name, s)
 		}
 
 		return status, aws.StringValue(status.Status), nil
 	}
+}
+
+func configOrganizationConformancePackDetailedStatusError(conn *configservice.ConfigService, name, status string) error {
+	memberAccountStatuses, err := configGetOrganizationConformancePackDetailedStatus(conn, name, status)
+
+	if err != nil {
+		return fmt.Errorf("unable to get Config Organization Conformance Pack detailed status for showing member account errors: %w", err)
+	}
+
+	var errBuilder strings.Builder
+
+	for _, mas := range memberAccountStatuses {
+		errBuilder.WriteString(fmt.Sprintf("Account ID (%s): %s: %s\n", aws.StringValue(mas.AccountId), aws.StringValue(mas.ErrorCode), aws.StringValue(mas.ErrorMessage)))
+	}
+
+	return fmt.Errorf("Failed in %d account(s):\n\n%s", len(memberAccountStatuses), errBuilder.String())
 }
 
 func configWaitForConformancePackStateCreateComplete(conn *configservice.ConfigService, name string) error {
@@ -357,6 +391,10 @@ func configWaitForConformancePackStateCreateComplete(conn *configservice.ConfigS
 	}
 
 	_, err := stateChangeConf.WaitForState()
+
+	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConformancePackException) {
+		return nil
+	}
 
 	return err
 
@@ -384,8 +422,8 @@ func configWaitForOrganizationConformancePackStatusCreateSuccessful(conn *config
 		Pending: []string{configservice.OrganizationResourceStatusCreateInProgress},
 		Target:  []string{configservice.OrganizationResourceStatusCreateSuccessful},
 		Timeout: ConfigOrganizationConformancePackCreateTimeout,
-		Refresh: configRefreshOrganizationConformancePackStatus(conn, name),
-		// Include a Delay to avoid transient error
+		Refresh: configRefreshOrganizationConformancePackCreationStatus(conn, name),
+		// Include a delay to help avoid ResourceDoesNotExist errors
 		Delay: 30 * time.Second,
 	}
 
@@ -417,10 +455,6 @@ func configWaitForOrganizationConformancePackStatusDeleteSuccessful(conn *config
 	}
 
 	_, err := stateChangeConf.WaitForState()
-
-	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConformancePackException) {
-		return nil
-	}
 
 	return err
 }

@@ -32,7 +32,7 @@ func testAccConfigOrganizationConformancePack_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
 				),
 			},
@@ -175,8 +175,8 @@ func testAccConfigOrganizationConformancePack_inputParameters(t *testing.T) {
 				Config: testAccConfigOrganizationConformancePackInputParameterConfig(rName, pKey, pValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
-					resource.TestCheckResourceAttr(resourceName, "input_parameters.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_parameters.*", map[string]string{
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_parameter.*", map[string]string{
 						"parameter_name":  pKey,
 						"parameter_value": pValue,
 					}),
@@ -241,7 +241,7 @@ func testAccConfigOrganizationConformancePack_S3Template(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
 				),
 			},
@@ -421,6 +421,12 @@ func testAccCheckConfigOrganizationConformancePackDestroy(s *terraform.State) er
 		pack, err := configDescribeOrganizationConformancePack(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConformancePackException) {
+			continue
+		}
+
+		// In the event the Organizations Organization is deleted first, its Conformance Packs
+		// are deleted and we can continue through the loop
+		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeOrganizationAccessDeniedException) {
 			continue
 		}
 

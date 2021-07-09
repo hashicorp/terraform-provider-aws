@@ -107,6 +107,7 @@ The `input_parameter` configuration block supports the following arguments:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the organization conformance pack.
+* `id` - The name of the organization conformance pack.
 
 ## Import
 

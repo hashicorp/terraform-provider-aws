@@ -8,10 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsConfigOrganizationConformancePack() *schema.Resource {
@@ -106,7 +104,8 @@ func resourceAwsConfigOrganizationConformancePackCreate(d *schema.ResourceData, 
 	conn := meta.(*AWSClient).configconn
 
 	name := d.Get("name").(string)
-	input := configservice.PutOrganizationConformancePackInput{
+
+	input := &configservice.PutOrganizationConformancePackInput{
 		OrganizationConformancePackName: aws.String(name),
 	}
 
@@ -134,7 +133,7 @@ func resourceAwsConfigOrganizationConformancePackCreate(d *schema.ResourceData, 
 		input.TemplateS3Uri = aws.String(v.(string))
 	}
 
-	_, err := conn.PutOrganizationConformancePack(&input)
+	_, err := conn.PutOrganizationConformancePack(input)
 
 	if err != nil {
 		return fmt.Errorf("error creating Config Organization Conformance Pack (%s): %w", name, err)
@@ -193,7 +192,7 @@ func resourceAwsConfigOrganizationConformancePackRead(d *schema.ResourceData, me
 func resourceAwsConfigOrganizationConformancePackUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).configconn
 
-	input := configservice.PutOrganizationConformancePackInput{
+	input := &configservice.PutOrganizationConformancePackInput{
 		OrganizationConformancePackName: aws.String(d.Id()),
 	}
 
@@ -221,7 +220,7 @@ func resourceAwsConfigOrganizationConformancePackUpdate(d *schema.ResourceData, 
 		input.TemplateS3Uri = aws.String(v.(string))
 	}
 
-	_, err := conn.PutOrganizationConformancePack(&input)
+	_, err := conn.PutOrganizationConformancePack(input)
 
 	if err != nil {
 		return fmt.Errorf("error updating Config Organization Conformance Pack (%s): %w", d.Id(), err)
@@ -241,23 +240,7 @@ func resourceAwsConfigOrganizationConformancePackDelete(d *schema.ResourceData, 
 		OrganizationConformancePackName: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(ConfigOrganizationConformancePackDeleteTimeout, func() *resource.RetryError {
-		_, err := conn.DeleteOrganizationConformancePack(input)
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, configservice.ErrCodeResourceInUseException) {
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteOrganizationConformancePack(input)
-	}
+	_, err := conn.DeleteOrganizationConformancePack(input)
 
 	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConformancePackException) {
 		return nil
@@ -268,6 +251,9 @@ func resourceAwsConfigOrganizationConformancePackDelete(d *schema.ResourceData, 
 	}
 
 	if err := configWaitForOrganizationConformancePackStatusDeleteSuccessful(conn, d.Id()); err != nil {
+		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConformancePackException) {
+			return nil
+		}
 		return fmt.Errorf("error waiting for Config Organization Conformance Pack (%s) to be deleted: %w", d.Id(), err)
 	}
 
