@@ -1,11 +1,13 @@
 package aws
 
 import (
+	"errors"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func describeFsxFileSystem(conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
@@ -87,7 +89,13 @@ func waitForFsxFileSystemCreation(conn *fsx.FSx, id string, timeout time.Duratio
 		Delay:   30 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*fsx.FileSystem); ok {
+		if output.FailureDetails != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
+		}
+	}
 
 	return err
 }
@@ -101,7 +109,13 @@ func waitForFsxFileSystemDeletion(conn *fsx.FSx, id string, timeout time.Duratio
 		Delay:   30 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*fsx.FileSystem); ok {
+		if output.FailureDetails != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
+		}
+	}
 
 	return err
 }
