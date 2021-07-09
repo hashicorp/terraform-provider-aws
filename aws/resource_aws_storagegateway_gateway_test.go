@@ -462,6 +462,67 @@ func TestAccAWSStorageGatewayGateway_SmbActiveDirectorySettings_timeout(t *testi
 	})
 }
 
+func TestAccAWSStorageGatewayGateway_SmbMicrosoftActiveDirectorySettings(t *testing.T) {
+	var gateway storagegateway.DescribeGatewayInformationOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayGatewayConfig_SmbMicrosoftActiveDirectorySettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.domain_name", "terraformtesting.com"),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.username", "Admin"),
+					resource.TestCheckResourceAttrSet(resourceName, "smb_active_directory_settings.0.active_directory_status"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"activation_key", "gateway_ip_address", "smb_active_directory_settings"},
+			},
+		},
+	})
+}
+
+func TestAccAWSStorageGatewayGateway_SmbMicrosoftActiveDirectorySettings_timeout(t *testing.T) {
+	var gateway storagegateway.DescribeGatewayInformationOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayGatewayConfig_SmbMicrosoftActiveDirectorySettingsTimeout(rName, 50),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.domain_name", "terraformtesting.com"),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.timeout_in_seconds", "50"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"activation_key", "gateway_ip_address", "smb_active_directory_settings"},
+			},
+		},
+	})
+}
+
 func TestAccAWSStorageGatewayGateway_SmbGuestPassword(t *testing.T) {
 	var gateway storagegateway.DescribeGatewayInformationOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -992,6 +1053,47 @@ resource "aws_storagegateway_gateway" "test" {
 `, rName)
 }
 
+func testAccAWSStorageGatewayGatewayConfig_DirectoryServiceSimpleDirectory(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_directory_service_directory" "test" {
+  name     = "terraformtesting.com"
+  password = "SuperSecretPassw0rd"
+  size     = "Small"
+
+  vpc_settings {
+    subnet_ids = aws_subnet.test[*].id
+    vpc_id     = aws_vpc.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+`, rName)
+}
+
+func testAccAWSStorageGatewayGatewayConfig_DirectoryServiceMicrosoftAD(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_directory_service_directory" "test" {
+  edition  = "Standard"
+  name     = "terraformtesting.com"
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+
+  vpc_settings {
+    subnet_ids = aws_subnet.test[*].id
+    vpc_id     = aws_vpc.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+`, rName)
+}
+
 func testAccAWSStorageGatewayGatewayConfigSmbActiveDirectorySettingsBase(rName string) string {
 	return composeConfig(
 		// Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html
@@ -1055,21 +1157,6 @@ resource "aws_security_group" "test" {
   }
 }
 
-resource "aws_directory_service_directory" "test" {
-  name     = "terraformtesting.com"
-  password = "SuperSecretPassw0rd"
-  size     = "Small"
-
-  vpc_settings {
-    subnet_ids = aws_subnet.test[*].id
-    vpc_id     = aws_vpc.test.id
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_vpc_dhcp_options" "test" {
   domain_name         = aws_directory_service_directory.test.name
   domain_name_servers = aws_directory_service_directory.test.dns_ip_addresses
@@ -1108,6 +1195,7 @@ resource "aws_instance" "test" {
 func testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettings(rName string) string {
 	return composeConfig(
 		testAccAWSStorageGatewayGatewayConfigSmbActiveDirectorySettingsBase(rName),
+		testAccAWSStorageGatewayGatewayConfig_DirectoryServiceSimpleDirectory(rName),
 		fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address = aws_instance.test.public_ip
@@ -1127,6 +1215,7 @@ resource "aws_storagegateway_gateway" "test" {
 func testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettingsTimeout(rName string, timeout int) string {
 	return composeConfig(
 		testAccAWSStorageGatewayGatewayConfigSmbActiveDirectorySettingsBase(rName),
+		testAccAWSStorageGatewayGatewayConfig_DirectoryServiceSimpleDirectory(rName),
 		fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address = aws_instance.test.public_ip
@@ -1138,6 +1227,47 @@ resource "aws_storagegateway_gateway" "test" {
     domain_name        = aws_directory_service_directory.test.name
     password           = aws_directory_service_directory.test.password
     username           = "Administrator"
+    timeout_in_seconds = %[2]d
+  }
+}
+`, rName, timeout))
+}
+
+func testAccAWSStorageGatewayGatewayConfig_SmbMicrosoftActiveDirectorySettings(rName string) string {
+	return composeConfig(
+		testAccAWSStorageGatewayGatewayConfigSmbActiveDirectorySettingsBase(rName),
+		testAccAWSStorageGatewayGatewayConfig_DirectoryServiceMicrosoftAD(rName),
+		fmt.Sprintf(`
+resource "aws_storagegateway_gateway" "test" {
+  gateway_ip_address = aws_instance.test.public_ip
+  gateway_name       = %[1]q
+  gateway_timezone   = "GMT"
+  gateway_type       = "FILE_S3"
+
+  smb_active_directory_settings {
+    domain_name = aws_directory_service_directory.test.name
+    password    = aws_directory_service_directory.test.password
+    username    = "Admin"
+  }
+}
+`, rName))
+}
+
+func testAccAWSStorageGatewayGatewayConfig_SmbMicrosoftActiveDirectorySettingsTimeout(rName string, timeout int) string {
+	return composeConfig(
+		testAccAWSStorageGatewayGatewayConfigSmbActiveDirectorySettingsBase(rName),
+		testAccAWSStorageGatewayGatewayConfig_DirectoryServiceMicrosoftAD(rName),
+		fmt.Sprintf(`
+resource "aws_storagegateway_gateway" "test" {
+  gateway_ip_address = aws_instance.test.public_ip
+  gateway_name       = %[1]q
+  gateway_timezone   = "GMT"
+  gateway_type       = "FILE_S3"
+
+  smb_active_directory_settings {
+    domain_name        = aws_directory_service_directory.test.name
+    password           = aws_directory_service_directory.test.password
+    username           = "Admin"
     timeout_in_seconds = %[2]d
   }
 }
