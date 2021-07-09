@@ -25,24 +25,13 @@ func resourceAwsGuardDutyDetector() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"enable": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
 			"account_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
 			"arn": {
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-			// finding_publishing_frequency is marked as Computed:true since
-			// GuardDuty member accounts inherit setting from master account
-			"finding_publishing_frequency": {
-				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
@@ -71,8 +60,21 @@ func resourceAwsGuardDutyDetector() *schema.Resource {
 				},
 			},
 
-			"tags": tagsSchema(),
+			"enable": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 
+			// finding_publishing_frequency is marked as Computed:true since
+			// GuardDuty member accounts inherit setting from master account
+			"finding_publishing_frequency": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
+			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 		},
 
@@ -93,8 +95,8 @@ func resourceAwsGuardDutyDetectorCreate(d *schema.ResourceData, meta interface{}
 		input.FindingPublishingFrequency = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("datasources"); ok {
-		input.DataSources = expandDataSourceConfigurations(v.([]interface{}))
+	if v, ok := d.GetOk("datasources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.DataSources = expandGuardDutyDataSourceConfigurations(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -141,12 +143,17 @@ func resourceAwsGuardDutyDetectorRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("arn", arn)
 
 	d.Set("account_id", meta.(*AWSClient).accountid)
-	d.Set("enable", *gdo.Status == guardduty.DetectorStatusEnabled)
-	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 
-	if err := d.Set("datasources", flattenDataSourceConfigurations(gdo.DataSources)); err != nil {
-		return fmt.Errorf("error setting datasources: %s", err)
+	if gdo.DataSources != nil {
+		if err := d.Set("datasources", []interface{}{flattenGuardDutyDataSourceConfigurationsResult(gdo.DataSources)}); err != nil {
+			return fmt.Errorf("error setting datasources: %w", err)
+		}
+	} else {
+		d.Set("datasources", nil)
 	}
+
+	d.Set("enable", aws.StringValue(gdo.Status) == guardduty.DetectorStatusEnabled)
+	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 
 	tags := keyvaluetags.GuarddutyKeyValueTags(gdo.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
@@ -165,7 +172,7 @@ func resourceAwsGuardDutyDetectorRead(d *schema.ResourceData, meta interface{}) 
 func resourceAwsGuardDutyDetectorUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).guarddutyconn
 
-	if d.HasChanges("enable", "finding_publishing_frequency", "datasources") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := guardduty.UpdateDetectorInput{
 			DetectorId:                 aws.String(d.Id()),
 			Enable:                     aws.Bool(d.Get("enable").(bool)),
@@ -173,7 +180,7 @@ func resourceAwsGuardDutyDetectorUpdate(d *schema.ResourceData, meta interface{}
 		}
 
 		if d.HasChange("datasources") {
-			input.DataSources = expandDataSourceConfigurations(d.Get("datasources").([]interface{}))
+			input.DataSources = expandGuardDutyDataSourceConfigurations(d.Get("datasources").([]interface{})[0].(map[string]interface{}))
 		}
 
 		log.Printf("[DEBUG] Update GuardDuty Detector: %s", input)
@@ -226,56 +233,58 @@ func resourceAwsGuardDutyDetectorDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func expandDataSourceConfigurations(dsc []interface{}) *guardduty.DataSourceConfigurations {
-	if len(dsc) < 1 || dsc[0] == nil {
+func expandGuardDutyDataSourceConfigurations(tfMap map[string]interface{}) *guardduty.DataSourceConfigurations {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := dsc[0].(map[string]interface{})
+	apiObject := &guardduty.DataSourceConfigurations{}
 
-	dataSourceConfigurations := &guardduty.DataSourceConfigurations{}
-
-	if v, ok := m["s3_logs"]; ok && v != "" && (len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil) {
-		dataSourceConfigurations.S3Logs = expandS3LogsConfiguration(v.([]interface{}))
+	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 {
+		apiObject.S3Logs = expandGuardDutyS3LogsConfiguration(v[0].(map[string]interface{}))
 	}
 
-	return dataSourceConfigurations
+	return apiObject
 }
 
-func expandS3LogsConfiguration(slc []interface{}) *guardduty.S3LogsConfiguration {
-	if len(slc) < 1 || slc[0] == nil {
+func expandGuardDutyS3LogsConfiguration(tfMap map[string]interface{}) *guardduty.S3LogsConfiguration {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := slc[0].(map[string]interface{})
+	apiObject := &guardduty.S3LogsConfiguration{}
 
-	s3LogsConfiguration := &guardduty.S3LogsConfiguration{
-		Enable: aws.Bool(m["enable"].(bool)),
+	if v, ok := tfMap["enable"].(bool); ok {
+		apiObject.Enable = aws.Bool(v)
 	}
 
-	return s3LogsConfiguration
+	return apiObject
 }
 
-func flattenDataSourceConfigurations(dsc *guardduty.DataSourceConfigurationsResult) []interface{} {
-	if dsc == nil {
-		return []interface{}{}
+func flattenGuardDutyDataSourceConfigurationsResult(apiObject *guardduty.DataSourceConfigurationsResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{
-		"s3_logs": flattenS3LogsConfiguration(dsc.S3Logs),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.S3Logs; v != nil {
+		tfMap["s3_logs"] = []interface{}{flattenGuardDutyS3LogsConfigurationResult(v)}
 	}
 
-	return []interface{}{m}
+	return tfMap
 }
 
-func flattenS3LogsConfiguration(slc *guardduty.S3LogsConfigurationResult) []interface{} {
-	if slc == nil {
-		return []interface{}{}
+func flattenGuardDutyS3LogsConfigurationResult(apiObject *guardduty.S3LogsConfigurationResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{
-		"enable": aws.StringValue(slc.Status) == guardduty.DataSourceStatusEnabled,
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Status; v != nil {
+		tfMap["enable"] = aws.StringValue(v) == guardduty.DataSourceStatusEnabled
 	}
 
-	return []interface{}{m}
+	return tfMap
 }
