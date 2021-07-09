@@ -55,6 +55,7 @@ func testAccAwsGuardDutyOrganizationConfiguration_s3logs(t *testing.T) {
 			testAccPreCheck(t)
 			testAccOrganizationsAccountPreCheck(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyDetectorDestroy,
 		Steps: []resource.TestStep{
