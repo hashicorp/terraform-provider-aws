@@ -44,73 +44,10 @@ func resourceAwsDbInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-
-			"arn": {
+			"address": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"username": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-
-			"password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-			},
-
-			"deletion_protection": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-
-			"engine": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				StateFunc: func(v interface{}) string {
-					value := v.(string)
-					return strings.ToLower(value)
-				},
-			},
-
-			"engine_version": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				DiffSuppressFunc: suppressAwsDbEngineVersionDiffs,
-			},
-
-			"ca_cert_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"character_set_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-
-			"storage_encrypted": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-
 			"allocated_storage": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -139,13 +76,139 @@ func resourceAwsDbInstance() *schema.Resource {
 					return false
 				},
 			},
-
-			"storage_type": {
+			"allow_major_version_upgrade": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			// apply_immediately is used to determine when the update modifications
+			// take place.
+			// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
+			"apply_immediately": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"auto_minor_version_upgrade": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"availability_zone": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"backup_retention_period": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"backup_window": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validateOnceADayWindowFormat,
+			},
+			"ca_cert_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
+			"character_set_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"copy_tags_to_snapshot": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"db_subnet_group_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"delete_automated_backups": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"deletion_protection": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"domain": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"domain_iam_role_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"enabled_cloudwatch_logs_exports": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						"agent",
+						"alert",
+						"audit",
+						"error",
+						"general",
+						"listener",
+						"slowquery",
+						"trace",
+						"postgresql",
+						"upgrade",
+					}, false),
+				},
+			},
+			"endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"engine": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				StateFunc: func(v interface{}) string {
+					value := v.(string)
+					return strings.ToLower(value)
+				},
+			},
+			"engine_version": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				DiffSuppressFunc: suppressAwsDbEngineVersionDiffs,
+			},
+			"final_snapshot_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+					validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z-]+$`), "must only contain alphanumeric characters and hyphens"),
+					validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end in a hyphen"),
+				),
+			},
+			"hosted_zone_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"iam_database_authentication_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"identifier": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -161,48 +224,30 @@ func resourceAwsDbInstance() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateRdsIdentifierPrefix,
 			},
-
 			"instance_class": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
-			"availability_zone": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-
-			"backup_retention_period": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-
-			"backup_window": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validateOnceADayWindowFormat,
-			},
-
 			"iops": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-
+			"kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
+			},
 			"latest_restorable_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"license_model": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"maintenance_window": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -216,7 +261,6 @@ func resourceAwsDbInstance() *schema.Resource {
 				},
 				ValidateFunc: validateOnceAWeekWindowFormat,
 			},
-
 			"max_allocated_storage": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -227,51 +271,81 @@ func resourceAwsDbInstance() *schema.Resource {
 					return false
 				},
 			},
-
+			"monitoring_interval": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
+			},
+			"monitoring_role_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"multi_az": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-
+			"name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"option_group_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"parameter_group_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"password": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+			},
+			"performance_insights_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"performance_insights_kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validateArn,
+			},
+			"performance_insights_retention_period": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-
 			"publicly_accessible": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
-			"vpc_security_group_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
+			"replicas": {
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
-
-			"security_group_names": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
-			"final_snapshot_identifier": {
+			"replicate_source_db": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-					validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z-]+$`), "must only contain alphanumeric characters and hyphens"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end in a hyphen"),
-				),
 			},
-
+			"resource_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"restore_to_point_in_time": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -309,7 +383,6 @@ func resourceAwsDbInstance() *schema.Resource {
 					},
 				},
 			},
-
 			"s3_import": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -348,189 +421,58 @@ func resourceAwsDbInstance() *schema.Resource {
 					},
 				},
 			},
-
+			"security_group_names": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
 			"skip_final_snapshot": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
-			"copy_tags_to_snapshot": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"db_subnet_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"parameter_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"hosted_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			// apply_immediately is used to determine when the update modifications
-			// take place.
-			// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
-			"apply_immediately": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-
-			"replicate_source_db": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"replicas": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
 				ForceNew: true,
 			},
-
-			"auto_minor_version_upgrade": {
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				ForceNew: true,
 			},
-
-			"allow_major_version_upgrade": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-
-			"monitoring_role_arn": {
+			"storage_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
-			"monitoring_interval": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
-			},
-
-			"option_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateArn,
-			},
-
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"timezone": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-
-			"iam_database_authentication_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-
-			"resource_id": {
+			"username": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
-
-			"enabled_cloudwatch_logs_exports": {
+			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						"agent",
-						"alert",
-						"audit",
-						"error",
-						"general",
-						"listener",
-						"slowquery",
-						"trace",
-						"postgresql",
-						"upgrade",
-					}, false),
-				},
-			},
-
-			"domain": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"domain_iam_role_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"performance_insights_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"performance_insights_kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validateArn,
-			},
-
-			"performance_insights_retention_period": {
-				Type:     schema.TypeInt,
-				Optional: true,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
-
-			"delete_automated_backups": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
 		},
 
 		CustomizeDiff: SetTagsDiff,
