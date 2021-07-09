@@ -26,12 +26,7 @@ func resourceAwsGuardDutyOrganizationConfiguration() *schema.Resource {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
-			"detector_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
+
 			"datasources": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -56,6 +51,13 @@ func resourceAwsGuardDutyOrganizationConfiguration() *schema.Resource {
 					},
 				},
 			},
+
+			"detector_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.NoZeroValues,
+			},
 		},
 	}
 }
@@ -66,9 +68,12 @@ func resourceAwsGuardDutyOrganizationConfigurationUpdate(d *schema.ResourceData,
 	detectorID := d.Get("detector_id").(string)
 
 	input := &guardduty.UpdateOrganizationConfigurationInput{
-		AutoEnable:  aws.Bool(d.Get("auto_enable").(bool)),
-		DetectorId:  aws.String(detectorID),
-		DataSources: expandOrganizationDatasourceConfig(d),
+		AutoEnable: aws.Bool(d.Get("auto_enable").(bool)),
+		DetectorId: aws.String(detectorID),
+	}
+
+	if v, ok := d.GetOk("datasources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.DataSources = expandGuardDutyOrganizationDataSourceConfigurations(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	_, err := conn.UpdateOrganizationConfiguration(input)
@@ -105,69 +110,73 @@ func resourceAwsGuardDutyOrganizationConfigurationRead(d *schema.ResourceData, m
 		return fmt.Errorf("error reading GuardDuty Organization Configuration (%s): empty response", d.Id())
 	}
 
-	if err := d.Set("datasources", flattenOrganizationDatasourceConfig(output.DataSources)); err != nil {
-		return fmt.Errorf("error setting datasources: %s", err)
+	d.Set("auto_enable", output.AutoEnable)
+
+	if output.DataSources != nil {
+		if err := d.Set("datasources", []interface{}{flattenGuardDutyOrganizationDataSourceConfigurationsResult(output.DataSources)}); err != nil {
+			return fmt.Errorf("error setting datasources: %w", err)
+		}
+	} else {
+		d.Set("datasources", nil)
 	}
 
 	d.Set("detector_id", d.Id())
-	d.Set("auto_enable", output.AutoEnable)
 
 	return nil
 }
 
-func flattenOrganizationDatasourceConfig(dsConfig *guardduty.OrganizationDataSourceConfigurationsResult) []interface{} {
-	if dsConfig == nil {
-		return []interface{}{}
-	}
-
-	values := map[string]interface{}{}
-
-	if v := dsConfig.S3Logs; v != nil {
-		values["s3_logs"] = flattenOrganizationS3LogsConfig(v)
-	}
-
-	return []interface{}{values}
-}
-
-func flattenOrganizationS3LogsConfig(s3LogsConfig *guardduty.OrganizationS3LogsConfigurationResult) []interface{} {
-	values := map[string]interface{}{}
-
-	if s3LogsConfig == nil {
-		values["auto_enable"] = false
-	} else {
-		values["auto_enable"] = aws.BoolValue(s3LogsConfig.AutoEnable)
-	}
-
-	return []interface{}{values}
-}
-
-func expandOrganizationDatasourceConfig(d *schema.ResourceData) *guardduty.OrganizationDataSourceConfigurations {
-	dsConfig := &guardduty.OrganizationDataSourceConfigurations{}
-
-	if v, ok := d.GetOk("datasources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		configList := v.([]interface{})
-		data := configList[0].(map[string]interface{})
-
-		if v, ok := data["s3_logs"]; ok {
-			dsConfig.S3Logs = expandOrganizationS3LogsConfig(v.([]interface{}))
-		}
-	}
-
-	return dsConfig
-}
-
-func expandOrganizationS3LogsConfig(configList []interface{}) *guardduty.OrganizationS3LogsConfiguration {
-	if len(configList) == 0 || configList[0] == nil {
+func expandGuardDutyOrganizationDataSourceConfigurations(tfMap map[string]interface{}) *guardduty.OrganizationDataSourceConfigurations {
+	if tfMap == nil {
 		return nil
 	}
 
-	data := configList[0].(map[string]interface{})
+	apiObject := &guardduty.OrganizationDataSourceConfigurations{}
 
-	autoEnable := data["auto_enable"].(bool)
-
-	s3LogsConfig := &guardduty.OrganizationS3LogsConfiguration{
-		AutoEnable: aws.Bool(autoEnable),
+	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 {
+		apiObject.S3Logs = expandGuardDutyOrganizationS3LogsConfiguration(v[0].(map[string]interface{}))
 	}
 
-	return s3LogsConfig
+	return apiObject
+}
+
+func expandGuardDutyOrganizationS3LogsConfiguration(tfMap map[string]interface{}) *guardduty.OrganizationS3LogsConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &guardduty.OrganizationS3LogsConfiguration{}
+
+	if v, ok := tfMap["auto_enable"].(bool); ok {
+		apiObject.AutoEnable = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func flattenGuardDutyOrganizationDataSourceConfigurationsResult(apiObject *guardduty.OrganizationDataSourceConfigurationsResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.S3Logs; v != nil {
+		tfMap["s3_logs"] = []interface{}{flattenGuardDutyOrganizationS3LogsConfigurationResult(v)}
+	}
+
+	return tfMap
+}
+
+func flattenGuardDutyOrganizationS3LogsConfigurationResult(apiObject *guardduty.OrganizationS3LogsConfigurationResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AutoEnable; v != nil {
+		tfMap["auto_enable"] = aws.BoolValue(v)
+	}
+
+	return tfMap
 }
