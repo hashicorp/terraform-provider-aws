@@ -109,7 +109,7 @@ func TestAccAWSSpotInstanceRequest_KeyName(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSpotInstanceRequestConfig_KeyName(rName, publicKey),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotInstanceRequestExists(resourceName, &sir),
 					resource.TestCheckResourceAttrPair(resourceName, "key_name", keyPairResourceName, "key_name"),
 				),
