@@ -1,4 +1,19 @@
 ## 3.50.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_config_organization_conformance_pack` ([#17298](https://github.com/hashicorp/terraform-provider-aws/issues/17298))
+
+ENHANCEMENTS:
+
+* resource/aws_cognito_user_pool_client: Add the `enable_token_revocation` argument to support targeted sign out ([#20031](https://github.com/hashicorp/terraform-provider-aws/issues/20031))
+* resource/fsx_windows_file_system: Add `aliases` argument. ([#20054](https://github.com/hashicorp/terraform-provider-aws/issues/20054))
+
+BUG FIXES:
+
+* resource/aws_cognito_user_pool_client: Allow the `default_redirect_uri` argument value to be an empty string ([#20031](https://github.com/hashicorp/terraform-provider-aws/issues/20031))
+* resource/aws_cognito_user_pool_client: Retry on `ConcurrentModificationException` ([#20031](https://github.com/hashicorp/terraform-provider-aws/issues/20031))
+
 ## 3.49.0 (July 08, 2021)
 
 FEATURES:
