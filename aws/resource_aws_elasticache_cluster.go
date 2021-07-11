@@ -268,6 +268,7 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 			CustomizeDiffValidateClusterNumCacheNodes,
 			CustomizeDiffClusterMemcachedNodeType,
 			CustomizeDiffValidateClusterMemcachedSnapshotIdentifier,
+			SetTagsDiff,
 		),
 	}
 }

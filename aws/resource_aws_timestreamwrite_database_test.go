@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/timestreamwrite"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -17,8 +19,9 @@ import (
 
 func init() {
 	resource.AddTestSweepers("aws_timestreamwrite_database", &resource.Sweeper{
-		Name: "aws_timestreamwrite_database",
-		F:    testSweepTimestreamWriteDatabases,
+		Name:         "aws_timestreamwrite_database",
+		F:            testSweepTimestreamWriteDatabases,
+		Dependencies: []string{"aws_timestreamwrite_table"},
 	})
 }
 
@@ -28,12 +31,13 @@ func testSweepTimestreamWriteDatabases(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).timestreamwriteconn
+	ctx := context.Background()
 
 	var sweeperErrs *multierror.Error
 
 	input := &timestreamwrite.ListDatabasesInput{}
 
-	err = conn.ListDatabasesPages(input, func(page *timestreamwrite.ListDatabasesOutput, lastPage bool) bool {
+	err = conn.ListDatabasesPagesWithContext(ctx, input, func(page *timestreamwrite.ListDatabasesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -45,17 +49,21 @@ func testSweepTimestreamWriteDatabases(region string) error {
 
 			dbName := aws.StringValue(database.DatabaseName)
 
+			log.Printf("[INFO] Deleting Timestream Database (%s)", dbName)
 			r := resourceAwsTimestreamWriteDatabase()
 			d := r.Data(nil)
 			d.SetId(dbName)
 
-			err := r.Delete(d, client)
+			diags := r.DeleteWithoutTimeout(ctx, d, client)
 
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Timestream Database (%s): %w", dbName, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
+			if diags != nil && diags.HasError() {
+				for _, d := range diags {
+					if d.Severity == diag.Error {
+						sweeperErr := fmt.Errorf("error deleting Timestream Database (%s): %s", dbName, d.Summary)
+						log.Printf("[ERROR] %s", sweeperErr)
+						sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+					}
+				}
 			}
 		}
 
@@ -98,6 +106,28 @@ func TestAccAWSTimestreamWriteDatabase_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSTimestreamWriteDatabase_disappears(t *testing.T) {
+	resourceName := "aws_timestreamwrite_database.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTimestreamWrite(t) },
+		ErrorCheck:   testAccErrorCheck(t, timestreamwrite.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSTimestreamWriteDatabaseDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSTimestreamWriteDatabaseConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTimestreamWriteDatabaseExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsTimestreamWriteDatabase(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

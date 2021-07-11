@@ -147,6 +147,23 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							},
 							Set: lambdaFunctionAssociationHash,
 						},
+						"function_association": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 2,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"event_type": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"function_arn": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
 						"max_ttl": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -330,6 +347,23 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							},
 							Set: lambdaFunctionAssociationHash,
 						},
+						"function_association": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 2,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"event_type": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"function_arn": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
 						"max_ttl": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -461,6 +495,18 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 				Set:      originHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"connection_attempts": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      3,
+							ValidateFunc: validation.IntBetween(1, 3),
+						},
+						"connection_timeout": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      10,
+							ValidateFunc: validation.IntBetween(1, 10),
+						},
 						"custom_origin_config": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -527,6 +573,24 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						"origin_path": {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"origin_shield": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enabled": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+									"origin_shield_region": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringMatch(awsRegionRegexp, "must be a valid AWS Region Code"),
+									},
+								},
+							},
 						},
 						"s3_origin_config": {
 							Type:     schema.TypeList,

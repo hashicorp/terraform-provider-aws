@@ -105,7 +105,7 @@ func dataSourceAwsLaunchConfiguration() *schema.Resource {
 							Computed: true,
 						},
 
-						"no_device": {
+						"encrypted": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -115,8 +115,18 @@ func dataSourceAwsLaunchConfiguration() *schema.Resource {
 							Computed: true,
 						},
 
+						"no_device": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
 						"snapshot_id": {
 							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"throughput": {
+							Type:     schema.TypeBool,
 							Computed: true,
 						},
 
@@ -127,11 +137,6 @@ func dataSourceAwsLaunchConfiguration() *schema.Resource {
 
 						"volume_type": {
 							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"encrypted": {
-							Type:     schema.TypeBool,
 							Computed: true,
 						},
 					},
@@ -194,6 +199,11 @@ func dataSourceAwsLaunchConfiguration() *schema.Resource {
 
 						"iops": {
 							Type:     schema.TypeInt,
+							Computed: true,
+						},
+
+						"throughput": {
+							Type:     schema.TypeBool,
 							Computed: true,
 						},
 

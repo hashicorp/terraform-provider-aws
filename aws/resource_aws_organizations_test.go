@@ -46,6 +46,10 @@ func TestAccAWSOrganizations_serial(t *testing.T) {
 			"OrganizationalUnit": testAccAwsOrganizationsPolicyAttachment_OrganizationalUnit,
 			"Root":               testAccAwsOrganizationsPolicyAttachment_Root,
 		},
+		"DelegatedAdministrator": {
+			"basic":      testAccAwsOrganizationsDelegatedAdministrator_basic,
+			"disappears": testAccAwsOrganizationsDelegatedAdministrator_disappears,
+		},
 	}
 
 	for group, m := range testCases {

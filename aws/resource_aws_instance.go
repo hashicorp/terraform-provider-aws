@@ -559,6 +559,37 @@ func resourceAwsInstance() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
+
+			"capacity_reservation_specification": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"capacity_reservation_preference": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(ec2.CapacityReservationPreference_Values(), false),
+							ExactlyOneOf: []string{"capacity_reservation_specification.0.capacity_reservation_preference", "capacity_reservation_specification.0.capacity_reservation_target"},
+						},
+						"capacity_reservation_target": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capacity_reservation_id": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+							ExactlyOneOf: []string{"capacity_reservation_specification.0.capacity_reservation_preference", "capacity_reservation_specification.0.capacity_reservation_target"},
+						},
+					},
+				},
+			},
 		},
 
 		CustomizeDiff: SetTagsDiff,
@@ -597,6 +628,7 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	// Build the creation struct
 	runOpts := &ec2.RunInstancesInput{
 		BlockDeviceMappings:               instanceOpts.BlockDeviceMappings,
+		CapacityReservationSpecification:  instanceOpts.CapacityReservationSpecification,
 		DisableApiTermination:             instanceOpts.DisableAPITermination,
 		EbsOptimized:                      instanceOpts.EBSOptimized,
 		Monitoring:                        instanceOpts.Monitoring,
@@ -1035,6 +1067,10 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("get_password_data", false)
 		d.Set("password_data", nil)
+	}
+
+	if err := d.Set("capacity_reservation_specification", flattenCapacityReservationSpecification(instance.CapacityReservationSpecification)); err != nil {
+		return fmt.Errorf("error setting capacity reservation specification: %s", err)
 	}
 
 	return nil
@@ -1538,6 +1574,25 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			if err := keyvaluetags.Ec2UpdateTags(conn, volumeID, o, n); err != nil {
 				return fmt.Errorf("error updating tags for volume (%s): %s", volumeID, err)
+			}
+		}
+	}
+
+	// To modify capacity reservation attributes of an instance, instance state needs to be in ec2.InstanceStateNameStopped,
+	// otherwise the modification will return an IncorrectInstanceState error
+	if d.HasChange("capacity_reservation_specification") && !d.IsNewResource() {
+		if v, ok := d.GetOk("capacity_reservation_specification"); ok {
+			capacityReservationSpecification := expandCapacityReservationSpecification(v.([]interface{}))
+			if *capacityReservationSpecification != (ec2.CapacityReservationSpecification{}) && capacityReservationSpecification != nil {
+				log.Printf("[DEBUG] Modifying capacity reservation for instance %s", d.Id())
+				_, err := conn.ModifyInstanceCapacityReservationAttributes(&ec2.ModifyInstanceCapacityReservationAttributesInput{
+					CapacityReservationSpecification: capacityReservationSpecification,
+					InstanceId:                       aws.String(d.Id()),
+				})
+
+				if err != nil {
+					return fmt.Errorf("Error updating instance capacity specification: %s", err)
+				}
 			}
 		}
 	}
@@ -2293,6 +2348,7 @@ func getAwsEc2InstancePasswordData(instanceID string, conn *ec2.EC2) (string, er
 
 type awsInstanceOpts struct {
 	BlockDeviceMappings               []*ec2.BlockDeviceMapping
+	CapacityReservationSpecification  *ec2.CapacityReservationSpecification
 	DisableAPITermination             *bool
 	EBSOptimized                      *bool
 	Monitoring                        *ec2.RunInstancesMonitoringEnabled
@@ -2484,6 +2540,11 @@ func buildAwsInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanc
 	if len(blockDevices) > 0 {
 		opts.BlockDeviceMappings = blockDevices
 	}
+
+	if v, ok := d.GetOk("capacity_reservation_specification"); ok {
+		opts.CapacityReservationSpecification = expandCapacityReservationSpecification(v.([]interface{}))
+	}
+
 	return opts, nil
 }
 
@@ -2701,6 +2762,42 @@ func expandSecondaryPrivateIPAddresses(ips []interface{}) []*ec2.PrivateIpAddres
 	return specs
 }
 
+func expandCapacityReservationSpecification(crs []interface{}) *ec2.CapacityReservationSpecification {
+	if len(crs) < 1 || crs[0] == nil {
+		return nil
+	}
+
+	m := crs[0].(map[string]interface{})
+
+	capacityReservationSpecification := &ec2.CapacityReservationSpecification{}
+
+	if v, ok := m["capacity_reservation_preference"]; ok && v != "" && v != nil {
+		capacityReservationSpecification.CapacityReservationPreference = aws.String(v.(string))
+	}
+
+	if v, ok := m["capacity_reservation_target"]; ok && v != "" && (len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil) {
+		capacityReservationSpecification.CapacityReservationTarget = expandCapacityReservationTarget(v.([]interface{}))
+	}
+
+	return capacityReservationSpecification
+}
+
+func expandCapacityReservationTarget(crt []interface{}) *ec2.CapacityReservationTarget {
+	if len(crt) < 1 || crt[0] == nil {
+		return nil
+	}
+
+	m := crt[0].(map[string]interface{})
+
+	capacityReservationTarget := &ec2.CapacityReservationTarget{}
+
+	if v, ok := m["capacity_reservation_id"]; ok && v != "" {
+		capacityReservationTarget.CapacityReservationId = aws.String(v.(string))
+	}
+
+	return capacityReservationTarget
+}
+
 func flattenEc2InstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse) []interface{} {
 	if opts == nil {
 		return nil
@@ -2722,6 +2819,31 @@ func flattenEc2EnclaveOptions(opts *ec2.EnclaveOptions) []interface{} {
 
 	m := map[string]interface{}{
 		"enabled": aws.BoolValue(opts.Enabled),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCapacityReservationSpecification(crs *ec2.CapacityReservationSpecificationResponse) []interface{} {
+	if crs == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"capacity_reservation_preference": aws.StringValue(crs.CapacityReservationPreference),
+		"capacity_reservation_target":     flattenCapacityReservationTarget(crs.CapacityReservationTarget),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCapacityReservationTarget(crt *ec2.CapacityReservationTargetResponse) []interface{} {
+	if crt == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"capacity_reservation_id": aws.StringValue(crt.CapacityReservationId),
 	}
 
 	return []interface{}{m}

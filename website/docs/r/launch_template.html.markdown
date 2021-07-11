@@ -296,6 +296,7 @@ Each `network_interfaces` block supports the following:
 * `delete_on_termination` - Whether the network interface should be destroyed on instance termination. Defaults to `false` if not set.
 * `description` - Description of the network interface.
 * `device_index` - The integer index of the network interface attachment.
+* `interface_type` - The type of network interface. To create an Elastic Fabric Adapter (EFA), specify `efa`.
 * `ipv6_addresses` - One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet. Conflicts with `ipv6_address_count`
 * `ipv6_address_count` - The number of IPv6 addresses to assign to a network interface. Conflicts with `ipv6_addresses`
 * `network_interface_id` - The ID of the network interface to attach.

@@ -342,6 +342,9 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `ACM_CERTIFICATE_SINGLE_ISSUED_DOMAIN` | Domain name of ACM Certificate with a single issued certificate. **DEPRECATED:** Should be replaced with `aws_acm_certficate` resource usage in tests. |
 | `ACM_CERTIFICATE_SINGLE_ISSUED_MOST_RECENT_ARN` | Amazon Resource Name of most recent ACM Certificate with a single issued certificate. **DEPRECATED:** Should be replaced with `aws_acm_certficate` resource usage in tests. |
 | `ADM_CLIENT_ID` | Identifier for Amazon Device Manager Client in Pinpoint testing. |
+| `AMPLIFY_DOMAIN_NAME` | Domain name to use for Amplify domain association testing. |
+| `AMPLIFY_GITHUB_ACCESS_TOKEN` | GitHub access token used for AWS Amplify testing. |
+| `AMPLIFY_GITHUB_REPOSITORY` | GitHub repository used for AWS Amplify testing. |
 | `ADM_CLIENT_SECRET` | Secret for Amazon Device Manager Client in Pinpoint testing. |
 | `APNS_BUNDLE_ID` | Identifier for Apple Push Notification Service Bundle in Pinpoint testing. |
 | `APNS_CERTIFICATE` | Certificate (PEM format) for Apple Push Notification Service in Pinpoint testing. |
@@ -503,4 +506,4 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
     - Web interface: With the `DEPLOYMENT_TARGET_VERSION` matching the expected release milestone and `DEPLOYMENT_NEXT_VERSION` matching the next release milestone
 - Wait for the TeamCity release job to complete either by watching the build logs or Slack notifications
 - Close the release milestone
-- Create a new GitHub release with the release title exactly matching the tag and milestone (e.g. `v2.22.0`) and copy the entries from the CHANGELOG to the release notes. This will trigger [HashiBot](https://github.com/apps/hashibot) release comments.
+- Create a new GitHub release with the release title exactly matching the tag and milestone (e.g. `v2.22.0`) and copy the entries from the CHANGELOG to the release notes.

@@ -65,7 +65,7 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							MinItems: 0,
-							MaxItems: 25,
+							MaxItems: 50,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"virtual_service": {

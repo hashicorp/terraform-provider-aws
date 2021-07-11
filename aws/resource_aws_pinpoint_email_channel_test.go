@@ -74,6 +74,34 @@ func TestAccAWSPinpointEmailChannel_configurationSet(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAWSPinpointEmailChannel_noRole(t *testing.T) {
+	var channel pinpoint.EmailChannelResponse
+	resourceName := "aws_pinpoint_email_channel.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPinpointEmailChannelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSPinpointEmailChannelConfigNoRole("user@example.com", rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPinpointEmailChannelExists(resourceName, &channel),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration_set", "aws_ses_configuration_set.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSPinpointEmailChannel_disappears(t *testing.T) {
 	var channel pinpoint.EmailChannelResponse
 	resourceName := "aws_pinpoint_email_channel.test"
@@ -240,6 +268,28 @@ resource "aws_iam_role_policy" "test" {
   }
 }
 EOF
+}
+`, fromAddress, rName)
+}
+
+func testAccAWSPinpointEmailChannelConfigNoRole(fromAddress, rName string) string {
+	return fmt.Sprintf(`
+resource "aws_pinpoint_app" "test" {}
+
+resource "aws_ses_configuration_set" "test" {
+  name = %[2]q
+}
+
+resource "aws_pinpoint_email_channel" "test" {
+  application_id    = aws_pinpoint_app.test.application_id
+  enabled           = "false"
+  from_address      = %[1]q
+  identity          = aws_ses_domain_identity.test.arn
+  configuration_set = aws_ses_configuration_set.test.arn
+}
+
+resource "aws_ses_domain_identity" "test" {
+  domain = "example.com"
 }
 `, fromAddress, rName)
 }

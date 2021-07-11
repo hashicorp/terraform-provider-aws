@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	tfnet "github.com/terraform-providers/terraform-provider-aws/aws/internal/net"
 )
 
 const (
@@ -697,6 +698,32 @@ func validatePrincipal(v interface{}, k string) (ws []string, errors []error) {
 	return ws, errors
 }
 
+func validateServiceCatalogSharePrincipal(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	// either account ID, or organization or organization unit
+
+	wsAccount, errorsAccount := validateAwsAccountId(v, k)
+
+	if len(errorsAccount) == 0 {
+		return wsAccount, errorsAccount
+	}
+
+	wsARN, errorsARN := validateArn(v, k)
+	ws = append(ws, wsARN...)
+	errors = append(errors, errorsARN...)
+
+	pattern := `^arn:[\w-]+:organizations:.*:(ou|organization)/`
+	if !regexp.MustCompile(pattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q does not look like an OU or organization: %q", k, value))
+	}
+
+	if len(errors) > 0 {
+		errors = append(errors, errorsAccount...)
+	}
+
+	return ws, errors
+}
+
 func validateArn(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
@@ -807,7 +834,7 @@ func validateCIDRBlock(cidr string) error {
 		return fmt.Errorf("%q is not a valid CIDR block: %w", cidr, err)
 	}
 
-	if !cidrBlocksEqual(cidr, ipnet.String()) {
+	if !tfnet.CIDRBlocksEqual(cidr, ipnet.String()) {
 		return fmt.Errorf("%q is not a valid CIDR block; did you mean %q?", cidr, ipnet)
 	}
 
@@ -829,7 +856,7 @@ func validateIpv4CIDRBlock(cidr string) error {
 		return fmt.Errorf("%q is not a valid IPv4 CIDR block", cidr)
 	}
 
-	if !cidrBlocksEqual(cidr, ipnet.String()) {
+	if !tfnet.CIDRBlocksEqual(cidr, ipnet.String()) {
 		return fmt.Errorf("%q is not a valid IPv4 CIDR block; did you mean %q?", cidr, ipnet)
 	}
 
@@ -851,41 +878,11 @@ func validateIpv6CIDRBlock(cidr string) error {
 		return fmt.Errorf("%q is not a valid IPv6 CIDR block", cidr)
 	}
 
-	if !cidrBlocksEqual(cidr, ipnet.String()) {
+	if !tfnet.CIDRBlocksEqual(cidr, ipnet.String()) {
 		return fmt.Errorf("%q is not a valid IPv6 CIDR block; did you mean %q?", cidr, ipnet)
 	}
 
 	return nil
-}
-
-// TODO Replace with tfnet.CIDRBlocksEqual.
-// cidrBlocksEqual returns whether or not two CIDR blocks are equal:
-// - Both CIDR blocks parse to an IP address and network
-// - The string representation of the IP addresses are equal
-// - The string representation of the networks are equal
-// This function is especially useful for IPv6 CIDR blocks which have multiple valid representations.
-func cidrBlocksEqual(cidr1, cidr2 string) bool {
-	ip1, ipnet1, err := net.ParseCIDR(cidr1)
-	if err != nil {
-		return false
-	}
-	ip2, ipnet2, err := net.ParseCIDR(cidr2)
-	if err != nil {
-		return false
-	}
-
-	return ip2.String() == ip1.String() && ipnet2.String() == ipnet1.String()
-}
-
-// canonicalCidrBlock returns the canonical representation of a CIDR block.
-// This function is especially useful for hash functions for sets which include IPv6 CIDR blocks.
-func canonicalCidrBlock(cidr string) string {
-	_, ipnet, err := net.ParseCIDR(cidr)
-	if err != nil {
-		return cidr
-	}
-
-	return ipnet.String()
 }
 
 func validateHTTPMethod() schema.SchemaValidateFunc {

@@ -35,7 +35,7 @@ func resourceAwsGlueConnection() *schema.Resource {
 			},
 			"connection_properties": {
 				Type:         schema.TypeMap,
-				Required:     true,
+				Optional:     true,
 				Sensitive:    true,
 				ValidateFunc: MapKeyInSlice(glue.ConnectionPropertyKey_Values(), false),
 				Elem:         &schema.Schema{Type: schema.TypeString},
@@ -243,8 +243,10 @@ func deleteGlueConnection(conn *glue.Glue, catalogID, connectionName string) err
 
 func expandGlueConnectionInput(d *schema.ResourceData) *glue.ConnectionInput {
 	connectionProperties := make(map[string]string)
-	for k, v := range d.Get("connection_properties").(map[string]interface{}) {
-		connectionProperties[k] = v.(string)
+	if val, ok := d.GetOkExists("connection_properties"); ok {
+		for k, v := range val.(map[string]interface{}) {
+			connectionProperties[k] = v.(string)
+		}
 	}
 
 	connectionInput := &glue.ConnectionInput{

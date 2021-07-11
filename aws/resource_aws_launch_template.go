@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
 func resourceAwsLaunchTemplate() *schema.Resource {
@@ -41,6 +42,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validateLaunchTemplateName,
@@ -510,6 +512,11 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"interface_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"efa", "interface"}, false),
+						},
 					},
 				},
 			},
@@ -658,14 +665,7 @@ func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) e
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	var ltName string
-	if v, ok := d.GetOk("name"); ok {
-		ltName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		ltName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		ltName = resource.UniqueId()
-	}
+	ltName := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
 
 	launchTemplateData, err := buildLaunchTemplateData(d)
 	if err != nil {
@@ -739,6 +739,7 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 
 	lt := dlt.LaunchTemplates[0]
 	d.Set("name", lt.LaunchTemplateName)
+	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(lt.LaunchTemplateName)))
 	d.Set("latest_version", lt.LatestVersionNumber)
 	d.Set("default_version", lt.DefaultVersionNumber)
 	tags := keyvaluetags.Ec2KeyValueTags(lt.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
@@ -1185,6 +1186,7 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 		networkInterface := map[string]interface{}{
 			"description":          aws.StringValue(v.Description),
 			"device_index":         aws.Int64Value(v.DeviceIndex),
+			"interface_type":       aws.StringValue(v.InterfaceType),
 			"ipv4_address_count":   aws.Int64Value(v.SecondaryPrivateIpAddressCount),
 			"ipv6_address_count":   aws.Int64Value(v.Ipv6AddressCount),
 			"network_interface_id": aws.StringValue(v.NetworkInterfaceId),
@@ -1613,6 +1615,10 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) (*ec2.LaunchTemp
 
 	if v, ok := ni["network_interface_id"].(string); ok && v != "" {
 		networkInterface.NetworkInterfaceId = aws.String(v)
+	}
+
+	if v, ok := ni["interface_type"].(string); ok && v != "" {
+		networkInterface.InterfaceType = aws.String(v)
 	}
 
 	if v, ok := ni["associate_carrier_ip_address"]; ok && v.(string) != "" {

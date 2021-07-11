@@ -27,6 +27,7 @@ resource "aws_datasync_location_s3" "example" {
 
 The following arguments are supported:
 
+* `agent_arns` - (Optional) A list of DataSync Agent ARNs with which this location will be associated.
 * `s3_bucket_arn` - (Required) Amazon Resource Name (ARN) of the S3 Bucket.
 * `s3_config` - (Required) Configuration block containing information for connecting to S3.
 * `s3_storage_class` - (Optional) The Amazon S3 storage class that you want to store your files in when this location is used as a task destination. [Valid values](https://docs.aws.amazon.com/datasync/latest/userguide/create-s3-location.html#using-storage-classes)  

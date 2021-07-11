@@ -40,6 +40,21 @@ func TestAccAWSMacie2_serial(t *testing.T) {
 			"number":         testAccAwsMacie2FindingsFilter_WithNumber,
 			"tags":           testAccAwsMacie2FindingsFilter_withTags,
 		},
+		"OrganizationAdminAccount": {
+			"basic":      testAccAwsMacie2OrganizationAdminAccount_basic,
+			"disappears": testAccAwsMacie2OrganizationAdminAccount_disappears,
+		},
+		"Member": {
+			"basic":          testAccAwsMacie2Member_basic,
+			"disappears":     testAccAwsMacie2Member_disappears,
+			"tags":           testAccAwsMacie2Member_withTags,
+			"invite":         testAccAwsMacie2Member_invite,
+			"invite_removed": testAccAwsMacie2Member_inviteRemoved,
+			"status":         testAccAwsMacie2Member_status,
+		},
+		"InvitationAccepter": {
+			"basic": testAccAwsMacie2InvitationAccepter_basic,
+		},
 	}
 
 	for group, m := range testCases {

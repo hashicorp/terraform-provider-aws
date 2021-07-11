@@ -96,10 +96,12 @@ func TestAccAWSDataSyncLocationS3_basic(t *testing.T) {
 				Config: testAccAWSDataSyncLocationS3Config(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncLocationS3Exists(resourceName, &locationS31),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "0"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket_arn", s3BucketResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "s3_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_config.0.bucket_access_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "s3_storage_class"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/test/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^s3://.+/`)),
