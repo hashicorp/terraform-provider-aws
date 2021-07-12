@@ -251,6 +251,8 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
     - [`aws_apigatewayv2_api` data source](/docs/providers/aws/d/apigatewayv2_api.html)
     - [`aws_apigatewayv2_api` resource](/docs/providers/aws/r/apigatewayv2_api.html)
     - [`aws_apigatewayv2_stage` resource](/docs/providers/aws/r/apigatewayv2_stage.html)
+    - [`aws_appconfig_application` resource](/docs/providers/aws/r/appconfig_application.html)
+    - [`aws_appconfig_environment` resource](/docs/providers/aws/r/appconfig_environment.html)
     - [`aws_athena_workgroup` resource](/docs/providers/aws/r/athena_workgroup.html)
     - [`aws_budgets_budget` resource](/docs/providers/aws/r/budgets_budget.html)
     - [`aws_codedeploy_app` resource](/docs/providers/aws/r/codedeploy_app.html)
