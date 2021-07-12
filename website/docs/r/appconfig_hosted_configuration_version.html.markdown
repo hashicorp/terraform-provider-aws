@@ -12,27 +12,16 @@ Provides an AppConfig Hosted Configuration Version resource.
 
 ## Example Usage
 
-### AppConfig Hosted Configuration Version
-
-```hcl
-resource "aws_appconfig_hosted_configuration_version" "production" {
-  application_id           = aws_appconfig_application.test.id
-  configuration_profile_id = aws_appconfig_configuration_profile.test.id
-  description              = "test"
+```terraform
+resource "aws_appconfig_hosted_configuration_version" "example" {
+  application_id           = aws_appconfig_application.example.id
+  configuration_profile_id = aws_appconfig_configuration_profile.example.configuration_profile_id
+  description              = "Example Hosted Configuration Version"
   content_type             = "application/json"
+
   content = jsonencode({
-    foo = "foo"
+    foo = "bar"
   })
-}
-
-resource "aws_appconfig_application" "test" {
-  name = "test"
-}
-
-resource "aws_appconfig_configuration_profile" "test" {
-  name           = "test"
-  application_id = aws_appconfig_application.test.id
-  location_uri   = "hosted"
 }
 ```
 
@@ -40,23 +29,24 @@ resource "aws_appconfig_configuration_profile" "test" {
 
 The following arguments are supported:
 
-- `application_id` - (Required) The application id.
-- `configuration_profile_id` - (Required) The configuration profile ID.
-- `content` - (Required) The content of the configuration or the configuration data.
-- `content_type` - (Required) A standard MIME type describing the format of the configuration content.
-- `description` - (Optional) A description of the configuration.
+* `application_id` - (Required, Forces new resource) The application ID.
+* `configuration_profile_id` - (Required, Forces new resource) The configuration profile ID.
+* `content` - (Required, Forces new resource) The content of the configuration or the configuration data.
+* `content_type` - (Required, Forces new resource) A standard MIME type describing the format of the configuration content. For more information, see [Content-Type](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.17).
+* `description` - (Optional, Forces new resource) A description of the configuration.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-- `version_number` - hosted configuration version
-- `id` - `<application id>/<configuration profile id>/<version number>`
+* `arn` - The Amazon Resource Name (ARN) of the AppConfig  hosted configuration version.
+* `id` - The AppConfig application ID, configuration profile ID, and version number separated by a slash (`/`).
+* `version_number` - The version number of the hosted configuration.
 
 ## Import
 
-`aws_appconfig_hosted_configuration_version` can be imported by the Application ID and Configuration Profile ID and Hosted Configuration Version Number, e.g.
+AppConfig Hosted Configuration Versions can be imported by using the application ID, configuration profile ID, and version number separated by a slash (`/`), e.g.
 
 ```
-$ terraform import aws_appconfig_hosted_configuration_version.test 71abcde/11xxxxx/2
+$ terraform import aws_appconfig_hosted_configuration_version.example 71abcde/11xxxxx/2
 ```

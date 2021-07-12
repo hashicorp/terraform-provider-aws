@@ -3,11 +3,14 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/appconfig"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -16,46 +19,45 @@ func resourceAwsAppconfigHostedConfigurationVersion() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsAppconfigHostedConfigurationVersionCreate,
 		Read:   resourceAwsAppconfigHostedConfigurationVersionRead,
-		Update: resourceAwsAppconfigHostedConfigurationVersionUpdate,
 		Delete: resourceAwsAppconfigHostedConfigurationVersionDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsAppconfigHostedConfigurationVersionImport,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
 			"application_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
+			},
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(4, 7),
-				),
+				Computed: true,
 			},
 			"configuration_profile_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(4, 7),
-				),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
 			},
 			"content": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:      schema.TypeString,
+				Required:  true,
+				ForceNew:  true,
+				Sensitive: true,
 			},
 			"content_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-				),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 1024),
-				),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 			"version_number": {
 				Type:     schema.TypeInt,
@@ -76,16 +78,19 @@ func resourceAwsAppconfigHostedConfigurationVersionCreate(d *schema.ResourceData
 		ConfigurationProfileId: aws.String(profileID),
 		Content:                []byte(d.Get("content").(string)),
 		ContentType:            aws.String(d.Get("content_type").(string)),
-		Description:            aws.String(d.Get("description").(string)),
 	}
 
-	hcv, err := conn.CreateHostedConfigurationVersion(input)
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	output, err := conn.CreateHostedConfigurationVersion(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating AppConfig HostedConfigurationVersion: %s", err)
+		return fmt.Errorf("error creating AppConfig HostedConfigurationVersion for Application (%s): %w", appID, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s/%d", appID, profileID, aws.Int64Value(hcv.VersionNumber)))
-	d.Set("version_number", hcv.VersionNumber)
+	d.SetId(fmt.Sprintf("%s/%s/%d", aws.StringValue(output.ApplicationId), aws.StringValue(output.ConfigurationProfileId), aws.Int64Value(output.VersionNumber)))
 
 	return resourceAwsAppconfigHostedConfigurationVersionRead(d, meta)
 }
@@ -93,76 +98,93 @@ func resourceAwsAppconfigHostedConfigurationVersionCreate(d *schema.ResourceData
 func resourceAwsAppconfigHostedConfigurationVersionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appconfigconn
 
+	appID, confProfID, versionNumber, err := resourceAwsAppconfigHostedConfigurationVersionParseID(d.Id())
+
+	if err != nil {
+		return err
+	}
+
 	input := &appconfig.GetHostedConfigurationVersionInput{
-		ApplicationId:          aws.String(d.Get("application_id").(string)),
-		ConfigurationProfileId: aws.String(d.Get("configuration_profile_id").(string)),
-		VersionNumber:          aws.Int64(int64(d.Get("version_number").(int))),
+		ApplicationId:          aws.String(appID),
+		ConfigurationProfileId: aws.String(confProfID),
+		VersionNumber:          aws.Int64(int64(versionNumber)),
 	}
 
 	output, err := conn.GetHostedConfigurationVersion(input)
 
-	if !d.IsNewResource() && isAWSErr(err, appconfig.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] Appconfig HostedConfigurationVersion (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] Appconfig Hosted Configuration Version (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting AppConfig HostedConfigurationVersion (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting AppConfig Hosted Configuration Version (%s): %w", d.Id(), err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error getting AppConfig HostedConfigurationVersion (%s): empty response", d.Id())
+		return fmt.Errorf("error getting AppConfig Hosted Configuration Version (%s): empty response", d.Id())
 	}
 
-	d.Set("description", output.Description)
+	d.Set("application_id", output.ApplicationId)
+	d.Set("configuration_profile_id", output.ConfigurationProfileId)
 	d.Set("content", string(output.Content))
 	d.Set("content_type", output.ContentType)
+	d.Set("description", output.Description)
+	d.Set("version_number", output.VersionNumber)
+
+	arn := arn.ARN{
+		AccountID: meta.(*AWSClient).accountid,
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Resource:  fmt.Sprintf("application/%s/configurationprofile/%s/hostedconfigurationversion/%d", appID, confProfID, versionNumber),
+		Service:   "appconfig",
+	}.String()
+
+	d.Set("arn", arn)
 
 	return nil
-}
-
-func resourceAwsAppconfigHostedConfigurationVersionUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceAwsAppconfigHostedConfigurationVersionCreate(d, meta)
 }
 
 func resourceAwsAppconfigHostedConfigurationVersionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appconfigconn
 
-	input := &appconfig.DeleteHostedConfigurationVersionInput{
-		ConfigurationProfileId: aws.String(d.Get("configuration_profile_id").(string)),
-		ApplicationId:          aws.String(d.Get("application_id").(string)),
-		VersionNumber:          aws.Int64(d.Get("version_number").(int64)),
+	appID, confProfID, versionNumber, err := resourceAwsAppconfigHostedConfigurationVersionParseID(d.Id())
+
+	if err != nil {
+		return err
 	}
 
-	_, err := conn.DeleteHostedConfigurationVersion(input)
+	input := &appconfig.DeleteHostedConfigurationVersionInput{
+		ApplicationId:          aws.String(appID),
+		ConfigurationProfileId: aws.String(confProfID),
+		VersionNumber:          aws.Int64(int64(versionNumber)),
+	}
 
-	if isAWSErr(err, appconfig.ErrCodeResourceNotFoundException, "") {
+	_, err = conn.DeleteHostedConfigurationVersion(input)
+
+	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Appconfig HostedConfigurationVersion (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Appconfig Hosted Configuration Version (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func resourceAwsAppconfigHostedConfigurationVersionImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	parts := strings.Split(d.Id(), "/")
-	if len(parts) != 3 {
-		return nil, fmt.Errorf("Wrong format of resource: %s. Please follow 'application-id/configurationprofile-id/version-number'", d.Id())
+func resourceAwsAppconfigHostedConfigurationVersionParseID(id string) (string, string, int, error) {
+	parts := strings.Split(id, "/")
+
+	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+		return "", "", 0, fmt.Errorf("unexpected format of ID (%q), expected ApplicationID/ConfigurationProfileID/VersionNumber", id)
 	}
 
-	verString := parts[2]
-	verNumber, err := strconv.Atoi(verString)
+	version, err := strconv.Atoi(parts[2])
 	if err != nil {
-		return nil, fmt.Errorf("version-number must be integer: %s: %w", verString, err)
+		return "", "", 0, fmt.Errorf("error parsing Hosted Configuration Version version_number: %w", err)
 	}
 
-	d.Set("application_id", parts[0])
-	d.Set("configuration_profile_id", parts[1])
-	d.Set("version_number", verNumber)
-
-	return []*schema.ResourceData{d}, nil
+	return parts[0], parts[1], version, nil
 }
