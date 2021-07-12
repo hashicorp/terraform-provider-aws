@@ -194,7 +194,7 @@ func testAccCheckAWSAppConfigConfigurationProfileARN(resourceName string, profil
 func testAccAWSAppConfigConfigurationProfile(profileName, profileDesc string) string {
 	appName := acctest.RandomWithPrefix("tf-acc-test")
 	appDesc := acctest.RandomWithPrefix("desc")
-	return testAccAWSAppConfigApplicationName(appName, appDesc) + fmt.Sprintf(`
+	return testAccAWSAppConfigApplicationConfigDescription(appName, appDesc) + fmt.Sprintf(`
 resource "aws_appconfig_configuration_profile" "test" {
   name           = %[1]q
   description    = %[2]q
