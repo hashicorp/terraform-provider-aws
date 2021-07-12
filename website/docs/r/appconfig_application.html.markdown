@@ -12,12 +12,11 @@ Provides an AppConfig Application resource.
 
 ## Example Usage
 
-### AppConfig Application
+```terraform
+resource "aws_appconfig_application" "example" {
+  name        = "example-application-tf"
+  description = "Example AppConfig Application"
 
-```hcl
-resource "aws_appconfig_application" "test" {
-  name        = "test-application-tf"
-  description = "Test AppConfig Application"
   tags = {
     Type = "AppConfig Application"
   }
@@ -28,21 +27,22 @@ resource "aws_appconfig_application" "test" {
 
 The following arguments are supported:
 
-- `name` - (Required) The name to use for the application. Must be between 1 and 64 characters in length.
-- `description` - (Optional) The description of the application. Can be at most 1024 characters.
-- `tags` - (Optional) A map of tags to assign to the resource.
+* `name` - (Required) The name for the application. Must be between 1 and 64 characters in length.
+* `description` - (Optional) The description of the application. Can be at most 1024 characters.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-- `arn` - The Amazon Resource Name (ARN) of the AppConfig Application.
-- `id` - The AppConfig Application ID
+* `arn` - The Amazon Resource Name (ARN) of the AppConfig Application.
+* `id` - The AppConfig application ID.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-Applications can be imported using their ID, e.g.
+AppConfig Applications can be imported using their application ID, e.g.
 
 ```
-$ terraform import aws_appconfig_application.bar 71rxuzt
+$ terraform import aws_appconfig_application.example 71rxuzt
 ```

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/appconfig"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -23,47 +24,51 @@ func resourceAwsAppconfigApplication() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-				),
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 1024),
-				),
-			},
-			"tags": tagsSchema(),
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 1024),
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 64),
+			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsAppconfigApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appconfigconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+
 	applicationName := d.Get("name").(string)
-	applicationDescription := d.Get("description").(string)
 
 	input := &appconfig.CreateApplicationInput{
-		Name:        aws.String(applicationName),
-		Description: aws.String(applicationDescription),
-		Tags:        keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().AppconfigTags(),
+		Name: aws.String(applicationName),
+		Tags: tags.IgnoreAws().AppconfigTags(),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
 	}
 
 	app, err := conn.CreateApplication(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating AppConfig application: %s", err)
+		return fmt.Errorf("error creating AppConfig Application (%s): %w", applicationName, err)
+	}
+
+	if app == nil {
+		return fmt.Errorf("error creating AppConfig Application (%s): empty response", applicationName)
 	}
 
 	d.SetId(aws.StringValue(app.Id))
@@ -73,6 +78,7 @@ func resourceAwsAppconfigApplicationCreate(d *schema.ResourceData, meta interfac
 
 func resourceAwsAppconfigApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appconfigconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &appconfig.GetApplicationInput{
@@ -81,21 +87,21 @@ func resourceAwsAppconfigApplicationRead(d *schema.ResourceData, meta interface{
 
 	output, err := conn.GetApplication(input)
 
-	if !d.IsNewResource() && isAWSErr(err, appconfig.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Appconfig Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting AppConfig Application (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting AppConfig Application (%s): %w", d.Id(), err)
 	}
 
 	if output == nil {
 		return fmt.Errorf("error getting AppConfig Application (%s): empty response", d.Id())
 	}
 
-	appARN := arn.ARN{
+	arn := arn.ARN{
 		AccountID: meta.(*AWSClient).accountid,
 		Partition: meta.(*AWSClient).partition,
 		Region:    meta.(*AWSClient).region,
@@ -103,17 +109,25 @@ func resourceAwsAppconfigApplicationRead(d *schema.ResourceData, meta interface{
 		Service:   "appconfig",
 	}.String()
 
-	d.Set("arn", appARN)
+	d.Set("arn", arn)
 	d.Set("name", output.Name)
 	d.Set("description", output.Description)
 
-	tags, err := keyvaluetags.AppconfigListTags(conn, appARN)
+	tags, err := keyvaluetags.AppconfigListTags(conn, arn)
+
 	if err != nil {
-		return fmt.Errorf("error getting tags for AppConfig Application (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for AppConfig Application (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -122,35 +136,32 @@ func resourceAwsAppconfigApplicationRead(d *schema.ResourceData, meta interface{
 func resourceAwsAppconfigApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appconfigconn
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-		if err := keyvaluetags.AppconfigUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating AppConfig (%s) tags: %s", d.Id(), err)
+	if d.HasChangesExcept("tags", "tags_all") {
+
+		updateInput := &appconfig.UpdateApplicationInput{
+			ApplicationId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("description") {
+			updateInput.Description = aws.String(d.Get("description").(string))
+		}
+
+		if d.HasChange("name") {
+			updateInput.Name = aws.String(d.Get("name").(string))
+		}
+
+		_, err := conn.UpdateApplication(updateInput)
+
+		if err != nil {
+			return fmt.Errorf("error updating AppConfig Application(%s): %w", d.Id(), err)
 		}
 	}
 
-	appDesc := d.Get("description").(string)
-	appName := d.Get("name").(string)
-
-	updateInput := &appconfig.UpdateApplicationInput{
-		ApplicationId: aws.String(d.Id()),
-		Description:   aws.String(appDesc),
-		Name:          aws.String(appName),
-	}
-
-	if d.HasChange("description") {
-		_, n := d.GetChange("description")
-		updateInput.Description = aws.String(n.(string))
-	}
-
-	if d.HasChange("name") {
-		_, n := d.GetChange("name")
-		updateInput.Name = aws.String(n.(string))
-	}
-
-	_, err := conn.UpdateApplication(updateInput)
-	if err != nil {
-		return fmt.Errorf("error updating AppConfig Application(%s): %s", d.Id(), err)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := keyvaluetags.AppconfigUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating AppConfig Application (%s) tags: %w", d.Get("arn").(string), err)
+		}
 	}
 
 	return resourceAwsAppconfigApplicationRead(d, meta)
@@ -165,12 +176,12 @@ func resourceAwsAppconfigApplicationDelete(d *schema.ResourceData, meta interfac
 
 	_, err := conn.DeleteApplication(input)
 
-	if isAWSErr(err, appconfig.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Appconfig Application (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Appconfig Application (%s): %w", d.Id(), err)
 	}
 
 	return nil

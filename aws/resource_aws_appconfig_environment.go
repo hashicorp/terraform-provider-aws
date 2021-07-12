@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/appconfig"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -20,48 +21,42 @@ func resourceAwsAppconfigEnvironment() *schema.Resource {
 		Update: resourceAwsAppconfigEnvironmentUpdate,
 		Delete: resourceAwsAppconfigEnvironmentDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsAppconfigEnvironmentImport,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-				),
-			},
 			"application_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(4, 7),
-				),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(4, 7),
 			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 1024),
-				),
-			},
-			"tags": tagsSchema(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"monitors": {
-				Type:     schema.TypeList,
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 64),
+			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 1024),
+			},
+			"monitor": {
+				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"alarm_arn": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 							ValidateFunc: validation.All(
-								validation.StringLenBetween(20, 2048),
+								validation.StringLenBetween(1, 2048),
+								validateArn,
 							),
 						},
 						"alarm_role_arn": {
@@ -69,107 +64,125 @@ func resourceAwsAppconfigEnvironment() *schema.Resource {
 							Optional: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(20, 2048),
+								validateArn,
 							),
 						},
 					},
 				},
 			},
+			"state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsAppconfigEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appconfigconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+
+	appId := d.Get("application_id").(string)
 
 	input := &appconfig.CreateEnvironmentInput{
 		Name:          aws.String(d.Get("name").(string)),
-		Description:   aws.String(d.Get("description").(string)),
-		ApplicationId: aws.String(d.Get("application_id").(string)),
-		Tags:          keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().AppconfigTags(),
-		Monitors:      expandAppconfigEnvironmentMonitors(d.Get("monitors").([]interface{})),
+		ApplicationId: aws.String(appId),
+		Tags:          tags.IgnoreAws().AppconfigTags(),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("monitor"); ok && v.(*schema.Set).Len() > 0 {
+		input.Monitors = expandAppconfigEnvironmentMonitors(v.(*schema.Set).List())
 	}
 
 	environment, err := conn.CreateEnvironment(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating AppConfig Environment: %s", err)
+		return fmt.Errorf("error creating AppConfig Environment for Application (%s): %w", appId, err)
 	}
 
-	d.SetId(aws.StringValue(environment.Id))
+	if environment == nil {
+		return fmt.Errorf("error creating AppConfig Environment for Application (%s): empty response", appId)
+	}
+
+	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(environment.Id), aws.StringValue(environment.ApplicationId)))
 
 	return resourceAwsAppconfigEnvironmentRead(d, meta)
 }
 
-func expandAppconfigEnvironmentMonitors(list []interface{}) []*appconfig.Monitor {
-	monitors := make([]*appconfig.Monitor, len(list))
-	for i, monitorInterface := range list {
-		m := monitorInterface.(map[string]interface{})
-		monitors[i] = &appconfig.Monitor{
-			AlarmArn:     aws.String(m["alarm_arn"].(string)),
-			AlarmRoleArn: aws.String(m["alarm_role_arn"].(string)),
-		}
-	}
-	return monitors
-}
-
-func flattenAwsAppconfigEnvironmentMonitors(monitors []*appconfig.Monitor) []interface{} {
-	list := make([]interface{}, len(monitors))
-	for i, monitor := range monitors {
-		list[i] = map[string]interface{}{
-			"alarm_arn":      aws.StringValue(monitor.AlarmArn),
-			"alarm_role_arn": aws.StringValue(monitor.AlarmRoleArn),
-		}
-	}
-	return list
-}
-
 func resourceAwsAppconfigEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appconfigconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	appID := d.Get("application_id").(string)
+	envID, appID, err := resourceAwsAppconfigEnvironmentParseID(d.Id())
+
+	if err != nil {
+		return err
+	}
 
 	input := &appconfig.GetEnvironmentInput{
 		ApplicationId: aws.String(appID),
-		EnvironmentId: aws.String(d.Id()),
+		EnvironmentId: aws.String(envID),
 	}
 
 	output, err := conn.GetEnvironment(input)
 
-	if !d.IsNewResource() && isAWSErr(err, appconfig.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] Appconfig Environment (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] Appconfig Environment (%s) for Application (%s) not found, removing from state", envID, appID)
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting AppConfig Environment (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting AppConfig Environment (%s) for Application (%s): %w", envID, appID, err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error getting AppConfig Environment (%s): empty response", d.Id())
+		return fmt.Errorf("error getting AppConfig Environment (%s) for Application (%s): empty response", envID, appID)
 	}
 
-	d.Set("name", output.Name)
-	d.Set("description", output.Description)
 	d.Set("application_id", output.ApplicationId)
-	d.Set("monitors", flattenAwsAppconfigEnvironmentMonitors(output.Monitors))
+	d.Set("description", output.Description)
+	d.Set("name", output.Name)
+	d.Set("state", output.State)
 
-	environmentARN := arn.ARN{
+	if err := d.Set("monitor", flattenAwsAppconfigEnvironmentMonitors(output.Monitors)); err != nil {
+		return fmt.Errorf("error setting monitor: %w", err)
+	}
+
+	arn := arn.ARN{
 		AccountID: meta.(*AWSClient).accountid,
 		Partition: meta.(*AWSClient).partition,
 		Region:    meta.(*AWSClient).region,
-		Resource:  fmt.Sprintf("application/%s/environment/%s", appID, d.Id()),
+		Resource:  fmt.Sprintf("application/%s/environment/%s", appID, envID),
 		Service:   "appconfig",
 	}.String()
-	d.Set("arn", environmentARN)
 
-	tags, err := keyvaluetags.AppconfigListTags(conn, environmentARN)
+	d.Set("arn", arn)
+
+	tags, err := keyvaluetags.AppconfigListTags(conn, arn)
+
 	if err != nil {
-		return fmt.Errorf("error getting tags for AppConfig Environment (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for AppConfig Environment (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -178,33 +191,42 @@ func resourceAwsAppconfigEnvironmentRead(d *schema.ResourceData, meta interface{
 func resourceAwsAppconfigEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appconfigconn
 
-	updateInput := &appconfig.UpdateEnvironmentInput{
-		EnvironmentId: aws.String(d.Id()),
-		ApplicationId: aws.String(d.Get("application_id").(string)),
-	}
+	if d.HasChangesExcept("tags", "tags_all") {
+		envID, appID, err := resourceAwsAppconfigEnvironmentParseID(d.Id())
 
-	if d.HasChange("description") {
-		updateInput.Description = aws.String(d.Get("description").(string))
-	}
+		if err != nil {
+			return err
+		}
 
-	if d.HasChange("name") {
-		updateInput.Name = aws.String(d.Get("name").(string))
-	}
+		updateInput := &appconfig.UpdateEnvironmentInput{
+			EnvironmentId: aws.String(envID),
+			ApplicationId: aws.String(appID),
+		}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-		if err := keyvaluetags.AppconfigUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating AppConfig (%s) tags: %s", d.Id(), err)
+		if d.HasChange("description") {
+			updateInput.Description = aws.String(d.Get("description").(string))
+		}
+
+		if d.HasChange("name") {
+			updateInput.Name = aws.String(d.Get("name").(string))
+		}
+
+		if d.HasChange("monitor") {
+			updateInput.Monitors = expandAppconfigEnvironmentMonitors(d.Get("monitor").(*schema.Set).List())
+		}
+
+		_, err = conn.UpdateEnvironment(updateInput)
+
+		if err != nil {
+			return fmt.Errorf("error updating AppConfig Environment (%s) for Application (%s): %w", envID, appID, err)
 		}
 	}
 
-	if d.HasChange("monitors") {
-		updateInput.Monitors = expandAppconfigEnvironmentMonitors(d.Get("monitors").([]interface{}))
-	}
-
-	_, err := conn.UpdateEnvironment(updateInput)
-	if err != nil {
-		return fmt.Errorf("error updating AppConfig Environment(%s): %s", d.Id(), err)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := keyvaluetags.AppconfigUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating AppConfig Environment (%s) tags: %w", d.Get("arn").(string), err)
+		}
 	}
 
 	return resourceAwsAppconfigEnvironmentRead(d, meta)
@@ -213,32 +235,114 @@ func resourceAwsAppconfigEnvironmentUpdate(d *schema.ResourceData, meta interfac
 func resourceAwsAppconfigEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appconfigconn
 
-	input := &appconfig.DeleteEnvironmentInput{
-		EnvironmentId: aws.String(d.Id()),
-		ApplicationId: aws.String(d.Get("application_id").(string)),
+	envID, appID, err := resourceAwsAppconfigEnvironmentParseID(d.Id())
+
+	if err != nil {
+		return err
 	}
 
-	_, err := conn.DeleteEnvironment(input)
+	input := &appconfig.DeleteEnvironmentInput{
+		EnvironmentId: aws.String(envID),
+		ApplicationId: aws.String(appID),
+	}
 
-	if isAWSErr(err, appconfig.ErrCodeResourceNotFoundException, "") {
+	_, err = conn.DeleteEnvironment(input)
+
+	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Appconfig Environment (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Appconfig Environment (%s) for Application (%s): %w", envID, appID, err)
 	}
 
 	return nil
 }
 
-func resourceAwsAppconfigEnvironmentImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	parts := strings.Split(d.Id(), "/")
-	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'application-id/environment-id'", d.Id())
+func resourceAwsAppconfigEnvironmentParseID(id string) (string, string, error) {
+	parts := strings.Split(id, ":")
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%q), expected environmentID:applicationID", id)
 	}
 
-	d.SetId(parts[1])
-	d.Set("application_id", parts[0])
+	return parts[0], parts[1], nil
+}
 
-	return []*schema.ResourceData{d}, nil
+func expandAppconfigEnvironmentMonitor(tfMap map[string]interface{}) *appconfig.Monitor {
+	if tfMap == nil {
+		return nil
+	}
+
+	monitor := &appconfig.Monitor{}
+
+	if v, ok := tfMap["alarm_arn"].(string); ok && v != "" {
+		monitor.AlarmArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["alarm_role_arn"].(string); ok && v != "" {
+		monitor.AlarmRoleArn = aws.String(v)
+	}
+
+	return monitor
+}
+
+func expandAppconfigEnvironmentMonitors(tfList []interface{}) []*appconfig.Monitor {
+	// AppConfig API requires a 0 length slice instead of a nil value
+	// when updating from N monitors to 0/nil monitors
+	monitors := make([]*appconfig.Monitor, 0)
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		monitor := expandAppconfigEnvironmentMonitor(tfMap)
+
+		if monitor == nil {
+			continue
+		}
+
+		monitors = append(monitors, monitor)
+	}
+
+	return monitors
+}
+
+func flattenAwsAppconfigEnvironmentMonitor(monitor *appconfig.Monitor) map[string]interface{} {
+	if monitor == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := monitor.AlarmArn; v != nil {
+		tfMap["alarm_arn"] = aws.StringValue(v)
+	}
+
+	if v := monitor.AlarmRoleArn; v != nil {
+		tfMap["alarm_role_arn"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenAwsAppconfigEnvironmentMonitors(monitors []*appconfig.Monitor) []interface{} {
+	if len(monitors) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, monitor := range monitors {
+		if monitor == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenAwsAppconfigEnvironmentMonitor(monitor))
+	}
+
+	return tfList
 }

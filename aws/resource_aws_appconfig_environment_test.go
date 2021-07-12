@@ -2,24 +2,22 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appconfig"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAppConfigEnvironment_basic(t *testing.T) {
-	var environment appconfig.GetEnvironmentOutput
-	roleName := acctest.RandomWithPrefix("tf-acc-test")
-	alarmName := acctest.RandomWithPrefix("tf-acc-test")
-	appName := acctest.RandomWithPrefix("tf-acc-test")
-	appDesc := acctest.RandomWithPrefix("desc")
-	envName := acctest.RandomWithPrefix("tf-acc-test")
-	envDesc := acctest.RandomWithPrefix("desc")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_environment.test"
+	appResourceName := "aws_appconfig_application.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
@@ -27,18 +25,19 @@ func TestAccAWSAppConfigEnvironment_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAppConfigEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppConfigEnvironmentWithMonitors(roleName, alarmName, appName, appDesc, envName, envDesc),
+				Config: testAccAWSAppConfigEnvironmentConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigEnvironmentExists(resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, "name", envName),
-					testAccCheckAWSAppConfigEnvironmentARN(resourceName, &environment),
+					testAccCheckAWSAppConfigEnvironmentExists(resourceName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`application/[a-z0-9]{4,7}/environment/[a-z0-9]{4,7}`)),
+					resource.TestCheckResourceAttrPair(resourceName, "application_id", appResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "monitor.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "description", envDesc),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAppConfigEnvironmentImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -47,12 +46,7 @@ func TestAccAWSAppConfigEnvironment_basic(t *testing.T) {
 }
 
 func TestAccAWSAppConfigEnvironment_disappears(t *testing.T) {
-	var environment appconfig.GetEnvironmentOutput
-
-	appName := acctest.RandomWithPrefix("tf-acc-test")
-	appDesc := acctest.RandomWithPrefix("desc")
-	envName := acctest.RandomWithPrefix("tf-acc-test")
-	envDesc := acctest.RandomWithPrefix("desc")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -62,10 +56,10 @@ func TestAccAWSAppConfigEnvironment_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAppConfigEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppConfigEnvironment(appName, appDesc, envName, envDesc),
+				Config: testAccAWSAppConfigEnvironmentConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigEnvironmentExists(resourceName, &environment),
-					testAccCheckAWSAppConfigEnvironmentDisappears(&environment),
+					testAccCheckAWSAppConfigEnvironmentExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppconfigEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -73,9 +67,185 @@ func TestAccAWSAppConfigEnvironment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigEnvironment_Tags(t *testing.T) {
-	var environment appconfig.GetEnvironmentOutput
+func TestAccAWSAppConfigEnvironment_updateName(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rNameUpdated := acctest.RandomWithPrefix("tf-acc-test-update")
+	resourceName := "aws_appconfig_environment.test"
 
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAppConfigEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAppConfigEnvironmentConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppConfigEnvironmentExists(resourceName),
+				),
+			},
+			{
+				Config: testAccAWSAppConfigEnvironmentConfigBasic(rNameUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppConfigEnvironmentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAppConfigEnvironment_updateDescription(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	description := acctest.RandomWithPrefix("tf-acc-test-update")
+	resourceName := "aws_appconfig_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAppConfigEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAppConfigEnvironmentConfigDescription(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppConfigEnvironmentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSAppConfigEnvironmentConfigDescription(rName, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppConfigEnvironmentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Test Description Removal
+				Config: testAccAWSAppConfigEnvironmentConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppConfigEnvironmentExists(resourceName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAppConfigEnvironment_Monitors(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_appconfig_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAppConfigEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAppConfigEnvironmentWithMonitors(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppConfigEnvironmentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "monitor.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_arn", "aws_cloudwatch_metric_alarm.test.0", "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSAppConfigEnvironmentWithMonitors(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppConfigEnvironmentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "monitor.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_arn", "aws_cloudwatch_metric_alarm.test.0", "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_arn", "aws_cloudwatch_metric_alarm.test.1", "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Test Monitor Removal
+				Config: testAccAWSAppConfigEnvironmentConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppConfigEnvironmentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "monitor.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAppConfigEnvironment_MultipleEnvironments(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName1 := "aws_appconfig_environment.test"
+	resourceName2 := "aws_appconfig_environment.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAppConfigEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAppConfigEnvironmentConfigMultiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppConfigEnvironmentExists(resourceName1),
+					testAccCheckAWSAppConfigEnvironmentExists(resourceName2),
+				),
+			},
+			{
+				ResourceName:      resourceName1,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      resourceName2,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSAppConfigEnvironmentConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppConfigEnvironmentExists(resourceName1),
+				),
+			},
+			{
+				ResourceName:      resourceName1,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAppConfigEnvironment_Tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_environment.test"
 
@@ -88,21 +258,20 @@ func TestAccAWSAppConfigEnvironment_Tags(t *testing.T) {
 			{
 				Config: testAccAWSAppConfigEnvironmentTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigEnvironmentExists(resourceName, &environment),
+					testAccCheckAWSAppConfigEnvironmentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAppConfigEnvironmentImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSAppConfigEnvironmentTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigEnvironmentExists(resourceName, &environment),
+					testAccCheckAWSAppConfigEnvironmentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -111,7 +280,7 @@ func TestAccAWSAppConfigEnvironment_Tags(t *testing.T) {
 			{
 				Config: testAccAWSAppConfigEnvironmentTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigEnvironmentExists(resourceName, &environment),
+					testAccCheckAWSAppConfigEnvironmentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -128,43 +297,36 @@ func testAccCheckAppConfigEnvironmentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &appconfig.GetEnvironmentInput{
-			ApplicationId: aws.String(rs.Primary.Attributes["application_id"]),
-			EnvironmentId: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.GetEnvironment(input)
-
-		if isAWSErr(err, appconfig.ErrCodeResourceNotFoundException, "") {
-			continue
-		}
+		envID, appID, err := resourceAwsAppconfigEnvironmentParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
+		input := &appconfig.GetEnvironmentInput{
+			ApplicationId: aws.String(appID),
+			EnvironmentId: aws.String(envID),
+		}
+
+		output, err := conn.GetEnvironment(input)
+
+		if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("error reading AppConfig Environment (%s) for Application (%s): %w", envID, appID, err)
+		}
+
 		if output != nil {
-			return fmt.Errorf("AppConfig Environment (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("AppConfig Environment (%s) for Application (%s) still exists", envID, appID)
 		}
 	}
 
 	return nil
 }
 
-func testAccCheckAWSAppConfigEnvironmentDisappears(environment *appconfig.GetEnvironmentOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).appconfigconn
-
-		_, err := conn.DeleteEnvironment(&appconfig.DeleteEnvironmentInput{
-			ApplicationId: environment.ApplicationId,
-			EnvironmentId: environment.Id,
-		})
-
-		return err
-	}
-}
-
-func testAccCheckAWSAppConfigEnvironmentExists(resourceName string, environment *appconfig.GetEnvironmentOutput) resource.TestCheckFunc {
+func testAccCheckAWSAppConfigEnvironmentExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -175,84 +337,64 @@ func testAccCheckAWSAppConfigEnvironmentExists(resourceName string, environment 
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).appconfigconn
+		envID, appID, err := resourceAwsAppconfigEnvironmentParseID(rs.Primary.ID)
 
-		output, err := conn.GetEnvironment(&appconfig.GetEnvironmentInput{
-			ApplicationId: aws.String(rs.Primary.Attributes["application_id"]),
-			EnvironmentId: aws.String(rs.Primary.ID),
-		})
 		if err != nil {
 			return err
 		}
 
-		*environment = *output
+		conn := testAccProvider.Meta().(*AWSClient).appconfigconn
+
+		input := &appconfig.GetEnvironmentInput{
+			ApplicationId: aws.String(appID),
+			EnvironmentId: aws.String(envID),
+		}
+
+		output, err := conn.GetEnvironment(input)
+
+		if err != nil {
+			return err
+		}
+
+		if output == nil {
+			return fmt.Errorf("AppConfig Environment (%s) for Application (%s) not found", envID, appID)
+		}
 
 		return nil
 	}
 }
 
-func testAccCheckAWSAppConfigEnvironmentARN(resourceName string, environment *appconfig.GetEnvironmentOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		return testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appconfig", fmt.Sprintf("application/%s/environment/%s", aws.StringValue(environment.ApplicationId), aws.StringValue(environment.Id)))(s)
-	}
-}
-
-func testAccAWSAppConfigEnvironmentWithMonitors(roleName, alarmName, appName, appDesc, envName, envDesc string) string {
-	return testAccAWSAppConfigMonitor_ServiceRole(roleName) + testAccAWSCloudWatchMetricAlarmConfig(alarmName) + testAccAWSAppConfigApplicationName(appName, appDesc) + fmt.Sprintf(`
+func testAccAWSAppConfigEnvironmentConfigBasic(rName string) string {
+	return composeConfig(
+		testAccAWSAppConfigApplicationConfigName(rName),
+		fmt.Sprintf(`
 resource "aws_appconfig_environment" "test" {
-  name           = %[1]q
-  description    = %[2]q
-  application_id = aws_appconfig_application.test.id
-
-  monitors {
-    alarm_arn      = aws_cloudwatch_metric_alarm.test.arn
-    alarm_role_arn = aws_iam_role.test.arn
-  }
-}
-`, envName, envDesc)
-}
-
-func testAccAWSAppConfigEnvironment(appName, appDesc, envName, envDesc string) string {
-	return testAccAWSAppConfigApplicationName(appName, appDesc) + fmt.Sprintf(`
-resource "aws_appconfig_environment" "test" {
-  name           = %[1]q
-  description    = %[2]q
+  name           = %q
   application_id = aws_appconfig_application.test.id
 }
-`, envName, envDesc)
+`, rName))
 }
 
-func testAccAWSAppConfigEnvironmentTags1(rName, tagKey1, tagValue1 string) string {
-	return testAccAWSAppConfigApplicationTags1(rName, tagKey1, tagValue1) + fmt.Sprintf(`
+func testAccAWSAppConfigEnvironmentConfigDescription(rName, description string) string {
+	return composeConfig(
+		testAccAWSAppConfigApplicationConfigName(rName),
+		fmt.Sprintf(`
 resource "aws_appconfig_environment" "test" {
-  name           = %[1]q
+  name           = %q
+  description    = %q
   application_id = aws_appconfig_application.test.id
-
-  tags = {
-    %[2]q = %[3]q
-  }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, description))
 }
 
-func testAccAWSAppConfigEnvironmentTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAWSAppConfigApplicationTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2) + fmt.Sprintf(`
-resource "aws_appconfig_environment" "test" {
-  name           = %[1]q
-  application_id = aws_appconfig_application.test.id
+func testAccAWSAppConfigEnvironmentWithMonitors(rName string, count int) string {
+	return composeConfig(
+		testAccAWSAppConfigApplicationConfigName(rName),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
 
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccAWSAppConfigMonitor_ServiceRole(rName string) string {
-	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = "%s"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -261,7 +403,7 @@ resource "aws_iam_role" "test" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "appconfig.amazonaws.com"
+        "Service": "appconfig.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -288,16 +430,84 @@ resource "aws_iam_role_policy" "test" {
 }
 POLICY
 }
-`, rName)
+
+resource "aws_cloudwatch_metric_alarm" "test" {
+  count = %[2]d
+
+  alarm_name                = "%[1]s-${count.index}"
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = "2"
+  metric_name               = "CPUUtilization"
+  namespace                 = "AWS/EC2"
+  period                    = "120"
+  statistic                 = "Average"
+  threshold                 = "80"
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+
+  dimensions = {
+    InstanceId = "i-abc123"
+  }
 }
 
-func testAccAWSAppConfigEnvironmentImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not Found: %s", resourceName)
-		}
+resource "aws_appconfig_environment" "test" {
+  name           = %[1]q
+  application_id = aws_appconfig_application.test.id
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["application_id"], rs.Primary.ID), nil
-	}
+  dynamic "monitor" {
+    for_each = aws_cloudwatch_metric_alarm.test.*.arn
+    content {
+      alarm_arn      = monitor.value
+      alarm_role_arn = aws_iam_role.test.arn
+    }
+  }
+}
+`, rName, count))
+}
+
+func testAccAWSAppConfigEnvironmentConfigMultiple(rName string) string {
+	return composeConfig(
+		testAccAWSAppConfigApplicationConfigName(rName),
+		fmt.Sprintf(`
+resource "aws_appconfig_environment" "test" {
+  name           = %[1]q
+  application_id = aws_appconfig_application.test.id
+}
+
+resource "aws_appconfig_environment" "test2" {
+  name           = "%[1]s-2"
+  application_id = aws_appconfig_application.test.id
+}
+`, rName))
+}
+
+func testAccAWSAppConfigEnvironmentTags1(rName, tagKey1, tagValue1 string) string {
+	return composeConfig(
+		testAccAWSAppConfigApplicationConfigName(rName),
+		fmt.Sprintf(`
+resource "aws_appconfig_environment" "test" {
+  name           = %[1]q
+  application_id = aws_appconfig_application.test.id
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccAWSAppConfigEnvironmentTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return composeConfig(
+		testAccAWSAppConfigApplicationConfigName(rName),
+		fmt.Sprintf(`
+resource "aws_appconfig_environment" "test" {
+  name           = %[1]q
+  application_id = aws_appconfig_application.test.id
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
