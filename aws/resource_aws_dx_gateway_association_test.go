@@ -711,10 +711,10 @@ resource "aws_dx_gateway_association_proposal" "test" {
 }
 
 resource "aws_dx_gateway_association_proposal" "test2" {
-	dx_gateway_id               = aws_dx_gateway.test.id
-	dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
-	associated_gateway_id       = aws_vpn_gateway_attachment.test.vpn_gateway_id
-  }
+  dx_gateway_id               = aws_dx_gateway.test.id
+  dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
+  associated_gateway_id       = aws_vpn_gateway_attachment.test.vpn_gateway_id
+}
 
 # Accepter
 resource "aws_dx_gateway_association" "test" {

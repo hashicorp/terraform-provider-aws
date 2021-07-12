@@ -416,11 +416,11 @@ func testAccDxGatewayAssociationProposalConfig_endOfLifeVpn(rName string, rBgpAs
 data "aws_caller_identity" "current" {}
 
 resource "aws_dx_gateway_association" "test" {
-provider = "awsalternate"
+  provider = "awsalternate"
 
-proposal_id                         = aws_dx_gateway_association_proposal.test.id
-dx_gateway_id                       = aws_dx_gateway.test.id
-associated_gateway_owner_account_id = data.aws_caller_identity.current.account_id
+  proposal_id                         = aws_dx_gateway_association_proposal.test.id
+  dx_gateway_id                       = aws_dx_gateway.test.id
+  associated_gateway_owner_account_id = data.aws_caller_identity.current.account_id
 }
 `)
 }
@@ -430,11 +430,11 @@ func testAccDxGatewayAssociationProposalConfig_endOfLifeTgw(rName string, rBgpAs
 data "aws_caller_identity" "current" {}
 
 resource "aws_dx_gateway_association" "test" {
-provider = "awsalternate"
+  provider = "awsalternate"
 
-proposal_id                         = aws_dx_gateway_association_proposal.test.id
-dx_gateway_id                       = aws_dx_gateway.test.id
-associated_gateway_owner_account_id = data.aws_caller_identity.current.account_id
+  proposal_id                         = aws_dx_gateway_association_proposal.test.id
+  dx_gateway_id                       = aws_dx_gateway.test.id
+  associated_gateway_owner_account_id = data.aws_caller_identity.current.account_id
 }
 `)
 }
