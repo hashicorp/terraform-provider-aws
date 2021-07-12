@@ -42,10 +42,10 @@ resource "aws_appconfig_application" "example" {
 
 The following arguments are supported:
 
+* `application_id` - (Required, Forces new resource) The AppConfig application ID. Must be between 4 and 7 characters in length.
 * `name` - (Required) The name for the environment. Must be between 1 and 64 characters in length.
-* `application_id` - (Required) The AppConfig application ID. Must be between 4 and 7 characters in length.
 * `description` - (Optional) The description of the environment. Can be at most 1024 characters.
-* `monitor` - (Optional) Set of Amazon CloudWatch alarms to monitor during the deployment process. Maximum of 5. Detailed below.
+* `monitor` - (Optional) Set of Amazon CloudWatch alarms to monitor during the deployment process. Maximum of 5. See [Monitor](#monitor) below for more details.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Monitor
@@ -68,5 +68,5 @@ In addition to all arguments above, the following attributes are exported:
 AppConfig Environments can be imported by using the environment ID and application ID separated by a colon (`:`), e.g.
 
 ```
-$ terraform import aws_appconfig_environment.example 71abcde/11xxxxx
+$ terraform import aws_appconfig_environment.example 71abcde:11xxxxx
 ```
