@@ -253,6 +253,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
     - [`aws_apigatewayv2_stage` resource](/docs/providers/aws/r/apigatewayv2_stage.html)
     - [`aws_appconfig_application` resource](/docs/providers/aws/r/appconfig_application.html)
     - [`aws_appconfig_configuration_profile` resource](/docs/providers/aws/r/appconfig_configuration_profile.html)
+    - [`aws_appconfig_deployment_strategy` resource](/docs/providers/aws/r/appconfig_deployment_strategy.html)
     - [`aws_appconfig_environment` resource](/docs/providers/aws/r/appconfig_environment.html)
     - [`aws_appconfig_hosted_configuration_version` resource](/docs/providers/aws/r/appconfig_hosted_configuration_version.html)
     - [`aws_athena_workgroup` resource](/docs/providers/aws/r/athena_workgroup.html)

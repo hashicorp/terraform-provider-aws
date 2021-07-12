@@ -2,18 +2,21 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appconfig"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAppConfigDeploymentStrategy_basic(t *testing.T) {
-	var strategy appconfig.GetDeploymentStrategyOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_deployment_strategy.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
@@ -21,17 +24,19 @@ func TestAccAWSAppConfigDeploymentStrategy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppConfigDeploymentStrategy(),
+				Config: testAccAWSAppConfigDeploymentStrategyConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName, &strategy),
-					testAccCheckAWSAppConfigDeploymentStrategyARN(resourceName, &strategy),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "description", "deployment strategy description"),
+					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`deploymentstrategy/[a-z0-9]{4,7}`)),
+					resource.TestCheckResourceAttr(resourceName, "deployment_duration_in_minutes", "3"),
+					resource.TestCheckResourceAttr(resourceName, "growth_factor", "10"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "replicate_to", appconfig.ReplicateToNone),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAppConfigDeploymentStrategyImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -39,8 +44,9 @@ func TestAccAWSAppConfigDeploymentStrategy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigDeploymentStrategy_disappears(t *testing.T) {
-	var strategy appconfig.GetDeploymentStrategyOutput
+func TestAccAWSAppConfigDeploymentStrategy_updateDescription(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	description := acctest.RandomWithPrefix("tf-acc-test-update")
 	resourceName := "aws_appconfig_deployment_strategy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -50,10 +56,88 @@ func TestAccAWSAppConfigDeploymentStrategy_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppConfigDeploymentStrategy(),
+				Config: testAccAWSAppConfigDeploymentStrategyConfigDescription(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName, &strategy),
-					testAccCheckAWSAppConfigDeploymentStrategyDisappears(&strategy),
+					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
+				),
+			},
+			{
+				Config: testAccAWSAppConfigDeploymentStrategyConfigDescription(rName, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAppConfigDeploymentStrategy_updateFinalBakeTime(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_appconfig_deployment_strategy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAppConfigDeploymentStrategyConfigFinalBakeTime(rName, 60),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "final_bake_time_in_minutes", "60"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSAppConfigDeploymentStrategyConfigFinalBakeTime(rName, 30),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "final_bake_time_in_minutes", "30"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Test FinalBakeTimeInMinutes Removal
+				Config: testAccAWSAppConfigDeploymentStrategyConfigName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAppConfigDeploymentStrategy_disappears(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_appconfig_deployment_strategy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAppConfigDeploymentStrategyConfigName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppconfigDeploymentStrategy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -62,8 +146,6 @@ func TestAccAWSAppConfigDeploymentStrategy_disappears(t *testing.T) {
 }
 
 func TestAccAWSAppConfigDeploymentStrategy_Tags(t *testing.T) {
-	var strategy appconfig.GetDeploymentStrategyOutput
-
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_deployment_strategy.test"
 
@@ -76,21 +158,20 @@ func TestAccAWSAppConfigDeploymentStrategy_Tags(t *testing.T) {
 			{
 				Config: testAccAWSAppConfigDeploymentStrategyTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName, &strategy),
+					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAppConfigDeploymentStrategyImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSAppConfigDeploymentStrategyTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName, &strategy),
+					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -99,7 +180,7 @@ func TestAccAWSAppConfigDeploymentStrategy_Tags(t *testing.T) {
 			{
 				Config: testAccAWSAppConfigDeploymentStrategyTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName, &strategy),
+					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -122,35 +203,23 @@ func testAccCheckAppConfigDeploymentStrategyDestroy(s *terraform.State) error {
 
 		output, err := conn.GetDeploymentStrategy(input)
 
-		if isAWSErr(err, appconfig.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
 			continue
 		}
 
 		if err != nil {
-			return err
+			return fmt.Errorf("error getting Appconfig Deployment Strategy (%s): %w", rs.Primary.ID, err)
 		}
 
 		if output != nil {
-			return fmt.Errorf("AppConfig DeploymentStrategy (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("AppConfig Deployment Strategy (%s) still exists", rs.Primary.ID)
 		}
 	}
 
 	return nil
 }
 
-func testAccCheckAWSAppConfigDeploymentStrategyDisappears(strategy *appconfig.GetDeploymentStrategyOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).appconfigconn
-
-		_, err := conn.DeleteDeploymentStrategy(&appconfig.DeleteDeploymentStrategyInput{
-			DeploymentStrategyId: strategy.Id,
-		})
-
-		return err
-	}
-}
-
-func testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName string, strategy *appconfig.GetDeploymentStrategyOutput) resource.TestCheckFunc {
+func testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -163,40 +232,57 @@ func testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName string, strat
 
 		conn := testAccProvider.Meta().(*AWSClient).appconfigconn
 
-		output, err := conn.GetDeploymentStrategy(&appconfig.GetDeploymentStrategyInput{
+		input := &appconfig.GetDeploymentStrategyInput{
 			DeploymentStrategyId: aws.String(rs.Primary.ID),
-		})
-		if err != nil {
-			return err
 		}
 
-		*strategy = *output
+		output, err := conn.GetDeploymentStrategy(input)
+
+		if err != nil {
+			return fmt.Errorf("error getting Appconfig Deployment Strategy (%s): %w", rs.Primary.ID, err)
+		}
+
+		if output == nil {
+			return fmt.Errorf("AppConfig Deployment Strategy (%s) not found", rs.Primary.ID)
+		}
 
 		return nil
 	}
 }
 
-func testAccCheckAWSAppConfigDeploymentStrategyARN(resourceName string, strategy *appconfig.GetDeploymentStrategyOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		return testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appconfig", fmt.Sprintf("deploymentstrategy/%s", aws.StringValue(strategy.Id)))(s)
-	}
-}
-
-func testAccAWSAppConfigDeploymentStrategy() string {
+func testAccAWSAppConfigDeploymentStrategyConfigName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appconfig_deployment_strategy" "test" {
-  name                           = "%s"
-  description                    = "deployment strategy description"
+  name                           = %[1]q
   deployment_duration_in_minutes = 3
-  final_bake_time_in_minutes     = 4
   growth_factor                  = 10
-  growth_type                    = "LINEAR"
   replicate_to                   = "NONE"
-  tags = {
-    Env = "Test"
-  }
 }
-`, acctest.RandomWithPrefix("tf-acc-test"))
+`, rName)
+}
+
+func testAccAWSAppConfigDeploymentStrategyConfigDescription(rName, description string) string {
+	return fmt.Sprintf(`
+resource "aws_appconfig_deployment_strategy" "test" {
+  name                           = %[1]q
+  deployment_duration_in_minutes = 3
+  description                    = %[2]q
+  growth_factor                  = 10
+  replicate_to                   = "NONE"
+}
+`, rName, description)
+}
+
+func testAccAWSAppConfigDeploymentStrategyConfigFinalBakeTime(rName string, time int) string {
+	return fmt.Sprintf(`
+resource "aws_appconfig_deployment_strategy" "test" {
+  name                           = %[1]q
+  deployment_duration_in_minutes = 3
+  final_bake_time_in_minutes     = %[2]d
+  growth_factor                  = 10
+  replicate_to                   = "NONE"
+}
+`, rName, time)
 }
 
 func testAccAWSAppConfigDeploymentStrategyTags1(rName, tagKey1, tagValue1 string) string {
@@ -204,9 +290,7 @@ func testAccAWSAppConfigDeploymentStrategyTags1(rName, tagKey1, tagValue1 string
 resource "aws_appconfig_deployment_strategy" "test" {
   name                           = %[1]q
   deployment_duration_in_minutes = 3
-  final_bake_time_in_minutes     = 4
   growth_factor                  = 10
-  growth_type                    = "LINEAR"
   replicate_to                   = "NONE"
 
   tags = {
@@ -217,13 +301,11 @@ resource "aws_appconfig_deployment_strategy" "test" {
 }
 
 func testAccAWSAppConfigDeploymentStrategyTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAWSAppConfigApplicationTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2) + fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_appconfig_deployment_strategy" "test" {
   name                           = %[1]q
   deployment_duration_in_minutes = 3
-  final_bake_time_in_minutes     = 4
   growth_factor                  = 10
-  growth_type                    = "LINEAR"
   replicate_to                   = "NONE"
 
   tags = {
@@ -232,15 +314,4 @@ resource "aws_appconfig_deployment_strategy" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccAWSAppConfigDeploymentStrategyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not Found: %s", resourceName)
-		}
-
-		return rs.Primary.ID, nil
-	}
 }
