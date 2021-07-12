@@ -287,7 +287,7 @@ func resourceAwsAppconfigConfigurationProfileParseID(id string) (string, string,
 	parts := strings.Split(id, ":")
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%q), expected configurationProfileID:applicationID", id)
+		return "", "", fmt.Errorf("unexpected format of ID (%q), expected ConfigurationProfileID:ApplicationID", id)
 	}
 
 	return parts[0], parts[1], nil
