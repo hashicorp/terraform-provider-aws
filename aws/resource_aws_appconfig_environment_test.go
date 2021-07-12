@@ -353,7 +353,7 @@ func testAccCheckAWSAppConfigEnvironmentExists(resourceName string) resource.Tes
 		output, err := conn.GetEnvironment(input)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("error reading AppConfig Environment (%s) for Application (%s): %w", envID, appID, err)
 		}
 
 		if output == nil {

@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -29,7 +30,7 @@ func resourceAwsAppconfigEnvironment() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(4, 7),
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -60,12 +61,9 @@ func resourceAwsAppconfigEnvironment() *schema.Resource {
 							),
 						},
 						"alarm_role_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(20, 2048),
-								validateArn,
-							),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
