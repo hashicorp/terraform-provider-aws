@@ -4646,7 +4646,7 @@ resource "aws_s3_bucket" "bucket" {
         prefix = "foo"
       }
 
-	  delete_marker_replication_status = "Enabled"
+      delete_marker_replication_status = "Enabled"
 
       destination {
         bucket        = aws_s3_bucket.destination.arn
