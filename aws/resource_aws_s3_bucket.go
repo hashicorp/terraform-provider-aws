@@ -2124,7 +2124,6 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 					Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
 				}
 			}
-
 		} else {
 			// XML schema V1.
 			rcRule.Prefix = aws.String(rr["prefix"].(string))
