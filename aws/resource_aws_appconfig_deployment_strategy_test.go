@@ -202,7 +202,7 @@ resource "aws_appconfig_deployment_strategy" "test" {
 func testAccAWSAppConfigDeploymentStrategyTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_appconfig_deployment_strategy" "test" {
-  name           = %[1]q
+  name                           = %[1]q
   deployment_duration_in_minutes = 3
   final_bake_time_in_minutes     = 4
   growth_factor                  = 10
@@ -219,7 +219,7 @@ resource "aws_appconfig_deployment_strategy" "test" {
 func testAccAWSAppConfigDeploymentStrategyTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccAWSAppConfigApplicationTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2) + fmt.Sprintf(`
 resource "aws_appconfig_deployment_strategy" "test" {
-  name           = %[1]q
+  name                           = %[1]q
   deployment_duration_in_minutes = 3
   final_bake_time_in_minutes     = 4
   growth_factor                  = 10
