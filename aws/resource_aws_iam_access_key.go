@@ -50,19 +50,26 @@ func resourceAwsIamAccessKey() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"user": {
+			"create_date": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
-			"status": {
+			"encrypted_secret": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"encrypted_ses_smtp_password_v4": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"key_fingerprint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"pgp_key": {
+				Type:     schema.TypeString,
+				ForceNew: true,
 				Optional: true,
-				Default:  "Active",
-				ValidateFunc: validation.StringInSlice([]string{
-					iam.StatusTypeActive,
-					iam.StatusTypeInactive,
-				}, false),
 			},
 			"secret": {
 				Type:      schema.TypeString,
@@ -74,26 +81,16 @@ func resourceAwsIamAccessKey() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
-			"pgp_key": {
+			"status": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      iam.StatusTypeActive,
+				ValidateFunc: validation.StringInSlice(iam.StatusType_Values(), false),
+			},
+			"user": {
 				Type:     schema.TypeString,
+				Required: true,
 				ForceNew: true,
-				Optional: true,
-			},
-			"create_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"encrypted_secret": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_fingerprint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"encrypted_ses_smtp_password_v4": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
