@@ -18,7 +18,8 @@ import (
 
 func TestAccAWSAccessKey_basic(t *testing.T) {
 	var conf iam.AccessKeyMetadata
-	rName := fmt.Sprintf("test-user-%d", acctest.RandInt())
+	resourceName := "aws_iam_access_key.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -29,18 +30,18 @@ func TestAccAWSAccessKey_basic(t *testing.T) {
 			{
 				Config: testAccAWSAccessKeyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAccessKeyExists("aws_iam_access_key.a_key", &conf),
+					testAccCheckAWSAccessKeyExists(resourceName, &conf),
 					testAccCheckAWSAccessKeyAttributes(&conf, "Active"),
-					testAccCheckResourceAttrRfc3339("aws_iam_access_key.a_key", "create_date"),
-					resource.TestCheckResourceAttrSet("aws_iam_access_key.a_key", "secret"),
-					resource.TestCheckNoResourceAttr("aws_iam_access_key.a_key", "encrypted_secret"),
-					resource.TestCheckNoResourceAttr("aws_iam_access_key.a_key", "key_fingerprint"),
-					resource.TestCheckResourceAttrSet("aws_iam_access_key.a_key", "ses_smtp_password_v4"),
-					resource.TestCheckNoResourceAttr("aws_iam_access_key.a_key", "encrypted_ses_smtp_password_v4"),
+					testAccCheckResourceAttrRfc3339(resourceName, "create_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "secret"),
+					resource.TestCheckNoResourceAttr(resourceName, "encrypted_secret"),
+					resource.TestCheckNoResourceAttr(resourceName, "key_fingerprint"),
+					resource.TestCheckResourceAttrSet(resourceName, "ses_smtp_password_v4"),
+					resource.TestCheckNoResourceAttr(resourceName, "encrypted_ses_smtp_password_v4"),
 				),
 			},
 			{
-				ResourceName:            "aws_iam_access_key.a_key",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"encrypted_secret", "key_fingerprint", "pgp_key", "secret", "ses_smtp_password_v4", "encrypted_ses_smtp_password_v4"},
@@ -51,7 +52,8 @@ func TestAccAWSAccessKey_basic(t *testing.T) {
 
 func TestAccAWSAccessKey_encrypted(t *testing.T) {
 	var conf iam.AccessKeyMetadata
-	rName := fmt.Sprintf("test-user-%d", acctest.RandInt())
+	resourceName := "aws_iam_access_key.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -62,23 +64,18 @@ func TestAccAWSAccessKey_encrypted(t *testing.T) {
 			{
 				Config: testAccAWSAccessKeyConfig_encrypted(rName, testPubKey1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAccessKeyExists("aws_iam_access_key.a_key", &conf),
+					testAccCheckAWSAccessKeyExists(resourceName, &conf),
 					testAccCheckAWSAccessKeyAttributes(&conf, "Active"),
-					testDecryptSecretKeyAndTest("aws_iam_access_key.a_key", testPrivKey1),
-					resource.TestCheckNoResourceAttr(
-						"aws_iam_access_key.a_key", "secret"),
-					resource.TestCheckResourceAttrSet(
-						"aws_iam_access_key.a_key", "encrypted_secret"),
-					resource.TestCheckResourceAttrSet(
-						"aws_iam_access_key.a_key", "key_fingerprint"),
-					resource.TestCheckNoResourceAttr(
-						"aws_iam_access_key.a_key", "ses_smtp_password_v4"),
-					resource.TestCheckResourceAttrSet(
-						"aws_iam_access_key.a_key", "encrypted_ses_smtp_password_v4"),
+					testDecryptSecretKeyAndTest(resourceName, testPrivKey1),
+					resource.TestCheckNoResourceAttr(resourceName, "secret"),
+					resource.TestCheckResourceAttrSet(resourceName, "encrypted_secret"),
+					resource.TestCheckResourceAttrSet(resourceName, "key_fingerprint"),
+					resource.TestCheckNoResourceAttr(resourceName, "ses_smtp_password_v4"),
+					resource.TestCheckResourceAttrSet(resourceName, "encrypted_ses_smtp_password_v4"),
 				),
 			},
 			{
-				ResourceName:            "aws_iam_access_key.a_key",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"encrypted_secret", "key_fingerprint", "pgp_key", "secret", "ses_smtp_password_v4", "encrypted_ses_smtp_password_v4"},
@@ -87,9 +84,10 @@ func TestAccAWSAccessKey_encrypted(t *testing.T) {
 	})
 }
 
-func TestAccAWSAccessKey_Status(t *testing.T) {
+func TestAccAWSAccessKey_status(t *testing.T) {
 	var conf iam.AccessKeyMetadata
-	rName := fmt.Sprintf("test-user-%d", acctest.RandInt())
+	resourceName := "aws_iam_access_key.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -100,12 +98,12 @@ func TestAccAWSAccessKey_Status(t *testing.T) {
 			{
 				Config: testAccAWSAccessKeyConfig_Status(rName, iam.StatusTypeInactive),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAccessKeyExists("aws_iam_access_key.a_key", &conf),
-					resource.TestCheckResourceAttr("aws_iam_access_key.a_key", "status", iam.StatusTypeInactive),
+					testAccCheckAWSAccessKeyExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "status", iam.StatusTypeInactive),
 				),
 			},
 			{
-				ResourceName:            "aws_iam_access_key.a_key",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"encrypted_secret", "key_fingerprint", "pgp_key", "secret", "ses_smtp_password_v4", "encrypted_ses_smtp_password_v4"},
@@ -113,15 +111,15 @@ func TestAccAWSAccessKey_Status(t *testing.T) {
 			{
 				Config: testAccAWSAccessKeyConfig_Status(rName, iam.StatusTypeActive),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAccessKeyExists("aws_iam_access_key.a_key", &conf),
-					resource.TestCheckResourceAttr("aws_iam_access_key.a_key", "status", iam.StatusTypeActive),
+					testAccCheckAWSAccessKeyExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "status", iam.StatusTypeActive),
 				),
 			},
 			{
 				Config: testAccAWSAccessKeyConfig_Status(rName, iam.StatusTypeInactive),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAccessKeyExists("aws_iam_access_key.a_key", &conf),
-					resource.TestCheckResourceAttr("aws_iam_access_key.a_key", "status", iam.StatusTypeInactive),
+					testAccCheckAWSAccessKeyExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "status", iam.StatusTypeInactive),
 				),
 			},
 		},
@@ -194,7 +192,7 @@ func testAccCheckAWSAccessKeyExists(n string, res *iam.AccessKeyMetadata) resour
 
 func testAccCheckAWSAccessKeyAttributes(accessKeyMetadata *iam.AccessKeyMetadata, status string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !strings.Contains(*accessKeyMetadata.UserName, "test-user") {
+		if !strings.Contains(*accessKeyMetadata.UserName, "tf-acc-test") {
 			return fmt.Errorf("Bad username: %s", *accessKeyMetadata.UserName)
 		}
 
@@ -240,27 +238,27 @@ func testDecryptSecretKeyAndTest(nAccessKey, key string) resource.TestCheckFunc 
 
 func testAccAWSAccessKeyConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_user" "a_user" {
-  name = "%s"
+resource "aws_iam_user" "test" {
+  name = %[1]q
 }
 
-resource "aws_iam_access_key" "a_key" {
-  user = aws_iam_user.a_user.name
+resource "aws_iam_access_key" "test" {
+  user = aws_iam_user.test.name
 }
 `, rName)
 }
 
 func testAccAWSAccessKeyConfig_encrypted(rName, key string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_user" "a_user" {
-  name = "%s"
+resource "aws_iam_user" "test" {
+  name = %[1]q
 }
 
-resource "aws_iam_access_key" "a_key" {
-  user = aws_iam_user.a_user.name
+resource "aws_iam_access_key" "test" {
+  user = aws_iam_user.test.name
 
   pgp_key = <<EOF
-%s
+%[2]s
 EOF
 }
 `, rName, key)
@@ -268,12 +266,12 @@ EOF
 
 func testAccAWSAccessKeyConfig_Status(rName string, status string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_user" "a_user" {
+resource "aws_iam_user" "test" {
   name = %[1]q
 }
 
-resource "aws_iam_access_key" "a_key" {
-  user   = aws_iam_user.a_user.name
+resource "aws_iam_access_key" "test" {
+  user   = aws_iam_user.test.name
   status = %[2]q
 }
 `, rName, status)
