@@ -153,7 +153,7 @@ func testAccCheckAWSAppConfigHostedConfigurationVersionARN(resourceName string, 
 func testAccAWSAppConfigHostedConfigurationVersion() string {
 	appName := acctest.RandomWithPrefix("tf-acc-test")
 	profileName := acctest.RandomWithPrefix("tf-acc-test")
-	return testAccAWSAppConfigApplicationName(appName, "test") + testAccAWSAppConfigConfigurationProfile(profileName, "test") + `
+	return testAccAWSAppConfigApplicationConfigDescription(appName, "test") + testAccAWSAppConfigConfigurationProfile(profileName, "test") + `
 resource "aws_appconfig_hosted_configuration_version" "test" {
   application_id           = aws_appconfig_application.test.id
   configuration_profile_id = aws_appconfig_configuration_profile.test.id
