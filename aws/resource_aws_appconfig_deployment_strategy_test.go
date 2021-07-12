@@ -25,7 +25,7 @@ func TestAccAWSAppConfigDeploymentStrategy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName, &strategy),
 					testAccCheckAWSAppConfigDeploymentStrategyARN(resourceName, &strategy),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "description", "deployment strategy description"),
 				),
 			},
