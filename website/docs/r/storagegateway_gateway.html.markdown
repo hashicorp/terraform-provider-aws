@@ -15,6 +15,26 @@ Manages an AWS Storage Gateway file, tape, or volume gateway in the provider reg
 
 ## Example Usage
 
+### Local Cache
+
+```terraform
+resource "aws_volume_attachment" "test" {
+  device_name = "/dev/xvdb"
+  volume_id   = aws_ebs_volume.test.id
+  instance_id = aws_instance.test.id
+}
+
+data "aws_storagegateway_local_disk" "test" {
+  disk_node   = data.aws_volume_attachment.test.device_name
+  gateway_arn = aws_storagegateway_gateway.test.arn
+}
+
+resource "aws_storagegateway_cache" "test" {
+  disk_id     = data.aws_storagegateway_local_disk.test.disk_id
+  gateway_arn = aws_storagegateway_gateway.test.arn
+}
+```
+
 ### FSx File Gateway
 
 ```terraform

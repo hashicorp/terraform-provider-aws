@@ -24,6 +24,60 @@ resource "aws_storagegateway_fsx_associate_file_system" "example" {
 }
 ```
 
+## Required Services Example
+
+```terraform
+data "aws_ssm_parameter" "aws_service_storagegateway_ami_FILE_S3_latest" {
+  name = "/aws/service/storagegateway/ami/FILE_S3/latest"
+}
+
+resource "aws_instance" "test" {
+  # If using a single root module to build full gateway stack
+  # you must include the dependencies below
+  depends_on = [aws_route.test, aws_vpc_dhcp_options_association.test]
+
+  ami                         = data.aws_ssm_parameter.aws_service_storagegateway_ami_FILE_S3_latest.value
+  associate_public_ip_address = true
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
+  vpc_security_group_ids      = [aws_security_group.test.id]
+  subnet_id                   = aws_subnet.test[0].id
+}
+
+resource "aws_storagegateway_gateway" "test" {
+  gateway_ip_address = aws_instance.test.public_ip
+  gateway_name       = "test-sgw"
+  gateway_timezone   = "GMT"
+  gateway_type       = "FILE_FSX_SMB"
+
+  smb_active_directory_settings {
+    domain_name = aws_directory_service_directory.test.name
+    password    = aws_directory_service_directory.test.password
+    username    = "Admin"
+  }
+}
+
+resource "aws_fsx_windows_file_system" "test" {
+  active_directory_id = aws_directory_service_directory.test.id
+  security_group_ids  = [aws_security_group.test.id]
+  skip_final_backup   = true
+  storage_capacity    = 32
+  subnet_ids          = [aws_subnet.test[0].id]
+  throughput_capacity = 8
+}
+
+resource "aws_storagegateway_fsx_associate_file_system" "fsx" {
+
+  gateway_arn = aws_storagegateway_gateway.test.arn
+  location_arn = aws_fsx_windows_file_system.test.arn
+  username = "Admin"
+  password = aws_directory_service_directory.test.password
+  cache_attributes {
+    cache_stale_timeout_in_seconds = 400
+  }
+  audit_destination_arn = aws_cloudwatch_log_group.test.arn
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
