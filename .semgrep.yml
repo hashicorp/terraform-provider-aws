@@ -348,7 +348,7 @@ rules:
             return nil
           }
       - pattern-not-inside: |
-          if <... d.IsNewResource() ...> { ... }
+          if <... !d.IsNewResource() ...> { ... }
     severity: WARNING
 
   - id: helper-schema-resource-Retry-without-TimeoutError-check
