@@ -18,9 +18,10 @@ func testAccAWSSecurityHubStandardsControl_basic(t *testing.T) {
 	resourceName := "aws_securityhub_standards_control.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: nil, //lintignore:AT001
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityHubStandardsControlConfig_basic(),
@@ -46,9 +47,10 @@ func testAccAWSSecurityHubStandardsControl_disabledControlStatus(t *testing.T) {
 	resourceName := "aws_securityhub_standards_control.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: nil, //lintignore:AT001
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityHubStandardsControlConfig_disabledControlStatus(),
@@ -64,9 +66,10 @@ func testAccAWSSecurityHubStandardsControl_disabledControlStatus(t *testing.T) {
 
 func testAccAWSSecurityHubStandardsControl_enabledControlStatusAndDisabledReason(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: nil, //lintignore:AT001
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSSecurityHubStandardsControlConfig_enabledControlStatus(),
