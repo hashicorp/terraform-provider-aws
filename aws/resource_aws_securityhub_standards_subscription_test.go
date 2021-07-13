@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -91,7 +92,7 @@ func testAccCheckAWSSecurityHubStandardsSubscriptionDestroy(s *terraform.State) 
 			continue
 		}
 
-		_, err := finder.StandardsSubscriptionByARN(conn, rs.Primary.ID)
+		output, err := finder.StandardsSubscriptionByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -99,6 +100,11 @@ func testAccCheckAWSSecurityHubStandardsSubscriptionDestroy(s *terraform.State) 
 
 		if err != nil {
 			return err
+		}
+
+		// INCOMPLETE subscription status => deleted.
+		if aws.StringValue(output.StandardsStatus) == securityhub.StandardsStatusIncomplete {
+			continue
 		}
 
 		return fmt.Errorf("Security Hub Standards Subscription %s still exists", rs.Primary.ID)
