@@ -83,6 +83,12 @@ const (
 	InvalidVpnGatewayIDNotFound         = "InvalidVpnGatewayID.NotFound"
 )
 
+const (
+	ErrCodeInvalidPermissionDuplicate = "InvalidPermission.Duplicate"
+	ErrCodeInvalidPermissionMalformed = "InvalidPermission.Malformed"
+	ErrCodeInvalidPermissionNotFound  = "InvalidPermission.NotFound"
+)
+
 func UnsuccessfulItemError(apiObject *ec2.UnsuccessfulItemError) error {
 	if apiObject == nil {
 		return nil

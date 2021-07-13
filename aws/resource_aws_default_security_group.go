@@ -14,6 +14,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const DefaultSecurityGroupName = "default"
@@ -267,13 +268,13 @@ func resourceAwsDefaultSecurityGroupRead(d *schema.ResourceData, meta interface{
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	group, err := finder.SecurityGroupByID(conn, d.Id())
-	if err != nil {
-		return err
-	}
-	if group == nil {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+	if err != nil {
+		return err
 	}
 
 	remoteIngressRules := resourceAwsSecurityGroupIPPermGather(d.Id(), group.IpPermissions, group.OwnerId)
@@ -328,23 +329,18 @@ func resourceAwsDefaultSecurityGroupUpdate(d *schema.ResourceData, meta interfac
 
 	group, err := finder.SecurityGroupByID(conn, d.Id())
 	if err != nil {
-		return err
-	}
-	if group == nil {
-		log.Printf("[WARN] Security group (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return fmt.Errorf("error updating Default Security Group (%s): %w", d.Id(), err)
 	}
 
 	err = resourceAwsSecurityGroupUpdateRules(d, "ingress", meta, group)
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating Default Security Group (%s): %w", d.Id(), err)
 	}
 
 	if d.Get("vpc_id") != nil {
 		err = resourceAwsSecurityGroupUpdateRules(d, "egress", meta, group)
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating Default Security Group (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -352,7 +348,7 @@ func resourceAwsDefaultSecurityGroupUpdate(d *schema.ResourceData, meta interfac
 		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Security Group (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("error updating Default Security Group (%s) tags: %w", d.Id(), err)
 		}
 	}
 
