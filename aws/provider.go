@@ -508,6 +508,7 @@ func Provider() *schema.Provider {
 			"aws_appautoscaling_scheduled_action":                     resourceAwsAppautoscalingScheduledAction(),
 			"aws_appconfig_application":                               resourceAwsAppconfigApplication(),
 			"aws_appconfig_configuration_profile":                     resourceAwsAppconfigConfigurationProfile(),
+			"aws_appconfig_deployment":                                resourceAwsAppconfigDeployment(),
 			"aws_appconfig_deployment_strategy":                       resourceAwsAppconfigDeploymentStrategy(),
 			"aws_appconfig_environment":                               resourceAwsAppconfigEnvironment(),
 			"aws_appconfig_hosted_configuration_version":              resourceAwsAppconfigHostedConfigurationVersion(),
