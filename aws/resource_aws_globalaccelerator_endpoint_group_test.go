@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"testing"
@@ -472,8 +471,7 @@ func testAccCheckGlobalAcceleratorEndpointGroupDeleteGlobalAcceleratorSecurityGr
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 		sg, err := ec2finder.SecurityGroupByNameAndVpcID(conn, "GlobalAccelerator", aws.StringValue(vpc.VpcId))
-		var nfe *resource.NotFoundError
-		if errors.As(err, &nfe) {
+		if tfresource.NotFound(err) {
 			// Already gone.
 			return nil
 		}

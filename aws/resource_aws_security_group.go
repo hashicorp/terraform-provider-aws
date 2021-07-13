@@ -20,6 +20,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 )
@@ -328,7 +329,7 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 		if err != nil {
 			//If we have a NotFound or InvalidParameterValue, then we are trying to remove the default IPv6 egress of a non-IPv6
 			//enabled SG
-			if !tfawserr.ErrCodeEquals(err, "InvalidPermission.NotFound") && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "remote-ipv6-range") {
+			if !tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidPermissionNotFound) && !tfawserr.ErrMessageContains(err, tfec2.ErrCodeInvalidParameterValue, "remote-ipv6-range") {
 				return fmt.Errorf("Error revoking default IPv6 egress rule for Security Group (%s): %w", d.Id(), err)
 			}
 		}
@@ -345,7 +346,7 @@ func resourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) erro
 
 	sg, err := finder.SecurityGroupByID(conn, d.Id())
 	var nfe *resource.NotFoundError
-	if errors.As(err, &nfe) {
+	if !d.IsNewResource() && errors.As(err, &nfe) {
 		log.Printf("[WARN] Security group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -412,13 +413,13 @@ func resourceAwsSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) er
 
 	err = resourceAwsSecurityGroupUpdateRules(d, "ingress", meta, group)
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating Security Group (%s): %w", d.Id(), err)
 	}
 
 	if d.Get("vpc_id") != nil {
 		err = resourceAwsSecurityGroupUpdateRules(d, "egress", meta, group)
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating Security Group (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -426,7 +427,7 @@ func resourceAwsSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Security Group (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("error updating Security Group (%s) tags: %w", d.Id(), err)
 		}
 	}
 

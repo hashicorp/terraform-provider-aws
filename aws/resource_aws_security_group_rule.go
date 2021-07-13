@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
@@ -211,7 +212,7 @@ func resourceAwsSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("Security Group Rule must be type 'ingress' or type 'egress'")
 	}
 
-	if tfawserr.ErrCodeEquals(autherr, "InvalidPermission.Duplicate") {
+	if tfawserr.ErrCodeEquals(autherr, tfec2.ErrCodeInvalidPermissionDuplicate) {
 		return fmt.Errorf(`[WARN] A duplicate Security Group rule was found on (%s). This may be
 a side effect of a now-fixed Terraform issue causing two security groups with
 identical attributes but different source_security_group_ids to overwrite each
@@ -281,7 +282,7 @@ func resourceAwsSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).ec2conn
 	sg_id := d.Get("security_group_id").(string)
 	sg, err := finder.SecurityGroupByID(conn, sg_id)
-	if tfresource.NotFound(err) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Group (%s) not found, removing Rule (%s) from state", sg_id, d.Id())
 		d.SetId("")
 		return nil
@@ -308,18 +309,16 @@ func resourceAwsSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	if len(rules) == 0 {
-		log.Printf("[WARN] No %s rules were found for Security Group (%s) looking for Security Group Rule (%s)",
-			ruleType, *sg.GroupName, d.Id())
+	if !d.IsNewResource() && len(rules) == 0 {
+		log.Printf("[WARN] No %s rules were found for Security Group (%s) looking for Security Group Rule (%s)", ruleType, aws.StringValue(sg.GroupName), d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	rule = findRuleMatch(p, rules, isVPC)
 
-	if rule == nil {
-		log.Printf("[DEBUG] Unable to find matching %s Security Group Rule (%s) for Group %s",
-			ruleType, d.Id(), sg_id)
+	if !d.IsNewResource() && rule == nil {
+		log.Printf("[DEBUG] Unable to find matching %s Security Group Rule (%s) for Group %s", ruleType, d.Id(), sg_id)
 		d.SetId("")
 		return nil
 	}
