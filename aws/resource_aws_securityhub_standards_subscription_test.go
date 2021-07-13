@@ -19,7 +19,7 @@ func testAccAWSSecurityHubStandardsSubscription_basic(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSecurityHubAccountDestroy,
+		CheckDestroy: testAccCheckAWSSecurityHubStandardsSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityHubStandardsSubscriptionConfig_basic,
@@ -44,7 +44,7 @@ func testAccAWSSecurityHubStandardsSubscription_disappears(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSecurityHubAccountDestroy,
+		CheckDestroy: testAccCheckAWSSecurityHubStandardsSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityHubStandardsSubscriptionConfig_basic,
@@ -106,10 +106,6 @@ func testAccCheckAWSSecurityHubStandardsSubscriptionDestroy(s *terraform.State) 
 
 	return nil
 }
-
-const testAccAWSSecurityHubStandardsSubscriptionConfig_empty = `
-resource "aws_securityhub_account" "test" {}
-`
 
 const testAccAWSSecurityHubStandardsSubscriptionConfig_basic = `
 resource "aws_securityhub_account" "test" {}
