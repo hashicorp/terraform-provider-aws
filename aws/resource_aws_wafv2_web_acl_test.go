@@ -541,7 +541,7 @@ func TestAccAwsWafv2WebACL_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_managedRuleGroup(t *testing.T) {
+func TestAccAwsWafv2WebACL_ManagedRuleGroup_basic(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
