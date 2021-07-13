@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"reflect"
@@ -251,15 +250,21 @@ func TestAccAWSS3BucketObject_contentBase64(t *testing.T) {
 func TestAccAWSS3BucketObject_sourceHashTrigger(t *testing.T) {
 	var obj, updated_obj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
-	source := testAccAWSS3BucketObjectCreateTempFile(t, "{anything will do }")
-	rewriteSourceF := func(*terraform.State) error {
-		if err := ioutil.WriteFile(source, []byte("{any other thing will do }"), 0644); err != nil {
-			os.Remove(source)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	startingData := "Ebben!"
+	changingData := "Ne andrò lontana"
+
+	filename := testAccAWSS3BucketObjectCreateTempFile(t, startingData)
+	defer os.Remove(filename)
+
+	rewriteFile := func(*terraform.State) error {
+		if err := os.WriteFile(filename, []byte(changingData), 0644); err != nil {
+			os.Remove(filename)
 			t.Fatal(err)
 		}
 		return nil
 	}
-	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -268,22 +273,22 @@ func TestAccAWSS3BucketObject_sourceHashTrigger(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
-				Config:    testAccAWSS3BucketObjectConfig_sourceHashTrigger(rName, source),
+				Config:    testAccAWSS3BucketObjectConfig_sourceHashTrigger(rName, filename),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj),
-					testAccCheckAWSS3BucketObjectBody(&obj, "{anything will do }"),
-					resource.TestCheckResourceAttr(resourceName, "source_hash", "7b006ff4d70f68cc65061acf2f802e6f"),
-					rewriteSourceF,
+					testAccCheckAWSS3BucketObjectBody(&obj, "Ebben!"),
+					resource.TestCheckResourceAttr(resourceName, "source_hash", "7c7e02a79f28968882bb1426c8f8bfc6"),
+					rewriteFile,
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccAWSS3BucketObjectConfig_sourceHashTrigger(rName, source),
+				Config:    testAccAWSS3BucketObjectConfig_sourceHashTrigger(rName, filename),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &updated_obj),
-					testAccCheckAWSS3BucketObjectBody(&updated_obj, "{any other thing will do }"),
-					resource.TestCheckResourceAttr(resourceName, "source_hash", "77a736aa9e04d0dc96b9b30894963983"),
+					testAccCheckAWSS3BucketObjectBody(&updated_obj, "Ne andrò lontana"),
+					resource.TestCheckResourceAttr(resourceName, "source_hash", "cffc5e20de2d21764145b1124c9b337b"),
 				),
 			},
 		},
@@ -1260,12 +1265,12 @@ func TestAccAWSS3BucketObject_ignoreTags(t *testing.T) {
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj),
 					testAccCheckAWSS3BucketObjectBody(&obj, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "AAA"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
 					testAccCheckAWSS3BucketObjectCheckTags(resourceName, map[string]string{
 						"ignorekey1": "ignorevalue1",
-						"Key1":       "AAA",
+						"Key1":       "A@AA",
 						"Key2":       "BBB",
 						"Key3":       "CCC",
 					}),
