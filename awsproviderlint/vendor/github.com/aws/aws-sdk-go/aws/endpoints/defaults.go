@@ -3582,6 +3582,8 @@ var awsPartition = partition{
 			},
 			Endpoints: endpoints{
 				"us-east-1": endpoint{},
+				"us-east-2": endpoint{},
+				"us-west-2": endpoint{},
 			},
 		},
 		"honeycode": service{
