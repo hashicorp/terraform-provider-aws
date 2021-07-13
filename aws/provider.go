@@ -369,6 +369,7 @@ func Provider() *schema.Provider {
 			"aws_rds_certificate":                            dataSourceAwsRdsCertificate(),
 			"aws_rds_cluster":                                dataSourceAwsRdsCluster(),
 			"aws_rds_engine_version":                         dataSourceAwsRdsEngineVersion(),
+			"aws_rds_global_cluster":                         dataSourceAwsRdsGlobalCluster(),
 			"aws_rds_orderable_db_instance":                  dataSourceAwsRdsOrderableDbInstance(),
 			"aws_redshift_cluster":                           dataSourceAwsRedshiftCluster(),
 			"aws_redshift_orderable_cluster":                 dataSourceAwsRedshiftOrderableCluster(),
