@@ -1,38 +1,38 @@
 package aws
 
 import (
+	"context"
 	"fmt"
-	"path"
 	"regexp"
-	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfsecurityhub "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub/finder"
 )
 
-func TestAccAWSSecurityHubStandardsControl_basic(t *testing.T) {
-	var standardsControl *securityhub.StandardsControl
-
+func testAccAWSSecurityHubStandardsControl_basic(t *testing.T) {
+	var standardsControl securityhub.StandardsControl
 	resourceName := "aws_securityhub_standards_control.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSecurityHubStandardsControlExists(resourceName, standardsControl),
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, securityhub.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityHubStandardsControlConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSecurityHubStandardsControlExists(resourceName, standardsControl),
+					testAccCheckAWSSecurityHubStandardsControlExists(resourceName, &standardsControl),
+					resource.TestCheckResourceAttr(resourceName, "control_id", "CIS.1.10"),
 					resource.TestCheckResourceAttr(resourceName, "control_status", "ENABLED"),
-					resource.TestMatchResourceAttr(resourceName, "control_status_updated_at", regexp.MustCompile(`\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z`)),
+					resource.TestCheckResourceAttrSet(resourceName, "control_status_updated_at"),
 					resource.TestCheckResourceAttr(resourceName, "description", "IAM password policies can prevent the reuse of a given password by the same user. It is recommended that the password policy prevent the reuse of passwords."),
 					resource.TestCheckResourceAttr(resourceName, "disabled_reason", ""),
 					resource.TestCheckResourceAttr(resourceName, "related_requirements.0", "CIS AWS Foundations 1.10"),
+					resource.TestCheckResourceAttrSet(resourceName, "remediation_url"),
 					resource.TestCheckResourceAttr(resourceName, "severity_rating", "LOW"),
 					resource.TestCheckResourceAttr(resourceName, "title", "Ensure IAM password policy prevents password reuse"),
 				),
@@ -41,21 +41,19 @@ func TestAccAWSSecurityHubStandardsControl_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityHubStandardsControl_disabledControlStatus(t *testing.T) {
-	var standardsControl *securityhub.StandardsControl
-
+func testAccAWSSecurityHubStandardsControl_disabledControlStatus(t *testing.T) {
+	var standardsControl securityhub.StandardsControl
 	resourceName := "aws_securityhub_standards_control.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSecurityHubStandardsControlExists(resourceName, standardsControl),
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, securityhub.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityHubStandardsControlConfig_disabledControlStatus(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSecurityHubStandardsControlExists(resourceName, standardsControl),
+					testAccCheckAWSSecurityHubStandardsControlExists(resourceName, &standardsControl),
 					resource.TestCheckResourceAttr(resourceName, "control_status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "disabled_reason", "We handle password policies within Okta"),
 				),
@@ -64,16 +62,11 @@ func TestAccAWSSecurityHubStandardsControl_disabledControlStatus(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityHubStandardsControl_enabledControlStatusAndDisabledReason(t *testing.T) {
-	var standardsControl *securityhub.StandardsControl
-
-	resourceName := "aws_securityhub_standards_control.test"
-
+func testAccAWSSecurityHubStandardsControl_enabledControlStatusAndDisabledReason(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSecurityHubStandardsControlExists(resourceName, standardsControl),
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, securityhub.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSSecurityHubStandardsControlConfig_enabledControlStatus(),
@@ -90,32 +83,25 @@ func testAccCheckAWSSecurityHubStandardsControlExists(n string, control *securit
 			return fmt.Errorf("Not found: %s", n)
 		}
 
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Security Hub Standards Control ID is set")
+		}
+
 		conn := testAccProvider.Meta().(*AWSClient).securityhubconn
 
-		arn := rs.Primary.ID
-		subscription_arn := path.Dir(strings.ReplaceAll(arn, "control", "subscription"))
+		standardsSubscriptionARN, err := tfsecurityhub.StandardsControlARNToStandardsSubscriptionARN(rs.Primary.ID)
 
-		resp, err := conn.DescribeStandardsControls(&securityhub.DescribeStandardsControlsInput{
-			StandardsSubscriptionArn: aws.String(subscription_arn),
-		})
 		if err != nil {
-			return fmt.Errorf("error reading Security Hub %s standard controls: %s", subscription_arn, err)
+			return err
 		}
 
-		controlNotFound := true
+		output, err := finder.StandardsControlByStandardsSubscriptionARNAndStandardsControlARN(context.TODO(), conn, standardsSubscriptionARN, rs.Primary.ID)
 
-		for _, c := range resp.Controls {
-			if aws.StringValue(c.StandardsControlArn) != arn {
-				continue
-			}
-
-			controlNotFound = false
-			control = c
+		if err != nil {
+			return err
 		}
 
-		if controlNotFound {
-			return fmt.Errorf("Security Hub %s standard control %s not found", subscription_arn, arn)
-		}
+		*control = *output
 
 		return nil
 	}

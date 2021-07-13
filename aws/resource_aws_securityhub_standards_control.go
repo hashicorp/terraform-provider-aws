@@ -3,16 +3,16 @@ package aws
 import (
 	"context"
 	"log"
-	"path"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	tfsecurityhub "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsSecurityHubStandardsControl() *schema.Resource {
@@ -23,47 +23,56 @@ func resourceAwsSecurityHubStandardsControl() *schema.Resource {
 		DeleteContext: resourceAwsSecurityHubStandardsControlDelete,
 
 		Schema: map[string]*schema.Schema{
+			"control_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"control_status": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(securityhub.ControlStatus_Values(), false),
+			},
+
+			"control_status_updated_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"disabled_reason": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
+			"related_requirements": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
+			"remediation_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"severity_rating": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"standards_control_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
-			"control_status": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(securityhub.ControlStatus_Values(), false),
-			},
-			"disabled_reason": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"control_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"control_status_updated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"related_requirements": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"remediation_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"severity_rating": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+
 			"title": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -75,39 +84,34 @@ func resourceAwsSecurityHubStandardsControl() *schema.Resource {
 func resourceAwsSecurityHubStandardsControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).securityhubconn
 
-	a := d.Get("standards_control_arn").(string)
-	controlArn, err := arn.Parse(a)
+	standardsSubscriptionARN, err := tfsecurityhub.StandardsControlARNToStandardsSubscriptionARN(d.Id())
+
 	if err != nil {
-		return diag.Errorf("error parsing standards control ARN %q", controlArn)
+		return diag.FromErr(err)
 	}
 
-	subscriptionArn := path.Dir(strings.ReplaceAll(controlArn.String(), "control", "subscription"))
+	control, err := finder.StandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx, conn, standardsSubscriptionARN, d.Id())
 
-	log.Printf("[DEBUG] Read Security Hub standard control %s", controlArn)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Security Hub Standards Control (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
-	resp, err := conn.DescribeStandardsControls(&securityhub.DescribeStandardsControlsInput{
-		StandardsSubscriptionArn: aws.String(subscriptionArn),
-	})
 	if err != nil {
-		return diag.Errorf("error reading Security Hub standard controls within %q subscription: %s", subscriptionArn, err)
+		return diag.Errorf("error reading Security Hub Standards Control (%s): %s", d.Id(), err)
 	}
 
-	for _, c := range resp.Controls {
-		if aws.StringValue(c.StandardsControlArn) != controlArn.String() {
-			continue
-		}
-
-		d.Set("control_status", c.ControlStatus)
-		d.Set("control_status_updated_at", c.ControlStatusUpdatedAt.Format(time.RFC3339))
-		d.Set("description", c.Description)
-		d.Set("disabled_reason", c.DisabledReason)
-		d.Set("severity_rating", c.SeverityRating)
-		d.Set("title", c.Title)
-
-		if err := d.Set("related_requirements", flattenStringList(c.RelatedRequirements)); err != nil {
-			return diag.Errorf("error setting related_requirements: %s", err)
-		}
-	}
+	d.Set("control_id", control.ControlId)
+	d.Set("control_status", control.ControlStatus)
+	d.Set("control_status_updated_at", control.ControlStatusUpdatedAt.Format(time.RFC3339))
+	d.Set("description", control.Description)
+	d.Set("disabled_reason", control.DisabledReason)
+	d.Set("related_requirements", aws.StringValueSlice(control.RelatedRequirements))
+	d.Set("remediation_url", control.RemediationUrl)
+	d.Set("severity_rating", control.SeverityRating)
+	d.Set("standards_control_arn", control.StandardsControlArn)
+	d.Set("title", control.Title)
 
 	return nil
 }
@@ -117,22 +121,23 @@ func resourceAwsSecurityHubStandardsControlPut(ctx context.Context, d *schema.Re
 
 	d.SetId(d.Get("standards_control_arn").(string))
 
-	log.Printf("[DEBUG] Update Security Hub standard control %s", d.Id())
-
-	_, err := conn.UpdateStandardsControl(&securityhub.UpdateStandardsControlInput{
-		StandardsControlArn: aws.String(d.Get("standards_control_arn").(string)),
+	input := &securityhub.UpdateStandardsControlInput{
 		ControlStatus:       aws.String(d.Get("control_status").(string)),
 		DisabledReason:      aws.String(d.Get("disabled_reason").(string)),
-	})
+		StandardsControlArn: aws.String(d.Id()),
+	}
+
+	log.Printf("[DEBUG] Updating Security Hub Standards Control: %s", input)
+	_, err := conn.UpdateStandardsControlWithContext(ctx, input)
+
 	if err != nil {
-		d.SetId("")
-		return diag.Errorf("error updating Security Hub standard control %q: %s", d.Id(), err)
+		return diag.Errorf("error updating Security Hub Standards Control (%s): %s", d.Id(), err)
 	}
 
 	return resourceAwsSecurityHubStandardsControlRead(ctx, d, meta)
 }
 
 func resourceAwsSecurityHubStandardsControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[WARN] Cannot delete Security Hub standard control. Terraform will remove this resource from the state.")
+	log.Printf("[WARN] Cannot delete Security Hub Standards Control. Terraform will remove this resource from the state.")
 	return nil
 }

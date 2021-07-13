@@ -43,8 +43,14 @@ func TestAccAWSSecurityHub_serial(t *testing.T) {
 		"ProductSubscription": {
 			"basic": testAccAWSSecurityHubProductSubscription_basic,
 		},
+		"StandardsControl": {
+			"basic":                                 testAccAWSSecurityHubStandardsControl_basic,
+			"DisabledControlStatus":                 testAccAWSSecurityHubStandardsControl_disabledControlStatus,
+			"EnabledControlStatusAndDisabledReason": testAccAWSSecurityHubStandardsControl_enabledControlStatusAndDisabledReason,
+		},
 		"StandardsSubscription": {
-			"basic": testAccAWSSecurityHubStandardsSubscription_basic,
+			"basic":      testAccAWSSecurityHubStandardsSubscription_basic,
+			"disappears": testAccAWSSecurityHubStandardsSubscription_disappears,
 		},
 	}
 
