@@ -164,7 +164,7 @@ func TestAccAWSStorageGatewayFsxAssociateFileSystem_auditDestination(t *testing.
 				Config: testAccAwsStorageGatewayFsxAssociateFileSystemConfig_AuditDisabled(rName, username),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsStorageGatewayFsxAssociateFileSystemExists(resourceName, &fsxFileSystemAssociation),
-					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", "", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "audit_destination_arn", ""),
 				),
 			},
 			{
