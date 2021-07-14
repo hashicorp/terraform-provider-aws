@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
 )
 
@@ -155,36 +156,17 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemRead(d *schema.ResourceData,
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	input := &storagegateway.DescribeFileSystemAssociationsInput{
-		FileSystemAssociationARNList: []*string{aws.String(d.Id())},
-	}
+	filesystem, err := finder.FileSystemAssociationByARN(conn, d.Id())
 
-	log.Printf("[DEBUG] Reading Storage Gateway FSx File Systems: %s", input)
-	output, err := conn.DescribeFileSystemAssociations(input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, storagegateway.ErrCodeInvalidGatewayRequestException) {
-			var igrex *storagegateway.InvalidGatewayRequestException
-			if ok := errors.As(err, &igrex); ok {
-				if err := igrex.Error_; err != nil {
-					if aws.StringValue(err.ErrorCode) == "FileSystemAssociationNotFound" {
-						log.Printf("[WARN] FSX File System %q not found, removing from state", d.Id())
-						d.SetId("")
-						return nil
-					}
-				}
-			}
-		}
-
-		return fmt.Errorf("error reading Storage Gateway FSx File System: %w", err)
+		return err
 	}
 
-	if output == nil || len(output.FileSystemAssociationInfoList) == 0 || output.FileSystemAssociationInfoList[0] == nil {
+	if !d.IsNewResource() && filesystem == nil {
 		log.Printf("[WARN] Storage Gateway FSx File System %q not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
-
-	filesystem := output.FileSystemAssociationInfoList[0]
 
 	arn := filesystem.FileSystemAssociationARN
 	d.Set("arn", arn)

@@ -1,17 +1,15 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/finder"
 )
 
 func TestAccAWSStorageGatewayFsxAssociateFileSystem_basic(t *testing.T) {
@@ -205,28 +203,18 @@ func testAccCheckAwsStorageGatewayFsxAssociateFileSystemDestroy(s *terraform.Sta
 			continue
 		}
 
-		input := &storagegateway.DescribeFileSystemAssociationsInput{
-			FileSystemAssociationARNList: []*string{aws.String(rs.Primary.ID)},
-		}
-
-		output, err := conn.DescribeFileSystemAssociations(input)
+		output, err := finder.FileSystemAssociationByARN(conn, rs.Primary.ID)
 
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, storagegateway.ErrCodeInvalidGatewayRequestException) {
-				var igrex *storagegateway.InvalidGatewayRequestException
-				if ok := errors.As(err, &igrex); ok {
-					if err := igrex.Error_; err != nil {
-						if aws.StringValue(err.ErrorCode) == "FileSystemAssociationNotFound" {
-							continue
-						}
-					}
-				}
-			}
 			return err
 		}
 
-		if output != nil && len(output.FileSystemAssociationInfoList) > 0 && output.FileSystemAssociationInfoList[0] != nil {
+		if output != nil {
 			return fmt.Errorf("Storage Gateway Fsx File System %q still exists", rs.Primary.ID)
+		}
+
+		if output == nil {
+			continue
 		}
 	}
 
@@ -242,21 +230,18 @@ func testAccCheckAwsStorageGatewayFsxAssociateFileSystemExists(resourceName stri
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
-		input := &storagegateway.DescribeFileSystemAssociationsInput{
-			FileSystemAssociationARNList: []*string{aws.String(rs.Primary.ID)},
-		}
 
-		output, err := conn.DescribeFileSystemAssociations(input)
+		output, err := finder.FileSystemAssociationByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil || len(output.FileSystemAssociationInfoList) == 0 || output.FileSystemAssociationInfoList[0] == nil {
+		if output == nil {
 			return fmt.Errorf("Storage Gateway Fsx File System %q does not exist", rs.Primary.ID)
 		}
 
-		*fsxFileSystemAssociation = *output.FileSystemAssociationInfoList[0]
+		*fsxFileSystemAssociation = *output
 
 		return nil
 	}
