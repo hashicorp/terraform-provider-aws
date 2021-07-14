@@ -61,6 +61,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the AppConfig Environment.
 * `id` - The AppConfig environment ID and application ID separated by a colon (`:`).
+* `environment_id` - The AppConfig environment ID.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
