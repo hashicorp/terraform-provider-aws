@@ -37,4 +37,4 @@ resource "aws_api_gateway_authorizer" "cognito" {
 ## Attributes Reference
 
 * `ids` - The list of cognito user pool ids.
-* `arns` - The list of cognito user pool arns.
+* `arns` - The set of cognito user pool Amazon Resource Names (ARNs).
