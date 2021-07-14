@@ -121,6 +121,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>emrcontainers</code></li>
   <li><code>es</code></li>
   <li><code>firehose</code></li>
+  <li><code>fis</code></li>
   <li><code>fms</code></li>
   <li><code>forecast</code></li>
   <li><code>fsx</code></li>

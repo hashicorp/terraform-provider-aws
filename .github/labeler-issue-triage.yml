@@ -172,6 +172,8 @@ service/eventbridge:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_event_'
 service/firehose:
   - '((\*|-) ?`?|(data|resource) "?)aws_kinesis_firehose_'
+service/fis:
+  - '((\*|-) ?`?|(data|resource) "?)aws_fis_'
 service/fms:
   - '((\*|-) ?`?|(data|resource) "?)aws_fms_'
 service/forecast:

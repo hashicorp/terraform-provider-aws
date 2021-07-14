@@ -90,6 +90,7 @@ variable "service_labels" {
     "emrcontainers",
     "eventbridge",
     "firehose",
+    "fis",
     "fms",
     "forecastservice",
     "frauddetector",

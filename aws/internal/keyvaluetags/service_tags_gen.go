@@ -267,6 +267,16 @@ func EksKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// FisTags returns fis service tags.
+func (tags KeyValueTags) FisTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// FisKeyValueTags creates KeyValueTags from fis service tags.
+func FisKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // GlacierTags returns glacier service tags.
 func (tags KeyValueTags) GlacierTags() map[string]*string {
 	return aws.StringMap(tags.Map())

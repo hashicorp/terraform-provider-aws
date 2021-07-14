@@ -125,6 +125,7 @@ var mapServiceNames = []string{
 	"dataexchange",
 	"dlm",
 	"eks",
+	"fis",
 	"glacier",
 	"glue",
 	"guardduty",

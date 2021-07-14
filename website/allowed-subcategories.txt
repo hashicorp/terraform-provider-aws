@@ -63,6 +63,7 @@ Elastic Transcoder
 ElasticSearch
 EventBridge (CloudWatch Events)
 EventBridge Schemas
+Fault Injection Simulator (FIS)
 File System (FSx)
 Firewall Manager (FMS)
 Gamelift

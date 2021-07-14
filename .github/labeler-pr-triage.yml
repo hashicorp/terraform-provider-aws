@@ -416,6 +416,10 @@ service/firehose:
   - 'aws/internal/service/firehose/**/*'
   - '**/*_firehose_*'
   - '**/firehose_*'
+service/fis:
+  - 'aws/internal/service/fis/**/*'
+  - '**/*_fis_*'
+  - '**/fis_*'
 service/fms:
   - 'aws/internal/service/fms/**/*'
   - '**/*_fms_*'
