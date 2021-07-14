@@ -44,9 +44,9 @@ resource "aws_storagegateway_gateway" "example" {
   gateway_timezone   = "GMT"
   gateway_type       = "FILE_FSX_SMB"
   smb_active_directory_settings {
-    domain_name        = "corp.example.com"
-    password           = "avoid-plaintext-passwords"
-    username           = "Admin"
+    domain_name = "corp.example.com"
+    password    = "avoid-plaintext-passwords"
+    username    = "Admin"
   }
 }
 ```
