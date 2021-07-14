@@ -224,13 +224,10 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemUpdate(d *schema.ResourceDat
 	if d.HasChanges("cache_attributes", "audit_destination_arn", "username", "password") {
 
 		input := &storagegateway.UpdateFileSystemAssociationInput{
+			AuditDestinationARN:      aws.String(d.Get("audit_destination_arn").(string)),
 			Password:                 aws.String(d.Get("password").(string)),
 			UserName:                 aws.String(d.Get("username").(string)),
 			FileSystemAssociationARN: aws.String(d.Id()),
-		}
-
-		if v, ok := d.GetOk("audit_destination_arn"); ok {
-			input.AuditDestinationARN = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("cache_attributes"); ok {
