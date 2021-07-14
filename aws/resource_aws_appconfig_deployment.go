@@ -106,7 +106,7 @@ func resourceAwsAppconfigDeploymentCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error starting AppConfig Deployment: empty response")
 	}
 
-	d.Set("deployment_number", aws.Int64Value(output.DeploymentNumber))
+	d.Set("deployment_number", output.DeploymentNumber)
 	d.SetId(appID + "/" + envID + "/" + strconv.FormatInt(aws.Int64Value(output.DeploymentNumber), 10))
 
 	return resourceAwsAppconfigDeploymentRead(d, meta)
