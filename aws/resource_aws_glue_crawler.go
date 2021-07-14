@@ -130,6 +130,11 @@ func resourceAwsGlueCrawler() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"sample_size": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(1, 249),
+						},
 					},
 				},
 			},
@@ -521,13 +526,18 @@ func expandGlueS3Target(cfg map[string]interface{}) *glue.S3Target {
 		Path: aws.String(cfg["path"].(string)),
 	}
 
-	if connection, ok := cfg["connection_name"]; ok {
-		target.ConnectionName = aws.String(connection.(string))
+	if v, ok := cfg["connection_name"]; ok {
+		target.ConnectionName = aws.String(v.(string))
 	}
 
-	if exclusions, ok := cfg["exclusions"]; ok {
-		target.Exclusions = expandStringList(exclusions.([]interface{}))
+	if v, ok := cfg["exclusions"]; ok {
+		target.Exclusions = expandStringList(v.([]interface{}))
 	}
+
+	if v, ok := cfg["sample_size"]; ok {
+		target.SampleSize = aws.Int64(int64(v.(int)))
+	}
+
 	return target
 }
 
@@ -767,6 +777,10 @@ func flattenGlueS3Targets(s3Targets []*glue.S3Target) []map[string]interface{} {
 		attrs["exclusions"] = flattenStringList(s3Target.Exclusions)
 		attrs["path"] = aws.StringValue(s3Target.Path)
 		attrs["connection_name"] = aws.StringValue(s3Target.ConnectionName)
+
+		if s3Target.SampleSize != nil {
+			attrs["sample_size"] = aws.Int64Value(s3Target.SampleSize)
+		}
 
 		result = append(result, attrs)
 	}
