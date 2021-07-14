@@ -46,7 +46,7 @@ resource "aws_storagegateway_gateway" "example" {
   smb_active_directory_settings {
     domain_name        = "corp.example.com"
     password           = "avoid-plaintext-passwords"
-    username           = "Admin""
+    username           = "Admin"
   }
 }
 ```

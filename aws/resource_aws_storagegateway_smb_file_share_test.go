@@ -1326,19 +1326,6 @@ resource "aws_storagegateway_smb_file_share" "test" {
 `, rName)
 }
 
-func testAccAWSStorageGatewaySmbFileShareAuditDestinationDisabled(rName string) string {
-	return testAccAWSStorageGateway_SmbFileShare_GuestAccessBase(rName) + fmt.Sprintf(`
-resource "aws_storagegateway_smb_file_share" "test" {
-  # Use GuestAccess to simplify testing
-  authentication        = "GuestAccess"
-  gateway_arn           = aws_storagegateway_gateway.test.arn
-  location_arn          = aws_s3_bucket.test.arn
-  role_arn              = aws_iam_role.test.arn
-  audit_destination_arn = ""
-}
-`)
-}
-
 func testAccAWSStorageGatewaySmbFileShareCacheAttributesConfig(rName string, timeout int) string {
 	return testAccAWSStorageGateway_SmbFileShare_GuestAccessBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
