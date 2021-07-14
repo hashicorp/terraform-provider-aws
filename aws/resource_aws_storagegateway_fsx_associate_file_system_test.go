@@ -161,7 +161,7 @@ func TestAccAWSStorageGatewayFsxAssociateFileSystem_auditDestination(t *testing.
 				ImportStateVerifyIgnore: []string{"username", "password"},
 			},
 			{
-				Config: testAccAwsStorageGatewayFsxAssociateFileSystemConfig_Audit(rName, username, ""),
+				Config: testAccAwsStorageGatewayFsxAssociateFileSystemConfig_AuditDisabled(rName, username),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsStorageGatewayFsxAssociateFileSystemExists(resourceName, &fsxFileSystemAssociation),
 					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", "", "arn"),
@@ -279,9 +279,9 @@ resource "aws_storagegateway_gateway" "test" {
   gateway_type       = "FILE_FSX_SMB"
 
   smb_active_directory_settings {
-    domain_name        = aws_directory_service_directory.test.name
-    password           = aws_directory_service_directory.test.password
-    username           = %[2]q
+    domain_name = aws_directory_service_directory.test.name
+    password    = aws_directory_service_directory.test.password
+    username    = %[2]q
   }
 
   tags = {
@@ -295,10 +295,10 @@ resource "aws_storagegateway_gateway" "test" {
 func testAccAwsStorageGatewayFsxAssociateFileSystemConfig_Required(rName, username string) string {
 	return testAccAWSStorageGatewayFsxAssociateFileSystemBase(rName, username) + fmt.Sprintf(`
 resource "aws_storagegateway_fsx_associate_file_system" "test" {
-  gateway_arn = aws_storagegateway_gateway.test.arn
+  gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_fsx_windows_file_system.test.arn
-  username = %[1]q
-  password = aws_directory_service_directory.test.password
+  username     = %[1]q
+  password     = aws_directory_service_directory.test.password
 }
 `, username)
 }
@@ -306,10 +306,10 @@ resource "aws_storagegateway_fsx_associate_file_system" "test" {
 func testAccAwsStorageGatewayFsxAssociateFileSystemConfigTags1(rName, username, tagKey1, tagValue1 string) string {
 	return testAccAWSStorageGatewayFsxAssociateFileSystemBase(rName, username) + fmt.Sprintf(`
 resource "aws_storagegateway_fsx_associate_file_system" "test" {
-  gateway_arn = aws_storagegateway_gateway.test.arn
+  gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_fsx_windows_file_system.test.arn
-  username = %[1]q
-  password = aws_directory_service_directory.test.password
+  username     = %[1]q
+  password     = aws_directory_service_directory.test.password
 
   tags = {
     %[2]q = %[3]q
@@ -321,10 +321,10 @@ resource "aws_storagegateway_fsx_associate_file_system" "test" {
 func testAccAwsStorageGatewayFsxAssociateFileSystemConfigTags2(rName, username, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccAWSStorageGatewayFsxAssociateFileSystemBase(rName, username) + fmt.Sprintf(`
 resource "aws_storagegateway_fsx_associate_file_system" "test" {
-  gateway_arn = aws_storagegateway_gateway.test.arn
+  gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_fsx_windows_file_system.test.arn
-  username = %[1]q
-  password = aws_directory_service_directory.test.password
+  username     = %[1]q
+  password     = aws_directory_service_directory.test.password
 
   tags = {
     %[2]q = %[3]q
@@ -337,11 +337,10 @@ resource "aws_storagegateway_fsx_associate_file_system" "test" {
 func testAccAwsStorageGatewayFsxAssociateFileSystemConfig_Audit(rName, username string, loggingDestination string) string {
 	return testAccAWSStorageGatewayFsxAssociateFileSystemBase(rName, username) + fmt.Sprintf(`
 resource "aws_storagegateway_fsx_associate_file_system" "test" {
-  gateway_arn = aws_storagegateway_gateway.test.arn
-  location_arn = aws_fsx_windows_file_system.test.arn
-  username = %[1]q
-  password = aws_directory_service_directory.test.password
-
+  gateway_arn           = aws_storagegateway_gateway.test.arn
+  location_arn          = aws_fsx_windows_file_system.test.arn
+  username              = %[1]q
+  password              = aws_directory_service_directory.test.password
   audit_destination_arn = %[2]s
 }
 
@@ -349,14 +348,28 @@ resource "aws_cloudwatch_log_group" "test" {}
 resource "aws_cloudwatch_log_group" "test2" {}
 `, username, loggingDestination)
 }
+func testAccAwsStorageGatewayFsxAssociateFileSystemConfig_AuditDisabled(rName, username string) string {
+	return testAccAWSStorageGatewayFsxAssociateFileSystemBase(rName, username) + fmt.Sprintf(`
+resource "aws_storagegateway_fsx_associate_file_system" "test" {
+  gateway_arn           = aws_storagegateway_gateway.test.arn
+  location_arn          = aws_fsx_windows_file_system.test.arn
+  username              = %[1]q
+  password              = aws_directory_service_directory.test.password
+  audit_destination_arn = ""
+}
+
+resource "aws_cloudwatch_log_group" "test" {}
+resource "aws_cloudwatch_log_group" "test2" {}
+`, username)
+}
 
 func testAccAwsStorageGatewayFsxAssociateFileSystemConfig_Cache(rName, username string, cache int) string {
 	return testAccAWSStorageGatewayFsxAssociateFileSystemBase(rName, username) + fmt.Sprintf(`
 resource "aws_storagegateway_fsx_associate_file_system" "test" {
-  gateway_arn = aws_storagegateway_gateway.test.arn
+  gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_fsx_windows_file_system.test.arn
-  username = %[1]q
-  password = aws_directory_service_directory.test.password
+  username     = %[1]q
+  password     = aws_directory_service_directory.test.password
 
   cache_attributes {
     cache_stale_timeout_in_seconds = %[2]d
