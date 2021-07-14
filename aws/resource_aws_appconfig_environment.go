@@ -32,6 +32,10 @@ func resourceAwsAppconfigEnvironment() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
 			},
+			"environment_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -110,6 +114,7 @@ func resourceAwsAppconfigEnvironmentCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error creating AppConfig Environment for Application (%s): empty response", appId)
 	}
 
+	d.Set("environment_id", environment.Id)
 	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(environment.Id), aws.StringValue(environment.ApplicationId)))
 
 	return resourceAwsAppconfigEnvironmentRead(d, meta)
@@ -148,6 +153,7 @@ func resourceAwsAppconfigEnvironmentRead(d *schema.ResourceData, meta interface{
 	}
 
 	d.Set("application_id", output.ApplicationId)
+	d.Set("environment_id", output.Id)
 	d.Set("description", output.Description)
 	d.Set("name", output.Name)
 	d.Set("state", output.State)
