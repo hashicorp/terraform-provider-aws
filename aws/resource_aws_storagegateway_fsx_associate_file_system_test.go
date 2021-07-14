@@ -161,6 +161,13 @@ func TestAccAWSStorageGatewayFsxAssociateFileSystem_auditDestination(t *testing.
 				ImportStateVerifyIgnore: []string{"username", "password"},
 			},
 			{
+				Config: testAccAwsStorageGatewayFsxAssociateFileSystemConfig_Audit(rName, username, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsStorageGatewayFsxAssociateFileSystemExists(resourceName, &fsxFileSystemAssociation),
+					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", "", "arn"),
+				),
+			},
+			{
 				Config: testAccAwsStorageGatewayFsxAssociateFileSystemConfig_Audit(rName, username, "aws_cloudwatch_log_group.test2.arn"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsStorageGatewayFsxAssociateFileSystemExists(resourceName, &fsxFileSystemAssociation),
