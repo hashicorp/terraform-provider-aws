@@ -16,10 +16,10 @@ Associate an Amazon FSx file system with the FSx File Gateway. After the associa
 
 ```terraform
 resource "aws_storagegateway_fsx_associate_file_system" "example" {
-  gateway_arn = aws_storagegateway_gateway.example.arn
-  location_arn = aws_fsx_windows_file_system.example.arn
-  username = "Admin"
-  password = "avoid-plaintext-passwords"
+  gateway_arn           = aws_storagegateway_gateway.example.arn
+  location_arn          = aws_fsx_windows_file_system.example.arn
+  username              = "Admin"
+  password              = "avoid-plaintext-passwords"
   audit_destination_arn = aws_s3_bucket.example.arn
 }
 ```
@@ -67,10 +67,10 @@ resource "aws_fsx_windows_file_system" "test" {
 
 resource "aws_storagegateway_fsx_associate_file_system" "fsx" {
 
-  gateway_arn = aws_storagegateway_gateway.test.arn
+  gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_fsx_windows_file_system.test.arn
-  username = "Admin"
-  password = aws_directory_service_directory.test.password
+  username     = "Admin"
+  password     = aws_directory_service_directory.test.password
   cache_attributes {
     cache_stale_timeout_in_seconds = 400
   }
