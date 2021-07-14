@@ -32,6 +32,7 @@ BUG FIXES:
 * resource/aws_cognito_user_pool_client: Retry on `ConcurrentModificationException` ([#20031](https://github.com/hashicorp/terraform-provider-aws/issues/20031))
 * resource/aws_datasync_location_s3: Correctly parse S3 on Outposts location URI ([#19859](https://github.com/hashicorp/terraform-provider-aws/issues/19859))
 * resource/aws_db_instance: Ignore allocated_storage for replica at creation time ([#12548](https://github.com/hashicorp/terraform-provider-aws/issues/12548))
+* resource/aws_elasticache_replication_group: Cannot set `cluster_mode.replicas_per_node_group` when member of Global Replication Group ([#20111](https://github.com/hashicorp/terraform-provider-aws/issues/20111))
 
 ## 3.49.0 (July 08, 2021)
 
