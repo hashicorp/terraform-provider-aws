@@ -1377,7 +1377,7 @@ resource "aws_api_gateway_rest_api" "test" {
                 statusCode = 200
               }
             }
-            uri = "https://aws.amazon.com/"
+            uri = "https://api.example.com/"
           }
         }
       }
@@ -1418,7 +1418,7 @@ resource "aws_api_gateway_rest_api" "test" {
                 statusCode = 200
               }
             }
-            uri = "https://aws.amazon.com/"
+            uri = "https://api.example.com/"
           }
         }
       }
@@ -1620,7 +1620,7 @@ resource "aws_api_gateway_rest_api" "test" {
                 statusCode = 200
               }
             }
-            uri = "https://aws.amazon.com/"
+            uri = "https://api.example.com/"
           }
         }
       }
@@ -1702,7 +1702,7 @@ resource "aws_api_gateway_rest_api" "test" {
                 statusCode = 200
               }
             }
-            uri = "https://aws.amazon.com/"
+            uri = "https://api.example.com/"
           }
         }
       }
@@ -1829,7 +1829,7 @@ resource "aws_api_gateway_rest_api" "test" {
                 statusCode = 200
               }
             }
-            uri = "https://aws.amazon.com/"
+            uri = "https://api.example.com/"
           }
         }
       }
@@ -1868,7 +1868,7 @@ resource "aws_api_gateway_rest_api" "test" {
                 statusCode = 200
               }
             }
-            uri = "https://aws.amazon.com/"
+            uri = "https://api.example.com/"
           }
         }
       }
@@ -1917,7 +1917,7 @@ resource "aws_api_gateway_rest_api" "test" {
                 statusCode = 200
               }
             }
-            uri = "https://aws.amazon.com/"
+            uri = "https://api.example.com/"
           }
         }
       }
@@ -1956,7 +1956,7 @@ resource "aws_api_gateway_rest_api" "test" {
                 statusCode = 200
               }
             }
-            uri = "https://aws.amazon.com/"
+            uri = "https://api.example.com/"
           }
         }
       }
@@ -1995,7 +1995,7 @@ resource "aws_api_gateway_rest_api" "test" {
                 statusCode = 200
               }
             }
-            uri = "https://aws.amazon.com/"
+            uri = "https://api.example.com/"
           }
         }
       }
@@ -2044,7 +2044,7 @@ resource "aws_api_gateway_rest_api" "test" {
                 statusCode = 200
               }
             }
-            uri = "https://aws.amazon.com/"
+            uri = "https://api.example.com/"
           }
         }
       }
@@ -2083,7 +2083,7 @@ resource "aws_api_gateway_rest_api" "test" {
                 statusCode = 200
               }
             }
-            uri = "https://aws.amazon.com/"
+            uri = "https://api.example.com/"
           }
         }
       }
@@ -2131,7 +2131,7 @@ resource "aws_api_gateway_rest_api" "test" {
                 statusCode = 200
               }
             }
-            uri = "https://aws.amazon.com/"
+            uri = "https://api.example.com/"
           }
         }
       }
@@ -2170,7 +2170,7 @@ resource "aws_api_gateway_rest_api" "test" {
                 statusCode = 200
               }
             }
-            uri = "https://aws.amazon.com/"
+            uri = "https://api.example.com/"
           }
         }
       }
@@ -2217,7 +2217,7 @@ resource "aws_api_gateway_rest_api" "test" {
                 statusCode = 200
               }
             }
-            uri = "https://aws.amazon.com/"
+            uri = "https://api.example.com/"
           }
         }
       }
@@ -2256,7 +2256,7 @@ resource "aws_api_gateway_rest_api" "test" {
                 statusCode = 200
               }
             }
-            uri = "https://aws.amazon.com/"
+            uri = "https://api.example.com/"
           }
         }
       }
@@ -2298,7 +2298,7 @@ resource "aws_api_gateway_rest_api" "test" {
                 statusCode = 200
               }
             }
-            uri = "https://aws.amazon.com/"
+            uri = "https://api.example.com/"
           }
         }
       }
@@ -2355,7 +2355,7 @@ resource "aws_api_gateway_rest_api" "test" {
                 statusCode = 200
               }
             }
-            uri = "https://aws.amazon.com/"
+            uri = "https://api.example.com/"
           }
         }
       }

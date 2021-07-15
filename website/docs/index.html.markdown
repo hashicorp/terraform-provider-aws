@@ -126,7 +126,7 @@ provider "aws" {
 }
 ```
 
-Please note that the [AWS Go SDK](https://aws.amazon.com/sdk-for-go/), the underlying authentication handler used by the Terraform AWS Provider, does not support all AWS CLI features, such as Single Sign On (SSO) configuration or credentials.
+Please note that the [AWS Go SDK](https://aws.amazon.com/sdk-for-go/), the underlying authentication handler used by the Terraform AWS Provider, does not support all AWS CLI features.
 
 ### CodeBuild, ECS, and EKS Roles
 
@@ -251,6 +251,11 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
     - [`aws_apigatewayv2_api` data source](/docs/providers/aws/d/apigatewayv2_api.html)
     - [`aws_apigatewayv2_api` resource](/docs/providers/aws/r/apigatewayv2_api.html)
     - [`aws_apigatewayv2_stage` resource](/docs/providers/aws/r/apigatewayv2_stage.html)
+    - [`aws_appconfig_application` resource](/docs/providers/aws/r/appconfig_application.html)
+    - [`aws_appconfig_configuration_profile` resource](/docs/providers/aws/r/appconfig_configuration_profile.html)
+    - [`aws_appconfig_deployment_strategy` resource](/docs/providers/aws/r/appconfig_deployment_strategy.html)
+    - [`aws_appconfig_environment` resource](/docs/providers/aws/r/appconfig_environment.html)
+    - [`aws_appconfig_hosted_configuration_version` resource](/docs/providers/aws/r/appconfig_hosted_configuration_version.html)
     - [`aws_athena_workgroup` resource](/docs/providers/aws/r/athena_workgroup.html)
     - [`aws_budgets_budget` resource](/docs/providers/aws/r/budgets_budget.html)
     - [`aws_codedeploy_app` resource](/docs/providers/aws/r/codedeploy_app.html)

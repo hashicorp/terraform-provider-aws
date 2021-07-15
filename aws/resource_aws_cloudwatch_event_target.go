@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfevents "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
 )
@@ -137,16 +138,29 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"enable_ecs_managed_tags": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"enable_execute_command": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"group": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
 						"launch_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      events.LaunchTypeEc2,
-							ValidateFunc: validation.StringInSlice(events.LaunchType_Values(), false),
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  events.LaunchTypeEc2,
+							ValidateFunc: validation.Any(
+								validation.StringIsEmpty,
+								validation.StringInSlice(events.LaunchType_Values(), false),
+							),
 						},
 						"network_configuration": {
 							Type:     schema.TypeList,
@@ -172,11 +186,36 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 								},
 							},
 						},
+						"placement_constraint": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 10,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"expression": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"type": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(events.PlacementConstraintType_Values(), false),
+									},
+								},
+							},
+						},
 						"platform_version": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1600),
 						},
+						"propagate_tags": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      events.PropagateTagsTaskDefinition,
+							ValidateFunc: validation.StringInSlice(events.PropagateTags_Values(), false),
+						},
+						"tags": tagsSchema(),
 						"task_count": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -261,7 +300,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							ValidateFunc: validation.All(
-								MapMaxItems(10),
+								MapMaxItems(100),
 								MapKeysDoNotMatch(regexp.MustCompile(`^AWS.*$`), "input_path must not start with \"AWS\""),
 							),
 						},
@@ -491,11 +530,11 @@ func buildPutTargetInputStruct(d *schema.ResourceData) *events.PutTargetsInput {
 		e.RoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("run_command_targets"); ok {
+	if v, ok := d.GetOk("run_command_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		e.RunCommandParameters = expandAwsCloudWatchEventTargetRunParameters(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("ecs_target"); ok {
+	if v, ok := d.GetOk("ecs_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		e.EcsParameters = expandAwsCloudWatchEventTargetEcsParameters(v.([]interface{}))
 	}
 
@@ -503,27 +542,27 @@ func buildPutTargetInputStruct(d *schema.ResourceData) *events.PutTargetsInput {
 		e.HttpParameters = expandAwsCloudWatchEventTargetHttpParameters(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("batch_target"); ok {
+	if v, ok := d.GetOk("batch_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		e.BatchParameters = expandAwsCloudWatchEventTargetBatchParameters(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("kinesis_target"); ok {
+	if v, ok := d.GetOk("kinesis_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		e.KinesisParameters = expandAwsCloudWatchEventTargetKinesisParameters(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("sqs_target"); ok {
+	if v, ok := d.GetOk("sqs_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		e.SqsParameters = expandAwsCloudWatchEventTargetSqsParameters(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("input_transformer"); ok {
+	if v, ok := d.GetOk("input_transformer"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		e.InputTransformer = expandAwsCloudWatchEventTransformerParameters(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("retry_policy"); ok {
+	if v, ok := d.GetOk("retry_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		e.RetryPolicy = expandAwsCloudWatchEventRetryPolicyParameters(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("dead_letter_config"); ok {
+	if v, ok := d.GetOk("dead_letter_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		e.DeadLetterConfig = expandAwsCloudWatchEventDeadLetterConfigParameters(v.([]interface{}))
 	}
 
@@ -560,18 +599,38 @@ func expandAwsCloudWatchEventTargetEcsParameters(config []interface{}) *events.E
 	ecsParameters := &events.EcsParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
+		tags := keyvaluetags.New(param["tags"].(map[string]interface{}))
+
 		if val, ok := param["group"].(string); ok && val != "" {
 			ecsParameters.Group = aws.String(val)
 		}
+
 		if val, ok := param["launch_type"].(string); ok && val != "" {
 			ecsParameters.LaunchType = aws.String(val)
 		}
+
 		if val, ok := param["network_configuration"]; ok {
 			ecsParameters.NetworkConfiguration = expandAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(val.([]interface{}))
 		}
+
 		if val, ok := param["platform_version"].(string); ok && val != "" {
 			ecsParameters.PlatformVersion = aws.String(val)
 		}
+
+		if v, ok := param["placement_constraint"].(*schema.Set); ok && v.Len() > 0 {
+			ecsParameters.PlacementConstraints = expandAwsCloudWatchEventTargetPlacementConstraints(v.List())
+		}
+
+		if v, ok := param["propagate_tags"].(string); ok {
+			ecsParameters.PropagateTags = aws.String(v)
+		}
+
+		if len(tags) > 0 {
+			ecsParameters.Tags = tags.IgnoreAws().CloudwatcheventsTags()
+		}
+
+		ecsParameters.EnableExecuteCommand = aws.Bool(param["enable_execute_command"].(bool))
+		ecsParameters.EnableECSManagedTags = aws.Bool(param["enable_ecs_managed_tags"].(bool))
 		ecsParameters.TaskCount = aws.Int64(int64(param["task_count"].(int)))
 		ecsParameters.TaskDefinitionArn = aws.String(param["task_definition_arn"].(string))
 	}
@@ -737,13 +796,27 @@ func flattenAwsCloudWatchEventTargetEcsParameters(ecsParameters *events.EcsParam
 	if ecsParameters.Group != nil {
 		config["group"] = aws.StringValue(ecsParameters.Group)
 	}
+
 	if ecsParameters.LaunchType != nil {
 		config["launch_type"] = aws.StringValue(ecsParameters.LaunchType)
 	}
+
 	config["network_configuration"] = flattenAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(ecsParameters.NetworkConfiguration)
 	if ecsParameters.PlatformVersion != nil {
 		config["platform_version"] = aws.StringValue(ecsParameters.PlatformVersion)
 	}
+
+	if ecsParameters.PropagateTags != nil {
+		config["propagate_tags"] = aws.StringValue(ecsParameters.PropagateTags)
+	}
+
+	if ecsParameters.PlacementConstraints != nil {
+		config["placement_constraint"] = flattenAwsCloudWatchEventTargetPlacementConstraints(ecsParameters.PlacementConstraints)
+	}
+
+	config["tags"] = keyvaluetags.CloudwatcheventsKeyValueTags(ecsParameters.Tags).IgnoreAws().Map()
+	config["enable_execute_command"] = aws.BoolValue(ecsParameters.EnableExecuteCommand)
+	config["enable_ecs_managed_tags"] = aws.BoolValue(ecsParameters.EnableECSManagedTags)
 	config["task_count"] = aws.Int64Value(ecsParameters.TaskCount)
 	config["task_definition_arn"] = aws.StringValue(ecsParameters.TaskDefinitionArn)
 	result := []map[string]interface{}{config}
@@ -846,6 +919,53 @@ func flatternAwsCloudWatchEventTargetDeadLetterConfig(dlc *events.DeadLetterConf
 
 	result := []map[string]interface{}{config}
 	return result
+}
+
+func expandAwsCloudWatchEventTargetPlacementConstraints(tfList []interface{}) []*events.PlacementConstraint {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var result []*events.PlacementConstraint
+
+	for _, tfMapRaw := range tfList {
+		if tfMapRaw == nil {
+			continue
+		}
+
+		tfMap := tfMapRaw.(map[string]interface{})
+
+		apiObject := &events.PlacementConstraint{}
+
+		if v, ok := tfMap["expression"].(string); ok && v != "" {
+			apiObject.Expression = aws.String(v)
+		}
+
+		if v, ok := tfMap["type"].(string); ok && v != "" {
+			apiObject.Type = aws.String(v)
+		}
+
+		result = append(result, apiObject)
+	}
+
+	return result
+}
+
+func flattenAwsCloudWatchEventTargetPlacementConstraints(pcs []*events.PlacementConstraint) []map[string]interface{} {
+	if len(pcs) == 0 {
+		return nil
+	}
+	results := make([]map[string]interface{}, 0)
+	for _, pc := range pcs {
+		c := make(map[string]interface{})
+		c["type"] = aws.StringValue(pc.Type)
+		if pc.Expression != nil {
+			c["expression"] = aws.StringValue(pc.Expression)
+		}
+
+		results = append(results, c)
+	}
+	return results
 }
 
 func resourceAwsCloudWatchEventTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

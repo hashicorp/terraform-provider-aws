@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfservicecatalog "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog/finder"
 )
 
@@ -34,7 +35,7 @@ func TestAccAWSServiceCatalogPortfolioShare_basic(t *testing.T) {
 				Config: testAccAWSServiceCatalogPortfolioShareConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
+					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "accepted", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_id", dataSourceName, "account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", compareName, "id"),
@@ -74,7 +75,7 @@ func TestAccAWSServiceCatalogPortfolioShare_organizationalUnit(t *testing.T) {
 				Config: testAccAWSServiceCatalogPortfolioShareConfig_organizationalUnit(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
+					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "accepted", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_id", "aws_organizations_organizational_unit.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", compareName, "id"),

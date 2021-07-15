@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -13,6 +14,8 @@ const (
 
 	// AdminStatus Unknown
 	AdminStatusUnknown = "Unknown"
+
+	StandardsStatusNotFound = "NotFound"
 )
 
 // AdminAccountAdminStatus fetches the AdminAccount and its AdminStatus
@@ -29,5 +32,23 @@ func AdminAccountAdminStatus(conn *securityhub.SecurityHub, adminAccountID strin
 		}
 
 		return adminAccount, aws.StringValue(adminAccount.Status), nil
+	}
+}
+
+func StandardsSubscriptionStatus(conn *securityhub.SecurityHub, arn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.StandardsSubscriptionByARN(conn, arn)
+
+		if tfresource.NotFound(err) {
+			// Return a fake result and status to deal with the INCOMPLETE subscription status
+			// being a target for both Create and Delete.
+			return "", StandardsStatusNotFound, nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.StandardsStatus), nil
 	}
 }

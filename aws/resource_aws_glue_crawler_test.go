@@ -220,6 +220,8 @@ func TestAccAWSGlueCrawler_JdbcTarget(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
 
+	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", testAccRandomDomainName())
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
@@ -227,7 +229,7 @@ func TestAccAWSGlueCrawler_JdbcTarget(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueCrawlerConfig_JdbcTarget(rName, "database-name/%"),
+				Config: testAccGlueCrawlerConfig_JdbcTarget(rName, jdbcConnectionUrl, "database-name/%"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
@@ -252,7 +254,7 @@ func TestAccAWSGlueCrawler_JdbcTarget(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGlueCrawlerConfig_JdbcTarget(rName, "database-name/table-name"),
+				Config: testAccGlueCrawlerConfig_JdbcTarget(rName, jdbcConnectionUrl, "database-name/table-name"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
@@ -290,6 +292,8 @@ func TestAccAWSGlueCrawler_JdbcTarget_Exclusions(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
 
+	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", testAccRandomDomainName())
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
@@ -297,7 +301,7 @@ func TestAccAWSGlueCrawler_JdbcTarget_Exclusions(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueCrawlerConfig_JdbcTarget_Exclusions2(rName, "exclusion1", "exclusion2"),
+				Config: testAccGlueCrawlerConfig_JdbcTarget_Exclusions2(rName, jdbcConnectionUrl, "exclusion1", "exclusion2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
@@ -308,7 +312,7 @@ func TestAccAWSGlueCrawler_JdbcTarget_Exclusions(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGlueCrawlerConfig_JdbcTarget_Exclusions1(rName, "exclusion1"),
+				Config: testAccGlueCrawlerConfig_JdbcTarget_Exclusions1(rName, jdbcConnectionUrl, "exclusion1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
@@ -331,6 +335,8 @@ func TestAccAWSGlueCrawler_JdbcTarget_Multiple(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
 
+	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", testAccRandomDomainName())
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
@@ -338,7 +344,7 @@ func TestAccAWSGlueCrawler_JdbcTarget_Multiple(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueCrawlerConfig_JdbcTarget_Multiple(rName, "database-name/table1", "database-name/table2"),
+				Config: testAccGlueCrawlerConfig_JdbcTarget_Multiple(rName, jdbcConnectionUrl, "database-name/table1", "database-name/table2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
@@ -352,7 +358,7 @@ func TestAccAWSGlueCrawler_JdbcTarget_Multiple(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGlueCrawlerConfig_JdbcTarget(rName, "database-name/table1"),
+				Config: testAccGlueCrawlerConfig_JdbcTarget(rName, jdbcConnectionUrl, "database-name/table1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
@@ -363,7 +369,7 @@ func TestAccAWSGlueCrawler_JdbcTarget_Multiple(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGlueCrawlerConfig_JdbcTarget_Multiple(rName, "database-name/table1", "database-name/table2"),
+				Config: testAccGlueCrawlerConfig_JdbcTarget_Multiple(rName, jdbcConnectionUrl, "database-name/table1", "database-name/table2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.#", "2"),
@@ -390,6 +396,8 @@ func TestAccAWSGlueCrawler_mongoDBTarget(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
 
+	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", testAccRandomDomainName())
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
@@ -397,7 +405,7 @@ func TestAccAWSGlueCrawler_mongoDBTarget(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueCrawlerConfigMongoDBTarget(rName, "database-name/%"),
+				Config: testAccGlueCrawlerConfigMongoDBTarget(rName, connectionUrl, "database-name/%"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
@@ -412,7 +420,7 @@ func TestAccAWSGlueCrawler_mongoDBTarget(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGlueCrawlerConfigMongoDBTarget(rName, "database-name/table-name"),
+				Config: testAccGlueCrawlerConfigMongoDBTarget(rName, connectionUrl, "database-name/table-name"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
@@ -430,6 +438,8 @@ func TestAccAWSGlueCrawler_mongoDBTarget_scan_all(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
 
+	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", testAccRandomDomainName())
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
@@ -437,7 +447,7 @@ func TestAccAWSGlueCrawler_mongoDBTarget_scan_all(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueCrawlerConfigMongoDBTargetScanAll(rName, false),
+				Config: testAccGlueCrawlerConfigMongoDBTargetScanAll(rName, connectionUrl, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
@@ -452,7 +462,7 @@ func TestAccAWSGlueCrawler_mongoDBTarget_scan_all(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGlueCrawlerConfigMongoDBTargetScanAll(rName, true),
+				Config: testAccGlueCrawlerConfigMongoDBTargetScanAll(rName, connectionUrl, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
@@ -462,7 +472,7 @@ func TestAccAWSGlueCrawler_mongoDBTarget_scan_all(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGlueCrawlerConfigMongoDBTargetScanAll(rName, false),
+				Config: testAccGlueCrawlerConfigMongoDBTargetScanAll(rName, connectionUrl, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
@@ -480,6 +490,8 @@ func TestAccAWSGlueCrawler_mongoDBTarget_multiple(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
 
+	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", testAccRandomDomainName())
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
@@ -487,7 +499,7 @@ func TestAccAWSGlueCrawler_mongoDBTarget_multiple(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueCrawlerConfigMongoDBMultiple(rName, "database-name/table1", "database-name/table2"),
+				Config: testAccGlueCrawlerConfigMongoDBMultiple(rName, connectionUrl, "database-name/table1", "database-name/table2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "2"),
@@ -505,7 +517,7 @@ func TestAccAWSGlueCrawler_mongoDBTarget_multiple(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGlueCrawlerConfigMongoDBTarget(rName, "database-name/%"),
+				Config: testAccGlueCrawlerConfigMongoDBTarget(rName, connectionUrl, "database-name/%"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
@@ -515,7 +527,7 @@ func TestAccAWSGlueCrawler_mongoDBTarget_multiple(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGlueCrawlerConfigMongoDBMultiple(rName, "database-name/table1", "database-name/table2"),
+				Config: testAccGlueCrawlerConfigMongoDBMultiple(rName, connectionUrl, "database-name/table1", "database-name/table2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "2"),
@@ -1697,17 +1709,17 @@ resource "aws_glue_crawler" "test" {
 `, rName, path, scanRate)
 }
 
-func testAccGlueCrawlerConfig_JdbcTarget(rName, path string) string {
+func testAccGlueCrawlerConfig_JdbcTarget(rName, jdbcConnectionUrl, path string) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_connection" "test" {
-  name = %q
+  name = %[1]q
 
   connection_properties = {
-    JDBC_CONNECTION_URL = "jdbc:mysql://terraformacctesting.com/testdatabase"
+    JDBC_CONNECTION_URL = %[1]q
     PASSWORD            = "testpassword"
     USERNAME            = "testusername"
   }
@@ -1717,28 +1729,28 @@ resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = aws_glue_catalog_database.test.name
-  name          = %q
+  name          = %[1]q
   role          = aws_iam_role.test.name
 
   jdbc_target {
     connection_name = aws_glue_connection.test.name
-    path            = %q
+    path            = %[3]q
   }
 }
-`, rName, rName, rName, path)
+`, rName, jdbcConnectionUrl, path)
 }
 
-func testAccGlueCrawlerConfig_JdbcTarget_Exclusions1(rName, exclusion1 string) string {
+func testAccGlueCrawlerConfig_JdbcTarget_Exclusions1(rName, jdbcConnectionUrl, exclusion1 string) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_connection" "test" {
-  name = %q
+  name = %[1]q
 
   connection_properties = {
-    JDBC_CONNECTION_URL = "jdbc:mysql://terraformacctesting.com/testdatabase"
+    JDBC_CONNECTION_URL = %[2]q
     PASSWORD            = "testpassword"
     USERNAME            = "testusername"
   }
@@ -1748,29 +1760,29 @@ resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = aws_glue_catalog_database.test.name
-  name          = %q
+  name          = %[1]q
   role          = aws_iam_role.test.name
 
   jdbc_target {
     connection_name = aws_glue_connection.test.name
-    exclusions      = [%q]
+    exclusions      = [%[3]q]
     path            = "database-name/table1"
   }
 }
-`, rName, rName, rName, exclusion1)
+`, rName, jdbcConnectionUrl, exclusion1)
 }
 
-func testAccGlueCrawlerConfig_JdbcTarget_Exclusions2(rName, exclusion1, exclusion2 string) string {
+func testAccGlueCrawlerConfig_JdbcTarget_Exclusions2(rName, jdbcConnectionUrl, exclusion1, exclusion2 string) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_connection" "test" {
-  name = %q
+  name = %[1]q
 
   connection_properties = {
-    JDBC_CONNECTION_URL = "jdbc:mysql://terraformacctesting.com/testdatabase"
+    JDBC_CONNECTION_URL = %[2]q
     PASSWORD            = "testpassword"
     USERNAME            = "testusername"
   }
@@ -1780,29 +1792,29 @@ resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = aws_glue_catalog_database.test.name
-  name          = %q
+  name          = %[1]q
   role          = aws_iam_role.test.name
 
   jdbc_target {
     connection_name = aws_glue_connection.test.name
-    exclusions      = [%q, %q]
+    exclusions      = [%[3]q, %[4]q]
     path            = "database-name/table1"
   }
 }
-`, rName, rName, rName, exclusion1, exclusion2)
+`, rName, jdbcConnectionUrl, exclusion1, exclusion2)
 }
 
-func testAccGlueCrawlerConfig_JdbcTarget_Multiple(rName, path1, path2 string) string {
+func testAccGlueCrawlerConfig_JdbcTarget_Multiple(rName, jdbcConnectionUrl, path1, path2 string) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_connection" "test" {
-  name = %q
+  name = %[1]q
 
   connection_properties = {
-    JDBC_CONNECTION_URL = "jdbc:mysql://terraformacctesting.com/testdatabase"
+    JDBC_CONNECTION_URL = %[2]q
     PASSWORD            = "testpassword"
     USERNAME            = "testusername"
   }
@@ -1812,40 +1824,40 @@ resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = aws_glue_catalog_database.test.name
-  name          = %q
+  name          = %[1]q
   role          = aws_iam_role.test.name
 
   jdbc_target {
     connection_name = aws_glue_connection.test.name
-    path            = %q
+    path            = %[3]q
   }
 
   jdbc_target {
     connection_name = aws_glue_connection.test.name
-    path            = %q
+    path            = %[4]q
   }
 }
-`, rName, rName, rName, path1, path2)
+`, rName, jdbcConnectionUrl, path1, path2)
 }
 
 func testAccGlueCrawlerConfig_Role_ARN_NoPath(rName string) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = aws_glue_catalog_database.test.name
-  name          = %q
+  name          = %[1]q
   role          = aws_iam_role.test.arn
 
   s3_target {
     path = "s3://bucket-name"
   }
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccGlueCrawlerConfig_Role_ARN_Path(rName string) string {
@@ -1853,7 +1865,7 @@ func testAccGlueCrawlerConfig_Role_ARN_Path(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name = %q
+  name = %[1]q
   path = "/path/"
 
   assume_role_policy = <<EOF
@@ -1879,21 +1891,21 @@ resource "aws_iam_role_policy_attachment" "test-AWSGlueServiceRole" {
 }
 
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = aws_glue_catalog_database.test.name
-  name          = %q
+  name          = %[1]q
   role          = aws_iam_role.test.arn
 
   s3_target {
     path = "s3://bucket-name"
   }
 }
-`, rName, rName, rName)
+`, rName)
 }
 
 func testAccGlueCrawlerConfig_Role_Name_Path(rName string) string {
@@ -1901,7 +1913,7 @@ func testAccGlueCrawlerConfig_Role_Name_Path(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name = %q
+  name = %[1]q
   path = "/path/"
 
   assume_role_policy = <<EOF
@@ -1927,62 +1939,62 @@ resource "aws_iam_role_policy_attachment" "test-AWSGlueServiceRole" {
 }
 
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = aws_glue_catalog_database.test.name
-  name          = %q
+  name          = %[1]q
   role          = "${replace(aws_iam_role.test.path, "/^\\//", "")}${aws_iam_role.test.name}"
 
   s3_target {
     path = "s3://bucket-name"
   }
 }
-`, rName, rName, rName)
+`, rName)
 }
 
 func testAccGlueCrawlerConfig_S3Target(rName, path string) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = aws_glue_catalog_database.test.name
-  name          = %q
+  name          = %[1]q
   role          = aws_iam_role.test.name
 
   s3_target {
-    path = %q
+    path = %[2]q
   }
 }
-`, rName, rName, path)
+`, rName, path)
 }
 
 func testAccGlueCrawlerConfig_S3Target_Exclusions1(rName, exclusion1 string) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = aws_glue_catalog_database.test.name
-  name          = %q
+  name          = %[1]q
   role          = aws_iam_role.test.name
 
   s3_target {
-    exclusions = [%q]
+    exclusions = [%[2]q]
     path       = "s3://bucket1"
   }
 }
-`, rName, rName, exclusion1)
+`, rName, exclusion1)
 }
 
 func testAccGlueCrawlerConfig_S3Target_ConnectionName(rName string) string {
@@ -2066,46 +2078,46 @@ resource "aws_glue_crawler" "test" {
 func testAccGlueCrawlerConfig_S3Target_Exclusions2(rName, exclusion1, exclusion2 string) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = aws_glue_catalog_database.test.name
-  name          = %q
+  name          = %[1]q
   role          = aws_iam_role.test.name
 
   s3_target {
-    exclusions = [%q, %q]
+    exclusions = [%[2]q, %[3]q]
     path       = "s3://bucket1"
   }
 }
-`, rName, rName, exclusion1, exclusion2)
+`, rName, exclusion1, exclusion2)
 }
 
 func testAccGlueCrawlerConfig_S3Target_Multiple(rName, path1, path2 string) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = aws_glue_catalog_database.test.name
-  name          = %q
+  name          = %[1]q
   role          = aws_iam_role.test.name
 
   s3_target {
-    path = %q
+    path = %[2]q
   }
 
   s3_target {
-    path = %q
+    path = %[3]q
   }
 }
-`, rName, rName, path1, path2)
+`, rName, path1, path2)
 }
 
 func testAccGlueCrawlerConfig_CatalogTarget(rName string, tableCount int) string {
@@ -2242,35 +2254,35 @@ EOF
 func testAccGlueCrawlerConfig_Schedule(rName, schedule string) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = aws_glue_catalog_database.test.name
-  name          = %q
+  name          = %[1]q
   role          = aws_iam_role.test.name
-  schedule      = %q
+  schedule      = %[2]q
 
   s3_target {
     path = "s3://bucket-name"
   }
 }
-`, rName, rName, schedule)
+`, rName, schedule)
 }
 
 func testAccGlueCrawlerConfig_SchemaChangePolicy(rName, deleteBehavior, updateBehavior string) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = aws_glue_catalog_database.test.name
-  name          = %q
+  name          = %[1]q
   role          = aws_iam_role.test.name
 
   s3_target {
@@ -2278,32 +2290,32 @@ resource "aws_glue_crawler" "test" {
   }
 
   schema_change_policy {
-    delete_behavior = %q
-    update_behavior = %q
+    delete_behavior = %[2]q
+    update_behavior = %[3]q
   }
 }
-`, rName, rName, deleteBehavior, updateBehavior)
+`, rName, deleteBehavior, updateBehavior)
 }
 
 func testAccGlueCrawlerConfig_TablePrefix(rName, tablePrefix string) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = aws_glue_catalog_database.test.name
-  name          = %q
+  name          = %[1]q
   role          = aws_iam_role.test.name
-  table_prefix  = %q
+  table_prefix  = %[2]q
 
   s3_target {
     path = "s3://bucket-name"
   }
 }
-`, rName, rName, tablePrefix)
+`, rName, tablePrefix)
 }
 
 func testAccGlueCrawlerConfigTags1(rName, tagKey1, tagValue1 string) string {
@@ -2360,11 +2372,11 @@ resource "aws_glue_crawler" "test" {
 func testAccGlueCrawlerConfig_SecurityConfiguration(rName, securityConfiguration string) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_security_configuration" "test" {
-  name = %q
+  name = %[2]q
 
   encryption_configuration {
     cloudwatch_encryption {
@@ -2385,7 +2397,7 @@ resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name          = aws_glue_catalog_database.test.name
-  name                   = %q
+  name                   = %[1]q
   role                   = aws_iam_role.test.name
   security_configuration = aws_glue_security_configuration.test.name
 
@@ -2393,10 +2405,10 @@ resource "aws_glue_crawler" "test" {
     path = "s3://bucket-name"
   }
 }
-`, rName, securityConfiguration, rName)
+`, rName, securityConfiguration)
 }
 
-func testAccGlueCrawlerConfigMongoDBTarget(rName, path string) string {
+func testAccGlueCrawlerConfigMongoDBTarget(rName, connectionUrl, path string) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -2407,7 +2419,7 @@ resource "aws_glue_connection" "test" {
   connection_type = "MONGODB"
 
   connection_properties = {
-    CONNECTION_URL = "mongodb://testdb.com:27017/databasename"
+    CONNECTION_URL = %[2]q
     PASSWORD       = "testpassword"
     USERNAME       = "testusername"
   }
@@ -2422,13 +2434,13 @@ resource "aws_glue_crawler" "test" {
 
   mongodb_target {
     connection_name = aws_glue_connection.test.name
-    path            = %[2]q
+    path            = %[3]q
   }
 }
-`, rName, path)
+`, rName, connectionUrl, path)
 }
 
-func testAccGlueCrawlerConfigMongoDBTargetScanAll(rName string, scan bool) string {
+func testAccGlueCrawlerConfigMongoDBTargetScanAll(rName, connectionUrl string, scan bool) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -2439,7 +2451,7 @@ resource "aws_glue_connection" "test" {
   connection_type = "MONGODB"
 
   connection_properties = {
-    CONNECTION_URL = "mongodb://testdb.com:27017/databasename"
+    CONNECTION_URL = %[2]q
     PASSWORD       = "testpassword"
     USERNAME       = "testusername"
   }
@@ -2455,13 +2467,13 @@ resource "aws_glue_crawler" "test" {
   mongodb_target {
     connection_name = aws_glue_connection.test.name
     path            = "database-name/table-name"
-    scan_all        = %[2]t
+    scan_all        = %[3]t
   }
 }
-`, rName, scan)
+`, rName, connectionUrl, scan)
 }
 
-func testAccGlueCrawlerConfigMongoDBMultiple(rName, path1, path2 string) string {
+func testAccGlueCrawlerConfigMongoDBMultiple(rName, connectionUrl, path1, path2 string) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -2472,7 +2484,7 @@ resource "aws_glue_connection" "test" {
   connection_type = "MONGODB"
 
   connection_properties = {
-    CONNECTION_URL = "mongodb://testdb.com:27017/databasename"
+    CONNECTION_URL = %[2]q
     PASSWORD       = "testpassword"
     USERNAME       = "testusername"
   }
@@ -2487,15 +2499,15 @@ resource "aws_glue_crawler" "test" {
 
   mongodb_target {
     connection_name = aws_glue_connection.test.name
-    path            = %[2]q
+    path            = %[3]q
   }
 
   mongodb_target {
     connection_name = aws_glue_connection.test.name
-    path            = %[3]q
+    path            = %[4]q
   }
 }
-`, rName, path1, path2)
+`, rName, connectionUrl, path1, path2)
 }
 
 func testAccGlueCrawlerLineageConfig(rName, lineageConfig string) string {

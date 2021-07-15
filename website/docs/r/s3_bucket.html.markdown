@@ -429,13 +429,14 @@ The `replication_configuration` object supports the following:
 
 The `rules` object supports the following:
 
-* `id` - (Optional) Unique identifier for the rule. Must be less than or equal to 255 characters in length.
-* `priority` - (Optional) The priority associated with the rule.
+* `delete_marker_replication_status` - (Optional) Whether delete markers are replicated. The only valid value is `Enabled`. To disable, omit this argument. This argument is only valid with V2 replication configurations (i.e., when `filter` is used).
 * `destination` - (Required) Specifies the destination for the rule (documented below).
-* `source_selection_criteria` - (Optional) Specifies special object selection criteria (documented below).
-* `prefix` - (Optional) Object keyname prefix identifying one or more objects to which the rule applies. Must be less than or equal to 1024 characters in length.
-* `status` - (Required) The status of the rule. Either `Enabled` or `Disabled`. The rule is ignored if status is not Enabled.
 * `filter` - (Optional) Filter that identifies subset of objects to which the replication rule applies (documented below).
+* `id` - (Optional) Unique identifier for the rule. Must be less than or equal to 255 characters in length.
+* `prefix` - (Optional) Object keyname prefix identifying one or more objects to which the rule applies. Must be less than or equal to 1024 characters in length.
+* `priority` - (Optional) The priority associated with the rule.
+* `source_selection_criteria` - (Optional) Specifies special object selection criteria (documented below).
+* `status` - (Required) The status of the rule. Either `Enabled` or `Disabled`. The rule is ignored if status is not Enabled.
 
 ~> **NOTE on `prefix` and `filter`:** Amazon S3's latest version of the replication configuration is V2, which includes the `filter` attribute for replication rules.
 With the `filter` attribute, you can specify object filters based on the object key prefix, tags, or both to scope the objects that the rule applies to.
