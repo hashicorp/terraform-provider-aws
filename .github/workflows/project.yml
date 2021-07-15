@@ -12,4 +12,4 @@ jobs:
       with:
         project: AWS Provider Working Board
         column: Open Maintainer PR
-        repo-token: ${{ secrets.GITHUB_ACTIONS_TOKEN}}
+        repo-token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN}}
