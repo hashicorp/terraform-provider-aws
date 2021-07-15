@@ -22,3 +22,5 @@ require (
 	github.com/pquerna/otp v1.3.0
 	gopkg.in/yaml.v2 v2.4.0
 )
+
+replace github.com/hashicorp/terraform-plugin-sdk/v2 => github.com/gdavison/terraform-plugin-sdk/v2 v2.0.2-0.20210714181518-b5a3dc95a675
