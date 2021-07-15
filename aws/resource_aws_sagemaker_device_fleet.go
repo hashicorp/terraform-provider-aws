@@ -182,7 +182,7 @@ func resourceAwsSagemakerDeviceFleetUpdate(d *schema.ResourceData, meta interfac
 			input.Description = aws.String(d.Get("description").(string))
 		}
 
-		log.Printf("[DEBUG] sagemaker DeviceFleet update config: %#v", *input)
+		log.Printf("[DEBUG] sagemaker DeviceFleet update config: %s", input.String())
 		_, err := conn.UpdateDeviceFleet(input)
 		if err != nil {
 			return fmt.Errorf("error updating SageMaker Device Fleet: %w", err)

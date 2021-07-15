@@ -20,7 +20,7 @@ resource "aws_sagemaker_device_fleet" "example" {
   role_arn          = aws_iam_role.test.arn
 
   output_config {
-    s3_output_location = "s3://${aws_s3_bucket.test.bucket}/prefix/"
+    s3_output_location = "s3://${aws_s3_bucket.example.bucket}/prefix/"
   }
 }
 ```
