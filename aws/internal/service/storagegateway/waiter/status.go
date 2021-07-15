@@ -1,7 +1,6 @@
 package waiter
 
 import (
-	"errors"
 	"fmt"
 	"log"
 
@@ -9,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/finder"
 )
 
 const (
@@ -143,34 +143,19 @@ func SmbFileShareStatus(conn *storagegateway.StorageGateway, fileShareArn string
 
 func FsxFileSystemStatus(conn *storagegateway.StorageGateway, fileSystemArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &storagegateway.DescribeFileSystemAssociationsInput{
-			FileSystemAssociationARNList: []*string{aws.String(fileSystemArn)},
-		}
 
-		log.Printf("[DEBUG] Reading Storage Gateway FSx File System: %s", input)
-		output, err := conn.DescribeFileSystemAssociations(input)
+		output, err := finder.FileSystemAssociationByARN(conn, fileSystemArn)
+
+		// there was an unhandled error in the Finder
 		if err != nil {
-			// currently verbose, can update for clarity pending: https://github.com/hashicorp/aws-sdk-go-base/issues/59
-			if tfawserr.ErrCodeEquals(err, storagegateway.ErrCodeInvalidGatewayRequestException) {
-
-				var igrex *storagegateway.InvalidGatewayRequestException
-				if ok := errors.As(err, &igrex); ok {
-					if err := igrex.Error_; err != nil {
-						if aws.StringValue(err.ErrorCode) == "FileSystemAssociationNotFound" {
-							return nil, FsxFileSystemStatusNotFound, nil
-						}
-					}
-				}
-			}
-			return nil, FsxFileSystemStatusUnknown, fmt.Errorf("error reading Storage Gateway FSx File System: %w", err)
+			return nil, "", err
 		}
 
-		if output == nil || len(output.FileSystemAssociationInfoList) == 0 || output.FileSystemAssociationInfoList[0] == nil {
+		// no error, and no File System Association found
+		if output == nil {
 			return nil, FsxFileSystemStatusNotFound, nil
 		}
 
-		filesystem := output.FileSystemAssociationInfoList[0]
-
-		return filesystem, aws.StringValue(filesystem.FileSystemAssociationStatus), nil
+		return output, aws.StringValue(output.FileSystemAssociationStatus), nil
 	}
 }
