@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -41,32 +40,6 @@ func suppressEquivalentTypeStringBoolean(k, old, new string, d *schema.ResourceD
 //  * The operator's configuration omits the optional configuration block
 func suppressMissingOptionalConfigurationBlock(k, old, new string, d *schema.ResourceData) bool {
 	return old == "1" && new == "0"
-}
-
-// Suppresses minor version changes to the db_instance engine_version attribute
-func suppressAwsDbEngineVersionDiffs(k, old, new string, d *schema.ResourceData) bool {
-	// First check if the old/new values are nil.
-	// If both are nil, we have no state to compare the values with, so register a diff.
-	// This populates the attribute field during a plan/apply with fresh state, allowing
-	// the attribute to still be used in future resources.
-	// See https://github.com/hashicorp/terraform/issues/11881
-	if old == "" && new == "" {
-		return false
-	}
-
-	if v, ok := d.GetOk("auto_minor_version_upgrade"); ok {
-		if v.(bool) {
-			// If we're set to auto upgrade minor versions
-			// ignore a minor version diff between versions
-			if strings.HasPrefix(old, new) {
-				log.Printf("[DEBUG] Ignoring minor version diff")
-				return true
-			}
-		}
-	}
-
-	// Throw a diff by default
-	return false
 }
 
 func suppressEquivalentJsonDiffs(k, old, new string, d *schema.ResourceData) bool {
