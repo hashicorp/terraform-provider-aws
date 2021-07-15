@@ -25,6 +25,7 @@ ENHANCEMENTS:
 * resource/aws_iam_access_key: Add encrypted SES SMTP password ([#19579](https://github.com/hashicorp/terraform-provider-aws/issues/19579))
 * resource/aws_s3_bucket: Add the delete_marker_replication_status argument for V2 replication configurations ([#19323](https://github.com/hashicorp/terraform-provider-aws/issues/19323))
 * resource/aws_s3_bucket_object: Add `source_hash` argument to compliment `etag`'s encryption limitations ([#11522](https://github.com/hashicorp/terraform-provider-aws/issues/11522))
+* resource/aws_sagemaker_domain: Add support for `retention_policy` ([#18562](https://github.com/hashicorp/terraform-provider-aws/issues/18562))
 * resource/aws_wafv2_web_acl: Support `scope_down_statement` on `managed_rule_group_statement` ([#19407](https://github.com/hashicorp/terraform-provider-aws/issues/19407))
 
 BUG FIXES:
