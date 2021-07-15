@@ -106,6 +106,11 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 
+			"engine_version_actual": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"db_parameter_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -447,7 +452,6 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("cluster_identifier", db.DBClusterIdentifier)
 	d.Set("copy_tags_to_snapshot", db.CopyTagsToSnapshot)
 	d.Set("dbi_resource_id", db.DbiResourceId)
-	d.Set("engine_version", db.EngineVersion)
 	d.Set("engine", db.Engine)
 	d.Set("identifier", db.DBInstanceIdentifier)
 	d.Set("instance_class", db.DBInstanceClass)
@@ -462,6 +466,8 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("publicly_accessible", db.PubliclyAccessible)
 	d.Set("storage_encrypted", db.StorageEncrypted)
 	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
+
+	rdsClusterSetResourceDataEngineVersionFromClusterInstance(d, db)
 
 	if len(db.DBParameterGroups) > 0 {
 		d.Set("db_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
@@ -657,4 +663,13 @@ var resourceAwsRdsClusterInstanceDeletePendingStates = []string{
 	"configuring-log-exports",
 	"modifying",
 	"deleting",
+}
+
+func rdsClusterSetResourceDataEngineVersionFromClusterInstance(d *schema.ResourceData, c *rds.DBInstance) {
+	oldVersion := d.Get("engine_version").(string)
+	newVersion := aws.StringValue(c.EngineVersion)
+	if oldVersion != newVersion && string(append([]byte(oldVersion), []byte(".")...)) != string([]byte(newVersion)[0:len(oldVersion)+1]) {
+		d.Set("engine_version", newVersion)
+	}
+	d.Set("engine_version_actual", newVersion)
 }
