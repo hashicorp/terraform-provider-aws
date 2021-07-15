@@ -366,6 +366,7 @@ resource "aws_db_proxy" "test" {
     description = "test"
     iam_auth    = "DISABLED"
     secret_arn  = aws_secretsmanager_secret.test.arn
+    username    = "test"
   }
 
   tags = {

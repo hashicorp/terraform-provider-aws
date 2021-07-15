@@ -86,6 +86,7 @@ func TestAccAWSDBProxy_basic(t *testing.T) {
 						"auth_scheme": "SECRETS",
 						"description": "test",
 						"iam_auth":    "DISABLED",
+						"username":    "test",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "debug_logging", "false"),
 					resource.TestCheckResourceAttr(resourceName, "idle_client_timeout", "1800"),
@@ -667,6 +668,7 @@ resource "aws_db_proxy" "test" {
     description = "test"
     iam_auth    = "DISABLED"
     secret_arn  = aws_secretsmanager_secret.test.arn
+    username    = "test"
   }
 
   tags = {
@@ -695,6 +697,7 @@ resource "aws_db_proxy" "test" {
     description = "test"
     iam_auth    = "DISABLED"
     secret_arn  = aws_secretsmanager_secret.test.arn
+    username    = "test"
   }
 }
 `, rName, nName)
@@ -719,6 +722,7 @@ resource "aws_db_proxy" "test" {
     description = "test"
     iam_auth    = "DISABLED"
     secret_arn  = aws_secretsmanager_secret.test.arn
+    username    = "test"
   }
 }
 `, rName, debugLogging)
@@ -743,6 +747,7 @@ resource "aws_db_proxy" "test" {
     description = "test"
     iam_auth    = "DISABLED"
     secret_arn  = aws_secretsmanager_secret.test.arn
+    username    = "test"
   }
 }
 `, rName, idleClientTimeout)
@@ -767,6 +772,7 @@ resource "aws_db_proxy" "test" {
     description = "test"
     iam_auth    = "DISABLED"
     secret_arn  = aws_secretsmanager_secret.test.arn
+    username    = "test"
   }
 }
 `, rName, requireTls)
@@ -790,6 +796,7 @@ resource "aws_db_proxy" "test" {
     description = "test"
     iam_auth    = "DISABLED"
     secret_arn  = aws_secretsmanager_secret.test.arn
+    username    = "test"
   }
 }
 
@@ -826,6 +833,7 @@ resource "aws_db_proxy" "test" {
     description = "test"
     iam_auth    = "DISABLED"
     secret_arn  = aws_secretsmanager_secret.test.arn
+    username    = "test"
   }
 }
 
@@ -855,6 +863,7 @@ resource "aws_db_proxy" "test" {
     description = "%[2]s"
     iam_auth    = "DISABLED"
     secret_arn  = aws_secretsmanager_secret.test.arn
+    username    = "test"
   }
 }
 `, rName, description)
@@ -880,6 +889,7 @@ resource "aws_db_proxy" "test" {
     description = "test"
     iam_auth    = "%[2]s"
     secret_arn  = aws_secretsmanager_secret.test.arn
+    username    = "test"
   }
 }
 `, rName, iamAuth)
@@ -904,6 +914,7 @@ resource "aws_db_proxy" "test" {
     description = "test"
     iam_auth    = "DISABLED"
     secret_arn  = aws_secretsmanager_secret.test2.arn
+    username    = "test
   }
 }
 
@@ -917,6 +928,32 @@ resource "aws_secretsmanager_secret_version" "test2" {
   secret_string = "{\"username\":\"db_user\",\"password\":\"db_user_password\"}"
 }
 `, rName, nName)
+}
+
+func testAccAWSDBProxyConfigAuthUsername(rName, iamAuth string) string {
+	return testAccAWSDBProxyConfigBase(rName) + fmt.Sprintf(`
+resource "aws_db_proxy" "test" {
+  depends_on = [
+    aws_secretsmanager_secret_version.test,
+    aws_iam_role_policy.test
+  ]
+
+  name                   = "%[1]s"
+  engine_family          = "MYSQL"
+  role_arn               = aws_iam_role.test.arn
+  require_tls            = true
+  vpc_security_group_ids = [aws_security_group.test.id]
+  vpc_subnet_ids         = aws_subnet.test.*.id
+
+  auth {
+    auth_scheme = "SECRETS"
+    description = "test"
+    iam_auth    = "DISABLED"
+    secret_arn  = aws_secretsmanager_secret.test.arn
+    username    = "%[2]s"
+  }
+}
+`, rName, iamAuth)
 }
 
 func testAccAWSDBProxyConfigTags(rName, key, value string) string {
@@ -938,6 +975,7 @@ resource "aws_db_proxy" "test" {
     description = "test"
     iam_auth    = "DISABLED"
     secret_arn  = aws_secretsmanager_secret.test.arn
+    username    = "test"
   }
 
   tags = {

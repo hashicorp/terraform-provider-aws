@@ -101,6 +101,10 @@ func resourceAwsDbProxy() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validateArn,
 						},
+						"username": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -220,6 +224,10 @@ func expandDbProxyAuth(l []interface{}) []*rds.UserAuthConfig {
 			userAuthConfig.SecretArn = aws.String(v)
 		}
 
+		if v, ok := m["username"].(string); ok && v != "" {
+			userAuthConfig.UserName = aws.String(v)
+		}
+
 		userAuthConfigs = append(userAuthConfigs, userAuthConfig)
 	}
 
@@ -233,6 +241,7 @@ func flattenDbProxyAuth(userAuthConfig *rds.UserAuthConfigInfo) map[string]inter
 	m["description"] = aws.StringValue(userAuthConfig.Description)
 	m["iam_auth"] = aws.StringValue(userAuthConfig.IAMAuth)
 	m["secret_arn"] = aws.StringValue(userAuthConfig.SecretArn)
+	m["username"] = aws.StringValue(userAuthConfig.UserName)
 
 	return m
 }
