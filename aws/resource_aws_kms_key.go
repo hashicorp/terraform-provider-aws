@@ -70,12 +70,6 @@ func resourceAwsKmsKey() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"multi_region": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
 			"enable_key_rotation": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -101,7 +95,6 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	req := &kms.CreateKeyInput{
 		CustomerMasterKeySpec: aws.String(d.Get("customer_master_key_spec").(string)),
 		KeyUsage:              aws.String(d.Get("key_usage").(string)),
-		MultiRegion:           aws.Bool(d.Get("multi_region").(bool)),
 	}
 	if v, exists := d.GetOk("description"); exists {
 		req.Description = aws.String(v.(string))
@@ -191,7 +184,6 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_usage", metadata.KeyUsage)
 	d.Set("customer_master_key_spec", metadata.CustomerMasterKeySpec)
 	d.Set("is_enabled", metadata.Enabled)
-	d.Set("multi_region", metadata.MultiRegion)
 
 	pOut, err := retryOnAwsCode(kms.ErrCodeNotFoundException, func() (interface{}, error) {
 		return conn.GetKeyPolicy(&kms.GetKeyPolicyInput{

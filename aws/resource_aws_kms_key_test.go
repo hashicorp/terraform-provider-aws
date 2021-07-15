@@ -87,7 +87,6 @@ func TestAccAWSKmsKey_basic(t *testing.T) {
 					testAccCheckAWSKmsKeyExists(resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "customer_master_key_spec", "SYMMETRIC_DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "ENCRYPT_DECRYPT"),
-					resource.TestCheckResourceAttr(resourceName, "multi_region", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -315,34 +314,6 @@ func TestAccAWSKmsKey_tags(t *testing.T) {
 					testAccCheckAWSKmsKeyExists(resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccAWSKmsKey_multiRegion(t *testing.T) {
-	var key kms.KeyMetadata
-	rName := fmt.Sprintf("tf-testacc-kms-key-%s", acctest.RandString(13))
-	resourceName := "aws_kms_key.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSKmsKeyMultiRegionConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsKeyExists(resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "multi_region", "true"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days"},
 			},
 		},
 	})
@@ -673,16 +644,6 @@ resource "aws_kms_key" "test" {
     Key1        = "Value One"
     Description = "Very interesting"
   }
-}
-`, rName)
-}
-
-func testAccAWSKmsKeyMultiRegionConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-  multi_region            = true
 }
 `, rName)
 }
