@@ -184,6 +184,12 @@ Attributes for target resource_tag block(s):
 * `key` - (Required) Tag key.
 * `value` - (Required) Tag value.
 
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - The Experiment Template ID
+
 ## Import
 
 FIS Experiment Templates can be imported using the `id`, e.g.

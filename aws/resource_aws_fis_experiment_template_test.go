@@ -201,7 +201,7 @@ resource "aws_fis_experiment_template" "test" {
   role_arn    = aws_iam_role.test.arn
 
   stop_condition {
-    source  = "none"
+    source = "none"
   }
 
   action {
