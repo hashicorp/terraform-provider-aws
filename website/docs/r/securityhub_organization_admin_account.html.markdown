@@ -27,7 +27,9 @@ resource "aws_securityhub_organization_admin_account" "example" {
 }
 
 # Auto enable security hub in organization member accounts
-resource "aws_securityhub_organization_configuration" "example" {}
+resource "aws_securityhub_organization_configuration" "example" {
+  auto_enable = true
+}
 ```
 
 ## Argument Reference
