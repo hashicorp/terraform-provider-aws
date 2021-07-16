@@ -111,8 +111,6 @@ func TestAccAWSSpotInstanceRequest_KeyName(t *testing.T) {
 				Config: testAccAWSSpotInstanceRequestConfig_KeyName(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSpotInstanceRequestExists(resourceName, &sir),
-					testAccCheckAWSSpotInstanceRequestAttributes(&sir),
-					testCheckKeyPair(rName, &sir),
 					resource.TestCheckResourceAttrPair(resourceName, "key_name", keyPairResourceName, "key_name"),
 				),
 			},
