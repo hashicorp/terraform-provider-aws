@@ -205,16 +205,16 @@ func testAccAWSElasticacheUserGroupConfigBasic(rName string) string {
 	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
-	user_name     = "default"
-	access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-	engine        = "REDIS"
-	passwords     = [ "password123456789" ]
+  user_name     = "default"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
 }
 
 resource "aws_elasticache_user_group" "test" {
   user_group_id = %[1]q
-	engine        = "REDIS"
-	user_ids      = [ aws_elasticache_user.test.user_id ]
+  engine        = "REDIS"
+  user_ids      = [aws_elasticache_user.test.user_id]
 }
 `, rName))
 }
@@ -223,24 +223,24 @@ func testAccAWSElasticacheUserGroupConfigMultiple(rName string) string {
 	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
-	user_name     = "default"
-	access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-	engine        = "REDIS"
-	passwords     = [ "password123456789" ]
+  user_name     = "default"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
 }
 
 resource "aws_elasticache_user" "test2" {
   user_id       = "%[1]s-2"
-	user_name     = "username1"
-	access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-	engine        = "REDIS"
-	passwords     = [ "password123456789" ]
+  user_name     = "username1"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
 }
 
 resource "aws_elasticache_user_group" "test" {
   user_group_id = %[1]q
-	engine        = "REDIS"
-	user_ids      = [ aws_elasticache_user.test.user_id, aws_elasticache_user.test2.user_id ]
+  engine        = "REDIS"
+  user_ids      = [aws_elasticache_user.test.user_id, aws_elasticache_user.test2.user_id]
 }
 `, rName))
 }
@@ -249,20 +249,20 @@ func testAccAWSElasticacheUserGroupConfigTags(rName, tagKey, tagValue string) st
 	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
-	user_name     = "default"
-	access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
-	engine        = "REDIS"
-	passwords     = [ "password123456789" ]
+  user_name     = "default"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
 }
 
 resource "aws_elasticache_user_group" "test" {
   user_group_id = %[1]q
-	engine        = "REDIS"
-	user_ids      = [ aws_elasticache_user.test.user_id ]
+  engine        = "REDIS"
+  user_ids      = [aws_elasticache_user.test.user_id]
 
-	tags = {
-		%[2]s = %[3]q
-	}
+  tags = {
+    %[2]s = %[3]q
+  }
 }
 `, rName, tagKey, tagValue))
 }

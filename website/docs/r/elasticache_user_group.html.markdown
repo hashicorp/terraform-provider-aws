@@ -22,9 +22,9 @@ resource "aws_elasticache_user" "test" {
 }
 
 resource "aws_elasticache_user_group" "test" {
-  engine = "REDIS"
+  engine        = "REDIS"
   user_group_id = "userGroupId"
-  user_ids = [aws_elasticache_user.test.user_id]
+  user_ids      = [aws_elasticache_user.test.user_id]
 }
 ```
 
@@ -38,6 +38,12 @@ The following arguments are required:
 The following arguments are optional:
 
 * `user_ids` - (Optional) The list of user IDs that belong to the user group.
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - The IP group identifier.
 
 ## Import
 

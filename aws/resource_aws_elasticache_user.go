@@ -121,11 +121,11 @@ func resourceAwsElasticacheUserRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error describing ElastiCache User (%s): %w", d.Id(), err)
 	}
 
-	d.Set("access_string", aws.StringValue(resp.AccessString))
-	d.Set("engine", aws.StringValue(resp.Engine))
-	d.Set("user_id", aws.StringValue(resp.UserId))
-	d.Set("user_name", aws.StringValue(resp.UserName))
-	d.Set("arn", aws.StringValue(resp.ARN))
+	d.Set("access_string", resp.AccessString)
+	d.Set("engine", resp.Engine)
+	d.Set("user_id", resp.UserId)
+	d.Set("user_name", resp.UserName)
+	d.Set("arn", resp.ARN)
 
 	// Tags are currently only supported in AWS Commercial.
 	if meta.(*AWSClient).partition == endpoints.AwsPartitionID {

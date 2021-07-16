@@ -125,8 +125,8 @@ func resourceAwsElasticacheUserGroupRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error describing ElastiCache User Group (%s): %w", d.Id(), err)
 	}
 
-	d.Set("arn", aws.StringValue(resp.ARN))
-	d.Set("engine", aws.StringValue(resp.Engine))
+	d.Set("arn", resp.ARN)
+	d.Set("engine", resp.Engine)
 	d.Set("user_ids", resp.UserIds)
 	d.Set("user_group_id", resp.UserGroupId)
 
