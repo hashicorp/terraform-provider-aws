@@ -62,7 +62,7 @@ func resourceAwsS3IntelligentTieringConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"archive_configuration": {
+			"tier": {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
@@ -89,7 +89,7 @@ func resourceAwsS3IntelligentTieringConfigurationPut(d *schema.ResourceData, met
 	s3conn := meta.(*AWSClient).s3conn
 
 	bucket := d.Get("bucket").(string)
-	config := d.Get("archive_configuration").(*schema.Set).List()
+	config := d.Get("tier").(*schema.Set).List()
 	id := d.Get("name").(string)
 
 	log.Printf("[DEBUG] S3 bucket: %s, put intelligent tiering configuration: %s", bucket, id)
@@ -171,7 +171,7 @@ func resourceAwsS3IntelligentTieringConfigurationRead(d *schema.ResourceData, me
 		return fmt.Errorf("error setting filter: %w", err)
 	}
 
-	if err = d.Set("archive_configuration", flattenS3ArchiveConfiguration(output.IntelligentTieringConfiguration.Tierings)); err != nil {
+	if err = d.Set("tier", flattenS3ArchiveConfiguration(output.IntelligentTieringConfiguration.Tierings)); err != nil {
 		return fmt.Errorf("error setting storage class anyalytics: %w", err)
 	}
 
