@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfs3 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -138,22 +139,41 @@ func resourceAwsS3IntelligentTieringConfigurationRead(d *schema.ResourceData, me
 	bucket := d.Get("bucket").(string)
 	id := d.Get("name").(string)
 
-	log.Printf("[DEBUG] S3 bucket intelligent tiering configuration, read for bucket: %s", bucket)
-	s3conn.GetBucketIntelligentTieringConfiguration(&s3.GetBucketIntelligentTieringConfigurationInput{
+	input := &s3.GetBucketIntelligentTieringConfigurationInput{
 		Bucket: aws.String(bucket),
 		Id:     aws.String(id),
-	})
+	}
+	log.Printf("[DEBUG] Reading S3 bucket Intelligent Tiering Configuration: %s", input)
 
-	// v := ""
-	// if err == nil && pol.IntelligentTieringConfiguration != nil {
-	// 	v = pol.IntelligentTieringConfiguration
-	// }
-	// if err := d.Set("id", v); err != nil {
-	// 	return err
-	// }
-	// if err := d.Set("bucket", d.Id()); err != nil {
-	// 	return err
-	// }
+	output, err := s3conn.GetBucketIntelligentTieringConfiguration(input)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+		log.Printf("[WARN] S3 Bucket Intelligent Tiering Configuration (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchConfiguration) {
+		log.Printf("[WARN] S3 Bucket Intelligent Tiering Configuration (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error getting S3 Bucket Intelligent Tiering Configuration (%s): %w", d.Id(), err)
+	}
+
+	if output == nil {
+		return fmt.Errorf("error getting S3 Bucket Intelligent Tiering Configuration (%s): empty response", d.Id())
+	}
+
+	if err := d.Set("filter", flattenS3IntelligentTieringFilter(output.IntelligentTieringConfiguration.Filter)); err != nil {
+		return fmt.Errorf("error setting filter: %w", err)
+	}
+
+	if err = d.Set("archive_configuration", flattenS3ArchiveConfiguration(output.IntelligentTieringConfiguration.Tierings)); err != nil {
+		return fmt.Errorf("error setting storage class anyalytics: %w", err)
+	}
 
 	return nil
 }
@@ -257,4 +277,52 @@ func expandS3IntelligentTieringConfiguration(tfMap map[string]interface{}) *s3.T
 	}
 
 	return apiObject
+}
+
+func flattenS3IntelligentTieringFilter(intelligentTieringFilter *s3.IntelligentTieringFilter) []map[string]interface{} {
+	if intelligentTieringFilter == nil {
+		return nil
+	}
+
+	result := make(map[string]interface{})
+	if intelligentTieringFilter.And != nil {
+		and := *intelligentTieringFilter.And
+		if and.Prefix != nil {
+			result["prefix"] = *and.Prefix
+		}
+		if and.Tags != nil {
+			result["tags"] = keyvaluetags.S3KeyValueTags(and.Tags).IgnoreAws().Map()
+		}
+	} else if intelligentTieringFilter.Prefix != nil {
+		result["prefix"] = *intelligentTieringFilter.Prefix
+	} else if intelligentTieringFilter.Tag != nil {
+		tags := []*s3.Tag{
+			intelligentTieringFilter.Tag,
+		}
+		result["tags"] = keyvaluetags.S3KeyValueTags(tags).IgnoreAws().Map()
+	} else {
+		return nil
+	}
+	return []map[string]interface{}{result}
+}
+
+func flattenS3ArchiveConfiguration(archiveConfigurations []*s3.Tiering) []map[string]interface{} {
+	if archiveConfigurations == nil {
+		return []map[string]interface{}{}
+	}
+
+	ac := make([]map[string]interface{}, 0, len(archiveConfigurations))
+	for _, c := range archiveConfigurations {
+		q := make(map[string]interface{})
+		if c.AccessTier != nil {
+			q["access_tier"] = aws.StringValue(c.AccessTier)
+		}
+
+		if c.Days != nil {
+			q["days"] = aws.Int64Value(c.Days)
+		}
+		ac = append(ac, q)
+	}
+
+	return ac
 }
