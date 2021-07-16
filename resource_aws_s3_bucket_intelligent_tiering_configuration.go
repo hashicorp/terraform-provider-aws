@@ -91,7 +91,7 @@ func resourceAwsS3IntelligentTieringConfigurationPut(d *schema.ResourceData, met
 	config := d.Get("archive_configuration").(*schema.Set).List()
 	id := d.Get("name").(string)
 
-	log.Printf("[DEBUG] S3 bucket: %s, put policy: %s", bucket, id)
+	log.Printf("[DEBUG] S3 bucket: %s, put intelligent tiering configuration: %s", bucket, id)
 
 	// Set status from boolean value
 	status := "Enabled"
@@ -130,6 +130,55 @@ func resourceAwsS3IntelligentTieringConfigurationPut(d *schema.ResourceData, met
 	d.SetId(bucket)
 
 	return resourceAwsS3IntelligentTieringConfigurationRead(d, meta)
+}
+
+func resourceAwsS3IntelligentTieringConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+	s3conn := meta.(*AWSClient).s3conn
+
+	bucket := d.Get("bucket").(string)
+	id := d.Get("name").(string)
+
+	log.Printf("[DEBUG] S3 bucket intelligent tiering configuration, read for bucket: %s", bucket)
+	s3conn.GetBucketIntelligentTieringConfiguration(&s3.GetBucketIntelligentTieringConfigurationInput{
+		Bucket: aws.String(bucket),
+		Id:     aws.String(id),
+	})
+
+	// v := ""
+	// if err == nil && pol.IntelligentTieringConfiguration != nil {
+	// 	v = pol.IntelligentTieringConfiguration
+	// }
+	// if err := d.Set("id", v); err != nil {
+	// 	return err
+	// }
+	// if err := d.Set("bucket", d.Id()); err != nil {
+	// 	return err
+	// }
+
+	return nil
+}
+
+func resourceAwsS3IntelligentTieringConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
+
+	s3conn := meta.(*AWSClient).s3conn
+
+	bucket := d.Get("bucket").(string)
+	id := d.Get("name").(string)
+
+	log.Printf("[DEBUG] S3 bucket: %s, delete intelligent tiering configuration", bucket)
+	_, err := s3conn.DeleteBucketIntelligentTieringConfiguration(&s3.DeleteBucketIntelligentTieringConfigurationInput{
+		Bucket: aws.String(bucket),
+		Id:     aws.String(id),
+	})
+
+	if err != nil {
+		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
+			return nil
+		}
+		return fmt.Errorf("Error deleting Intelligent Tiering Configuration: %s", err)
+	}
+
+	return nil
 }
 
 func expandS3IntelligentTieringFilter(l []interface{}) *s3.IntelligentTieringFilter {
@@ -199,8 +248,6 @@ func expandS3IntelligentTieringConfiguration(tfMap map[string]interface{}) *s3.T
 
 	apiObject := &s3.Tiering{}
 
-	log.Printf("[DEBUG] This is the map: %s", tfMap)
-
 	if v, ok := tfMap["access_tier"].(string); ok && v != "" {
 		apiObject.AccessTier = aws.String(v)
 	}
@@ -209,56 +256,5 @@ func expandS3IntelligentTieringConfiguration(tfMap map[string]interface{}) *s3.T
 		apiObject.Days = aws.Int64(int64(v))
 	}
 
-	log.Printf("[DEBUG] This is the apiObject: %s", apiObject)
-
 	return apiObject
-}
-
-func resourceAwsS3IntelligentTieringConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
-
-	bucket := d.Get("bucket").(string)
-	id := d.Get("name").(string)
-
-	log.Printf("[DEBUG] S3 bucket policy, read for bucket: %s", bucket)
-	s3conn.GetBucketIntelligentTieringConfiguration(&s3.GetBucketIntelligentTieringConfigurationInput{
-		Bucket: aws.String(bucket),
-		Id:     aws.String(id),
-	})
-
-	// v := ""
-	// if err == nil && pol.IntelligentTieringConfiguration != nil {
-	// 	v = pol.IntelligentTieringConfiguration
-	// }
-	// if err := d.Set("id", v); err != nil {
-	// 	return err
-	// }
-	// if err := d.Set("bucket", d.Id()); err != nil {
-	// 	return err
-	// }
-
-	return nil
-}
-
-func resourceAwsS3IntelligentTieringConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-
-	s3conn := meta.(*AWSClient).s3conn
-
-	bucket := d.Get("bucket").(string)
-	id := d.Get("name").(string)
-
-	log.Printf("[DEBUG] S3 bucket: %s, delete policy", bucket)
-	_, err := s3conn.DeleteBucketIntelligentTieringConfiguration(&s3.DeleteBucketIntelligentTieringConfigurationInput{
-		Bucket: aws.String(bucket),
-		Id:     aws.String(id),
-	})
-
-	if err != nil {
-		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
-			return nil
-		}
-		return fmt.Errorf("Error deleting Intelligent Tiering Configuration: %s", err)
-	}
-
-	return nil
 }
