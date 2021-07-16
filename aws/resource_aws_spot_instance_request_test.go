@@ -341,7 +341,12 @@ func TestAccAWSSpotInstanceRequest_NetworkInterfaceAttributes(t *testing.T) {
 func TestAccAWSSpotInstanceRequest_getPasswordData(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
+
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	publicKey, _, err := acctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -350,7 +355,7 @@ func TestAccAWSSpotInstanceRequest_getPasswordData(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSpotInstanceRequestConfig_getPasswordData(rName),
+				Config: testAccAWSSpotInstanceRequestConfig_getPasswordData(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotInstanceRequestExists(resourceName, &sir),
 					resource.TestCheckResourceAttrSet(resourceName, "password_data"),
@@ -386,19 +391,6 @@ func TestAccAWSSpotInstanceRequest_disappears(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testCheckKeyPair(keyName string, sir *ec2.SpotInstanceRequest) resource.TestCheckFunc {
-	return func(*terraform.State) error {
-		if sir.LaunchSpecification.KeyName == nil {
-			return fmt.Errorf("No Key Pair found, expected(%s)", keyName)
-		}
-		if sir.LaunchSpecification.KeyName != nil && *sir.LaunchSpecification.KeyName != keyName {
-			return fmt.Errorf("Bad key name, expected (%s), got (%s)", keyName, *sir.LaunchSpecification.KeyName)
-		}
-
-		return nil
-	}
 }
 
 func testAccAWSSpotInstanceRequestValidUntil(t *testing.T) string {
@@ -1040,25 +1032,16 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
-func testAccAWSSpotInstanceRequestConfig_getPasswordData(rName string) string {
+func testAccAWSSpotInstanceRequestConfig_getPasswordData(rName, publicKey string) string {
 	return composeConfig(
+		testAccLatestWindowsServer2016CoreAmiConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-# Find latest Microsoft Windows Server 2016 Core image (Amazon deletes old ones)
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["Windows_Server-2016-English-Core-Base-*"]
-  }
-}
-
 resource "aws_spot_instance_request" "test" {
-  ami                  = data.aws_ami.test.id
+  ami                  = data.aws_ami.win2016core-ami.id
   instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
   spot_price           = "0.05"
+  key_name             = aws_key_pair.test.key_name
   wait_for_fulfillment = true
   get_password_data    = true
 
@@ -1066,7 +1049,16 @@ resource "aws_spot_instance_request" "test" {
     Name = %[1]q
   }
 }
-`, rName))
+
+resource "aws_key_pair" "test" {
+  key_name   = %[1]q
+  public_key = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, publicKey))
 }
 
 func testAccAWSSpotInstanceRequestInterruptConfig(interruptionBehavior string) string {
