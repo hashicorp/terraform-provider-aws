@@ -31,6 +31,32 @@ func resourceAwsFlowLog() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 
+			"destination_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"file_format": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"plain-text",
+								"parquet",
+							}, true),
+						},
+						"hive_compatible_partitions": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"per_hour_partition": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+			},
+
 			"log_destination": {
 				Type:          schema.TypeString,
 				Optional:      true,
