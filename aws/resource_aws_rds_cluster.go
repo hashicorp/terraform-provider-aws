@@ -1506,6 +1506,10 @@ func waitForRDSClusterDeletion(conn *rds.RDS, id string, timeout time.Duration) 
 func rdsClusterSetResourceDataEngineVersionFromCluster(d *schema.ResourceData, c *rds.DBCluster) {
 	oldVersion := d.Get("engine_version").(string)
 	newVersion := aws.StringValue(c.EngineVersion)
+	compareActualEngineVersion(d, oldVersion, newVersion)
+}
+
+func compareActualEngineVersion(d *schema.ResourceData, oldVersion string, newVersion string) {
 	if oldVersion != newVersion && string(append([]byte(oldVersion), []byte(".")...)) != string([]byte(newVersion)[0:len(oldVersion)+1]) {
 		d.Set("engine_version", newVersion)
 	}

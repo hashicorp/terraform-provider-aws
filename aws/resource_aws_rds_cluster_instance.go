@@ -668,8 +668,5 @@ var resourceAwsRdsClusterInstanceDeletePendingStates = []string{
 func rdsClusterSetResourceDataEngineVersionFromClusterInstance(d *schema.ResourceData, c *rds.DBInstance) {
 	oldVersion := d.Get("engine_version").(string)
 	newVersion := aws.StringValue(c.EngineVersion)
-	if oldVersion != newVersion && string(append([]byte(oldVersion), []byte(".")...)) != string([]byte(newVersion)[0:len(oldVersion)+1]) {
-		d.Set("engine_version", newVersion)
-	}
-	d.Set("engine_version_actual", newVersion)
+	compareActualEngineVersion(d, oldVersion, newVersion)
 }
