@@ -1034,6 +1034,7 @@ func Provider() *schema.Provider {
 			"aws_s3_bucket":                                           resourceAwsS3Bucket(),
 			"aws_s3_bucket_analytics_configuration":                   resourceAwsS3BucketAnalyticsConfiguration(),
 			"aws_s3_bucket_policy":                                    resourceAwsS3BucketPolicy(),
+			"aws_s3_bucket_intelligent_tiering_configuration":         resourceAwsS3IntelligentTieringConfiguration(),
 			"aws_s3_bucket_public_access_block":                       resourceAwsS3BucketPublicAccessBlock(),
 			"aws_s3_bucket_object":                                    resourceAwsS3BucketObject(),
 			"aws_s3_bucket_ownership_controls":                        resourceAwsS3BucketOwnershipControls(),
