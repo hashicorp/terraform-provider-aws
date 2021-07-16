@@ -532,7 +532,7 @@ rules:
 
   - id: ssh-key
     languages: [go]
-    message: Generate random SSH keys using acctest.RandSSHKeyPair(). https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md#hardcoded-ssh-key
+    message: Generate random SSH keys using acctest.RandSSHKeyPair() or RandSSHKeyPairSize(). https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md#hardcoded-ssh-key
     paths:
       include:
         - aws/
