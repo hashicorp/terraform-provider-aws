@@ -213,5 +213,6 @@ func resourceAwsAppconfigDeploymentUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsAppconfigDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[WARN] Cannot destroy AppConfig Deployment. Terraform will remove this resource from the state file, however this resource remains.")
 	return nil
 }
