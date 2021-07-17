@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appconfig/waiter"
 )
 
 func resourceAwsAppconfigDeployment() *schema.Resource {
@@ -106,8 +107,14 @@ func resourceAwsAppconfigDeploymentCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error starting AppConfig Deployment: empty response")
 	}
 
+	deployNum := aws.Int64Value(output.DeploymentNumber)
+
 	d.Set("deployment_number", output.DeploymentNumber)
-	d.SetId(appID + "/" + envID + "/" + strconv.FormatInt(aws.Int64Value(output.DeploymentNumber), 10))
+	d.SetId(appID + "/" + envID + "/" + strconv.FormatInt(deployNum, 10))
+
+	if err := waiter.DeploymentCreated(conn, appID, envID, deployNum); err != nil {
+		return fmt.Errorf("error waiting for AppConfig Deployment (%s) creation: %w", d.Id(), err)
+	}
 
 	return resourceAwsAppconfigDeploymentRead(d, meta)
 }
