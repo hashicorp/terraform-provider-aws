@@ -199,7 +199,17 @@ func resourceAwsAppconfigDeploymentRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsAppconfigDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
-	return nil
+	conn := meta.(*AWSClient).appconfigconn
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := keyvaluetags.AppconfigUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating EFS file system (%s) tags: %w", d.Id(), err)
+		}
+	}
+
+	return resourceAwsAppconfigDeploymentRead(d, meta)
 }
 
 func resourceAwsAppconfigDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
