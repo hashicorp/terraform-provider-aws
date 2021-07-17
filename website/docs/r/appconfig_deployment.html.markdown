@@ -16,7 +16,7 @@ Provides an AppConfig Deployment resource for an [`aws_appconfig_application` re
 resource "aws_appconfig_deployment" "test" {
   application_id           = aws_appconfig_application.example.id
   configuration_profile_id = aws_appconfig_configuration_profile.example.configuration_profile_id
-  configuration_version    = "00000000-0000-0000-0000-000000000000"
+  configuration_version    = aws_appconfig_hosted_configuration_version.example.version_number
   deployment_strategy_id   = aws_appconfig_deployment_strategy.example.id
   description              = "My test deployment"
   environment_id           = aws_appconfig_environment.example.environment_id
