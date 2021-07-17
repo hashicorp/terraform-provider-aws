@@ -12,8 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsKmsKey() *schema.Resource {
@@ -34,30 +35,59 @@ func resourceAwsKmsKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+
+			"bypass_policy_lockout_check": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
+
+			"customer_master_key_spec": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      kms.CustomerMasterKeySpecSymmetricDefault,
+				ValidateFunc: validation.StringInSlice(kms.CustomerMasterKeySpec_Values(), false),
+			},
+
+			"deletion_window_in_days": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(7, 30),
+			},
+
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(0, 8192),
 			},
+
+			"enable_key_rotation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
+			"is_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+
+			"key_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"key_usage": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      kms.KeyUsageTypeEncryptDecrypt,
 				ForceNew:     true,
+				Default:      kms.KeyUsageTypeEncryptDecrypt,
 				ValidateFunc: validation.StringInSlice(kms.KeyUsageType_Values(), false),
 			},
-			"customer_master_key_spec": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      kms.CustomerMasterKeySpecSymmetricDefault,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(kms.CustomerMasterKeySpec_Values(), false),
-			},
+
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -65,26 +95,7 @@ func resourceAwsKmsKey() *schema.Resource {
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
-			"bypass_policy_lockout_check": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"is_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"enable_key_rotation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"deletion_window_in_days": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(7, 30),
-			},
+
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 		},
@@ -96,47 +107,42 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	// Allow aws to chose default values if we don't pass them
-	req := &kms.CreateKeyInput{
+	input := &kms.CreateKeyInput{
+		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_check").(bool)),
 		CustomerMasterKeySpec:          aws.String(d.Get("customer_master_key_spec").(string)),
 		KeyUsage:                       aws.String(d.Get("key_usage").(string)),
-		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_check").(bool)),
-	}
-	if v, exists := d.GetOk("description"); exists {
-		req.Description = aws.String(v.(string))
-	}
-	if v, exists := d.GetOk("policy"); exists {
-		req.Policy = aws.String(v.(string))
-	}
-	if len(tags) > 0 {
-		req.Tags = tags.IgnoreAws().KmsTags()
 	}
 
-	var resp *kms.CreateKeyOutput
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("policy"); ok {
+		input.Policy = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().KmsTags()
+	}
+
 	// AWS requires any principal in the policy to exist before the key is created.
 	// The KMS service's awareness of principals is limited by "eventual consistency".
 	// They acknowledge this here:
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
-		var err error
-		resp, err = conn.CreateKey(req)
-		if isAWSErr(err, kms.ErrCodeMalformedPolicyDocumentException, "") {
-			return resource.RetryableError(err)
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
+	log.Printf("[DEBUG] Creating KMS Key: %s", input)
+
+	outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
+		return conn.CreateKey(input)
 	})
-	if isResourceTimeoutError(err) {
-		resp, err = conn.CreateKey(req)
-	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating KMS Key: %w", err)
 	}
 
-	d.SetId(aws.StringValue(resp.KeyMetadata.KeyId))
-	d.Set("key_id", resp.KeyMetadata.KeyId)
+	output := outputRaw.(*kms.CreateKeyOutput)
+
+	d.SetId(aws.StringValue(output.KeyMetadata.KeyId))
+	d.Set("key_id", output.KeyMetadata.KeyId)
 
 	if enableKeyRotation := d.Get("enable_key_rotation").(bool); enableKeyRotation {
 		if err := updateKmsKeyRotationStatus(conn, d); err != nil {
@@ -158,38 +164,24 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	req := &kms.DescribeKeyInput{
-		KeyId: aws.String(d.Id()),
-	}
+	output, err := finder.KeyByID(conn, d.Id())
 
-	var resp *kms.DescribeKeyOutput
-	var err error
-	if d.IsNewResource() {
-		var out interface{}
-		out, err = retryOnAwsCode(kms.ErrCodeNotFoundException, func() (interface{}, error) {
-			return conn.DescribeKey(req)
-		})
-		resp, _ = out.(*kms.DescribeKeyOutput)
-	} else {
-		resp, err = conn.DescribeKey(req)
-	}
-	if err != nil {
-		return err
-	}
-	metadata := resp.KeyMetadata
-
-	if aws.StringValue(metadata.KeyState) == kms.KeyStatePendingDeletion {
-		log.Printf("[WARN] Removing KMS key %s because it's already gone", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] KMS Key (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("arn", metadata.Arn)
-	d.Set("key_id", metadata.KeyId)
-	d.Set("description", metadata.Description)
-	d.Set("key_usage", metadata.KeyUsage)
-	d.Set("customer_master_key_spec", metadata.CustomerMasterKeySpec)
-	d.Set("is_enabled", metadata.Enabled)
+	if err != nil {
+		return fmt.Errorf("error reading KMS Key (%s): %w", d.Id(), err)
+	}
+
+	d.Set("arn", output.Arn)
+	d.Set("customer_master_key_spec", output.CustomerMasterKeySpec)
+	d.Set("description", output.Description)
+	d.Set("is_enabled", output.Enabled)
+	d.Set("key_id", output.KeyId)
+	d.Set("key_usage", output.KeyUsage)
 
 	pOut, err := retryOnAwsCode(kms.ErrCodeNotFoundException, func() (interface{}, error) {
 		return conn.GetKeyPolicy(&kms.GetKeyPolicyInput{

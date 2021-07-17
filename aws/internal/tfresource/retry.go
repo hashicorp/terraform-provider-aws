@@ -19,10 +19,43 @@ func RetryWhenAwsErrCodeEquals(timeout time.Duration, f func() (interface{}, err
 
 		output, err = f()
 
+		// https://github.com/hashicorp/aws-sdk-go-base/pull/55 has been merged.
+		// Once aws-sdk-go-base has been updated, use variadic version of ErrCodeEquals.
 		for _, code := range codes {
 			if tfawserr.ErrCodeEquals(err, code) {
 				return resource.RetryableError(err)
 			}
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if TimedOut(err) {
+		output, err = f()
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+// RetryWhenNotFound retries the specified function when it returns a resource.NotFoundError.
+func RetryWhenNotFound(timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
+	var output interface{}
+
+	err := resource.Retry(timeout, func() *resource.RetryError {
+		var err error
+
+		output, err = f()
+
+		if NotFound(err) {
+			return resource.RetryableError(err)
 		}
 
 		if err != nil {
