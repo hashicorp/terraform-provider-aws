@@ -119,18 +119,26 @@ func resourceAwsAppconfigDeploymentCreate(d *schema.ResourceData, meta interface
 	return resourceAwsAppconfigDeploymentRead(d, meta)
 }
 
-func resourceAwsAppconfigDeploymentImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	idParts := strings.Split(d.Id(), "/")
+func parseAwsAppconfigDeploymentID(id string) (string, string, int64, error) {
+	idParts := strings.Split(id, "/")
 	if len(idParts) != 3 {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected <application-id>/<environment-id>/<deployment-number>", d.Id())
+		return "", "", 0, fmt.Errorf("unexpected format of ID (%q), expected <application-id>/<environment-id>/<deployment-number>", id)
 	}
 
 	appID := idParts[0]
 	envID := idParts[1]
 	depS := idParts[2]
-	depNum, err := strconv.Atoi(depS)
+	depNum, err := strconv.ParseInt(depS, 10, 64)
 	if err != nil {
-		return nil, fmt.Errorf("deployment number is invalid (%s): %w", depS, err)
+		return "", "", 0, fmt.Errorf("deployment number is invalid (%s): %w", depS, err)
+	}
+	return appID, envID, depNum, nil
+}
+
+func resourceAwsAppconfigDeploymentImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	appID, envID, depNum, err := parseAwsAppconfigDeploymentID(d.Id())
+	if err != nil {
+		return nil, err
 	}
 
 	d.Set("application_id", appID)
