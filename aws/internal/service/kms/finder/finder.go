@@ -72,3 +72,31 @@ func KeyPolicyByKeyIDAndPolicyName(conn *kms.KMS, keyID, policyName string) (str
 
 	return aws.StringValue(output.Policy), nil
 }
+
+func KeyRotationStatusByKeyID(conn *kms.KMS, keyID string) (bool, error) {
+	input := &kms.GetKeyRotationStatusInput{
+		KeyId: aws.String(keyID),
+	}
+
+	output, err := conn.GetKeyRotationStatus(input)
+
+	if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
+		return false, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return false, err
+	}
+
+	if output == nil || output.KeyRotationEnabled == nil {
+		return false, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return aws.BoolValue(output.KeyRotationEnabled), nil
+}

@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
@@ -15,38 +14,14 @@ const (
 	KeyStatePendingDeletionTimeout = 20 * time.Minute
 
 	KeyDeletedTimeout = 20 * time.Minute
+
+	PropagationTimeout = 2 * time.Minute
 )
 
 // IAMPropagation retries the specified function if the returned error indicates an IAM eventual consistency issue.
 // If the retries time out the specified function is called one last time.
 func IAMPropagation(f func() (interface{}, error)) (interface{}, error) {
-	var output interface{}
-
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
-		var err error
-
-		output, err = f()
-
-		if tfawserr.ErrCodeEquals(err, kms.ErrCodeMalformedPolicyDocumentException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = f()
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
+	return tfresource.RetryWhenAwsErrCodeEquals(iamwaiter.PropagationTimeout, f, kms.ErrCodeMalformedPolicyDocumentException)
 }
 
 func KeyDeleted(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {

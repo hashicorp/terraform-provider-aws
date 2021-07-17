@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfkms "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
@@ -144,6 +145,10 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(output.KeyMetadata.KeyId))
 	d.Set("key_id", output.KeyMetadata.KeyId)
 
+	// TODO
+	// TODO Ensure that DescribeKey etc. return OK here, NOT during Read.
+	// TODO
+
 	if enableKeyRotation := d.Get("enable_key_rotation").(bool); enableKeyRotation {
 		if err := updateKmsKeyRotationStatus(conn, d); err != nil {
 			return err
@@ -183,33 +188,31 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_id", output.KeyId)
 	d.Set("key_usage", output.KeyUsage)
 
-	pOut, err := retryOnAwsCode(kms.ErrCodeNotFoundException, func() (interface{}, error) {
-		return conn.GetKeyPolicy(&kms.GetKeyPolicyInput{
-			KeyId:      aws.String(d.Id()),
-			PolicyName: aws.String("default"),
-		})
+	outputRaw, err := tfresource.RetryWhenNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
+		return finder.KeyPolicyByKeyIDAndPolicyName(conn, d.Id(), tfkms.PolicyNameDefault)
 	})
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading KMS Key (%s) policy: %w", d.Id(), err)
 	}
 
-	p := pOut.(*kms.GetKeyPolicyOutput)
-	policy, err := structure.NormalizeJsonString(*p.Policy)
+	policy, err := structure.NormalizeJsonString(outputRaw.(string))
+
 	if err != nil {
-		return fmt.Errorf("policy contains an invalid JSON: %w", err)
+		return fmt.Errorf("policy contains invalid JSON: %w", err)
 	}
+
 	d.Set("policy", policy)
 
-	out, err := retryOnAwsCode(kms.ErrCodeNotFoundException, func() (interface{}, error) {
-		return conn.GetKeyRotationStatus(&kms.GetKeyRotationStatusInput{
-			KeyId: aws.String(d.Id()),
-		})
+	outputRaw, err = tfresource.RetryWhenNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
+		return finder.KeyRotationStatusByKeyID(conn, d.Id())
 	})
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading KMS Key (%s) rotation status: %w", d.Id(), err)
 	}
-	krs, _ := out.(*kms.GetKeyRotationStatusOutput)
-	d.Set("enable_key_rotation", krs.KeyRotationEnabled)
+
+	d.Set("enable_key_rotation", outputRaw.(bool))
 
 	var tags keyvaluetags.KeyValueTags
 	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
