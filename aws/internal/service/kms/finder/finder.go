@@ -44,7 +44,7 @@ func KeyByID(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
 	return keyMetadata, nil
 }
 
-func KeyPolicyByKeyIDAndPolicyName(conn *kms.KMS, keyID, policyName string) (string, error) {
+func KeyPolicyByKeyIDAndPolicyName(conn *kms.KMS, keyID, policyName string) (*string, error) {
 	input := &kms.GetKeyPolicyInput{
 		KeyId:      aws.String(keyID),
 		PolicyName: aws.String(policyName),
@@ -53,27 +53,27 @@ func KeyPolicyByKeyIDAndPolicyName(conn *kms.KMS, keyID, policyName string) (str
 	output, err := conn.GetKeyPolicy(input)
 
 	if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
-		return "", &resource.NotFoundError{
+		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	if output == nil || output.Policy == nil {
-		return "", &resource.NotFoundError{
+	if output == nil {
+		return nil, &resource.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
 	}
 
-	return aws.StringValue(output.Policy), nil
+	return output.Policy, nil
 }
 
-func KeyRotationStatusByKeyID(conn *kms.KMS, keyID string) (bool, error) {
+func KeyRotationEnabledByKeyID(conn *kms.KMS, keyID string) (*bool, error) {
 	input := &kms.GetKeyRotationStatusInput{
 		KeyId: aws.String(keyID),
 	}
@@ -81,22 +81,22 @@ func KeyRotationStatusByKeyID(conn *kms.KMS, keyID string) (bool, error) {
 	output, err := conn.GetKeyRotationStatus(input)
 
 	if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
-		return false, &resource.NotFoundError{
+		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
-	if output == nil || output.KeyRotationEnabled == nil {
-		return false, &resource.NotFoundError{
+	if output == nil {
+		return nil, &resource.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
 	}
 
-	return aws.BoolValue(output.KeyRotationEnabled), nil
+	return output.KeyRotationEnabled, nil
 }
