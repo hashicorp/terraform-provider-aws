@@ -274,6 +274,40 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 				},
 			},
 
+			"redshift_target": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"database": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"db_user": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"secrets_manager_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"sql": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"statement_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"with_event": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
+			},
+
 			"sqs_target": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -426,6 +460,12 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 		d.Set("http_target", nil)
 	}
 
+	if t.RedshiftDataParameters != nil {
+		if err := d.Set("redshift_target", flattenAwsCloudWatchEventTargetRedshiftParameters(t.RedshiftDataParameters)); err != nil {
+			return fmt.Errorf("Error setting ecs_target error: %w", err)
+		}
+	}
+
 	if t.EcsParameters != nil {
 		if err := d.Set("ecs_target", flattenAwsCloudWatchEventTargetEcsParameters(t.EcsParameters)); err != nil {
 			return fmt.Errorf("Error setting ecs_target error: %w", err)
@@ -538,6 +578,10 @@ func buildPutTargetInputStruct(d *schema.ResourceData) *events.PutTargetsInput {
 		e.EcsParameters = expandAwsCloudWatchEventTargetEcsParameters(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("redshift_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		e.RedshiftDataParameters = expandAwsCloudWatchEventTargetRedshiftParameters(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("http_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		e.HttpParameters = expandAwsCloudWatchEventTargetHttpParameters(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -593,6 +637,34 @@ func expandAwsCloudWatchEventTargetRunParameters(config []interface{}) *events.R
 	}
 
 	return command
+}
+
+func expandAwsCloudWatchEventTargetRedshiftParameters(config []interface{}) *events.RedshiftDataParameters {
+	redshiftParameters := &events.RedshiftDataParameters{}
+	for _, c := range config {
+		param := c.(map[string]interface{})
+
+		redshiftParameters.Database = aws.String(param["database"].(string))
+		redshiftParameters.Sql = aws.String(param["sql"].(string))
+
+		if val, ok := param["with_event"].(bool); ok {
+			redshiftParameters.WithEvent = aws.Bool(val)
+		}
+
+		if val, ok := param["statement_name"].(string); ok && val != "" {
+			redshiftParameters.StatementName = aws.String(val)
+		}
+
+		if val, ok := param["secrets_manager_arn"].(string); ok && val != "" {
+			redshiftParameters.SecretManagerArn = aws.String(val)
+		}
+
+		if val, ok := param["db_user"].(string); ok && val != "" {
+			redshiftParameters.DbUser = aws.String(val)
+		}
+	}
+
+	return redshiftParameters
 }
 
 func expandAwsCloudWatchEventTargetEcsParameters(config []interface{}) *events.EcsParameters {
@@ -819,6 +891,20 @@ func flattenAwsCloudWatchEventTargetEcsParameters(ecsParameters *events.EcsParam
 	config["enable_ecs_managed_tags"] = aws.BoolValue(ecsParameters.EnableECSManagedTags)
 	config["task_count"] = aws.Int64Value(ecsParameters.TaskCount)
 	config["task_definition_arn"] = aws.StringValue(ecsParameters.TaskDefinitionArn)
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flattenAwsCloudWatchEventTargetRedshiftParameters(redshiftParameters *events.RedshiftDataParameters) []map[string]interface{} {
+	config := make(map[string]interface{})
+
+	config["database"] = aws.StringValue(redshiftParameters.Database)
+	config["db_user"] = aws.StringValue(redshiftParameters.DbUser)
+	config["secret_manager_arn"] = aws.StringValue(redshiftParameters.SecretManagerArn)
+	config["sql"] = aws.StringValue(redshiftParameters.Sql)
+	config["statement_name"] = aws.StringValue(redshiftParameters.StatementName)
+	config["with_event"] = aws.BoolValue(redshiftParameters.WithEvent)
+
 	result := []map[string]interface{}{config}
 	return result
 }
