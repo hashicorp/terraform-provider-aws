@@ -100,7 +100,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Amazon Resource Name (ARN) of the NFS File Share.
+* `id` - Amazon Resource Name (ARN) of the FSx file system association
 * `arn` - Amazon Resource Name (ARN) of the newly created file system association.
 * `gateway_arn` - Amazon Resource Name (ARN) of the Storage Gateway
 * `location_arn` - Amazon Resource Name (ARN) of the FSx File System
@@ -109,7 +109,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_storagegateway_fsx_associate_file_system` can be imported by using the NFS File Share Amazon Resource Name (ARN), e.g.
+`aws_storagegateway_fsx_associate_file_system` can be imported by using the FSx file system association Amazon Resource Name (ARN), e.g.
 
 ```
 $ terraform import aws_storagegateway_fsx_associate_file_system.example arn:aws:storagegateway:us-east-1:123456789012:fs-association/fsa-0DA347732FDB40125
