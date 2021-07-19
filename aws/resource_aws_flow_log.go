@@ -34,24 +34,28 @@ func resourceAwsFlowLog() *schema.Resource {
 			"destination_options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"file_format": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type: schema.TypeString,
 							ValidateFunc: validation.StringInSlice([]string{
 								"plain-text",
 								"parquet",
-							}, true),
+							}, false),
+							Default:  "plain-text",
+							Optional: true,
 						},
 						"hive_compatible_partitions": {
 							Type:     schema.TypeBool,
-							Required: true,
+							Default:  false,
+							Optional: true,
 						},
 						"per_hour_partition": {
 							Type:     schema.TypeBool,
-							Required: true,
+							Default:  false,
+							Optional: true,
 						},
 					},
 				},
@@ -200,6 +204,10 @@ func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 		opts.MaxAggregationInterval = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("destination_options"); ok && v != "" {
+		opts.DestinationOptions = expandFlowLogsDestinationOptions(v.([]interface{}))
+	}
+
 	if len(tags) > 0 {
 		opts.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcFlowLog)
 	}
@@ -273,6 +281,10 @@ func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set(resourceKey, fl.ResourceId)
 	}
 
+	if err := d.Set("destination_options", flattenFlowLogsDestinationOptions(fl.DestinationOptions)); err != nil {
+		return fmt.Errorf("error setting destination_options: %w", err)
+	}
+
 	tags := keyvaluetags.Ec2KeyValueTags(fl.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -324,4 +336,34 @@ func resourceAwsLogFlowDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func expandFlowLogsDestinationOptions(l []interface{}) *ec2.DestinationOptionsRequest {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	do := &ec2.DestinationOptionsRequest{
+		FileFormat:               aws.String(string(m["file_format"].(string))),
+		HiveCompatiblePartitions: aws.Bool(bool(m["hive_compatible_partitions"].(bool))),
+		PerHourPartition:         aws.Bool(bool(m["per_hour_partition"].(bool))),
+	}
+
+	return do
+}
+
+func flattenFlowLogsDestinationOptions(do *ec2.DestinationOptionsResponse) []interface{} {
+	if do == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"file_format":                aws.StringValue(do.FileFormat),
+		"hive_compatible_partitions": aws.BoolValue(do.HiveCompatiblePartitions),
+		"per_hour_partition":         aws.BoolValue(do.PerHourPartition),
+	}
+
+	return []interface{}{m}
 }
