@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfstoragegateway "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
 )
 
@@ -21,9 +22,11 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 		Read:   resourceAwsStorageGatewaySmbFileShareRead,
 		Update: resourceAwsStorageGatewaySmbFileShareUpdate,
 		Delete: resourceAwsStorageGatewaySmbFileShareDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
@@ -31,35 +34,63 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"access_based_enumeration": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"admin_user_list": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"authentication": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "ActiveDirectory",
-				ValidateFunc: validation.StringInSlice([]string{
-					"ActiveDirectory",
-					"GuestAccess",
-				}, false),
 			},
 			"audit_destination_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateArn,
 			},
-			"default_storage_class": {
-				Type:     schema.TypeString,
+			"authentication": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      tfstoragegateway.AuthenticationActiveDirectory,
+				ValidateFunc: validation.StringInSlice(tfstoragegateway.Authentication_Values(), false),
+			},
+			"bucket_region": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{"vpc_endpoint_dns_name"},
+			},
+			"cache_attributes": {
+				Type:     schema.TypeList,
 				Optional: true,
-				Default:  "S3_STANDARD",
-				ValidateFunc: validation.StringInSlice([]string{
-					"S3_ONEZONE_IA",
-					"S3_STANDARD_IA",
-					"S3_STANDARD",
-					"S3_INTELLIGENT_TIERING",
-				}, false),
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cache_stale_timeout_in_seconds": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(300, 2592000),
+						},
+					},
+				},
+			},
+			"case_sensitivity": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      storagegateway.CaseSensitivityClientSpecified,
+				ValidateFunc: validation.StringInSlice(storagegateway.CaseSensitivity_Values(), false),
+			},
+			"default_storage_class": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      tfstoragegateway.DefaultStorageClassS3Standard,
+				ValidateFunc: validation.StringInSlice(tfstoragegateway.DefaultStorageClass_Values(), false),
 			},
 			"fileshare_id": {
 				Type:     schema.TypeString,
@@ -104,17 +135,6 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
-			"vpc_endpoint": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"bucket_region": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				RequiredWith: []string{"vpc_endpoint"},
-			},
 			"object_acl": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -126,19 +146,14 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"cache_attributes": {
-				Type:     schema.TypeList,
+			"notification_policy": {
+				Type:     schema.TypeString,
 				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cache_stale_timeout_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(300, 2592000),
-						},
-					},
-				},
+				Default:  "{}",
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^\{[\w\s:\{\}\[\]"]*}$`), ""),
+					validation.StringLenBetween(2, 100),
+				),
 			},
 			"path": {
 				Type:     schema.TypeString,
@@ -164,39 +179,19 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"access_based_enumeration": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"valid_user_list": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 100,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"admin_user_list": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"case_sensitivity": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      storagegateway.CaseSensitivityClientSpecified,
-				ValidateFunc: validation.StringInSlice(storagegateway.CaseSensitivity_Values(), false),
-			},
-			"notification_policy": {
+			"vpc_endpoint_dns_name": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "{}",
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile(`^\{[\w\s:\{\}\[\]"]*}$`), ""),
-					validation.StringLenBetween(2, 100),
-				),
+				ForceNew: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
 		},
 
 		CustomizeDiff: SetTagsDiff,
@@ -209,57 +204,103 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &storagegateway.CreateSMBFileShareInput{
-		Authentication:       aws.String(d.Get("authentication").(string)),
-		ClientToken:          aws.String(resource.UniqueId()),
-		DefaultStorageClass:  aws.String(d.Get("default_storage_class").(string)),
-		GatewayARN:           aws.String(d.Get("gateway_arn").(string)),
-		GuessMIMETypeEnabled: aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
-		InvalidUserList:      expandStringSet(d.Get("invalid_user_list").(*schema.Set)),
-		KMSEncrypted:         aws.Bool(d.Get("kms_encrypted").(bool)),
-		LocationARN:          aws.String(d.Get("location_arn").(string)),
-		VPCEndpointDNSName:   aws.String(d.Get("vpc_endpoint").(string)),
-		BucketRegion:         aws.String(d.Get("bucket_region").(string)),
-		ObjectACL:            aws.String(d.Get("object_acl").(string)),
-		OplocksEnabled:       aws.Bool(d.Get("oplocks_enabled").(bool)),
-		ReadOnly:             aws.Bool(d.Get("read_only").(bool)),
-		RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
-		Role:                 aws.String(d.Get("role_arn").(string)),
-		CaseSensitivity:      aws.String(d.Get("case_sensitivity").(string)),
-		ValidUserList:        expandStringSet(d.Get("valid_user_list").(*schema.Set)),
-		AdminUserList:        expandStringSet(d.Get("admin_user_list").(*schema.Set)),
-		Tags:                 tags.IgnoreAws().StoragegatewayTags(),
-	}
-
-	if v, ok := d.GetOk("kms_key_arn"); ok {
-		input.KMSKey = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("audit_destination_arn"); ok {
-		input.AuditDestinationARN = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("file_share_name"); ok {
-		input.FileShareName = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("smb_acl_enabled"); ok {
-		input.SMBACLEnabled = aws.Bool(v.(bool))
+		ClientToken: aws.String(resource.UniqueId()),
+		GatewayARN:  aws.String(d.Get("gateway_arn").(string)),
+		LocationARN: aws.String(d.Get("location_arn").(string)),
+		Role:        aws.String(d.Get("role_arn").(string)),
 	}
 
 	if v, ok := d.GetOk("access_based_enumeration"); ok {
 		input.AccessBasedEnumeration = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("cache_attributes"); ok {
-		input.CacheAttributes = expandStorageGatewayNfsFileShareCacheAttributes(v.([]interface{}))
+	if v, ok := d.GetOk("admin_user_list"); ok && v.(*schema.Set).Len() > 0 {
+		input.AdminUserList = expandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("audit_destination_arn"); ok {
+		input.AuditDestinationARN = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("authentication"); ok {
+		input.Authentication = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("bucket_region"); ok {
+		input.BucketRegion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("cache_attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.CacheAttributes = expandStorageGatewayCacheAttributes(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("case_sensitivity"); ok {
+		input.CaseSensitivity = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("default_storage_class"); ok {
+		input.DefaultStorageClass = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("file_share_name"); ok {
+		input.FileShareName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("guess_mime_type_enabled"); ok {
+		input.GuessMIMETypeEnabled = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("invalid_user_list"); ok && v.(*schema.Set).Len() > 0 {
+		input.InvalidUserList = expandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("kms_encrypted"); ok {
+		input.KMSEncrypted = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("kms_key_arn"); ok {
+		input.KMSKey = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("notification_policy"); ok {
 		input.NotificationPolicy = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Storage Gateway SMB File Share: %#v", input)
+	if v, ok := d.GetOk("object_acl"); ok {
+		input.ObjectACL = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("oplocks_enabled"); ok {
+		input.OplocksEnabled = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("read_only"); ok {
+		input.ReadOnly = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("requester_pays"); ok {
+		input.RequesterPays = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("smb_acl_enabled"); ok {
+		input.SMBACLEnabled = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("valid_user_list"); ok && v.(*schema.Set).Len() > 0 {
+		input.ValidUserList = expandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("vpc_endpoint_dns_name"); ok {
+		input.VPCEndpointDNSName = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().StoragegatewayTags()
+	}
+
+	log.Printf("[DEBUG] Creating Storage Gateway SMB File Share: %s", input)
 	output, err := conn.CreateSMBFileShare(input)
+
 	if err != nil {
 		return fmt.Errorf("error creating Storage Gateway SMB File Share: %w", err)
 	}
@@ -315,14 +356,18 @@ func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error setting invalid_user_list: %w", err)
 	}
 
-	if err := d.Set("cache_attributes", flattenStorageGatewayNfsFileShareCacheAttributes(fileshare.CacheAttributes)); err != nil {
-		return fmt.Errorf("error setting cache_attributes: %w", err)
+	if fileshare.CacheAttributes != nil {
+		if err := d.Set("cache_attributes", []interface{}{flattenStorageGatewayCacheAttributes(fileshare.CacheAttributes)}); err != nil {
+			return fmt.Errorf("error setting cache_attributes: %w", err)
+		}
+	} else {
+		d.Set("cache_attributes", nil)
 	}
 
 	d.Set("kms_encrypted", fileshare.KMSEncrypted)
 	d.Set("kms_key_arn", fileshare.KMSKey)
 	d.Set("location_arn", fileshare.LocationARN)
-	d.Set("vpc_endpoint", fileshare.VPCEndpointDNSName)
+	d.Set("vpc_endpoint_dns_name", fileshare.VPCEndpointDNSName)
 	d.Set("bucket_region", fileshare.BucketRegion)
 	d.Set("object_acl", fileshare.ObjectACL)
 	d.Set("oplocks_enabled", fileshare.OplocksEnabled)
@@ -449,4 +494,32 @@ func resourceAwsStorageGatewaySmbFileShareDelete(d *schema.ResourceData, meta in
 	}
 
 	return nil
+}
+
+func expandStorageGatewayCacheAttributes(tfMap map[string]interface{}) *storagegateway.CacheAttributes {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &storagegateway.CacheAttributes{}
+
+	if v, ok := tfMap["cache_stale_timeout_in_seconds"].(int); ok && v != 0 {
+		apiObject.CacheStaleTimeoutInSeconds = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func flattenStorageGatewayCacheAttributes(apiObject *storagegateway.CacheAttributes) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CacheStaleTimeoutInSeconds; v != nil {
+		tfMap["cache_stale_timeout_in_seconds"] = aws.Int64Value(v)
+	}
+
+	return tfMap
 }

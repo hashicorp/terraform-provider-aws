@@ -44,8 +44,8 @@ The following arguments are supported:
 
 * `gateway_arn` - (Required) Amazon Resource Name (ARN) of the file gateway.
 * `location_arn` - (Required) The ARN of the backed storage used for storing file data.
-* `vpc_endpoint` - (Optional) The DNS name of the VPC endpoint for S3 private link.
-* `bucket_region` - (Optional) The region of the S3 buck used by the file share. Required when specifying a `vpc_endpoint`.
+* `vpc_endpoint_dns_name` - (Optional) The DNS name of the VPC endpoint for S3 private link.
+* `bucket_region` - (Optional) The region of the S3 buck used by the file share. Required when specifying a `vpc_endpoint_dns_name`.
 * `role_arn` - (Required) The ARN of the AWS Identity and Access Management (IAM) role that a file gateway assumes when it accesses the underlying storage.
 * `admin_user_list` - (Optional) A list of users in the Active Directory that have admin access to the file share. Only valid if `authentication` is set to `ActiveDirectory`.
 * `authentication` - (Optional) The authentication method that users use to access the file share. Defaults to `ActiveDirectory`. Valid values: `ActiveDirectory`, `GuestAccess`.
