@@ -1,4 +1,13 @@
 ## 3.51.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_glue_crawler: Add `sample_size` argument in `s3_target` block. ([#20203](https://github.com/hashicorp/terraform-provider-aws/issues/20203))
+
+BUG FIXES:
+
+* aws/resource_aws_lambda_event_source_mapping: Ignore `InvalidParameterValueException` error caused by IAM propagation when creating Lambda event source mapping with Kinesis stream source ([#20229](https://github.com/hashicorp/terraform-provider-aws/issues/20229))
+
 ## 3.50.0 (July 15, 2021)
 
 NOTES:
