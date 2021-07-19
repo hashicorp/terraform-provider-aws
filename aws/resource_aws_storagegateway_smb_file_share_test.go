@@ -342,6 +342,40 @@ func TestAccAWSStorageGatewaySmbFileShare_GuessMIMETypeEnabled(t *testing.T) {
 	})
 }
 
+func TestAccAWSStorageGatewaySmbFileShare_OpLocksEnabled(t *testing.T) {
+	var smbFileShare storagegateway.SMBFileShareInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_smb_file_share.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewaySmbFileShareConfig_OpLocksEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "oplocks_enabled", "false"),
+				),
+			},
+			{
+				Config: testAccAWSStorageGatewaySmbFileShareConfig_OpLocksEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "oplocks_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSStorageGatewaySmbFileShare_InvalidUserList(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1079,6 +1113,19 @@ resource "aws_storagegateway_smb_file_share" "test" {
   role_arn                = aws_iam_role.test.arn
 }
 `, guessMimeTypeEnabled)
+}
+
+func testAccAWSStorageGatewaySmbFileShareConfig_OpLocksEnabled(rName string, opLocksEnabled bool) string {
+	return testAccAWSStorageGateway_SmbFileShare_GuestAccessBase(rName) + fmt.Sprintf(`
+resource "aws_storagegateway_smb_file_share" "test" {
+  # Use GuestAccess to simplify testing
+  authentication          = "GuestAccess"
+  gateway_arn             = aws_storagegateway_gateway.test.arn
+  oplocks_enabled         = %t
+  location_arn            = aws_s3_bucket.test.arn
+  role_arn                = aws_iam_role.test.arn
+}
+`, opLocksEnabled)
 }
 
 func testAccAWSStorageGatewaySmbFileShareConfig_InvalidUserList_Single(rName, domain, invalidUser1 string) string {

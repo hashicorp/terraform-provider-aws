@@ -104,11 +104,27 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
+			"vpc_endpoint": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"bucket_region": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{"vpc_endpoint"},
+			},
 			"object_acl": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      storagegateway.ObjectACLPrivate,
 				ValidateFunc: validation.StringInSlice(storagegateway.ObjectACL_Values(), false),
+			},
+			"oplocks_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
 			},
 			"cache_attributes": {
 				Type:     schema.TypeList,
@@ -201,7 +217,10 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 		InvalidUserList:      expandStringSet(d.Get("invalid_user_list").(*schema.Set)),
 		KMSEncrypted:         aws.Bool(d.Get("kms_encrypted").(bool)),
 		LocationARN:          aws.String(d.Get("location_arn").(string)),
+		VPCEndpointDNSName:   aws.String(d.Get("vpc_endpoint").(string)),
+		BucketRegion:         aws.String(d.Get("bucket_region").(string)),
 		ObjectACL:            aws.String(d.Get("object_acl").(string)),
+		OplocksEnabled:       aws.Bool(d.Get("oplocks_enabled").(bool)),
 		ReadOnly:             aws.Bool(d.Get("read_only").(bool)),
 		RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
 		Role:                 aws.String(d.Get("role_arn").(string)),
@@ -303,7 +322,10 @@ func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta inte
 	d.Set("kms_encrypted", fileshare.KMSEncrypted)
 	d.Set("kms_key_arn", fileshare.KMSKey)
 	d.Set("location_arn", fileshare.LocationARN)
+	d.Set("vpc_endpoint", fileshare.VPCEndpointDNSName)
+	d.Set("bucket_region", fileshare.BucketRegion)
 	d.Set("object_acl", fileshare.ObjectACL)
+	d.Set("oplocks_enabled", fileshare.OplocksEnabled)
 	d.Set("path", fileshare.Path)
 	d.Set("read_only", fileshare.ReadOnly)
 	d.Set("requester_pays", fileshare.RequesterPays)
@@ -346,7 +368,7 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 	}
 
 	if d.HasChanges("admin_user_list", "default_storage_class", "guess_mime_type_enabled", "invalid_user_list",
-		"kms_encrypted", "object_acl", "read_only", "requester_pays", "requester_pays",
+		"kms_encrypted", "object_acl", "oplocks_enabled", "read_only", "requester_pays", "requester_pays",
 		"valid_user_list", "kms_key_arn", "audit_destination_arn", "smb_acl_enabled", "cache_attributes",
 		"case_sensitivity", "file_share_name", "notification_policy", "access_based_enumeration") {
 		input := &storagegateway.UpdateSMBFileShareInput{
@@ -356,6 +378,7 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 			InvalidUserList:        expandStringSet(d.Get("invalid_user_list").(*schema.Set)),
 			KMSEncrypted:           aws.Bool(d.Get("kms_encrypted").(bool)),
 			ObjectACL:              aws.String(d.Get("object_acl").(string)),
+			OplocksEnabled:         aws.Bool(d.Get("oplocks_enabled").(bool)),
 			ReadOnly:               aws.Bool(d.Get("read_only").(bool)),
 			RequesterPays:          aws.Bool(d.Get("requester_pays").(bool)),
 			ValidUserList:          expandStringSet(d.Get("valid_user_list").(*schema.Set)),
