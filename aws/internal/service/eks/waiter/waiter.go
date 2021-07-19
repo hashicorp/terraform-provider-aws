@@ -2,13 +2,12 @@ package waiter
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	tfeks "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/eks"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -30,12 +29,7 @@ func AddonCreated(ctx context.Context, conn *eks.EKS, clusterName, addonName str
 
 	if output, ok := outputRaw.(*eks.Addon); ok {
 		if status, health := aws.StringValue(output.Status), output.Health; status == eks.AddonStatusCreateFailed && health != nil {
-			var errs *multierror.Error
-
-			for _, issue := range health.Issues {
-				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(issue.Code), aws.StringValue(issue.Message)))
-			}
-			tfresource.SetLastError(err, errs.ErrorOrNil())
+			tfresource.SetLastError(err, tfeks.AddonIssuesError(health.Issues))
 		}
 
 		return output, err
@@ -55,6 +49,10 @@ func AddonDeleted(ctx context.Context, conn *eks.EKS, clusterName, addonName str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*eks.Addon); ok {
+		if status, health := aws.StringValue(output.Status), output.Health; status == eks.AddonStatusDeleteFailed && health != nil {
+			tfresource.SetLastError(err, tfeks.AddonIssuesError(health.Issues))
+		}
+
 		return output, err
 	}
 
@@ -73,12 +71,7 @@ func AddonUpdateSuccessful(ctx context.Context, conn *eks.EKS, clusterName, addo
 
 	if output, ok := outputRaw.(*eks.Update); ok {
 		if status := aws.StringValue(output.Status); status == eks.UpdateStatusCancelled || status == eks.UpdateStatusFailed {
-			var errs *multierror.Error
-
-			for _, e := range output.Errors {
-				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(e.ErrorCode), aws.StringValue(e.ErrorMessage)))
-			}
-			tfresource.SetLastError(err, errs.ErrorOrNil())
+			tfresource.SetLastError(err, tfeks.ErrorDetailsError(output.Errors))
 		}
 
 		return output, err
@@ -133,12 +126,7 @@ func ClusterUpdateSuccessful(conn *eks.EKS, name, id string, timeout time.Durati
 
 	if output, ok := outputRaw.(*eks.Update); ok {
 		if status := aws.StringValue(output.Status); status == eks.UpdateStatusCancelled || status == eks.UpdateStatusFailed {
-			var errs *multierror.Error
-
-			for _, e := range output.Errors {
-				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(e.ErrorCode), aws.StringValue(e.ErrorMessage)))
-			}
-			tfresource.SetLastError(err, errs.ErrorOrNil())
+			tfresource.SetLastError(err, tfeks.ErrorDetailsError(output.Errors))
 		}
 
 		return output, err
@@ -192,6 +180,10 @@ func NodegroupCreated(ctx context.Context, conn *eks.EKS, clusterName, nodeGroup
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*eks.Nodegroup); ok {
+		if status, health := aws.StringValue(output.Status), output.Health; status == eks.NodegroupStatusCreateFailed && health != nil {
+			tfresource.SetLastError(err, tfeks.IssuesError(health.Issues))
+		}
+
 		return output, err
 	}
 
@@ -209,6 +201,10 @@ func NodegroupDeleted(ctx context.Context, conn *eks.EKS, clusterName, nodeGroup
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*eks.Nodegroup); ok {
+		if status, health := aws.StringValue(output.Status), output.Health; status == eks.NodegroupStatusDeleteFailed && health != nil {
+			tfresource.SetLastError(err, tfeks.IssuesError(health.Issues))
+		}
+
 		return output, err
 	}
 
@@ -227,12 +223,7 @@ func NodegroupUpdateSuccessful(ctx context.Context, conn *eks.EKS, clusterName, 
 
 	if output, ok := outputRaw.(*eks.Update); ok {
 		if status := aws.StringValue(output.Status); status == eks.UpdateStatusCancelled || status == eks.UpdateStatusFailed {
-			var errs *multierror.Error
-
-			for _, e := range output.Errors {
-				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(e.ErrorCode), aws.StringValue(e.ErrorMessage)))
-			}
-			tfresource.SetLastError(err, errs.ErrorOrNil())
+			tfresource.SetLastError(err, tfeks.ErrorDetailsError(output.Errors))
 		}
 
 		return output, err
