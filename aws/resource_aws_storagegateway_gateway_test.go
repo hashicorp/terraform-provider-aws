@@ -1113,7 +1113,7 @@ resource "aws_storagegateway_gateway" "test" {
 func testAccAWSStorageGatewayGatewayConfig_DirectoryServiceSimpleDirectory(rName, domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
-  name     = "terraformtesting.com"
+  name     = %[2]q
   password = "SuperSecretPassw0rd"
   size     = "Small"
 
@@ -1134,7 +1134,7 @@ func testAccAWSStorageGatewayGatewayConfig_DirectoryServiceMicrosoftAD(rName, do
 	return fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   edition  = "Standard"
-  name     = "terraformtesting.com"
+  name     = %[2]q
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
 
