@@ -172,8 +172,8 @@ func SMBFileShareUpdated(conn *storagegateway.StorageGateway, arn string, timeou
 // FsxFileSystemAvailable waits for a FSx File System to return Available
 func FsxFileSystemAvailable(conn *storagegateway.StorageGateway, fileSystemArn string, timeout time.Duration) (*storagegateway.FileSystemAssociationInfo, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: FsxFileSystemAvailableAvailableStatusPending(),
-		Target:  FsxFileSystemAvailableAvailableStatusTarget(),
+		Pending: FsxFileSystemStatusAvailableStatusPending(),
+		Target:  FsxFileSystemStatusAvailableStatusTarget(),
 		Refresh: FsxFileSystemStatus(conn, fileSystemArn),
 		Timeout: timeout,
 		Delay:   FsxFileSystemAvailableDelay,
@@ -190,8 +190,8 @@ func FsxFileSystemAvailable(conn *storagegateway.StorageGateway, fileSystemArn s
 
 func FsxFileSystemDeleted(conn *storagegateway.StorageGateway, fileSystemArn string, timeout time.Duration) (*storagegateway.FileSystemAssociationInfo, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:        FsxFileSystemAvailableDeletedStatusPending(),
-		Target:         FsxFileSystemAvailableDeletedStatusTarget(),
+		Pending:        FsxFileSystemStatusDeletedStatusPending(),
+		Target:         FsxFileSystemStatusDeletedStatusTarget(),
 		Refresh:        FsxFileSystemStatus(conn, fileSystemArn),
 		Timeout:        timeout,
 		Delay:          FsxFileSystemDeletedDelay,

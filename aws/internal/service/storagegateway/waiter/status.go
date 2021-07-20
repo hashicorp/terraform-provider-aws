@@ -13,15 +13,21 @@ import (
 )
 
 const (
-	StorageGatewayGatewayStatusConnected = "GatewayConnected"
-	StoredIscsiVolumeStatusNotFound      = "NotFound"
-	StoredIscsiVolumeStatusUnknown       = "Unknown"
-	NfsFileShareStatusNotFound           = "NotFound"
-	NfsFileShareStatusUnknown            = "Unknown"
-	SmbFileShareStatusNotFound           = "NotFound"
-	SmbFileShareStatusUnknown            = "Unknown"
-	FsxFileSystemStatusNotFound          = "NotFound"
-	FsxFileSystemStatusUnknown           = "Unknown"
+	StorageGatewayGatewayStatusConnected        = "GatewayConnected"
+	StoredIscsiVolumeStatusNotFound             = "NotFound"
+	StoredIscsiVolumeStatusUnknown              = "Unknown"
+	NfsFileShareStatusNotFound                  = "NotFound"
+	NfsFileShareStatusUnknown                   = "Unknown"
+	SmbFileShareStatusNotFound                  = "NotFound"
+	SmbFileShareStatusUnknown                   = "Unknown"
+	FsxFileSystemStatusNotFound                 = "NotFound"
+	FsxFileSystemStatusUnknown                  = "Unknown"
+	FsxFileSystemAssociationStatusAvailable     = "AVAILABLE"
+	FsxFileSystemAssociationStatusCreating      = "CREATING"
+	FsxFileSystemAssociationStatusDeleting      = "DELETING"
+	FsxFileSystemAssociationStatusForceDeleting = "FORCE_DELETING"
+	FsxFileSystemAssociationStatusUpdating      = "UPDATING"
+	FsxFileSystemAssociationStatusError         = "ERROR"
 )
 
 func StorageGatewayGatewayStatus(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
@@ -150,18 +156,18 @@ func FsxFileSystemStatus(conn *storagegateway.StorageGateway, fileSystemArn stri
 	}
 }
 
-func FsxFileSystemAvailableAvailableStatusPending() []string {
-	return []string{"CREATING", "UPDATING"}
+func FsxFileSystemStatusAvailableStatusPending() []string {
+	return []string{FsxFileSystemAssociationStatusCreating, FsxFileSystemAssociationStatusUpdating}
 }
 
-func FsxFileSystemAvailableAvailableStatusTarget() []string {
-	return []string{"AVAILABLE"}
+func FsxFileSystemStatusAvailableStatusTarget() []string {
+	return []string{FsxFileSystemAssociationStatusAvailable}
 }
 
-func FsxFileSystemAvailableDeletedStatusPending() []string {
-	return []string{"AVAILABLE", "DELETING", "FORCE_DELETING"}
+func FsxFileSystemStatusDeletedStatusPending() []string {
+	return []string{FsxFileSystemAssociationStatusAvailable, FsxFileSystemAssociationStatusDeleting, FsxFileSystemAssociationStatusForceDeleting}
 }
 
-func FsxFileSystemAvailableDeletedStatusTarget() []string {
+func FsxFileSystemStatusDeletedStatusTarget() []string {
 	return []string{}
 }
