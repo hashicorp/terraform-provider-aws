@@ -401,7 +401,8 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 			input.FileShareName = aws.String(d.Get("file_share_name").(string))
 		}
 
-		if d.HasChange("kms_key_arn") {
+		// This value can only be set when KMSEncrypted is true.
+		if d.HasChange("kms_key_arn") && d.Get("kms_encrypted").(bool) {
 			input.KMSKey = aws.String(d.Get("kms_key_arn").(string))
 		}
 
