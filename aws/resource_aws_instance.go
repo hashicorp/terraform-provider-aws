@@ -658,7 +658,7 @@ func resourceAwsInstance() *schema.Resource {
 							return err
 						}
 
-						_, defaultVersion, latestVersion, err = getAwsLaunchtemplateSpecification(conn, templateId)
+						_, defaultVersion, latestVersion, err = getAwsLaunchTemplateSpecification(conn, templateId)
 						if err != nil {
 							return err
 						}
@@ -3092,7 +3092,7 @@ func getAwsInstanceLaunchTemplate(conn *ec2.EC2, d *schema.ResourceData) ([]map[
 		return nil, nil
 	}
 
-	name, defaultVersion, latestVersion, err := getAwsLaunchtemplateSpecification(conn, id)
+	name, defaultVersion, latestVersion, err := getAwsLaunchTemplateSpecification(conn, id)
 
 	if err != nil {
 		if isAWSErr(err, "InvalidLaunchTemplateId.Malformed", "") {
@@ -3178,9 +3178,9 @@ func getAwsInstanceLaunchTemplateVersion(conn *ec2.EC2, instanceId string) (stri
 	return *launchTemplateVersion, nil
 }
 
-// getAwsLaunchtemplateSpecification takes conn and template id
+// getAwsLaunchTemplateSpecification takes conn and template id
 // returns name, default version, latest version
-func getAwsLaunchtemplateSpecification(conn *ec2.EC2, id string) (string, string, string, error) {
+func getAwsLaunchTemplateSpecification(conn *ec2.EC2, id string) (string, string, string, error) {
 	dlt, err := conn.DescribeLaunchTemplates(&ec2.DescribeLaunchTemplatesInput{
 		LaunchTemplateIds: []*string{aws.String(id)},
 	})
@@ -3193,4 +3193,29 @@ func getAwsLaunchtemplateSpecification(conn *ec2.EC2, id string) (string, string
 	latestVersion := strconv.FormatInt(*dlt.LaunchTemplates[0].LatestVersionNumber, 10)
 
 	return name, defaultVersion, latestVersion, nil
+}
+
+func expandEc2LaunchTemplateSpecification(specs []interface{}) *ec2.LaunchTemplateSpecification {
+	if len(specs) < 1 {
+		return nil
+	}
+
+	spec := specs[0].(map[string]interface{})
+
+	idValue, idOk := spec["id"]
+	nameValue, nameOk := spec["name"]
+
+	result := &ec2.LaunchTemplateSpecification{}
+
+	if idOk && idValue != "" {
+		result.LaunchTemplateId = aws.String(idValue.(string))
+	} else if nameOk && nameValue != "" {
+		result.LaunchTemplateName = aws.String(nameValue.(string))
+	}
+
+	if v, ok := spec["version"]; ok && v != "" {
+		result.Version = aws.String(v.(string))
+	}
+
+	return result
 }

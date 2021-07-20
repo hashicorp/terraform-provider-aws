@@ -1887,7 +1887,7 @@ func expandAutoScalingInstancesDistribution(l []interface{}) *autoscaling.Instan
 	return instancesDistribution
 }
 
-func expandAutoScalingLaunchTemplate(l []interface{}) *autoscaling.LaunchTemplate {
+func expandMixedInstancesLaunchTemplate(l []interface{}) *autoscaling.LaunchTemplate {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1895,7 +1895,7 @@ func expandAutoScalingLaunchTemplate(l []interface{}) *autoscaling.LaunchTemplat
 	m := l[0].(map[string]interface{})
 
 	launchTemplate := &autoscaling.LaunchTemplate{
-		LaunchTemplateSpecification: expandAutoScalingLaunchTemplateSpecification(m["launch_template_specification"].([]interface{})),
+		LaunchTemplateSpecification: expandMixedInstancesLaunchTemplateSpecification(m["launch_template_specification"].([]interface{})),
 	}
 
 	if v, ok := m["override"]; ok {
@@ -1930,7 +1930,7 @@ func expandAutoScalingLaunchTemplateOverride(m map[string]interface{}) *autoscal
 	}
 
 	if v, ok := m["launch_template_specification"]; ok && v.([]interface{}) != nil {
-		launchTemplateOverrides.LaunchTemplateSpecification = expandAutoScalingLaunchTemplateSpecification(m["launch_template_specification"].([]interface{}))
+		launchTemplateOverrides.LaunchTemplateSpecification = expandMixedInstancesLaunchTemplateSpecification(m["launch_template_specification"].([]interface{}))
 	}
 
 	if v, ok := m["weighted_capacity"]; ok && v.(string) != "" {
@@ -1940,7 +1940,7 @@ func expandAutoScalingLaunchTemplateOverride(m map[string]interface{}) *autoscal
 	return launchTemplateOverrides
 }
 
-func expandAutoScalingLaunchTemplateSpecification(l []interface{}) *autoscaling.LaunchTemplateSpecification {
+func expandMixedInstancesLaunchTemplateSpecification(l []interface{}) *autoscaling.LaunchTemplateSpecification {
 	launchTemplateSpecification := &autoscaling.LaunchTemplateSpecification{}
 
 	if len(l) == 0 || l[0] == nil {
@@ -1975,7 +1975,7 @@ func expandAutoScalingMixedInstancesPolicy(l []interface{}) *autoscaling.MixedIn
 	m := l[0].(map[string]interface{})
 
 	mixedInstancesPolicy := &autoscaling.MixedInstancesPolicy{
-		LaunchTemplate: expandAutoScalingLaunchTemplate(m["launch_template"].([]interface{})),
+		LaunchTemplate: expandMixedInstancesLaunchTemplate(m["launch_template"].([]interface{})),
 	}
 
 	if v, ok := m["instances_distribution"]; ok {
@@ -2289,4 +2289,55 @@ func validateAutoScalingGroupInstanceRefreshTriggerFields(i interface{}, path ct
 	}
 
 	return diag.Errorf("'%s' is not a recognized parameter name for aws_autoscaling_group", v)
+}
+
+func expandLaunchTemplateSpecification(specs []interface{}) *autoscaling.LaunchTemplateSpecification {
+	if len(specs) < 1 {
+		return nil
+	}
+
+	spec := specs[0].(map[string]interface{})
+
+	idValue, idOk := spec["id"]
+	nameValue, nameOk := spec["name"]
+
+	result := &autoscaling.LaunchTemplateSpecification{}
+
+	// DescribeAutoScalingGroups returns both name and id but LaunchTemplateSpecification
+	// allows only one of them to be set
+	if idOk && idValue != "" {
+		result.LaunchTemplateId = aws.String(idValue.(string))
+	} else if nameOk && nameValue != "" {
+		result.LaunchTemplateName = aws.String(nameValue.(string))
+	}
+
+	if v, ok := spec["version"]; ok && v != "" {
+		result.Version = aws.String(v.(string))
+	}
+
+	return result
+}
+
+func flattenLaunchTemplateSpecification(lt *autoscaling.LaunchTemplateSpecification) []map[string]interface{} {
+	if lt == nil {
+		return []map[string]interface{}{}
+	}
+
+	attrs := map[string]interface{}{}
+	result := make([]map[string]interface{}, 0)
+
+	// id and name are always returned by DescribeAutoscalingGroups
+	attrs["id"] = aws.StringValue(lt.LaunchTemplateId)
+	attrs["name"] = aws.StringValue(lt.LaunchTemplateName)
+
+	// version is returned only if it was previously set
+	if lt.Version != nil {
+		attrs["version"] = aws.StringValue(lt.Version)
+	} else {
+		attrs["version"] = nil
+	}
+
+	result = append(result, attrs)
+
+	return result
 }
