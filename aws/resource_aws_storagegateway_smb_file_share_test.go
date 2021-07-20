@@ -910,7 +910,7 @@ func testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName string, smbFil
 func testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domain string) string {
 	return composeConfig(testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettings(rName, domain), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = %q
+  name = %[1]q
 
   assume_role_policy = <<POLICY
 {
@@ -952,7 +952,7 @@ POLICY
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket        = %q
+  bucket        = %[1]q
   force_destroy = true
 }
 `, rName))
