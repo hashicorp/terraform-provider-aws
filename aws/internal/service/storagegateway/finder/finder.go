@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfstoragegateway "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway"
 )
@@ -113,8 +114,9 @@ func SMBFileShareByARN(conn *storagegateway.StorageGateway, arn string) (*storag
 
 	// TODO Check for multiple results.
 	// TODO https://github.com/hashicorp/terraform-provider-aws/pull/17613.
-
 	return output.SMBFileShareInfoList[0], nil
+}
+
 func FileSystemAssociationByARN(conn *storagegateway.StorageGateway, fileSystemAssociationARN string) (*storagegateway.FileSystemAssociationInfo, error) {
 
 	input := &storagegateway.DescribeFileSystemAssociationsInput{

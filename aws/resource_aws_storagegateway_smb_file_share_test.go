@@ -960,7 +960,7 @@ resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
 }
-`, rName))
+`, rName)
 }
 
 func testAccAWSStorageGateway_SmbFileShare_GuestAccessBase(rName string) string {
@@ -1011,7 +1011,7 @@ resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSStorageGatewaySmbFileShareConfig_Authentication_ActiveDirectory(rName, domainName string) string {
@@ -1022,7 +1022,7 @@ resource "aws_storagegateway_smb_file_share" "test" {
   location_arn   = aws_s3_bucket.test.arn
   role_arn       = aws_iam_role.test.arn
 }
-`)
+`
 }
 
 func testAccAWSStorageGatewaySmbFileShareConfig_Authentication_GuestAccess(rName string) string {
@@ -1099,6 +1099,19 @@ resource "aws_storagegateway_smb_file_share" "test" {
 `, guessMimeTypeEnabled))
 }
 
+func testAccAWSStorageGatewaySmbFileShareConfig_OpLocksEnabled(rName string, opLocksEnabled bool) string {
+	return composeConfig(testAccAWSStorageGateway_SmbFileShare_GuestAccessBase(rName), fmt.Sprintf(`
+resource "aws_storagegateway_smb_file_share" "test" {
+  # Use GuestAccess to simplify testing
+  authentication  = "GuestAccess"
+  gateway_arn     = aws_storagegateway_gateway.test.arn
+  oplocks_enabled = %t
+  location_arn    = aws_s3_bucket.test.arn
+  role_arn        = aws_iam_role.test.arn
+}
+`, opLocksEnabled))
+}
+
 func testAccAWSStorageGatewaySmbFileShareConfig_InvalidUserList_Single(rName, domainName, invalidUser1 string) string {
 	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domainName) + fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
@@ -1109,7 +1122,7 @@ resource "aws_storagegateway_smb_file_share" "test" {
   location_arn      = aws_s3_bucket.test.arn
   role_arn          = aws_iam_role.test.arn
 }
-`, invalidUser1))
+`, invalidUser1)
 }
 
 func testAccAWSStorageGatewaySmbFileShareConfig_InvalidUserList_Multiple(rName, domainName, invalidUser1, invalidUser2 string) string {
@@ -1118,7 +1131,7 @@ resource "aws_storagegateway_smb_file_share" "test" {
   location_arn      = aws_s3_bucket.test.arn
   role_arn          = aws_iam_role.test.arn
 }
-`, invalidUser1, invalidUser2))
+`, invalidUser1, invalidUser2)
 }
 
 func testAccAWSStorageGatewaySmbFileShareConfig_KMSEncrypted(rName string, kmsEncrypted bool) string {
@@ -1225,7 +1238,7 @@ resource "aws_storagegateway_smb_file_share" "test" {
   role_arn        = aws_iam_role.test.arn
   valid_user_list = [%q]
 }
-`, validUser1))
+`, validUser1)
 }
 
 func testAccAWSStorageGatewaySmbFileShareConfig_ValidUserList_Multiple(rName, domainName, validUser1, validUser2 string) string {
@@ -1238,7 +1251,7 @@ resource "aws_storagegateway_smb_file_share" "test" {
   role_arn        = aws_iam_role.test.arn
   valid_user_list = [%q, %q]
 }
-`, validUser1, validUser2))
+`, validUser1, validUser2)
 }
 
 func testAccAWSStorageGatewaySmbFileShareConfig_AdminUserList_Single(rName, domainName, adminUser1 string) string {
@@ -1247,7 +1260,7 @@ resource "aws_storagegateway_smb_file_share" "test" {
   role_arn        = aws_iam_role.test.arn
   admin_user_list = [%q]
 }
-`, adminUser1))
+`, adminUser1)
 }
 
 func testAccAWSStorageGatewaySmbFileShareConfig_AdminUserList_Multiple(rName, domainName, adminUser1, adminUser2 string) string {
@@ -1260,7 +1273,7 @@ resource "aws_storagegateway_smb_file_share" "test" {
   role_arn        = aws_iam_role.test.arn
   admin_user_list = [%q, %q]
 }
-`, adminUser1, adminUser2))
+`, adminUser1, adminUser2)
 }
 
 func testAccAWSStorageGatewaySmbFileShareConfigTags1(rName, tagKey1, tagValue1 string) string {
@@ -1305,7 +1318,7 @@ resource "aws_storagegateway_smb_file_share" "test" {
   role_arn        = aws_iam_role.test.arn
   smb_acl_enabled = %[1]t
 }
-`, enabled))
+`, enabled)
 }
 
 func testAccAWSStorageGatewaySmbFileShareAuditDestinationConfig(rName string) string {
