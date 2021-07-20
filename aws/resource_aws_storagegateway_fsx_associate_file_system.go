@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	tfsgw "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway"
+	tfsgwerr "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
 )
@@ -124,7 +124,7 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemCreate(d *schema.ResourceDat
 	log.Printf("[DEBUG] Associating File System to Storage Gateway: %s", input)
 	output, err := conn.AssociateFileSystem(input)
 	if err != nil {
-		if tfsgw.InvalidGatewayRequestErrCodeEquals(err, tfsgw.FileSystemAssociationNotFound) {
+		if tfsgwerr.InvalidGatewayRequestErrCodeEquals(err, tfsgwerr.FileSystemAssociationNotFound) {
 			log.Printf("[WARN] FSX File System %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -160,8 +160,7 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemRead(d *schema.ResourceData,
 		return nil
 	}
 
-	arn := filesystem.FileSystemAssociationARN
-	d.Set("arn", arn)
+	d.Set("arn", filesystem.FileSystemAssociationARN)
 
 	d.Set("audit_destination_arn", filesystem.AuditDestinationARN)
 	d.Set("gateway_arn", filesystem.GatewayARN)
