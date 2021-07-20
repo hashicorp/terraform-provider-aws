@@ -183,6 +183,11 @@ func resourceAwsTransferServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+
+			"directory_id": {
+				Type: schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -251,6 +256,14 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		input.IdentityProviderDetails.Url = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("directory_id"); ok {
+		if input.IdentityProviderDetails == nil {
+			input.IdentityProviderDetails = &transfer.IdentityProviderDetails{}
+		}
+
+		input.IdentityProviderDetails.DirectoryId = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
