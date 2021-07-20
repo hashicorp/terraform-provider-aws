@@ -16,7 +16,7 @@ func dataSourceAwsElastiCacheUser() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"access_string": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"engine": {
 				Type:     schema.TypeString,
@@ -38,7 +38,7 @@ func dataSourceAwsElastiCacheUser() *schema.Resource {
 			},
 			"user_name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 		},
 	}

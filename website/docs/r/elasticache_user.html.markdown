@@ -3,60 +3,50 @@ subcategory: "ElastiCache"
 layout: "aws"
 page_title: "AWS: aws_elasticache_user"
 description: |-
-  Provides an ElastiCache User resource.
+  Provides an ElastiCache user.
 ---
 
 # Resource: aws_elasticache_user
 
-Provides an ElastiCache User resource.
+Provides an ElastiCache user resource.
 
 ## Example Usage
 
-Here's a basic example of using `aws_elasticache_user` with no passwords configured:
-
-```hcl
+```terraform
 resource "aws_elasticache_user" "test" {
-  user_id       = "test-user-id"
-  user_name     = "test-user-name"
-  access_string = "on ~* +@all"
-}
-```
-
-Here's a more advanced example of using `aws_elasticache_user` with passwords configured:
-
-```hcl
-resource "aws_elasticache_user" "test" {
-  user_id              = "test-user-id"
-  user_name            = "test-user-name"
-  access_string        = "on ~* +@all"
-  engine               = "redis"
-  no_password_required = false
-  passwords            = ["password1234567890", "password0123456789"]
+  user_id       = "testUserId"
+  user_name     = "testUserName"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
-* `user_id` – (Required) User ID of the Elasticache User.
-* `user_name` – (Required) User Name of the Elasticache User.
-* `access_string` – (Required) List of space-delimited rules which are applied on the Elasticache User.
-* `engine` – (Optional) Name of the cache engine to be used.  Valid value for this parameter is `redis`.
-* `no_password_required` - (Optional) Whether the ElastiCache User will have passwords. Valid values for this parameters are `true` and `false`. Default is set to `true`.
-* `passwords` - (Optional) Set of Passwords configured for the ElastiCache User if `no_password_required` is set to `false`.  This has a minimum of `1` password entry and a maximum of `2` password entries.
+* `access_string` - (Required) Access permissions string used for this user.
+* `engine` - (Required) The current supported value is `REDIS`.
+* `user_id` - (Required) The ID of the user.
+* `user_name` - (Required) The username of the user.
+
+The following arguments are optional:
+
+* `no_password_required` - (Optional) Indicates a password is not required for this user.
+* `passwords` - (Optional) Passwords used for this user. You can create up to two passwords for each user.
+* `tags` - (Optional) A list of tags to be added to this resource. A tag is a key-value pair.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `user_id`
-
+* `arn` - The ARN of the created ElastiCache User.
 
 ## Import
 
-ElastiCache Users can be imported using the `user_id`, e.g.
+ElastiCache users can be imported using the `user_id`, e.g.
 
 ```
-$ terraform import aws_elasticache_user.foo tf-test-user-id
+$ terraform import aws_elasticache_user.my_user userId1
 ```

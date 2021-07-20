@@ -36,7 +36,7 @@ resource "aws_elasticache_user" "test-basic" {
   user_id              = %[1]q
   user_name            = %[1]q
   access_string        = "on ~* +@all"
-  engine               = "redis"
+  engine               = "REDIS"
   no_password_required = true
 }
 

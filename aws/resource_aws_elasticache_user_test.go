@@ -1,188 +1,156 @@
 package aws
 
 import (
+	//"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSElasticacheUser_basic(t *testing.T) {
-	var u elasticache.User
-	resourceName := "aws_elasticache_user.test-basic"
-	rName := fmt.Sprintf("a-user-test-tf-basic")
+	var user elasticache.User
+	rName := acctest.RandomWithPrefix("tf-acc")
+	resourceName := "aws_elasticache_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticacheUserConfig(rName),
+				Config: testAccAWSElasticacheUserConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheUserExists(&u, resourceName),
-					testAccCheckAWSElasticacheUserAttributes(&u, rName),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					testAccCheckAWSElasticacheUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* +@all"),
+					resource.TestCheckResourceAttr(resourceName, "no_password_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "user_name", "username1"),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"no_password_required",
+					"passwords",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheUser_tags(t *testing.T) {
+	var user elasticache.User
+	rName := acctest.RandomWithPrefix("tf-acc")
+	resourceName := "aws_elasticache_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheUserConfigTags(rName, "tagKey", "tagVal"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
+					resource.TestCheckResourceAttr(resourceName, "no_password_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "user_name", "username1"),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.tagKey", "tagVal"),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheUserConfigTags(rName, "tagKey", "tagVal2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
+					resource.TestCheckResourceAttr(resourceName, "no_password_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "user_name", "username1"),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.tagKey", "tagVal2"),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheUserConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
+					resource.TestCheckResourceAttr(resourceName, "no_password_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "user_name", "username1"),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSElasticacheUser_updateAccessString(t *testing.T) {
-	var u elasticache.User
-	resourceName := "aws_elasticache_user.test-access-string"
-	rName := fmt.Sprintf("a-user-test-tf-update-access-string")
+func TestAccAWSElasticacheUser_disappears(t *testing.T) {
+	var user elasticache.User
+	rName := acctest.RandomWithPrefix("tf-acc")
+	resourceName := "aws_elasticache_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticacheUserConfigUpdateAccessStringPre(rName),
+				Config: testAccAWSElasticacheUserConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheUserExists(&u, resourceName),
-					testAccCheckAWSElasticacheUserAttributes(&u, rName),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* +@all"),
+					testAccCheckAWSElasticacheUserExists(resourceName, &user),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsElasticacheUser(), resourceName),
 				),
-			},
-			{
-				Config: testAccAWSElasticacheUserConfigUpdateAccessStringPost(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheUserExists(&u, resourceName),
-					testAccCheckAWSElasticacheUserAttributes(&u, rName),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "access_string", "off ~* +@all"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSElasticacheUser_addPasswords(t *testing.T) {
-	var u elasticache.User
-	resourceName := "aws_elasticache_user.test-passwords-add"
-	rName := fmt.Sprintf("a-user-test-tf-update-passwords-add")
-	pass1 := fmt.Sprintf("strongpassword12345678")
-	pass2 := fmt.Sprintf("strongpassword23456789")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSElasticacheUserDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSElasticacheUserConfigNoPasswords("add", rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheUserExists(&u, resourceName),
-					testAccCheckAWSElasticacheUserAttributes(&u, rName),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* +@all"),
-				),
-			},
-			{
-				Config: testAccAWSElasticacheUserConfigPasswords("add", rName, pass1, pass2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheUserExists(&u, resourceName),
-					testAccCheckAWSElasticacheUserAttributes(&u, rName),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* +@all"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSElasticacheUser_removePasswords(t *testing.T) {
-	var u elasticache.User
-	resourceName := "aws_elasticache_user.test-passwords-remove"
-	rName := fmt.Sprintf("a-user-test-tf-update-passwords-remove")
-	pass1 := fmt.Sprintf("strongpassw0rd12345678")
-	pass2 := fmt.Sprintf("strongpassw0rd23456789")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSElasticacheUserDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSElasticacheUserConfigPasswords("remove", rName, pass1, pass2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheUserExists(&u, resourceName),
-					testAccCheckAWSElasticacheUserAttributes(&u, rName),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* +@all"),
-				),
-			},
-			{
-				Config: testAccAWSElasticacheUserConfigNoPasswords("remove", rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheUserExists(&u, resourceName),
-					testAccCheckAWSElasticacheUserAttributes(&u, rName),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* +@all"),
-				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
 }
 
 func testAccCheckAWSElasticacheUserDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
+	return testAccCheckAWSElasticacheUserDestroyWithProvider(s, testAccProvider)
+}
+
+func testAccCheckAWSElasticacheUserDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
+	conn := provider.Meta().(*AWSClient).elasticacheconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_user" {
 			continue
 		}
 
-		params := elasticache.DescribeUsersInput{
-			UserId: aws.String(rs.Primary.ID),
-		}
-
-		response, err := conn.DescribeUsers(&params)
-
-		if isAWSErr(err, elasticache.ErrCodeUserNotFoundFault, "") {
-			continue
-		}
-
+		_, err := finder.ElastiCacheUserById(conn, rs.Primary.ID)
 		if err != nil {
-			return err
-		}
-
-		if response != nil {
-			for _, users := range response.Users {
-				if aws.StringValue(users.UserId) == rs.Primary.ID {
-					return fmt.Errorf("[ERROR] ElastiCache User (%s) still exists", rs.Primary.ID)
-				}
+			if tfresource.NotFound(err) {
+				return nil
 			}
 		}
+
+		return err
 	}
+
 	return nil
 }
 
-// ElastiCache User Validations
+func testAccCheckAWSElasticacheUserExists(n string, v *elasticache.User) resource.TestCheckFunc {
+	return testAccCheckAWSElasticacheUserExistsWithProvider(n, v, func() *schema.Provider { return testAccProvider })
+}
 
-func testAccCheckAWSElasticacheUserExists(u *elasticache.User, n string) resource.TestCheckFunc {
+func testAccCheckAWSElasticacheUserExistsWithProvider(n string, v *elasticache.User, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -190,111 +158,46 @@ func testAccCheckAWSElasticacheUserExists(u *elasticache.User, n string) resourc
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("[ERROR] No ElastiCache User ID is set")
+			return fmt.Errorf("No ElastiCache User ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
-
-		params := elasticache.DescribeUsersInput{
-			UserId: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeUsers(&params)
+		provider := providerF()
+		conn := provider.Meta().(*AWSClient).elasticacheconn
+		resp, err := finder.ElastiCacheUserById(conn, rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("[ERROR] ElastiCache User: %v", err)
+			return fmt.Errorf("ElastiCache User (%s) not found: %w", rs.Primary.ID, err)
 		}
 
-		if len(resp.Users) != 1 ||
-			*resp.Users[0].UserId != rs.Primary.ID {
-			return fmt.Errorf("[ERROR] ElastiCache User not found")
-		}
-
-		*u = *resp.Users[0]
-
-		return nil
-	}
-
-}
-
-func testAccCheckAWSElasticacheUserAttributes(u *elasticache.User, rName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
-		if *u.UserId != rName {
-			return fmt.Errorf("Bad ElastiCache User ID: %#v", u.UserId)
-		}
-
-		if *u.UserName != rName {
-			return fmt.Errorf("Bad ElastiCache User Name: %#v", u.UserName)
-		}
-
-		if *u.Engine != "redis" {
-			return fmt.Errorf("Bad ElastiCache User Engine: %#v", u.Engine)
-		}
+		*v = *resp
 
 		return nil
 	}
 }
 
-// Basic Resource
-
-func testAccAWSElasticacheUserConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_elasticache_user" "test-basic" {
-  user_id              = %[1]q
-  user_name            = %[1]q
-  access_string        = "on ~* +@all"
-  engine               = "redis"
-  no_password_required = true
-}
-`, rName)
-}
-
-// Updates for Passwords
-
-func testAccAWSElasticacheUserConfigNoPasswords(operation string, rName string) string {
-	return fmt.Sprintf(`
-resource "aws_elasticache_user" "test-passwords-%[1]s" {
-  user_id       = %[2]q
-  user_name     = %[2]q
-  access_string = "on ~* +@all"
-  engine        = "redis"
-}
-`, operation, rName)
-}
-
-func testAccAWSElasticacheUserConfigPasswords(operation string, rName string, pass1 string, pass2 string) string {
-	return fmt.Sprintf(`
-resource "aws_elasticache_user" "test-passwords-%[1]s" {
-  user_id              = %[2]q
-  user_name            = %[2]q
-  access_string        = "on ~* +@all"
-  engine               = "redis"
-  no_password_required = false
-  passwords            = [%[3]q, %[4]q]
-}
-`, operation, rName, pass1, pass2)
-}
-
-// Updates for Access String
-
-func testAccAWSElasticacheUserConfigUpdateAccessStringPre(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_elasticache_user" "test-access-string" {
+func testAccAWSElasticacheUserConfigBasic(rName string) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
-  user_name     = %[1]q
-  access_string = "on ~* +@all"
-  engine        = "redis"
+  user_name     = "username1"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
 }
-`, rName)
+`, rName))
 }
 
-func testAccAWSElasticacheUserConfigUpdateAccessStringPost(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_elasticache_user" "test-access-string" {
+func testAccAWSElasticacheUserConfigTags(rName, tagKey, tagValue string) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
-  user_name     = %[1]q
-  access_string = "off ~* +@all"
-  engine        = "redis"
+  user_name     = "username1"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
+
+  tags = {
+    %[2]s = %[3]q
+  }
 }
-`, rName)
+`, rName, tagKey, tagValue))
 }
