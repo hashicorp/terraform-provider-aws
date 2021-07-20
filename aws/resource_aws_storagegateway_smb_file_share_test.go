@@ -1108,11 +1108,11 @@ func testAccAWSStorageGatewaySmbFileShareConfig_OpLocksEnabled(rName string, opL
 	return composeConfig(testAccAWSStorageGateway_SmbFileShare_GuestAccessBase(rName), fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
   # Use GuestAccess to simplify testing
-  authentication          = "GuestAccess"
-  gateway_arn             = aws_storagegateway_gateway.test.arn
-  oplocks_enabled         = %t
-  location_arn            = aws_s3_bucket.test.arn
-  role_arn                = aws_iam_role.test.arn
+  authentication  = "GuestAccess"
+  gateway_arn     = aws_storagegateway_gateway.test.arn
+  oplocks_enabled = %t
+  location_arn    = aws_s3_bucket.test.arn
+  role_arn        = aws_iam_role.test.arn
 }
 `, opLocksEnabled))
 }
