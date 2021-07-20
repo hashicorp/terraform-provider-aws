@@ -59,7 +59,7 @@ func RetryWhenAwsErrCodeEquals(timeout time.Duration, f func() (interface{}, err
 
 // RetryWhenNotFound retries the specified function when it returns a resource.NotFoundError.
 func RetryWhenNotFound(timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
-	return RetryWhen(timeout, f, func(err error) bool { return NotFound(err) })
+	return RetryWhen(timeout, f, NotFound)
 }
 
 // RetryWhenNewResourceNotFound retries the specified function when it returns a resource.NotFoundError and `isNewResource` is true.
