@@ -40,6 +40,9 @@ func TestAccAWSTransfer_serial(t *testing.T) {
 			"Posix":                 testAccAWSTransferUser_posix,
 			"UserNameValidation":    testAccAWSTransferUser_UserName_Validation,
 		},
+		"Access": {
+			"basic":                 testAccAWSTransferAccess_basic,
+		},
 	}
 
 	for group, m := range testCases {

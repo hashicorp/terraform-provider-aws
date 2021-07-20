@@ -2,10 +2,8 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -19,9 +17,8 @@ func init() {
 }
 
 func testAccAWSTransferAccess_basic(t *testing.T) {
-	var conf transfer.DescribedServer
+	var conf transfer.DescribedAccess
 	resourceName := "aws_transfer_access.test"
-	iamRoleResourceName := "aws_iam_role.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
@@ -59,8 +56,7 @@ func testAccAWSTransferAccess_basic(t *testing.T) {
 }
 
 
-func testAccCheckAWSTransferAccessExists(n string, v *transfer.DescribedServer) resource.TestCheckFunc {
-	//TODO: Migrate from server to access
+func testAccCheckAWSTransferAccessExists(n string, v *transfer.DescribedAccess) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -68,12 +64,14 @@ func testAccCheckAWSTransferAccessExists(n string, v *transfer.DescribedServer) 
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Transfer Server ID is set")
+			return fmt.Errorf("No Transfer Access ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).transferconn
 
-		output, err := finder.ServerByID(conn, rs.Primary.ID)
+		externalID := rs.Primary.Attributes["external_id"]
+		serverID := rs.Primary.Attributes["server_id"]
+		output, err := finder.AccessByID(conn, serverID, externalID)
 
 		if err != nil {
 			return err
@@ -86,15 +84,16 @@ func testAccCheckAWSTransferAccessExists(n string, v *transfer.DescribedServer) 
 }
 
 func testAccCheckAWSTransferAccessDestroy(s *terraform.State) error {
-	//TODO: Migrate from server to access
 	conn := testAccProvider.Meta().(*AWSClient).transferconn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_transfer_server" {
+		if rs.Type != "aws_transfer_access" {
 			continue
 		}
 
-		_, err := finder.ServerByID(conn, rs.Primary.ID)
+		externalID := rs.Primary.Attributes["external_id"]
+		serverID := rs.Primary.Attributes["server_id"]
+		_, err := finder.AccessByID(conn, serverID, externalID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -104,7 +103,7 @@ func testAccCheckAWSTransferAccessDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Transfer Server %s still exists", rs.Primary.ID)
+		return fmt.Errorf("Transfer Access %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -113,7 +112,7 @@ func testAccCheckAWSTransferAccessDestroy(s *terraform.State) error {
 func testAccAWSTransferAccessBasicConfig() string {
 	//TODO: Migrate from Server to Access
 	return `
-resource "aws_transfer_server" "test" {}
+resource "aws_server_access" "test" {}
 `
 }
 
