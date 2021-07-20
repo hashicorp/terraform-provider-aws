@@ -13,8 +13,9 @@ func TestAccDataSourceAWSElasticacheUser_basic(t *testing.T) {
 	rName := fmt.Sprintf("a-user-test-tf-basic")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		Providers:  testAccProviders,
+		ErrorCheck: testAccErrorCheck(t, elasticache.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSElastiCacheUserConfigWithDataSource(rName),
