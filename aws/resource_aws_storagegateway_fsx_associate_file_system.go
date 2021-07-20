@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,12 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfsgw "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
 )
@@ -125,17 +124,10 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemCreate(d *schema.ResourceDat
 	log.Printf("[DEBUG] Associating File System to Storage Gateway: %s", input)
 	output, err := conn.AssociateFileSystem(input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, storagegateway.ErrCodeInvalidGatewayRequestException) {
-			var igrex *storagegateway.InvalidGatewayRequestException
-			if ok := errors.As(err, &igrex); ok {
-				if err := igrex.Error_; err != nil {
-					if aws.StringValue(err.ErrorCode) == "FileSystemAssociationNotFound" {
-						log.Printf("[WARN] FSX File System %q not found, removing from state", d.Id())
-						d.SetId("")
-						return nil
-					}
-				}
-			}
+		if tfsgw.InvalidGatewayRequestErrCodeEquals(err, tfsgw.FileSystemAssociationNotFound) {
+			log.Printf("[WARN] FSX File System %q not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
 		}
 
 		return fmt.Errorf("Error associating file system to storage gateway (%s): %w", d.Get("gateway_arn").(string), err)
