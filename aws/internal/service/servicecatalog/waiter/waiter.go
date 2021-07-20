@@ -43,8 +43,9 @@ const (
 
 	LaunchPathsReadyTimeout = 3 * time.Minute
 
-	ProvisionedProductReadyTimeout  = 3 * time.Minute
-	ProvisionedProductDeleteTimeout = 3 * time.Minute
+	ProvisionedProductReadyTimeout  = 30 * time.Minute
+	ProvisionedProductUpdateTimeout = 30 * time.Minute
+	ProvisionedProductDeleteTimeout = 30 * time.Minute
 
 	RecordReadyTimeout = 3 * time.Minute
 
