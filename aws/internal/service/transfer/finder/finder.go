@@ -63,3 +63,32 @@ func UserByID(conn *transfer.Transfer, serverId, userName string) (*transfer.Des
 
 	return output, nil
 }
+
+func AccessByID(conn *transfer.Transfer, serverId, id string) (*transfer.DescribedAccess, error) {
+	input := &transfer.DescribeAccessInput{
+		ExternalId: aws.String(id),
+		ServerId: aws.String(serverId),
+	}
+
+	output, err := conn.DescribeAccess(input)
+
+	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Access == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output.Access, nil
+}
