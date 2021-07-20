@@ -47,7 +47,7 @@ const (
 	ProvisionedProductUpdateTimeout = 30 * time.Minute
 	ProvisionedProductDeleteTimeout = 30 * time.Minute
 
-	RecordReadyTimeout = 3 * time.Minute
+	RecordReadyTimeout = 30 * time.Minute
 
 	PortfolioConstraintsReadyTimeout = 3 * time.Minute
 
