@@ -100,8 +100,7 @@ func TestAccAwsCloudformationResource_DesiredState_BooleanValueRemoved(t *testin
 			{
 				Config: testAccAwsCloudformationResourceConfigDesiredStateBooleanValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					// JSON patch operation is submitted, but CloudFormation does not revert value to property default
-					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Enabled":true`)),
+					resource.TestMatchResourceAttr(resourceName, "resource_model", regexp.MustCompile(`"Enabled":false`)),
 				),
 			},
 		},
