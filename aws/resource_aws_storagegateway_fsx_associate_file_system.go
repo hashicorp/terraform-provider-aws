@@ -138,7 +138,7 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemCreate(d *schema.ResourceDat
 			}
 		}
 
-		return fmt.Errorf("Error associating file system to storage gateway: %w", err)
+		return fmt.Errorf("Error associating file system to storage gateway (%s): %w", d.Get("gateway_arn").(string), err)
 	}
 
 	d.SetId(aws.StringValue(output.FileSystemAssociationARN))
@@ -242,7 +242,6 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemDelete(d *schema.ResourceDat
 	if err != nil {
 		if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file system association") {
 			log.Printf("[WARN] Storage Gateway FSx File System Association %q not found, removing from state", d.Id())
-			d.SetId("")
 			return nil
 		}
 	}
