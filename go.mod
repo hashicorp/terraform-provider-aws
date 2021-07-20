@@ -28,6 +28,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
-replace github.com/aws/aws-sdk-go => github.com/hashicorp/aws-sdk-go-private v1.38.23-0.20210420184552-ae24b9862457
+replace github.com/aws/aws-sdk-go => github.com/hashicorp/aws-sdk-go-private v1.39.2-0.20210716172600-daec78152c52
 
 replace github.com/hashicorp/terraform-plugin-sdk/v2 => github.com/gdavison/terraform-plugin-sdk/v2 v2.7.1-0.20210913224932-c7c2dbd9e010
