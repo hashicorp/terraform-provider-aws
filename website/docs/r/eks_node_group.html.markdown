@@ -25,6 +25,10 @@ resource "aws_eks_node_group" "example" {
     min_size     = 1
   }
 
+  update_config {
+    max_unavailable = 2
+  }
+
   # Ensure that IAM Role permissions are created before and deleted after EKS Node Group handling.
   # Otherwise, EKS will not be able to properly delete EC2 Instances and Elastic Network Interfaces.
   depends_on = [
@@ -161,6 +165,13 @@ The following arguments are optional:
 * `key` - (Required) The key of the taint. Maximum length of 63.
 * `value` - (Optional) The value of the taint. Maximum length of 63.
 * `effect` - (Required) The effect of the taint. Valid values: `NO_SCHEDULE`, `NO_EXECUTE`, `PREFER_NO_SCHEDULE`.
+
+### update_config Configuration Block
+
+The following arguments are mutually exclusive.
+
+* `max_unavailable` - (Optional) Desired max number of unavailable worker nodes during node group update.
+* `max_unavailable_percentage` - (Optional) Desired max percentage of unavailable worker nodes during node group update.
 
 ## Attributes Reference
 

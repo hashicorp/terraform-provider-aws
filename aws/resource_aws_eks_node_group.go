@@ -247,6 +247,27 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 					},
 				},
 			},
+			"update_config": {
+				Type:     schema.TypeList,
+				Required: false,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_unavailable": {
+							Type:          schema.TypeInt,
+							Required:      true,
+							ValidateFunc:  validation.IntBetween(1, 100),
+							ConflictsWith: []string{"max_unavailable_percentage"},
+						},
+						"max_unavailable_percentage": {
+							Type:          schema.TypeInt,
+							Required:      true,
+							ValidateFunc:  validation.IntBetween(1, 100),
+							ConflictsWith: []string{"max_unavailable"},
+						},
+					},
+				},
+			},
 			"version": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -311,6 +332,10 @@ func resourceAwsEksNodeGroupCreate(ctx context.Context, d *schema.ResourceData, 
 
 	if v, ok := d.GetOk("taint"); ok && v.(*schema.Set).Len() > 0 {
 		input.Taints = expandEksTaints(v.(*schema.Set).List())
+	}
+
+	if v := d.Get("update_config").([]interface{}); len(v) > 0 {
+		input.UpdateConfig = expandEksNodegroupUpdateConfig(v)
 	}
 
 	if v, ok := d.GetOk("version"); ok {
@@ -406,6 +431,10 @@ func resourceAwsEksNodeGroupRead(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("error setting taint: %s", err)
 	}
 
+	if err := d.Set("update_config", flattenEksNodeGroupUpdateConfig(nodeGroup.UpdateConfig)); err != nil {
+		return fmt.Errorf("error setting update_config: %w", err)
+	}
+
 	d.Set("version", nodeGroup.Version)
 
 	tags := keyvaluetags.EksKeyValueTags(nodeGroup.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
@@ -483,7 +512,7 @@ func resourceAwsEksNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if d.HasChanges("labels", "scaling_config", "taint") {
+	if d.HasChanges("labels", "scaling_config", "update_config", "taint") {
 		oldLabelsRaw, newLabelsRaw := d.GetChange("labels")
 
 		input := &eks.UpdateNodegroupConfigInput{
@@ -499,6 +528,10 @@ func resourceAwsEksNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		oldTaintsRaw, newTaintsRaw := d.GetChange("taint")
 		input.Taints = expandEksUpdateTaintsPayload(oldTaintsRaw.(*schema.Set).List(), newTaintsRaw.(*schema.Set).List())
+
+		if v := d.Get("update_config").([]interface{}); len(v) > 0 {
+			input.UpdateConfig = expandEksNodegroupUpdateConfig(v)
+		}
 
 		output, err := conn.UpdateNodegroupConfig(input)
 
@@ -727,6 +760,26 @@ func expandEksRemoteAccessConfig(l []interface{}) *eks.RemoteAccessConfig {
 	return config
 }
 
+func expandEksNodegroupUpdateConfig(l []interface{}) *eks.NodegroupUpdateConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &eks.NodegroupUpdateConfig{}
+
+	if v, ok := m["max_unavailable"].(int); ok {
+		config.MaxUnavailable = aws.Int64(int64(v))
+	}
+
+	if v, ok := m["max_unavailable_percentage"].(int); ok {
+		config.MaxUnavailablePercentage = aws.Int64(int64(v))
+	}
+
+	return config
+}
+
 func expandEksUpdateLabelsPayload(oldLabelsMap, newLabelsMap interface{}) *eks.UpdateLabelsPayload {
 	// EKS Labels operate similarly to keyvaluetags
 	oldLabels := keyvaluetags.New(oldLabelsMap)
@@ -814,6 +867,19 @@ func flattenEksNodeGroupScalingConfig(config *eks.NodegroupScalingConfig) []map[
 		"desired_size": aws.Int64Value(config.DesiredSize),
 		"max_size":     aws.Int64Value(config.MaxSize),
 		"min_size":     aws.Int64Value(config.MinSize),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenEksNodeGroupUpdateConfig(config *eks.NodegroupUpdateConfig) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"max_unavailable":            aws.Int64Value(config.MaxUnavailable),
+		"max_unavailable_percentage": aws.Int64Value(config.MaxUnavailablePercentage),
 	}
 
 	return []map[string]interface{}{m}
