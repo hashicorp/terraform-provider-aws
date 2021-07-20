@@ -52,8 +52,6 @@ func StorageGatewayGatewayJoinDomainStatus(conn *storagegateway.StorageGateway, 
 
 		output, err := conn.DescribeSMBSettings(input)
 
-		log.Printf("[DEBUG] Storage Gateway Gateway Join Domain Status: %s", *output.ActiveDirectoryStatus)
-
 		if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway is not connected") {
 			return output, storagegateway.ActiveDirectoryStatusUnknownError, nil
 		}
@@ -150,4 +148,20 @@ func FsxFileSystemStatus(conn *storagegateway.StorageGateway, fileSystemArn stri
 
 		return output, aws.StringValue(output.FileSystemAssociationStatus), nil
 	}
+}
+
+func FsxFileSystemAvailableAvailableStatusPending() []string {
+	return []string{"CREATING", "UPDATING"}
+}
+
+func FsxFileSystemAvailableAvailableStatusTarget() []string {
+	return []string{"AVAILABLE"}
+}
+
+func FsxFileSystemAvailableDeletedStatusPending() []string {
+	return []string{"AVAILABLE", "DELETING", "FORCE_DELETING"}
+}
+
+func FsxFileSystemAvailableDeletedStatusTarget() []string {
+	return []string{}
 }
