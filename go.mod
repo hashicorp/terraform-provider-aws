@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/agl/ed25519 v0.0.0-20170116200512-5312a6153412 // indirect
-	github.com/aws/aws-sdk-go v1.39.5
+	github.com/aws/aws-sdk-go v1.40.3
 	github.com/beevik/etree v1.1.0
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/hashicorp/aws-sdk-go-base v0.7.1
@@ -22,3 +22,5 @@ require (
 	github.com/pquerna/otp v1.3.0
 	gopkg.in/yaml.v2 v2.4.0
 )
+
+replace github.com/hashicorp/terraform-plugin-sdk/v2 => github.com/gdavison/terraform-plugin-sdk/v2 v2.0.2-0.20210714181518-b5a3dc95a675

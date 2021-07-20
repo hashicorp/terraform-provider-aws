@@ -1133,6 +1133,13 @@ To run a specific resource sweeper:
 $ SWEEPARGS=-sweep-run=aws_example_thing make sweep
 ```
 
+To run sweepers with an assumed role, use the following additional environment variables:
+
+* `TF_AWS_ASSUME_ROLE_ARN` - Required.
+* `TF_AWS_ASSUME_ROLE_DURATION` - Optional, defaults to 1 hour (3600).
+* `TF_AWS_ASSUME_ROLE_EXTERNAL_ID` - Optional.
+* `TF_AWS_ASSUME_ROLE_SESSION_NAME` - Optional.
+
 ### Writing Test Sweepers
 
 The first step is to initialize the resource into the test sweeper framework:

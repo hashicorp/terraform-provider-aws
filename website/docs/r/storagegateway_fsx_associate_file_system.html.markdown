@@ -85,7 +85,7 @@ The following arguments are supported:
 * `gateway_arn` - (Required) The Amazon Resource Name (ARN) of the gateway.
 * `location_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon FSx file system to associate with the FSx File Gateway.
 * `username` - (Required) The user name of the user credential that has permission to access the root share of the Amazon FSx file system. The user account must belong to the Amazon FSx delegated admin user group.
-* `password` - (Required, sensative) The password of the user credential.
+* `password` - (Required, sensitive) The password of the user credential.
 * `audit_destination_arn` - (Optional) The Amazon Resource Name (ARN) of the storage used for the audit logs.
 * `cache_attributes` - (Optional) Refresh cache information. see [Cache Attributes](#cache_attributes) for more details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -102,9 +102,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Amazon Resource Name (ARN) of the FSx file system association
 * `arn` - Amazon Resource Name (ARN) of the newly created file system association.
-* `gateway_arn` - Amazon Resource Name (ARN) of the Storage Gateway
-* `location_arn` - Amazon Resource Name (ARN) of the FSx File System
-* `username` - Username used to connect to Directory Service
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import

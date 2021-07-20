@@ -38,10 +38,11 @@ func testSweepGlueCrawlers(region string) error {
 		for _, crawler := range page.Crawlers {
 			name := aws.StringValue(crawler.Name)
 
-			log.Printf("[INFO] Deleting Glue Crawler: %s", name)
-			_, err := conn.DeleteCrawler(&glue.DeleteCrawlerInput{
-				Name: aws.String(name),
-			})
+			r := resourceAwsGlueCrawler()
+			d := r.Data(nil)
+			d.SetId(name)
+
+			err := r.Delete(d, client)
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete Glue Crawler %s: %s", name, err)
 			}
@@ -641,6 +642,42 @@ func TestAccAWSGlueCrawler_S3Target_ConnectionName(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueCrawler_S3Target_SampleSize(t *testing.T) {
+	var crawler glue.Crawler
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_crawler.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCrawlerConfig_S3TargetSampleSize(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_target.0.sample_size", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGlueCrawlerConfig_S3TargetSampleSize(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_target.0.sample_size", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSGlueCrawler_S3Target_Exclusions(t *testing.T) {
 	var crawler glue.Crawler
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -964,6 +1001,13 @@ func TestAccAWSGlueCrawler_Configuration(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGlueCrawlerConfig_Configuration(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "configuration", ""),
+				),
 			},
 		},
 	})
@@ -2561,4 +2605,25 @@ resource "aws_glue_crawler" "test" {
   }
 }
 `, rName, policy)
+}
+
+func testAccGlueCrawlerConfig_S3TargetSampleSize(rName string, size int) string {
+	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+
+  s3_target {
+    sample_size = %[2]d
+    path        = "s3://bucket1"
+  }
+}
+`, rName, size)
 }

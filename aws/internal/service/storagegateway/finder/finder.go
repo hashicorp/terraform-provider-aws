@@ -7,7 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	tfstoragegateway "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway"
 )
 
 func LocalDiskByDiskId(conn *storagegateway.StorageGateway, gatewayARN string, diskID string) (*storagegateway.Disk, error) {
@@ -85,6 +86,35 @@ func UploadBufferDisk(conn *storagegateway.StorageGateway, gatewayARN string, di
 	return result, err
 }
 
+func SMBFileShareByARN(conn *storagegateway.StorageGateway, arn string) (*storagegateway.SMBFileShareInfo, error) {
+	input := &storagegateway.DescribeSMBFileSharesInput{
+		FileShareARNList: aws.StringSlice([]string{arn}),
+	}
+
+	output, err := conn.DescribeSMBFileShares(input)
+
+	if tfstoragegateway.OperationErrorCode(err) == tfstoragegateway.OperationErrCodeFileShareNotFound {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.SMBFileShareInfoList) == 0 || output.SMBFileShareInfoList[0] == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	// TODO Check for multiple results.
+	// TODO https://github.com/hashicorp/terraform-provider-aws/pull/17613.
+
+	return output.SMBFileShareInfoList[0], nil
 func FileSystemAssociationByARN(conn *storagegateway.StorageGateway, fileSystemAssociationARN string) (*storagegateway.FileSystemAssociationInfo, error) {
 
 	input := &storagegateway.DescribeFileSystemAssociationsInput{
