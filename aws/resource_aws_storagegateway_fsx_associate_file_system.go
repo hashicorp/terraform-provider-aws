@@ -231,11 +231,13 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemDelete(d *schema.ResourceDat
 	log.Printf("[DEBUG] Deleting Storage Gateway File System Association: %s", input)
 	_, err := conn.DisassociateFileSystem(input)
 	if err != nil {
-		if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file system association") {
-			log.Printf("[WARN] Storage Gateway FSx File System Association %q not found, removing from state", d.Id())
+		if tfsgwerr.InvalidGatewayRequestErrCodeEquals(err, tfsgwerr.FileSystemAssociationNotFound) {
+			log.Printf("[WARN] FSX File System Association %q not found, removing from state", d.Id())
+			d.SetId("")
 			return nil
 		}
 	}
+
 	if _, err = waiter.FsxFileSystemDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		if isResourceNotFoundError(err) {
 			return nil
