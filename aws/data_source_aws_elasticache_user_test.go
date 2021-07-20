@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAWSElasticacheUser_basic(t *testing.T) {
 	resourceName := "aws_elasticache_user.test-basic"
 	dataSourceName := "data.aws_elasticache_user.test-basic"
-	rName := fmt.Sprintf("a-user-test-tf-basic")
+	rName := acctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
