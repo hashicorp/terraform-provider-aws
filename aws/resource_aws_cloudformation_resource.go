@@ -2,6 +2,7 @@ package aws
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"regexp"
@@ -16,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/cfjsonpatch"
+	"github.com/mattbaird/jsonpatch"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
 )
 
@@ -174,7 +175,7 @@ func resourceAwsCloudFormationResourceUpdate(ctx context.Context, d *schema.Reso
 	if d.HasChange("desired_state") {
 		oldRaw, newRaw := d.GetChange("desired_state")
 
-		patchOperations, err := cfjsonpatch.PatchOperations(oldRaw, newRaw)
+		patchDocument, err := patchDocument(oldRaw.(string), newRaw.(string))
 
 		if err != nil {
 			return diag.Diagnostics{
@@ -187,9 +188,9 @@ func resourceAwsCloudFormationResourceUpdate(ctx context.Context, d *schema.Reso
 		}
 
 		input := &cloudformation.UpdateResourceInput{
-			ClientToken:     aws.String(resource.UniqueId()),
-			Identifier:      aws.String(d.Id()),
-			PatchOperations: patchOperations,
+			ClientToken:   aws.String(resource.UniqueId()),
+			Identifier:    aws.String(d.Id()),
+			PatchDocument: aws.String(patchDocument),
 		}
 
 		if v, ok := d.GetOk("role_arn"); ok {
@@ -333,18 +334,14 @@ func resourceAwsCloudFormationResourceCustomizeDiffSchemaDiff(ctx context.Contex
 		return fmt.Errorf("error converting CloudFormation Resource Schema JSON: %w", err)
 	}
 
-	patchOperations, err := cfjsonpatch.PatchOperations(oldDesiredStateRaw, newDesiredStateRaw)
+	patches, err := jsonpatch.CreatePatch([]byte(oldDesiredStateRaw.(string)), []byte(newDesiredStateRaw.(string)))
 
 	if err != nil {
 		return fmt.Errorf("error creating desired_state JSON Patch: %w", err)
 	}
 
-	for _, patchOperation := range patchOperations {
-		if patchOperation == nil {
-			continue
-		}
-
-		if cfResource.IsCreateOnlyPropertyPath(aws.StringValue(patchOperation.Path)) {
+	for _, patch := range patches {
+		if cfResource.IsCreateOnlyPropertyPath(patch.Path) {
 			if err := diff.ForceNew("desired_state"); err != nil {
 				return fmt.Errorf("error setting desired_state ForceNew: %w", err)
 			}
@@ -354,4 +351,21 @@ func resourceAwsCloudFormationResourceCustomizeDiffSchemaDiff(ctx context.Contex
 	}
 
 	return nil
+}
+
+// patchDocument returns a JSON Patch document describing the difference between `old` and `new`.
+func patchDocument(old, new string) (string, error) {
+	patch, err := jsonpatch.CreatePatch([]byte(old), []byte(new))
+
+	if err != nil {
+		return "", err
+	}
+
+	b, err := json.Marshal(patch)
+
+	if err != nil {
+		return "", err
+	}
+
+	return string(b), nil
 }
