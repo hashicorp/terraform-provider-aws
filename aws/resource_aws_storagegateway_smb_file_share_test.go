@@ -5,11 +5,12 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSStorageGatewaySmbFileShare_Authentication_ActiveDirectory(t *testing.T) {
@@ -878,22 +879,17 @@ func testAccCheckAWSStorageGatewaySmbFileShareDestroy(s *terraform.State) error 
 			continue
 		}
 
-		input := &storagegateway.DescribeSMBFileSharesInput{
-			FileShareARNList: []*string{aws.String(rs.Primary.ID)},
+		_, err := finder.SMBFileShareByARN(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		output, err := conn.DescribeSMBFileShares(input)
-
 		if err != nil {
-			if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
-				continue
-			}
 			return err
 		}
 
-		if output != nil && len(output.SMBFileShareInfoList) > 0 && output.SMBFileShareInfoList[0] != nil {
-			return fmt.Errorf("Storage Gateway SMB File Share %q still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("Storage Gateway SMB File Share %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -908,21 +904,14 @@ func testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName string, smbFil
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
-		input := &storagegateway.DescribeSMBFileSharesInput{
-			FileShareARNList: []*string{aws.String(rs.Primary.ID)},
-		}
 
-		output, err := conn.DescribeSMBFileShares(input)
+		output, err := finder.SMBFileShareByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil || len(output.SMBFileShareInfoList) == 0 || output.SMBFileShareInfoList[0] == nil {
-			return fmt.Errorf("Storage Gateway SMB File Share %q does not exist", rs.Primary.ID)
-		}
-
-		*smbFileShare = *output.SMBFileShareInfoList[0]
+		*smbFileShare = *output
 
 		return nil
 	}

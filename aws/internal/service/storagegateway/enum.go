@@ -27,3 +27,11 @@ func DefaultStorageClass_Values() []string {
 		DefaultStorageClassS3StandardIA,
 	}
 }
+
+const (
+	FileShareStatusAvailable     = "AVAILABLE"
+	FileShareStatusCreating      = "CREATING"
+	FileShareStatusDeleting      = "DELETING"
+	FileShareStatusForceDeleting = "FORCE_DELETING"
+	FileShareStatusUpdating      = "UPDATING"
+)
