@@ -2,6 +2,8 @@ package aws
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
@@ -9,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
-	"log"
 )
 
 func resourceAwsTransferAccess() *schema.Resource {
@@ -29,14 +30,14 @@ func resourceAwsTransferAccess() *schema.Resource {
 			},
 
 			"home_directory": {
-				Type:         schema.TypeString,
-				Optional:     true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 
 			"home_directory_mappings": {
-				Type:         schema.TypeList,
-				MinItems:     1,
-				Optional:     true,
+				Type:     schema.TypeList,
+				MinItems: 1,
+				Optional: true,
 			},
 
 			"home_directory_type": {
@@ -49,25 +50,25 @@ func resourceAwsTransferAccess() *schema.Resource {
 			},
 
 			"policy": {
-				Type:         schema.TypeString,
-				Optional:     true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 
-			"posix_profile" : {
-				Type:		schema.TypeSet,
-				Optional: 	true,
+			"posix_profile": {
+				Type:     schema.TypeSet,
+				Optional: true,
 				//TODO: this
 			},
 
 			"role": {
-				Type:         schema.TypeString,
-				Optional:     false,
+				Type:     schema.TypeString,
+				Optional: false,
 				//TODO: Min length 20
 			},
 
 			"server_id": {
-				Type:         schema.TypeString,
-				Optional:     false,
+				Type:     schema.TypeString,
+				Optional: false,
 				//TODO: Min length 19
 			},
 
@@ -167,12 +168,38 @@ func resourceAwsTransferAccessUpdate(d *schema.ResourceData, meta interface{}) e
 			input.ExternalId = aws.String(d.Get("external_id").(string))
 		}
 
-		//TODO: add all attributes
+		if d.HasChange("home_directory") {
+			input.HomeDirectory = aws.String(d.Get("home_directory").(string))
+		}
+
+		if d.HasChange("home_directory_mappings") {
+			//TODO: This
+		}
+
+		if d.HasChange("home_directory_type") {
+			input.HomeDirectoryType = aws.String(d.Get("home_directory_type").(string))
+		}
+
+		if d.HasChange("policy") {
+			input.Policy = aws.String(d.Get("policy").(string))
+		}
+
+		if d.HasChange("posix_profile") {
+			//TODO: This
+		}
+
+		if d.HasChange("role") {
+			input.Role = aws.String(d.Get("role").(string))
+		}
+
+		if d.HasChange("server_id") {
+			input.ServerId = aws.String(d.Get("server_id").(string))
+		}
 
 		log.Printf("[DEBUG] Updating Transfer Access: %s", input)
 		_, err := conn.UpdateAccess(input)
 		if err != nil {
-			return fmt.Errorf("error updating Transfer Access (externalID: %s, serverID: %s): %w", aws.StringValue(input.ExternalId),  aws.StringValue(input.ServerId), err)
+			return fmt.Errorf("error updating Transfer Access (externalID: %s, serverID: %s): %w", aws.StringValue(input.ExternalId), aws.StringValue(input.ServerId), err)
 		}
 	}
 
@@ -188,7 +215,7 @@ func resourceAwsTransferAccessDelete(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] Deleting Transfer Access: (externalID: %s, serverID: %s)", externalId, serverId)
 	_, err := conn.DeleteAccess(&transfer.DeleteAccessInput{
 		ExternalId: aws.String(externalId),
-		ServerId: aws.String(serverId),
+		ServerId:   aws.String(serverId),
 	})
 
 	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {

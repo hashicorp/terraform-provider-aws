@@ -185,7 +185,7 @@ func resourceAwsTransferServer() *schema.Resource {
 			},
 
 			"directory_id": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Optional: true,
 			},
 		},

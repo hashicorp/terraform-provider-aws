@@ -67,7 +67,7 @@ func UserByID(conn *transfer.Transfer, serverId, userName string) (*transfer.Des
 func AccessByID(conn *transfer.Transfer, serverId, id string) (*transfer.DescribedAccess, error) {
 	input := &transfer.DescribeAccessInput{
 		ExternalId: aws.String(id),
-		ServerId: aws.String(serverId),
+		ServerId:   aws.String(serverId),
 	}
 
 	output, err := conn.DescribeAccess(input)
