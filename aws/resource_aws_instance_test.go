@@ -2616,17 +2616,14 @@ func TestAccAWSInstance_associatePublic_overridePrivate(t *testing.T) {
 	})
 }
 
-// Test suite for instance launch_template feature
-// 1. Create instance without launch template
-// 2. Update with launch_template - this should recreate instance
-// 3. Root volume size should be overridden from instance attributes
-// 4. Creating new template version should not trigger instance recreation when default is used
-// 5. Updating from $Default version to exact version should not trigger recreation
-// 6. Updating to latest template version should recreate instance
-func TestAccAWSInstance_LaunchTemplate(t *testing.T) {
-	var v1, v2, v3, v4, v5 ec2.Instance
+func TestAccAWSInstance_LaunchTemplate_basic(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	launchTemplateResourceName := "aws_launch_template.test"
+	amiDataSourceName := "data.aws_ami.amzn-ami-minimal-hvm-ebs"
+	instanceTypeDataSourceName := "data.aws_ec2_instance_type_offering.available"
 
-	resName := "aws_instance.foo"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2635,45 +2632,178 @@ func TestAccAWSInstance_LaunchTemplate(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigCreateWithoutTemplate,
+				Config: testAccInstanceConfig_WithTemplate_Basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(resName, &v1),
-					resource.TestCheckResourceAttr(resName, "instance_type", "t2.medium"),
-					resource.TestCheckResourceAttr(resName, "root_block_device.0.volume_size", "10"),
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", launchTemplateResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", "$Default"),
+					resource.TestCheckResourceAttrPair(resourceName, "ami", amiDataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_type", instanceTypeDataSourceName, "instance_type"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_LaunchTemplate_OverrideTemplate(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	launchTemplateResourceName := "aws_launch_template.test"
+	amiDataSourceName := "data.aws_ami.amzn-ami-minimal-hvm-ebs"
+	instanceTypeDataSourceName := "data.aws_ec2_instance_type_offering.small"
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_WithTemplate_OverrideTemplate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "ami", amiDataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_type", instanceTypeDataSourceName, "instance_type"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_LaunchTemplate_SetSpecificVersion(t *testing.T) {
+	var v1, v2 ec2.Instance
+	resourceName := "aws_instance.test"
+	launchTemplateResourceName := "aws_launch_template.test"
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_WithTemplate_Basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v1),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", "$Default"),
 				),
 			},
 			{
-				Config: testAccInstanceConfigUpdateWithTemplate,
+				Config: testAccInstanceConfig_WithTemplate_SpecificVersion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(resName, &v2),
+					testAccCheckInstanceExists(resourceName, &v2),
+					testAccCheckInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.version", launchTemplateResourceName, "default_version"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_LaunchTemplate_ModifyTemplate_DefaultVersion(t *testing.T) {
+	var v1, v2 ec2.Instance
+	resourceName := "aws_instance.test"
+	launchTemplateResourceName := "aws_launch_template.test"
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_WithTemplate_Basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v1),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", "$Default"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_WithTemplate_ModifyTemplate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v2),
+					testAccCheckInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", "$Default"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_LaunchTemplate_UpdateTemplateVersion(t *testing.T) {
+	var v1, v2 ec2.Instance
+	resourceName := "aws_instance.test"
+	launchTemplateResourceName := "aws_launch_template.test"
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_WithTemplate_SpecificVersion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v1),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.version", launchTemplateResourceName, "default_version"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_WithTemplate_UpdateVersion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v2),
 					testAccCheckInstanceRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resName, "instance_type", "t2.micro"),
-					resource.TestCheckResourceAttr(resName, "root_block_device.0.volume_size", "11"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.version", launchTemplateResourceName, "default_version"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_LaunchTemplate_SwapIDAndName(t *testing.T) {
+	var v1, v2 ec2.Instance
+	resourceName := "aws_instance.test"
+	launchTemplateResourceName := "aws_launch_template.test"
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_WithTemplate_Basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v1),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", launchTemplateResourceName, "name"),
 				),
 			},
 			{
-				Config: testAccInstanceConfigUpdateTemplateSettings,
+				Config: testAccInstanceConfig_WithTemplate_WithName(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(resName, &v3),
-					testAccCheckInstanceNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resName, "instance_type", "t2.micro"),
-				),
-			},
-			{
-				Config: testAccInstanceConfigUpdateInstanceTemplateVersion,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(resName, &v4),
-					testAccCheckInstanceNotRecreated(&v3, &v4),
-					resource.TestCheckResourceAttr(resName, "instance_type", "t2.micro"),
-				),
-			},
-			{
-				Config: testAccInstanceConfigUpdateInstanceTemplateLatest,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(resName, &v5),
-					testAccCheckInstanceRecreated(&v4, &v5),
-					resource.TestCheckResourceAttr(resName, "instance_type", "t2.nano"),
-					resource.TestCheckResourceAttr(resName, "root_block_device.0.volume_size", "10"),
+					testAccCheckInstanceExists(resourceName, &v2),
+					testAccCheckInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", launchTemplateResourceName, "name"),
 				),
 			},
 		},
@@ -6205,16 +6335,23 @@ resource "aws_instance" "test" {
 // the first available EC2 instance type offering in the current region from a list of preferred instance types.
 // The data source is named 'available'.
 func testAccAvailableEc2InstanceTypeForRegion(preferredInstanceTypes ...string) string {
+	return testAccAvailableEc2InstanceTypeForRegionNamed("available", preferredInstanceTypes...)
+}
+
+// testAccAvailableEc2InstanceTypeForRegionNamed returns the configuration for a data source that describes
+// the first available EC2 instance type offering in the current region from a list of preferred instance types.
+// The data source name is configurable.
+func testAccAvailableEc2InstanceTypeForRegionNamed(name string, preferredInstanceTypes ...string) string {
 	return fmt.Sprintf(`
-data "aws_ec2_instance_type_offering" "available" {
+data "aws_ec2_instance_type_offering" "%[1]s" {
   filter {
     name   = "instance-type"
-    values = ["%[1]s"]
+    values = ["%[2]s"]
   }
 
-  preferred_instance_types = ["%[1]s"]
+  preferred_instance_types = ["%[2]s"]
 }
-`, strings.Join(preferredInstanceTypes, "\", \""))
+`, name, strings.Join(preferredInstanceTypes, "\", \""))
 }
 
 // testAccAvailableEc2InstanceTypeForAvailabilityZone returns the configuration for a data source that describes
@@ -6325,258 +6462,123 @@ resource "aws_ec2_capacity_reservation" "test" {
 `, rName, ec2.CapacityReservationInstancePlatformLinuxUnix))
 }
 
-const testAccInstanceConfigCreateWithoutTemplate = `
-data "aws_ami" "debian_jessie_latest" {
-  most_recent = true
-
-  filter {
-    name   = "name"
-    values = ["debian-jessie-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-
-  owners = ["379101102735"] # Debian
+func testAccInstanceConfig_WithTemplate_Basic(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro", "t1.micro", "m1.small"),
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 }
 
-resource "aws_instance" "foo" {
-  ami                         = data.aws_ami.debian_jessie_latest.id
-  associate_public_ip_address = true
-  instance_type               = "t2.medium"
-
-  root_block_device {
-    volume_size           = "10"
-    volume_type           = "standard"
-    delete_on_termination = true
-  }
-
-  tags = {
-    Name = "test-terraform"
+resource "aws_instance" "test" {
+  launch_template {
+    id = aws_launch_template.test.id
   }
 }
-`
-
-const testAccInstanceConfigUpdateWithTemplate = `
-data "aws_ami" "debian_jessie_latest" {
-  most_recent = true
-
-  filter {
-    name   = "name"
-    values = ["debian-jessie-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-
-  owners = ["379101102735"] # Debian
+`, rName))
 }
 
-resource "aws_launch_template" "foobar" {
-  name_prefix   = "foobar"
-  image_id      = data.aws_ami.debian_jessie_latest.id
-  instance_type = "t2.micro"
+func testAccInstanceConfig_WithTemplate_OverrideTemplate(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegionNamed("micro", "t3.micro", "t2.micro", "t1.micro", "m1.small"),
+		testAccAvailableEc2InstanceTypeForRegionNamed("small", "t3.small", "t2.small", "t1.small", "m1.medium"),
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  instance_type = data.aws_ec2_instance_type_offering.micro.instance_type
 }
 
-resource "aws_instance" "foo" {
-  ami                         = data.aws_ami.debian_jessie_latest.id
-  associate_public_ip_address = true
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.small.instance_type
 
   launch_template {
-    id = aws_launch_template.foobar.id
-  }
-
-  root_block_device {
-    volume_size           = "11"
-    volume_type           = "standard"
-    delete_on_termination = true
-  }
-
-  tags = {
-    Name = "test-terraform"
+    id = aws_launch_template.test.id
   }
 }
-`
-
-const testAccInstanceConfigUpdateTemplateSettings = `
-data "aws_ami" "debian_jessie_latest" {
-  most_recent = true
-
-  filter {
-    name   = "name"
-    values = ["debian-jessie-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-
-  owners = ["379101102735"] # Debian
+`, rName))
 }
 
-resource "aws_launch_template" "foobar" {
-  name_prefix   = "foobar"
-  image_id      = data.aws_ami.debian_jessie_latest.id
-  instance_type = "t2.nano"
+func testAccInstanceConfig_WithTemplate_SpecificVersion(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro", "t1.micro", "m1.small"),
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 }
 
-resource "aws_instance" "foo" {
-  associate_public_ip_address = true
-
+resource "aws_instance" "test" {
   launch_template {
-    id = aws_launch_template.foobar.id
-  }
-
-  root_block_device {
-    volume_size           = "11"
-    volume_type           = "standard"
-    delete_on_termination = true
-  }
-
-  tags = {
-    Name = "test-terraform"
+    id      = aws_launch_template.test.id
+    version = aws_launch_template.test.default_version
   }
 }
-`
-
-const testAccInstanceConfigUpdateInstanceTemplateVersion = `
-data "aws_ami" "debian_jessie_latest" {
-  most_recent = true
-
-  filter {
-    name   = "name"
-    values = ["debian-jessie-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-
-  owners = ["379101102735"] # Debian
+`, rName))
 }
 
-resource "aws_launch_template" "foobar" {
-  name_prefix   = "foobar"
-  image_id      = data.aws_ami.debian_jessie_latest.id
-  instance_type = "t2.nano"
+func testAccInstanceConfig_WithTemplate_ModifyTemplate(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.small", "t2.small", "t1.small", "m1.medium"),
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 }
 
-resource "aws_instance" "foo" {
-  associate_public_ip_address = true
-
+resource "aws_instance" "test" {
   launch_template {
-    id      = aws_launch_template.foobar.id
-    version = "1"
-  }
-
-  root_block_device {
-    volume_size           = "11"
-    volume_type           = "standard"
-    delete_on_termination = true
-  }
-
-  tags = {
-    Name = "test-terraform"
+    id = aws_launch_template.test.id
   }
 }
-`
-
-const testAccInstanceConfigUpdateInstanceTemplateLatest = `
-data "aws_ami" "debian_jessie_latest" {
-  most_recent = true
-
-  filter {
-    name   = "name"
-    values = ["debian-jessie-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-
-  owners = ["379101102735"] # Debian
+`, rName))
 }
 
-resource "aws_launch_template" "foobar" {
-  name_prefix   = "foobar"
-  image_id      = data.aws_ami.debian_jessie_latest.id
-  instance_type = "t2.nano"
+func testAccInstanceConfig_WithTemplate_UpdateVersion(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.small", "t2.small", "t1.small", "m1.medium"),
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+
+  update_default_version = true
 }
 
-resource "aws_instance" "foo" {
-  ami                         = data.aws_ami.debian_jessie_latest.id
-  associate_public_ip_address = true
-
+resource "aws_instance" "test" {
   launch_template {
-    id      = aws_launch_template.foobar.id
-    version = aws_launch_template.foobar.latest_version
-  }
-
-  root_block_device {
-    volume_size           = "10"
-    volume_type           = "standard"
-    delete_on_termination = true
-  }
-
-  tags = {
-    Name = "test-terraform"
+    id      = aws_launch_template.test.id
+    version = aws_launch_template.test.default_version
   }
 }
-`
+`, rName))
+}
+
+func testAccInstanceConfig_WithTemplate_WithName(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro", "t1.micro", "m1.small"),
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+}
+
+resource "aws_instance" "test" {
+  launch_template {
+    name = aws_launch_template.test.name
+  }
+}
+`, rName))
+}
