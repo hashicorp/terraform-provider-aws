@@ -13,10 +13,11 @@ const (
 	// Maximum amount of time to wait for KeyState to return PendingDeletion
 	KeyStatePendingDeletionTimeout = 20 * time.Minute
 
-	KeyDeletedTimeout = 20 * time.Minute
+	KeyDeletedTimeout          = 20 * time.Minute
+	KeyRotationUpdatedTimeout  = 10 * time.Minute
+	KeyStatePropagationTimeout = 20 * time.Minute
 
-	KeyRotationUpdatedTimeout = 20 * time.Minute
-	PropagationTimeout        = 2 * time.Minute
+	PropagationTimeout = 2 * time.Minute
 )
 
 // IAMPropagation retries the specified function if the returned error indicates an IAM eventual consistency issue.

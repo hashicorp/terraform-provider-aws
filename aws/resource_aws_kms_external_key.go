@@ -462,3 +462,137 @@ func importKmsExternalKeyMaterial(conn *kms.KMS, keyID, keyMaterialBase64, valid
 
 	return nil
 }
+
+func updateKmsKeyStatus(conn *kms.KMS, id string, shouldBeEnabled bool) error {
+	var err error
+
+	if shouldBeEnabled {
+		log.Printf("[DEBUG] Enabling KMS key %q", id)
+		_, err = conn.EnableKey(&kms.EnableKeyInput{
+			KeyId: aws.String(id),
+		})
+	} else {
+		log.Printf("[DEBUG] Disabling KMS key %q", id)
+		_, err = conn.DisableKey(&kms.DisableKeyInput{
+			KeyId: aws.String(id),
+		})
+	}
+
+	if err != nil {
+		return fmt.Errorf("Failed to set KMS key %q status to %t: %q",
+			id, shouldBeEnabled, err.Error())
+	}
+
+	// Wait for propagation since KMS is eventually consistent
+	wait := resource.StateChangeConf{
+		Pending:                   []string{fmt.Sprintf("%t", !shouldBeEnabled)},
+		Target:                    []string{fmt.Sprintf("%t", shouldBeEnabled)},
+		Timeout:                   20 * time.Minute,
+		MinTimeout:                2 * time.Second,
+		ContinuousTargetOccurence: 15,
+		Refresh: func() (interface{}, string, error) {
+			log.Printf("[DEBUG] Checking if KMS key %s enabled status is %t",
+				id, shouldBeEnabled)
+			resp, err := conn.DescribeKey(&kms.DescribeKeyInput{
+				KeyId: aws.String(id),
+			})
+			if err != nil {
+				if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+					return nil, fmt.Sprintf("%t", !shouldBeEnabled), nil
+				}
+				return resp, "FAILED", err
+			}
+			status := fmt.Sprintf("%t", *resp.KeyMetadata.Enabled)
+			log.Printf("[DEBUG] KMS key %s status received: %s, retrying", id, status)
+
+			return resp, status, nil
+		},
+	}
+
+	_, err = wait.WaitForState()
+	if err != nil {
+		return fmt.Errorf("Failed setting KMS key status to %t: %w", shouldBeEnabled, err)
+	}
+
+	return nil
+}
+
+func updateKmsKeyRotationStatus(conn *kms.KMS, d *schema.ResourceData) error {
+	shouldEnableRotation := d.Get("enable_key_rotation").(bool)
+
+	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+		err := handleKeyRotation(conn, shouldEnableRotation, aws.String(d.Id()))
+
+		if err != nil {
+			if isAWSErr(err, kms.ErrCodeDisabledException, "") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+	if isResourceTimeoutError(err) {
+		err = handleKeyRotation(conn, shouldEnableRotation, aws.String(d.Id()))
+	}
+
+	if err != nil {
+		return fmt.Errorf("Failed to set key rotation for %q to %t: %q",
+			d.Id(), shouldEnableRotation, err.Error())
+	}
+
+	// Wait for propagation since KMS is eventually consistent
+	wait := resource.StateChangeConf{
+		Pending:                   []string{fmt.Sprintf("%t", !shouldEnableRotation)},
+		Target:                    []string{fmt.Sprintf("%t", shouldEnableRotation)},
+		Timeout:                   5 * time.Minute,
+		MinTimeout:                1 * time.Second,
+		ContinuousTargetOccurence: 5,
+		Refresh: func() (interface{}, string, error) {
+			log.Printf("[DEBUG] Checking if KMS key %s rotation status is %t",
+				d.Id(), shouldEnableRotation)
+
+			out, err := retryOnAwsCode(kms.ErrCodeNotFoundException, func() (interface{}, error) {
+				return conn.GetKeyRotationStatus(&kms.GetKeyRotationStatusInput{
+					KeyId: aws.String(d.Id()),
+				})
+			})
+			if err != nil {
+				return 42, "", err
+			}
+			resp, _ := out.(*kms.GetKeyRotationStatusOutput)
+
+			status := fmt.Sprintf("%t", *resp.KeyRotationEnabled)
+			log.Printf("[DEBUG] KMS key %s rotation status received: %s, retrying", d.Id(), status)
+
+			return resp, status, nil
+		},
+	}
+
+	_, err = wait.WaitForState()
+	if err != nil {
+		return fmt.Errorf("Failed setting KMS key rotation status to %t: %s", shouldEnableRotation, err)
+	}
+
+	return nil
+}
+
+func handleKeyRotation(conn *kms.KMS, shouldEnableRotation bool, keyId *string) error {
+	var err error
+	if shouldEnableRotation {
+		log.Printf("[DEBUG] Enabling key rotation for KMS key %q", *keyId)
+		_, err = conn.EnableKeyRotation(&kms.EnableKeyRotationInput{
+			KeyId: keyId,
+		})
+	} else {
+		log.Printf("[DEBUG] Disabling key rotation for KMS key %q", *keyId)
+		_, err = conn.DisableKeyRotation(&kms.DisableKeyRotationInput{
+			KeyId: keyId,
+		})
+	}
+	return err
+}

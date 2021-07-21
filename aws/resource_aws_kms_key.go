@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -151,7 +150,7 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if enabled := d.Get("is_enabled").(bool); !enabled {
-		if err := updateKmsKeyStatus(conn, d.Id(), enabled); err != nil {
+		if err := updateKmsKeyEnabled(conn, d.Id(), enabled); err != nil {
 			return err
 		}
 	}
@@ -242,34 +241,58 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsKmsKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
 
-	if d.HasChange("is_enabled") && d.Get("is_enabled").(bool) {
-		// Enable before any attributes will be modified
-		if err := updateKmsKeyStatus(conn, d.Id(), d.Get("is_enabled").(bool)); err != nil {
+	if hasChange, enabled := d.HasChange("is_enabled"), d.Get("is_enabled").(bool); hasChange && enabled {
+		// Enable before any attributes are modified.
+		if err := updateKmsKeyEnabled(conn, d.Id(), enabled); err != nil {
 			return err
 		}
 	}
 
-	if d.HasChange("enable_key_rotation") {
-		if err := updateKmsKeyRotationEnabled(conn, d.Id(), d.Get("enable_key_rotation").(bool)); err != nil {
+	if hasChange, enableKeyRotation := d.HasChange("enable_key_rotation"), d.Get("enable_key_rotation").(bool); hasChange {
+		if err := updateKmsKeyRotationEnabled(conn, d.Id(), enableKeyRotation); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("description") {
-		if err := resourceAwsKmsKeyDescriptionUpdate(conn, d); err != nil {
-			return err
+		input := &kms.UpdateKeyDescriptionInput{
+			Description: aws.String(d.Get("description").(string)),
+			KeyId:       aws.String(d.Id()),
 		}
-	}
-	if d.HasChange("policy") {
-		if err := resourceAwsKmsKeyPolicyUpdate(conn, d); err != nil {
-			return err
+
+		log.Printf("[DEBUG] Updating KMS Key description: %s", input)
+		_, err := conn.UpdateKeyDescription(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating KMS Key (%s) description: %w", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("is_enabled") && !d.Get("is_enabled").(bool) {
-		// Only disable when all attributes are modified
-		// because we cannot modify disabled keys
-		if err := updateKmsKeyStatus(conn, d.Id(), d.Get("is_enabled").(bool)); err != nil {
+	if d.HasChange("policy") {
+		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+		if err != nil {
+			return fmt.Errorf("policy contains invalid JSON: %w", err)
+		}
+
+		input := &kms.PutKeyPolicyInput{
+			BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_check").(bool)),
+			KeyId:                          aws.String(d.Id()),
+			Policy:                         aws.String(policy),
+			PolicyName:                     aws.String(tfkms.PolicyNameDefault),
+		}
+
+		log.Printf("[DEBUG] Updating KMS Key policy: %s", input)
+		_, err = conn.PutKeyPolicy(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating KMS Key (%s) policy: %w", d.Id(), err)
+		}
+	}
+
+	if hasChange, enabled := d.HasChange("is_enabled"), d.Get("is_enabled").(bool); hasChange && !enabled {
+		// Only disable after all attributes have been modified because we cannot modify disabled keys.
+		if err := updateKmsKeyEnabled(conn, d.Id(), enabled); err != nil {
 			return err
 		}
 	}
@@ -283,176 +306,6 @@ func resourceAwsKmsKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return resourceAwsKmsKeyRead(d, meta)
-}
-
-func resourceAwsKmsKeyDescriptionUpdate(conn *kms.KMS, d *schema.ResourceData) error {
-	description := d.Get("description").(string)
-	keyId := d.Get("key_id").(string)
-
-	log.Printf("[DEBUG] KMS key: %s, update description: %s", keyId, description)
-
-	req := &kms.UpdateKeyDescriptionInput{
-		Description: aws.String(description),
-		KeyId:       aws.String(keyId),
-	}
-	_, err := conn.UpdateKeyDescription(req)
-
-	return err
-}
-
-func resourceAwsKmsKeyPolicyUpdate(conn *kms.KMS, d *schema.ResourceData) error {
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-	if err != nil {
-		return fmt.Errorf("policy contains an invalid JSON: %w", err)
-	}
-	keyId := d.Get("key_id").(string)
-	bypassPolicyLockoutCheck := d.Get("bypass_policy_lockout_check").(bool)
-
-	log.Printf("[DEBUG] KMS key: %s, bypass policy lockout check: %t, update policy: %s", keyId, bypassPolicyLockoutCheck, policy)
-
-	req := &kms.PutKeyPolicyInput{
-		KeyId:                          aws.String(keyId),
-		Policy:                         aws.String(policy),
-		PolicyName:                     aws.String("default"),
-		BypassPolicyLockoutSafetyCheck: aws.Bool(bypassPolicyLockoutCheck),
-	}
-	_, err = conn.PutKeyPolicy(req)
-
-	return err
-}
-
-func updateKmsKeyStatus(conn *kms.KMS, id string, shouldBeEnabled bool) error {
-	var err error
-
-	if shouldBeEnabled {
-		log.Printf("[DEBUG] Enabling KMS key %q", id)
-		_, err = conn.EnableKey(&kms.EnableKeyInput{
-			KeyId: aws.String(id),
-		})
-	} else {
-		log.Printf("[DEBUG] Disabling KMS key %q", id)
-		_, err = conn.DisableKey(&kms.DisableKeyInput{
-			KeyId: aws.String(id),
-		})
-	}
-
-	if err != nil {
-		return fmt.Errorf("Failed to set KMS key %q status to %t: %q",
-			id, shouldBeEnabled, err.Error())
-	}
-
-	// Wait for propagation since KMS is eventually consistent
-	wait := resource.StateChangeConf{
-		Pending:                   []string{fmt.Sprintf("%t", !shouldBeEnabled)},
-		Target:                    []string{fmt.Sprintf("%t", shouldBeEnabled)},
-		Timeout:                   20 * time.Minute,
-		MinTimeout:                2 * time.Second,
-		ContinuousTargetOccurence: 15,
-		Refresh: func() (interface{}, string, error) {
-			log.Printf("[DEBUG] Checking if KMS key %s enabled status is %t",
-				id, shouldBeEnabled)
-			resp, err := conn.DescribeKey(&kms.DescribeKeyInput{
-				KeyId: aws.String(id),
-			})
-			if err != nil {
-				if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
-					return nil, fmt.Sprintf("%t", !shouldBeEnabled), nil
-				}
-				return resp, "FAILED", err
-			}
-			status := fmt.Sprintf("%t", *resp.KeyMetadata.Enabled)
-			log.Printf("[DEBUG] KMS key %s status received: %s, retrying", id, status)
-
-			return resp, status, nil
-		},
-	}
-
-	_, err = wait.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Failed setting KMS key status to %t: %w", shouldBeEnabled, err)
-	}
-
-	return nil
-}
-
-func updateKmsKeyRotationStatus(conn *kms.KMS, d *schema.ResourceData) error {
-	shouldEnableRotation := d.Get("enable_key_rotation").(bool)
-
-	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
-		err := handleKeyRotation(conn, shouldEnableRotation, aws.String(d.Id()))
-
-		if err != nil {
-			if isAWSErr(err, kms.ErrCodeDisabledException, "") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		err = handleKeyRotation(conn, shouldEnableRotation, aws.String(d.Id()))
-	}
-
-	if err != nil {
-		return fmt.Errorf("Failed to set key rotation for %q to %t: %q",
-			d.Id(), shouldEnableRotation, err.Error())
-	}
-
-	// Wait for propagation since KMS is eventually consistent
-	wait := resource.StateChangeConf{
-		Pending:                   []string{fmt.Sprintf("%t", !shouldEnableRotation)},
-		Target:                    []string{fmt.Sprintf("%t", shouldEnableRotation)},
-		Timeout:                   5 * time.Minute,
-		MinTimeout:                1 * time.Second,
-		ContinuousTargetOccurence: 5,
-		Refresh: func() (interface{}, string, error) {
-			log.Printf("[DEBUG] Checking if KMS key %s rotation status is %t",
-				d.Id(), shouldEnableRotation)
-
-			out, err := retryOnAwsCode(kms.ErrCodeNotFoundException, func() (interface{}, error) {
-				return conn.GetKeyRotationStatus(&kms.GetKeyRotationStatusInput{
-					KeyId: aws.String(d.Id()),
-				})
-			})
-			if err != nil {
-				return 42, "", err
-			}
-			resp, _ := out.(*kms.GetKeyRotationStatusOutput)
-
-			status := fmt.Sprintf("%t", *resp.KeyRotationEnabled)
-			log.Printf("[DEBUG] KMS key %s rotation status received: %s, retrying", d.Id(), status)
-
-			return resp, status, nil
-		},
-	}
-
-	_, err = wait.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Failed setting KMS key rotation status to %t: %s", shouldEnableRotation, err)
-	}
-
-	return nil
-}
-
-func handleKeyRotation(conn *kms.KMS, shouldEnableRotation bool, keyId *string) error {
-	var err error
-	if shouldEnableRotation {
-		log.Printf("[DEBUG] Enabling key rotation for KMS key %q", *keyId)
-		_, err = conn.EnableKeyRotation(&kms.EnableKeyRotationInput{
-			KeyId: keyId,
-		})
-	} else {
-		log.Printf("[DEBUG] Disabling key rotation for KMS key %q", *keyId)
-		_, err = conn.DisableKeyRotation(&kms.DisableKeyRotationInput{
-			KeyId: keyId,
-		})
-	}
-	return err
 }
 
 func resourceAwsKmsKeyDelete(d *schema.ResourceData, meta interface{}) error {
@@ -488,10 +341,57 @@ func resourceAwsKmsKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+func updateKmsKeyEnabled(conn *kms.KMS, keyID string, enabled bool) error {
+	var err error
+
+	log.Printf("[DEBUG] Updating KMS Key (%s) key enabled: %t", keyID, enabled)
+	if enabled {
+		_, err = conn.EnableKey(&kms.EnableKeyInput{
+			KeyId: aws.String(keyID),
+		})
+	} else {
+		_, err = conn.DisableKey(&kms.DisableKeyInput{
+			KeyId: aws.String(keyID),
+		})
+	}
+
+	if err != nil {
+		return fmt.Errorf("error updating KMS Key (%s) key enabled (%t): %w", keyID, enabled, err)
+	}
+
+	// Wait for propagation since KMS is eventually consistent.
+	checkFunc := func() (bool, error) {
+		output, err := finder.KeyByID(conn, keyID)
+
+		if tfresource.NotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		return aws.BoolValue(output.Enabled) == enabled, nil
+	}
+	opts := &tfresource.WaitOpts{
+		ContinuousTargetOccurence: 15,
+		MinTimeout:                2 * time.Second,
+	}
+
+	err = tfresource.WaitUntil(waiter.KeyStatePropagationTimeout, checkFunc, opts)
+
+	if err != nil {
+		return fmt.Errorf("error waiting for KMS Key (%s) key state propagation: %w", keyID, err)
+	}
+
+	return nil
+}
+
 func updateKmsKeyRotationEnabled(conn *kms.KMS, keyID string, enabled bool) error {
 	updateFunc := func() (interface{}, error) {
 		var err error
 
+		log.Printf("[DEBUG] Updating KMS Key (%s) key rotation enabled: %t", keyID, enabled)
 		if enabled {
 			_, err = conn.EnableKeyRotation(&kms.EnableKeyRotationInput{
 				KeyId: aws.String(keyID),
@@ -513,7 +413,7 @@ func updateKmsKeyRotationEnabled(conn *kms.KMS, keyID string, enabled bool) erro
 
 	// Wait for propagation since KMS is eventually consistent.
 	checkFunc := func() (bool, error) {
-		got, err := finder.KeyRotationEnabledByKeyID(conn, keyID)
+		output, err := finder.KeyRotationEnabledByKeyID(conn, keyID)
 
 		if tfresource.NotFound(err) {
 			return false, nil
@@ -523,7 +423,7 @@ func updateKmsKeyRotationEnabled(conn *kms.KMS, keyID string, enabled bool) erro
 			return false, err
 		}
 
-		return aws.BoolValue(got) == enabled, nil
+		return aws.BoolValue(output) == enabled, nil
 	}
 	opts := &tfresource.WaitOpts{
 		ContinuousTargetOccurence: 5,

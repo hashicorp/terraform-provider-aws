@@ -12,6 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -423,19 +426,17 @@ func testAccCheckAWSKmsKeyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		out, err := conn.DescribeKey(&kms.DescribeKeyInput{
-			KeyId: aws.String(rs.Primary.ID),
-		})
+		_, err := finder.KeyByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
 			return err
 		}
 
-		if *out.KeyMetadata.KeyState == "PendingDeletion" {
-			return nil
-		}
-
-		return fmt.Errorf("KMS key still exists:\n%#v", out.KeyMetadata)
+		return fmt.Errorf("KMS Key %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -454,17 +455,15 @@ func testAccCheckAWSKmsKeyExists(name string, key *kms.KeyMetadata) resource.Tes
 
 		conn := testAccProvider.Meta().(*AWSClient).kmsconn
 
-		o, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
-			return conn.DescribeKey(&kms.DescribeKeyInput{
-				KeyId: aws.String(rs.Primary.ID),
-			})
+		outputRaw, err := tfresource.RetryWhenNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
+			return finder.KeyByID(conn, rs.Primary.ID)
 		})
+
 		if err != nil {
 			return err
 		}
-		out := o.(*kms.DescribeKeyOutput)
 
-		*key = *out.KeyMetadata
+		*key = *(outputRaw.(*kms.KeyMetadata))
 
 		return nil
 	}
