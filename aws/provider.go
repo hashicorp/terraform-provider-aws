@@ -1081,6 +1081,7 @@ func Provider() *schema.Provider {
 			"aws_service_discovery_service":                           resourceAwsServiceDiscoveryService(),
 			"aws_servicequotas_service_quota":                         resourceAwsServiceQuotasServiceQuota(),
 			"aws_shield_protection":                                   resourceAwsShieldProtection(),
+			"aws_shield_protection_health_check_association":          resourceAwsShieldProtectionHealthCheckAssociation(),
 			"aws_signer_signing_job":                                  resourceAwsSignerSigningJob(),
 			"aws_signer_signing_profile":                              resourceAwsSignerSigningProfile(),
 			"aws_signer_signing_profile_permission":                   resourceAwsSignerSigningProfilePermission(),
