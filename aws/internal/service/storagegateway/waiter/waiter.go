@@ -17,8 +17,8 @@ const (
 	NfsFileShareDeletedDelay                                = 5 * time.Second
 	SmbFileShareAvailableDelay                              = 5 * time.Second
 	SmbFileShareDeletedDelay                                = 5 * time.Second
-	FsxFileSystemAvailableDelay                             = 5 * time.Second
-	FsxFileSystemDeletedDelay                               = 5 * time.Second
+	FileSystemAssociationAvailableDelay                     = 5 * time.Second
+	FileSystemAssociationDeletedDelay                       = 5 * time.Second
 )
 
 func StorageGatewayGatewayConnected(conn *storagegateway.StorageGateway, gatewayARN string, timeout time.Duration) (*storagegateway.DescribeGatewayInformationOutput, error) {
@@ -169,14 +169,14 @@ func SMBFileShareUpdated(conn *storagegateway.StorageGateway, arn string, timeou
 	return nil, err
 }
 
-// FsxFileSystemAvailable waits for a FSx File System to return Available
-func FsxFileSystemAvailable(conn *storagegateway.StorageGateway, fileSystemArn string, timeout time.Duration) (*storagegateway.FileSystemAssociationInfo, error) {
+// FileSystemAssociationAvailable waits for a FSx File System to return Available
+func FileSystemAssociationAvailable(conn *storagegateway.StorageGateway, fileSystemArn string, timeout time.Duration) (*storagegateway.FileSystemAssociationInfo, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: tfstoragegateway.FsxFileSystemStatusAvailableStatusPending(),
-		Target:  tfstoragegateway.FsxFileSystemStatusAvailableStatusTarget(),
-		Refresh: FsxFileSystemStatus(conn, fileSystemArn),
+		Pending: tfstoragegateway.FileSystemAssociationStatusAvailableStatusPending(),
+		Target:  tfstoragegateway.FileSystemAssociationStatusAvailableStatusTarget(),
+		Refresh: FileSystemAssociationStatus(conn, fileSystemArn),
 		Timeout: timeout,
-		Delay:   FsxFileSystemAvailableDelay,
+		Delay:   FileSystemAssociationAvailableDelay,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -188,13 +188,13 @@ func FsxFileSystemAvailable(conn *storagegateway.StorageGateway, fileSystemArn s
 	return nil, err
 }
 
-func FsxFileSystemDeleted(conn *storagegateway.StorageGateway, fileSystemArn string, timeout time.Duration) (*storagegateway.FileSystemAssociationInfo, error) {
+func FileSystemAssociationDeleted(conn *storagegateway.StorageGateway, fileSystemArn string, timeout time.Duration) (*storagegateway.FileSystemAssociationInfo, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:        tfstoragegateway.FsxFileSystemStatusDeletedStatusPending(),
-		Target:         tfstoragegateway.FsxFileSystemStatusDeletedStatusTarget(),
-		Refresh:        FsxFileSystemStatus(conn, fileSystemArn),
+		Pending:        tfstoragegateway.FileSystemAssociationStatusDeletedStatusPending(),
+		Target:         tfstoragegateway.FileSystemAssociationStatusDeletedStatusTarget(),
+		Refresh:        FileSystemAssociationStatus(conn, fileSystemArn),
 		Timeout:        timeout,
-		Delay:          FsxFileSystemDeletedDelay,
+		Delay:          FileSystemAssociationDeletedDelay,
 		NotFoundChecks: 1,
 	}
 

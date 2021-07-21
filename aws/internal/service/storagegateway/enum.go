@@ -39,32 +39,32 @@ const (
 )
 
 const (
-	AssociateFileSystemCreateTimeout = 3 * time.Minute
-	AssociateFileSystemUpdateTimeout = 3 * time.Minute
-	AssociateFileSystemDeleteTimeout = 3 * time.Minute
+	FileSystemAssociationCreateTimeout = 3 * time.Minute
+	FileSystemAssociationUpdateTimeout = 3 * time.Minute
+	FileSystemAssociationDeleteTimeout = 3 * time.Minute
 )
 
 const (
-	FsxFileSystemAssociationStatusAvailable     = "AVAILABLE"
-	FsxFileSystemAssociationStatusCreating      = "CREATING"
-	FsxFileSystemAssociationStatusDeleting      = "DELETING"
-	FsxFileSystemAssociationStatusForceDeleting = "FORCE_DELETING"
-	FsxFileSystemAssociationStatusUpdating      = "UPDATING"
-	FsxFileSystemAssociationStatusError         = "ERROR"
+	FileSystemAssociationStatusAvailable     = "AVAILABLE"
+	FileSystemAssociationStatusCreating      = "CREATING"
+	FileSystemAssociationStatusDeleting      = "DELETING"
+	FileSystemAssociationStatusForceDeleting = "FORCE_DELETING"
+	FileSystemAssociationStatusUpdating      = "UPDATING"
+	FileSystemAssociationStatusError         = "ERROR"
 )
 
-func FsxFileSystemStatusAvailableStatusPending() []string {
-	return []string{FsxFileSystemAssociationStatusCreating, FsxFileSystemAssociationStatusUpdating}
+func FileSystemAssociationStatusAvailableStatusPending() []string {
+	return []string{FileSystemAssociationStatusCreating, FileSystemAssociationStatusUpdating}
 }
 
-func FsxFileSystemStatusAvailableStatusTarget() []string {
-	return []string{FsxFileSystemAssociationStatusAvailable}
+func FileSystemAssociationStatusAvailableStatusTarget() []string {
+	return []string{FileSystemAssociationStatusAvailable}
 }
 
-func FsxFileSystemStatusDeletedStatusPending() []string {
-	return []string{FsxFileSystemAssociationStatusAvailable, FsxFileSystemAssociationStatusDeleting, FsxFileSystemAssociationStatusForceDeleting}
+func FileSystemAssociationStatusDeletedStatusPending() []string {
+	return []string{FileSystemAssociationStatusAvailable, FileSystemAssociationStatusDeleting, FileSystemAssociationStatusForceDeleting}
 }
 
-func FsxFileSystemStatusDeletedStatusTarget() []string {
+func FileSystemAssociationStatusDeletedStatusTarget() []string {
 	return []string{}
 }

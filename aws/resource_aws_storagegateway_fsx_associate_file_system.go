@@ -17,20 +17,20 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
 )
 
-func resourceAwsStorageGatewayFsxAssociateFileSystem() *schema.Resource {
+func resourceAwsStorageGatewayFileSystemAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create:        resourceAwsStorageGatewayFsxAssociateFileSystemCreate,
-		Read:          resourceAwsStorageGatewayFsxAssociateFileSystemRead,
-		Update:        resourceAwsStorageGatewayFsxAssociateFileSystemUpdate,
-		Delete:        resourceAwsStorageGatewayFsxAssociateFileSystemDelete,
+		Create:        resourceAwsStorageGatewayFileSystemAssociationCreate,
+		Read:          resourceAwsStorageGatewayFileSystemAssociationRead,
+		Update:        resourceAwsStorageGatewayFileSystemAssociationUpdate,
+		Delete:        resourceAwsStorageGatewayFileSystemAssociationDelete,
 		CustomizeDiff: customdiff.Sequence(SetTagsDiff),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(tfstoragegateway.AssociateFileSystemCreateTimeout),
-			Update: schema.DefaultTimeout(tfstoragegateway.AssociateFileSystemUpdateTimeout),
-			Delete: schema.DefaultTimeout(tfstoragegateway.AssociateFileSystemDeleteTimeout),
+			Create: schema.DefaultTimeout(tfstoragegateway.FileSystemAssociationCreateTimeout),
+			Update: schema.DefaultTimeout(tfstoragegateway.FileSystemAssociationUpdateTimeout),
+			Delete: schema.DefaultTimeout(tfstoragegateway.FileSystemAssociationDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -98,7 +98,7 @@ func resourceAwsStorageGatewayFsxAssociateFileSystem() *schema.Resource {
 	}
 }
 
-func resourceAwsStorageGatewayFsxAssociateFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsStorageGatewayFileSystemAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).storagegatewayconn
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -117,7 +117,7 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemCreate(d *schema.ResourceDat
 	}
 
 	if v, ok := d.GetOk("cache_attributes"); ok {
-		input.CacheAttributes = expandStorageGatewayFsxAssociateFileSystemCacheAttributes(v.([]interface{}))
+		input.CacheAttributes = expandStorageGatewayFileSystemAssociationCacheAttributes(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Associating File System to Storage Gateway: %s", input)
@@ -135,14 +135,14 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemCreate(d *schema.ResourceDat
 	d.SetId(aws.StringValue(output.FileSystemAssociationARN))
 	log.Printf("[INFO] Storage Gateway FSx File System Association ID: %s", d.Id())
 
-	if _, err = waiter.FsxFileSystemAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err = waiter.FileSystemAssociationAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Storage Gateway FSx File System Association (%q) to be Available: %w", d.Id(), err)
 	}
 
-	return resourceAwsStorageGatewayFsxAssociateFileSystemRead(d, meta)
+	return resourceAwsStorageGatewayFileSystemAssociationRead(d, meta)
 }
 
-func resourceAwsStorageGatewayFsxAssociateFileSystemRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsStorageGatewayFileSystemAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).storagegatewayconn
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
@@ -165,7 +165,7 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemRead(d *schema.ResourceData,
 	d.Set("gateway_arn", filesystem.GatewayARN)
 	d.Set("location_arn", filesystem.LocationARN)
 
-	if err := d.Set("cache_attributes", flattenStorageGatewayFsxAssociateFileSystemCacheAttributes(filesystem.CacheAttributes)); err != nil {
+	if err := d.Set("cache_attributes", flattenStorageGatewayFileSystemAssociationCacheAttributes(filesystem.CacheAttributes)); err != nil {
 		return fmt.Errorf("error setting cache_attributes: %w", err)
 	}
 
@@ -183,7 +183,7 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemRead(d *schema.ResourceData,
 	return nil
 }
 
-func resourceAwsStorageGatewayFsxAssociateFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsStorageGatewayFileSystemAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).storagegatewayconn
 
 	if d.HasChange("tags_all") {
@@ -203,7 +203,7 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemUpdate(d *schema.ResourceDat
 		}
 
 		if v, ok := d.GetOk("cache_attributes"); ok {
-			input.CacheAttributes = expandStorageGatewayFsxAssociateFileSystemCacheAttributes(v.([]interface{}))
+			input.CacheAttributes = expandStorageGatewayFileSystemAssociationCacheAttributes(v.([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating Storage Gateway FSx File System Association: %s", input)
@@ -212,15 +212,15 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemUpdate(d *schema.ResourceDat
 			return fmt.Errorf("error updating Storage Gateway FSx File System Association: %w", err)
 		}
 
-		if _, err = waiter.FsxFileSystemAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err = waiter.FileSystemAssociationAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for Storage Gateway FSx File System Association (%q) to be Available: %w", d.Id(), err)
 		}
 	}
 
-	return resourceAwsStorageGatewayFsxAssociateFileSystemRead(d, meta)
+	return resourceAwsStorageGatewayFileSystemAssociationRead(d, meta)
 }
 
-func resourceAwsStorageGatewayFsxAssociateFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsStorageGatewayFileSystemAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).storagegatewayconn
 
 	input := &storagegateway.DisassociateFileSystemInput{
@@ -237,7 +237,7 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemDelete(d *schema.ResourceDat
 		}
 	}
 
-	if _, err = waiter.FsxFileSystemDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err = waiter.FileSystemAssociationDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		if isResourceNotFoundError(err) {
 			return nil
 		}
@@ -247,7 +247,7 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemDelete(d *schema.ResourceDat
 	return nil
 }
 
-func expandStorageGatewayFsxAssociateFileSystemCacheAttributes(l []interface{}) *storagegateway.CacheAttributes {
+func expandStorageGatewayFileSystemAssociationCacheAttributes(l []interface{}) *storagegateway.CacheAttributes {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -261,7 +261,7 @@ func expandStorageGatewayFsxAssociateFileSystemCacheAttributes(l []interface{}) 
 	return ca
 }
 
-func flattenStorageGatewayFsxAssociateFileSystemCacheAttributes(ca *storagegateway.CacheAttributes) []interface{} {
+func flattenStorageGatewayFileSystemAssociationCacheAttributes(ca *storagegateway.CacheAttributes) []interface{} {
 	if ca == nil {
 		return []interface{}{}
 	}
