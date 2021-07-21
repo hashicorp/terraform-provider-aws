@@ -913,7 +913,7 @@ func testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName string, smbFil
 }
 
 func testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domainName string) string {
-	return composeConfig(testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettings(rName, domainName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettings(rName, domainName), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -1015,7 +1015,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 func testAccAWSStorageGatewaySmbFileShareConfig_Authentication_ActiveDirectory(rName, domainName string) string {
-	return composeConfig(testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domainName) + `
+	return composeConfig(testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domainName), `
 resource "aws_storagegateway_smb_file_share" "test" {
   authentication = "ActiveDirectory"
   gateway_arn    = aws_storagegateway_gateway.test.arn
@@ -1113,7 +1113,7 @@ resource "aws_storagegateway_smb_file_share" "test" {
 }
 
 func testAccAWSStorageGatewaySmbFileShareConfig_InvalidUserList_Single(rName, domainName, invalidUser1 string) string {
-	return composeConfig(testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domainName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domainName), fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
   # Must be ActiveDirectory
   authentication    = "ActiveDirectory"
@@ -1233,7 +1233,7 @@ resource "aws_storagegateway_smb_file_share" "test" {
 }
 
 func testAccAWSStorageGatewaySmbFileShareConfig_ValidUserList_Single(rName, domainName, validUser1 string) string {
-	return composeConfig(testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domainName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domainName), fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
   # Must be ActiveDirectory
   authentication  = "ActiveDirectory"
@@ -1246,7 +1246,7 @@ resource "aws_storagegateway_smb_file_share" "test" {
 }
 
 func testAccAWSStorageGatewaySmbFileShareConfig_ValidUserList_Multiple(rName, domainName, validUser1, validUser2 string) string {
-	return composeConfig(testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domainName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domainName), fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
   # Must be ActiveDirectory
   authentication  = "ActiveDirectory"
@@ -1318,7 +1318,7 @@ resource "aws_storagegateway_smb_file_share" "test" {
 }
 
 func testAccAWSStorageGatewaySmbFileShareSMBACLConfig(rName, domainName string, enabled bool) string {
-	return composeConfig(testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domainName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domainName), fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
   authentication  = "ActiveDirectory"
   gateway_arn     = aws_storagegateway_gateway.test.arn
