@@ -558,7 +558,8 @@ The arguments of `geo_restriction` are:
     you want CloudFront to use for HTTPS connections. Can only be set if
     `cloudfront_default_certificate = false`. See all possible values in
     [this](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/secure-connections-supported-viewer-protocols-ciphers.html)
-    table under "Security policy." Default: `TLSv1`. **NOTE**:
+    table under "Security policy." Some examples include: `TLSv1.2_2019` and
+    `TLSv1.2_2021`. Default: `TLSv1`. **NOTE**:
     If you are using a custom certificate (specified with `acm_certificate_arn`
     or `iam_certificate_id`), and have specified `sni-only` in
     `ssl_support_method`, `TLSv1` or later must be specified. If you have
