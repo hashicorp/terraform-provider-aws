@@ -2,14 +2,14 @@ package aws
 
 import (
 	"fmt"
-	// "reflect"
-	"regexp"
-	// "sort"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"reflect"
+	"regexp"
+	"sort"
 	"testing"
 	"time"
 )
@@ -389,11 +389,11 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithTwoTiers_Default(t *t
 	var itc s3.IntelligentTieringConfiguration
 	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
 
-	accessTierOne := "DEEP_ARCHIVE_ACCESS"
-	accessTierDaysOne := "240"
+	accessTierOne := "ARCHIVE_ACCESS"
+	accessTierDaysOne := "120"
 
-	accessTierTwo := "ARCHIVE_ACCESS"
-	accessTierDaysTwo := "120"
+	accessTierTwo := "DEEP_ARCHIVE_ACCESS"
+	accessTierDaysTwo := "240"
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -412,6 +412,53 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithTwoTiers_Default(t *t
 					resource.TestCheckResourceAttr(resourceName, "tier.0.days", accessTierDaysOne),
 					resource.TestCheckResourceAttr(resourceName, "tier.1.access_tier", accessTierTwo),
 					resource.TestCheckResourceAttr(resourceName, "tier.1.days", accessTierDaysTwo),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSS3BucketIntelligentTieringConfiguration_WithTwoTiers_RemoveOne(t *testing.T) {
+	var itc s3.IntelligentTieringConfiguration
+	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
+
+	accessTierOne := "ARCHIVE_ACCESS"
+	accessTierDaysOne := "120"
+
+	accessTierTwo := "DEEP_ARCHIVE_ACCESS"
+	accessTierDaysTwo := "240"
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketIntelligentTieringConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketIntelligentTieringConfigurationTwoTiers(rName, rName, accessTierOne, accessTierDaysOne, accessTierTwo, accessTierDaysTwo),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					resource.TestCheckResourceAttr(resourceName, "tier.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tier.0.access_tier", accessTierOne),
+					resource.TestCheckResourceAttr(resourceName, "tier.0.days", accessTierDaysOne),
+					resource.TestCheckResourceAttr(resourceName, "tier.1.access_tier", accessTierTwo),
+					resource.TestCheckResourceAttr(resourceName, "tier.1.days", accessTierDaysTwo),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketIntelligentTieringConfigurationOneTier(rName, rName, accessTierOne, accessTierDaysOne),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					resource.TestCheckResourceAttr(resourceName, "tier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tier.0.access_tier", accessTierOne),
+					resource.TestCheckResourceAttr(resourceName, "tier.0.days", accessTierDaysOne),
 				),
 			},
 			{
@@ -690,5 +737,213 @@ func testAccCheckAWSS3BucketIntelligentTieringConfigurationRemoved(name, bucket 
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).s3conn
 		return waitForDeleteS3BucketIntelligentTieringConfiguration(conn, bucket, name, 1*time.Minute)
+	}
+}
+
+func TestExpandS3IntelligentTieringFilter(t *testing.T) {
+	testCases := map[string]struct {
+		Input    []interface{}
+		Expected *s3.IntelligentTieringFilter
+	}{
+		"nil input": {
+			Input:    nil,
+			Expected: nil,
+		},
+		"empty input": {
+			Input:    []interface{}{},
+			Expected: nil,
+		},
+		"prefix only": {
+			Input: []interface{}{
+				map[string]interface{}{
+					"prefix": "prefix/",
+				},
+			},
+			Expected: &s3.IntelligentTieringFilter{
+				Prefix: aws.String("prefix/"),
+			},
+		},
+		"prefix and single tag": {
+			Input: []interface{}{
+				map[string]interface{}{
+					"prefix": "prefix/",
+					"tags": map[string]interface{}{
+						"tag1key": "tag1value",
+					},
+				},
+			},
+			Expected: &s3.IntelligentTieringFilter{
+				And: &s3.IntelligentTieringAndOperator{
+					Prefix: aws.String("prefix/"),
+					Tags: []*s3.Tag{
+						{
+							Key:   aws.String("tag1key"),
+							Value: aws.String("tag1value"),
+						},
+					},
+				},
+			},
+		},
+		"prefix and multiple tags": {
+			Input: []interface{}{map[string]interface{}{
+				"prefix": "prefix/",
+				"tags": map[string]interface{}{
+					"tag1key": "tag1value",
+					"tag2key": "tag2value",
+				},
+			},
+			},
+			Expected: &s3.IntelligentTieringFilter{
+				And: &s3.IntelligentTieringAndOperator{
+					Prefix: aws.String("prefix/"),
+					Tags: []*s3.Tag{
+						{
+							Key:   aws.String("tag1key"),
+							Value: aws.String("tag1value"),
+						},
+						{
+							Key:   aws.String("tag2key"),
+							Value: aws.String("tag2value"),
+						},
+					},
+				},
+			},
+		},
+		"single tag only": {
+			Input: []interface{}{
+				map[string]interface{}{
+					"tags": map[string]interface{}{
+						"tag1key": "tag1value",
+					},
+				},
+			},
+			Expected: &s3.IntelligentTieringFilter{
+				Tag: &s3.Tag{
+					Key:   aws.String("tag1key"),
+					Value: aws.String("tag1value"),
+				},
+			},
+		},
+		"multiple tags only": {
+			Input: []interface{}{
+				map[string]interface{}{
+					"tags": map[string]interface{}{
+						"tag1key": "tag1value",
+						"tag2key": "tag2value",
+					},
+				},
+			},
+			Expected: &s3.IntelligentTieringFilter{
+				And: &s3.IntelligentTieringAndOperator{
+					Tags: []*s3.Tag{
+						{
+							Key:   aws.String("tag1key"),
+							Value: aws.String("tag1value"),
+						},
+						{
+							Key:   aws.String("tag2key"),
+							Value: aws.String("tag2value"),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for k, tc := range testCases {
+		value := expandS3IntelligentTieringFilter(tc.Input)
+
+		if value == nil {
+			if tc.Expected == nil {
+				continue
+			} else {
+				t.Errorf("Case %q: Got nil\nExpected:\n%v", k, tc.Expected)
+			}
+		}
+
+		if tc.Expected == nil {
+			t.Errorf("Case %q: Got: %v\nExpected: nil", k, value)
+		}
+
+		// Sort tags by key for consistency
+		if value.And != nil && value.And.Tags != nil {
+			sort.Slice(value.And.Tags, func(i, j int) bool {
+				return *value.And.Tags[i].Key < *value.And.Tags[j].Key
+			})
+		}
+
+		// Convert to strings to avoid dealing with pointers
+		valueS := fmt.Sprintf("%v", value)
+		expectedValueS := fmt.Sprintf("%v", tc.Expected)
+
+		if valueS != expectedValueS {
+			t.Errorf("Case %q: Given:\n%s\n\nExpected:\n%s", k, valueS, expectedValueS)
+		}
+	}
+}
+
+func TestExpandS3IntelligentTieringConfigurations(t *testing.T) {
+	testCases := map[string]struct {
+		Input    []interface{}
+		Expected []*s3.Tiering
+	}{
+		"nil input": {
+			Input:    nil,
+			Expected: nil,
+		},
+		"empty input": {
+			Input:    []interface{}{map[string]interface{}{}},
+			Expected: nil,
+		},
+		"empty tier": {
+			Input: []interface{}{
+				map[string]interface{}{},
+			},
+			Expected: []*s3.Tiering{},
+		},
+		"one tier": {
+			Input: []interface{}{
+				map[string]interface{}{
+					"access_tier": "test",
+					"days":        55,
+				},
+			},
+			Expected: []*s3.Tiering{
+				{
+					AccessTier: aws.String("test"),
+					Days:       aws.Int64(int64(55)),
+				},
+			},
+		},
+		"two tiers": {
+			Input: []interface{}{
+				map[string]interface{}{
+					"access_tier": "test",
+					"days":        55,
+				},
+				map[string]interface{}{
+					"access_tier": "test2",
+					"days":        56,
+				},
+			},
+			Expected: []*s3.Tiering{
+				{
+					AccessTier: aws.String("test"),
+					Days:       aws.Int64(int64(55)),
+				},
+				{
+					AccessTier: aws.String("test2"),
+					Days:       aws.Int64(int64(56)),
+				},
+			},
+		},
+	}
+
+	for k, tc := range testCases {
+		value := expandS3IntelligentTieringConfigurations(tc.Input)
+
+		if !reflect.DeepEqual(value, tc.Expected) {
+			t.Errorf("Case %q:\nGot:\n%v\nExpected:\n%v", k, value, tc.Expected)
+		}
 	}
 }
