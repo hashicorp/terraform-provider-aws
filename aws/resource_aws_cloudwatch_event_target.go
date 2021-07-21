@@ -900,7 +900,7 @@ func flattenAwsCloudWatchEventTargetRedshiftParameters(redshiftParameters *event
 
 	config["database"] = aws.StringValue(redshiftParameters.Database)
 	config["db_user"] = aws.StringValue(redshiftParameters.DbUser)
-	config["secret_manager_arn"] = aws.StringValue(redshiftParameters.SecretManagerArn)
+	config["secrets_manager_arn"] = aws.StringValue(redshiftParameters.SecretManagerArn)
 	config["sql"] = aws.StringValue(redshiftParameters.Sql)
 	config["statement_name"] = aws.StringValue(redshiftParameters.StatementName)
 	config["with_event"] = aws.BoolValue(redshiftParameters.WithEvent)
