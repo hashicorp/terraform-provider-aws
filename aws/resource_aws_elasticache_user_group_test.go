@@ -1,7 +1,6 @@
 package aws
 
 import (
-	//"errors"
 	"fmt"
 	"testing"
 

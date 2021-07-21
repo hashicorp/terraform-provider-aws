@@ -43,7 +43,7 @@ The following arguments are optional:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The IP group identifier.
+* `id` - The user group identifier.
 
 ## Import
 
