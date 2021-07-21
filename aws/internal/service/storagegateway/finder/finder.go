@@ -1,13 +1,11 @@
 package finder
 
 import (
-	"errors"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfstoragegateway "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway"
 )
@@ -126,16 +124,9 @@ func FileSystemAssociationByARN(conn *storagegateway.StorageGateway, fileSystemA
 
 	output, err := conn.DescribeFileSystemAssociations(input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, storagegateway.ErrCodeInvalidGatewayRequestException) {
-			var igrex *storagegateway.InvalidGatewayRequestException
-			if ok := errors.As(err, &igrex); ok {
-				if err := igrex.Error_; err != nil {
-					if aws.StringValue(err.ErrorCode) == "FileSystemAssociationNotFound" {
-						log.Printf("[WARN] FSX File System %q not found", fileSystemAssociationARN)
-						return nil, nil
-					}
-				}
-			}
+		if tfstoragegateway.InvalidGatewayRequestErrCodeEquals(err, tfstoragegateway.FileSystemAssociationNotFound) {
+			log.Printf("[WARN] FSX File System %q not found", fileSystemAssociationARN)
+			return nil, nil
 		}
 
 		return nil, fmt.Errorf("error reading Storage Gateway FSx File System: %w", err)
