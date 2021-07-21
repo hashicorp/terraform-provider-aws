@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-// RetryWhen retries the function `f` when the error it returns satisfies `predicate`.
+// RetryWhenContext retries the function `f` when the error it returns satisfies `predicate`.
 // `f` is retried until `timeout` expires.
-func RetryWhen(timeout time.Duration, f func() (interface{}, error), predicate func(error) bool) (interface{}, error) {
+func RetryWhenContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error), predicate func(error) bool) (interface{}, error) {
 	var output interface{}
 
 	err := resource.Retry(timeout, func() *resource.RetryError {
@@ -42,9 +42,15 @@ func RetryWhen(timeout time.Duration, f func() (interface{}, error), predicate f
 	return output, nil
 }
 
-// RetryWhenAwsErrCodeEquals retries the specified function when it returns one of the specified AWS error code.
-func RetryWhenAwsErrCodeEquals(timeout time.Duration, f func() (interface{}, error), codes ...string) (interface{}, error) {
-	return RetryWhen(timeout, f, func(err error) bool {
+// RetryWhen retries the function `f` when the error it returns satisfies `predicate`.
+// `f` is retried until `timeout` expires.
+func RetryWhen(timeout time.Duration, f func() (interface{}, error), predicate func(error) bool) (interface{}, error) {
+	return RetryWhenContext(context.Background(), timeout, f, predicate)
+}
+
+// RetryWhenAwsErrCodeEqualsContext retries the specified function when it returns one of the specified AWS error code.
+func RetryWhenAwsErrCodeEqualsContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error), codes ...string) (interface{}, error) {
+	return RetryWhenContext(ctx, timeout, f, func(err error) bool {
 		// https://github.com/hashicorp/aws-sdk-go-base/pull/55 has been merged.
 		// Once aws-sdk-go-base has been updated, use variadic version of ErrCodeEquals.
 		for _, code := range codes {
@@ -57,14 +63,29 @@ func RetryWhenAwsErrCodeEquals(timeout time.Duration, f func() (interface{}, err
 	})
 }
 
+// RetryWhenAwsErrCodeEquals retries the specified function when it returns one of the specified AWS error code.
+func RetryWhenAwsErrCodeEquals(timeout time.Duration, f func() (interface{}, error), codes ...string) (interface{}, error) {
+	return RetryWhenAwsErrCodeEqualsContext(context.Background(), timeout, f, codes...)
+}
+
+// RetryWhenNotFoundContext retries the specified function when it returns a resource.NotFoundError.
+func RetryWhenNotFoundContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
+	return RetryWhenContext(ctx, timeout, f, NotFound)
+}
+
 // RetryWhenNotFound retries the specified function when it returns a resource.NotFoundError.
 func RetryWhenNotFound(timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
-	return RetryWhen(timeout, f, NotFound)
+	return RetryWhenNotFoundContext(context.Background(), timeout, f)
+}
+
+// RetryWhenNewResourceNotFoundContext retries the specified function when it returns a resource.NotFoundError and `isNewResource` is true.
+func RetryWhenNewResourceNotFoundContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error), isNewResource bool) (interface{}, error) {
+	return RetryWhenContext(ctx, timeout, f, func(err error) bool { return isNewResource && NotFound(err) })
 }
 
 // RetryWhenNewResourceNotFound retries the specified function when it returns a resource.NotFoundError and `isNewResource` is true.
 func RetryWhenNewResourceNotFound(timeout time.Duration, f func() (interface{}, error), isNewResource bool) (interface{}, error) {
-	return RetryWhen(timeout, f, func(err error) bool { return isNewResource && NotFound(err) })
+	return RetryWhenNewResourceNotFoundContext(context.Background(), timeout, f, isNewResource)
 }
 
 // RetryConfigContext allows configuration of StateChangeConf's various time arguments.
