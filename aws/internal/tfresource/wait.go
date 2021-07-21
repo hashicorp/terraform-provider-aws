@@ -16,8 +16,8 @@ type WaitOpts struct {
 
 const (
 	targetStateError = "ERROR"
-	targetStateFalse  = "FALSE"
-	targetStateTrue   = "TRUE"
+	targetStateFalse = "FALSE"
+	targetStateTrue  = "TRUE"
 )
 
 // WaitUntilContext waits for the function `f` to return `true`.

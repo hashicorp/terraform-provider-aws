@@ -15,7 +15,8 @@ const (
 
 	KeyDeletedTimeout = 20 * time.Minute
 
-	PropagationTimeout = 2 * time.Minute
+	KeyRotationUpdatedTimeout = 20 * time.Minute
+	PropagationTimeout        = 2 * time.Minute
 )
 
 // IAMPropagation retries the specified function if the returned error indicates an IAM eventual consistency issue.

@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -144,7 +145,7 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_id", d.Id())
 
 	if enableKeyRotation := d.Get("enable_key_rotation").(bool); enableKeyRotation {
-		if err := updateKmsKeyRotationStatus(conn, d); err != nil {
+		if err := updateKmsKeyRotationEnabled(conn, d.Id(), enableKeyRotation); err != nil {
 			return err
 		}
 	}
@@ -249,7 +250,7 @@ func resourceAwsKmsKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("enable_key_rotation") {
-		if err := updateKmsKeyRotationStatus(conn, d); err != nil {
+		if err := updateKmsKeyRotationEnabled(conn, d.Id(), d.Get("enable_key_rotation").(bool)); err != nil {
 			return err
 		}
 	}
@@ -456,34 +457,83 @@ func handleKeyRotation(conn *kms.KMS, shouldEnableRotation bool, keyId *string) 
 
 func resourceAwsKmsKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
-	keyId := d.Get("key_id").(string)
 
-	req := &kms.ScheduleKeyDeletionInput{
-		KeyId: aws.String(keyId),
+	input := &kms.ScheduleKeyDeletionInput{
+		KeyId: aws.String(d.Id()),
 	}
-	if v, exists := d.GetOk("deletion_window_in_days"); exists {
-		req.PendingWindowInDays = aws.Int64(int64(v.(int)))
-	}
-	_, err := conn.ScheduleKeyDeletion(req)
 
-	if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+	if v, ok := d.GetOk("deletion_window_in_days"); ok {
+		input.PendingWindowInDays = aws.Int64(int64(v.(int)))
+	}
+
+	log.Printf("[DEBUG] Deleting KMS Key: (%s)", d.Id())
+	_, err := conn.ScheduleKeyDeletion(input)
+
+	if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
+		return nil
+	}
+
+	if tfawserr.ErrMessageContains(err, kms.ErrCodeInvalidStateException, "is pending deletion") {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error scheduling deletion for KMS Key (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting KMS Key (%s): %w", d.Id(), err)
 	}
 
-	//  Error: error scheduling deletion for KMS Key (a93d0bf5-ff4c-4323-9f9a-2151ac639254): KMSInvalidStateException: arn:aws:kms:us-west-2:346386234494:key/a93d0bf5-ff4c-4323-9f9a-2151ac639254 is pending deletion.
-
-	_, err = waiter.KeyStatePendingDeletion(conn, d.Id())
-
-	if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
-		return nil
+	if _, err := waiter.KeyDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for KMS Key (%s) to delete: %w", d.Id(), err)
 	}
+
+	return nil
+}
+
+func updateKmsKeyRotationEnabled(conn *kms.KMS, keyID string, enabled bool) error {
+	updateFunc := func() (interface{}, error) {
+		var err error
+
+		if enabled {
+			_, err = conn.EnableKeyRotation(&kms.EnableKeyRotationInput{
+				KeyId: aws.String(keyID),
+			})
+		} else {
+			_, err = conn.DisableKeyRotation(&kms.DisableKeyRotationInput{
+				KeyId: aws.String(keyID),
+			})
+		}
+
+		return nil, err
+	}
+
+	_, err := tfresource.RetryWhenAwsErrCodeEquals(waiter.KeyRotationUpdatedTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeDisabledException)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for KMS Key (%s) to schedule deletion: %w", d.Id(), err)
+		return fmt.Errorf("error updating KMS Key (%s) key rotation enabled (%t): %w", keyID, enabled, err)
+	}
+
+	// Wait for propagation since KMS is eventually consistent.
+	checkFunc := func() (bool, error) {
+		got, err := finder.KeyRotationEnabledByKeyID(conn, keyID)
+
+		if tfresource.NotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		return aws.BoolValue(got) == enabled, nil
+	}
+	opts := &tfresource.WaitOpts{
+		ContinuousTargetOccurence: 5,
+		MinTimeout:                1 * time.Second,
+	}
+
+	err = tfresource.WaitUntil(waiter.PropagationTimeout, checkFunc, opts)
+
+	if err != nil {
+		return fmt.Errorf("error waiting for KMS Key (%s) key rotation propagation: %w", keyID, err)
 	}
 
 	return nil

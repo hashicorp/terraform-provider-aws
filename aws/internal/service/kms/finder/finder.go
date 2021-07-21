@@ -34,6 +34,7 @@ func KeyByID(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
 
 	keyMetadata := output.KeyMetadata
 
+	// Once the CMK is in the pending deletion state Terraform considers it logically deleted.
 	if state := aws.StringValue(keyMetadata.KeyState); state == kms.KeyStatePendingDeletion {
 		return nil, &resource.NotFoundError{
 			Message:     state,
