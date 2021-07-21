@@ -111,7 +111,7 @@ func resourceAwsElasticacheUserRead(d *schema.ResourceData, meta interface{}) er
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := finder.ElastiCacheUserById(conn, d.Id())
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && (tfresource.NotFound(err) || isAWSErr(err, elasticache.ErrCodeUserNotFoundFault, "")) {
 		d.SetId("")
 		log.Printf("[DEBUG] ElastiCache User (%s) not found", d.Id())
 		return nil
