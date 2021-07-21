@@ -1,5 +1,7 @@
 package storagegateway
 
+import "time"
+
 const (
 	AuthenticationActiveDirectory = "ActiveDirectory"
 	AuthenticationGuestAccess     = "GuestAccess"
@@ -35,3 +37,34 @@ const (
 	FileShareStatusForceDeleting = "FORCE_DELETING"
 	FileShareStatusUpdating      = "UPDATING"
 )
+
+const (
+	AssociateFileSystemCreateTimeout = 3 * time.Minute
+	AssociateFileSystemUpdateTimeout = 3 * time.Minute
+	AssociateFileSystemDeleteTimeout = 3 * time.Minute
+)
+
+const (
+	FsxFileSystemAssociationStatusAvailable     = "AVAILABLE"
+	FsxFileSystemAssociationStatusCreating      = "CREATING"
+	FsxFileSystemAssociationStatusDeleting      = "DELETING"
+	FsxFileSystemAssociationStatusForceDeleting = "FORCE_DELETING"
+	FsxFileSystemAssociationStatusUpdating      = "UPDATING"
+	FsxFileSystemAssociationStatusError         = "ERROR"
+)
+
+func FsxFileSystemStatusAvailableStatusPending() []string {
+	return []string{FsxFileSystemAssociationStatusCreating, FsxFileSystemAssociationStatusUpdating}
+}
+
+func FsxFileSystemStatusAvailableStatusTarget() []string {
+	return []string{FsxFileSystemAssociationStatusAvailable}
+}
+
+func FsxFileSystemStatusDeletedStatusPending() []string {
+	return []string{FsxFileSystemAssociationStatusAvailable, FsxFileSystemAssociationStatusDeleting, FsxFileSystemAssociationStatusForceDeleting}
+}
+
+func FsxFileSystemStatusDeletedStatusTarget() []string {
+	return []string{}
+}
