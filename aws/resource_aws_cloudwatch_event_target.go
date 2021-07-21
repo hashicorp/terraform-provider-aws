@@ -898,6 +898,10 @@ func flattenAwsCloudWatchEventTargetEcsParameters(ecsParameters *events.EcsParam
 func flattenAwsCloudWatchEventTargetRedshiftParameters(redshiftParameters *events.RedshiftDataParameters) []map[string]interface{} {
 	config := make(map[string]interface{})
 
+	if redshiftParameters == nil {
+		return []map[string]interface{}{config}
+	}
+
 	config["database"] = aws.StringValue(redshiftParameters.Database)
 	config["db_user"] = aws.StringValue(redshiftParameters.DbUser)
 	config["secrets_manager_arn"] = aws.StringValue(redshiftParameters.SecretManagerArn)
