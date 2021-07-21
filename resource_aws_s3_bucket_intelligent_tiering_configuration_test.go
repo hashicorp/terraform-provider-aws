@@ -895,27 +895,21 @@ func TestExpandS3IntelligentTieringConfigurations(t *testing.T) {
 			Input:    []interface{}{map[string]interface{}{}},
 			Expected: nil,
 		},
-		"empty tier": {
-			Input: []interface{}{
-				map[string]interface{}{},
-			},
-			Expected: []*s3.Tiering{},
-		},
-		"one tier": {
+		"one input": {
 			Input: []interface{}{
 				map[string]interface{}{
-					"access_tier": "test",
-					"days":        55,
+					"access_tier": "testing",
+					"days":        123,
 				},
 			},
 			Expected: []*s3.Tiering{
 				{
-					AccessTier: aws.String("test"),
-					Days:       aws.Int64(int64(55)),
+					AccessTier: aws.String("testing"),
+					Days:       aws.Int64(int64(123)),
 				},
 			},
 		},
-		"two tiers": {
+		"two inputs": {
 			Input: []interface{}{
 				map[string]interface{}{
 					"access_tier": "test",
