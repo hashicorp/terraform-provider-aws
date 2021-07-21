@@ -1402,8 +1402,8 @@ resource "aws_cloudwatch_event_target" "test" {
   redshift_target {
     database       = "redshiftdb"
     sql            = "SELECT * FROM table"
-		statement_name = "NewStatement"
-		db_user        = "someUser"
+    statement_name = "NewStatement"
+    db_user        = "someUser"
   }
 }
 resource "aws_redshift_cluster" "default" {
