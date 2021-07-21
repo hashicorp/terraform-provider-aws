@@ -232,30 +232,32 @@ func TestAccAWSStorageGatewayFsxAssociateFileSystem_disappears_storageGateway(t 
 	})
 }
 
-//
-// func TestAccAWSStorageGatewayFsxAssociateFileSystem_disappears_fsxFileSystem(t *testing.T) {
-// 	var fsxFileSystemAssociation storagegateway.FileSystemAssociationInfo
-// 	rName := acctest.RandomWithPrefix("tf-acc-test")
-// 	resourceName := "aws_storagegateway_fsx_associate_file_system.test"
-// 	username := "Admin"
+func TestAccAWSStorageGatewayFsxAssociateFileSystem_disappears_fsxFileSystem(t *testing.T) {
+	var fsxFileSystemAssociation storagegateway.FileSystemAssociationInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_fsx_associate_file_system.test"
+	domainName := testAccRandomDomainName()
+	username := "Admin"
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(storagegateway.EndpointsID, t) },
-// 		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
-// 		Providers:    testAccProviders,
-// 		CheckDestroy: testAccCheckAwsStorageGatewayFsxAssociateFileSystemDestroy,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccAwsStorageGatewayFsxAssociateFileSystemConfig_Required(rName, username),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckAwsStorageGatewayFsxAssociateFileSystemExists(resourceName, &fsxFileSystemAssociation),
-// 					testAccCheckResourceDisappears(testAccProvider, resourceAwsFsxWindowsFileSystem(), "aws_fsx_windows_file_system.test"),
-// 				),
-// 				ExpectNonEmptyPlan: true,
-// 			},
-// 		},
-// 	})
-// }
+	t.Skip("A bug in the service API has been reported. Deleting the FSx file system before the association prevents association from being deleted.")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(storagegateway.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsStorageGatewayFsxAssociateFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsStorageGatewayFsxAssociateFileSystemConfig_Required(rName, domainName, username),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsStorageGatewayFsxAssociateFileSystemExists(resourceName, &fsxFileSystemAssociation),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsFsxWindowsFileSystem(), "aws_fsx_windows_file_system.test"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 
 func testAccCheckAwsStorageGatewayFsxAssociateFileSystemDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
