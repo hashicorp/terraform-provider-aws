@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	tfsgwerr "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway"
+	tfstoragegateway "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
 )
@@ -124,7 +124,7 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemCreate(d *schema.ResourceDat
 	log.Printf("[DEBUG] Associating File System to Storage Gateway: %s", input)
 	output, err := conn.AssociateFileSystem(input)
 	if err != nil {
-		if tfsgwerr.InvalidGatewayRequestErrCodeEquals(err, tfsgwerr.FileSystemAssociationNotFound) {
+		if tfstoragegateway.InvalidGatewayRequestErrCodeEquals(err, tfstoragegateway.FileSystemAssociationNotFound) {
 			log.Printf("[WARN] FSX File System %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -231,7 +231,7 @@ func resourceAwsStorageGatewayFsxAssociateFileSystemDelete(d *schema.ResourceDat
 	log.Printf("[DEBUG] Deleting Storage Gateway File System Association: %s", input)
 	_, err := conn.DisassociateFileSystem(input)
 	if err != nil {
-		if tfsgwerr.InvalidGatewayRequestErrCodeEquals(err, tfsgwerr.FileSystemAssociationNotFound) {
+		if tfstoragegateway.InvalidGatewayRequestErrCodeEquals(err, tfstoragegateway.FileSystemAssociationNotFound) {
 			log.Printf("[WARN] FSX File System Association %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
