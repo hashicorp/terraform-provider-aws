@@ -25,28 +25,39 @@ func resourceAwsTransferAccess() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"external_id": {
-				Type:     schema.TypeString,
-				Optional: false,
+				Type: schema.TypeString,
 			},
 
 			"home_directory": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 
 			"home_directory_mappings": {
 				Type:     schema.TypeList,
-				MinItems: 1,
 				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"entry": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(0, 1024),
+						},
+						"target": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(0, 1024),
+						},
+					},
+				},
 			},
 
 			"home_directory_type": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(transfer.HomeDirectoryType_Values(), false),
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      transfer.HomeDirectoryTypePath,
+				ValidateFunc: validation.StringInSlice([]string{transfer.HomeDirectoryTypePath, transfer.HomeDirectoryTypeLogical}, false),
 			},
 
 			"policy": {
@@ -55,21 +66,39 @@ func resourceAwsTransferAccess() *schema.Resource {
 			},
 
 			"posix_profile": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
-				//TODO: this
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"gid": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+						"uid": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+						"secondary_gids": {
+							Type:     schema.TypeSet,
+							Elem:     &schema.Schema{Type: schema.TypeInt},
+							Optional: true,
+						},
+					},
+				},
 			},
 
 			"role": {
-				Type:     schema.TypeString,
-				Optional: false,
-				//TODO: Min length 20
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"server_id": {
-				Type:     schema.TypeString,
-				Optional: false,
-				//TODO: Min length 19
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateTransferServerID,
 			},
 
 			"force_destroy": {
@@ -94,8 +123,8 @@ func resourceAwsTransferAccessCreate(d *schema.ResourceData, meta interface{}) e
 		input.HomeDirectory = aws.String(v.(string))
 	}
 
-	if _, ok := d.GetOk("home_directory_mappings"); ok {
-		//TODO this
+	if v, ok := d.GetOk("home_directory_mappings"); ok {
+		input.HomeDirectoryMappings = expandAwsTransferHomeDirectoryMappings(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("home_directory_type"); ok {
@@ -106,8 +135,8 @@ func resourceAwsTransferAccessCreate(d *schema.ResourceData, meta interface{}) e
 		input.Policy = aws.String(v.(string))
 	}
 
-	if _, ok := d.GetOk("posix_profile"); ok {
-		//TODO this
+	if v, ok := d.GetOk("posix_profile"); ok {
+		input.PosixProfile = expandTransferUserPosixUser(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("role"); ok {
@@ -150,10 +179,16 @@ func resourceAwsTransferAccessRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("external_id", output.ExternalId)
 	d.Set("policy", output.Policy)
 	d.Set("home_directory_type", output.HomeDirectoryType)
-	d.Set("home_directory_mappings", output.HomeDirectoryMappings)
-	d.Set("posix_profile", output.PosixProfile)
 	d.Set("home_directory", output.HomeDirectory)
 	d.Set("role", output.Role)
+
+	if err := d.Set("home_directory_mappings", flattenAwsTransferHomeDirectoryMappings(output.HomeDirectoryMappings)); err != nil {
+		return fmt.Errorf("Error setting home_directory_mappings: %w", err)
+	}
+
+	if err := d.Set("posix_profile", flattenTransferUserPosixUser(output.PosixProfile)); err != nil {
+		return fmt.Errorf("Error setting posix_profile: %w", err)
+	}
 
 	return nil
 }
@@ -173,7 +208,7 @@ func resourceAwsTransferAccessUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if d.HasChange("home_directory_mappings") {
-			//TODO: This
+			input.HomeDirectoryMappings = expandAwsTransferHomeDirectoryMappings(d.Get("home_directory_mappings").([]interface{}))
 		}
 
 		if d.HasChange("home_directory_type") {
@@ -185,7 +220,7 @@ func resourceAwsTransferAccessUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if d.HasChange("posix_profile") {
-			//TODO: This
+			input.PosixProfile = expandTransferUserPosixUser(d.Get("posix_profile").([]interface{}))
 		}
 
 		if d.HasChange("role") {

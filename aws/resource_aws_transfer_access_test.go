@@ -55,7 +55,6 @@ func testAccAWSTransferAccess_basic(t *testing.T) {
 	})
 }
 
-
 func testAccCheckAWSTransferAccessExists(n string, v *transfer.DescribedAccess) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -115,7 +114,6 @@ func testAccAWSTransferAccessBasicConfig() string {
 resource "aws_server_access" "test" {}
 `
 }
-
 
 func testAccAWSTransferAccessUpdatedConfig(rName string) string {
 	//TODO: Migrate from Server to Access
