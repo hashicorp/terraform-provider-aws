@@ -87,6 +87,25 @@ resource "aws_s3_bucket" "example" {
 }
 ```
 
+### S3 Logging in Apache Parquet format with per-hour partitions
+
+```terraform
+resource "aws_flow_log" "example" {
+  log_destination      = aws_s3_bucket.example.arn
+  log_destination_type = "s3"
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.example.id
+  destination_options {
+    file_format        = "parquet"
+    per_hour_partition = true
+  }
+}
+
+resource "aws_s3_bucket" "example" {
+  bucket = "example"
+}
+```
+
 ## Argument Reference
 
 ~> **NOTE:** One of `eni_id`, `subnet_id`, or `vpc_id` must be specified.

@@ -635,7 +635,48 @@ resource "aws_flow_log" "test" {
   traffic_type         = "ALL"
   vpc_id               = aws_vpc.test.id
   destination_options {
-	file_format = "plain-text"
+    file_format = "plain-text"
+  }
+}
+`, rName)
+}
+
+func testAccFlowLogConfig_LogDestinationType_S3_DO_PlainText_HiveCompatible(rName string) string {
+	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_flow_log" "test" {
+  log_destination      = aws_s3_bucket.test.arn
+  log_destination_type = "s3"
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.test.id
+  destination_options {
+    file_format                = "plain-text"
+    hive_compatible_partitions = true
+  }
+}
+`, rName)
+}
+
+func testAccFlowLogConfig_LogDestinationType_S3_DO_PlainText_HiveCompatible_PerHour(rName string) string {
+	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_flow_log" "test" {
+  log_destination      = aws_s3_bucket.test.arn
+  log_destination_type = "s3"
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.test.id
+  destination_options {
+    file_format                = "plain-text"
+    hive_compatible_partitions = true
+    per_hour_partition         = true
   }
 }
 `, rName)
@@ -654,7 +695,7 @@ resource "aws_flow_log" "test" {
   traffic_type         = "ALL"
   vpc_id               = aws_vpc.test.id
   destination_options {
-	file_format = "parquet"
+    file_format = "parquet"
   }
 }
 `, rName)
@@ -673,28 +714,8 @@ resource "aws_flow_log" "test" {
   traffic_type         = "ALL"
   vpc_id               = aws_vpc.test.id
   destination_options {
-	file_format = "parquet"
-	hive_compatible_partitions = true
-  }
-}
-`, rName)
-}
-
-func testAccFlowLogConfig_LogDestinationType_S3_DO_PlainText_HiveCompatible_Invalid(rName string) string {
-	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
-resource "aws_flow_log" "test" {
-  log_destination      = aws_s3_bucket.test.arn
-  log_destination_type = "s3"
-  traffic_type         = "ALL"
-  vpc_id               = aws_vpc.test.id
-  destination_options {
-	file_format = "plain-text"
-	hive_compatible_partitions = true
+    file_format                = "parquet"
+    hive_compatible_partitions = true
   }
 }
 `, rName)
@@ -713,9 +734,9 @@ resource "aws_flow_log" "test" {
   traffic_type         = "ALL"
   vpc_id               = aws_vpc.test.id
   destination_options {
-	file_format = "parquet"
-	hive_compatible_partitions = true
-	per_hour_partition = true
+    file_format                = "parquet"
+    hive_compatible_partitions = true
+    per_hour_partition         = true
   }
 }
 `, rName)

@@ -32,19 +32,20 @@ func resourceAwsFlowLog() *schema.Resource {
 			},
 
 			"destination_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				ForceNew:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"file_format": {
 							Type: schema.TypeString,
 							ValidateFunc: validation.StringInSlice([]string{
-								"plain-text",
-								"parquet",
+								ec2.DestinationFileFormatPlainText,
+								ec2.DestinationFileFormatParquet,
 							}, false),
-							Default:  "plain-text",
+							Default:  ec2.DestinationFileFormatPlainText,
 							Optional: true,
 						},
 						"hive_compatible_partitions": {
@@ -358,9 +359,9 @@ func flattenFlowLogsDestinationOptions(do *ec2.DestinationOptionsResponse) []int
 	if do == nil {
 		return []interface{}{}
 	}
-
+	//aws.StringValue(do.FileFormat),
 	m := map[string]interface{}{
-		"file_format":                aws.StringValue(do.FileFormat),
+		"file_format":                *do.FileFormat,
 		"hive_compatible_partitions": aws.BoolValue(do.HiveCompatiblePartitions),
 		"per_hour_partition":         aws.BoolValue(do.PerHourPartition),
 	}
