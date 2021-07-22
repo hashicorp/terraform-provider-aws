@@ -24,7 +24,7 @@ const (
 // If `f` returns an error, return immediately with that error.
 // If `timeout` is exceeded before `f` returns `true`, return an error.
 // Waits between calls to `f` using exponential backoff, except when waiting for the target state to reoccur.
-func WaitUntilContext(ctx context.Context, timeout time.Duration, f func() (bool, error), opts *WaitOpts) error {
+func WaitUntilContext(ctx context.Context, timeout time.Duration, f func() (bool, error), opts WaitOpts) error {
 	refresh := func() (interface{}, string, error) {
 		done, err := f()
 
@@ -40,17 +40,14 @@ func WaitUntilContext(ctx context.Context, timeout time.Duration, f func() (bool
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{targetStateFalse},
-		Target:  []string{targetStateTrue},
-		Refresh: refresh,
-		Timeout: timeout,
-	}
-
-	if opts != nil {
-		stateConf.ContinuousTargetOccurence = opts.ContinuousTargetOccurence
-		stateConf.Delay = opts.Delay
-		stateConf.MinTimeout = opts.MinTimeout
-		stateConf.PollInterval = opts.PollInterval
+		Pending:                   []string{targetStateFalse},
+		Target:                    []string{targetStateTrue},
+		Refresh:                   refresh,
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: opts.ContinuousTargetOccurence,
+		Delay:                     opts.Delay,
+		MinTimeout:                opts.MinTimeout,
+		PollInterval:              opts.PollInterval,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
@@ -62,6 +59,6 @@ func WaitUntilContext(ctx context.Context, timeout time.Duration, f func() (bool
 // If `f` returns an error, return immediately with that error.
 // If `timeout` is exceeded before `f` returns `true`, return an error.
 // Waits between calls to `f` using exponential backoff, except when waiting for the target state to reoccur.
-func WaitUntil(timeout time.Duration, f func() (bool, error), opts *WaitOpts) error {
+func WaitUntil(timeout time.Duration, f func() (bool, error), opts WaitOpts) error {
 	return WaitUntilContext(context.Background(), timeout, f, opts)
 }

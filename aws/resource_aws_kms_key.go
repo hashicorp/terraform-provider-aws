@@ -373,7 +373,7 @@ func updateKmsKeyEnabled(conn *kms.KMS, keyID string, enabled bool) error {
 
 		return aws.BoolValue(output.Enabled) == enabled, nil
 	}
-	opts := &tfresource.WaitOpts{
+	opts := tfresource.WaitOpts{
 		ContinuousTargetOccurence: 15,
 		MinTimeout:                2 * time.Second,
 	}
@@ -425,7 +425,7 @@ func updateKmsKeyRotationEnabled(conn *kms.KMS, keyID string, enabled bool) erro
 
 		return aws.BoolValue(output) == enabled, nil
 	}
-	opts := &tfresource.WaitOpts{
+	opts := tfresource.WaitOpts{
 		ContinuousTargetOccurence: 5,
 		MinTimeout:                1 * time.Second,
 	}

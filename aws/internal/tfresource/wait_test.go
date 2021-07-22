@@ -53,7 +53,7 @@ func TestWaitUntil(t *testing.T) {
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
-			err := tfresource.WaitUntil(5*time.Second, testCase.F, nil)
+			err := tfresource.WaitUntil(5*time.Second, testCase.F, tfresource.WaitOpts{})
 
 			if testCase.ExpectError && err == nil {
 				t.Fatal("expected error")
