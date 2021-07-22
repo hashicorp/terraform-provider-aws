@@ -11,6 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsKmsAlias() *schema.Resource {
@@ -29,6 +33,7 @@ func resourceAwsKmsAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -36,6 +41,7 @@ func resourceAwsKmsAlias() *schema.Resource {
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validateAwsKmsName,
 			},
+
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -43,73 +49,73 @@ func resourceAwsKmsAlias() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validateAwsKmsName,
 			},
+
+			"target_key_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"target_key_id": {
 				Type:             schema.TypeString,
 				Required:         true,
 				DiffSuppressFunc: suppressEquivalentTargetKeyIdAndARN,
 			},
-			"target_key_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
 
+const (
+	kmsAliasDefaultNamePrefix = "alias/"
+)
+
 func resourceAwsKmsAliasCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
 
-	var name string
-	if v, ok := d.GetOk("name"); ok {
-		name = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		name = resource.PrefixedUniqueId(v.(string))
-	} else {
-		name = resource.PrefixedUniqueId("alias/")
+	namePrefix := d.Get("name_prefix").(string)
+	if namePrefix == "" {
+		namePrefix = kmsAliasDefaultNamePrefix
 	}
+	name := naming.Generate(d.Get("name").(string), namePrefix)
 
-	targetKeyId := d.Get("target_key_id").(string)
-
-	log.Printf("[DEBUG] KMS alias create name: %s, target_key: %s", name, targetKeyId)
-
-	req := &kms.CreateAliasInput{
+	input := &kms.CreateAliasInput{
 		AliasName:   aws.String(name),
-		TargetKeyId: aws.String(targetKeyId),
+		TargetKeyId: aws.String(d.Get("target_key_id").(string)),
 	}
 
-	// KMS is eventually consistent
-	_, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
-		return conn.CreateAlias(req)
-	})
+	// KMS is eventually consistent.
+	log.Printf("[DEBUG] Creating KMS Alias: %s", input)
+
+	_, err := tfresource.RetryWhenAwsErrCodeEquals(waiter.KeyRotationUpdatedTimeout, func() (interface{}, error) {
+		return conn.CreateAlias(input)
+	}, kms.ErrCodeNotFoundException)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating KMS Alias (%s): %w", name, err)
 	}
+
 	d.SetId(name)
+
 	return resourceAwsKmsAliasRead(d, meta)
 }
 
 func resourceAwsKmsAliasRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
 
-	var alias *kms.AliasListEntry
-	var err error
-	if d.IsNewResource() {
-		alias, err = retryFindKmsAliasByName(conn, d.Id())
-	} else {
-		alias, err = findKmsAliasByName(conn, d.Id(), nil)
-	}
-	if err != nil {
-		return err
-	}
-	if alias == nil {
-		log.Printf("[DEBUG] Removing KMS Alias (%s) as it's already gone", d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
+		return finder.AliasByName(conn, d.Id())
+	}, d.IsNewResource())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] KMS Alias (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	log.Printf("[DEBUG] Found KMS Alias: %s", alias)
+	alias := outputRaw.(*kms.AliasListEntry)
 
 	d.Set("arn", alias.AliasArn)
+	d.Set("name", alias.AliasName)
+	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(alias.AliasName)))
 	d.Set("target_key_id", alias.TargetKeyId)
 
 	aliasARN, err := arn.Parse(*alias.AliasArn)
