@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_elasticache_user` ([#16629](https://github.com/hashicorp/terraform-provider-aws/issues/16629))
+* **New Resource:** `aws_appconfig_deployment` ([#20172](https://github.com/hashicorp/terraform-provider-aws/issues/20172))
 * **New Resource:** `aws_elasticache_user` ([#16629](https://github.com/hashicorp/terraform-provider-aws/issues/16629))
 * **New Resource:** `aws_elasticache_user_group` ([#16504](https://github.com/hashicorp/terraform-provider-aws/issues/16504))
 
