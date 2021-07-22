@@ -230,6 +230,10 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	if err != nil {
+		return nil
+	}
+
 	key := outputRaw.(*Key)
 
 	d.Set("arn", key.metadata.Arn)
