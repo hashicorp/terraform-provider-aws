@@ -1180,14 +1180,14 @@ resource "aws_api_gateway_deployment" "test" {
 }
 
 func testAccAWSTransferServerConfigBaseDirectoryService(rName string) string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_directory_service_directory" "test" {
-  name = %[1]q
+  name = "directory.test.com"
   password = "P4ssw0rd"
   size = "small"
 
   vpc_settings {
-    vpc_id     = aws_vpc.sandbox_vpc.id
+    vpc_id     = aws_vpc.test.id
     subnet_ids = [
       aws_subnet.test_a.id,
       aws_subnet.test_b.id
@@ -1213,7 +1213,7 @@ resource "aws_subnet" "test_b" {
   cidr_block        = "10.0.2.0/24"
 }
 
-`, rName)
+`
 }
 
 func testAccAWSTransferServerBasicConfig() string {

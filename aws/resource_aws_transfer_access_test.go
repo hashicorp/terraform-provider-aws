@@ -12,13 +12,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
-func init() {
-	RegisterServiceErrorCheckFunc(transfer.EndpointsID, testAccErrorCheckSkipTransfer)
-}
-
 func testAccAWSTransferAccess_basic(t *testing.T) {
 	var conf transfer.DescribedAccess
-	resourceName := "aws_transfer_access.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
@@ -30,14 +25,14 @@ func testAccAWSTransferAccess_basic(t *testing.T) {
 			{
 				Config: testAccAWSTransferAccessBasicConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferAccessExists(resourceName, &conf),
+					testAccCheckAWSTransferAccessExists(rName, &conf),
 					//testAccMatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexp.MustCompile(`server/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "external_id", ""),
+					resource.TestCheckResourceAttr(rName, "external_id", ""),
 					//TODO: ...
 				),
 			},
 			{
-				ResourceName:            resourceName,
+				ResourceName:            rName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"force_destroy"},
@@ -45,9 +40,9 @@ func testAccAWSTransferAccess_basic(t *testing.T) {
 			{
 				Config: testAccAWSTransferAccessUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferAccessExists(resourceName, &conf),
+					testAccCheckAWSTransferAccessExists(rName, &conf),
 					//testAccMatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexp.MustCompile(`server/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "external_id", ""),
+					resource.TestCheckResourceAttr(rName, "external_id", ""),
 					//TODO: ...
 				),
 			},
