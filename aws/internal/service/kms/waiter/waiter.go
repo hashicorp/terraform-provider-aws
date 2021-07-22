@@ -5,8 +5,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	awspolicy "github.com/jen20/awspolicyequivalence"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	tfkms "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/finder"
@@ -68,7 +70,7 @@ func KeyPolicyPropagated(conn *kms.KMS, id, policy string) error {
 		return equivalent, nil
 	}
 	opts := tfresource.WaitOpts{
-		ContinuousTargetOccurence: 5,
+		ContinuousTargetOccurence: 3,
 		MinTimeout:                1 * time.Second,
 	}
 
@@ -117,6 +119,28 @@ func KeyStatePropagated(conn *kms.KMS, id string, enabled bool) error {
 	}
 
 	return tfresource.WaitUntil(KeyStatePropagationTimeout, checkFunc, opts)
+}
+
+func TagsPropagated(conn *kms.KMS, id string, tags keyvaluetags.KeyValueTags) error {
+	checkFunc := func() (bool, error) {
+		output, err := keyvaluetags.KmsListTags(conn, id)
+
+		if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		return output.Equal(tags), nil
+	}
+	opts := tfresource.WaitOpts{
+		ContinuousTargetOccurence: 3,
+		MinTimeout:                1 * time.Second,
+	}
+
+	return tfresource.WaitUntil(PropagationTimeout, checkFunc, opts)
 }
 
 // TODO: Remove

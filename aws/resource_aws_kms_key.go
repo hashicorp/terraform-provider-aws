@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -161,6 +162,12 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if len(tags) > 0 {
+		if err := waiter.TagsPropagated(conn, d.Id(), tags); err != nil {
+			return fmt.Errorf("error waiting for KMS Key (%s) tag propagation: %w", d.Id(), err)
+		}
+	}
+
 	return resourceAwsKmsKeyRead(d, meta)
 }
 
@@ -205,6 +212,10 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		key.tags, err = keyvaluetags.KmsListTags(conn, d.Id())
+
+		if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
+			return nil, &resource.NotFoundError{LastError: err}
+		}
 
 		if err != nil {
 			return nil, fmt.Errorf("error listing tags for KMS Key (%s): %w", d.Id(), err)
@@ -292,6 +303,10 @@ func resourceAwsKmsKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if err := keyvaluetags.KmsUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating KMS Key (%s) tags: %w", d.Id(), err)
+		}
+
+		if err := waiter.TagsPropagated(conn, d.Id(), keyvaluetags.New(n)); err != nil {
+			return fmt.Errorf("error waiting for KMS Key (%s) tag propagation: %w", d.Id(), err)
 		}
 	}
 

@@ -1944,7 +1944,7 @@ func TestKeyValueTagsEqual(t *testing.T) {
 			got := testCase.source.Equal(testCase.target)
 
 			if got != testCase.want {
-				t.Errorf("unexpected ContainsAll: %t", got)
+				t.Errorf("unexpected Equal: %t", got)
 			}
 		})
 	}
