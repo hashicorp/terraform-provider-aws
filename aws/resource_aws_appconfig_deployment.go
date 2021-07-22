@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appconfig/waiter"
 )
 
 func resourceAwsAppconfigDeployment() *schema.Resource {
@@ -23,7 +24,7 @@ func resourceAwsAppconfigDeployment() *schema.Resource {
 		Update: resourceAwsAppconfigDeploymentUpdate,
 		Delete: resourceAwsAppconfigDeploymentDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsAppconfigDeploymentImport,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -32,6 +33,10 @@ func resourceAwsAppconfigDeployment() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"configuration_profile_id": {
 				Type:         schema.TypeString,
@@ -44,6 +49,10 @@ func resourceAwsAppconfigDeployment() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
+			},
+			"deployment_number": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"deployment_strategy_id": {
 				Type:         schema.TypeString,
@@ -63,14 +72,6 @@ func resourceAwsAppconfigDeployment() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
 			},
-			"deployment_number": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 		},
@@ -83,12 +84,9 @@ func resourceAwsAppconfigDeploymentCreate(d *schema.ResourceData, meta interface
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	appID := d.Get("application_id").(string)
-	envID := d.Get("environment_id").(string)
-
 	input := &appconfig.StartDeploymentInput{
-		ApplicationId:          aws.String(appID),
-		EnvironmentId:          aws.String(envID),
+		ApplicationId:          aws.String(d.Get("application_id").(string)),
+		EnvironmentId:          aws.String(d.Get("environment_id").(string)),
 		ConfigurationProfileId: aws.String(d.Get("configuration_profile_id").(string)),
 		ConfigurationVersion:   aws.String(d.Get("configuration_version").(string)),
 		DeploymentStrategyId:   aws.String(d.Get("deployment_strategy_id").(string)),
@@ -106,39 +104,17 @@ func resourceAwsAppconfigDeploymentCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error starting AppConfig Deployment: empty response")
 	}
 
-	d.Set("deployment_number", output.DeploymentNumber)
-	d.SetId(appID + "/" + envID + "/" + strconv.FormatInt(aws.Int64Value(output.DeploymentNumber), 10))
+	appID := aws.StringValue(output.ApplicationId)
+	envID := aws.StringValue(output.EnvironmentId)
+	deployNum := aws.Int64Value(output.DeploymentNumber)
+
+	d.SetId(fmt.Sprintf("%s/%s/%d", appID, envID, deployNum))
+
+	if err := waiter.DeploymentCreated(conn, appID, envID, deployNum); err != nil {
+		return fmt.Errorf("error waiting for AppConfig Deployment (%s) creation: %w", d.Id(), err)
+	}
 
 	return resourceAwsAppconfigDeploymentRead(d, meta)
-}
-
-func parseAwsAppconfigDeploymentID(id string) (string, string, int64, error) {
-	idParts := strings.Split(id, "/")
-	if len(idParts) != 3 {
-		return "", "", 0, fmt.Errorf("unexpected format of ID (%q), expected <application-id>/<environment-id>/<deployment-number>", id)
-	}
-
-	appID := idParts[0]
-	envID := idParts[1]
-	depS := idParts[2]
-	depNum, err := strconv.ParseInt(depS, 10, 64)
-	if err != nil {
-		return "", "", 0, fmt.Errorf("deployment number is invalid (%s): %w", depS, err)
-	}
-	return appID, envID, depNum, nil
-}
-
-func resourceAwsAppconfigDeploymentImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	appID, envID, depNum, err := parseAwsAppconfigDeploymentID(d.Id())
-	if err != nil {
-		return nil, err
-	}
-
-	d.Set("application_id", appID)
-	d.Set("environment_id", envID)
-	d.Set("deployment_number", depNum)
-
-	return []*schema.ResourceData{d}, nil
 }
 
 func resourceAwsAppconfigDeploymentRead(d *schema.ResourceData, meta interface{}) error {
@@ -146,14 +122,16 @@ func resourceAwsAppconfigDeploymentRead(d *schema.ResourceData, meta interface{}
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	appID := d.Get("application_id").(string)
-	envID := d.Get("environment_id").(string)
-	deployNum := d.Get("deployment_number").(int)
+	appID, envID, deploymentNum, err := resourceAwsAppconfigDeploymentParseID(d.Id())
+
+	if err != nil {
+		return err
+	}
 
 	input := &appconfig.GetDeploymentInput{
 		ApplicationId:    aws.String(appID),
+		DeploymentNumber: aws.Int64(int64(deploymentNum)),
 		EnvironmentId:    aws.String(envID),
-		DeploymentNumber: aws.Int64(int64(deployNum)),
 	}
 
 	output, err := conn.GetDeployment(input)
@@ -176,20 +154,23 @@ func resourceAwsAppconfigDeploymentRead(d *schema.ResourceData, meta interface{}
 		AccountID: meta.(*AWSClient).accountid,
 		Partition: meta.(*AWSClient).partition,
 		Region:    meta.(*AWSClient).region,
-		Resource:  fmt.Sprintf("application/%s/environment/%s/deployment/%d", appID, envID, deployNum),
+		Resource:  fmt.Sprintf("application/%s/environment/%s/deployment/%d", aws.StringValue(output.ApplicationId), aws.StringValue(output.EnvironmentId), aws.Int64Value(output.DeploymentNumber)),
 		Service:   "appconfig",
 	}.String()
 
+	d.Set("application_id", output.ApplicationId)
 	d.Set("arn", arn)
-	d.Set("description", output.Description)
 	d.Set("configuration_profile_id", output.ConfigurationProfileId)
 	d.Set("configuration_version", output.ConfigurationVersion)
+	d.Set("deployment_number", output.DeploymentNumber)
 	d.Set("deployment_strategy_id", output.DeploymentStrategyId)
+	d.Set("description", output.Description)
+	d.Set("environment_id", output.EnvironmentId)
 
 	tags, err := keyvaluetags.AppconfigListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for AppConfig Application (%s): %w", d.Id(), err)
+		return fmt.Errorf("error listing tags for AppConfig Deployment (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
@@ -213,14 +194,29 @@ func resourceAwsAppconfigDeploymentUpdate(d *schema.ResourceData, meta interface
 		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.AppconfigUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating EFS file system (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("error updating AppConfig Deployment (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
 
 	return resourceAwsAppconfigDeploymentRead(d, meta)
 }
 
-func resourceAwsAppconfigDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsAppconfigDeploymentDelete(_ *schema.ResourceData, _ interface{}) error {
 	log.Printf("[WARN] Cannot destroy AppConfig Deployment. Terraform will remove this resource from the state file, however this resource remains.")
 	return nil
+}
+
+func resourceAwsAppconfigDeploymentParseID(id string) (string, string, int, error) {
+	parts := strings.Split(id, "/")
+
+	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+		return "", "", 0, fmt.Errorf("unexpected format of ID (%q), expected ApplicationID:EnvironmentID:DeploymentNumber", id)
+	}
+
+	num, err := strconv.Atoi(parts[2])
+	if err != nil {
+		return "", "", 0, fmt.Errorf("error parsing AppConfig Deployment resource ID deployment_number: %w", err)
+	}
+
+	return parts[0], parts[1], num, nil
 }
