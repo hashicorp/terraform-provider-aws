@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
@@ -155,6 +154,13 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	// Wait for propagation since KMS is eventually consistent.
+	if v, ok := d.GetOk("policy"); ok {
+		if err := waiter.KeyPolicyPropagated(conn, d.Id(), v.(string)); err != nil {
+			return fmt.Errorf("error waiting for KMS Key (%s) policy propagation: %w", d.Id(), err)
+		}
+	}
+
 	return resourceAwsKmsKeyRead(d, meta)
 }
 
@@ -269,24 +275,8 @@ func resourceAwsKmsKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("policy") {
-		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
-		if err != nil {
-			return fmt.Errorf("policy contains invalid JSON: %w", err)
-		}
-
-		input := &kms.PutKeyPolicyInput{
-			BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_check").(bool)),
-			KeyId:                          aws.String(d.Id()),
-			Policy:                         aws.String(policy),
-			PolicyName:                     aws.String(tfkms.PolicyNameDefault),
-		}
-
-		log.Printf("[DEBUG] Updating KMS Key policy: %s", input)
-		_, err = conn.PutKeyPolicy(input)
-
-		if err != nil {
-			return fmt.Errorf("error updating KMS Key (%s) policy: %w", d.Id(), err)
+		if err := updateKmsKeyPolicy(conn, d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_check").(bool)); err != nil {
+			return err
 		}
 	}
 
@@ -342,46 +332,73 @@ func resourceAwsKmsKeyDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func updateKmsKeyEnabled(conn *kms.KMS, keyID string, enabled bool) error {
-	var err error
+	updateFunc := func() (interface{}, error) {
+		var err error
 
-	log.Printf("[DEBUG] Updating KMS Key (%s) key enabled: %t", keyID, enabled)
-	if enabled {
-		_, err = conn.EnableKey(&kms.EnableKeyInput{
-			KeyId: aws.String(keyID),
-		})
-	} else {
-		_, err = conn.DisableKey(&kms.DisableKeyInput{
-			KeyId: aws.String(keyID),
-		})
+		log.Printf("[DEBUG] Updating KMS Key (%s) key enabled: %t", keyID, enabled)
+		if enabled {
+			_, err = conn.EnableKey(&kms.EnableKeyInput{
+				KeyId: aws.String(keyID),
+			})
+		} else {
+			_, err = conn.DisableKey(&kms.DisableKeyInput{
+				KeyId: aws.String(keyID),
+			})
+		}
+
+		return nil, err
 	}
+
+	_, err := tfresource.RetryWhenAwsErrCodeEquals(waiter.KeyRotationUpdatedTimeout, updateFunc, kms.ErrCodeNotFoundException)
 
 	if err != nil {
 		return fmt.Errorf("error updating KMS Key (%s) key enabled (%t): %w", keyID, enabled, err)
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	checkFunc := func() (bool, error) {
-		output, err := finder.KeyByID(conn, keyID)
-
-		if tfresource.NotFound(err) {
-			return false, nil
-		}
-
-		if err != nil {
-			return false, err
-		}
-
-		return aws.BoolValue(output.Enabled) == enabled, nil
-	}
-	opts := tfresource.WaitOpts{
-		ContinuousTargetOccurence: 15,
-		MinTimeout:                2 * time.Second,
-	}
-
-	err = tfresource.WaitUntil(waiter.KeyStatePropagationTimeout, checkFunc, opts)
+	err = waiter.KeyStatePropagated(conn, keyID, enabled)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for KMS Key (%s) key state propagation: %w", keyID, err)
+	}
+
+	return nil
+}
+
+func updateKmsKeyPolicy(conn *kms.KMS, keyID string, policy string, bypassPolicyLockoutSafetyCheck bool) error {
+	policy, err := structure.NormalizeJsonString(policy)
+
+	if err != nil {
+		return fmt.Errorf("policy contains invalid JSON: %w", err)
+	}
+
+	updateFunc := func() (interface{}, error) {
+		var err error
+
+		input := &kms.PutKeyPolicyInput{
+			BypassPolicyLockoutSafetyCheck: aws.Bool(bypassPolicyLockoutSafetyCheck),
+			KeyId:                          aws.String(keyID),
+			Policy:                         aws.String(policy),
+			PolicyName:                     aws.String(tfkms.PolicyNameDefault),
+		}
+
+		log.Printf("[DEBUG] Updating KMS Key policy: %s", input)
+		_, err = conn.PutKeyPolicy(input)
+
+		return nil, err
+	}
+
+	_, err = tfresource.RetryWhenAwsErrCodeEquals(waiter.PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
+
+	if err != nil {
+		return fmt.Errorf("error updating KMS Key (%s) policy: %w", keyID, err)
+	}
+
+	// Wait for propagation since KMS is eventually consistent.
+	err = waiter.KeyPolicyPropagated(conn, keyID, policy)
+
+	if err != nil {
+		return fmt.Errorf("error waiting for KMS Key (%s) policy propagation: %w", keyID, err)
 	}
 
 	return nil
@@ -412,25 +429,7 @@ func updateKmsKeyRotationEnabled(conn *kms.KMS, keyID string, enabled bool) erro
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	checkFunc := func() (bool, error) {
-		output, err := finder.KeyRotationEnabledByKeyID(conn, keyID)
-
-		if tfresource.NotFound(err) {
-			return false, nil
-		}
-
-		if err != nil {
-			return false, err
-		}
-
-		return aws.BoolValue(output) == enabled, nil
-	}
-	opts := tfresource.WaitOpts{
-		ContinuousTargetOccurence: 5,
-		MinTimeout:                1 * time.Second,
-	}
-
-	err = tfresource.WaitUntil(waiter.PropagationTimeout, checkFunc, opts)
+	err = waiter.KeyRotationEnabledPropagated(conn, keyID, enabled)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for KMS Key (%s) key rotation propagation: %w", keyID, err)
