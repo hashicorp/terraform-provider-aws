@@ -98,7 +98,7 @@ func TestAccAWSKmsKey_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_check"},
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
 			},
 		},
 	})
@@ -173,7 +173,7 @@ func TestAccAWSKmsKey_policy(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_check"},
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
 			},
 			{
 				Config: testAccAWSKmsKey_removedPolicy(rName),
@@ -203,14 +203,14 @@ func TestAccAWSKmsKey_policyBypass(t *testing.T) {
 				Config: testAccAWSKmsKey_policyBypass(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsKeyExists(resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_check", "true"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_check"},
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
 			},
 		},
 	})
@@ -230,14 +230,14 @@ func TestAccAWSKmsKey_policyBypassUpdate(t *testing.T) {
 				Config: testAccAWSKmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsKeyExists(resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_check", "false"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
 				),
 			},
 			{
 				Config: testAccAWSKmsKey_policyBypass(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsKeyExists(resourceName, &after),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_check", "true"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
 				),
 			},
 		},
@@ -265,7 +265,7 @@ func TestAccAWSKmsKey_Policy_IamRole(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_check"},
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
 			},
 		},
 	})
@@ -293,7 +293,7 @@ func TestAccAWSKmsKey_Policy_IamServiceLinkedRole(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_check"},
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
 			},
 		},
 	})
@@ -323,7 +323,7 @@ func TestAccAWSKmsKey_isEnabled(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_check"},
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
 			},
 			{
 				Config: testAccAWSKmsKey_disabled(rName),
@@ -359,23 +359,34 @@ func TestAccAWSKmsKey_tags(t *testing.T) {
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsKey_tags(rName),
+				Config: testAccAWSKmsKeyConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsKeyExists(resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_check"},
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
 			},
 			{
-				Config: testAccAWSKmsKey(rName),
+				Config: testAccAWSKmsKeyConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsKeyExists(resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSKmsKeyConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsKeyExists(resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -535,8 +546,9 @@ resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
 
-  bypass_policy_lockout_check = %t
-  policy                      = <<-POLICY
+  bypass_policy_lockout_safety_check = %[2]t
+
+  policy = <<-POLICY
     {
       "Version": "2012-10-17",
       "Id": "kms-tf-1",
@@ -679,10 +691,6 @@ func testAccAWSKmsKey_removedPolicy(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
-
-  tags = {
-    Name = %[1]q
-  }
 }
 `, rName)
 }
@@ -693,10 +701,6 @@ resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
   enable_key_rotation     = true
-
-  tags = {
-    Name = %[1]q
-  }
 }
 `, rName)
 }
@@ -708,10 +712,6 @@ resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
   enable_key_rotation     = false
   is_enabled              = false
-
-  tags = {
-    Name = %[1]q
-  }
 }
 `, rName)
 }
@@ -723,24 +723,31 @@ resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
   enable_key_rotation     = true
   is_enabled              = true
-
-  tags = {
-    Name = %[1]q
-  }
 }
 `, rName)
 }
 
-func testAccAWSKmsKey_tags(rName string) string {
+func testAccAWSKmsKeyConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = %[1]q
 
   tags = {
-    Name        = %[1]q
-    Key1        = "Value One"
-    Description = "Very interesting"
+    %[2]q = %[3]q
   }
 }
-`, rName)
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSKmsKeyConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

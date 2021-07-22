@@ -36,7 +36,7 @@ func resourceAwsKmsKey() *schema.Resource {
 				Computed: true,
 			},
 
-			"bypass_policy_lockout_check": {
+			"bypass_policy_lockout_safety_check": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -108,7 +108,7 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &kms.CreateKeyInput{
-		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_check").(bool)),
+		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_safety_check").(bool)),
 		CustomerMasterKeySpec:          aws.String(d.Get("customer_master_key_spec").(string)),
 		KeyUsage:                       aws.String(d.Get("key_usage").(string)),
 	}
@@ -275,7 +275,7 @@ func resourceAwsKmsKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("policy") {
-		if err := updateKmsKeyPolicy(conn, d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_check").(bool)); err != nil {
+		if err := updateKmsKeyPolicy(conn, d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
 			return err
 		}
 	}

@@ -3,9 +3,13 @@ package waiter
 import (
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	awspolicy "github.com/jen20/awspolicyequivalence"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	tfkms "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -42,6 +46,80 @@ func KeyDeleted(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
 
 	return nil, err
 }
+
+func KeyPolicyPropagated(conn *kms.KMS, id, policy string) error {
+	checkFunc := func() (bool, error) {
+		output, err := finder.KeyPolicyByKeyIDAndPolicyName(conn, id, tfkms.PolicyNameDefault)
+
+		if tfresource.NotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		equivalent, err := awspolicy.PoliciesAreEquivalent(aws.StringValue(output), policy)
+
+		if err != nil {
+			return false, err
+		}
+
+		return equivalent, nil
+	}
+	opts := tfresource.WaitOpts{
+		ContinuousTargetOccurence: 5,
+		MinTimeout:                1 * time.Second,
+	}
+
+	return tfresource.WaitUntil(PropagationTimeout, checkFunc, opts)
+}
+
+func KeyRotationEnabledPropagated(conn *kms.KMS, id string, enabled bool) error {
+	checkFunc := func() (bool, error) {
+		output, err := finder.KeyRotationEnabledByKeyID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		return aws.BoolValue(output) == enabled, nil
+	}
+	opts := tfresource.WaitOpts{
+		ContinuousTargetOccurence: 5,
+		MinTimeout:                1 * time.Second,
+	}
+
+	return tfresource.WaitUntil(PropagationTimeout, checkFunc, opts)
+}
+
+func KeyStatePropagated(conn *kms.KMS, id string, enabled bool) error {
+	checkFunc := func() (bool, error) {
+		output, err := finder.KeyByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		return aws.BoolValue(output.Enabled) == enabled, nil
+	}
+	opts := tfresource.WaitOpts{
+		ContinuousTargetOccurence: 15,
+		MinTimeout:                2 * time.Second,
+	}
+
+	return tfresource.WaitUntil(KeyStatePropagationTimeout, checkFunc, opts)
+}
+
+// TODO: Remove
 
 // KeyStatePendingDeletion waits for KeyState to return PendingDeletion
 func KeyStatePendingDeletion(conn *kms.KMS, keyID string) (*kms.DescribeKeyOutput, error) {
