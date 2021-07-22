@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-const DeploymentCreatedTimeout = 10 * time.Minute
+const DeploymentCreatedTimeout = 20 * time.Minute
 
 func DeploymentCreated(conn *appconfig.AppConfig, appID, envID string, deployNum int64) error {
 	stateConf := &resource.StateChangeConf{
