@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_cloudwatch_event_target: Add `enable_ecs_managed_tags`, `enable_execute_command`, `placement_constraints`, `propagate_tags`, and `tags` arguments to `ecs_target` block.
+```

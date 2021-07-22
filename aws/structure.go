@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
@@ -1656,50 +1655,6 @@ func expandApiGatewayMethodParametersOperations(d *schema.ResourceData, key stri
 	return operations
 }
 
-func expandCloudWatchLogMetricTransformations(m map[string]interface{}) []*cloudwatchlogs.MetricTransformation {
-	transformation := cloudwatchlogs.MetricTransformation{
-		MetricName:      aws.String(m["name"].(string)),
-		MetricNamespace: aws.String(m["namespace"].(string)),
-		MetricValue:     aws.String(m["value"].(string)),
-	}
-
-	if m["default_value"].(string) != "" {
-		value, _ := strconv.ParseFloat(m["default_value"].(string), 64)
-		transformation.DefaultValue = aws.Float64(value)
-	}
-
-	if dims := m["dimensions"].(map[string]interface{}); len(dims) > 0 {
-		transformation.Dimensions = expandStringMap(dims)
-	}
-
-	return []*cloudwatchlogs.MetricTransformation{&transformation}
-}
-
-func flattenCloudWatchLogMetricTransformations(ts []*cloudwatchlogs.MetricTransformation) []interface{} {
-	mts := make([]interface{}, 0)
-	m := make(map[string]interface{})
-
-	m["name"] = aws.StringValue(ts[0].MetricName)
-	m["namespace"] = aws.StringValue(ts[0].MetricNamespace)
-	m["value"] = aws.StringValue(ts[0].MetricValue)
-
-	if ts[0].DefaultValue == nil {
-		m["default_value"] = ""
-	} else {
-		m["default_value"] = strconv.FormatFloat(aws.Float64Value(ts[0].DefaultValue), 'f', -1, 64)
-	}
-
-	if dims := ts[0].Dimensions; len(dims) > 0 {
-		m["dimensions"] = pointersMapToStringList(dims)
-	} else {
-		m["dimensions"] = nil
-	}
-
-	mts = append(mts, m)
-
-	return mts
-}
-
 func flattenBeanstalkAsg(list []*elasticbeanstalk.AutoScalingGroup) []string {
 	strs := make([]string, 0, len(list))
 	for _, r := range list {
@@ -2733,61 +2688,6 @@ func flattenIotThingTypeProperties(s *iot.ThingTypeProperties) []map[string]inte
 	m["searchable_attributes"] = flattenStringSet(s.SearchableAttributes)
 
 	return []map[string]interface{}{m}
-}
-
-func expandLaunchTemplateSpecification(specs []interface{}) (*autoscaling.LaunchTemplateSpecification, error) {
-	if len(specs) < 1 {
-		return nil, nil
-	}
-
-	spec := specs[0].(map[string]interface{})
-
-	idValue, idOk := spec["id"]
-	nameValue, nameOk := spec["name"]
-
-	if idValue == "" && nameValue == "" {
-		return nil, fmt.Errorf("One of `id` or `name` must be set for `launch_template`")
-	}
-
-	result := &autoscaling.LaunchTemplateSpecification{}
-
-	// DescribeAutoScalingGroups returns both name and id but LaunchTemplateSpecification
-	// allows only one of them to be set
-	if idOk && idValue != "" {
-		result.LaunchTemplateId = aws.String(idValue.(string))
-	} else if nameOk && nameValue != "" {
-		result.LaunchTemplateName = aws.String(nameValue.(string))
-	}
-
-	if v, ok := spec["version"]; ok && v != "" {
-		result.Version = aws.String(v.(string))
-	}
-
-	return result, nil
-}
-
-func flattenLaunchTemplateSpecification(lt *autoscaling.LaunchTemplateSpecification) []map[string]interface{} {
-	if lt == nil {
-		return []map[string]interface{}{}
-	}
-
-	attrs := map[string]interface{}{}
-	result := make([]map[string]interface{}, 0)
-
-	// id and name are always returned by DescribeAutoscalingGroups
-	attrs["id"] = *lt.LaunchTemplateId
-	attrs["name"] = *lt.LaunchTemplateName
-
-	// version is returned only if it was previosly set
-	if lt.Version != nil {
-		attrs["version"] = *lt.Version
-	} else {
-		attrs["version"] = nil
-	}
-
-	result = append(result, attrs)
-
-	return result
 }
 
 func flattenVpcPeeringConnectionOptions(options *ec2.VpcPeeringConnectionOptionsDescription) []interface{} {

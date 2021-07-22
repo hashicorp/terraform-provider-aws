@@ -94,6 +94,15 @@ The following arguments are supported:
 * `entry` - (Required) Represents an entry and a target.
 * `target` - (Required) Represents the map target.
 
+The `Restricted` option is achieved using the following mapping:
+
+```
+home_directory_mappings {
+	entry  = "/"
+	target = "/${aws_s3_bucket.foo.id}/$${Transfer:UserName}"
+}
+```
+
 ### Posix Profile
 
 * `gid` - (Required) The POSIX group ID used for all EFS operations by this user.

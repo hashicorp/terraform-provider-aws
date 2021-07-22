@@ -290,6 +290,11 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	// Backwards compatibility: https://github.com/hashicorp/terraform-provider-aws/issues/19786.
+	if d.Get("kms_data_key_reuse_period_seconds").(int) == 0 {
+		d.Set("kms_data_key_reuse_period_seconds", tfsqs.DefaultQueueKmsDataKeyReusePeriodSeconds)
+	}
+
 	d.Set("name", name)
 	if d.Get("fifo_queue").(bool) {
 		d.Set("name_prefix", naming.NamePrefixFromNameWithSuffix(name, tfsqs.FifoQueueNameSuffix))

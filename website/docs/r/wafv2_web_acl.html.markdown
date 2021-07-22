@@ -47,6 +47,12 @@ resource "aws_wafv2_web_acl" "example" {
         excluded_rule {
           name = "NoUserAgent_HEADER"
         }
+
+        scope_down_statement {
+          geo_match_statement {
+            country_codes = ["US", "NL"]
+          }
+        }
       }
     }
 
@@ -410,6 +416,7 @@ The `managed_rule_group_statement` block supports the following arguments:
 
 * `excluded_rule` - (Optional) The `rules` whose actions are set to `COUNT` by the web ACL, regardless of the action that is set on the rule. See [Excluded Rule](#excluded-rule) below for details.
 * `name` - (Required) The name of the managed rule group.
+* `scope_down_statement` - Narrows the scope of the statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [Statement](#statement) above for details.
 * `vendor_name` - (Required) The name of the managed rule group vendor.
 
 ### NOT Statement
