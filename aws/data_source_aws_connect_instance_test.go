@@ -13,9 +13,9 @@ func TestAccAwsConnectInstanceDataSource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("datasource-test-terraform")
 	resourceName := "aws_connect_instance.foo"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, connect.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAwsConnectInstanceDataSourceConfig_nonExistentId,
@@ -51,9 +51,9 @@ func TestAccAwsConnectInstanceDataSource_alias(t *testing.T) {
 	rName := acctest.RandomWithPrefix("datasource-test-terraform")
 	resourceName := "aws_connect_instance.foo"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, connect.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsConnectInstanceDataSourceConfigAlias(rName),
