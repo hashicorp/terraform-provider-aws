@@ -11,7 +11,7 @@ func TestAccAWSTransfer_serial(t *testing.T) {
 			"disappears":                    testAccAWSTransferServer_disappears,
 			"APIGateway":                    testAccAWSTransferServer_apiGateway,
 			"APIGatewayForceDestroy":        testAccAWSTransferServer_apiGateway_forceDestroy,
-			"DirectoryService":				 testAccAWSTransferServer_directoryService,
+			"DirectoryService":              testAccAWSTransferServer_directoryService,
 			"Domain":                        testAccAWSTransferServer_domain,
 			"ForceDestroy":                  testAccAWSTransferServer_forceDestroy,
 			"HostKey":                       testAccAWSTransferServer_hostKey,
@@ -41,7 +41,7 @@ func TestAccAWSTransfer_serial(t *testing.T) {
 			"UserNameValidation":    testAccAWSTransferUser_UserName_Validation,
 		},
 		"Access": {
-			"basic":                 testAccAWSTransferAccess_basic,
+			"basic": testAccAWSTransferAccess_basic,
 		},
 	}
 

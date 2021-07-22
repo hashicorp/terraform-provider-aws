@@ -1182,7 +1182,7 @@ resource "aws_api_gateway_deployment" "test" {
 func testAccAWSTransferServerConfigBaseDirectoryService(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
-  name     = "directory.test.com"
+  name = %[1]q
   password = "P4ssw0rd"
   size = "small"
 
@@ -1202,20 +1202,19 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test_a" {
   vpc_id            = aws_vpc.test.id
-  availability_zone = "eu-central-1a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.1.0/24"
 
 }
 
 resource "aws_subnet" "test_b" {
   vpc_id            = aws_vpc.test.id
-  availability_zone = "eu-central-1b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = "10.0.2.0/24"
 }
 
 `, rName)
 }
-
 
 func testAccAWSTransferServerBasicConfig() string {
 	return `

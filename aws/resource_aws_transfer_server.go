@@ -371,6 +371,12 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("url", "")
 	}
 
+	if output.IdentityProviderDetails != nil {
+		d.Set("directory_id", output.IdentityProviderDetails.DirectoryId)
+	} else {
+		d.Set("directory_id", "")
+	}
+
 	tags := keyvaluetags.TransferKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -504,7 +510,7 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 			}
 		}
 
-		if d.HasChanges("invocation_role", "url") {
+		if d.HasChanges("invocation_role", "url", "directory_id") {
 			identityProviderDetails := &transfer.IdentityProviderDetails{}
 
 			if attr, ok := d.GetOk("invocation_role"); ok {
@@ -513,6 +519,10 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 
 			if attr, ok := d.GetOk("url"); ok {
 				identityProviderDetails.Url = aws.String(attr.(string))
+			}
+
+			if attr, ok := d.GetOk("directory_id"); ok {
+				identityProviderDetails.DirectoryId = aws.String(attr.(string))
 			}
 
 			input.IdentityProviderDetails = identityProviderDetails
