@@ -3610,10 +3610,14 @@ resource "aws_db_instance" "bar" {
 
 func testAccAWSDBInstanceConfig_MajorVersionOnly(engine, engineVersion string) string {
 	return composeConfig(testAccAWSDBInstanceConfig_orderableClassMysql(), fmt.Sprintf(`
+locals {
+  engine = %[1]q
+}
+
 resource "aws_db_instance" "test" {
   allocated_storage       = 10
   backup_retention_period = 0
-  engine                  = %[1]q
+  engine                  = local.engine
   engine_version          = %[2]q
   instance_class          = "db.r4.large"
   name                    = "baz"
