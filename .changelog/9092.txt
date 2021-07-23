@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_budgets_budget: Add the `cost_filter` argument which allows multiple `values` to be specified per filter. This new argument will eventually replace the `cost_filters` argument
+```
