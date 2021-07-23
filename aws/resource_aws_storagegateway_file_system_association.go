@@ -27,12 +27,6 @@ func resourceAwsStorageGatewayFileSystemAssociation() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(tfstoragegateway.FileSystemAssociationCreateTimeout),
-			Update: schema.DefaultTimeout(tfstoragegateway.FileSystemAssociationUpdateTimeout),
-			Delete: schema.DefaultTimeout(tfstoragegateway.FileSystemAssociationDeleteTimeout),
-		},
-
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -133,10 +127,10 @@ func resourceAwsStorageGatewayFileSystemAssociationCreate(d *schema.ResourceData
 	}
 
 	d.SetId(aws.StringValue(output.FileSystemAssociationARN))
-	log.Printf("[INFO] Storage Gateway FSx File System Association ID: %s", d.Id())
+	log.Printf("[INFO] Storage Gateway File System Association ID: %s", d.Id())
 
-	if _, err = waiter.FileSystemAssociationAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Storage Gateway FSx File System Association (%q) to be Available: %w", d.Id(), err)
+	if _, err = waiter.FileSystemAssociationAvailable(conn, d.Id(), tfstoragegateway.FileSystemAssociationCreateTimeout); err != nil {
+		return fmt.Errorf("error waiting for Storage Gateway File System Association (%q) to be Available: %w", d.Id(), err)
 	}
 
 	return resourceAwsStorageGatewayFileSystemAssociationRead(d, meta)
@@ -206,14 +200,14 @@ func resourceAwsStorageGatewayFileSystemAssociationUpdate(d *schema.ResourceData
 			input.CacheAttributes = expandStorageGatewayFileSystemAssociationCacheAttributes(v.([]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating Storage Gateway FSx File System Association: %s", input)
+		log.Printf("[DEBUG] Updating Storage Gateway File System Association: %s", input)
 		_, err := conn.UpdateFileSystemAssociation(input)
 		if err != nil {
-			return fmt.Errorf("error updating Storage Gateway FSx File System Association: %w", err)
+			return fmt.Errorf("error updating Storage Gateway File System Association: %w", err)
 		}
 
-		if _, err = waiter.FileSystemAssociationAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Storage Gateway FSx File System Association (%q) to be Available: %w", d.Id(), err)
+		if _, err = waiter.FileSystemAssociationAvailable(conn, d.Id(), tfstoragegateway.FileSystemAssociationUpdateTimeout); err != nil {
+			return fmt.Errorf("error waiting for Storage Gateway File System Association (%q) to be Available: %w", d.Id(), err)
 		}
 	}
 
@@ -237,11 +231,11 @@ func resourceAwsStorageGatewayFileSystemAssociationDelete(d *schema.ResourceData
 		}
 	}
 
-	if _, err = waiter.FileSystemAssociationDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err = waiter.FileSystemAssociationDeleted(conn, d.Id(), tfstoragegateway.FileSystemAssociationDeleteTimeout); err != nil {
 		if isResourceNotFoundError(err) {
 			return nil
 		}
-		return fmt.Errorf("error waiting for Storage Gateway FSx File System Association (%q) to be deleted: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for Storage Gateway File System Association (%q) to be deleted: %w", d.Id(), err)
 	}
 
 	return nil

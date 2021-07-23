@@ -233,13 +233,14 @@ func TestAccAWSStorageGatewayFileSystemAssociation_disappears_storageGateway(t *
 }
 
 func TestAccAWSStorageGatewayFileSystemAssociation_disappears_fsxFileSystem(t *testing.T) {
+
+	t.Skip("A bug in the service API has been reported. Deleting the FSx file system before the association prevents association from being deleted.")
+
 	var fsxFileSystemAssociation storagegateway.FileSystemAssociationInfo
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_file_system_association.test"
 	domainName := testAccRandomDomainName()
 	username := "Admin"
-
-	t.Skip("A bug in the service API has been reported. Deleting the FSx file system before the association prevents association from being deleted.")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(storagegateway.EndpointsID, t) },
