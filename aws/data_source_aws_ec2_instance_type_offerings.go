@@ -21,7 +21,7 @@ func dataSourceAwsEc2InstanceTypeOfferings() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"locations": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -31,7 +31,7 @@ func dataSourceAwsEc2InstanceTypeOfferings() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(ec2.LocationType_Values(), false),
 			},
 			"location_types": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
