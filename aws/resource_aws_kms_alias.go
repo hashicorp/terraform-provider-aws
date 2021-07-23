@@ -3,10 +3,8 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -37,6 +35,7 @@ func resourceAwsKmsAlias() *schema.Resource {
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validateAwsKmsName,
@@ -45,6 +44,7 @@ func resourceAwsKmsAlias() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validateAwsKmsName,
@@ -58,22 +58,18 @@ func resourceAwsKmsAlias() *schema.Resource {
 			"target_key_id": {
 				Type:             schema.TypeString,
 				Required:         true,
-				DiffSuppressFunc: suppressEquivalentTargetKeyIdAndARN,
+				DiffSuppressFunc: suppressEquivalentKmsKeyARNOrID,
 			},
 		},
 	}
 }
-
-const (
-	kmsAliasDefaultNamePrefix = "alias/"
-)
 
 func resourceAwsKmsAliasCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
 
 	namePrefix := d.Get("name_prefix").(string)
 	if namePrefix == "" {
-		namePrefix = kmsAliasDefaultNamePrefix
+		namePrefix = tfkms.AliasNamePrefix
 	}
 	name := naming.Generate(d.Get("name").(string), namePrefix)
 
@@ -137,28 +133,20 @@ func resourceAwsKmsAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
 
 	if d.HasChange("target_key_id") {
-		err := resourceAwsKmsAliasTargetUpdate(conn, d)
-		if err != nil {
-			return err
+		input := &kms.UpdateAliasInput{
+			AliasName:   aws.String(d.Id()),
+			TargetKeyId: aws.String(d.Get("target_key_id").(string)),
 		}
-		return resourceAwsKmsAliasRead(d, meta)
+
+		log.Printf("[DEBUG] Updating KMS Alias: %s", input)
+		_, err := conn.UpdateAlias(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating KMS Alias (%s): %w", d.Id(), err)
+		}
 	}
-	return nil
-}
 
-func resourceAwsKmsAliasTargetUpdate(conn *kms.KMS, d *schema.ResourceData) error {
-	name := d.Get("name").(string)
-	targetKeyId := d.Get("target_key_id").(string)
-
-	log.Printf("[DEBUG] KMS alias: %s, update target: %s", name, targetKeyId)
-
-	req := &kms.UpdateAliasInput{
-		AliasName:   aws.String(name),
-		TargetKeyId: aws.String(targetKeyId),
-	}
-	_, err := conn.UpdateAlias(req)
-
-	return err
+	return resourceAwsKmsAliasRead(d, meta)
 }
 
 func resourceAwsKmsAliasDelete(d *schema.ResourceData, meta interface{}) error {
@@ -180,43 +168,6 @@ func resourceAwsKmsAliasDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// API by default limits results to 50 aliases
-// This is how we make sure we won't miss any alias
-// See http://docs.aws.amazon.com/kms/latest/APIReference/API_ListAliases.html
-func findKmsAliasByName(conn *kms.KMS, name string, marker *string) (*kms.AliasListEntry, error) {
-	req := kms.ListAliasesInput{
-		Limit: aws.Int64(int64(100)),
-	}
-	if marker != nil {
-		req.Marker = marker
-	}
-
-	log.Printf("[DEBUG] Listing KMS aliases: %s", req)
-	resp, err := conn.ListAliases(&req)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, entry := range resp.Aliases {
-		if *entry.AliasName == name {
-			return entry, nil
-		}
-	}
-	if *resp.Truncated {
-		log.Printf("[DEBUG] KMS alias list is truncated, listing more via %s", *resp.NextMarker)
-		return findKmsAliasByName(conn, name, resp.NextMarker)
-	}
-
-	return nil, nil
-}
-
-func suppressEquivalentTargetKeyIdAndARN(k, old, new string, d *schema.ResourceData) bool {
-	newARN, err := arn.Parse(new)
-	if err != nil {
-		log.Printf("[DEBUG] %q can not be parsed as an ARN: %q", new, err)
-		return false
-	}
-
-	resource := strings.TrimPrefix(newARN.Resource, "key/")
-	return old == resource
+func suppressEquivalentKmsKeyARNOrID(k, old, new string, d *schema.ResourceData) bool {
+	return tfkms.KeyARNOrIDEqual(old, new)
 }
