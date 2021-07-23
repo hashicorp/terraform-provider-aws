@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * data-source/aws_ec2_instance_type_offerings: Add `locations` and `location_types` attributes ([#16704](https://github.com/hashicorp/terraform-provider-aws/issues/16704))
+* data-source/aws_lb: Add ability to filter results by `tags` ([#6458](https://github.com/hashicorp/terraform-provider-aws/issues/6458))
 
 ## 3.51.0 (July 22, 2021)
 
