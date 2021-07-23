@@ -58,3 +58,78 @@ func TestAliasARNToKeyARN(t *testing.T) {
 		})
 	}
 }
+
+func TestKeyARNOrIDEqual(t *testing.T) {
+	testCases := []struct {
+		name   string
+		first  string
+		second string
+		want   bool
+	}{
+		{
+			name:   "empty",
+			first:  "",
+			second: "",
+			want:   true,
+		},
+		{
+			name:   "equal IDs",
+			first:  "1234abcd-12ab-34cd-56ef-1234567890ab",
+			second: "1234abcd-12ab-34cd-56ef-1234567890ab",
+			want:   true,
+		},
+		{
+			name:   "not equal IDs",
+			first:  "1234abcd-12ab-34cd-56ef-1234567890ab",
+			second: "1234abcd-12ab-34cd-56ef-1234567890ac",
+		},
+		{
+			name:   "equal ARNs",
+			first:  "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+			second: "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+			want:   true,
+		},
+		{
+			name:   "not equal ARNs",
+			first:  "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+			second: "arn:aws:kms:us-east-2:111122224444:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+		},
+		{
+			name:   "equal first ID, second ARN",
+			first:  "1234abcd-12ab-34cd-56ef-1234567890ab",
+			second: "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+			want:   true,
+		},
+		{
+			name:   "equal first ARN, second ID",
+			first:  "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+			second: "1234abcd-12ab-34cd-56ef-1234567890ab",
+			want:   true,
+		},
+		{
+			name:   "not equal first ID, second ARN",
+			first:  "1234abcd-12ab-34cd-56ef-1234567890ab",
+			second: "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ac",
+		},
+		{
+			name:   "not equal first ARN, second ID",
+			first:  "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+			second: "1234abcd-12ab-34cd-56ef-1234567890ac",
+		},
+		{
+			name:   "not equal first ID, second incorrect ARN",
+			first:  "1234abcd-12ab-34cd-56ef-1234567890ab",
+			second: "arn:aws:kms:us-east-2:111122223333:alias/1234abcd-12ab-34cd-56ef-1234567890ab",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := tfkms.KeyARNOrIDEqual(testCase.first, testCase.second)
+
+			if got != testCase.want {
+				t.Errorf("unexpected Equal: %t", got)
+			}
+		})
+	}
+}
