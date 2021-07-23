@@ -138,12 +138,10 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"cost_filter"},
-				Deprecated:    "Please use `cost_filter`. This attribute might be removed in future releases.",
 			},
 			"cost_filter": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ConflictsWith: []string{"cost_filters"},
+				Type:     schema.TypeSet,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -159,6 +157,7 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 						},
 					},
 				},
+				ConflictsWith: []string{"cost_filters"},
 			},
 			"notification": {
 				Type:     schema.TypeSet,

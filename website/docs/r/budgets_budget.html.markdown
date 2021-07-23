@@ -117,7 +117,7 @@ resource "aws_budgets_budget" "ri_utilization" {
 
 ## Argument Reference
 
-~> **NOTE:** The `cost_filters` attribute has been deprecated and might be removed in future releases, please use `cost_filter` instead.
+~> **NOTE:** The `cost_filters` attribute will be deprecated and eventually removed in future releases, please use `cost_filter` instead.
 
 For more detailed documentation about each argument, refer to the [AWS official
 documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-budget.html).
