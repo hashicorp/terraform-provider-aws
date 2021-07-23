@@ -5,9 +5,11 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	awsarn "github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/go-multierror"
@@ -533,10 +535,11 @@ func TestAccAWSCloudWatchEventRule_PartnerEventBus(t *testing.T) {
 
 func TestAccAWSCloudWatchEventRule_EventBusArn(t *testing.T) {
 	key := "EVENT_BRIDGE_EVENT_BUS_ARN"
-	busName := os.Getenv(key)
-	if busName == "" {
-		t.Skipf("Environment variable %s is not set", key)
+	busArn, err := awsarn.Parse(os.Getenv(key))
+	if err != nil {
+		t.Skipf("Environment variable %s is missing or is not a valid ARN", key)
 	}
+	busName := strings.Replace(busArn.Resource, "event-bus/", "", 1)
 
 	var v events.DescribeRuleOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test-rule")
@@ -549,12 +552,12 @@ func TestAccAWSCloudWatchEventRule_EventBusArn(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventRulePartnerEventBusConfig(rName, busName),
+				Config: testAccAWSCloudWatchEventRulePartnerEventBusConfig(rName, busArn.String()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName, rName))),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
+					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busArn.String()),
 					testAccCheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
