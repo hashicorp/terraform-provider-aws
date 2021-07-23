@@ -3,25 +3,36 @@ package finder
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/budgets"
-	tfbudgets "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func ActionById(conn *budgets.Budgets, id string) (*budgets.DescribeBudgetActionOutput, error) {
-	accountID, actionID, budgetName, err := tfbudgets.DecodeBudgetsBudgetActionID(id)
-	if err != nil {
-		return nil, err
-	}
-
+func ActionByAccountIDActionIDAndBudgetName(conn *budgets.Budgets, accountID, actionID, budgetName string) (*budgets.Action, error) {
 	input := &budgets.DescribeBudgetActionInput{
-		BudgetName: aws.String(budgetName),
 		AccountId:  aws.String(accountID),
 		ActionId:   aws.String(actionID),
+		BudgetName: aws.String(budgetName),
 	}
 
-	out, err := conn.DescribeBudgetAction(input)
+	output, err := conn.DescribeBudgetAction(input)
+
+	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	return out, nil
+	if output == nil || output.Action == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output.Action, nil
 }
