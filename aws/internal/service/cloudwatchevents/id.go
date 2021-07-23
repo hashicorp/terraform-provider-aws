@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	awsarn "github.com/aws/aws-sdk-go/aws/arn"
 )
 
 var (
@@ -54,7 +56,7 @@ func RuleParseID(id string) (string, string, error) {
 		i := strings.LastIndex(id, ruleIDSeparator)
 		busName := id[:i]
 		statementID := id[i+1:]
-		if partnerEventBusPattern.MatchString(busName) && statementID != "" {
+		if (partnerEventBusPattern.MatchString(busName) || awsarn.IsARN(busName)) && statementID != "" {
 			return busName, statementID, nil
 		}
 	}
