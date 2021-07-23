@@ -95,7 +95,7 @@ func TestAccAwsSecretsManagerSecret_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
 			},
 		},
 	})
@@ -124,7 +124,7 @@ func TestAccAwsSecretsManagerSecret_withNamePrefix(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "name_prefix"},
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "name_prefix", "force_overwrite_replica_secret"},
 			},
 		},
 	})
@@ -159,7 +159,7 @@ func TestAccAwsSecretsManagerSecret_Description(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
 			},
 		},
 	})
@@ -193,7 +193,7 @@ func TestAccAwsSecretsManagerSecret_OverwriteReplica(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
 			},
 		},
 	})
@@ -228,7 +228,7 @@ func TestAccAwsSecretsManagerSecret_KmsKeyID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
 			},
 		},
 	})
@@ -264,7 +264,7 @@ func TestAccAwsSecretsManagerSecret_RecoveryWindowInDays_Recreate(t *testing.T) 
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
 			},
 		},
 	})
@@ -309,7 +309,7 @@ func TestAccAwsSecretsManagerSecret_RotationLambdaARN(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
 			},
 			// Test removing rotation on resource update
 			{
@@ -363,7 +363,7 @@ func TestAccAwsSecretsManagerSecret_RotationRules(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
 			},
 			// Test removing rotation rules on resource update
 			{
@@ -425,7 +425,7 @@ func TestAccAwsSecretsManagerSecret_Tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
 			},
 		},
 	})
