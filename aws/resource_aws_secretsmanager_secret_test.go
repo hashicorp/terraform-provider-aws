@@ -166,6 +166,30 @@ func TestAccAwsSecretsManagerSecret_Description(t *testing.T) {
 	})
 }
 
+func TestAccAwsSecretsManagerSecret_basicReplica(t *testing.T) {
+	var providers []*schema.Provider
+	var secret secretsmanager.DescribeSecretOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_secretsmanager_secret.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t); testAccMultipleRegionPreCheck(t, 2) },
+		ErrorCheck:        testAccErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 2),
+		CheckDestroy:      testAccCheckAwsSecretsManagerSecretDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsSecretsManagerSecretConfig_basicReplica(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "false"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAwsSecretsManagerSecret_overwriteReplica(t *testing.T) {
 	var providers []*schema.Provider
 	var secret secretsmanager.DescribeSecretOutput
@@ -173,7 +197,8 @@ func TestAccAwsSecretsManagerSecret_overwriteReplica(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t); testAccMultipleRegionPreCheck(t, 3) },
+		ErrorCheck:        testAccErrorCheck(t, secretsmanager.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3),
 		CheckDestroy:      testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
@@ -573,6 +598,24 @@ resource "aws_secretsmanager_secret" "test" {
   name        = "%s"
 }
 `, description, rName)
+}
+
+func testAccAwsSecretsManagerSecretConfig_basicReplica(rName string) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(2),
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = awsalternate
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+
+  replica {
+    region = data.aws_region.alternate.name
+  }
+}
+`, rName))
 }
 
 func testAccAwsSecretsManagerSecretConfig_overwriteReplica(rName string, force_overwrite_replica_secret bool) string {
