@@ -29,6 +29,12 @@ func dataSourceAwsQLDBLedger() *schema.Resource {
 				),
 			},
 
+			"permissions_mode": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(qldb.PermissionsMode_Values(), false),
+			},
+
 			"deletion_protection": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -56,6 +62,7 @@ func dataSourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error
 	d.SetId(aws.StringValue(resp.Name))
 	d.Set("arn", resp.Arn)
 	d.Set("deletion_protection", resp.DeletionProtection)
+	d.Set("permissions_mode", resp.PermissionsMode)
 
 	return nil
 }
