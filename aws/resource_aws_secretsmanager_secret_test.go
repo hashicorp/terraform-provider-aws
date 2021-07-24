@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/secretsmanager/waiter"
 )
@@ -165,35 +166,37 @@ func TestAccAwsSecretsManagerSecret_Description(t *testing.T) {
 	})
 }
 
-func TestAccAwsSecretsManagerSecret_OverwriteReplica(t *testing.T) {
+func TestAccAwsSecretsManagerSecret_overwriteReplica(t *testing.T) {
+	var providers []*schema.Provider
 	var secret secretsmanager.DescribeSecretOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3),
+		CheckDestroy:      testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_OverwriteReplica(rName, "true"),
+				Config: testAccAwsSecretsManagerSecretConfig_overwriteReplica(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "true"),
 				),
 			},
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_OverwriteReplica(rName, "false"),
+				Config: testAccAwsSecretsManagerSecretConfig_overwriteReplicaUpdate(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "true"),
+				),
+			},
+			{
+				Config: testAccAwsSecretsManagerSecretConfig_overwriteReplica(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "false"),
 				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
 			},
 		},
 	})
@@ -572,13 +575,64 @@ resource "aws_secretsmanager_secret" "test" {
 `, description, rName)
 }
 
-func testAccAwsSecretsManagerSecretConfig_OverwriteReplica(rName, force_overwrite_replica_secret string) string {
-	return fmt.Sprintf(`
-resource "aws_secretsmanager_secret" "test" {
-  force_overwrite_replica_secret = "%s"
-  name        = "%s"
+func testAccAwsSecretsManagerSecretConfig_overwriteReplica(rName string, force_overwrite_replica_secret bool) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(3),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  provider                = awsalternate
+  deletion_window_in_days = 7
 }
-`, force_overwrite_replica_secret, rName)
+
+resource "aws_kms_key" "test2" {
+  provider                = awsthird
+  deletion_window_in_days = 7
+}
+
+data "aws_region" "alternate" {
+  provider = awsalternate
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name                           = %[1]q
+  force_overwrite_replica_secret = %[2]t
+
+  replica {
+    kms_key_id = aws_kms_key.test.key_id
+    region     = data.aws_region.alternate.name
+  }
+}
+`, rName, force_overwrite_replica_secret))
+}
+
+func testAccAwsSecretsManagerSecretConfig_overwriteReplicaUpdate(rName string, force_overwrite_replica_secret bool) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(3),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  provider                = awsalternate
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key" "test2" {
+  provider                = awsthird
+  deletion_window_in_days = 7
+}
+
+data "aws_region" "third" {
+  provider = awsthird
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name                           = %[1]q
+  force_overwrite_replica_secret = %[2]t
+
+  replica {
+    kms_key_id = aws_kms_key.test2.key_id
+    region     = data.aws_region.third.name
+  }
+}
+`, rName, force_overwrite_replica_secret))
 }
 
 func testAccAwsSecretsManagerSecretConfig_Name(rName string) string {
