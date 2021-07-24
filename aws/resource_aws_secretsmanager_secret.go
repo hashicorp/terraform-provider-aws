@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/secretsmanager/waiter"
@@ -78,15 +80,17 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 					validation.IntInSlice([]int{0}),
 				),
 			},
-			"replicas": {
+			"replica": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
+				Set:      secretReplicaHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"kms_key_id": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
+							Computed: true,
 						},
 						"last_accessed_date": {
 							Type:     schema.TypeString,
@@ -95,6 +99,7 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 						"region": {
 							Type:     schema.TypeString,
 							Required: true,
+							Computed: true,
 						},
 						"status": {
 							Type:     schema.TypeString,
@@ -169,7 +174,7 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("replicas"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("replica"); ok && v.(*schema.Set).Len() > 0 {
 		input.AddReplicaRegions = expandSecretsManagerSecretReplicas(v.(*schema.Set).List())
 	}
 
@@ -306,8 +311,8 @@ func resourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interface{
 	d.Set("kms_key_id", output.KmsKeyId)
 	d.Set("name", output.Name)
 
-	if err := d.Set("replicas", flattenSecretsManagerSecretReplicas(output.ReplicationStatus)); err != nil {
-		return fmt.Errorf("error setting replicas: %w", err)
+	if err := d.Set("replica", flattenSecretsManagerSecretReplicas(output.ReplicationStatus)); err != nil {
+		return fmt.Errorf("error setting replica: %w", err)
 	}
 
 	pIn := &secretsmanager.GetResourcePolicyInput{
@@ -355,6 +360,25 @@ func resourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interface{
 
 func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).secretsmanagerconn
+
+	if d.HasChange("replica") {
+		o, n := d.GetChange("replica")
+
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		err := removeSecretsManagerSecretReplicas(conn, d.Id(), os.Difference(ns).List())
+
+		if err != nil {
+			return fmt.Errorf("error deleting Secrets Manager Secret replica: %w", err)
+		}
+
+		err = addSecretsManagerSecretReplicas(conn, d.Id(), d.Get("force_overwrite_replica_secret").(bool), ns.Difference(os).List())
+
+		if err != nil {
+			return fmt.Errorf("error adding Secrets Manager Secret replica: %w", err)
+		}
+	}
 
 	if d.HasChanges("description", "kms_key_id") {
 		input := &secretsmanager.UpdateSecretInput{
@@ -468,6 +492,14 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 func resourceAwsSecretsManagerSecretDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).secretsmanagerconn
 
+	if v, ok := d.GetOk("replica"); ok && v.(*schema.Set).Len() > 0 {
+		err := removeSecretsManagerSecretReplicas(conn, d.Id(), v.(*schema.Set).List())
+
+		if err != nil {
+			return fmt.Errorf("error deleting Secrets Manager Secret replica: %w", err)
+		}
+	}
+
 	input := &secretsmanager.DeleteSecretInput{
 		SecretId: aws.String(d.Id()),
 	}
@@ -486,6 +518,66 @@ func resourceAwsSecretsManagerSecretDelete(d *schema.ResourceData, meta interfac
 			return nil
 		}
 		return fmt.Errorf("error deleting Secrets Manager Secret: %w", err)
+	}
+
+	return nil
+}
+
+func removeSecretsManagerSecretReplicas(conn *secretsmanager.SecretsManager, id string, tfList []interface{}) error {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	input := &secretsmanager.RemoveRegionsFromReplicationInput{
+		SecretId: aws.String(id),
+	}
+
+	var regions []string
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		regions = append(regions, tfMap["region"].(string))
+	}
+
+	input.RemoveReplicaRegions = aws.StringSlice(regions)
+
+	log.Printf("[DEBUG] Removing Secrets Manager Secret Replicas: %s", input)
+
+	_, err := conn.RemoveRegionsFromReplication(input)
+
+	if err != nil {
+		if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+			return nil
+		}
+
+		return err
+	}
+
+	return nil
+}
+
+func addSecretsManagerSecretReplicas(conn *secretsmanager.SecretsManager, id string, forceOverwrite bool, tfList []interface{}) error {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	input := &secretsmanager.ReplicateSecretToRegionsInput{
+		SecretId:                    aws.String(id),
+		ForceOverwriteReplicaSecret: aws.Bool(forceOverwrite),
+		AddReplicaRegions:           expandSecretsManagerSecretReplicas(tfList),
+	}
+
+	log.Printf("[DEBUG] Removing Secrets Manager Secret Replica: %s", input)
+
+	_, err := conn.ReplicateSecretToRegions(input)
+
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -581,4 +673,20 @@ func flattenSecretsManagerSecretReplicas(apiObjects []*secretsmanager.Replicatio
 	}
 
 	return tfList
+}
+
+func secretReplicaHash(v interface{}) int {
+	var buf bytes.Buffer
+
+	m := v.(map[string]interface{})
+
+	if v, ok := m["kms_key_id"].(string); ok {
+		buf.WriteString(fmt.Sprintf("%s-", v))
+	}
+
+	if v, ok := m["region"].(string); ok {
+		buf.WriteString(fmt.Sprintf("%s-", v))
+	}
+
+	return hashcode.String(buf.String())
 }
