@@ -840,7 +840,7 @@ func testAccCheckAWSEIPExists(n string, ec2classic bool, res *ec2.Address) resou
 
 		var output *ec2.DescribeAddressesOutput
 
-		err := resource.Retry(15*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(15*time.Minute, func() *resource.RetryError {
 			var err error
 
 			output, err = conn.DescribeAddresses(input)

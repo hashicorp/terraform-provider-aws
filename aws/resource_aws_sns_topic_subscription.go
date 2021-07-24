@@ -173,7 +173,7 @@ func resourceAwsSnsTopicSubscriptionRead(d *schema.ResourceData, meta interface{
 
 	var output *sns.GetSubscriptionAttributesOutput
 
-	err := resource.Retry(waiter.SubscriptionCreateTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.SubscriptionCreateTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = finder.SubscriptionByARN(conn, d.Id())

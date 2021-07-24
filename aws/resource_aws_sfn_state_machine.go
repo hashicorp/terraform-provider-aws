@@ -144,7 +144,7 @@ func resourceAwsSfnStateMachineCreate(d *schema.ResourceData, meta interface{}) 
 	var output *sfn.CreateStateMachineOutput
 
 	log.Printf("[DEBUG] Creating Step Function State Machine: %s", input)
-	err := resource.Retry(waiter.StateMachineCreatedTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.StateMachineCreatedTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateStateMachine(input)
@@ -281,7 +281,7 @@ func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		// Handle eventual consistency after update.
-		err = resource.Retry(waiter.StateMachineUpdatedTimeout, func() *resource.RetryError {
+		err = tfresource.RetryOnConnectionResetByPeer(waiter.StateMachineUpdatedTimeout, func() *resource.RetryError {
 			output, err := finder.StateMachineByARN(conn, d.Id())
 
 			if err != nil {

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsDataPipelinePipeline() *schema.Resource {
@@ -164,7 +165,7 @@ func waitForDataPipelineDeletion(conn *datapipeline.DataPipeline, pipelineID str
 	params := &datapipeline.DescribePipelinesInput{
 		PipelineIds: []*string{aws.String(pipelineID)},
 	}
-	return resource.Retry(10*time.Minute, func() *resource.RetryError {
+	return tfresource.RetryOnConnectionResetByPeer(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribePipelines(params)
 		if isAWSErr(err, datapipeline.ErrCodePipelineNotFoundException, "") || isAWSErr(err, datapipeline.ErrCodePipelineDeletedException, "") {
 			return nil

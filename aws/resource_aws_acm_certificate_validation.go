@@ -12,6 +12,7 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsAcmCertificateValidation() *schema.Resource {
@@ -71,7 +72,7 @@ func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta inte
 		log.Printf("[INFO] No validation_record_fqdns set, skipping check")
 	}
 
-	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		resp, err := acmconn.DescribeCertificate(params)
 
 		if err != nil {
@@ -109,7 +110,7 @@ func resourceAwsAcmCertificateCheckValidationRecords(validationRecordFqdns []int
 		}
 		var err error
 		var output *acm.DescribeCertificateOutput
-		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err = tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 			log.Printf("[DEBUG] Certificate domain validation options empty for %s, retrying", aws.StringValue(cert.CertificateArn))
 			output, err = conn.DescribeCertificate(input)
 			if err != nil {

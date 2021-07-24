@@ -338,7 +338,7 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 
 	var resp *s3.HeadObjectOutput
 
-	err := resource.Retry(s3BucketObjectCreationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(s3BucketObjectCreationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = s3conn.HeadObject(input)

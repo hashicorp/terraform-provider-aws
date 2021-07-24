@@ -15,6 +15,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsConfigConfigRule() *schema.Resource {
@@ -172,7 +173,7 @@ func resourceAwsConfigConfigRulePut(d *schema.ResourceData, meta interface{}) er
 		Tags:       tags.IgnoreAws().ConfigserviceTags(),
 	}
 	log.Printf("[DEBUG] Creating AWSConfig config rule: %s", input)
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutConfigRule(&input)
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
@@ -283,7 +284,7 @@ func resourceAwsConfigConfigRuleDelete(d *schema.ResourceData, meta interface{})
 	input := &configservice.DeleteConfigRuleInput{
 		ConfigRuleName: aws.String(name),
 	}
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(2*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteConfigRule(input)
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceInUseException" {

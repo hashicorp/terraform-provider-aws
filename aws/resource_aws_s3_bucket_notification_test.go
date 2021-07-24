@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSS3BucketNotification_LambdaFunction(t *testing.T) {
@@ -272,7 +273,7 @@ func testAccCheckAWSS3BucketNotificationDestroy(s *terraform.State) error {
 		if rs.Type != "aws_s3_bucket_notification" {
 			continue
 		}
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
 				Bucket: aws.String(rs.Primary.ID),
 			})
@@ -308,7 +309,7 @@ func testAccCheckAWSS3BucketTopicNotification(n, i, t string, events []string, f
 		topicArn := s.RootModule().Resources[t].Primary.ID
 		conn := testAccProvider.Meta().(*AWSClient).s3conn
 
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
 				Bucket: aws.String(rs.Primary.ID),
 			})
@@ -365,7 +366,7 @@ func testAccCheckAWSS3BucketQueueNotification(n, i, t string, events []string, f
 		queueArn := s.RootModule().Resources[t].Primary.Attributes["arn"]
 		conn := testAccProvider.Meta().(*AWSClient).s3conn
 
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
 				Bucket: aws.String(rs.Primary.ID),
 			})
@@ -422,7 +423,7 @@ func testAccCheckAWSS3BucketLambdaFunctionConfiguration(n, i, t string, events [
 		funcArn := s.RootModule().Resources[t].Primary.Attributes["arn"]
 		conn := testAccProvider.Meta().(*AWSClient).s3conn
 
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
 				Bucket: aws.String(rs.Primary.ID),
 			})

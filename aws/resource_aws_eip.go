@@ -217,7 +217,7 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 	var describeAddresses *ec2.DescribeAddressesOutput
 
 	if d.IsNewResource() {
-		err := resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
 			describeAddresses, err = ec2conn.DescribeAddresses(req)
 			if err != nil {
 				awsErr, ok := err.(awserr.Error)
@@ -381,7 +381,7 @@ func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		log.Printf("[DEBUG] EIP associate configuration: %s (domain: %s)", assocOpts, domain)
 
-		err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 			_, err := ec2conn.AssociateAddress(assocOpts)
 			if err != nil {
 				if isAWSErr(err, "InvalidAllocationID.NotFound", "") {
@@ -457,7 +457,7 @@ func resourceAwsEipDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		var err error
 		_, err = ec2conn.ReleaseAddress(input)
 
@@ -539,7 +539,7 @@ func waitForEc2AddressAssociationClassic(conn *ec2.EC2, publicIP string, instanc
 		},
 	}
 
-	err := resource.Retry(ec2AddressAssociationClassicTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(ec2AddressAssociationClassicTimeout, func() *resource.RetryError {
 		output, err := conn.DescribeAddresses(input)
 
 		if tfawserr.ErrCodeEquals(err, "InvalidAddress.NotFound") {

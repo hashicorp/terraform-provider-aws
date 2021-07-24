@@ -29,7 +29,7 @@ This guide describes the behavior of the Terraform AWS Provider and provides cod
 
 ## Terraform Plugin SDK Functionality
 
-The [Terraform Plugin SDK](https://github.com/hashicorp/terraform-plugin-sdk/), which the AWS Provider uses, provides vital tools for handling consistency: the `resource.StateChangeConf{}` struct, and the retry functions, `resource.Retry()` and `resource.RetryContext()`. We will discuss these throughout the rest of this guide. Since they help keep the AWS Provider code consistent, we heavily prefer them over custom implementations.
+The [Terraform Plugin SDK](https://github.com/hashicorp/terraform-plugin-sdk/), which the AWS Provider uses, provides vital tools for handling consistency: the `resource.StateChangeConf{}` struct, and the retry functions, `resource.Retry() Deprecated` and `resource.RetryContext()`. We will discuss these throughout the rest of this guide. Since they help keep the AWS Provider code consistent, we heavily prefer them over custom implementations.
 
 This guide goes beyond the [Extending Terraform documentation](https://www.terraform.io/docs/extend/resources/retries-and-customizable-timeouts.html) by providing additional context and emergent implementations specific to the Terraform AWS Provider.
 
@@ -43,7 +43,7 @@ The [`resource.StateChangeConf` type](https://pkg.go.dev/github.com/hashicorp/te
 
 ### Retry Functions
 
-The [`resource.Retry()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#Retry) and [`resource.RetryContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#RetryContext) functions provide a simplified retry implementation around `resource.StateChangeConf`. Their most common use is for simple error-based retries.
+The [`tfresource.RetryOnConnectionResetByPeer()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#Retry) and [`resource.RetryContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#RetryContext) functions provide a simplified retry implementation around `resource.StateChangeConf`. Their most common use is for simple error-based retries.
 
 ## AWS Request Handling
 
@@ -108,7 +108,7 @@ These two concepts conflict with each other and require additional handling in T
 
 ### Operation Specific Error Retries
 
-Even given a properly ordered Terraform configuration, eventual consistency can unexpectedly prevent downstream operations from succeeding. A simple retry after a few seconds resolves many of these issues. To reduce frustrating behavior for operators, wrap AWS Go SDK operations with the `resource.Retry()` or `resource.RetryContext()` functions. These retries should have a reasonably low timeout (typically two minutes but up to five minutes). Save them in a constant for reusability. These functions are preferably in line with the associated resource logic to remove any indirection with the code.
+Even given a properly ordered Terraform configuration, eventual consistency can unexpectedly prevent downstream operations from succeeding. A simple retry after a few seconds resolves many of these issues. To reduce frustrating behavior for operators, wrap AWS Go SDK operations with the `tfresource.RetryOnConnectionResetByPeer()` or `resource.RetryContext()` functions. These retries should have a reasonably low timeout (typically two minutes but up to five minutes). Save them in a constant for reusability. These functions are preferably in line with the associated resource logic to remove any indirection with the code.
 
 Do not use this type of logic to overcome improperly ordered Terraform configurations. The approach may not work in larger environments.
 
@@ -130,7 +130,7 @@ import (
 )
 
 // ... Create, Read, Update, or Delete function ...
-	err := resource.Retry(waiter.ThingOperationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.ThingOperationTimeout, func() *resource.RetryError {
 		_, err := conn./* ... AWS Go SDK operation with eventual consistency errors ... */
 
 		// Retryable conditions which can be checked.
@@ -187,7 +187,7 @@ import (
 )
 
 // ... Create and typically Update function ...
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn./* ... AWS Go SDK operation with IAM eventual consistency errors ... */
 
 		// Example retryable condition
@@ -237,7 +237,7 @@ import (
 	iamwaiterStopTime := time.Now().Add(iamwaiter.PropagationTimeout)
 
 	// Ensure to add IAM eventual consistency timeout in case of retries
-	err = resource.Retry(iamwaiter.PropagationTimeout+waiter.ThingOperationTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout+waiter.ThingOperationTimeout, func() *resource.RetryError {
 		// Only retry IAM eventual consistency errors up to that timeout
 		iamwaiterRetry := time.Now().Before(iamwaiterStopTime)
 
@@ -310,7 +310,7 @@ function ExampleThingRead(d *schema.ResourceData, meta interface{}) error {
 	input := &example.OperationInput{/* ... */}
 
 	var output *example.OperationOutput
-	err := resource.Retry(waiter.ThingCreationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.ThingCreationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.Operation(input)
 
@@ -356,7 +356,7 @@ function ExampleThingRead(d *schema.ResourceData, meta interface{}) error {
 Some other general guidelines are:
 
 - If the `Create` function uses `resource.StateChangeConf`, the underlying `resource.RefreshStateFunc` should `return nil, "", nil` instead of the API "not found" error. This way the `StateChangeConf` logic will automatically retry.
-- If the `Create` function uses `resource.Retry()`, the API "not found" error should be caught and `return resource.RetryableError(err)` to automatically retry.
+- If the `Create` function uses `tfresource.RetryOnConnectionResetByPeer()`, the API "not found" error should be caught and `return resource.RetryableError(err)` to automatically retry.
 
 In rare cases, it may be easier to duplicate all `Read` function logic in the `Create` function to handle all retries in one place.
 

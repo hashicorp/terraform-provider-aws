@@ -764,7 +764,7 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Run configuration: %s", runOpts)
 
 	var runResp *ec2.Reservation
-	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		runResp, err = conn.RunInstances(runOpts)
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
@@ -1257,7 +1257,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 							return err
 						}
 					} else {
-						err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+						err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 							_, err := conn.ReplaceIamInstanceProfileAssociation(input)
 							if err != nil {
 								if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
@@ -1442,7 +1442,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433
-		err = resource.Retry(waiter.InstanceAttributePropagationTimeout, func() *resource.RetryError {
+		err = tfresource.RetryOnConnectionResetByPeer(waiter.InstanceAttributePropagationTimeout, func() *resource.RetryError {
 			_, err := conn.StartInstances(input)
 
 			if tfawserr.ErrMessageContains(err, tfec2.ErrCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value") {
@@ -1925,7 +1925,7 @@ func associateInstanceProfile(d *schema.ResourceData, conn *ec2.EC2) error {
 			Name: aws.String(d.Get("iam_instance_profile").(string)),
 		},
 	}
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.AssociateIamInstanceProfile(input)
 		if err != nil {
 			if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
@@ -2495,7 +2495,7 @@ func getAwsEc2InstancePasswordData(instanceID string, conn *ec2.EC2) (string, er
 	input := &ec2.GetPasswordDataInput{
 		InstanceId: aws.String(instanceID),
 	}
-	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(15*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = conn.GetPasswordData(input)
 

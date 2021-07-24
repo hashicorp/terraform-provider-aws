@@ -136,7 +136,7 @@ func resourceAwsLexBotAliasCreate(d *schema.ResourceData, meta interface{}) erro
 		input.ConversationLogs = conversationLogs
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		output, err := conn.PutBotAlias(input)
 
 		input.Checksum = output.Checksum
@@ -229,7 +229,7 @@ func resourceAwsLexBotAliasUpdate(d *schema.ResourceData, meta interface{}) erro
 		input.ConversationLogs = conversationLogs
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 		_, err := conn.PutBotAlias(input)
 
 		// IAM eventual consistency
@@ -268,7 +268,7 @@ func resourceAwsLexBotAliasDelete(d *schema.ResourceData, meta interface{}) erro
 		Name:    aws.String(botAliasName),
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DeleteBotAlias(input)
 
 		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {

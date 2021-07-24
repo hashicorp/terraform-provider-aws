@@ -76,7 +76,7 @@ func QueueAttributesPropagated(conn *sqs.SQS, url string, expected map[string]st
 	}
 
 	var got map[string]string
-	err := resource.Retry(QueueAttributePropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(QueueAttributePropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		got, err = finder.QueueAttributesByURL(conn, url)

@@ -62,7 +62,7 @@ func resourceAwsSecretsManagerSecretPolicyCreate(d *schema.ResourceData, meta in
 	log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %#v", input)
 	var res *secretsmanager.PutResourcePolicyOutput
 
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		res, err = conn.PutResourcePolicy(input)
 		if isAWSErr(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
@@ -95,7 +95,7 @@ func resourceAwsSecretsManagerSecretPolicyRead(d *schema.ResourceData, meta inte
 
 	var res *secretsmanager.GetResourcePolicyOutput
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		res, err = conn.GetResourcePolicy(input)
@@ -158,7 +158,7 @@ func resourceAwsSecretsManagerSecretPolicyUpdate(d *schema.ResourceData, meta in
 		}
 
 		log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %#v", input)
-		err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+		err = tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			var err error
 			_, err = conn.PutResourcePolicy(input)
 			if isAWSErr(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,

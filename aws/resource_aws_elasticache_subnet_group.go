@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsElasticacheSubnetGroup() *schema.Resource {
@@ -208,7 +209,7 @@ func resourceAwsElasticacheSubnetGroupDelete(d *schema.ResourceData, meta interf
 
 	log.Printf("[DEBUG] Cache subnet group delete: %s", d.Id())
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteCacheSubnetGroup(&elasticache.DeleteCacheSubnetGroupInput{
 			CacheSubnetGroupName: aws.String(d.Id()),
 		})

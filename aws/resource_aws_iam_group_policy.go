@@ -98,7 +98,7 @@ func resourceAwsIamGroupPolicyRead(d *schema.ResourceData, meta interface{}) err
 
 	var getResp *iam.GetGroupPolicyOutput
 
-	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		getResp, err = iamconn.GetGroupPolicy(request)

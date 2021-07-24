@@ -254,7 +254,7 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 
 	var vpc *ec2.Vpc
 
-	err := resource.Retry(waiter.VpcPropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.VpcPropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		vpc, err = finder.VpcByID(conn, d.Id())
@@ -587,7 +587,7 @@ func resourceAwsVpcDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 	log.Printf("[INFO] Deleting VPC: %s", d.Id())
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteVpc(deleteVpcOpts)
 		if err == nil {
 			return nil

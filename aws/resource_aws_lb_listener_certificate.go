@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfelbv2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elbv2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsLbListenerCertificate() *schema.Resource {
@@ -55,7 +56,7 @@ func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interfa
 
 	log.Printf("[DEBUG] Adding certificate: %s of listener: %s", certificateArn, listenerArn)
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.AddListenerCertificates(params)
 
 		// Retry for IAM Server Certificate eventual consistency
@@ -94,7 +95,7 @@ func resourceAwsLbListenerCertificateRead(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] Reading certificate: %s of listener: %s", certificateArn, listenerArn)
 
 	var certificate *elbv2.Certificate
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		var err error
 		certificate, err = findAwsLbListenerCertificate(certificateArn, listenerArn, true, nil, conn)
 		if err != nil {

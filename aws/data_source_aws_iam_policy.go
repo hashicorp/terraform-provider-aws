@@ -68,7 +68,7 @@ func dataSourceAwsIAMPolicyRead(d *schema.ResourceData, meta interface{}) error 
 	var results []*iam.Policy
 
 	// Handle IAM eventual consistency
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		results, err = finder.Policies(conn, arn, name, pathPrefix)
 
@@ -138,7 +138,7 @@ func dataSourceAwsIAMPolicyRead(d *schema.ResourceData, meta interface{}) error 
 
 	// Handle IAM eventual consistency
 	var policyVersionOutput *iam.GetPolicyVersionOutput
-	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		policyVersionOutput, err = conn.GetPolicyVersion(policyVersionInput)
 

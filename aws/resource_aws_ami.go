@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -338,7 +339,7 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var res *ec2.DescribeImagesOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		var err error
 		res, err = client.DescribeImages(req)
 		if err != nil {

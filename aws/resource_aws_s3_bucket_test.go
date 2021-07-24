@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -105,7 +106,7 @@ func testSweepS3Buckets(region string) error {
 		}
 
 		log.Printf("[INFO] Deleting S3 Bucket: %s", name)
-		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err = tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.DeleteBucket(input)
 
 			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
@@ -2759,7 +2760,7 @@ func testAccCheckAWSS3BucketDestroyWithProvider(s *terraform.State, provider *sc
 		}
 
 		// Retry for S3 eventual consistency
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.HeadBucket(input)
 
 			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "NotFound", "") {

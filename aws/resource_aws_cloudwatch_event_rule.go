@@ -17,6 +17,7 @@ import (
 	tfevents "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -120,7 +121,7 @@ func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface
 
 	// IAM Roles take some time to propagate
 	var out *events.PutRuleOutput
-	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		out, err = conn.PutRule(input)
 
 		if isAWSErr(err, "ValidationException", "cannot be assumed by principal") {
@@ -222,7 +223,7 @@ func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] Updating CloudWatch Events Rule: %s", input)
 
 	// IAM Roles take some time to propagate
-	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutRule(input)
 
 		if isAWSErr(err, "ValidationException", "cannot be assumed by principal") {
@@ -265,7 +266,7 @@ func resourceAwsCloudWatchEventRuleDelete(d *schema.ResourceData, meta interface
 		EventBusName: aws.String(busName),
 	}
 
-	err = resource.Retry(cloudWatchEventRuleDeleteRetryTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(cloudWatchEventRuleDeleteRetryTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteRule(input)
 
 		if isAWSErr(err, "ValidationException", "Rule can't be deleted since it has targets") {

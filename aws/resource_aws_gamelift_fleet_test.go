@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -48,7 +49,7 @@ func testSweepGameliftFleets(region string) error {
 
 		for _, attr := range out.FleetAttributes {
 			log.Printf("[INFO] Deleting Gamelift Fleet %q", *attr.FleetId)
-			err := resource.Retry(60*time.Minute, func() *resource.RetryError {
+			err := tfresource.RetryOnConnectionResetByPeer(60*time.Minute, func() *resource.RetryError {
 				_, err := conn.DeleteFleet(&gamelift.DeleteFleetInput{
 					FleetId: attr.FleetId,
 				})
@@ -596,7 +597,7 @@ func testAccCheckAWSGameliftFleetDisappears(res *gamelift.FleetAttributes) resou
 		conn := testAccProvider.Meta().(*AWSClient).gameliftconn
 
 		input := &gamelift.DeleteFleetInput{FleetId: res.FleetId}
-		err := resource.Retry(60*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(60*time.Minute, func() *resource.RetryError {
 			_, err := conn.DeleteFleet(input)
 			if err != nil {
 				msg := fmt.Sprintf("Cannot delete fleet %s that is in status of ", *res.FleetId)

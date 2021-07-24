@@ -117,7 +117,7 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		var response *http.Response
-		err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		err = tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 			log.Printf("[DEBUG] Making HTTP request: %s", request.URL.String())
 			response, err = client.Do(request)
 

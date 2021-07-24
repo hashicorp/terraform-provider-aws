@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -63,7 +64,7 @@ func testSweepAutoscalingGroups(region string) error {
 			ForceDelete:          aws.Bool(true),
 		}
 
-		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+		err = tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 			if _, err := conn.DeleteAutoScalingGroup(&deleteopts); err != nil {
 				if awserr, ok := err.(awserr.Error); ok {
 					switch awserr.Code() {

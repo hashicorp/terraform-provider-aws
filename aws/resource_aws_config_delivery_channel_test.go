@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepConfigDeliveryChannels(region string) error {
 
 	req := &configservice.DescribeDeliveryChannelsInput{}
 	var resp *configservice.DescribeDeliveryChannelsOutput
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = conn.DescribeDeliveryChannels(req)
 		if err != nil {

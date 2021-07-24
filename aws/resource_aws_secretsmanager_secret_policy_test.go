@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/secretsmanager/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -179,7 +180,7 @@ func testAccCheckAwsSecretsManagerSecretPolicyDestroy(s *terraform.State) error 
 
 		var output *secretsmanager.DescribeSecretOutput
 
-		err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 			var err error
 			output, err = conn.DescribeSecret(secretInput)
 

@@ -296,7 +296,7 @@ func resourceAwsLexIntentCreate(d *schema.ResourceData, meta interface{}) error 
 		input.Slots = expandLexSlots(v.(*schema.Set).List())
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		output, err := conn.PutIntent(input)
 
 		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
@@ -447,7 +447,7 @@ func resourceAwsLexIntentUpdate(d *schema.ResourceData, meta interface{}) error 
 		input.Slots = expandLexSlots(v.(*schema.Set).List())
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 		_, err := conn.PutIntent(input)
 
 		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
@@ -478,7 +478,7 @@ func resourceAwsLexIntentDelete(d *schema.ResourceData, meta interface{}) error 
 		Name: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DeleteIntent(input)
 
 		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {

@@ -92,7 +92,7 @@ func S3ObjectListTags(conn *s3.S3, bucket, key string) (KeyValueTags, error) {
 
 	var output *s3.GetObjectTaggingOutput
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		var err error
 		output, err = conn.GetObjectTagging(input)
 		if awsErr, ok := err.(awserr.Error); ok {

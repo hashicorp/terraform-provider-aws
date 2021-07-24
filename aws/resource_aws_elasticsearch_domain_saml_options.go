@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsElasticSearchDomainSAMLOptions() *schema.Resource {
@@ -158,7 +159,7 @@ func resourceAwsElasticSearchDomainSAMLOptionsPut(d *schema.ResourceData, meta i
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	}
 	var out *elasticsearch.DescribeElasticsearchDomainOutput
-	err = resource.Retry(50*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(50*time.Minute, func() *resource.RetryError {
 		var err error
 		out, err = conn.DescribeElasticsearchDomain(input)
 		if err != nil {
@@ -206,7 +207,7 @@ func resourceAwsElasticSearchDomainSAMLOptionsDelete(d *schema.ResourceData, met
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	}
 	var out *elasticsearch.DescribeElasticsearchDomainOutput
-	err = resource.Retry(60*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(60*time.Minute, func() *resource.RetryError {
 		var err error
 		out, err = conn.DescribeElasticsearchDomain(input)
 		if err != nil {

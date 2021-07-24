@@ -185,7 +185,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	var resp *ssm.GetParameterOutput
-	err := resource.Retry(ssmParameterCreationValidationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(ssmParameterCreationValidationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.GetParameter(input)
 

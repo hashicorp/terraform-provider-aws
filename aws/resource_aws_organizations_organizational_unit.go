@@ -88,7 +88,7 @@ func resourceAwsOrganizationsOrganizationalUnitCreate(d *schema.ResourceData, me
 
 	var err error
 	var resp *organizations.CreateOrganizationalUnitOutput
-	err = resource.Retry(4*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(4*time.Minute, func() *resource.RetryError {
 		resp, err = conn.CreateOrganizationalUnit(createOpts)
 
 		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeFinalizingOrganizationException) {

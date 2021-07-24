@@ -235,7 +235,7 @@ func resourceAwsS3BucketInventoryPut(d *schema.ResourceData, meta interface{}) e
 	}
 
 	log.Printf("[DEBUG] Putting S3 bucket inventory configuration: %s", input)
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutBucketInventoryConfiguration(input)
 
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
@@ -311,7 +311,7 @@ func resourceAwsS3BucketInventoryRead(d *schema.ResourceData, meta interface{}) 
 
 	log.Printf("[DEBUG] Reading S3 bucket inventory configuration: %s", input)
 	var output *s3.GetBucketInventoryConfigurationOutput
-	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.GetBucketInventoryConfiguration(input)
 

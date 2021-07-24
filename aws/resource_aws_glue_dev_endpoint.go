@@ -16,6 +16,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/waiter"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsGlueDevEndpoint() *schema.Resource {
@@ -223,7 +224,7 @@ func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	log.Printf("[DEBUG] Creating Glue Dev Endpoint: %#v", *input)
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateDevEndpoint(input)
 		if err != nil {
 			// Retry for IAM eventual consistency
@@ -480,7 +481,7 @@ func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if hasChanged {
 		log.Printf("[DEBUG] Updating Glue Dev Endpoint: %s", input)
-		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 			_, err := conn.UpdateDevEndpoint(input)
 			if err != nil {
 				if isAWSErr(err, glue.ErrCodeInvalidInputException, "another concurrent update operation") {

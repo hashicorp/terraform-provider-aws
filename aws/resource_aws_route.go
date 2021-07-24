@@ -425,7 +425,7 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Deleting Route: %s", input)
-	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err = conn.DeleteRoute(input)
 
 		if err == nil {

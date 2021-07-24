@@ -131,7 +131,7 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Adding new Lambda permission: %s", input)
 	var out *lambda.AddPermissionOutput
 	// Retry for IAM and Lambda eventual consistency
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		var err error
 		out, err = conn.AddPermission(&input)
 
@@ -159,7 +159,7 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(statementId)
 
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 		// IAM is eventually consistent :/
 		err := resourceAwsLambdaPermissionRead(d, meta)
 		if err != nil {
@@ -201,7 +201,7 @@ func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] Looking for Lambda permission: %s", input)
 	var out *lambda.GetPolicyOutput
 	var statement *LambdaPolicyStatement
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		// IAM is eventually consistent :/
 		var err error
 		out, err = conn.GetPolicy(&input)

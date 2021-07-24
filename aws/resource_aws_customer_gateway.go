@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsCustomerGateway() *schema.Resource {
@@ -306,7 +307,7 @@ func resourceAwsCustomerGatewayDelete(d *schema.ResourceData, meta interface{}) 
 	input := &ec2.DescribeCustomerGatewaysInput{
 		Filters: []*ec2.Filter{gatewayFilter},
 	}
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 		resp, err := conn.DescribeCustomerGateways(input)
 
 		if err != nil {

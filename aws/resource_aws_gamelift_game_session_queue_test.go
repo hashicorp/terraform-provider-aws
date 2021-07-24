@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const testAccGameliftGameSessionQueuePrefix = "tfAccQueue-"
@@ -308,7 +309,7 @@ func testAccCheckAWSGameliftGameSessionQueueDestroy(s *terraform.State) error {
 		}
 
 		// Deletions can take a few seconds
-		err := resource.Retry(30*time.Second, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(30*time.Second, func() *resource.RetryError {
 			out, err := conn.DescribeGameSessionQueues(input)
 
 			if isAWSErr(err, gamelift.ErrCodeNotFoundException, "") {

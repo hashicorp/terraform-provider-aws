@@ -97,7 +97,7 @@ func testSweepSecurityGroups(region string) error {
 			}
 
 			// Handle EC2 eventual consistency
-			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 				_, err := conn.DeleteSecurityGroup(input)
 
 				if isAWSErr(err, "DependencyViolation", "") {

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsEipAssociation() *schema.Resource {
@@ -94,7 +95,7 @@ func resourceAwsEipAssociationCreate(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] EIP association configuration: %#v", request)
 
 	var resp *ec2.AssociateAddressOutput
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.AssociateAddress(request)
 
@@ -158,7 +159,7 @@ func resourceAwsEipAssociationRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	var response *ec2.DescribeAddressesOutput
-	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		response, err = conn.DescribeAddresses(request)
 

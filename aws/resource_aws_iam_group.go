@@ -79,7 +79,7 @@ func resourceAwsIamGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	var getResp *iam.GetGroupOutput
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		getResp, err = iamconn.GetGroup(request)

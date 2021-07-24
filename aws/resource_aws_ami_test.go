@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSAMI_basic(t *testing.T) {
@@ -404,7 +405,7 @@ func testAccCheckAmiExists(n string, ami *ec2.Image) resource.TestCheckFunc {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 		var resp *ec2.DescribeImagesOutput
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 			opts := &ec2.DescribeImagesInput{
 				ImageIds: []*string{aws.String(rs.Primary.ID)},
 			}

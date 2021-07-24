@@ -509,7 +509,7 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	} else {
 		var priority int64
-		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 			var err error
 			priority, err = highestListenerRulePriority(elbconn, listenerArn)
 			if err != nil {
@@ -557,7 +557,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 		RuleArns: []*string{aws.String(d.Id())},
 	}
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = elbconn.DescribeRules(req)
 		if err != nil {
@@ -844,7 +844,7 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := resource.Retry(waiter.LoadBalancerTagPropagationTimeout, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(waiter.LoadBalancerTagPropagationTimeout, func() *resource.RetryError {
 			err := keyvaluetags.Elbv2UpdateTags(elbconn, d.Id(), o, n)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {

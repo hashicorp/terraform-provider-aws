@@ -305,7 +305,7 @@ func resourceAwsLakeFormationPermissionsCreate(d *schema.ResourceData, meta inte
 	}
 
 	var output *lakeformation.GrantPermissionsOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.GrantPermissions(input)
 		if err != nil {
@@ -574,7 +574,7 @@ func resourceAwsLakeFormationPermissionsDelete(d *schema.ResourceData, meta inte
 		return nil
 	}
 
-	err := resource.Retry(waiter.PermissionsDeleteRetryTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PermissionsDeleteRetryTimeout, func() *resource.RetryError {
 		var err error
 		_, err = conn.RevokePermissions(input)
 		if err != nil {
@@ -613,7 +613,7 @@ func resourceAwsLakeFormationPermissionsDelete(d *schema.ResourceData, meta inte
 	// You can't just wait until permissions = 0 because there could be many other unrelated permissions
 	// on the resource and filtering is non-trivial for table with columns.
 
-	err = resource.Retry(waiter.PermissionsDeleteRetryTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(waiter.PermissionsDeleteRetryTimeout, func() *resource.RetryError {
 		var err error
 		_, err = conn.RevokePermissions(input)
 

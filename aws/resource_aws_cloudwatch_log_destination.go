@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsCloudWatchLogDestination() *schema.Resource {
@@ -71,7 +72,7 @@ func resourceAwsCloudWatchLogDestinationPut(d *schema.ResourceData, meta interfa
 	}
 
 	var err error
-	err = resource.Retry(3*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(3*time.Minute, func() *resource.RetryError {
 		_, err = conn.PutDestination(params)
 
 		if isAWSErr(err, cloudwatchlogs.ErrCodeInvalidParameterException, "") {

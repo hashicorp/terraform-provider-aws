@@ -9,7 +9,7 @@ Optional parameters:
 ## Flagged Code
 
 ```go
-err := resource.Retry(1 * time.Minute, func() *RetryError {
+err := tfresource.RetryOnConnectionResetByPeer(1 * time.Minute, func() *RetryError {
   // Calling API logic, e.g.
   _, err := conn.DoSomething(input)
 
@@ -32,7 +32,7 @@ if err != nil {
 
 // or
 
-err := resource.Retry(1 * time.Minute, func() *RetryError {
+err := tfresource.RetryOnConnectionResetByPeer(1 * time.Minute, func() *RetryError {
   // Calling API logic, e.g.
   _, err := conn.DoSomething(input)
 
@@ -54,7 +54,7 @@ Singular reports can be ignored by adding the a `//lintignore:R006` Go code comm
 
 ```go
 //lintignore:R006
-err := resource.Retry(1 * time.Minute, func() *RetryError {
+err := tfresource.RetryOnConnectionResetByPeer(1 * time.Minute, func() *RetryError {
   // Calling API logic, e.g.
   _, err := conn.DoSomething(input)
 

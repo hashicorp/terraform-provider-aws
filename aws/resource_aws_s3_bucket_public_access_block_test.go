@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfs3 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSS3BucketPublicAccessBlock_basic(t *testing.T) {
@@ -275,7 +276,7 @@ func testAccCheckAWSS3BucketPublicAccessBlockExists(n string, config *s3.PublicA
 		}
 
 		var output *s3.GetPublicAccessBlockOutput
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 			var err error
 			output, err = conn.GetPublicAccessBlock(input)
 
@@ -329,7 +330,7 @@ func testAccCheckAWSS3BucketPublicAccessBlockDisappears(n string) resource.TestC
 			Bucket: aws.String(rs.Primary.ID),
 		}
 
-		return resource.Retry(1*time.Minute, func() *resource.RetryError {
+		return tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.GetPublicAccessBlock(getInput)
 
 			if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchPublicAccessBlockConfiguration) {

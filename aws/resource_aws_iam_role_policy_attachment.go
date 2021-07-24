@@ -64,7 +64,7 @@ func resourceAwsIamRolePolicyAttachmentRead(d *schema.ResourceData, meta interfa
 
 	var hasPolicyAttachment bool
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		hasPolicyAttachment, err = iamRoleHasPolicyARNAttachment(conn, role, policyARN)

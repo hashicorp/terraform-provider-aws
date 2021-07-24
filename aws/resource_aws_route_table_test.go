@@ -1280,7 +1280,7 @@ func testAccCheckAWSRouteTableWaitForVpcEndpointRoute(routeTable *ec2.RouteTable
 
 		plId := aws.StringValue(resp.PrefixLists[0].PrefixListId)
 
-		err = resource.Retry(3*time.Minute, func() *resource.RetryError {
+		err = tfresource.RetryOnConnectionResetByPeer(3*time.Minute, func() *resource.RetryError {
 			resp, err := conn.DescribeRouteTables(&ec2.DescribeRouteTablesInput{
 				RouteTableIds: []*string{routeTable.RouteTableId},
 			})

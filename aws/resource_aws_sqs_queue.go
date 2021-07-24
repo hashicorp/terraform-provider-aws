@@ -219,7 +219,7 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Creating SQS Queue: %s", input)
 	var output *sqs.CreateQueueOutput
-	err = resource.Retry(waiter.QueueCreatedTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(waiter.QueueCreatedTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateQueue(input)

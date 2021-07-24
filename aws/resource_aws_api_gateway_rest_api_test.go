@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -36,7 +37,7 @@ func testSweepAPIGatewayRestApis(region string) error {
 			}
 			log.Printf("[INFO] Deleting API Gateway REST API: %s", input)
 			// TooManyRequestsException: Too Many Requests can take over a minute to resolve itself
-			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+			err := tfresource.RetryOnConnectionResetByPeer(2*time.Minute, func() *resource.RetryError {
 				_, err := conn.DeleteRestApi(input)
 				if err != nil {
 					if isAWSErr(err, apigateway.ErrCodeTooManyRequestsException, "") {

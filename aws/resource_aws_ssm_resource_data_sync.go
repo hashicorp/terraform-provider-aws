@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsSsmResourceDataSync() *schema.Resource {
@@ -72,7 +73,7 @@ func resourceAwsSsmResourceDataSyncCreate(d *schema.ResourceData, meta interface
 		SyncName:      aws.String(d.Get("name").(string)),
 	}
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateResourceDataSync(input)
 		if err != nil {
 			if isAWSErr(err, ssm.ErrCodeResourceDataSyncInvalidConfigurationException, "S3 write failed for bucket") {

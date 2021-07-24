@@ -67,7 +67,7 @@ func dataSourceAwsIAMSessionContextRead(d *schema.ResourceData, meta interface{}
 
 	var role *iam.Role
 
-	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		role, err = finder.Role(conn, roleName)

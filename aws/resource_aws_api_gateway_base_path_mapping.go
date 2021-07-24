@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const emptyBasePathMappingValue = "(none)"
@@ -55,7 +56,7 @@ func resourceAwsApiGatewayBasePathMappingCreate(d *schema.ResourceData, meta int
 		Stage:      aws.String(d.Get("stage_name").(string)),
 	}
 
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(30*time.Second, func() *resource.RetryError {
 		_, err := conn.CreateBasePathMapping(input)
 
 		if err != nil {

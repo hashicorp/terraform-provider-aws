@@ -259,7 +259,7 @@ func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] Creating EKS Cluster: %s", input)
 	var output *eks.CreateClusterOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateCluster(input)

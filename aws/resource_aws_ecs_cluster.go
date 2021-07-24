@@ -16,6 +16,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecs/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecs/waiter"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -198,7 +199,7 @@ func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error
 	// CreateCluster will create the ECS IAM Service Linked Role on first ECS provision
 	// This process does not complete before the initial API call finishes.
 	var out *ecs.CreateClusterOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateCluster(input)
 
@@ -238,7 +239,7 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	var out *ecs.DescribeClustersOutput
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(2*time.Minute, func() *resource.RetryError {
 		var err error
 		out, err = finder.ClusterByARN(conn, d.Id())
 
@@ -365,7 +366,7 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 			DefaultCapacityProviderStrategy: expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
 		}
 
-		err := resource.Retry(ecsClusterTimeoutUpdate, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(ecsClusterTimeoutUpdate, func() *resource.RetryError {
 			_, err := conn.PutClusterCapacityProviders(&input)
 			if err != nil {
 				if isAWSErr(err, ecs.ErrCodeClientException, "Cluster was not ACTIVE") {
@@ -403,7 +404,7 @@ func resourceAwsEcsClusterDelete(d *schema.ResourceData, meta interface{}) error
 	input := &ecs.DeleteClusterInput{
 		Cluster: aws.String(d.Id()),
 	}
-	err := resource.Retry(ecsClusterTimeoutDelete, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(ecsClusterTimeoutDelete, func() *resource.RetryError {
 		_, err := conn.DeleteCluster(input)
 
 		if err == nil {

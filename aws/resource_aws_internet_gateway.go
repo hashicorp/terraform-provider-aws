@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsInternetGateway() *schema.Resource {
@@ -66,7 +67,7 @@ func resourceAwsInternetGatewayCreate(d *schema.ResourceData, meta interface{}) 
 	d.SetId(aws.StringValue(ig.InternetGatewayId))
 	log.Printf("[INFO] InternetGateway ID: %s", d.Id())
 	var igRaw interface{}
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 		igRaw, _, err = IGStateRefreshFunc(conn, d.Id())()
 		if igRaw != nil {
 			return nil
@@ -183,7 +184,7 @@ func resourceAwsInternetGatewayDelete(d *schema.ResourceData, meta interface{}) 
 	input := &ec2.DeleteInternetGatewayInput{
 		InternetGatewayId: aws.String(d.Id()),
 	}
-	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteInternetGateway(input)
 		if err == nil {
 			return nil
@@ -226,7 +227,7 @@ func resourceAwsInternetGatewayAttach(d *schema.ResourceData, meta interface{}) 
 		InternetGatewayId: aws.String(d.Id()),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(2*time.Minute, func() *resource.RetryError {
 		_, err := conn.AttachInternetGateway(input)
 		if err == nil {
 			return nil

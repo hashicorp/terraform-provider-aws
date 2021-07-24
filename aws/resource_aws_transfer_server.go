@@ -736,7 +736,7 @@ func updateTransferServer(conn *transfer.Transfer, input *transfer.UpdateServerI
 	// To prevent accessing the EC2 API directly to check the VPC Endpoint
 	// state, which can require confusing IAM permissions and have other
 	// eventual consistency consideration, we retry only via the Transfer API.
-	err := resource.Retry(Ec2VpcEndpointCreationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(Ec2VpcEndpointCreationTimeout, func() *resource.RetryError {
 		_, err := conn.UpdateServer(input)
 
 		if tfawserr.ErrMessageContains(err, transfer.ErrCodeConflictException, "VPC Endpoint state is not yet available") {

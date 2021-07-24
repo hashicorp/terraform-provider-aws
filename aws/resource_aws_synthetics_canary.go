@@ -274,7 +274,7 @@ func resourceAwsSyntheticsCanaryCreate(d *schema.ResourceData, meta interface{})
 	iamwaiterStopTime := time.Now().Add(iamwaiter.PropagationTimeout)
 
 	// Ensure to add IAM eventual consistency timeout in case of retries
-	err = resource.Retry(iamwaiter.PropagationTimeout+waiter.CanaryCreatedTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout+waiter.CanaryCreatedTimeout, func() *resource.RetryError {
 		// Only retry IAM eventual consistency errors up to that timeout
 		iamwaiterRetry := time.Now().Before(iamwaiterStopTime)
 

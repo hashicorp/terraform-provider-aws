@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsKmsAlias() *schema.Resource {
@@ -174,7 +175,7 @@ func resourceAwsKmsAliasDelete(d *schema.ResourceData, meta interface{}) error {
 
 func retryFindKmsAliasByName(conn *kms.KMS, name string) (*kms.AliasListEntry, error) {
 	var resp *kms.AliasListEntry
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = findKmsAliasByName(conn, name, nil)
 		if err != nil {

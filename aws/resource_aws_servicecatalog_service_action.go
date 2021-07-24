@@ -99,7 +99,7 @@ func resourceAwsServiceCatalogServiceActionCreate(d *schema.ResourceData, meta i
 	}
 
 	var output *servicecatalog.CreateServiceActionOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateServiceAction(input)
@@ -188,7 +188,7 @@ func resourceAwsServiceCatalogServiceActionUpdate(d *schema.ResourceData, meta i
 		input.Name = aws.String(d.Get("name").(string))
 	}
 
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.UpdateServiceAction(input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
@@ -220,7 +220,7 @@ func resourceAwsServiceCatalogServiceActionDelete(d *schema.ResourceData, meta i
 		Id: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(waiter.ServiceActionDeleteTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.ServiceActionDeleteTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteServiceAction(input)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceInUseException) {

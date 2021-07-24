@@ -226,7 +226,7 @@ func resourceAwsConfigRemediationConfigurationDelete(d *schema.ResourceData, met
 	}
 
 	log.Printf("[DEBUG] Deleting AWS Config remediation configurations for rule %q", name)
-	err := resource.Retry(configRemediationConfigurationDeletionTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(configRemediationConfigurationDeletionTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteRemediationConfiguration(input)
 
 		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeResourceInUseException) {

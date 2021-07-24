@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 // We can only modify 20 parameters at a time, so walk them until
@@ -219,7 +220,7 @@ func resourceAwsNeptuneParameterGroupUpdate(d *schema.ResourceData, meta interfa
 			}
 
 			log.Printf("[DEBUG] Reset Neptune Parameter Group: %s", resetOpts)
-			err := resource.Retry(30*time.Second, func() *resource.RetryError {
+			err := tfresource.RetryOnConnectionResetByPeer(30*time.Second, func() *resource.RetryError {
 				_, err := conn.ResetDBParameterGroup(&resetOpts)
 				if err != nil {
 					if isAWSErr(err, "InvalidDBParameterGroupState", " has pending changes") {
@@ -274,7 +275,7 @@ func resourceAwsNeptuneParameterGroupDelete(d *schema.ResourceData, meta interfa
 	deleteOpts := neptune.DeleteDBParameterGroupInput{
 		DBParameterGroupName: aws.String(d.Id()),
 	}
-	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(3*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteDBParameterGroup(&deleteOpts)
 		if err != nil {
 			if isAWSErr(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {

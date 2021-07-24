@@ -385,7 +385,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := resource.Retry(waiter.LoadBalancerTagPropagationTimeout, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(waiter.LoadBalancerTagPropagationTimeout, func() *resource.RetryError {
 			err := keyvaluetags.Elbv2UpdateTags(conn, d.Id(), o, n)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
@@ -645,7 +645,7 @@ func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
 		},
 	}
 	var out *ec2.DescribeNetworkInterfacesOutput
-	err = resource.Retry(waiter.LoadBalancerNetworkInterfaceDetachTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(waiter.LoadBalancerNetworkInterfaceDetachTimeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.DescribeNetworkInterfaces(input)
 		if err != nil {

@@ -14,6 +14,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsKmsKey() *schema.Resource {
@@ -111,7 +112,7 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	// The KMS service's awareness of principals is limited by "eventual consistency".
 	// They acknowledge this here:
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateKey(req)
 		if isAWSErr(err, kms.ErrCodeMalformedPolicyDocumentException, "") {
@@ -214,7 +215,7 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("enable_key_rotation", krs.KeyRotationEnabled)
 
 	var tags keyvaluetags.KeyValueTags
-	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(2*time.Minute, func() *resource.RetryError {
 		var err error
 		tags, err = keyvaluetags.KmsListTags(conn, d.Id())
 
@@ -388,7 +389,7 @@ func updateKmsKeyStatus(conn *kms.KMS, id string, shouldBeEnabled bool) error {
 func updateKmsKeyRotationStatus(conn *kms.KMS, d *schema.ResourceData) error {
 	shouldEnableRotation := d.Get("enable_key_rotation").(bool)
 
-	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(10*time.Minute, func() *resource.RetryError {
 		err := handleKeyRotation(conn, shouldEnableRotation, aws.String(d.Id()))
 
 		if err != nil {

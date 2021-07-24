@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsWafv2RuleGroup() *schema.Resource {
@@ -137,7 +138,7 @@ func resourceAwsWafv2RuleGroupCreate(d *schema.ResourceData, meta interface{}) e
 		params.Tags = tags.IgnoreAws().Wafv2Tags()
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateRuleGroup(params)
 		if err != nil {
@@ -243,7 +244,7 @@ func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 		u.Description = aws.String(v.(string))
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.UpdateRuleGroup(u)
 		if err != nil {
 			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
@@ -284,7 +285,7 @@ func resourceAwsWafv2RuleGroupDelete(d *schema.ResourceData, meta interface{}) e
 		LockToken: aws.String(d.Get("lock_token").(string)),
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteRuleGroup(r)
 		if err != nil {
 			if isAWSErr(err, wafv2.ErrCodeWAFAssociatedItemException, "") {

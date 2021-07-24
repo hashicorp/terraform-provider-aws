@@ -19,6 +19,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dynamodb/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsDynamoDbTable() *schema.Resource {
@@ -391,7 +392,7 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 
 	var output *dynamodb.CreateTableOutput
 	var requiresTagging bool
-	err := resource.Retry(waiter.CreateTableTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.CreateTableTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateTable(req)
 		if err != nil {
@@ -849,7 +850,7 @@ func createDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamo
 			},
 		}
 
-		err := resource.Retry(waiter.ReplicaUpdateTimeout, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(waiter.ReplicaUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateTable(input)
 			if err != nil {
 				if isAWSErr(err, "ThrottlingException", "") {
@@ -920,7 +921,7 @@ func updateDynamoDbPITR(d *schema.ResourceData, conn *dynamodb.DynamoDB) error {
 
 	log.Printf("[DEBUG] Updating DynamoDB point in time recovery status to %v", toEnable)
 
-	err := resource.Retry(waiter.UpdateTableContinuousBackupsTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.UpdateTableContinuousBackupsTimeout, func() *resource.RetryError {
 		_, err := conn.UpdateContinuousBackups(input)
 		if err != nil {
 			// Backups are still being enabled for this newly created table
@@ -1081,7 +1082,7 @@ func deleteDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
 		TableName: aws.String(tableName),
 	}
 
-	err := resource.Retry(waiter.DeleteTableTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.DeleteTableTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteTable(input)
 		if err != nil {
 			// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously
@@ -1143,7 +1144,7 @@ func deleteDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamo
 				},
 			}
 
-			err := resource.Retry(waiter.UpdateTableTimeout, func() *resource.RetryError {
+			err := tfresource.RetryOnConnectionResetByPeer(waiter.UpdateTableTimeout, func() *resource.RetryError {
 				_, err := conn.UpdateTable(input)
 				if err != nil {
 					if isAWSErr(err, "ThrottlingException", "") {

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsOpsworksStack() *schema.Resource {
@@ -467,7 +468,7 @@ func resourceAwsOpsworksStackCreate(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Creating OpsWorks stack: %s", req)
 
 	var resp *opsworks.CreateStackOutput
-	err = resource.Retry(20*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(20*time.Minute, func() *resource.RetryError {
 		resp, err = client.CreateStack(req)
 		if err != nil {
 			// If Terraform is also managing the service IAM role, it may have just been created and not yet be

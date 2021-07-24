@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsVpcPeeringConnectionOptions() *schema.Resource {
@@ -101,7 +102,7 @@ func resourceAwsVpcPeeringConnectionOptionsUpdate(d *schema.ResourceData, meta i
 
 		// Retry reading back the modified options to deal with eventual consistency.
 		// Often this is to do with a delay transitioning from pending-acceptance to active.
-		err = resource.Retry(3*time.Minute, func() *resource.RetryError {
+		err = tfresource.RetryOnConnectionResetByPeer(3*time.Minute, func() *resource.RetryError {
 			pc, err = vpcPeeringConnection(conn, d.Id())
 
 			if err != nil {

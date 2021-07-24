@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsGuardDutyMember() *schema.Resource {
@@ -236,7 +237,7 @@ func inviteGuardDutyMemberWaiter(accountID, detectorID string, timeout time.Dura
 
 	// wait until e-mail verification finishes
 	var out *guardduty.GetMembersOutput
-	err := resource.Retry(timeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(timeout, func() *resource.RetryError {
 		log.Printf("[DEBUG] Reading GuardDuty Member: %s", input)
 		var err error
 		out, err = conn.GetMembers(&input)

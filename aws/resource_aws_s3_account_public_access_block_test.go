@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 // S3 account-level settings must run serialized
@@ -298,7 +299,7 @@ func testAccCheckAWSS3AccountPublicAccessBlockExists(resourceName string, config
 
 		// Retry for eventual consistency
 		var output *s3control.GetPublicAccessBlockOutput
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 			var err error
 			output, err = conn.GetPublicAccessBlock(input)
 
@@ -340,7 +341,7 @@ func testAccCheckAWSS3AccountPublicAccessBlockDestroy(s *terraform.State) error 
 		}
 
 		// Retry for eventual consistency
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.GetPublicAccessBlock(input)
 
 			if isAWSErr(err, s3control.ErrCodeNoSuchPublicAccessBlockConfiguration, "") {
@@ -382,7 +383,7 @@ func testAccCheckAWSS3AccountPublicAccessBlockDisappears() resource.TestCheckFun
 		}
 
 		// Retry for eventual consistency
-		return resource.Retry(1*time.Minute, func() *resource.RetryError {
+		return tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.GetPublicAccessBlock(getInput)
 
 			if isAWSErr(err, s3control.ErrCodeNoSuchPublicAccessBlockConfiguration, "") {

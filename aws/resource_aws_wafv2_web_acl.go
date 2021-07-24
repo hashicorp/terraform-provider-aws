@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -164,7 +165,7 @@ func resourceAwsWafv2WebACLCreate(d *schema.ResourceData, meta interface{}) erro
 		params.Tags = tags.IgnoreAws().Wafv2Tags()
 	}
 
-	err := resource.Retry(Wafv2WebACLCreateTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(Wafv2WebACLCreateTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateWebACL(params)
 		if err != nil {
@@ -274,7 +275,7 @@ func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) erro
 			u.Description = aws.String(v.(string))
 		}
 
-		err := resource.Retry(Wafv2WebACLUpdateTimeout, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(Wafv2WebACLUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateWebACL(u)
 			if err != nil {
 				if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
@@ -319,7 +320,7 @@ func resourceAwsWafv2WebACLDelete(d *schema.ResourceData, meta interface{}) erro
 		LockToken: aws.String(d.Get("lock_token").(string)),
 	}
 
-	err := resource.Retry(Wafv2WebACLDeleteTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(Wafv2WebACLDeleteTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteWebACL(r)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFAssociatedItemException) {

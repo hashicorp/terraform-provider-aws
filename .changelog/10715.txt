@@ -1,0 +1,3 @@
+```release-note:bug
+internal/tfresource/retry: Add retry handling when a request's connection is reset by peer
+```

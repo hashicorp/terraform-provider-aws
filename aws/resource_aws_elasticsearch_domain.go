@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsElasticSearchDomain() *schema.Resource {
@@ -573,7 +574,7 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 
 	// IAM Roles can take some time to propagate if set in AccessPolicies and created in the same terraform
 	var out *elasticsearch.CreateElasticsearchDomainOutput
-	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateElasticsearchDomain(&input)
 		if err != nil {
@@ -642,7 +643,7 @@ func waitForElasticSearchDomainCreation(conn *elasticsearch.ElasticsearchService
 		DomainName: aws.String(domainName),
 	}
 	var out *elasticsearch.DescribeElasticsearchDomainOutput
-	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(60*time.Minute, func() *resource.RetryError {
 		var err error
 		out, err = conn.DescribeElasticsearchDomain(input)
 		if err != nil {
@@ -909,7 +910,7 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	}
 	var out *elasticsearch.DescribeElasticsearchDomainOutput
-	err = resource.Retry(60*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(60*time.Minute, func() *resource.RetryError {
 		out, err = conn.DescribeElasticsearchDomain(descInput)
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -1005,7 +1006,7 @@ func resourceAwsElasticSearchDomainDeleteWaiter(domainName string, conn *elastic
 		DomainName: aws.String(domainName),
 	}
 	var out *elasticsearch.DescribeElasticsearchDomainOutput
-	err := resource.Retry(90*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(90*time.Minute, func() *resource.RetryError {
 		var err error
 		out, err = conn.DescribeElasticsearchDomain(input)
 

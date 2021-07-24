@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -52,7 +53,7 @@ func testSweepDbOptionGroups(region string) error {
 			OptionGroupName: og.OptionGroupName,
 		}
 
-		ret := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		ret := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.DeleteOptionGroup(deleteOpts)
 			if err != nil {
 				if isAWSErr(err, rds.ErrCodeInvalidOptionGroupStateFault, "") {

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
@@ -95,5 +96,57 @@ func TestRetryConfigContext_error(t *testing.T) {
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatal("timeout")
+	}
+}
+
+func TestRetryOnConnectionResetByPeer(t *testing.T) {
+	var retryCount int32
+
+	testCases := []struct {
+		Name        string
+		F           func() *resource.RetryError
+		ExpectError bool
+	}{
+		{
+			Name: "retryable error",
+			F: func() *resource.RetryError {
+				if atomic.CompareAndSwapInt32(&retryCount, 0, 1) {
+					return resource.RetryableError(awserr.New(request.ErrCodeRequestError, "RequestError other", nil))
+				}
+				return nil
+			},
+			ExpectError: false,
+		},
+		{
+			Name: "non-retryable RequestError read: connection reset by peer should still be retried",
+			F: func() *resource.RetryError {
+				if atomic.CompareAndSwapInt32(&retryCount, 0, 1) {
+					return resource.NonRetryableError(awserr.New(request.ErrCodeRequestError, "RequestError read: connection reset by peer", nil))
+				}
+				return nil
+			},
+			ExpectError: false,
+		},
+		{
+			Name: "non-retryable other request error",
+			F: func() *resource.RetryError {
+				return resource.NonRetryableError(awserr.New(request.ErrCodeRequestError, "RequestError other", nil))
+			},
+			ExpectError: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			retryCount = 0
+
+			err := tfresource.RetryOnConnectionResetByPeer(5*time.Second, testCase.F)
+
+			if testCase.ExpectError && err == nil {
+				t.Fatal("expected error")
+			} else if !testCase.ExpectError && err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+		})
 	}
 }

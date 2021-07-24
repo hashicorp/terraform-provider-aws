@@ -56,7 +56,7 @@ func resourceAwsServiceCatalogTagOptionCreate(d *schema.ResourceData, meta inter
 	}
 
 	var output *servicecatalog.CreateTagOptionOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateTagOption(input)
@@ -148,7 +148,7 @@ func resourceAwsServiceCatalogTagOptionUpdate(d *schema.ResourceData, meta inter
 		input.Value = aws.String(d.Get("value").(string))
 	}
 
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.UpdateTagOption(input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {

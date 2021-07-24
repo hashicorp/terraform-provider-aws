@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -595,7 +596,7 @@ func TestAccAwsLexIntent_updateWithExternalChange(t *testing.T) {
 					Type: aws.String("ReturnIntent"),
 				},
 			}
-			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 				_, err := conn.PutIntent(input)
 
 				if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {

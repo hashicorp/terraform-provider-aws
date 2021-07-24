@@ -193,7 +193,7 @@ func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var createResp *iam.CreateRoleOutput
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		createResp, err = iamconn.CreateRole(request)
 		// IAM users (referenced in Principal field of assume policy)
@@ -244,7 +244,7 @@ func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 
 	var getResp *iam.GetRoleOutput
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		getResp, err = iamconn.GetRole(request)
@@ -526,7 +526,7 @@ func deleteIamRole(conn *iam.IAM, roleName string, forceDetach, hasInline, hasMa
 	deleteRoleInput := &iam.DeleteRoleInput{
 		RoleName: aws.String(roleName),
 	}
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteRole(deleteRoleInput)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, iam.ErrCodeDeleteConflictException) {

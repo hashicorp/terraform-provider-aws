@@ -29,7 +29,7 @@ func isAWSErrRequestFailureStatusCode(err error, statusCode int) bool {
 
 func retryOnAwsCode(code string, f func() (interface{}, error)) (interface{}, error) {
 	var resp interface{}
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(2*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = f()
 		if err != nil {
@@ -52,7 +52,7 @@ func retryOnAwsCode(code string, f func() (interface{}, error)) (interface{}, er
 // Note: This function will be moved out of the aws package in the future.
 func RetryOnAwsCodes(codes []string, f func() (interface{}, error)) (interface{}, error) {
 	var resp interface{}
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = f()
 		if err != nil {

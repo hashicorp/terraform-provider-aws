@@ -295,7 +295,7 @@ func resourceAwsRDSGlobalClusterDelete(d *schema.ResourceData, meta interface{})
 
 	// Allow for eventual consistency
 	// InvalidGlobalClusterStateFault: Global Cluster arn:aws:rds::123456789012:global-cluster:tf-acc-test-5618525093076697001-0 is not empty
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteGlobalCluster(input)
 
 		if isAWSErr(err, rds.ErrCodeInvalidGlobalClusterStateFault, "is not empty") {
@@ -489,7 +489,7 @@ func waitForRdsGlobalClusterRemoval(conn *rds.RDS, dbClusterIdentifier string) e
 	var globalCluster *rds.GlobalCluster
 	stillExistsErr := fmt.Errorf("RDS DB Cluster still exists in RDS Global Cluster")
 
-	err := resource.Retry(rdsGlobalClusterRemovalTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(rdsGlobalClusterRemovalTimeout, func() *resource.RetryError {
 		var err error
 
 		globalCluster, err = rdsDescribeGlobalClusterFromDbClusterARN(conn, dbClusterIdentifier)
@@ -526,7 +526,7 @@ func resourceAwsRDSGlobalClusterUpgradeMajorEngineVersion(clusterId string, engi
 	}
 	input.AllowMajorVersionUpgrade = aws.Bool(true)
 	input.EngineVersion = aws.String(engineVersion)
-	err := resource.Retry(waiter.RdsClusterInitiateUpgradeTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.RdsClusterInitiateUpgradeTimeout, func() *resource.RetryError {
 		_, err := conn.ModifyGlobalCluster(input)
 		if err != nil {
 			if isAWSErr(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
@@ -556,7 +556,7 @@ func resourceAwsRDSGlobalClusterUpgradeMinorEngineVersion(clusterMembers *schema
 				DBClusterIdentifier: aws.String(clusterMemberArn.(string)),
 				EngineVersion:       aws.String(engineVersion),
 			}
-			err := resource.Retry(waiter.RdsClusterInitiateUpgradeTimeout, func() *resource.RetryError {
+			err := tfresource.RetryOnConnectionResetByPeer(waiter.RdsClusterInitiateUpgradeTimeout, func() *resource.RetryError {
 				_, err := conn.ModifyDBCluster(modInput)
 				if err != nil {
 					if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {

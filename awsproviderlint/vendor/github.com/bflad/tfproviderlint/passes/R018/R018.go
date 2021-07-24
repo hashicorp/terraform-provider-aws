@@ -11,7 +11,7 @@ import (
 
 const Doc = `check for time.Sleep() function usage
 
-Terraform Providers should generally avoid this function when waiting for API operations and prefer polling methods such as resource.Retry() or (resource.StateChangeConf).WaitForState().`
+Terraform Providers should generally avoid this function when waiting for API operations and prefer polling methods such as tfresource.RetryOnConnectionResetByPeer() or (resource.StateChangeConf).WaitForState().`
 
 const analyzerName = "R018"
 
@@ -33,7 +33,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			continue
 		}
 
-		pass.Reportf(callExpr.Pos(), "%s: prefer resource.Retry() or (resource.StateChangeConf).WaitForState() over time.Sleep()", analyzerName)
+		pass.Reportf(callExpr.Pos(), "%s: prefer tfresource.RetryOnConnectionResetByPeer() or (resource.StateChangeConf).WaitForState() over time.Sleep()", analyzerName)
 	}
 
 	return nil, nil

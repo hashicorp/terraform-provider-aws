@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsRedshiftCluster() *schema.Resource {
@@ -916,7 +917,7 @@ func resourceAwsRedshiftClusterDelete(d *schema.ResourceData, meta interface{}) 
 func deleteAwsRedshiftCluster(opts *redshift.DeleteClusterInput, conn *redshift.Redshift, timeout time.Duration) error {
 	id := *opts.ClusterIdentifier
 	log.Printf("[INFO] Deleting Redshift Cluster %q", id)
-	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(15*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteCluster(opts)
 		if isAWSErr(err, redshift.ErrCodeInvalidClusterStateFault, "") {
 			return resource.RetryableError(err)

@@ -271,7 +271,7 @@ func deleteElasticacheGlobalReplicationGroup(conn *elasticache.ElastiCache, id s
 		RetainPrimaryReplicationGroup: aws.Bool(true),
 	}
 
-	err := resource.Retry(readyTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(readyTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteGlobalReplicationGroup(input)
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeGlobalReplicationGroupNotFoundFault) {
 			return resource.NonRetryableError(&resource.NotFoundError{

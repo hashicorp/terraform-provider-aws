@@ -58,7 +58,7 @@ func resourceAwsEcrRepositoryPolicyPut(d *schema.ResourceData, meta interface{})
 	// Retry due to IAM eventual consistency
 	var err error
 	var out *ecr.SetRepositoryPolicyOutput
-	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		out, err = conn.SetRepositoryPolicy(&input)
 
 		if isAWSErr(err, ecr.ErrCodeInvalidParameterException, "Invalid repository policy provided") {
@@ -92,7 +92,7 @@ func resourceAwsEcrRepositoryPolicyRead(d *schema.ResourceData, meta interface{}
 
 	var out *ecr.GetRepositoryPolicyOutput
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		out, err = conn.GetRepositoryPolicy(input)

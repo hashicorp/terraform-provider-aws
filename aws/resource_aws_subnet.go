@@ -237,7 +237,7 @@ func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 
 	var subnet *ec2.Subnet
 
-	err := resource.Retry(waiter.SubnetPropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.SubnetPropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		subnet, err = finder.SubnetByID(conn, d.Id())

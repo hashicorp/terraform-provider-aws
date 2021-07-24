@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/guardduty/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsGuardDutyDetector() *schema.Resource {
@@ -208,7 +209,7 @@ func resourceAwsGuardDutyDetectorDelete(d *schema.ResourceData, meta interface{}
 		DetectorId: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(waiter.MembershipPropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.MembershipPropagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteDetector(input)
 
 		if isAWSErr(err, guardduty.ErrCodeBadRequestException, "cannot delete detector while it has invited or associated members") {

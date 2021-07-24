@@ -273,7 +273,7 @@ func resourceAwsNetworkAclRead(d *schema.ResourceData, meta interface{}) error {
 
 	var networkAcl *ec2.NetworkAcl
 
-	err := resource.Retry(waiter.NetworkAclPropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.NetworkAclPropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		networkAcl, err = finder.NetworkAclByID(conn, d.Id())
@@ -585,7 +585,7 @@ func resourceAwsNetworkAclDelete(d *schema.ResourceData, meta interface{}) error
 	input := &ec2.DeleteNetworkAclInput{
 		NetworkAclId: aws.String(d.Id()),
 	}
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteNetworkAcl(input)
 		if err != nil {
 			if isAWSErr(err, "InvalidNetworkAclID.NotFound", "") {

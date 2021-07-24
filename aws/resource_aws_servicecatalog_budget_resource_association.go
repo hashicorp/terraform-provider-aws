@@ -48,7 +48,7 @@ func resourceAwsServiceCatalogBudgetResourceAssociationCreate(d *schema.Resource
 	}
 
 	var output *servicecatalog.AssociateBudgetWithResourceOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.AssociateBudgetWithResource(input)

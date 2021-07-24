@@ -28,6 +28,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscaling/waiter"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -750,7 +751,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Auto Scaling Group create configuration: %#v", createOpts)
 
 	// Retry for IAM eventual consistency
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateAutoScalingGroup(&createOpts)
 
 		// ValidationError: You must use a valid fully-formed launch template. Value (tf-acc-test-6643732652421074386) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
@@ -1382,7 +1383,7 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 	// We retry the delete operation to handle InUse/InProgress errors coming
 	// from scaling operations. We should be able to sneak in a delete in between
 	// scaling operations within 5m.
-	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		if _, err := conn.DeleteAutoScalingGroup(&deleteopts); err != nil {
 			if awserr, ok := err.(awserr.Error); ok {
 				switch awserr.Code() {
@@ -1411,7 +1412,7 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	var group *autoscaling.Group
-	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		group, err = getAwsAutoscalingGroup(d.Id(), conn)
 
 		if group != nil {
@@ -1452,7 +1453,7 @@ func resourceAutoScalingGroupWarmPoolDelete(g *autoscaling.Group, d *schema.Reso
 			ForceDelete:          aws.Bool(d.Get("force_delete").(bool) || d.Get("force_delete_warm_pool").(bool)),
 		}
 
-		err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 			if _, err := conn.DeleteWarmPool(&deleteopts); err != nil {
 				if callerr, ok := err.(awserr.Error); ok {
 					switch callerr.Code() {
@@ -1561,7 +1562,7 @@ func resourceAwsAutoscalingGroupWarmPoolDrain(d *schema.ResourceData, meta inter
 	// Next, wait for the Warm Pool to drain
 	log.Printf("[DEBUG] Waiting for warm pool to have zero instances")
 	var p *autoscaling.DescribeWarmPoolOutput
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		p, err := getAwsAutoscalingGroupWarmPool(d.Id(), conn)
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -1645,7 +1646,7 @@ func resourceAwsAutoscalingGroupDrain(d *schema.ResourceData, meta interface{}) 
 	// Next, wait for the Auto Scaling Group to drain
 	log.Printf("[DEBUG] Waiting for group to have zero instances")
 	var g *autoscaling.Group
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		g, err := getAwsAutoscalingGroup(d.Id(), conn)
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -2216,7 +2217,7 @@ func expandAutoScalingGroupInstanceRefreshPreferences(l []interface{}) *autoscal
 
 func autoScalingGroupRefreshInstances(conn *autoscaling.AutoScaling, asgName string, refreshConfig []interface{}) error {
 	input := createAutoScalingGroupInstanceRefreshInput(asgName, refreshConfig)
-	err := resource.Retry(waiter.InstanceRefreshStartedTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.InstanceRefreshStartedTimeout, func() *resource.RetryError {
 		_, err := conn.StartInstanceRefresh(input)
 		if tfawserr.ErrCodeEquals(err, autoscaling.ErrCodeInstanceRefreshInProgressFault) {
 			cancelErr := cancelAutoscalingInstanceRefresh(conn, asgName)

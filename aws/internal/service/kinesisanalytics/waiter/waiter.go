@@ -94,7 +94,7 @@ func ApplicationUpdated(conn *kinesisanalytics.KinesisAnalytics, name string) (*
 func IAMPropagation(f func() (interface{}, error)) (interface{}, error) {
 	var output interface{}
 
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = f()

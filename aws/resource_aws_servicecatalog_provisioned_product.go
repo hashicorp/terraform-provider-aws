@@ -288,7 +288,7 @@ func resourceAwsServiceCatalogProvisionedProductCreate(d *schema.ResourceData, m
 
 	var output *servicecatalog.ProvisionProductOutput
 
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.ProvisionProduct(input)
@@ -467,7 +467,7 @@ func resourceAwsServiceCatalogProvisionedProductUpdate(d *schema.ResourceData, m
 		}
 	}
 
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.UpdateProvisionedProduct(input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {

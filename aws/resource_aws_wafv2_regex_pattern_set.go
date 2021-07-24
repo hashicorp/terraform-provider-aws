@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsWafv2RegexPatternSet() *schema.Resource {
@@ -223,7 +224,7 @@ func resourceAwsWafv2RegexPatternSetDelete(d *schema.ResourceData, meta interfac
 		Scope:     aws.String(d.Get("scope").(string)),
 		LockToken: aws.String(d.Get("lock_token").(string)),
 	}
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteRegexPatternSet(params)
 		if err != nil {
 			if isAWSErr(err, wafv2.ErrCodeWAFAssociatedItemException, "") {

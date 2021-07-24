@@ -43,7 +43,7 @@ func ResourceShareInvitationByResourceShareArnAndStatus(conn *ram.RAM, resourceS
 	var invitation *ram.ResourceShareInvitation
 
 	// Retry for Ram resource share invitation eventual consistency
-	err := resource.Retry(FindInvitationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(FindInvitationTimeout, func() *resource.RetryError {
 		i, err := resourceShareInvitationByResourceShareArnAndStatus(conn, resourceShareArn, status)
 		invitation = i
 
@@ -79,7 +79,7 @@ func ResourceShareInvitationByArn(conn *ram.RAM, arn string) (*ram.ResourceShare
 	var invitation *ram.ResourceShareInvitation
 
 	// Retry for Ram resource share invitation eventual consistency
-	err := resource.Retry(FindInvitationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(FindInvitationTimeout, func() *resource.RetryError {
 		i, err := resourceShareInvitationByArn(conn, arn)
 		invitation = i
 
@@ -113,7 +113,7 @@ func resourceShare(conn *ram.RAM, input *ram.GetResourceSharesInput) (*ram.Resou
 	var shares *ram.GetResourceSharesOutput
 
 	// Retry for Ram resource share eventual consistency
-	err := resource.Retry(FindResourceShareTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(FindResourceShareTimeout, func() *resource.RetryError {
 		ss, err := conn.GetResourceShares(input)
 		shares = ss
 

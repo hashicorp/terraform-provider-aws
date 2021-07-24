@@ -178,7 +178,7 @@ func resourceAwsConfigConformancePackDelete(d *schema.ResourceData, meta interfa
 		ConformancePackName: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(ConfigConformancePackDeleteTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(ConfigConformancePackDeleteTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteConformancePack(input)
 
 		if err != nil {

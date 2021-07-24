@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -14,7 +15,7 @@ import (
 func RetryWhenAwsErrCodeEquals(timeout time.Duration, f func() (interface{}, error), codes ...string) (interface{}, error) {
 	var output interface{}
 
-	err := resource.Retry(timeout, func() *resource.RetryError {
+	err := RetryOnConnectionResetByPeer(timeout, func() *resource.RetryError {
 		var err error
 
 		output, err = f()
@@ -113,4 +114,16 @@ func RetryConfigContext(ctx context.Context, delay time.Duration, delayRand time
 	// resultErr takes precedence over waitErr if both are set because it is
 	// more likely to be useful
 	return resultErr
+}
+
+func RetryOnConnectionResetByPeer(timeout time.Duration, f resource.RetryFunc) error {
+	return resource.RetryContext(context.Background(), timeout, func() *resource.RetryError {
+		err := f()
+
+		if err != nil && !err.Retryable && tfawserr.ErrMessageContains(err.Err, request.ErrCodeRequestError, "read: connection reset by peer") {
+			return resource.RetryableError(err.Err)
+		}
+
+		return err
+	})
 }

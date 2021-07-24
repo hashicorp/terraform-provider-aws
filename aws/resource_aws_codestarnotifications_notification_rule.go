@@ -230,7 +230,7 @@ func cleanupCodeStarNotificationsNotificationRuleTargets(conn *codestarnotificat
 			TargetAddress:       aws.String(target["address"].(string)),
 		}
 
-		err := resource.Retry(codestarNotificationsTargetSubscriptionTimeout, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(codestarNotificationsTargetSubscriptionTimeout, func() *resource.RetryError {
 			_, err := conn.DeleteTarget(input)
 
 			if isAWSErr(err, codestarnotifications.ErrCodeValidationException, awsCodeStartNotificationsNotificationRuleErrorSubscribed) {

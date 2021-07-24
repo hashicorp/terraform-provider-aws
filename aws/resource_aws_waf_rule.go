@@ -226,7 +226,7 @@ func resourceAwsWafRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	wr := newWafRetryer(conn)
-	err := resource.Retry(WafRuleDeleteTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(WafRuleDeleteTimeout, func() *resource.RetryError {
 		var err error
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.DeleteRuleInput{

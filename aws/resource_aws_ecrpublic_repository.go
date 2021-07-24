@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsEcrPublicRepository() *schema.Resource {
@@ -146,7 +147,7 @@ func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}
 	}
 
 	var err error
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		out, err = conn.DescribeRepositories(input)
 		if d.IsNewResource() && isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
 			return resource.RetryableError(err)
@@ -241,7 +242,7 @@ func resourceAwsEcrPublicRepositoryDelete(d *schema.ResourceData, meta interface
 	input := &ecrpublic.DescribeRepositoriesInput{
 		RepositoryNames: aws.StringSlice([]string{d.Id()}),
 	}
-	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err = conn.DescribeRepositories(input)
 		if err != nil {
 			if isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {

@@ -16,6 +16,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/waiter"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsGlueTrigger() *schema.Resource {
@@ -212,7 +213,7 @@ func resourceAwsGlueTriggerCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Creating Glue Trigger: %s", input)
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		_, err = conn.CreateTrigger(input)
 		if err != nil {

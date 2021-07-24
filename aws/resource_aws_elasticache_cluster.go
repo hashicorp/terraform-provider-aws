@@ -690,7 +690,7 @@ func deleteElasticacheCacheCluster(conn *elasticache.ElastiCache, cacheClusterID
 	}
 
 	log.Printf("[DEBUG] Deleting ElastiCache Cache Cluster: %s", input)
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteCacheCluster(input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidCacheClusterStateFault, "serving as primary") {

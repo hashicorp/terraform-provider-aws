@@ -181,7 +181,7 @@ func resourceAwsImageBuilderInfrastructureConfigurationCreate(d *schema.Resource
 	}
 
 	var output *imagebuilder.CreateInfrastructureConfigurationOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateInfrastructureConfiguration(input)
@@ -332,7 +332,7 @@ func resourceAwsImageBuilderInfrastructureConfigurationUpdate(d *schema.Resource
 			input.TerminateInstanceOnFailure = aws.Bool(v.(bool))
 		}
 
-		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateInfrastructureConfiguration(input)
 
 			if tfawserr.ErrMessageContains(err, imagebuilder.ErrCodeInvalidParameterValueException, "instance profile does not exist") {

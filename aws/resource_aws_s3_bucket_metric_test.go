@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestExpandS3MetricsFilter(t *testing.T) {
@@ -568,7 +569,7 @@ func testAccCheckAWSS3BucketMetricDestroy(s *terraform.State) error {
 			return err
 		}
 
-		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err = tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 			input := &s3.GetBucketMetricsConfigurationInput{
 				Bucket: aws.String(bucket),
 				Id:     aws.String(name),

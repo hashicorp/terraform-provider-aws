@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsRedshiftSnapshotCopyGrant() *schema.Resource {
@@ -79,7 +80,7 @@ func resourceAwsRedshiftSnapshotCopyGrantCreate(d *schema.ResourceData, meta int
 	log.Printf("[DEBUG] Created new Redshift SnapshotCopyGrant: %s", *out.SnapshotCopyGrant.SnapshotCopyGrantName)
 	d.SetId(grantName)
 
-	err = resource.Retry(3*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(3*time.Minute, func() *resource.RetryError {
 		var err error
 		var grant *redshift.SnapshotCopyGrant
 		grant, err = findAwsRedshiftSnapshotCopyGrant(conn, grantName)
@@ -188,7 +189,7 @@ func resourceAwsRedshiftSnapshotCopyGrantDelete(d *schema.ResourceData, meta int
 
 // Used by the tests as well
 func waitForAwsRedshiftSnapshotCopyGrantToBeDeleted(conn *redshift.Redshift, grantName string) error {
-	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(3*time.Minute, func() *resource.RetryError {
 		var err error
 		var grant *redshift.SnapshotCopyGrant
 		grant, err = findAwsRedshiftSnapshotCopyGrant(conn, grantName)

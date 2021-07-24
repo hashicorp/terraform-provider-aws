@@ -120,7 +120,7 @@ func resourceAwsSecretsManagerSecretVersionRead(d *schema.ResourceData, meta int
 
 	var output *secretsmanager.GetSecretValueOutput
 
-	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.GetSecretValue(input)

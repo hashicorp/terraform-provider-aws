@@ -15,6 +15,7 @@ import (
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsSagemakerFeatureGroup() *schema.Resource {
@@ -228,7 +229,7 @@ func resourceAwsSagemakerFeatureGroupCreate(d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[DEBUG] Sagemaker Feature Group create config: %#v", *input)
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateFeatureGroup(input)
 		if err != nil {
 			if isAWSErr(err, "ValidationException", "The execution role ARN is invalid.") {

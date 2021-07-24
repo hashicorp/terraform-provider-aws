@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -79,7 +80,7 @@ func resourceAwsAccessAnalyzerAnalyzerCreate(d *schema.ResourceData, meta interf
 	}
 
 	// Handle Organizations eventual consistency
-	err := resource.Retry(accessAnalyzerOrganizationCreationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(accessAnalyzerOrganizationCreationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateAnalyzer(input)
 
 		if isAWSErr(err, accessanalyzer.ErrCodeValidationException, "You must create an organization") {

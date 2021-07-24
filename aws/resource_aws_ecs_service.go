@@ -527,7 +527,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] Creating ECS service: %s", input)
 
 	// Retry due to AWS IAM & ECS eventual consistency
-	err := resource.Retry(iamwaiter.PropagationTimeout+waiter.ServiceCreateTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout+waiter.ServiceCreateTimeout, func() *resource.RetryError {
 		output, err := conn.CreateService(&input)
 
 		if err != nil {
@@ -1123,7 +1123,7 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 	if updateService {
 		log.Printf("[DEBUG] Updating ECS Service (%s): %s", d.Id(), input)
 		// Retry due to IAM eventual consistency
-		err := resource.Retry(iamwaiter.PropagationTimeout+waiter.ServiceUpdateTimeout, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout+waiter.ServiceUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateService(&input)
 
 			if err != nil {
@@ -1217,7 +1217,7 @@ func resourceAwsEcsServiceDelete(d *schema.ResourceData, meta interface{}) error
 		Cluster: aws.String(d.Get("cluster").(string)),
 	}
 	// Wait until the ECS service is drained
-	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		log.Printf("[DEBUG] Trying to delete ECS service %s", input)
 
 		_, err := conn.DeleteService(&input)

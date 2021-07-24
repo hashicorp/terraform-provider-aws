@@ -68,7 +68,7 @@ func resourceAwsIamGroupMembershipRead(d *schema.ResourceData, meta interface{})
 
 	var ul []string
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		err := conn.GetGroupPages(input, func(page *iam.GetGroupOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage

@@ -15,6 +15,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/neptune/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -385,7 +386,7 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 		log.Printf("[DEBUG] Neptune Cluster create options: %s", createDbClusterInput)
 	}
 
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		if restoreDBClusterFromSnapshot {
 			_, err = conn.RestoreDBClusterFromSnapshot(restoreDBClusterFromSnapshotInput)
@@ -627,7 +628,7 @@ func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if requestUpdate {
-		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 			_, err := conn.ModifyDBCluster(req)
 			if err != nil {
 				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
@@ -715,7 +716,7 @@ func resourceAwsNeptuneClusterDelete(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] Neptune Cluster delete options: %s", deleteOpts)
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteDBCluster(&deleteOpts)
 		if err != nil {
 			if isAWSErr(err, neptune.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {

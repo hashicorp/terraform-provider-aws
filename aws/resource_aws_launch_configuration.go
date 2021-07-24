@@ -15,6 +15,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsLaunchConfiguration() *schema.Resource {
@@ -533,7 +534,7 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 
 	// IAM profiles can take ~10 seconds to propagate in AWS:
 	// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := autoscalingconn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
 		if err != nil {
 			if isAWSErr(err, "ValidationError", "Invalid IamInstanceProfile") {
@@ -635,7 +636,7 @@ func resourceAwsLaunchConfigurationDelete(d *schema.ResourceData, meta interface
 
 	log.Printf("[DEBUG] Deleting Autoscaling Launch Configuration: %s", d.Id())
 	// Retry for Autoscaling eventual consistency
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		_, err := autoscalingconn.DeleteLaunchConfiguration(input)
 
 		if isAWSErr(err, autoscaling.ErrCodeResourceInUseFault, "") {

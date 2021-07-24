@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSSesTemplate_basic(t *testing.T) {
@@ -155,7 +156,7 @@ func testAccCheckSesTemplateDestroy(s *terraform.State) error {
 		if rs.Type != "aws_ses_template" {
 			continue
 		}
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 			input := ses.GetTemplateInput{
 				TemplateName: aws.String(rs.Primary.ID),
 			}

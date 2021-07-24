@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsCloud9EnvironmentEc2() *schema.Resource {
@@ -97,7 +98,7 @@ func resourceAwsCloud9EnvironmentEc2Create(d *schema.ResourceData, meta interfac
 	}
 
 	var out *cloud9.CreateEnvironmentEC2Output
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateEnvironmentEC2(params)
 		if err != nil {
@@ -250,7 +251,7 @@ func resourceAwsCloud9EnvironmentEc2Delete(d *schema.ResourceData, meta interfac
 		EnvironmentIds: []*string{aws.String(d.Id())},
 	}
 	var out *cloud9.DescribeEnvironmentsOutput
-	err = resource.Retry(20*time.Minute, func() *resource.RetryError { // Deleting instances can take a long time
+	err = tfresource.RetryOnConnectionResetByPeer(20*time.Minute, func() *resource.RetryError { // Deleting instances can take a long time
 		out, err = conn.DescribeEnvironments(input)
 		if err != nil {
 			if isAWSErr(err, cloud9.ErrCodeNotFoundException, "") {

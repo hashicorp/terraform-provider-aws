@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
@@ -226,7 +227,7 @@ func testAccCheckAWSCloud9EnvironmentEc2Disappears(res *cloud9.Environment) reso
 			EnvironmentIds: []*string{res.Id},
 		}
 		var out *cloud9.DescribeEnvironmentsOutput
-		err = resource.Retry(20*time.Minute, func() *resource.RetryError { // Deleting instances can take a long time
+		err = tfresource.RetryOnConnectionResetByPeer(20*time.Minute, func() *resource.RetryError { // Deleting instances can take a long time
 			out, err = conn.DescribeEnvironments(input)
 			if err != nil {
 				if isAWSErr(err, cloud9.ErrCodeNotFoundException, "") {

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsAppautoscalingTarget() *schema.Resource {
@@ -73,7 +74,7 @@ func resourceAwsAppautoscalingTargetPut(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[DEBUG] Application autoscaling target create configuration %s", targetOpts)
 	var err error
-	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err = conn.RegisterScalableTarget(&targetOpts)
 
 		if err != nil {
@@ -110,7 +111,7 @@ func resourceAwsAppautoscalingTargetRead(d *schema.ResourceData, meta interface{
 	namespace := d.Get("service_namespace").(string)
 	dimension := d.Get("scalable_dimension").(string)
 
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(2*time.Minute, func() *resource.RetryError {
 		var err error
 		t, err = getAwsAppautoscalingTarget(d.Id(), namespace, dimension, conn)
 		if err != nil {
@@ -163,7 +164,7 @@ func resourceAwsAppautoscalingTargetDelete(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error deleting Application AutoScaling Target (%s): %w", d.Id(), err)
 	}
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+	return tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 		t, err := getAwsAppautoscalingTarget(d.Get("resource_id").(string), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string), conn)
 
 		if err != nil {

@@ -719,7 +719,7 @@ func resourceAwsAppmeshVirtualGatewayRead(d *schema.ResourceData, meta interface
 
 	var virtualGateway *appmesh.VirtualGatewayData
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		virtualGateway, err = finder.VirtualGateway(conn, d.Get("mesh_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))

@@ -71,7 +71,7 @@ func resourceAwsServiceCatalogPrincipalPortfolioAssociationCreate(d *schema.Reso
 	}
 
 	var output *servicecatalog.AssociatePrincipalWithPortfolioOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.AssociatePrincipalWithPortfolio(input)

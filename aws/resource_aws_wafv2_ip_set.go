@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfnet "github.com/terraform-providers/terraform-provider-aws/aws/internal/net"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsWafv2IPSet() *schema.Resource {
@@ -252,7 +253,7 @@ func resourceAwsWafv2IPSetDelete(d *schema.ResourceData, meta interface{}) error
 		LockToken: aws.String(d.Get("lock_token").(string)),
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 		var err error
 		_, err = conn.DeleteIPSet(params)
 		if err != nil {

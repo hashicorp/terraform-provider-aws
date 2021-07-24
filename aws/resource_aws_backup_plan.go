@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsBackupPlan() *schema.Resource {
@@ -272,7 +273,7 @@ func resourceAwsBackupPlanDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	log.Printf("[DEBUG] Deleting Backup Plan: %s", d.Id())
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(2*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteBackupPlan(input)
 
 		if isAWSErr(err, backup.ErrCodeInvalidRequestException, "Related backup plan selections must be deleted prior to backup") {

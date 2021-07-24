@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsDocDBSubnetGroup() *schema.Resource {
@@ -218,7 +219,7 @@ func waitForDocDBSubnetGroupDeletion(conn *docdb.DocDB, name string) error {
 		DBSubnetGroupName: aws.String(name),
 	}
 
-	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeDBSubnetGroups(params)
 
 		if isAWSErr(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {

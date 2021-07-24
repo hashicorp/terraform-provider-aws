@@ -819,7 +819,7 @@ func testAccCheckAWSLambdaEventSourceMappingIsBeingDisabled(conf *lambda.EventSo
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
 		// Disable enabled state
-		err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(10*time.Minute, func() *resource.RetryError {
 			params := &lambda.UpdateEventSourceMappingInput{
 				UUID:    conf.UUID,
 				Enabled: aws.Bool(false),
@@ -845,7 +845,7 @@ func testAccCheckAWSLambdaEventSourceMappingIsBeingDisabled(conf *lambda.EventSo
 		}
 
 		// wait for state to be propagated
-		return resource.Retry(10*time.Minute, func() *resource.RetryError {
+		return tfresource.RetryOnConnectionResetByPeer(10*time.Minute, func() *resource.RetryError {
 			params := &lambda.GetEventSourceMappingInput{
 				UUID: conf.UUID,
 			}

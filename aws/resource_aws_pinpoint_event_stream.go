@@ -59,7 +59,7 @@ func resourceAwsPinpointEventStreamUpsert(d *schema.ResourceData, meta interface
 	}
 
 	// Retry for IAM eventual consistency
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutEventStream(&req)
 
 		if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeBadRequestException, "make sure the IAM Role is configured correctly") {

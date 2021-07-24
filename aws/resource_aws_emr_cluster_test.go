@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -1573,7 +1574,7 @@ func testAccCheckAWSEmrClusterDisappears(cluster *emr.Cluster) resource.TestChec
 		var output *emr.ListInstancesOutput
 		var instanceCount int
 
-		err = resource.Retry(20*time.Minute, func() *resource.RetryError {
+		err = tfresource.RetryOnConnectionResetByPeer(20*time.Minute, func() *resource.RetryError {
 			var err error
 			output, err = conn.ListInstances(input)
 

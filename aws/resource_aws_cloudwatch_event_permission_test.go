@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfevents "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -368,7 +369,7 @@ func testAccCheckCloudWatchEventPermissionDestroy(s *terraform.State) error {
 		input := &events.DescribeEventBusInput{
 			Name: aws.String(eventBusName),
 		}
-		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err = tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 			debo, err := conn.DescribeEventBus(input)
 			if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
 				return nil

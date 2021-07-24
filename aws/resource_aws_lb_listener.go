@@ -433,7 +433,7 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 
 	var output *elbv2.CreateListenerOutput
 
-	err := resource.Retry(waiter.LoadBalancerListenerCreateTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.LoadBalancerListenerCreateTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateListener(params)
@@ -473,7 +473,7 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 
 	var listener *elbv2.Listener
 
-	err := resource.Retry(waiter.LoadBalancerListenerReadTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.LoadBalancerListenerReadTimeout, func() *resource.RetryError {
 		var err error
 		listener, err = finder.ListenerByARN(conn, d.Id())
 
@@ -592,7 +592,7 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 			}
 		}
 
-		err := resource.Retry(waiter.LoadBalancerListenerUpdateTimeout, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(waiter.LoadBalancerListenerUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.ModifyListener(params)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
@@ -618,7 +618,7 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := resource.Retry(waiter.LoadBalancerTagPropagationTimeout, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(waiter.LoadBalancerTagPropagationTimeout, func() *resource.RetryError {
 			err := keyvaluetags.Elbv2UpdateTags(conn, d.Id(), o, n)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) ||

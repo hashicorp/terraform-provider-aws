@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/msk/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsMskCluster() *schema.Resource {
@@ -415,7 +416,7 @@ func waitForMskClusterCreation(conn *kafka.Kafka, arn string) error {
 	input := &kafka.DescribeClusterInput{
 		ClusterArn: aws.String(arn),
 	}
-	err := resource.Retry(waiter.ClusterCreateTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.ClusterCreateTimeout, func() *resource.RetryError {
 		out, err := conn.DescribeCluster(input)
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -1216,7 +1217,7 @@ func resourceAwsMskClusterDeleteWaiter(conn *kafka.Kafka, arn string) error {
 	input := &kafka.DescribeClusterInput{
 		ClusterArn: aws.String(arn),
 	}
-	err := resource.Retry(waiter.ClusterDeleteTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.ClusterDeleteTimeout, func() *resource.RetryError {
 		_, err := conn.DescribeCluster(input)
 
 		if err != nil {

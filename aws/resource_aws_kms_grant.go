@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsKmsGrant() *schema.Resource {
@@ -147,7 +148,7 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 
 	var out *kms.CreateGrantOutput
 
-	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(3*time.Minute, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateGrant(&input)
 
@@ -302,7 +303,7 @@ by the list grants call when expected.
 // are handled by the findKmsGrantById function
 func findKmsGrantByIdWithRetry(conn *kms.KMS, keyId string, grantId string) (*kms.GrantListEntry, error) {
 	var grant *kms.GrantListEntry
-	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(3*time.Minute, func() *resource.RetryError {
 		var err error
 		grant, err = findKmsGrantById(conn, keyId, grantId, nil)
 
@@ -326,7 +327,7 @@ func findKmsGrantByIdWithRetry(conn *kms.KMS, keyId string, grantId string) (*km
 // Used by the tests as well
 func waitForKmsGrantToBeRevoked(conn *kms.KMS, keyId string, grantId string) error {
 	var grant *kms.GrantListEntry
-	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(3*time.Minute, func() *resource.RetryError {
 		var err error
 		grant, err = findKmsGrantById(conn, keyId, grantId, nil)
 
@@ -367,7 +368,7 @@ func findKmsGrantById(conn *kms.KMS, keyId string, grantId string, marker *strin
 	var err error
 	var grant *kms.GrantListEntry
 
-	err = resource.Retry(3*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(3*time.Minute, func() *resource.RetryError {
 		out, err = conn.ListGrants(&input)
 
 		if err != nil {

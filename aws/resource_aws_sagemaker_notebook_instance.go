@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsSagemakerNotebookInstance() *schema.Resource {
@@ -387,7 +388,7 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 			}
 			// StartNotebookInstance sometimes doesn't take so we'll check for a state change and if
 			// it doesn't change we'll send another request
-			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+			err := tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 				_, err := conn.StartNotebookInstance(startOpts)
 				if err != nil {
 					return resource.NonRetryableError(fmt.Errorf("error starting sagemaker notebook instance (%s): %s", d.Id(), err))

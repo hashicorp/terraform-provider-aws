@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -59,7 +60,7 @@ func testSweepEc2TransitGateways(region string) error {
 			}
 
 			log.Printf("[INFO] Deleting EC2 Transit Gateway: %s", id)
-			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+			err := tfresource.RetryOnConnectionResetByPeer(2*time.Minute, func() *resource.RetryError {
 				_, err := conn.DeleteTransitGateway(input)
 
 				if isAWSErr(err, "IncorrectState", "has non-deleted Transit Gateway Attachments") {

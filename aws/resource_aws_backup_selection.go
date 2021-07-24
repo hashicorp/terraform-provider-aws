@@ -101,7 +101,7 @@ func resourceAwsBackupSelectionCreate(d *schema.ResourceData, meta interface{}) 
 
 	// Retry for IAM eventual consistency
 	var output *backup.CreateBackupSelectionOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateBackupSelection(input)
 
@@ -149,7 +149,7 @@ func resourceAwsBackupSelectionRead(d *schema.ResourceData, meta interface{}) er
 
 	var resp *backup.GetBackupSelectionOutput
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.GetBackupSelection(input)

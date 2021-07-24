@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsSesDomainIdentityVerification() *schema.Resource {
@@ -56,7 +57,7 @@ func getAwsSesIdentityVerificationAttributes(conn *ses.SES, domainName string) (
 func resourceAwsSesDomainIdentityVerificationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sesconn
 	domainName := d.Get("domain").(string)
-	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		att, err := getAwsSesIdentityVerificationAttributes(conn, domainName)
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("Error getting identity verification attributes: %s", err))

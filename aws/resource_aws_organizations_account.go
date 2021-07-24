@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsOrganizationsAccount() *schema.Resource {
@@ -108,7 +109,7 @@ func resourceAwsOrganizationsAccountCreate(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] Creating AWS Organizations Account: %s", createOpts)
 
 	var resp *organizations.CreateAccountOutput
-	err := resource.Retry(4*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(4*time.Minute, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.CreateAccount(createOpts)

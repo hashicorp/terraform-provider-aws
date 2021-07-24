@@ -154,7 +154,7 @@ func resourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) erro
 		RepositoryNames: aws.StringSlice([]string{d.Id()}),
 	}
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		out, err = conn.DescribeRepositories(input)
@@ -314,7 +314,7 @@ func resourceAwsEcrRepositoryDelete(d *schema.ResourceData, meta interface{}) er
 	input := &ecr.DescribeRepositoriesInput{
 		RepositoryNames: aws.StringSlice([]string{d.Id()}),
 	}
-	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err = conn.DescribeRepositories(input)
 		if err != nil {
 			if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {

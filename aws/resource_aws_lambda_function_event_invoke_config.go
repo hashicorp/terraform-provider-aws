@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsLambdaFunctionEventInvokeConfig() *schema.Resource {
@@ -115,7 +116,7 @@ func resourceAwsLambdaFunctionEventInvokeConfigCreate(d *schema.ResourceData, me
 	}
 
 	// Retry for destination validation eventual consistency errors
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(2*time.Minute, func() *resource.RetryError {
 		_, err := conn.PutFunctionEventInvokeConfig(input)
 
 		// InvalidParameterValueException: The destination ARN arn:PARTITION:SERVICE:REGION:ACCOUNT:RESOURCE is invalid.
@@ -213,7 +214,7 @@ func resourceAwsLambdaFunctionEventInvokeConfigUpdate(d *schema.ResourceData, me
 	}
 
 	// Retry for destination validation eventual consistency errors
-	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(2*time.Minute, func() *resource.RetryError {
 		_, err := conn.PutFunctionEventInvokeConfig(input)
 
 		// InvalidParameterValueException: The destination ARN arn:PARTITION:SERVICE:REGION:ACCOUNT:RESOURCE is invalid.

@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -1357,7 +1358,7 @@ func testAccCheckAWSS3BucketObjectExists(n string, obj *s3.GetObjectOutput) reso
 
 		var out *s3.GetObjectOutput
 
-		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(2*time.Minute, func() *resource.RetryError {
 			var err error
 			out, err = s3conn.GetObject(input)
 			if awsErr, ok := err.(awserr.Error); ok {

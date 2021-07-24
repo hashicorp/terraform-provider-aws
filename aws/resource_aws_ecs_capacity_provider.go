@@ -183,7 +183,7 @@ func resourceAwsEcsCapacityProviderUpdate(d *schema.ResourceData, meta interface
 		}
 
 		log.Printf("[DEBUG] Updating ECS Capacity Provider: %s", input)
-		err := resource.Retry(waiter.CapacityProviderUpdateTimeout, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(waiter.CapacityProviderUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateCapacityProvider(input)
 
 			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeUpdateInProgressException) {

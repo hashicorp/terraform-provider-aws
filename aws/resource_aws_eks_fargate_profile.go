@@ -125,7 +125,7 @@ func resourceAwsEksFargateProfileCreate(d *schema.ResourceData, meta interface{}
 	awsMutexKV.Lock(mutexKey)
 	defer awsMutexKV.Unlock(mutexKey)
 
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateFargateProfile(input)
 
 		// Retry for IAM eventual consistency on error:

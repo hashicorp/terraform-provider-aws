@@ -14,6 +14,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/acmpca/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/acmpca/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
@@ -298,7 +299,7 @@ func resourceAwsAcmpcaCertificateAuthorityCreate(d *schema.ResourceData, meta in
 
 	log.Printf("[DEBUG] Creating ACM PCA Certificate Authority: %s", input)
 	var output *acmpca.CreateCertificateAuthorityOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateCertificateAuthority(input)
 		if err != nil {

@@ -19,6 +19,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsKmsExternalKey() *schema.Resource {
@@ -117,7 +118,7 @@ func resourceAwsKmsExternalKeyCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	var output *kms.CreateKeyOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateKey(input)
@@ -174,7 +175,7 @@ func resourceAwsKmsExternalKeyRead(d *schema.ResourceData, meta interface{}) err
 
 	var output *kms.DescribeKeyOutput
 	// Retry for KMS eventual consistency on creation
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(2*time.Minute, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.DescribeKey(input)
@@ -373,7 +374,7 @@ func importKmsExternalKeyMaterial(conn *kms.KMS, keyID, keyMaterialBase64, valid
 
 	var getParametersForImportOutput *kms.GetParametersForImportOutput
 	// Handle KMS eventual consistency
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		var err error
 
 		getParametersForImportOutput, err = conn.GetParametersForImport(getParametersForImportInput)
@@ -438,7 +439,7 @@ func importKmsExternalKeyMaterial(conn *kms.KMS, keyID, keyMaterialBase64, valid
 	}
 
 	// Handle KMS eventual consistency
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.ImportKeyMaterial(importKeyMaterialInput)
 
 		if isAWSErr(err, kms.ErrCodeNotFoundException, "") {

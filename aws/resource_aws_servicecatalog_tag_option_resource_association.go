@@ -65,7 +65,7 @@ func resourceAwsServiceCatalogTagOptionResourceAssociationCreate(d *schema.Resou
 	}
 
 	var output *servicecatalog.AssociateTagOptionWithResourceOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.AssociateTagOptionWithResource(input)

@@ -241,7 +241,7 @@ func resourceAwsGameliftFleetCreate(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[INFO] Creating Gamelift Fleet: %s", input)
 	var out *gamelift.CreateFleetOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateFleet(&input)
 
@@ -437,7 +437,7 @@ func resourceAwsGameliftFleetDelete(d *schema.ResourceData, meta interface{}) er
 	input := &gamelift.DeleteFleetInput{
 		FleetId: aws.String(d.Id()),
 	}
-	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(60*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteFleet(input)
 		if err != nil {
 			msg := fmt.Sprintf("Cannot delete fleet %s that is in status of ", d.Id())

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSDocDBClusterInstance_basic(t *testing.T) {
@@ -246,7 +247,7 @@ func testAccAWSDocDBClusterInstanceDisappears(v *docdb.DBInstance) resource.Test
 		if _, err := conn.DeleteDBInstance(opts); err != nil {
 			return err
 		}
-		return resource.Retry(40*time.Minute, func() *resource.RetryError {
+		return tfresource.RetryOnConnectionResetByPeer(40*time.Minute, func() *resource.RetryError {
 			opts := &docdb.DescribeDBInstancesInput{
 				DBInstanceIdentifier: v.DBInstanceIdentifier,
 			}

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/vault/helper/pgpkeys"
 )
 
@@ -265,7 +266,7 @@ func testDecryptPasswordAndTest(nProfile, nAccessKey, key string) resource.TestC
 			return fmt.Errorf("Error getting session credentials: %s", err)
 		}
 
-		return resource.Retry(2*time.Minute, func() *resource.RetryError {
+		return tfresource.RetryOnConnectionResetByPeer(2*time.Minute, func() *resource.RetryError {
 			iamAsCreatedUser := iam.New(iamAsCreatedUserSession)
 			newPassword, err := generateIAMPassword(20)
 			if err != nil {

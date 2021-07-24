@@ -92,7 +92,7 @@ func resourceAwsServiceCatalogConstraintCreate(d *schema.ResourceData, meta inte
 	}
 
 	var output *servicecatalog.CreateConstraintOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateConstraint(input)
@@ -189,7 +189,7 @@ func resourceAwsServiceCatalogConstraintUpdate(d *schema.ResourceData, meta inte
 		input.Parameters = aws.String(d.Get("parameters").(string))
 	}
 
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.UpdateConstraint(input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {

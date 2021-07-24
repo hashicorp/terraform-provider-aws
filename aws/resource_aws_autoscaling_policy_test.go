@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
@@ -270,7 +271,7 @@ func testAccCheckScalingPolicyDisappears(conf *autoscaling.ScalingPolicy) resour
 			return err
 		}
 
-		return resource.Retry(10*time.Minute, func() *resource.RetryError {
+		return tfresource.RetryOnConnectionResetByPeer(10*time.Minute, func() *resource.RetryError {
 			params := &autoscaling.DescribePoliciesInput{
 				AutoScalingGroupName: conf.AutoScalingGroupName,
 				PolicyNames:          []*string{conf.PolicyName},

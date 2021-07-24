@@ -309,7 +309,7 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 		CertificateArn: aws.String(d.Id()),
 	}
 
-	return resource.Retry(AcmCertificateDnsValidationAssignmentTimeout, func() *resource.RetryError {
+	return tfresource.RetryOnConnectionResetByPeer(AcmCertificateDnsValidationAssignmentTimeout, func() *resource.RetryError {
 		resp, err := acmconn.DescribeCertificate(params)
 
 		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceNotFoundException) {
@@ -492,7 +492,7 @@ func resourceAwsAcmCertificateDelete(d *schema.ResourceData, meta interface{}) e
 		CertificateArn: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(AcmCertificateCrossServicePropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(AcmCertificateCrossServicePropagationTimeout, func() *resource.RetryError {
 		_, err := acmconn.DeleteCertificate(params)
 
 		if tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceInUseException) {

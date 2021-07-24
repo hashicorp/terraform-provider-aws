@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 type WafRegionalRetryer struct {
@@ -23,7 +24,7 @@ func (t *WafRegionalRetryer) RetryWithToken(f withRegionalTokenFunc) (interface{
 
 	var out interface{}
 	var tokenOut *waf.GetChangeTokenOutput
-	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(15*time.Minute, func() *resource.RetryError {
 		var err error
 
 		tokenOut, err = t.Connection.GetChangeToken(&waf.GetChangeTokenInput{})

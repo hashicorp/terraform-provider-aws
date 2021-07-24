@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsLbTargetGroupAttachment() *schema.Resource {
@@ -68,7 +69,7 @@ func resourceAwsLbAttachmentCreate(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[INFO] Registering Target %s with Target Group %s", d.Get("target_id").(string),
 		d.Get("target_group_arn").(string))
 
-	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(10*time.Minute, func() *resource.RetryError {
 		_, err := elbconn.RegisterTargets(params)
 
 		if isAWSErr(err, "InvalidTarget", "") {

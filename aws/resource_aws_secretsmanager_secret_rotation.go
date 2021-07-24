@@ -68,7 +68,7 @@ func resourceAwsSecretsManagerSecretRotationCreate(d *schema.ResourceData, meta 
 		}
 
 		log.Printf("[DEBUG] Enabling Secrets Manager Secret rotation: %s", input)
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 			output, err := conn.RotateSecret(input)
 			if err != nil {
 				// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
@@ -104,7 +104,7 @@ func resourceAwsSecretsManagerSecretRotationRead(d *schema.ResourceData, meta in
 
 	var output *secretsmanager.DescribeSecretOutput
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.DescribeSecret(input)
@@ -167,7 +167,7 @@ func resourceAwsSecretsManagerSecretRotationUpdate(d *schema.ResourceData, meta 
 			}
 
 			log.Printf("[DEBUG] Enabling Secrets Manager Secret Rotation: %s", input)
-			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 				_, err := conn.RotateSecret(input)
 				if err != nil {
 					// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.

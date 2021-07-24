@@ -210,7 +210,7 @@ func resourceAwsNetworkAclRuleRead(d *schema.ResourceData, meta interface{}) err
 
 	var resp *ec2.NetworkAclEntry
 
-	err := resource.Retry(waiter.NetworkAclEntryPropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.NetworkAclEntryPropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = finder.NetworkAclEntry(conn, networkAclID, egress, ruleNumber)

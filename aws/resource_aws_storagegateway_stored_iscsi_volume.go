@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsStorageGatewayStoredIscsiVolume() *schema.Resource {
@@ -256,7 +257,7 @@ func resourceAwsStorageGatewayStoredIscsiVolumeDelete(d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Deleting Storage Gateway Stored iSCSI volume: %s", input)
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(2*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteVolume(input)
 		if err != nil {
 			if isAWSErr(err, storagegateway.ErrorCodeVolumeNotFound, "") {

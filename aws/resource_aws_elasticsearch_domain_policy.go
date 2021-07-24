@@ -10,6 +10,7 @@ import (
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsElasticSearchDomainPolicy() *schema.Resource {
@@ -72,7 +73,7 @@ func resourceAwsElasticSearchDomainPolicyUpsert(d *schema.ResourceData, meta int
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	}
 	var out *elasticsearch.DescribeElasticsearchDomainOutput
-	err = resource.Retry(50*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(50*time.Minute, func() *resource.RetryError {
 		var err error
 		out, err = conn.DescribeElasticsearchDomain(input)
 		if err != nil {
@@ -115,7 +116,7 @@ func resourceAwsElasticSearchDomainPolicyDelete(d *schema.ResourceData, meta int
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	}
 	var out *elasticsearch.DescribeElasticsearchDomainOutput
-	err = resource.Retry(60*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(60*time.Minute, func() *resource.RetryError {
 		var err error
 		out, err = conn.DescribeElasticsearchDomain(input)
 		if err != nil {

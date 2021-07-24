@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsCloudFrontDistribution() *schema.Resource {
@@ -810,7 +811,7 @@ func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interf
 
 	var resp *cloudfront.CreateDistributionWithTagsOutput
 	// Handle eventual consistency issues
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateDistributionWithTags(params)
 
@@ -915,7 +916,7 @@ func resourceAwsCloudFrontDistributionUpdate(d *schema.ResourceData, meta interf
 	}
 
 	// Handle eventual consistency issues
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.UpdateDistribution(params)
 
 		// ACM and IAM certificate eventual consistency
@@ -1083,7 +1084,7 @@ func resourceAwsCloudFrontDistributionDelete(d *schema.ResourceData, meta interf
 		// Occasionally the DeleteDistribution call will return this error as well, in which retries will succeed:
 		//   * PreconditionFailed: The request failed because it didn't meet the preconditions in one or more request-header fields
 		if isAWSErr(err, cloudfront.ErrCodeDistributionNotDisabled, "") || isAWSErr(err, cloudfront.ErrCodePreconditionFailed, "") {
-			err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+			err = tfresource.RetryOnConnectionResetByPeer(2*time.Minute, func() *resource.RetryError {
 				_, err := conn.DeleteDistribution(deleteDistributionInput)
 
 				if isAWSErr(err, cloudfront.ErrCodeDistributionNotDisabled, "") {

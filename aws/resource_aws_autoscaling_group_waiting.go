@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 // waitForASGCapacityTimeout gathers the current numbers of healthy instances
@@ -35,7 +36,7 @@ func waitForASGCapacity(
 
 	log.Printf("[DEBUG] Waiting on %s for capacity...", d.Id())
 
-	err = resource.Retry(wait, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(wait, func() *resource.RetryError {
 		g, err := getAwsAutoscalingGroup(d.Id(), meta.(*AWSClient).autoscalingconn)
 		if err != nil {
 			return resource.NonRetryableError(err)

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsMediaStoreContainer() *schema.Resource {
@@ -158,7 +159,7 @@ func resourceAwsMediaStoreContainerDelete(d *schema.ResourceData, meta interface
 	dcinput := &mediastore.DescribeContainerInput{
 		ContainerName: aws.String(d.Id()),
 	}
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeContainer(dcinput)
 		if err != nil {
 			if isAWSErr(err, mediastore.ErrCodeContainerNotFoundException, "") {

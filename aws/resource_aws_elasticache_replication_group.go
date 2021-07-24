@@ -737,7 +737,7 @@ func disassociateElasticacheReplicationGroup(conn *elasticache.ElastiCache, glob
 		ReplicationGroupId:       aws.String(id),
 		ReplicationGroupRegion:   aws.String(region),
 	}
-	err := resource.Retry(readyTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(readyTimeout, func() *resource.RetryError {
 		_, err := conn.DisassociateGlobalReplicationGroup(input)
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeGlobalReplicationGroupNotFoundFault) {
 			return nil
@@ -783,7 +783,7 @@ func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elastica
 	}
 
 	// 10 minutes should give any creating/deleting cache clusters or snapshots time to complete
-	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteReplicationGroup(input)
 		if isAWSErr(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
 			return nil

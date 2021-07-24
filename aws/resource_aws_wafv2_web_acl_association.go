@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -59,7 +60,7 @@ func resourceAwsWafv2WebACLAssociationCreate(d *schema.ResourceData, meta interf
 		WebACLArn:   aws.String(webAclArn),
 	}
 
-	err := resource.Retry(Wafv2WebACLAssociationCreateTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(Wafv2WebACLAssociationCreateTimeout, func() *resource.RetryError {
 		var err error
 		_, err = conn.AssociateWebACL(params)
 		if err != nil {

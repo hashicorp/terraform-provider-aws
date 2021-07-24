@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsConfigDeliveryChannel() *schema.Resource {
@@ -93,7 +94,7 @@ func resourceAwsConfigDeliveryChannelPut(d *schema.ResourceData, meta interface{
 
 	input := configservice.PutDeliveryChannelInput{DeliveryChannel: &channel}
 
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutDeliveryChannel(&input)
 		if err == nil {
 			return nil
@@ -166,7 +167,7 @@ func resourceAwsConfigDeliveryChannelDelete(d *schema.ResourceData, meta interfa
 		DeliveryChannelName: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(30*time.Second, func() *resource.RetryError {
 		_, err := conn.DeleteDeliveryChannel(&input)
 		if err != nil {
 			if isAWSErr(err, configservice.ErrCodeLastDeliveryChannelDeleteFailedException, "there is a running configuration recorder") {

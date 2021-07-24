@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsGuardDutyInviteAccepter() *schema.Resource {
@@ -49,7 +50,7 @@ func resourceAwsGuardDutyInviteAccepterCreate(d *schema.ResourceData, meta inter
 
 	listInvitationsInput := &guardduty.ListInvitationsInput{}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		log.Printf("[DEBUG] Listing GuardDuty Invitations: %s", listInvitationsInput)
 		err := conn.ListInvitationsPages(listInvitationsInput, func(page *guardduty.ListInvitationsOutput, lastPage bool) bool {
 			for _, invitation := range page.Invitations {

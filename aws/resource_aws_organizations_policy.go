@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsOrganizationsPolicy() *schema.Resource {
@@ -78,7 +79,7 @@ func resourceAwsOrganizationsPolicyCreate(ctx context.Context, d *schema.Resourc
 
 	var err error
 	var resp *organizations.CreatePolicyOutput
-	err = resource.Retry(4*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(4*time.Minute, func() *resource.RetryError {
 		resp, err = conn.CreatePolicy(input)
 
 		if err != nil {

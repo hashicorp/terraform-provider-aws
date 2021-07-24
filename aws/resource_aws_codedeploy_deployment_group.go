@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
@@ -549,7 +550,7 @@ func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta int
 
 	var resp *codedeploy.CreateDeploymentGroupOutput
 	var err error
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 		resp, err = conn.CreateDeploymentGroup(&input)
 
 		if isAWSErr(err, codedeploy.ErrCodeInvalidRoleException, "") {
@@ -778,7 +779,7 @@ func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta int
 		log.Printf("[DEBUG] Updating CodeDeploy DeploymentGroup %s", d.Id())
 
 		var err error
-		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+		err = tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 			_, err = conn.UpdateDeploymentGroup(&input)
 
 			if isAWSErr(err, codedeploy.ErrCodeInvalidRoleException, "") {

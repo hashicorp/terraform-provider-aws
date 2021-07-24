@@ -133,7 +133,7 @@ func {{ . | Title }}CreateTags(conn {{ . | ClientType }}, identifier string{{ if
 
 	{{- if . | RetryCreationOnResourceNotFound }}
 
-	err := resource.Retry(EventualConsistencyTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(EventualConsistencyTimeout, func() *resource.RetryError {
 		_, err := conn.{{ . | TagFunction }}(input)
 
 		{{- if . | ResourceNotFoundErrorCodeContains }}

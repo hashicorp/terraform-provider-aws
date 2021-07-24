@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsOrganizationsPolicyAttachment() *schema.Resource {
@@ -49,7 +50,7 @@ func resourceAwsOrganizationsPolicyAttachmentCreate(d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Creating Organizations Policy Attachment: %s", input)
 
-	err := resource.Retry(4*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(4*time.Minute, func() *resource.RetryError {
 		_, err := conn.AttachPolicy(input)
 
 		if err != nil {

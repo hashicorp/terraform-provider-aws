@@ -146,7 +146,7 @@ func resourceAwsS3BucketAnalyticsConfigurationPut(d *schema.ResourceData, meta i
 		AnalyticsConfiguration: analyticsConfiguration,
 	}
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		_, err := s3conn.PutBucketAnalyticsConfiguration(input)
 
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
@@ -435,7 +435,7 @@ func waitForDeleteS3BucketAnalyticsConfiguration(conn *s3.S3, bucket, name strin
 		Id:     aws.String(name),
 	}
 
-	err := resource.Retry(timeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(timeout, func() *resource.RetryError {
 		output, err := conn.GetBucketAnalyticsConfiguration(input)
 
 		if err != nil {

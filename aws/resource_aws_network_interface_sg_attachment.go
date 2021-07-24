@@ -92,7 +92,7 @@ func resourceAwsNetworkInterfaceSGAttachmentRead(d *schema.ResourceData, meta in
 
 	var groupIdentifier *ec2.GroupIdentifier
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		groupIdentifier, err = finder.NetworkInterfaceSecurityGroup(conn, interfaceID, sgID)

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsWafRegionalWebAclAssociation() *schema.Resource {
@@ -52,7 +53,7 @@ func resourceAwsWafRegionalWebAclAssociationCreate(d *schema.ResourceData, meta 
 	// create association and wait on retryable error
 	// no response body
 	var err error
-	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(2*time.Minute, func() *resource.RetryError {
 		_, err = conn.AssociateWebACL(params)
 		if err != nil {
 			if isAWSErr(err, wafregional.ErrCodeWAFUnavailableEntityException, "") {

@@ -333,7 +333,7 @@ func resourceAwsAppmeshGatewayRouteRead(d *schema.ResourceData, meta interface{}
 
 	var gatewayRoute *appmesh.GatewayRouteData
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		gatewayRoute, err = finder.GatewayRoute(conn, d.Get("mesh_name").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))

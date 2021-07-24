@@ -211,7 +211,7 @@ func resourceAwsS3ControlBucketDelete(d *schema.ResourceData, meta interface{}) 
 	// S3 Control Bucket have a backend state which cannot be checked so this error
 	// can occur on deletion:
 	//   InvalidBucketState: Bucket is in an invalid state
-	err = resource.Retry(s3controlBucketStatePropagationTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(s3controlBucketStatePropagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteBucket(input)
 
 		if tfawserr.ErrCodeEquals(err, "InvalidBucketState") {

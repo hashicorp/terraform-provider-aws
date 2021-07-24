@@ -597,7 +597,7 @@ func testAccCheckLambdaPermissionExists(n string, statement *LambdaPolicyStateme
 
 		// IAM is eventually consistent
 		var foundStatement *LambdaPolicyStatement
-		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 			var err error
 			foundStatement, err = lambdaPermissionExists(rs, conn)
 			if err != nil {
@@ -633,7 +633,7 @@ func testAccCheckAWSLambdaPermissionDestroy(s *terraform.State) error {
 		}
 
 		// IAM is eventually consistent
-		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 			err := isLambdaPermissionGone(rs, conn)
 			if err != nil {
 				if !strings.HasPrefix(err.Error(), "Error unmarshalling Lambda policy") {

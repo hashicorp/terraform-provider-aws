@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 // https://docs.aws.amazon.com/iot/latest/apireference/API_CreateThingType.html
@@ -185,7 +186,7 @@ func resourceAwsIotThingTypeDelete(d *schema.ResourceData, meta interface{}) err
 	}
 	log.Printf("[DEBUG] Deleting IoT Thing Type: %s", deleteParams)
 
-	err = resource.Retry(6*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(6*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteThingType(deleteParams)
 
 		if err != nil {

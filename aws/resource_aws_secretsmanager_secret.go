@@ -181,7 +181,7 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 
 	// Retry for secret recreation after deletion
 	var output *secretsmanager.CreateSecretOutput
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateSecret(input)
 		// Temporarily retry on these errors to support immediate secret recreation:
@@ -210,7 +210,7 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 			SecretId:       aws.String(d.Id()),
 		}
 
-		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			var err error
 			_, err = conn.PutResourcePolicy(input)
 			if isAWSErr(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
@@ -238,7 +238,7 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 		}
 
 		log.Printf("[DEBUG] Enabling Secrets Manager Secret rotation: %s", input)
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.RotateSecret(input)
 			if err != nil {
 				// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
@@ -271,7 +271,7 @@ func resourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interface{
 
 	var output *secretsmanager.DescribeSecretOutput
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.DescribeSecret(input)
@@ -408,7 +408,7 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 			}
 
 			log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %#v", input)
-			err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+			err = tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 				var err error
 				_, err = conn.PutResourcePolicy(input)
 				if isAWSErr(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
@@ -448,7 +448,7 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 			}
 
 			log.Printf("[DEBUG] Enabling Secrets Manager Secret rotation: %s", input)
-			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 				_, err := conn.RotateSecret(input)
 				if err != nil {
 					// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.

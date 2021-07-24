@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsElasticBeanstalkApplication() *schema.Resource {
@@ -220,7 +221,7 @@ func resourceAwsElasticBeanstalkApplicationRead(d *schema.ResourceData, meta int
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	var app *elasticbeanstalk.ApplicationDescription
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(30*time.Second, func() *resource.RetryError {
 		var err error
 		app, err = getBeanstalkApplication(d.Id(), conn)
 		if err != nil {
@@ -288,7 +289,7 @@ func resourceAwsElasticBeanstalkApplicationDelete(d *schema.ResourceData, meta i
 	}
 
 	var app *elasticbeanstalk.ApplicationDescription
-	err = resource.Retry(10*time.Second, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(10*time.Second, func() *resource.RetryError {
 		app, err = getBeanstalkApplication(d.Id(), meta.(*AWSClient).elasticbeanstalkconn)
 		if err != nil {
 			return resource.NonRetryableError(err)

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsGameliftBuild() *schema.Resource {
@@ -93,7 +94,7 @@ func resourceAwsGameliftBuildCreate(d *schema.ResourceData, meta interface{}) er
 	}
 	log.Printf("[INFO] Creating Gamelift Build: %s", input)
 	var out *gamelift.CreateBuildOutput
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(30*time.Second, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateBuild(&input)
 		if err != nil {

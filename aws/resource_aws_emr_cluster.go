@@ -21,6 +21,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsEMRCluster() *schema.Resource {
@@ -921,7 +922,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] EMR Cluster create options: %s", params)
 
 	var resp *emr.RunJobFlowOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.RunJobFlow(params)
 		if err != nil {
@@ -1225,7 +1226,7 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 			// RemoveAutoScalingPolicy seems to have eventual consistency.
 			// Retry reading Instance Group configuration until the policy is removed.
-			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 				autoscalingPolicy, err := getEmrCoreInstanceGroupAutoscalingPolicy(conn, d.Id())
 
 				if err != nil {
@@ -1375,7 +1376,7 @@ func resourceAwsEMRClusterDelete(d *schema.ResourceData, meta interface{}) error
 	}
 	var resp *emr.ListInstancesOutput
 	var count int
-	err = resource.Retry(20*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(20*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = conn.ListInstances(input)
 

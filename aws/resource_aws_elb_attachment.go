@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsElbAttachment() *schema.Resource {
@@ -46,7 +47,7 @@ func resourceAwsElbAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[INFO] registering instance %s with ELB %s", instance, elbName)
 
-	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(10*time.Minute, func() *resource.RetryError {
 		_, err := elbconn.RegisterInstancesWithLoadBalancer(&registerInstancesOpts)
 
 		if isAWSErr(err, "InvalidTarget", "") {

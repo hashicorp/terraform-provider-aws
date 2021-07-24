@@ -121,7 +121,7 @@ func resourceAwsAppautoscalingScheduledActionPut(d *schema.ResourceData, meta in
 	}
 
 	if needsPut {
-		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(5*time.Minute, func() *resource.RetryError {
 			_, err := conn.PutScheduledAction(input)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeObjectNotFoundException) {

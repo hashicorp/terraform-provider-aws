@@ -93,7 +93,7 @@ func resourceAwsS3AccountPublicAccessBlockRead(d *schema.ResourceData, meta inte
 
 	// Retry for eventual consistency on creation
 	var output *s3control.GetPublicAccessBlockOutput
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.GetPublicAccessBlock(input)
 

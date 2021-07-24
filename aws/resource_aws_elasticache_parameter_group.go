@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsElasticacheParameterGroup() *schema.Resource {
@@ -291,7 +292,7 @@ func resourceAwsElasticacheParameterGroupDelete(d *schema.ResourceData, meta int
 	deleteOpts := elasticache.DeleteCacheParameterGroupInput{
 		CacheParameterGroupName: aws.String(d.Id()),
 	}
-	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(3*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteCacheParameterGroup(&deleteOpts)
 		if err != nil {
 			awsErr, ok := err.(awserr.Error)
@@ -375,7 +376,7 @@ func resourceAwsElastiCacheResetParameterGroup(conn *elasticache.ElastiCache, na
 		CacheParameterGroupName: aws.String(name),
 		ParameterNameValues:     parameters,
 	}
-	return resource.Retry(30*time.Second, func() *resource.RetryError {
+	return tfresource.RetryOnConnectionResetByPeer(30*time.Second, func() *resource.RetryError {
 		_, err := conn.ResetCacheParameterGroup(&input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidCacheParameterGroupStateFault, " has pending changes") {

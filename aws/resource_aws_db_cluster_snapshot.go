@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const rdsDbClusterSnapshotCreateTimeout = 2 * time.Minute
@@ -121,7 +122,7 @@ func resourceAwsDbClusterSnapshotCreate(d *schema.ResourceData, meta interface{}
 		Tags:                        tags.IgnoreAws().RdsTags(),
 	}
 
-	err := resource.Retry(rdsDbClusterSnapshotCreateTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(rdsDbClusterSnapshotCreateTimeout, func() *resource.RetryError {
 		_, err := conn.CreateDBClusterSnapshot(params)
 		if err != nil {
 			if isAWSErr(err, rds.ErrCodeInvalidDBClusterStateFault, "") {

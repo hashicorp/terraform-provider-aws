@@ -115,7 +115,7 @@ func resourceAwsServiceCatalogPortfolioShareCreate(d *schema.ResourceData, meta 
 	}
 
 	var output *servicecatalog.CreatePortfolioShareOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreatePortfolioShare(input)
@@ -220,7 +220,7 @@ func resourceAwsServiceCatalogPortfolioShareUpdate(d *schema.ResourceData, meta 
 			input.ShareTagOptions = aws.Bool(v.(bool))
 		}
 
-		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+		err := tfresource.RetryOnConnectionResetByPeer(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.UpdatePortfolioShare(input)
 
 			if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {

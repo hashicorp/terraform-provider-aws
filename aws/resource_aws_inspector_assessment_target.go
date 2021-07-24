@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAWSInspectorAssessmentTarget() *schema.Resource {
@@ -107,7 +108,7 @@ func resourceAwsInspectorAssessmentTargetDelete(d *schema.ResourceData, meta int
 	input := &inspector.DeleteAssessmentTargetInput{
 		AssessmentTargetArn: aws.String(d.Id()),
 	}
-	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(60*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteAssessmentTarget(input)
 
 		if isAWSErr(err, inspector.ErrCodeAssessmentRunInProgressException, "") {

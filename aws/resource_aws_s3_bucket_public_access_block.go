@@ -74,7 +74,7 @@ func resourceAwsS3BucketPublicAccessBlockCreate(d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] S3 bucket: %s, public access block: %v", bucket, input.PublicAccessBlockConfiguration)
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 		_, err := s3conn.PutPublicAccessBlock(input)
 
 		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
@@ -107,7 +107,7 @@ func resourceAwsS3BucketPublicAccessBlockRead(d *schema.ResourceData, meta inter
 
 	// Retry for eventual consistency on creation
 	var output *s3.GetPublicAccessBlockOutput
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = s3conn.GetPublicAccessBlock(input)
 

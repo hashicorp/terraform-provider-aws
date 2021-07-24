@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsCloudWatchLogStream() *schema.Resource {
@@ -69,7 +70,7 @@ func resourceAwsCloudWatchLogStreamRead(d *schema.ResourceData, meta interface{}
 	var ls *cloudwatchlogs.LogStream
 	var exists bool
 
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryOnConnectionResetByPeer(2*time.Minute, func() *resource.RetryError {
 		var err error
 		ls, exists, err = lookupCloudWatchLogStream(conn, d.Id(), group, nil)
 		if err != nil {

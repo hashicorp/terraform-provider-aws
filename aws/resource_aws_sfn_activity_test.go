@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSSfnActivity_basic(t *testing.T) {
@@ -114,7 +115,7 @@ func testAccCheckAWSSfnActivityDestroy(s *terraform.State) error {
 		}
 
 		// Retrying as Read after Delete is not always consistent
-		retryErr := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		retryErr := tfresource.RetryOnConnectionResetByPeer(1*time.Minute, func() *resource.RetryError {
 			var err error
 
 			_, err = conn.DescribeActivity(&sfn.DescribeActivityInput{

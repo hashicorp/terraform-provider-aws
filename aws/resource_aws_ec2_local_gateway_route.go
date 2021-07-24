@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -78,7 +79,7 @@ func resourceAwsEc2LocalGatewayRouteRead(d *schema.ResourceData, meta interface{
 	}
 
 	var localGatewayRoute *ec2.LocalGatewayRoute
-	err = resource.Retry(ec2LocalGatewayRouteEventualConsistencyTimeout, func() *resource.RetryError {
+	err = tfresource.RetryOnConnectionResetByPeer(ec2LocalGatewayRouteEventualConsistencyTimeout, func() *resource.RetryError {
 		var err error
 		localGatewayRoute, err = getEc2LocalGatewayRoute(conn, localGatewayRouteTableID, destination)
 
