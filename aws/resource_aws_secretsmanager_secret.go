@@ -99,7 +99,6 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 						"region": {
 							Type:     schema.TypeString,
 							Required: true,
-							Computed: true,
 						},
 						"status": {
 							Type:     schema.TypeString,
