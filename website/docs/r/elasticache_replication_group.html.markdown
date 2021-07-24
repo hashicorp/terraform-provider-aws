@@ -175,6 +175,7 @@ The following arguments are optional:
 * `subnet_group_name` - (Optional) The name of the cache subnet group to be used for the replication group.
 * `tags` - (Optional) A map of tags to assign to the resource. Adding tags to this resource will add or overwrite any existing tags on the clusters in the replication group and not to the group itself. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transit_encryption_enabled` - (Optional) Whether to enable encryption in transit.
+* `user_group_ids` - (Optional) A list of User Group Ids to associate to the replication group.
 
 ### cluster_mode
 

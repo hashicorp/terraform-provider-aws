@@ -2091,6 +2091,20 @@ resource "aws_security_group" "test" {
   }
 }
 
+resource "aws_elasticache_user" "test" {
+  user_id       = %[1]q
+  user_name     = "default"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
+}
+
+resource "aws_elasticache_user_group" "test" {
+  user_group_id = %[1]q
+  engine        = "REDIS"
+  user_ids      = [aws_elasticache_user.test.user_id]
+}
+
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "test description"
@@ -2101,6 +2115,7 @@ resource "aws_elasticache_replication_group" "test" {
   security_group_ids            = [aws_security_group.test.id]
   availability_zones            = [data.aws_availability_zones.available.names[0]]
   auto_minor_version_upgrade    = false
+	user_group_ids                = [aws_elasticache_user_group.test.id]
 }
 `, rName)
 }

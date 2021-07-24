@@ -280,6 +280,15 @@ func ResourceReplicationGroup() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
+			"user_group_ids": {
+				Type:       schema.TypeSet,
+				ConfigMode: 0,
+				Optional:   true,
+				Default:    nil,
+				Elem:       &schema.Schema{Type: schema.TypeString},
+				MaxItems:   1, //at the moment the aws sdk only supports 1 user group id to be associated with a cluster
+				Set:        schema.HashString,
+			},
 			"kms_key_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -435,6 +444,11 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 	if cacheClusters, ok := d.GetOk("number_cache_clusters"); ok {
 		params.NumCacheClusters = aws.Int64(int64(cacheClusters.(int)))
 	}
+
+	if userGroupIds := d.Get("user_group_ids").(*schema.Set); userGroupIds.Len() > 0 {
+		params.UserGroupIds = expandStringSet(userGroupIds)
+	}
+
 	resp, err := conn.CreateReplicationGroup(params)
 	if err != nil {
 		return fmt.Errorf("error creating ElastiCache Replication Group (%s): %w", d.Get("replication_group_id").(string), err)
@@ -580,6 +594,8 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 			d.Set("reader_endpoint_address", rgp.NodeGroups[0].ReaderEndpoint.Address)
 		}
 
+		d.Set("user_group_ids", rgp.UserGroupIds)
+
 		d.Set("auto_minor_version_upgrade", c.AutoMinorVersionUpgrade)
 		d.Set("at_rest_encryption_enabled", c.AtRestEncryptionEnabled)
 		d.Set("transit_encryption_enabled", c.TransitEncryptionEnabled)
@@ -686,6 +702,25 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange("node_type") {
 		params.CacheNodeType = aws.String(d.Get("node_type").(string))
 		requestUpdate = true
+	}
+
+	if d.HasChange("user_group_ids") {
+		old, new := d.GetChange("user_group_ids")
+		newSet := new.(*schema.Set)
+		oldSet := old.(*schema.Set)
+		add := newSet.Difference(oldSet)
+		remove := oldSet.Difference(newSet)
+
+		if add.Len() > 0 {
+			params.UserGroupIdsToAdd = expandStringSet(add)
+			requestUpdate = true
+		}
+
+		if remove.Len() > 0 {
+			params.UserGroupIdsToRemove = expandStringSet(remove)
+			requestUpdate = true
+		}
+
 	}
 
 	if requestUpdate {
