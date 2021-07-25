@@ -159,7 +159,7 @@ func testAccAWSBudgetsBudgetActionExists(resourceName string, config *budgets.Ac
 		output, err := finder.ActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
 
 		if err != nil {
-			return fmt.Errorf("Describe budget action error: %v", err)
+			return err
 		}
 
 		*config = *output

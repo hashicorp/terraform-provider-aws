@@ -9,18 +9,27 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/budgets"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	tfbudgets "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsBudgetsBudget() *schema.Resource {
 	return &schema.Resource{
+		Create: resourceAwsBudgetsBudgetCreate,
+		Read:   resourceAwsBudgetsBudgetRead,
+		Update: resourceAwsBudgetsBudgetUpdate,
+		Delete: resourceAwsBudgetsBudgetDelete,
+
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"account_id": {
 				Type:         schema.TypeString,
 				Computed:     true,
@@ -28,32 +37,48 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateAwsAccountId,
 			},
-			"name": {
-				Type:          schema.TypeString,
-				Computed:      true,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-			},
-			"name_prefix": {
+
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
-				Optional: true,
-				ForceNew: true,
 			},
+
 			"budget_type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(budgets.BudgetType_Values(), false),
 			},
-			"limit_amount": {
-				Type:     schema.TypeString,
-				Required: true,
+
+			"cost_filters": {
+				Type:          schema.TypeMap,
+				Optional:      true,
+				Computed:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"cost_filter"},
 			},
-			"limit_unit": {
-				Type:     schema.TypeString,
-				Required: true,
+
+			"cost_filter": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"values": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+				ConflictsWith: []string{"cost_filters"},
 			},
+
 			"cost_types": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -119,46 +144,33 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 					},
 				},
 			},
-			"time_period_start": {
+
+			"limit_amount": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"time_period_end": {
+
+			"limit_unit": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "2087-06-15_00:00",
+				Required: true,
 			},
-			"time_unit": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(budgets.TimeUnit_Values(), false),
-			},
-			"cost_filters": {
-				Type:          schema.TypeMap,
+
+			"name": {
+				Type:          schema.TypeString,
 				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"cost_filter"},
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name_prefix"},
 			},
-			"cost_filter": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"values": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-				ConflictsWith: []string{"cost_filters"},
+
+			"name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
 			},
+
 			"notification": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -168,15 +180,6 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(budgets.ComparisonOperator_Values(), false),
-						},
-						"threshold": {
-							Type:     schema.TypeFloat,
-							Required: true,
-						},
-						"threshold_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(budgets.ThresholdType_Values(), false),
 						},
 						"notification_type": {
 							Type:         schema.TypeString,
@@ -196,41 +199,52 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 								ValidateFunc: validateArn,
 							},
 						},
+						"threshold": {
+							Type:     schema.TypeFloat,
+							Required: true,
+						},
+						"threshold_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(budgets.ThresholdType_Values(), false),
+						},
 					},
 				},
 			},
-		},
-		Create: resourceAwsBudgetsBudgetCreate,
-		Read:   resourceAwsBudgetsBudgetRead,
-		Update: resourceAwsBudgetsBudgetUpdate,
-		Delete: resourceAwsBudgetsBudgetDelete,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+
+			"time_period_end": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "2087-06-15_00:00",
+			},
+
+			"time_period_start": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+
+			"time_unit": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(budgets.TimeUnit_Values(), false),
+			},
 		},
 	}
 }
 
 func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).budgetconn
+
 	budget, err := expandBudgetsBudgetUnmarshal(d)
 	if err != nil {
 		return fmt.Errorf("failed unmarshalling budget: %v", err)
 	}
 
-	if v, ok := d.GetOk("name"); ok {
-		budget.BudgetName = aws.String(v.(string))
+	name := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
+	budget.BudgetName = aws.String(name)
 
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		budget.BudgetName = aws.String(resource.PrefixedUniqueId(v.(string)))
-
-	} else {
-		budget.BudgetName = aws.String(resource.UniqueId())
-	}
-
-	conn := meta.(*AWSClient).budgetconn
-	var accountID string
-	if v, ok := d.GetOk("account_id"); ok {
-		accountID = v.(string)
-	} else {
+	accountID := d.Get("account_id").(string)
+	if accountID == "" {
 		accountID = meta.(*AWSClient).accountid
 	}
 
@@ -238,8 +252,9 @@ func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) er
 		AccountId: aws.String(accountID),
 		Budget:    budget,
 	})
+
 	if err != nil {
-		return fmt.Errorf("create budget failed: %v", err)
+		return fmt.Errorf("error creating Budget (%s): %w", name, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", accountID, aws.StringValue(budget.BudgetName)))
@@ -254,6 +269,183 @@ func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	return resourceAwsBudgetsBudgetRead(d, meta)
+}
+
+func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).budgetconn
+
+	accountID, budgetName, err := tfbudgets.BudgetParseResourceID(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	budget, err := finder.BudgetByAccountIDAndBudgetName(conn, accountID, budgetName)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Budget (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading Budget (%s): %w", d.Id(), err)
+	}
+
+	d.Set("account_id", accountID)
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "budgetservice",
+		AccountID: accountID,
+		Resource:  fmt.Sprintf("budget/%s", budgetName),
+	}
+	d.Set("arn", arn.String())
+	d.Set("budget_type", budget.BudgetType)
+
+	// `cost_filters` should be removed in future releases
+	if err := d.Set("cost_filter", convertCostFiltersToMap(budget.CostFilters)); err != nil {
+		return fmt.Errorf("error setting cost_filter: %w", err)
+	}
+	if err := d.Set("cost_filters", convertCostFiltersToStringMap(budget.CostFilters)); err != nil {
+		return fmt.Errorf("error setting cost_filters: %w", err)
+	}
+
+	if err := d.Set("cost_types", flattenBudgetsCostTypes(budget.CostTypes)); err != nil {
+		return fmt.Errorf("error setting cost_types: %w", err)
+	}
+
+	if budget.BudgetLimit != nil {
+		d.Set("limit_amount", budget.BudgetLimit.Amount)
+		d.Set("limit_unit", budget.BudgetLimit.Unit)
+	}
+
+	d.Set("name", budget.BudgetName)
+	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(budget.BudgetName)))
+
+	if budget.TimePeriod != nil {
+		d.Set("time_period_end", aws.TimeValue(budget.TimePeriod.End).Format("2006-01-02_15:04"))
+		d.Set("time_period_start", aws.TimeValue(budget.TimePeriod.Start).Format("2006-01-02_15:04"))
+	}
+
+	d.Set("time_unit", budget.TimeUnit)
+
+	notifications, err := finder.NotificationsByAccountIDAndBudgetName(conn, accountID, budgetName)
+
+	if tfresource.NotFound(err) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading Budget (%s) notifications: %w", d.Id(), err)
+	}
+
+	var tfList []interface{}
+
+	for _, notification := range notifications {
+		tfMap := make(map[string]interface{})
+
+		tfMap["comparison_operator"] = aws.StringValue(notification.ComparisonOperator)
+		tfMap["threshold"] = aws.Float64Value(notification.Threshold)
+		tfMap["notification_type"] = aws.StringValue(notification.NotificationType)
+
+		if notification.ThresholdType == nil {
+			// The AWS API doesn't seem to return a ThresholdType if it's set to PERCENTAGE
+			// Set it manually to make behavior more predictable
+			tfMap["threshold_type"] = budgets.ThresholdTypePercentage
+		} else {
+			tfMap["threshold_type"] = aws.StringValue(notification.ThresholdType)
+		}
+
+		subscribers, err := finder.SubscribersByAccountIDBudgetNameAndNotification(conn, accountID, budgetName, notification)
+
+		if tfresource.NotFound(err) {
+			tfList = append(tfList, tfMap)
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("error reading Budget (%s) subscribers: %w", d.Id(), err)
+		}
+
+		var emailSubscribers []string
+		var snsSubscribers []string
+
+		for _, subscriber := range subscribers {
+			if aws.StringValue(subscriber.SubscriptionType) == budgets.SubscriptionTypeSns {
+				snsSubscribers = append(snsSubscribers, aws.StringValue(subscriber.Address))
+			} else if aws.StringValue(subscriber.SubscriptionType) == budgets.SubscriptionTypeEmail {
+				emailSubscribers = append(emailSubscribers, aws.StringValue(subscriber.Address))
+			}
+		}
+
+		tfMap["subscriber_email_addresses"] = emailSubscribers
+		tfMap["subscriber_sns_topic_arns"] = snsSubscribers
+
+		tfList = append(tfList, tfMap)
+	}
+
+	if err := d.Set("notification", tfList); err != nil {
+		return fmt.Errorf("error setting notification: %w", err)
+	}
+
+	return nil
+}
+
+func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).budgetconn
+
+	accountID, _, err := tfbudgets.BudgetParseResourceID(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	budget, err := expandBudgetsBudgetUnmarshal(d)
+	if err != nil {
+		return fmt.Errorf("could not create budget: %v", err)
+	}
+
+	_, err = conn.UpdateBudget(&budgets.UpdateBudgetInput{
+		AccountId: aws.String(accountID),
+		NewBudget: budget,
+	})
+	if err != nil {
+		return fmt.Errorf("update budget failed: %v", err)
+	}
+
+	err = resourceAwsBudgetsBudgetNotificationsUpdate(d, meta)
+
+	if err != nil {
+		return fmt.Errorf("update budget notification failed: %v", err)
+	}
+
+	return resourceAwsBudgetsBudgetRead(d, meta)
+}
+
+func resourceAwsBudgetsBudgetDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).budgetconn
+
+	accountID, budgetName, err := tfbudgets.BudgetParseResourceID(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[DEBUG] Deleting Budget: %s", d.Id())
+	_, err = conn.DeleteBudget(&budgets.DeleteBudgetInput{
+		AccountId:  aws.String(accountID),
+		BudgetName: aws.String(budgetName),
+	})
+
+	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting Budget (%s): %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func resourceAwsBudgetsBudgetNotificationsCreate(notifications []*budgets.Notification, subscribers [][]*budgets.Subscriber, budgetName string, accountID string, meta interface{}) error {
@@ -279,217 +471,10 @@ func resourceAwsBudgetsBudgetNotificationsCreate(notifications []*budgets.Notifi
 	return nil
 }
 
-func expandBudgetNotificationsUnmarshal(notificationsRaw []interface{}) ([]*budgets.Notification, [][]*budgets.Subscriber) {
-
-	notifications := make([]*budgets.Notification, len(notificationsRaw))
-	subscribersForNotifications := make([][]*budgets.Subscriber, len(notificationsRaw))
-	for i, notificationRaw := range notificationsRaw {
-		notificationRaw := notificationRaw.(map[string]interface{})
-		comparisonOperator := notificationRaw["comparison_operator"].(string)
-		threshold := notificationRaw["threshold"].(float64)
-		thresholdType := notificationRaw["threshold_type"].(string)
-		notificationType := notificationRaw["notification_type"].(string)
-
-		notifications[i] = &budgets.Notification{
-			ComparisonOperator: aws.String(comparisonOperator),
-			Threshold:          aws.Float64(threshold),
-			ThresholdType:      aws.String(thresholdType),
-			NotificationType:   aws.String(notificationType),
-		}
-
-		emailSubscribers := expandBudgetSubscribers(notificationRaw["subscriber_email_addresses"], budgets.SubscriptionTypeEmail)
-		snsSubscribers := expandBudgetSubscribers(notificationRaw["subscriber_sns_topic_arns"], budgets.SubscriptionTypeSns)
-
-		subscribersForNotifications[i] = append(emailSubscribers, snsSubscribers...)
-	}
-	return notifications, subscribersForNotifications
-}
-
-func expandBudgetSubscribers(rawList interface{}, subscriptionType string) []*budgets.Subscriber {
-	result := make([]*budgets.Subscriber, 0)
-	addrs := expandStringSet(rawList.(*schema.Set))
-	for _, addr := range addrs {
-		result = append(result, &budgets.Subscriber{
-			SubscriptionType: aws.String(subscriptionType),
-			Address:          addr,
-		})
-	}
-	return result
-}
-
-func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) error {
-	accountID, budgetName, err := decodeBudgetsBudgetID(d.Id())
-	if err != nil {
-		return err
-	}
-
-	conn := meta.(*AWSClient).budgetconn
-	describeBudgetOutput, err := conn.DescribeBudget(&budgets.DescribeBudgetInput{
-		BudgetName: aws.String(budgetName),
-		AccountId:  aws.String(accountID),
-	})
-	if isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
-		log.Printf("[WARN] Budget %s not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("describe budget failed: %v", err)
-	}
-
-	budget := describeBudgetOutput.Budget
-	if budget == nil {
-		log.Printf("[WARN] Budget %s not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	d.Set("account_id", accountID)
-	d.Set("budget_type", budget.BudgetType)
-
-	// `cost_filters` should be removed in future releases
-	if _, ok := d.GetOk("cost_filters"); ok {
-		if err := d.Set("cost_filters", convertCostFiltersToStringMap(budget.CostFilters)); err != nil {
-			return fmt.Errorf("error setting cost_filters: %s", err)
-		}
-	} else {
-		if err := d.Set("cost_filter", convertCostFiltersToMap(budget.CostFilters)); err != nil {
-			return fmt.Errorf("error setting cost_filter: %s", err)
-		}
-	}
-
-	if err := d.Set("cost_types", flattenBudgetsCostTypes(budget.CostTypes)); err != nil {
-		return fmt.Errorf("error setting cost_types: %s %s", err, budget.CostTypes)
-	}
-
-	if budget.BudgetLimit != nil {
-		d.Set("limit_amount", budget.BudgetLimit.Amount)
-		d.Set("limit_unit", budget.BudgetLimit.Unit)
-	}
-
-	d.Set("name", budget.BudgetName)
-
-	if budget.TimePeriod != nil {
-		d.Set("time_period_end", aws.TimeValue(budget.TimePeriod.End).Format("2006-01-02_15:04"))
-		d.Set("time_period_start", aws.TimeValue(budget.TimePeriod.Start).Format("2006-01-02_15:04"))
-	}
-
-	d.Set("time_unit", budget.TimeUnit)
-
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "budgetservice",
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("budget/%s", aws.StringValue(budget.BudgetName)),
-	}
-	d.Set("arn", arn.String())
-
-	return resourceAwsBudgetsBudgetNotificationRead(d, meta)
-}
-
-func resourceAwsBudgetsBudgetNotificationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).budgetconn
-
-	accountID, budgetName, err := decodeBudgetsBudgetID(d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error decoding Budget (%s) ID: %s", d.Id(), err)
-	}
-
-	describeNotificationsForBudgetOutput, err := conn.DescribeNotificationsForBudget(&budgets.DescribeNotificationsForBudgetInput{
-		BudgetName: aws.String(budgetName),
-		AccountId:  aws.String(accountID),
-	})
-
-	if err != nil {
-		return fmt.Errorf("error describing Budget (%s) Notifications: %s", d.Id(), err)
-	}
-
-	notifications := make([]map[string]interface{}, 0)
-
-	for _, notificationOutput := range describeNotificationsForBudgetOutput.Notifications {
-		notification := make(map[string]interface{})
-
-		notification["comparison_operator"] = aws.StringValue(notificationOutput.ComparisonOperator)
-		notification["threshold"] = aws.Float64Value(notificationOutput.Threshold)
-		notification["notification_type"] = aws.StringValue(notificationOutput.NotificationType)
-
-		if notificationOutput.ThresholdType == nil {
-			// The AWS API doesn't seem to return a ThresholdType if it's set to PERCENTAGE
-			// Set it manually to make behavior more predictable
-			notification["threshold_type"] = budgets.ThresholdTypePercentage
-		} else {
-			notification["threshold_type"] = aws.StringValue(notificationOutput.ThresholdType)
-		}
-
-		subscribersOutput, err := conn.DescribeSubscribersForNotification(&budgets.DescribeSubscribersForNotificationInput{
-			BudgetName:   aws.String(budgetName),
-			AccountId:    aws.String(accountID),
-			Notification: notificationOutput,
-		})
-
-		if err != nil {
-			return fmt.Errorf("error describing Budget (%s) Notification Subscribers: %s", d.Id(), err)
-		}
-
-		snsSubscribers := make([]interface{}, 0)
-		emailSubscribers := make([]interface{}, 0)
-
-		for _, subscriberOutput := range subscribersOutput.Subscribers {
-			if aws.StringValue(subscriberOutput.SubscriptionType) == budgets.SubscriptionTypeSns {
-				snsSubscribers = append(snsSubscribers, *subscriberOutput.Address)
-			} else if aws.StringValue(subscriberOutput.SubscriptionType) == budgets.SubscriptionTypeEmail {
-				emailSubscribers = append(emailSubscribers, *subscriberOutput.Address)
-			}
-		}
-		if len(snsSubscribers) > 0 {
-			notification["subscriber_sns_topic_arns"] = schema.NewSet(schema.HashString, snsSubscribers)
-		}
-		if len(emailSubscribers) > 0 {
-			notification["subscriber_email_addresses"] = schema.NewSet(schema.HashString, emailSubscribers)
-		}
-		notifications = append(notifications, notification)
-	}
-
-	if err := d.Set("notification", notifications); err != nil {
-		return fmt.Errorf("error setting notification: %s %s", err, describeNotificationsForBudgetOutput.Notifications)
-	}
-
-	return nil
-}
-
-func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
-	accountID, _, err := decodeBudgetsBudgetID(d.Id())
-	if err != nil {
-		return err
-	}
-
-	conn := meta.(*AWSClient).budgetconn
-	budget, err := expandBudgetsBudgetUnmarshal(d)
-	if err != nil {
-		return fmt.Errorf("could not create budget: %v", err)
-	}
-
-	_, err = conn.UpdateBudget(&budgets.UpdateBudgetInput{
-		AccountId: aws.String(accountID),
-		NewBudget: budget,
-	})
-	if err != nil {
-		return fmt.Errorf("update budget failed: %v", err)
-	}
-
-	err = resourceAwsBudgetsBudgetNotificationsUpdate(d, meta)
-
-	if err != nil {
-		return fmt.Errorf("update budget notification failed: %v", err)
-	}
-
-	return resourceAwsBudgetsBudgetRead(d, meta)
-}
 func resourceAwsBudgetsBudgetNotificationsUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).budgetconn
-	accountID, budgetName, err := decodeBudgetsBudgetID(d.Id())
+
+	accountID, budgetName, err := tfbudgets.BudgetParseResourceID(d.Id())
 
 	if err != nil {
 		return err
@@ -522,29 +507,6 @@ func resourceAwsBudgetsBudgetNotificationsUpdate(d *schema.ResourceData, meta in
 		if err != nil {
 			return fmt.Errorf("error creating Budget (%s) Notifications: %s", d.Id(), err)
 		}
-	}
-
-	return nil
-}
-
-func resourceAwsBudgetsBudgetDelete(d *schema.ResourceData, meta interface{}) error {
-	accountID, budgetName, err := decodeBudgetsBudgetID(d.Id())
-	if err != nil {
-		return err
-	}
-
-	conn := meta.(*AWSClient).budgetconn
-	_, err = conn.DeleteBudget(&budgets.DeleteBudgetInput{
-		BudgetName: aws.String(budgetName),
-		AccountId:  aws.String(accountID),
-	})
-	if err != nil {
-		if isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
-			log.Printf("[INFO] budget %s could not be found. skipping delete.", d.Id())
-			return nil
-		}
-
-		return fmt.Errorf("delete budget failed: %v", err)
 	}
 
 	return nil
@@ -653,14 +615,6 @@ func expandBudgetsBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, erro
 	return budget, nil
 }
 
-func decodeBudgetsBudgetID(id string) (string, string, error) {
-	parts := strings.Split(id, ":")
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected AccountID:BudgetName", id)
-	}
-	return parts[0], parts[1], nil
-}
-
 func expandBudgetsCostTypesUnmarshal(budgetCostTypes []interface{}) *budgets.CostTypes {
 	costTypes := &budgets.CostTypes{
 		IncludeCredit:            aws.Bool(true),
@@ -697,4 +651,42 @@ func expandBudgetsCostTypesUnmarshal(budgetCostTypes []interface{}) *budgets.Cos
 	}
 
 	return costTypes
+}
+
+func expandBudgetNotificationsUnmarshal(notificationsRaw []interface{}) ([]*budgets.Notification, [][]*budgets.Subscriber) {
+
+	notifications := make([]*budgets.Notification, len(notificationsRaw))
+	subscribersForNotifications := make([][]*budgets.Subscriber, len(notificationsRaw))
+	for i, notificationRaw := range notificationsRaw {
+		notificationRaw := notificationRaw.(map[string]interface{})
+		comparisonOperator := notificationRaw["comparison_operator"].(string)
+		threshold := notificationRaw["threshold"].(float64)
+		thresholdType := notificationRaw["threshold_type"].(string)
+		notificationType := notificationRaw["notification_type"].(string)
+
+		notifications[i] = &budgets.Notification{
+			ComparisonOperator: aws.String(comparisonOperator),
+			Threshold:          aws.Float64(threshold),
+			ThresholdType:      aws.String(thresholdType),
+			NotificationType:   aws.String(notificationType),
+		}
+
+		emailSubscribers := expandBudgetSubscribers(notificationRaw["subscriber_email_addresses"], budgets.SubscriptionTypeEmail)
+		snsSubscribers := expandBudgetSubscribers(notificationRaw["subscriber_sns_topic_arns"], budgets.SubscriptionTypeSns)
+
+		subscribersForNotifications[i] = append(emailSubscribers, snsSubscribers...)
+	}
+	return notifications, subscribersForNotifications
+}
+
+func expandBudgetSubscribers(rawList interface{}, subscriptionType string) []*budgets.Subscriber {
+	result := make([]*budgets.Subscriber, 0)
+	addrs := expandStringSet(rawList.(*schema.Set))
+	for _, addr := range addrs {
+		result = append(result, &budgets.Subscriber{
+			SubscriptionType: aws.String(subscriptionType),
+			Address:          addr,
+		})
+	}
+	return result
 }

@@ -16,6 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfbudgets "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -316,40 +319,39 @@ func testAccAWSBudgetsBudgetExists(resourceName string, config budgets.Budget) r
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		accountID, budgetName, err := decodeBudgetsBudgetID(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("failed decoding ID: %v", err)
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Budget ID is set")
 		}
 
-		client := testAccProvider.Meta().(*AWSClient).budgetconn
-		b, err := client.DescribeBudget(&budgets.DescribeBudgetInput{
-			BudgetName: &budgetName,
-			AccountId:  &accountID,
-		})
+		conn := testAccProvider.Meta().(*AWSClient).budgetconn
+
+		accountID, budgetName, err := tfbudgets.BudgetParseResourceID(rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("Describebudget error: %v", err)
+			return err
 		}
 
-		if b.Budget == nil {
-			return fmt.Errorf("No budget returned %v in %v", b.Budget, b)
+		output, err := finder.BudgetByAccountIDAndBudgetName(conn, accountID, budgetName)
+
+		if err != nil {
+			return err
 		}
 
-		if aws.StringValue(b.Budget.BudgetLimit.Amount) != aws.StringValue(config.BudgetLimit.Amount) {
+		if aws.StringValue(output.BudgetLimit.Amount) != aws.StringValue(config.BudgetLimit.Amount) {
 			return fmt.Errorf("budget limit incorrectly set %v != %v", aws.StringValue(config.BudgetLimit.Amount),
-				aws.StringValue(b.Budget.BudgetLimit.Amount))
+				aws.StringValue(output.BudgetLimit.Amount))
 		}
 
-		if err := testAccAWSBudgetsBudgetCheckCostTypes(config, *b.Budget.CostTypes); err != nil {
+		if err := testAccAWSBudgetsBudgetCheckCostTypes(config, *output.CostTypes); err != nil {
 			return err
 		}
 
-		if err := testAccAWSBudgetsBudgetCheckTimePeriod(*config.TimePeriod, *b.Budget.TimePeriod); err != nil {
+		if err := testAccAWSBudgetsBudgetCheckTimePeriod(*config.TimePeriod, *output.TimePeriod); err != nil {
 			return err
 		}
 
-		if !reflect.DeepEqual(b.Budget.CostFilters, config.CostFilters) {
-			return fmt.Errorf("cost filter not set properly: %v != %v", b.Budget.CostFilters, config.CostFilters)
+		if !reflect.DeepEqual(output.CostFilters, config.CostFilters) {
+			return fmt.Errorf("cost filter not set properly: %v != %v", output.CostFilters, config.CostFilters)
 		}
 
 		return nil
@@ -409,25 +411,30 @@ func testAccAWSBudgetsBudgetCheckCostTypes(config budgets.Budget, costTypes budg
 }
 
 func testAccAWSBudgetsBudgetDestroy(s *terraform.State) error {
-	meta := testAccProvider.Meta()
-	client := meta.(*AWSClient).budgetconn
+	conn := testAccProvider.Meta().(*AWSClient).budgetconn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_budgets_budget" {
 			continue
 		}
 
-		accountID, budgetName, err := decodeBudgetsBudgetID(rs.Primary.ID)
+		accountID, budgetName, err := tfbudgets.BudgetParseResourceID(rs.Primary.ID)
+
 		if err != nil {
-			return fmt.Errorf("Budget '%s': id could not be decoded and could not be deleted properly", rs.Primary.ID)
+			return err
 		}
 
-		_, err = client.DescribeBudget(&budgets.DescribeBudgetInput{
-			BudgetName: aws.String(budgetName),
-			AccountId:  aws.String(accountID),
-		})
-		if !isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
-			return fmt.Errorf("Budget '%s' was not deleted properly", rs.Primary.ID)
+		_, err = finder.BudgetByAccountIDAndBudgetName(conn, accountID, budgetName)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("Budget Action %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -447,7 +454,7 @@ func testAccAWSBudgetsBudgetConfigUpdate(name string) budgets.Budget {
 		CostFilters: map[string][]*string{
 			"AZ": {
 				aws.String(testAccGetAlternateRegion()),
-				aws.String("ap-northeast-1"),
+				aws.String(testAccGetThirdRegion()),
 			},
 		},
 		CostTypes: &budgets.CostTypes{
@@ -483,7 +490,7 @@ func testAccAWSBudgetsBudgetConfigDefaults(name string) budgets.Budget {
 		CostFilters: map[string][]*string{
 			"AZ": {
 				aws.String(testAccGetRegion()),
-				aws.String("ap-northeast-1"),
+				aws.String(testAccGetThirdRegion()),
 			},
 		},
 		CostTypes: &budgets.CostTypes{

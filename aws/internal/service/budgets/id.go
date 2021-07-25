@@ -36,7 +36,7 @@ func BudgetCreateResourceID(accountID, budgetName string) string {
 func BudgetParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, budgetResourceIDSeparator)
 
-	if len(parts) == 3 && parts[0] != "" && parts[1] != "" {
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], nil
 	}
 
