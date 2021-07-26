@@ -80,6 +80,71 @@ func testSweepBudgetsBudgets(region string) error {
 }
 
 func TestAccAWSBudgetsBudget_basic(t *testing.T) {
+	var budget budgets.Budget
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_budgets_budget.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBudgetsBudgetConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists(resourceName, &budget),
+					testAccCheckResourceAttrAccountID(resourceName, "account_id"),
+					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "budgets", fmt.Sprintf(`budget/%s`, rName)),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "RI_UTILIZATION"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{
+						"name":     "Service",
+						"values.#": "1",
+						"values.0": "Amazon Elasticsearch Service",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.Service", "Amazon Elasticsearch Service"),
+					resource.TestCheckResourceAttr(resourceName, "limit_amount", "100.0"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "PERCENTAGE"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "QUARTERLY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSBudgetsBudget_disappears(t *testing.T) {
+	var budget budgets.Budget
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_budgets_budget.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBudgetsBudgetConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists(resourceName, &budget),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsBudgetsBudget(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSBudgetsBudget_basicish(t *testing.T) {
 	costFilterKey := "AZ"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	configBasicDefaults := testAccAWSBudgetsBudgetConfigDefaults(rName)
@@ -96,8 +161,8 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 			{
 				Config: testAccAWSBudgetsBudgetConfig_BasicDefaults(configBasicDefaults, costFilterKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists(resourceName, configBasicDefaults),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "budgetservice", fmt.Sprintf(`budget/%s`, rName)),
+					testAccAWSBudgetsBudgetExistsAndIsValid(resourceName, configBasicDefaults),
+					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "budgets", fmt.Sprintf(`budget/%s`, rName)),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(*configBasicDefaults.BudgetName)),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", *configBasicDefaults.BudgetType),
 					resource.TestCheckResourceAttr(resourceName, "limit_amount", *configBasicDefaults.BudgetLimit.Amount),
@@ -115,7 +180,7 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 			{
 				Config: testAccAWSBudgetsBudgetConfig_Basic(configBasicUpdate, costFilterKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists(resourceName, configBasicUpdate),
+					testAccAWSBudgetsBudgetExistsAndIsValid(resourceName, configBasicUpdate),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(*configBasicUpdate.BudgetName)),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", *configBasicUpdate.BudgetType),
 					resource.TestCheckResourceAttr(resourceName, "limit_amount", *configBasicUpdate.BudgetLimit.Amount),
@@ -126,10 +191,9 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -151,7 +215,7 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 			{
 				Config: testAccAWSBudgetsBudgetConfig_PrefixDefaults(configBasicDefaults, costFilterKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists(resourceName, configBasicDefaults),
+					testAccAWSBudgetsBudgetExistsAndIsValid(resourceName, configBasicDefaults),
 					resource.TestMatchResourceAttr(resourceName, "name_prefix", regexp.MustCompile(*configBasicDefaults.BudgetName)),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", *configBasicDefaults.BudgetType),
 					resource.TestCheckResourceAttr(resourceName, "limit_amount", *configBasicDefaults.BudgetLimit.Amount),
@@ -165,7 +229,7 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 			{
 				Config: testAccAWSBudgetsBudgetConfig_Prefix(configBasicUpdate, costFilterKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists(resourceName, configBasicUpdate),
+					testAccAWSBudgetsBudgetExistsAndIsValid(resourceName, configBasicUpdate),
 					resource.TestMatchResourceAttr(resourceName, "name_prefix", regexp.MustCompile(*configBasicUpdate.BudgetName)),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", *configBasicUpdate.BudgetType),
 					resource.TestCheckResourceAttr(resourceName, "limit_amount", *configBasicUpdate.BudgetLimit.Amount),
@@ -177,10 +241,9 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 			},
 
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -222,42 +285,42 @@ func TestAccAWSBudgetsBudget_notification(t *testing.T) {
 				Config:      testAccAWSBudgetsBudgetConfigWithNotification_Basic(configBasicDefaults, notificationConfigDefaults, noEmails, noTopics),
 				ExpectError: regexp.MustCompile(`Notification must have at least one subscriber`),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists(resourceName, configBasicDefaults),
+					testAccAWSBudgetsBudgetExistsAndIsValid(resourceName, configBasicDefaults),
 				),
 			},
 			// Basic Notification with only email
 			{
 				Config: testAccAWSBudgetsBudgetConfigWithNotification_Basic(configBasicDefaults, notificationConfigDefaults, oneEmail, noTopics),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists(resourceName, configBasicDefaults),
+					testAccAWSBudgetsBudgetExistsAndIsValid(resourceName, configBasicDefaults),
 				),
 			},
 			// Change only subscriber to a different e-mail
 			{
 				Config: testAccAWSBudgetsBudgetConfigWithNotification_Basic(configBasicDefaults, notificationConfigDefaults, oneOtherEmail, noTopics),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists(resourceName, configBasicDefaults),
+					testAccAWSBudgetsBudgetExistsAndIsValid(resourceName, configBasicDefaults),
 				),
 			},
 			// Add a second e-mail and a topic
 			{
 				Config: testAccAWSBudgetsBudgetConfigWithNotification_Basic(configBasicDefaults, notificationConfigDefaults, twoEmails, oneTopic),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists(resourceName, configBasicDefaults),
+					testAccAWSBudgetsBudgetExistsAndIsValid(resourceName, configBasicDefaults),
 				),
 			},
 			// Delete both E-Mails
 			{
 				Config: testAccAWSBudgetsBudgetConfigWithNotification_Basic(configBasicDefaults, notificationConfigDefaults, noEmails, oneTopic),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists(resourceName, configBasicDefaults),
+					testAccAWSBudgetsBudgetExistsAndIsValid(resourceName, configBasicDefaults),
 				),
 			},
 			// Swap one Topic fo one E-Mail
 			{
 				Config: testAccAWSBudgetsBudgetConfigWithNotification_Basic(configBasicDefaults, notificationConfigDefaults, oneEmail, noTopics),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists(resourceName, configBasicDefaults),
+					testAccAWSBudgetsBudgetExistsAndIsValid(resourceName, configBasicDefaults),
 				),
 			},
 			// Can't update without at least one subscriber
@@ -265,7 +328,7 @@ func TestAccAWSBudgetsBudget_notification(t *testing.T) {
 				Config:      testAccAWSBudgetsBudgetConfigWithNotification_Basic(configBasicDefaults, notificationConfigDefaults, noEmails, noTopics),
 				ExpectError: regexp.MustCompile(`Notification must have at least one subscriber`),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists(resourceName, configBasicDefaults),
+					testAccAWSBudgetsBudgetExistsAndIsValid(resourceName, configBasicDefaults),
 				),
 			},
 			// Update all non-subscription parameters
@@ -273,7 +336,7 @@ func TestAccAWSBudgetsBudget_notification(t *testing.T) {
 				Config:      testAccAWSBudgetsBudgetConfigWithNotification_Basic(configBasicDefaults, notificationConfigUpdated, noEmails, noTopics),
 				ExpectError: regexp.MustCompile(`Notification must have at least one subscriber`),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists(resourceName, configBasicDefaults),
+					testAccAWSBudgetsBudgetExistsAndIsValid(resourceName, configBasicDefaults),
 				),
 			},
 			// Add a second subscription
@@ -281,38 +344,45 @@ func TestAccAWSBudgetsBudget_notification(t *testing.T) {
 				Config:      testAccAWSBudgetsBudgetConfigWithNotification_Basic(configBasicDefaults, twoNotificationConfigs, noEmails, noTopics),
 				ExpectError: regexp.MustCompile(`Notification must have at least one subscriber`),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists(resourceName, configBasicDefaults),
+					testAccAWSBudgetsBudgetExistsAndIsValid(resourceName, configBasicDefaults),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSBudgetsBudget_disappears(t *testing.T) {
-	costFilterKey := "AZ"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	configBasicDefaults := testAccAWSBudgetsBudgetConfigDefaults(rName)
-	resourceName := "aws_budgets_budget.test"
+func testAccAWSBudgetsBudgetExists(resourceName string, v *budgets.Budget) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSBudgetsBudgetConfig_BasicDefaults(configBasicDefaults, costFilterKey),
-				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists(resourceName, configBasicDefaults),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsBudgetsBudget(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Budget ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).budgetconn
+
+		accountID, budgetName, err := tfbudgets.BudgetParseResourceID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		output, err := finder.BudgetByAccountIDAndBudgetName(conn, accountID, budgetName)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
 }
 
-func testAccAWSBudgetsBudgetExists(resourceName string, config budgets.Budget) resource.TestCheckFunc {
+func testAccAWSBudgetsBudgetExistsAndIsValid(resourceName string, config budgets.Budget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -528,6 +598,23 @@ func testAccAWSBudgetsBudgetNotificationConfigUpdate() budgets.Notification {
 		Threshold:          aws.Float64(200.0),
 		ComparisonOperator: aws.String(budgets.ComparisonOperatorLessThan),
 	}
+}
+
+func testAccAWSBudgetsBudgetConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name              = %[1]q
+  budget_type       = "RI_UTILIZATION"
+  limit_amount      = "100.0"
+  limit_unit        = "PERCENTAGE"
+  time_period_start = "2021-07-01_00:00"
+  time_unit         = "QUARTERLY"
+
+  cost_filters = {
+    Service = "Amazon Elasticsearch Service"
+  }
+}
+`, rName)
 }
 
 func testAccAWSBudgetsBudgetConfig_WithAccountID(budgetConfig budgets.Budget, accountID, costFilterKey string) string {

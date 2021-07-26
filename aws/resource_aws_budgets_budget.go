@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -37,18 +36,15 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateAwsAccountId,
 			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"budget_type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(budgets.BudgetType_Values(), false),
 			},
-
 			"cost_filters": {
 				Type:          schema.TypeMap,
 				Optional:      true,
@@ -56,7 +52,6 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"cost_filter"},
 			},
-
 			"cost_filter": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -78,7 +73,6 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 				},
 				ConflictsWith: []string{"cost_filters"},
 			},
-
 			"cost_types": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -144,17 +138,14 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 					},
 				},
 			},
-
 			"limit_amount": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
 			"limit_unit": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -162,7 +153,6 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
 			},
-
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -170,7 +160,6 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 			},
-
 			"notification": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -211,18 +200,17 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 					},
 				},
 			},
-
 			"time_period_end": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "2087-06-15_00:00",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "2087-06-15_00:00",
+				ValidateFunc: tfbudgets.ValidateTimePeriodTimestamp,
 			},
-
 			"time_period_start": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: tfbudgets.ValidateTimePeriodTimestamp,
 			},
-
 			"time_unit": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -295,7 +283,7 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("account_id", accountID)
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Service:   "budgetservice",
+		Service:   "budgets",
 		AccountID: accountID,
 		Resource:  fmt.Sprintf("budget/%s", budgetName),
 	}
@@ -323,8 +311,8 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(budget.BudgetName)))
 
 	if budget.TimePeriod != nil {
-		d.Set("time_period_end", aws.TimeValue(budget.TimePeriod.End).Format("2006-01-02_15:04"))
-		d.Set("time_period_start", aws.TimeValue(budget.TimePeriod.Start).Format("2006-01-02_15:04"))
+		d.Set("time_period_end", tfbudgets.TimePeriodTimestampToString(budget.TimePeriod.End))
+		d.Set("time_period_start", tfbudgets.TimePeriodTimestampToString(budget.TimePeriod.Start))
 	}
 
 	d.Set("time_unit", budget.TimeUnit)
@@ -568,7 +556,6 @@ func expandBudgetsBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, erro
 	budgetType := d.Get("budget_type").(string)
 	budgetLimitAmount := d.Get("limit_amount").(string)
 	budgetLimitUnit := d.Get("limit_unit").(string)
-	costTypes := expandBudgetsCostTypesUnmarshal(d.Get("cost_types").([]interface{}))
 	budgetTimeUnit := d.Get("time_unit").(string)
 	budgetCostFilters := make(map[string][]*string)
 
@@ -587,14 +574,16 @@ func expandBudgetsBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, erro
 		}
 	}
 
-	budgetTimePeriodStart, err := time.Parse("2006-01-02_15:04", d.Get("time_period_start").(string))
+	budgetTimePeriodStart, err := tfbudgets.TimePeriodTimestampFromString(d.Get("time_period_start").(string))
+
 	if err != nil {
-		return nil, fmt.Errorf("failure parsing time: %v", err)
+		return nil, err
 	}
 
-	budgetTimePeriodEnd, err := time.Parse("2006-01-02_15:04", d.Get("time_period_end").(string))
+	budgetTimePeriodEnd, err := tfbudgets.TimePeriodTimestampFromString(d.Get("time_period_end").(string))
+
 	if err != nil {
-		return nil, fmt.Errorf("failure parsing time: %v", err)
+		return nil, err
 	}
 
 	budget := &budgets.Budget{
@@ -604,53 +593,63 @@ func expandBudgetsBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, erro
 			Amount: aws.String(budgetLimitAmount),
 			Unit:   aws.String(budgetLimitUnit),
 		},
-		CostTypes: costTypes,
 		TimePeriod: &budgets.TimePeriod{
-			End:   &budgetTimePeriodEnd,
-			Start: &budgetTimePeriodStart,
+			End:   budgetTimePeriodEnd,
+			Start: budgetTimePeriodStart,
 		},
 		TimeUnit:    aws.String(budgetTimeUnit),
 		CostFilters: budgetCostFilters,
 	}
+
+	if v, ok := d.GetOk("cost_types"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		budget.CostTypes = expandBudgetsCostTypes(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	return budget, nil
 }
 
-func expandBudgetsCostTypesUnmarshal(budgetCostTypes []interface{}) *budgets.CostTypes {
-	costTypes := &budgets.CostTypes{
-		IncludeCredit:            aws.Bool(true),
-		IncludeDiscount:          aws.Bool(true),
-		IncludeOtherSubscription: aws.Bool(true),
-		IncludeRecurring:         aws.Bool(true),
-		IncludeRefund:            aws.Bool(true),
-		IncludeSubscription:      aws.Bool(true),
-		IncludeSupport:           aws.Bool(true),
-		IncludeTax:               aws.Bool(true),
-		IncludeUpfront:           aws.Bool(true),
-		UseAmortized:             aws.Bool(false),
-		UseBlended:               aws.Bool(false),
-	}
-	if len(budgetCostTypes) == 1 {
-		costTypesMap := budgetCostTypes[0].(map[string]interface{})
-		for k, v := range map[string]*bool{
-			"include_credit":             costTypes.IncludeCredit,
-			"include_discount":           costTypes.IncludeDiscount,
-			"include_other_subscription": costTypes.IncludeOtherSubscription,
-			"include_recurring":          costTypes.IncludeRecurring,
-			"include_refund":             costTypes.IncludeRefund,
-			"include_subscription":       costTypes.IncludeSubscription,
-			"include_support":            costTypes.IncludeSupport,
-			"include_tax":                costTypes.IncludeTax,
-			"include_upfront":            costTypes.IncludeUpfront,
-			"use_amortized":              costTypes.UseAmortized,
-			"use_blended":                costTypes.UseBlended,
-		} {
-			if val, ok := costTypesMap[k]; ok {
-				*v = val.(bool)
-			}
-		}
+func expandBudgetsCostTypes(tfMap map[string]interface{}) *budgets.CostTypes {
+	if tfMap == nil {
+		return nil
 	}
 
-	return costTypes
+	apiObject := &budgets.CostTypes{}
+
+	if v, ok := tfMap["include_credit"].(bool); ok {
+		apiObject.IncludeCredit = aws.Bool(v)
+	}
+	if v, ok := tfMap["include_discount"].(bool); ok {
+		apiObject.IncludeDiscount = aws.Bool(v)
+	}
+	if v, ok := tfMap["include_other_subscription"].(bool); ok {
+		apiObject.IncludeOtherSubscription = aws.Bool(v)
+	}
+	if v, ok := tfMap["include_recurring"].(bool); ok {
+		apiObject.IncludeRecurring = aws.Bool(v)
+	}
+	if v, ok := tfMap["include_refund"].(bool); ok {
+		apiObject.IncludeRefund = aws.Bool(v)
+	}
+	if v, ok := tfMap["include_subscription"].(bool); ok {
+		apiObject.IncludeSubscription = aws.Bool(v)
+	}
+	if v, ok := tfMap["include_support"].(bool); ok {
+		apiObject.IncludeSupport = aws.Bool(v)
+	}
+	if v, ok := tfMap["include_tax"].(bool); ok {
+		apiObject.IncludeTax = aws.Bool(v)
+	}
+	if v, ok := tfMap["include_upfront"].(bool); ok {
+		apiObject.IncludeUpfront = aws.Bool(v)
+	}
+	if v, ok := tfMap["use_amortized"].(bool); ok {
+		apiObject.UseAmortized = aws.Bool(v)
+	}
+	if v, ok := tfMap["use_blended"].(bool); ok {
+		apiObject.UseBlended = aws.Bool(v)
+	}
+
+	return apiObject
 }
 
 func expandBudgetNotificationsUnmarshal(notificationsRaw []interface{}) ([]*budgets.Notification, [][]*budgets.Subscriber) {

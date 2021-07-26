@@ -1,4 +1,4 @@
-package glue
+package budgets
 
 import (
 	"fmt"

@@ -295,7 +295,7 @@ func resourceAwsBudgetsBudgetActionRead(d *schema.ResourceData, meta interface{}
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Service:   "budgetservice",
+		Service:   "budgets",
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("budget/%s/action/%s", budgetName, actionID),
 	}

@@ -89,7 +89,7 @@ func TestAccAWSBudgetsBudgetAction_basic(t *testing.T) {
 				Config: testAccAWSBudgetsBudgetActionConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSBudgetsBudgetActionExists(resourceName, &conf),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "budgetservice", regexp.MustCompile(fmt.Sprintf(`budget/%s/action/.+`, rName))),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "budgets", regexp.MustCompile(fmt.Sprintf(`budget/%s/action/.+`, rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "budget_name", "aws_budgets_budget.test", "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "action_type", "APPLY_IAM_POLICY"),
