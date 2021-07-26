@@ -25,8 +25,9 @@ func resourceAwsTransferAccess() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"external_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 256),
 			},
 
 			"home_directory": {
