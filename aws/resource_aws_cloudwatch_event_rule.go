@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	awsarn "github.com/aws/aws-sdk-go/aws/arn"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -181,14 +180,7 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(out.Name)))
 	d.Set("role_arn", out.RoleArn)
 	d.Set("schedule_expression", out.ScheduleExpression)
-	currentEventBusName := d.Get("event_bus_name").(string)
-	if awsarn.IsARN(currentEventBusName) {
-		eventBusArn, _ := awsarn.Parse(currentEventBusName)
-		eventBusArn.Resource = "event-bus/" + *out.EventBusName
-		d.Set("event_bus_name", eventBusArn.String())
-	} else {
-		d.Set("event_bus_name", out.EventBusName)
-	}
+	d.Set("event_bus_name", out.EventBusName)
 
 	boolState, err := getBooleanStateFromString(*out.State)
 	if err != nil {
