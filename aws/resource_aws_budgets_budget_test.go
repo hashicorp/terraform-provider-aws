@@ -225,6 +225,106 @@ func TestAccAWSBudgetsBudget_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSBudgetsBudget_CostTypes(t *testing.T) {
+	var budget budgets.Budget
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_budgets_budget.test"
+
+	now := time.Now().UTC()
+	ts1 := now.AddDate(0, 0, -14)
+	ts2 := time.Date(2050, 1, 1, 00, 0, 0, 0, time.UTC)
+	ts3 := now.AddDate(0, 0, -28)
+	ts4 := time.Date(2060, 7, 1, 00, 0, 0, 0, time.UTC)
+	startDate1 := tfbudgets.TimePeriodTimestampToString(&ts1)
+	endDate1 := tfbudgets.TimePeriodTimestampToString(&ts2)
+	startDate2 := tfbudgets.TimePeriodTimestampToString(&ts3)
+	endDate2 := tfbudgets.TimePeriodTimestampToString(&ts4)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBudgetsBudgetConfigCostTypes(rName, startDate1, endDate1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists(resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{
+						"name":     "AZ",
+						"values.#": "2",
+						"values.0": testAccGetRegion(),
+						"values.1": testAccGetAlternateRegion(),
+					}),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.AZ", strings.Join([]string{testAccGetRegion(), testAccGetAlternateRegion()}, ",")),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_credit", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_discount", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_other_subscription", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_recurring", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_refund", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_subscription", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_support", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_tax", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_upfront", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.use_amortized", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.use_blended", "true"),
+					resource.TestCheckResourceAttr(resourceName, "limit_amount", "456.78"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "USD"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "time_period_end", endDate1),
+					resource.TestCheckResourceAttr(resourceName, "time_period_start", startDate1),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSBudgetsBudgetConfigCostTypesUpdated(rName, startDate2, endDate2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists(resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{
+						"name":     "AZ",
+						"values.#": "2",
+						"values.0": testAccGetAlternateRegion(),
+						"values.1": testAccGetThirdRegion(),
+					}),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.AZ", strings.Join([]string{testAccGetAlternateRegion(), testAccGetThirdRegion()}, ",")),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_credit", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_discount", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_other_subscription", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_recurring", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_refund", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_subscription", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_support", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_tax", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_upfront", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.use_amortized", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.use_blended", "false"),
+					resource.TestCheckResourceAttr(resourceName, "limit_amount", "567.89"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "USD"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "time_period_end", endDate2),
+					resource.TestCheckResourceAttr(resourceName, "time_period_start", startDate2),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSBudgetsBudget_basicish(t *testing.T) {
 	costFilterKey := "AZ"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -673,6 +773,62 @@ resource "aws_budgets_budget" "test" {
   time_unit    = "MONTHLY"
 }
 `, namePrefix)
+}
+
+func testAccAWSBudgetsBudgetConfigCostTypes(rName, startDate, endDate string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name         = %[1]q
+  budget_type  = "COST"
+  limit_amount = "456.78"
+  limit_unit   = "USD"
+
+  time_period_start = %[2]q
+  time_period_end   = %[3]q
+  time_unit         = "DAILY"
+
+  cost_filter {
+    name   = "AZ"
+    values = [%[4]q, %[5]q]
+  }
+
+  cost_types {
+    include_discount     = false
+    include_subscription = true
+	include_tax          = false
+	use_blended          = true
+  }
+}
+`, rName, startDate, endDate, testAccGetRegion(), testAccGetAlternateRegion())
+}
+
+func testAccAWSBudgetsBudgetConfigCostTypesUpdated(rName, startDate, endDate string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name         = %[1]q
+  budget_type  = "COST"
+  limit_amount = "567.89"
+  limit_unit   = "USD"
+
+  time_period_start = %[2]q
+  time_period_end   = %[3]q
+  time_unit         = "DAILY"
+
+  cost_filter {
+    name   = "AZ"
+    values = [%[4]q, %[5]q]
+  }
+
+  cost_types {
+	include_credit       = false
+    include_discount     = true
+	include_refund       = false
+    include_subscription = true
+	include_tax          = true
+	use_blended          = false
+  }
+}
+`, rName, startDate, endDate, testAccGetAlternateRegion(), testAccGetThirdRegion())
 }
 
 func testAccAWSBudgetsBudgetConfig_WithAccountID(budgetConfig budgets.Budget, accountID, costFilterKey string) string {
