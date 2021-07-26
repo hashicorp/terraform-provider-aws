@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/shopspring/decimal"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	tfbudgets "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets/finder"
@@ -139,8 +140,9 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 				},
 			},
 			"limit_amount": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				DiffSuppressFunc: suppressEquivalentBudgetLimitAmount,
 			},
 			"limit_unit": {
 				Type:     schema.TypeString,
@@ -689,4 +691,20 @@ func expandBudgetSubscribers(rawList interface{}, subscriptionType string) []*bu
 		})
 	}
 	return result
+}
+
+func suppressEquivalentBudgetLimitAmount(k, old, new string, d *schema.ResourceData) bool {
+	d1, err := decimal.NewFromString(old)
+
+	if err != nil {
+		return false
+	}
+
+	d2, err := decimal.NewFromString(new)
+
+	if err != nil {
+		return false
+	}
+
+	return d1.Equal(d2)
 }

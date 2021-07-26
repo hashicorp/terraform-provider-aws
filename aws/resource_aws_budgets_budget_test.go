@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	tfbudgets "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
@@ -112,6 +113,84 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "time_period_end"),
 					resource.TestCheckResourceAttrSet(resourceName, "time_period_start"),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "QUARTERLY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSBudgetsBudget_Name_Generated(t *testing.T) {
+	var budget budgets.Budget
+	resourceName := "aws_budgets_budget.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBudgetsBudgetConfigNameGenerated(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists(resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "RI_COVERAGE"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{
+						"name":     "Service",
+						"values.#": "1",
+						"values.0": "Amazon Redshift",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.Service", "Amazon Redshift"),
+					resource.TestCheckResourceAttr(resourceName, "limit_amount", "100.0"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "PERCENTAGE"),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "time_period_end"),
+					resource.TestCheckResourceAttrSet(resourceName, "time_period_start"),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "ANNUALLY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSBudgetsBudget_NamePrefix(t *testing.T) {
+	var budget budgets.Budget
+	resourceName := "aws_budgets_budget.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBudgetsBudgetConfigNamePrefix("tf-acc-test-prefix-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists(resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "SAVINGS_PLANS_UTILIZATION"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "limit_amount", "100.0"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "PERCENTAGE"),
+					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "time_period_end"),
+					resource.TestCheckResourceAttrSet(resourceName, "time_period_start"),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "MONTHLY"),
 				),
 			},
 			{
@@ -605,18 +684,45 @@ func testAccAWSBudgetsBudgetNotificationConfigUpdate() budgets.Notification {
 func testAccAWSBudgetsBudgetConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_budgets_budget" "test" {
-  name              = %[1]q
-  budget_type       = "RI_UTILIZATION"
-  limit_amount      = "100.0"
-  limit_unit        = "PERCENTAGE"
-  time_period_start = "2021-07-01_00:00"
-  time_unit         = "QUARTERLY"
+  name         = %[1]q
+  budget_type  = "RI_UTILIZATION"
+  limit_amount = "100.0"
+  limit_unit   = "PERCENTAGE"
+  time_unit    = "QUARTERLY"
 
   cost_filters = {
     Service = "Amazon Elasticsearch Service"
   }
 }
 `, rName)
+}
+
+func testAccAWSBudgetsBudgetConfigNameGenerated() string {
+	return `
+resource "aws_budgets_budget" "test" {
+  budget_type  = "RI_COVERAGE"
+  limit_amount = "100.00"
+  limit_unit   = "PERCENTAGE"
+  time_unit    = "ANNUALLY"
+
+  cost_filter {
+    name   = "Service"
+    values = ["Amazon Redshift"]
+  }
+}
+`
+}
+
+func testAccAWSBudgetsBudgetConfigNamePrefix(namePrefix string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name_prefix  = %[1]q
+  budget_type  = "SAVINGS_PLANS_UTILIZATION"
+  limit_amount = "100"
+  limit_unit   = "PERCENTAGE"
+  time_unit    = "MONTHLY"
+}
+`, namePrefix)
 }
 
 func testAccAWSBudgetsBudgetConfig_WithAccountID(budgetConfig budgets.Budget, accountID, costFilterKey string) string {

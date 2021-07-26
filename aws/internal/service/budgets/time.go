@@ -12,6 +12,10 @@ const (
 )
 
 func TimePeriodTimestampFromString(s string) (*time.Time, error) {
+	if s == "" {
+		return nil, nil
+	}
+
 	ts, err := time.Parse(timePeriodLayout, s)
 
 	if err != nil {
@@ -22,6 +26,10 @@ func TimePeriodTimestampFromString(s string) (*time.Time, error) {
 }
 
 func TimePeriodTimestampToString(ts *time.Time) string {
+	if ts == nil {
+		return ""
+	}
+
 	return aws.TimeValue(ts).Format(timePeriodLayout)
 }
 
