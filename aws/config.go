@@ -695,6 +695,17 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	// StartDeployment operations can return a ConflictException
+	// if ongoing deployments are in-progress, thus we handle them
+	// here for the service client.
+	client.appconfigconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if r.Operation.Name == "StartDeployment" {
+			if tfawserr.ErrCodeEquals(r.Error, appconfig.ErrCodeConflictException) {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+	})
+
 	client.appsyncconn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if r.Operation.Name == "CreateGraphqlApi" {
 			if isAWSErr(r.Error, appsync.ErrCodeConcurrentModificationException, "a GraphQL API creation is already in progress") {

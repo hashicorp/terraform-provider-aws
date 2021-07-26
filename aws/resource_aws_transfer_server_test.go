@@ -856,6 +856,11 @@ func testAccAWSTransferServer_forceDestroy(t *testing.T) {
 	sshKeyResourceName := "aws_transfer_ssh_key.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
+	publicKey, _, err := acctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
@@ -863,7 +868,7 @@ func testAccAWSTransferServer_forceDestroy(t *testing.T) {
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTransferServerForceDestroyConfig(rName),
+				Config: testAccAWSTransferServerForceDestroyConfig(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &s),
 					testAccCheckAWSTransferUserExists(userResourceName, &u),
@@ -1179,43 +1184,6 @@ resource "aws_api_gateway_deployment" "test" {
 `, rName)
 }
 
-func testAccAWSTransferServerConfigBaseDirectoryService(rName string) string {
-	return `
-resource "aws_directory_service_directory" "test" {
-  name = "directory.test.com"
-  password = "P4ssw0rd"
-  size = "small"
-
-  vpc_settings {
-    vpc_id     = aws_vpc.test.id
-    subnet_ids = [
-      aws_subnet.test_a.id,
-      aws_subnet.test_b.id
-    ]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-}
-
-resource "aws_subnet" "test_a" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-
-}
-
-resource "aws_subnet" "test_b" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.0.2.0/24"
-}
-
-`
-}
-
 func testAccAWSTransferServerBasicConfig() string {
 	return `
 resource "aws_transfer_server" "test" {}
@@ -1257,22 +1225,6 @@ func testAccAWSTransferServerApiGatewayIdentityProviderTypeConfig(rName string, 
 resource "aws_transfer_server" "test" {
   identity_provider_type = "API_GATEWAY"
   url                    = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
-  invocation_role        = aws_iam_role.test.arn
-  logging_role           = aws_iam_role.test.arn
-
-  force_destroy = %[1]t
-}
-`, forceDestroy))
-}
-
-func testAccAWSTransferServerDirectoryServiceIdentityProviderTypeConfig(rName string, forceDestroy bool) string {
-	return composeConfig(
-		testAccAWSTransferServerConfigBaseDirectoryService(rName),
-		testAccAWSTransferServerConfigBaseLoggingRole(rName),
-		fmt.Sprintf(`
-resource "aws_transfer_server" "test" {
-  identity_provider_type = "AWS_DIRECTORY_SERVICE"
-  directory_id			 = "${aws_directory_service.test.id}"
   invocation_role        = aws_iam_role.test.arn
   logging_role           = aws_iam_role.test.arn
 

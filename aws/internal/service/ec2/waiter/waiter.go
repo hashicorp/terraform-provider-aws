@@ -370,7 +370,7 @@ func RouteTableAssociationCreated(conn *ec2.EC2, id string) (*ec2.RouteTableAsso
 
 func RouteTableAssociationDeleted(conn *ec2.EC2, id string) (*ec2.RouteTableAssociationState, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.RouteTableAssociationStateCodeDisassociating},
+		Pending: []string{ec2.RouteTableAssociationStateCodeDisassociating, ec2.RouteTableAssociationStateCodeAssociated},
 		Target:  []string{},
 		Refresh: RouteTableAssociationState(conn, id),
 		Timeout: RouteTableAssociationDeletedTimeout,

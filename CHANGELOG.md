@@ -1,12 +1,25 @@
-## 3.51.0 (Unreleased)
+## 3.52.0 (Unreleased)
+## 3.51.0 (July 22, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_elasticache_user` ([#16629](https://github.com/hashicorp/terraform-provider-aws/issues/16629))
+* **New Resource:** `aws_appconfig_deployment` ([#20172](https://github.com/hashicorp/terraform-provider-aws/issues/20172))
+* **New Resource:** `aws_elasticache_user` ([#16629](https://github.com/hashicorp/terraform-provider-aws/issues/16629))
+* **New Resource:** `aws_elasticache_user_group` ([#16504](https://github.com/hashicorp/terraform-provider-aws/issues/16504))
 
 ENHANCEMENTS:
 
+* resource/aws_cloudwatch_event_target: Add support for Redshift event target. ([#20256](https://github.com/hashicorp/terraform-provider-aws/issues/20256))
 * resource/aws_glue_crawler: Add `sample_size` argument in `s3_target` block. ([#20203](https://github.com/hashicorp/terraform-provider-aws/issues/20203))
+* resource/aws_instance: Add support for configuration with Launch Template ([#10807](https://github.com/hashicorp/terraform-provider-aws/issues/10807))
+* resource/aws_servicecatalog_provisioned_product: Increase timeouts to align with CloudFormation (30 min.) ([#20254](https://github.com/hashicorp/terraform-provider-aws/issues/20254))
+* resource/aws_storagegateway_smb_file_share: Add `bucket_region`, `oplocks_enabled` and `vpc_endpoint_dns_name` arguments ([#20234](https://github.com/hashicorp/terraform-provider-aws/issues/20234))
 
 BUG FIXES:
 
 * aws/resource_aws_lambda_event_source_mapping: Ignore `InvalidParameterValueException` error caused by IAM propagation when creating Lambda event source mapping with Kinesis stream source ([#20229](https://github.com/hashicorp/terraform-provider-aws/issues/20229))
+* aws/resource_aws_route_table_association: Correctly handle `associated` as a pending state when waiting for deletion of an association ([#20265](https://github.com/hashicorp/terraform-provider-aws/issues/20265))
 
 ## 3.50.0 (July 15, 2021)
 
