@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
+	awsarn "github.com/aws/aws-sdk-go/aws/arn"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -47,7 +48,16 @@ func Rule(conn *events.CloudWatchEvents, eventBusName, ruleName string) (*events
 		input.EventBusName = aws.String(eventBusName)
 	}
 
-	return conn.DescribeRule(&input)
+	out, err := conn.DescribeRule(&input)
+
+	if err == nil && awsarn.IsARN(eventBusName) {
+		eventBusArn, _ := awsarn.Parse(eventBusName)
+		eventBusArn.Resource = "event-bus/" + *out.EventBusName
+		updatedEventBusArn := eventBusArn.String()
+		out.EventBusName = &updatedEventBusArn
+	}
+
+	return out, err
 
 }
 

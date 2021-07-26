@@ -565,6 +565,11 @@ func TestAccAWSCloudWatchEventRule_EventBusArn(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
