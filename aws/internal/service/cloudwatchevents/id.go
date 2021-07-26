@@ -92,7 +92,7 @@ func TargetParseImportID(id string) (string, string, string, error) {
 		iRule := strings.LastIndex(id[:iTarget], targetImportIDSeparator)
 		busName := id[:iRule]
 		ruleName := id[iRule+1 : iTarget]
-		if partnerEventBusPattern.MatchString(busName) && ruleName != "" && targetID != "" {
+		if (partnerEventBusPattern.MatchString(busName) || awsarn.IsARN(busName)) && ruleName != "" && targetID != "" {
 			return busName, ruleName, targetID, nil
 		}
 	}

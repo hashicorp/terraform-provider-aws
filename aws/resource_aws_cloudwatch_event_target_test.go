@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	awsarn "github.com/aws/aws-sdk-go/aws/arn"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -214,6 +215,45 @@ func TestAccAWSCloudWatchEventTarget_EventBusName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID2),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudWatchEventTarget_EventBusArn(t *testing.T) {
+	resourceName := "aws_cloudwatch_event_target.test"
+	key := "EVENT_BRIDGE_EVENT_BUS_ARN"
+	busArn, err := awsarn.Parse(os.Getenv(key))
+	if err != nil {
+		t.Skipf("Environment variable %s is missing or is not a valid ARN", key)
+	}
+	busName := strings.Replace(busArn.Resource, "event-bus/", "", 1)
+
+	var target events.Target
+	ruleName := acctest.RandomWithPrefix("tf-acc-test-rule")
+	snsTopicName := acctest.RandomWithPrefix("tf-acc-test-sns")
+	targetID := acctest.RandomWithPrefix("tf-acc-test-target")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchEventTargetConfigEventBusName(ruleName, busName, snsTopicName, targetID),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventTargetExists(resourceName, &target),
+					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
+					resource.TestCheckResourceAttr(resourceName, "target_id", targetID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -882,6 +922,37 @@ resource "aws_sns_topic" "test" {
 }
 
 func testAccAWSCloudWatchEventTargetConfigEventBusName(ruleName, eventBusName, snsTopicName, targetID string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_target" "test" {
+  rule           = aws_cloudwatch_event_rule.test.name
+  event_bus_name = aws_cloudwatch_event_rule.test.event_bus_name
+  target_id      = %[1]q
+  arn            = aws_sns_topic.test.arn
+}
+
+resource "aws_sns_topic" "test" {
+  name = %[2]q
+}
+
+resource "aws_cloudwatch_event_rule" "test" {
+  name           = %[3]q
+  event_bus_name = aws_cloudwatch_event_bus.test.name
+  event_pattern  = <<PATTERN
+{
+	"source": [
+		"aws.ec2"
+	]
+}
+PATTERN
+}
+
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %[4]q
+}
+`, targetID, snsTopicName, ruleName, eventBusName)
+}
+
+func testAccAWSCloudWatchEventTargetConfigEventBusArn(ruleName, eventBusName, snsTopicName, targetID string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_target" "test" {
   rule           = aws_cloudwatch_event_rule.test.name
