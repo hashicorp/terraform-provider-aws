@@ -1286,6 +1286,43 @@ resource "aws_transfer_server" "test" {
 `, forceDestroy))
 }
 
+func testAccAWSTransferServerConfigBaseDirectoryService(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_directory_service_directory" "test" {
+  name = %[1]q
+  password = "P4ssw0rd"
+  size = "small"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = [
+      aws_subnet.test_a.id,
+      aws_subnet.test_b.id
+    ]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+}
+
+resource "aws_subnet" "test_a" {
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.1.0/24"
+
+}
+
+resource "aws_subnet" "test_b" {
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[1]
+  cidr_block        = "10.0.2.0/24"
+}
+
+`, rName)
+}
+
 func testAccAWSTransferServerForceDestroyConfig(rName, publicKey string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
