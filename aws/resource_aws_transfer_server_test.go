@@ -1233,6 +1233,59 @@ resource "aws_transfer_server" "test" {
 `, forceDestroy))
 }
 
+func testAccAWSTransferServerDirectoryServiceIdentityProviderTypeConfig(rName string, forceDestroy bool) string {
+	return composeConfig(
+		testAccAWSTransferServerConfigBaseDirectoryService(rName),
+		testAccAWSTransferServerConfigBaseLoggingRole(rName),
+		fmt.Sprintf(`
+resource "aws_transfer_server" "test" {
+  identity_provider_type = "AWS_DIRECTORY_SERVICE"
+  directory_id			 = "${aws_directory_service.test.id}"
+  invocation_role        = aws_iam_role.test.arn
+  logging_role           = aws_iam_role.test.arn
+
+  force_destroy = %[1]t
+}
+`, forceDestroy))
+}
+
+func testAccAWSTransferServerConfigBaseDirectoryService(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_directory_service_directory" "test" {
+  name = %[1]q
+  password = "P4ssw0rd"
+  size = "small"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = [
+      aws_subnet.test_a.id,
+      aws_subnet.test_b.id
+    ]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+}
+
+resource "aws_subnet" "test_a" {
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.1.0/24"
+
+}
+
+resource "aws_subnet" "test_b" {
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[1]
+  cidr_block        = "10.0.2.0/24"
+}
+
+`, rName)
+}
+
 func testAccAWSTransferServerForceDestroyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
