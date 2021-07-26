@@ -208,7 +208,8 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 			},
 			"time_period_start": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
+				Computed:     true,
 				ValidateFunc: tfbudgets.ValidateTimePeriodTimestamp,
 			},
 			"time_unit": {

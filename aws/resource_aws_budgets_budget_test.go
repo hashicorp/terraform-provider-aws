@@ -109,6 +109,8 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "limit_unit", "PERCENTAGE"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "time_period_end"),
+					resource.TestCheckResourceAttrSet(resourceName, "time_period_start"),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "QUARTERLY"),
 				),
 			},
