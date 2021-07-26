@@ -1040,6 +1040,20 @@ resource "aws_subnet" "test" {
   vpc_id                  = aws_vpc.test.id
   cidr_block              = "10.0.0.0/24"
   map_public_ip_on_launch = true
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_subnet" "test2" {
+  vpc_id                  = aws_vpc.test.id
+  cidr_block              = "10.0.1.0/24"
+  map_public_ip_on_launch = true
+  availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
     Name = %[1]q
@@ -1235,13 +1249,14 @@ resource "aws_transfer_server" "test" {
 
 func testAccAWSTransferServerDirectoryServiceIdentityProviderTypeConfig(rName string, forceDestroy bool) string {
 	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		testAccAWSTransferServerConfigBaseVpc(rName),
 		testAccAWSTransferServerConfigBaseDirectoryService(rName),
 		testAccAWSTransferServerConfigBaseLoggingRole(rName),
 		fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   identity_provider_type = "AWS_DIRECTORY_SERVICE"
-  directory_id			 = "${aws_directory_service.test.id}"
-  invocation_role        = aws_iam_role.test.arn
+  directory_id			 = "${aws_directory_service_directory.test.id}"
   logging_role           = aws_iam_role.test.arn
 
   force_destroy = %[1]t
@@ -1250,40 +1265,20 @@ resource "aws_transfer_server" "test" {
 }
 
 func testAccAWSTransferServerConfigBaseDirectoryService(rName string) string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_directory_service_directory" "test" {
-  name = %[1]q
-  password = "P4ssw0rd"
-  size = "small"
+  name     = "corp.notexample.com"
+  password = "SuperSecretPassw0rd"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
     subnet_ids = [
-      aws_subnet.test_a.id,
-      aws_subnet.test_b.id
+      aws_subnet.test.id,
+      aws_subnet.test2.id
     ]
   }
 }
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-}
-
-resource "aws_subnet" "test_a" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-
-}
-
-resource "aws_subnet" "test_b" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.0.2.0/24"
-}
-
-`, rName)
+`
 }
 
 func testAccAWSTransferServerForceDestroyConfig(rName, publicKey string) string {

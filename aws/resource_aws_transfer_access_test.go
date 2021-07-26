@@ -14,6 +14,7 @@ import (
 
 func testAccAWSTransferAccess_basic(t *testing.T) {
 	var conf transfer.DescribedAccess
+	resourceName := "aws_transfer_access.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
@@ -23,27 +24,27 @@ func testAccAWSTransferAccess_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSTransferAccessDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTransferAccessBasicConfig(),
+				Config: testAccAWSTransferAccessBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferAccessExists(rName, &conf),
-					//testAccMatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexp.MustCompile(`server/.+`)),
-					resource.TestCheckResourceAttr(rName, "external_id", ""),
-					//TODO: ...
+					testAccCheckAWSTransferAccessExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
+					resource.TestCheckResourceAttr(resourceName, "home_directory", "/"+rName+"/"),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
 				),
 			},
 			{
-				ResourceName:            rName,
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccAWSTransferAccessUpdatedConfig(rName),
+				Config: testAccAWSTransferAccessUpdatedConfig(resourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferAccessExists(rName, &conf),
-					//testAccMatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexp.MustCompile(`server/.+`)),
-					resource.TestCheckResourceAttr(rName, "external_id", ""),
-					//TODO: ...
+					testAccCheckAWSTransferAccessExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
+					resource.TestCheckResourceAttr(resourceName, "home_directory", "/"+rName+"/test"),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
 				),
 			},
 		},
@@ -61,10 +62,21 @@ func testAccCheckAWSTransferAccessExists(n string, v *transfer.DescribedAccess) 
 			return fmt.Errorf("No Transfer Access ID is set")
 		}
 
+		//TODO: Clean this up
+		serverRs, ok := s.RootModule().Resources["aws_transfer_server.test"]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if serverRs.Primary.ID == "" {
+			return fmt.Errorf("No Transfer Server ID is set")
+		}
+		//TODO: End Clean
+
 		conn := testAccProvider.Meta().(*AWSClient).transferconn
 
-		externalID := rs.Primary.Attributes["external_id"]
-		serverID := rs.Primary.Attributes["server_id"]
+		externalID := rs.Primary.ID
+		serverID := serverRs.Primary.ID
 		output, err := finder.AccessByID(conn, serverID, externalID)
 
 		if err != nil {
@@ -103,22 +115,166 @@ func testAccCheckAWSTransferAccessDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSTransferAccessBasicConfig() string {
-	//TODO: Migrate from Server to Access
-	return `
-resource "aws_server_access" "test" {}
-`
+func testAccAWSTransferAccessConfigBase(rName string) string {
+	return fmt.Sprintf(`
+  data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id                  = aws_vpc.test.id
+  cidr_block              = "10.0.0.0/24"
+  map_public_ip_on_launch = true
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_subnet" "test2" {
+  vpc_id                  = aws_vpc.test.id
+  cidr_block              = "10.0.1.0/24"
+  map_public_ip_on_launch = true
+  availability_zone = data.aws_availability_zones.available.names[1]
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_directory_service_directory" "test" {
+  name     = "corp.notexample.com"
+  password = "SuperSecretPassw0rd"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = [
+      aws_subnet.test.id,
+      aws_subnet.test2.id
+    ]
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "transfer.amazonaws.com"
+    },
+    "Action": "sts:AssumeRole"
+  }]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "AllowFullAccesstoCloudWatchLogs",
+    "Effect": "Allow",
+    "Action": [
+      "logs:*"
+    ],
+    "Resource": "*"
+  }]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "test2" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = <<POLICY
+{
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Sid": "AllowFullAccesstoS3",
+                "Effect": "Allow",
+                "Action": [
+                  "s3:*"
+                ],
+                "Resource": "*"
+              }
+            ]
+          }
+POLICY
+}
+
+  resource "aws_s3_bucket" "test" {
+    bucket = %[1]q
+	acl = "private"
+}
+
+  resource "aws_transfer_server" "test" {
+  identity_provider_type = "AWS_DIRECTORY_SERVICE"
+  directory_id			 = "${aws_directory_service_directory.test.id}"
+  logging_role           = aws_iam_role.test.arn  
+}
+`, rName)
+}
+
+func testAccAWSTransferAccessBasicConfig(rName string) string {
+	return composeConfig(
+		testAccAWSTransferAccessConfigBase(rName),
+		`
+		resource "aws_transfer_access" "test" {
+		  external_id = "S-1-1-12-1234567890-123456789-1234567890-1234"
+		  server_id = aws_transfer_server.test.id
+		  role = aws_iam_role.test.arn
+		  home_directory = "/${aws_s3_bucket.test.id}/"
+		  home_directory_type = "PATH"		  		 
+		}
+		`)
 }
 
 func testAccAWSTransferAccessUpdatedConfig(rName string) string {
-	//TODO: Migrate from Server to Access
-
 	return composeConfig(
-		testAccAWSTransferServerConfigBaseLoggingRole(rName),
+		testAccAWSTransferAccessConfigBase(rName),
 		`
-resource "aws_transfer_server" "test" {
-  identity_provider_type = "SERVICE_MANAGED"
-  logging_role           = aws_iam_role.test.arn
-}
-`)
+		resource "aws_transfer_access" "test" {
+		  external_id = "S-0-0-09-0987654321-098765432-0987654321-0987"
+		  server_id = aws_transfer_server.test.id
+          role = aws_iam_role.test.arn
+		  home_directory = "/${aws_s3_bucket.test.id}/test"
+		  home_directory_type = "PATH"		
+		}
+		`)
 }
