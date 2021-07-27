@@ -34,7 +34,7 @@ func resourceAwsS3BucketObject() *schema.Resource {
 		Delete: resourceAwsS3BucketObjectDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: importState,
+			State: resourceAwsS3BucketObjectImport,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -327,41 +327,6 @@ func resourceAwsS3BucketObjectCreate(d *schema.ResourceData, meta interface{}) e
 	return resourceAwsS3BucketObjectPut(d, meta)
 }
 
-func importState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	id := d.Id()
-
-	if strings.HasPrefix(id, "s3://") {
-		id = strings.TrimPrefix(id, "s3://")
-	}
-
-	if len(id) < 1 || !strings.Contains(id, "/") {
-		return []*schema.ResourceData{d}, fmt.Errorf("id %s should be in format <bucket>/<key> or s3://<bucket>/<key>", id)
-	}
-	parts := strings.Split(id, "/")
-
-	if len(parts) < 2 {
-		return []*schema.ResourceData{d}, fmt.Errorf("id %s should be in format <bucket>/<key> or s3://<bucket>/<key>", id)
-	}
-
-	bucket := parts[0]
-	key := strings.Join(parts[1:], "/")
-
-	d.SetId(key)
-	if err := d.Set("bucket", bucket); err != nil {
-		return []*schema.ResourceData{d}, err
-	}
-
-	if err := d.Set("key", key); err != nil {
-		return []*schema.ResourceData{d}, err
-	}
-
-	if err := resourceAwsS3BucketObjectRead(d, meta); err != nil {
-		return []*schema.ResourceData{d}, err
-	}
-
-	return []*schema.ResourceData{d}, nil
-}
-
 func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	s3conn := meta.(*AWSClient).s3conn
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
@@ -569,6 +534,29 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	return nil
+}
+
+func resourceAwsS3BucketObjectImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	id := d.Id()
+
+	if strings.HasPrefix(id, "s3://") {
+		id = strings.TrimPrefix(id, "s3://")
+	}
+
+	parts := strings.Split(id, "/")
+
+	if len(parts) < 2 {
+		return []*schema.ResourceData{d}, fmt.Errorf("id %s should be in format <bucket>/<key> or s3://<bucket>/<key>", id)
+	}
+
+	bucket := parts[0]
+	key := strings.Join(parts[1:], "/")
+
+	d.SetId(key)
+	d.Set("bucket", bucket)
+	d.Set("key", key)
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func resourceAwsS3BucketObjectSetKMS(d *schema.ResourceData, meta interface{}, sseKMSKeyId *string) error {
