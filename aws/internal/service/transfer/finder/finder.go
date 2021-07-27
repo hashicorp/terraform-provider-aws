@@ -64,7 +64,7 @@ func UserByID(conn *transfer.Transfer, serverId, userName string) (*transfer.Des
 	return output, nil
 }
 
-func AccessByID(conn *transfer.Transfer, serverId, externalId string) (*transfer.DescribedAccess, error) {
+func AccessByID(conn *transfer.Transfer, serverId, externalId string) (*transfer.DescribeAccessOutput, error) {
 	input := &transfer.DescribeAccessInput{
 		ExternalId: aws.String(externalId),
 		ServerId:   aws.String(serverId),
@@ -90,5 +90,5 @@ func AccessByID(conn *transfer.Transfer, serverId, externalId string) (*transfer
 		}
 	}
 
-	return output.Access, nil
+	return output, nil
 }
