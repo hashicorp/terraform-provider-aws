@@ -2,16 +2,17 @@ package aws
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"reflect"
 	"regexp"
 	"sort"
 	"testing"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSS3BucketIntelligentTieringConfiguration_basic(t *testing.T) {
@@ -895,6 +896,10 @@ func TestExpandS3IntelligentTieringConfigurations(t *testing.T) {
 			Input:    []interface{}{map[string]interface{}{}},
 			Expected: nil,
 		},
+		"nil array": {
+			Input:    []interface{}{nil},
+			Expected: nil,
+		},
 		"one input": {
 			Input: []interface{}{
 				map[string]interface{}{
@@ -1118,6 +1123,66 @@ func TestFlattenS3IntelligentTieringConfiguration(t *testing.T) {
 
 		if !reflect.DeepEqual(value, tc.Expected) {
 			t.Errorf("Case %q: Got:\n%v\n\nExpected:\n%v", k, value, tc.Expected)
+		}
+	}
+}
+
+func TestResourceAwsS3BucketIntelligentTieringConfigurationParseStatus(t *testing.T) {
+	testCases := map[string]struct {
+		Input    *string
+		Expected bool
+	}{
+		"nil input": {
+			Input:    nil,
+			Expected: false,
+		},
+		"random input": {
+			Input:    aws.String("testing"),
+			Expected: false,
+		},
+		"disabled title": {
+			Input:    aws.String("Disabled"),
+			Expected: false,
+		},
+		"enabled title": {
+			Input:    aws.String("Enabled"),
+			Expected: true,
+		},
+		"enabled random case": {
+			Input:    aws.String("EnAbLed"),
+			Expected: true,
+		},
+	}
+
+	for k, tc := range testCases {
+		value := resourceAwsS3BucketIntelligentTieringConfigurationParseStatus(tc.Input)
+
+		if !reflect.DeepEqual(value, tc.Expected) {
+			t.Errorf("Case %q:\nGot:\n%v\nExpected:\n%v", k, value, tc.Expected)
+		}
+	}
+}
+
+func TestResourceAwsS3BucketIntelligentTieringConfigurationParseEnabled(t *testing.T) {
+	testCases := map[string]struct {
+		Input    bool
+		Expected *string
+	}{
+		"false input": {
+			Input:    false,
+			Expected: aws.String("Disabled"),
+		},
+		"true input": {
+			Input:    true,
+			Expected: aws.String("Enabled"),
+		},
+	}
+
+	for k, tc := range testCases {
+		value := resourceAwsS3BucketIntelligentTieringConfigurationParseEnabled(tc.Input)
+
+		if !reflect.DeepEqual(value, tc.Expected) {
+			t.Errorf("Case %q:\nGot:\n%v\nExpected:\n%v", k, value, tc.Expected)
 		}
 	}
 }
