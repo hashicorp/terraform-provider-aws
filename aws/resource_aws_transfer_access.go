@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	tftransfer "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -117,9 +118,11 @@ func resourceAwsTransferAccessCreate(d *schema.ResourceData, meta interface{}) e
 
 	input := &transfer.CreateAccessInput{}
 
-	if v, ok := d.GetOk("external_id"); ok {
-		input.ExternalId = aws.String(v.(string))
-	}
+	serverID := d.Get("server_id").(string)
+	externalID := d.Get("external_id").(string)
+
+	input.ServerId = aws.String(serverID)
+	input.ExternalId = aws.String(externalID)
 
 	if v, ok := d.GetOk("home_directory"); ok {
 		input.HomeDirectory = aws.String(v.(string))
@@ -145,10 +148,6 @@ func resourceAwsTransferAccessCreate(d *schema.ResourceData, meta interface{}) e
 		input.Role = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("server_id"); ok {
-		input.ServerId = aws.String(v.(string))
-	}
-
 	log.Printf("[DEBUG] Creating Access: %s", input)
 	output, err := conn.CreateAccess(input)
 
@@ -156,7 +155,7 @@ func resourceAwsTransferAccessCreate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error creating Access: %w", err)
 	}
 
-	d.SetId(aws.StringValue(output.ExternalId))
+	d.SetId(tftransfer.AccessCreateResourceID(*output.ServerId, *output.ExternalId))
 
 	return resourceAwsTransferAccessRead(d, meta)
 }
@@ -164,8 +163,11 @@ func resourceAwsTransferAccessCreate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsTransferAccessRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
 
-	externalId := d.Get("external_id").(string)
-	serverId := d.Get("server_id").(string)
+	serverId, externalId, err := tftransfer.AccessParseResourceID(d.Id())
+	if err != nil {
+		return fmt.Errorf("error parsing Transfer Access ID: %s", err)
+	}
+
 	output, err := finder.AccessByID(conn, serverId, externalId)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -178,17 +180,19 @@ func resourceAwsTransferAccessRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error reading Access with external ID (%s) for server (%s): %w", externalId, serverId, err)
 	}
 
-	d.Set("external_id", output.ExternalId)
-	d.Set("policy", output.Policy)
-	d.Set("home_directory_type", output.HomeDirectoryType)
-	d.Set("home_directory", output.HomeDirectory)
-	d.Set("role", output.Role)
+	access := output.Access
+	d.Set("external_id", access.ExternalId)
+	d.Set("server_id", serverId)
+	d.Set("policy", access.Policy)
+	d.Set("home_directory_type", access.HomeDirectoryType)
+	d.Set("home_directory", access.HomeDirectory)
+	d.Set("role", access.Role)
 
-	if err := d.Set("home_directory_mappings", flattenAwsTransferHomeDirectoryMappings(output.HomeDirectoryMappings)); err != nil {
+	if err := d.Set("home_directory_mappings", flattenAwsTransferHomeDirectoryMappings(access.HomeDirectoryMappings)); err != nil {
 		return fmt.Errorf("Error setting home_directory_mappings: %w", err)
 	}
 
-	if err := d.Set("posix_profile", flattenTransferUserPosixUser(output.PosixProfile)); err != nil {
+	if err := d.Set("posix_profile", flattenTransferUserPosixUser(access.PosixProfile)); err != nil {
 		return fmt.Errorf("Error setting posix_profile: %w", err)
 	}
 

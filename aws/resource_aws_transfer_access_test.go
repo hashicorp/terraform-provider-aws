@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	tftransfer "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/transfer"
@@ -62,28 +63,20 @@ func testAccCheckAWSTransferAccessExists(n string, v *transfer.DescribedAccess) 
 			return fmt.Errorf("No Transfer Access ID is set")
 		}
 
-		//TODO: Clean this up
-		serverRs, ok := s.RootModule().Resources["aws_transfer_server.test"]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+		serverID, externalID, err := tftransfer.AccessParseResourceID(rs.Primary.ID)
+		if err != nil {
+			return fmt.Errorf("error parsing Transfer Access ID: %s", err)
 		}
-
-		if serverRs.Primary.ID == "" {
-			return fmt.Errorf("No Transfer Server ID is set")
-		}
-		//TODO: End Clean
 
 		conn := testAccProvider.Meta().(*AWSClient).transferconn
 
-		externalID := rs.Primary.ID
-		serverID := serverRs.Primary.ID
 		output, err := finder.AccessByID(conn, serverID, externalID)
 
 		if err != nil {
 			return err
 		}
 
-		*v = *output
+		*v = *output.Access
 
 		return nil
 	}
@@ -212,29 +205,16 @@ resource "aws_iam_role_policy" "test" {
       "logs:*"
     ],
     "Resource": "*"
-  }]
-}
-POLICY
-}
-
-resource "aws_iam_role_policy" "test2" {
-  name = %[1]q
-  role = aws_iam_role.test.id
-
-  policy = <<POLICY
+  },
 {
-            "Version": "2012-10-17",
-            "Statement": [
-              {
                 "Sid": "AllowFullAccesstoS3",
                 "Effect": "Allow",
                 "Action": [
                   "s3:*"
                 ],
                 "Resource": "*"
-              }
-            ]
-          }
+              }]
+}
 POLICY
 }
 
