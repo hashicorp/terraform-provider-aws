@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
@@ -41,12 +40,11 @@ func resourceAwsKmsExternalKey() *schema.Resource {
 				Computed: true,
 			},
 
-			// TODO
-			// "bypass_policy_lockout_safety_check": {
-			// 	Type:     schema.TypeBool,
-			// 	Optional: true,
-			// 	Default:  false,
-			// },
+			"bypass_policy_lockout_safety_check": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 
 			"deletion_window_in_days": {
 				Type:         schema.TypeInt,
@@ -118,8 +116,9 @@ func resourceAwsKmsExternalKeyCreate(d *schema.ResourceData, meta interface{}) e
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &kms.CreateKeyInput{
-		KeyUsage: aws.String(kms.KeyUsageTypeEncryptDecrypt),
-		Origin:   aws.String(kms.OriginTypeExternal),
+		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_safety_check").(bool)),
+		KeyUsage:                       aws.String(kms.KeyUsageTypeEncryptDecrypt),
+		Origin:                         aws.String(kms.OriginTypeExternal),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -183,6 +182,8 @@ func resourceAwsKmsExternalKeyRead(d *schema.ResourceData, meta interface{}) err
 		return nil
 	}
 
+	log.Printf("[WARN] kmsKey: %v", key)
+
 	d.Set("arn", key.metadata.Arn)
 	d.Set("description", key.metadata.Description)
 	d.Set("enabled", key.metadata.Enabled)
@@ -235,20 +236,8 @@ func resourceAwsKmsExternalKeyUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if d.HasChange("policy") {
-		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
-		if err != nil {
-			return fmt.Errorf("error parsing KMS External Key (%s) policy JSON: %s", d.Id(), err)
-		}
-
-		input := &kms.PutKeyPolicyInput{
-			KeyId:      aws.String(d.Id()),
-			Policy:     aws.String(policy),
-			PolicyName: aws.String("default"),
-		}
-
-		if _, err := conn.PutKeyPolicy(input); err != nil {
-			return fmt.Errorf("error updating KMS External Key (%s) policy: %s", d.Id(), err)
+		if err := updateKmsKeyPolicy(conn, d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
+			return err
 		}
 	}
 

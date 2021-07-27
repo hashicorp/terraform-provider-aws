@@ -332,10 +332,12 @@ func findKmsKey(conn *kms.KMS, keyID string, isNewResource bool) (*kmsKey, error
 			return nil, fmt.Errorf("policy contains invalid JSON: %w", err)
 		}
 
-		key.rotation, err = finder.KeyRotationEnabledByKeyID(conn, keyID)
+		if aws.StringValue(key.metadata.Origin) == kms.OriginTypeAwsKms {
+			key.rotation, err = finder.KeyRotationEnabledByKeyID(conn, keyID)
 
-		if err != nil {
-			return nil, fmt.Errorf("error reading KMS Key (%s) rotation enabled: %w", keyID, err)
+			if err != nil {
+				return nil, fmt.Errorf("error reading KMS Key (%s) rotation enabled: %w", keyID, err)
+			}
 		}
 
 		key.tags, err = keyvaluetags.KmsListTags(conn, keyID)
