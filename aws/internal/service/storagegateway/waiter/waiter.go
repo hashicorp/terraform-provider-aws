@@ -169,7 +169,7 @@ func SMBFileShareUpdated(conn *storagegateway.StorageGateway, arn string, timeou
 	return nil, err
 }
 
-// FileSystemAssociationAvailable waits for a FSx File System to return Available
+// FileSystemAssociationAvailable waits for a File System Association to return Available
 func FileSystemAssociationAvailable(conn *storagegateway.StorageGateway, fileSystemArn string, timeout time.Duration) (*storagegateway.FileSystemAssociationInfo, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: tfstoragegateway.FileSystemAssociationStatusAvailableStatusPending(),

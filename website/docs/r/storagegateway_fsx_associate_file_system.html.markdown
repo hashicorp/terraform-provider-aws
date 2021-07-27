@@ -1,12 +1,12 @@
 ---
 subcategory: "Storage Gateway"
 layout: "aws"
-page_title: "AWS: storagegateway_fsx_associate_file_system"
+page_title: "AWS: aws_storagegateway_file_system_association"
 description: |-
-  Associate an Amazon FSx file system with the FSx File Gateway. After the association process is complete, the file shares on the Amazon FSx file system are available for access through the gateway. This operation only supports the FSx File Gateway type.
+  Mananges an association between an Amazon FSx file system and an Amazon FSx File Gateway.
 ---
 
-# Resource: aws_storagegateway_fsx_associate_file_system
+# Resource: aws_storagegateway_file_system_association
 
 Associate an Amazon FSx file system with the FSx File Gateway. After the association process is complete, the file shares on the Amazon FSx file system are available for access through the gateway. This operation only supports the FSx File Gateway type.
 
@@ -15,7 +15,7 @@ Associate an Amazon FSx file system with the FSx File Gateway. After the associa
 ## Example Usage
 
 ```terraform
-resource "aws_storagegateway_fsx_associate_file_system" "example" {
+resource "aws_storagegateway_file_system_association" "example" {
   gateway_arn           = aws_storagegateway_gateway.example.arn
   location_arn          = aws_fsx_windows_file_system.example.arn
   username              = "Admin"
@@ -65,7 +65,7 @@ resource "aws_fsx_windows_file_system" "test" {
   throughput_capacity = 8
 }
 
-resource "aws_storagegateway_fsx_associate_file_system" "fsx" {
+resource "aws_storagegateway_file_system_association" "fsx" {
 
   gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_fsx_windows_file_system.test.arn
@@ -106,8 +106,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_storagegateway_fsx_associate_file_system` can be imported by using the FSx file system association Amazon Resource Name (ARN), e.g.
+`aws_storagegateway_file_system_association` can be imported by using the FSx file system association Amazon Resource Name (ARN), e.g.
 
 ```
-$ terraform import aws_storagegateway_fsx_associate_file_system.example arn:aws:storagegateway:us-east-1:123456789012:fs-association/fsa-0DA347732FDB40125
+$ terraform import aws_storagegateway_file_system_association.example arn:aws:storagegateway:us-east-1:123456789012:fs-association/fsa-0DA347732FDB40125
 ```

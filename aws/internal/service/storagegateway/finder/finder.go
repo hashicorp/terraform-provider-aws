@@ -120,20 +120,20 @@ func FileSystemAssociationByARN(conn *storagegateway.StorageGateway, fileSystemA
 	input := &storagegateway.DescribeFileSystemAssociationsInput{
 		FileSystemAssociationARNList: []*string{aws.String(fileSystemAssociationARN)},
 	}
-	log.Printf("[DEBUG] Reading Storage Gateway FSx File Associations: %s", input)
+	log.Printf("[DEBUG] Reading Storage Gateway File System Associations: %s", input)
 
 	output, err := conn.DescribeFileSystemAssociations(input)
 	if err != nil {
 		if tfstoragegateway.InvalidGatewayRequestErrCodeEquals(err, tfstoragegateway.FileSystemAssociationNotFound) {
-			log.Printf("[WARN] FSX File System %q not found", fileSystemAssociationARN)
+			log.Printf("[WARN] Storage Gateway File System Association (%s) not found", fileSystemAssociationARN)
 			return nil, nil
 		}
 
-		return nil, fmt.Errorf("error reading Storage Gateway FSx File System: %w", err)
+		return nil, fmt.Errorf("error reading Storage Gateway File System Association (%s): %w", fileSystemAssociationARN, err)
 	}
 
 	if output == nil || len(output.FileSystemAssociationInfoList) == 0 || output.FileSystemAssociationInfoList[0] == nil {
-		log.Printf("[WARN] FSX File System %q not found", fileSystemAssociationARN)
+		log.Printf("[WARN] Storage Gateway File System Association (%s) not found", fileSystemAssociationARN)
 		return nil, nil
 	}
 
