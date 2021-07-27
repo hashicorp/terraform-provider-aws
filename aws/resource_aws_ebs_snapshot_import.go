@@ -47,21 +47,19 @@ func resourceAwsEbsSnapshotImport() *schema.Resource {
 							ForceNew: true,
 						},
 						"upload_end": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IsRFC3339Time,
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 						"upload_size": {
 							Type:     schema.TypeFloat,
 							Optional: true,
-							ForceNew: true,
+							Computed: true,
 						},
 						"upload_start": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IsRFC3339Time,
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -158,63 +156,6 @@ func resourceAwsEbsSnapshotImport() *schema.Resource {
 	}
 }
 
-func expandAwsEbsSnapshotClientData(tfMap map[string]interface{}) (*ec2.ClientData, error) {
-	clientData := &ec2.ClientData{}
-
-	if v, ok := tfMap["comment"].(string); ok {
-		clientData.Comment = aws.String(v)
-	}
-
-	if v, ok := tfMap["upload_end"].(string); ok {
-		upload_end, err := time.Parse(time.RFC3339, v)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing upload_end to timestamp: %s", err)
-		}
-		clientData.UploadEnd = aws.Time(upload_end)
-	}
-
-	if v, ok := tfMap["upload_size"].(float64); ok {
-		clientData.UploadSize = aws.Float64(v)
-	}
-
-	if v, ok := tfMap["upload_start"].(string); ok {
-		upload_start, err := time.Parse(time.RFC3339, v)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing upload_start to timestamp: %s", err)
-		}
-		clientData.UploadStart = aws.Time(upload_start)
-	}
-
-	return clientData, nil
-}
-
-func expandAwsEbsSnapshotDiskContainer(tfMap map[string]interface{}) *ec2.SnapshotDiskContainer {
-	diskContainer := &ec2.SnapshotDiskContainer{
-		Format: aws.String(tfMap["format"].(string)),
-	}
-
-	if v, ok := tfMap["description"].(string); ok {
-		diskContainer.Description = aws.String(v)
-	}
-
-	if v, ok := tfMap["url"].(string); ok && v != "" {
-		diskContainer.Url = aws.String(v)
-	}
-
-	if v, ok := tfMap["user_bucket"]; ok {
-		vL := v.([]interface{})
-		for _, v := range vL {
-			ub := v.(map[string]interface{})
-			diskContainer.UserBucket = &ec2.UserBucket{
-				S3Bucket: aws.String(ub["s3_bucket"].(string)),
-				S3Key:    aws.String(ub["s3_key"].(string)),
-			}
-		}
-	}
-
-	return diskContainer
-}
-
 func resourceAwsEbsSnapshotImportCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
@@ -225,26 +166,17 @@ func resourceAwsEbsSnapshotImportCreate(d *schema.ResourceData, meta interface{}
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeImportSnapshotTask),
 	}
 
-	if v, ok := d.GetOk("client_data"); ok {
-		vL := v.([]interface{})
-		for _, v := range vL {
-			cdv, ok := v.(map[string]interface{})
+	if clientData, ok := d.GetOk("client_data"); ok {
+		for _, v := range clientData.([]interface{}) {
+			if cdv, ok := v.(map[string]interface{}); ok {
 
-			if !ok {
-				continue
+				clientData, err := expandAwsEbsSnapshotClientData(cdv)
+				if err != nil {
+					return err
+				}
+
+				request.ClientData = clientData
 			}
-
-			clientData, err := expandAwsEbsSnapshotClientData(cdv)
-
-			if err != nil {
-				return err
-			}
-
-			if clientData == nil {
-				continue
-			}
-
-			request.ClientData = clientData
 		}
 	}
 
@@ -254,22 +186,13 @@ func resourceAwsEbsSnapshotImportCreate(d *schema.ResourceData, meta interface{}
 		request.Description = aws.String(v.(string))
 	}
 
-	v := d.Get("disk_container")
-	vL := v.([]interface{})
-	for _, v := range vL {
-		dcv, ok := v.(map[string]interface{})
+	diskContainer := d.Get("disk_container")
+	for _, v := range diskContainer.([]interface{}) {
+		if dcv, ok := v.(map[string]interface{}); ok {
 
-		if !ok {
-			continue
+			diskContainer := expandAwsEbsSnapshotDiskContainer(dcv)
+			request.DiskContainer = diskContainer
 		}
-
-		diskContainer := expandAwsEbsSnapshotDiskContainer(dcv)
-
-		if diskContainer == nil {
-			continue
-		}
-
-		request.DiskContainer = diskContainer
 	}
 
 	if v, ok := d.GetOk("encrypted"); ok {
@@ -287,8 +210,6 @@ func resourceAwsEbsSnapshotImportCreate(d *schema.ResourceData, meta interface{}
 	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		var resp *ec2.ImportSnapshotOutput
 		resp, err := conn.ImportSnapshot(request)
-		// Error: InvalidParameter: The service role terraform-20201121225356951800000001 provided does not exist or does not have sufficient permissions
-		// status code: 400, request id: b0abc3d2-5b59-4e5c-b748-c1cb084020c0
 
 		if isAWSErr(err, "InvalidParameter", "provided does not exist or does not have sufficient permissions") {
 			return resource.RetryableError(err)
@@ -314,10 +235,6 @@ func resourceAwsEbsSnapshotImportCreate(d *schema.ResourceData, meta interface{}
 			}
 		}
 
-		err = resourceAwsEbsSnapshotImportRead(d, meta)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
 		return nil
 	})
 
@@ -329,7 +246,7 @@ func resourceAwsEbsSnapshotImportCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error importing EBS Snapshot: %s", err)
 	}
 
-	return nil
+	return resourceAwsEbsSnapshotImportRead(d, meta)
 }
 
 func resourceAwsEbsSnapshotImportRead(d *schema.ResourceData, meta interface{}) error {
@@ -420,7 +337,64 @@ func resourceAwsEbsSnapshotImportDelete(d *schema.ResourceData, meta interface{}
 		_, err = conn.DeleteSnapshot(input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting EBS snapshot: %s", err)
+		return fmt.Errorf("error deleting EBS snapshot: %s", err)
 	}
 	return nil
+}
+
+func expandAwsEbsSnapshotClientData(tfMap map[string]interface{}) (*ec2.ClientData, error) {
+	clientData := &ec2.ClientData{}
+
+	if v, ok := tfMap["comment"].(string); ok {
+		clientData.Comment = aws.String(v)
+	}
+
+	if v, ok := tfMap["upload_end"].(string); ok {
+		upload_end, err := time.Parse(time.RFC3339, v)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing upload_end to timestamp: %s", err)
+		}
+		clientData.UploadEnd = aws.Time(upload_end)
+	}
+
+	if v, ok := tfMap["upload_size"].(float64); ok {
+		clientData.UploadSize = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["upload_start"].(string); ok {
+		upload_start, err := time.Parse(time.RFC3339, v)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing upload_start to timestamp: %s", err)
+		}
+		clientData.UploadStart = aws.Time(upload_start)
+	}
+
+	return clientData, nil
+}
+
+func expandAwsEbsSnapshotDiskContainer(tfMap map[string]interface{}) *ec2.SnapshotDiskContainer {
+	diskContainer := &ec2.SnapshotDiskContainer{
+		Format: aws.String(tfMap["format"].(string)),
+	}
+
+	if v, ok := tfMap["description"].(string); ok {
+		diskContainer.Description = aws.String(v)
+	}
+
+	if v, ok := tfMap["url"].(string); ok && v != "" {
+		diskContainer.Url = aws.String(v)
+	}
+
+	if v, ok := tfMap["user_bucket"]; ok {
+		vL := v.([]interface{})
+		for _, v := range vL {
+			ub := v.(map[string]interface{})
+			diskContainer.UserBucket = &ec2.UserBucket{
+				S3Bucket: aws.String(ub["s3_bucket"].(string)),
+				S3Key:    aws.String(ub["s3_key"].(string)),
+			}
+		}
+	}
+
+	return diskContainer
 }

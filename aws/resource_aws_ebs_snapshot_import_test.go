@@ -269,7 +269,7 @@ data "aws_iam_policy_document" "vmimport-trust" {
 }
 
 func testAccAwsEbsSnapshotImportConfigBasic(rName string, t *testing.T) string {
-	return testAccAwsEbsSnapshotImportConfig_Base(t) + fmt.Sprintf(`
+	return composeConfig(testAccAwsEbsSnapshotImportConfig_Base(t), fmt.Sprintf(`
 resource "aws_ebs_snapshot_import" "test" {
   disk_container {
     description = %[1]q
@@ -287,11 +287,11 @@ resource "aws_ebs_snapshot_import" "test" {
     delete = "10m"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAwsEbsSnapshotImportConfigTags1(rName string, t *testing.T, tagKey1 string, tagValue1 string) string {
-	return testAccAwsEbsSnapshotImportConfig_Base(t) + fmt.Sprintf(`
+	return composeConfig(testAccAwsEbsSnapshotImportConfig_Base(t), fmt.Sprintf(`
 resource "aws_ebs_snapshot_import" "test" {
   disk_container {
     description = %[1]q
@@ -313,11 +313,11 @@ resource "aws_ebs_snapshot_import" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccAwsEbsSnapshotImportConfigTags2(rName string, t *testing.T, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
-	return testAccAwsEbsSnapshotImportConfig_Base(t) + fmt.Sprintf(`
+	return composeConfig(testAccAwsEbsSnapshotImportConfig_Base(t), fmt.Sprintf(`
 resource "aws_ebs_snapshot_import" "test" {
   disk_container {
     description = %[1]q
@@ -340,7 +340,7 @@ resource "aws_ebs_snapshot_import" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccAwsEbsSnapshotDisk(t *testing.T) string {
