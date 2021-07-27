@@ -76,7 +76,6 @@ func testSweepKmsKeys(region string) error {
 
 func TestAccAWSKmsKey_basic(t *testing.T) {
 	var key kms.KeyMetadata
-	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -86,7 +85,7 @@ func TestAccAWSKmsKey_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsKey(rName),
+				Config: testAccAWSKmsKeyConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsKeyExists(resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "customer_master_key_spec", "SYMMETRIC_DEFAULT"),
@@ -139,7 +138,7 @@ func TestAccAWSKmsKey_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsKey(rName),
+				Config: testAccAWSKmsKeyConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsKeyExists(resourceName, &key),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsKmsKey(), resourceName),
@@ -227,7 +226,7 @@ func TestAccAWSKmsKey_policyBypassUpdate(t *testing.T) {
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsKey(rName),
+				Config: testAccAWSKmsKeyConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsKeyExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
@@ -490,7 +489,13 @@ func testAccCheckAWSKmsKeyIsEnabled(key *kms.KeyMetadata, isEnabled bool) resour
 	}
 }
 
-func testAccAWSKmsKey(rName string) string {
+func testAccAWSKmsKeyConfig() string {
+	return `
+resource "aws_kms_key" "test" {}
+`
+}
+
+func testAccAWSKmsKeyConfigName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
