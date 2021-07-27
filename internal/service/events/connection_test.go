@@ -187,7 +187,7 @@ func TestAccEventsConnection_oAuth(t *testing.T) {
 	authorizationType := "OAUTH_CLIENT_CREDENTIALS"
 	description := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	// oauth
-	authorizationEndpoint := "https://www.hashicorp.com/products/terraform"
+	authorizationEndpoint := "https://example.com/auth"
 	httpMethod := "POST"
 
 	// client_parameters
@@ -211,7 +211,7 @@ func TestAccEventsConnection_oAuth(t *testing.T) {
 	nameModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	descriptionModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	// oauth
-	authorizationEndpointModified := "https://www.hashicorp.com/"
+	authorizationEndpointModified := "https://example.com/auth-modified"
 	httpMethodModified := "GET"
 
 	// client_parameters

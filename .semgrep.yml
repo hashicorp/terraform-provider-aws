@@ -560,8 +560,8 @@ rules:
     paths:
       include:
         - internal/service/**/*_data_source_test.go
-        - internal/service/[a-c]*
-        - internal/service/d*
+        - internal/service/[a-d]*
+        - internal/service/events
         - internal/service/[f-z]*
       exclude:
         - internal/service/codebuild/project_test.go
