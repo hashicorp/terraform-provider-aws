@@ -30,9 +30,8 @@ func dataSourceAwsQLDBLedger() *schema.Resource {
 			},
 
 			"permissions_mode": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(qldb.PermissionsMode_Values(), false),
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"deletion_protection": {
