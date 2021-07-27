@@ -53,11 +53,6 @@ resource "aws_s3_bucket_intelligent_tiering_configuration" "example-filtered" {
   }
 
   tier {
-    access_tier = "DEEP_ARCHIVE_ACCESS"
-    days        = 180
-  }
-
-  tier {
     access_tier = "ARCHIVE_ACCESS"
     days        = 125
   }
@@ -76,11 +71,17 @@ The following arguments are supported:
 * `bucket` - (Required) The name of the bucket this intelligent tiering configuration is associated with.
 * `name` - (Required) Unique identifier of the intelligent tiering configuration for the bucket.
 * `filter` - (Optional) Object filtering that accepts a prefix, tags, or a logical AND of prefix and tags (documented below).
+* `tier` - (Required) Access tier configurations that accepts access tier and number of days to move to the tier (documented below).
 
 The `filter` configuration supports the following:
 
 * `prefix` - (Optional) Object prefix for filtering.
 * `tags` - (Optional) Set of object tags for filtering.
+
+The `tier` configuration supports the following:
+
+* `access_tier` - (Required) Specifies the Intelligent Tiering Archive Tier that objects in this filter will transition to. Can be `ARCHIVE_CONFIGURATION`, or `DEEP_ARCHIVE_CONFIGURATION`.
+* `days` - (Required) Number of days until the object is moved to the access tier. Must be over `90` for `ARCHIVE_CONFIGURATION` and over `180` for `DEEP_ARCHIVE_CONFIGURATION`
 
 ## Attributes Reference
 
@@ -88,7 +89,7 @@ No additional attributes are exported.
 
 ## Import
 
-S3 bucket analytics configurations can be imported using `???`, e.g.
+S3 bucket analytics configurations can be imported using `bucket:name`, e.g.
 
 ```
 $ terraform import aws_s3_bucket_intelligent_tiering_configuration.my-bucket-entire-bucket my-bucket:EntireBucket
