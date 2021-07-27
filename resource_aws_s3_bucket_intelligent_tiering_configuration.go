@@ -88,7 +88,7 @@ func resourceAwsS3IntelligentTieringConfigurationPut(d *schema.ResourceData, met
 	s3conn := meta.(*AWSClient).s3conn
 
 	bucket := d.Get("bucket").(string)
-	config := d.Get("tier").(*schema.Set).List()
+	tiers := d.Get("tier").(*schema.Set).List()
 	name := d.Get("name").(string)
 
 	log.Printf("[DEBUG] S3 bucket: %s, put intelligent tiering configuration: %s", bucket, name)
@@ -106,7 +106,7 @@ func resourceAwsS3IntelligentTieringConfigurationPut(d *schema.ResourceData, met
 			Filter:   expandS3IntelligentTieringFilter(d.Get("filter").([]interface{})),
 			Id:       aws.String(name),
 			Status:   aws.String(status),
-			Tierings: expandS3IntelligentTieringConfigurations(config),
+			Tierings: expandS3IntelligentTieringConfigurations(tiers),
 		},
 	}
 
@@ -179,7 +179,7 @@ func resourceAwsS3IntelligentTieringConfigurationRead(d *schema.ResourceData, me
 		return fmt.Errorf("error setting enabled status: %w", err)
 	}
 
-	if err = d.Set("tier", flattenS3ArchiveConfiguration(output.IntelligentTieringConfiguration.Tierings)); err != nil {
+	if err = d.Set("tier", flattenS3IntelligentTieringConfiguration(output.IntelligentTieringConfiguration.Tierings)); err != nil {
 		return fmt.Errorf("error setting archive tier: %w", err)
 	}
 
@@ -374,20 +374,20 @@ func flattenS3IntelligentTieringFilter(intelligentTieringFilter *s3.IntelligentT
 	return []map[string]interface{}{result}
 }
 
-func flattenS3ArchiveConfiguration(archiveConfigurations []*s3.Tiering) []map[string]interface{} {
-	if archiveConfigurations == nil {
+func flattenS3IntelligentTieringConfiguration(tieringConfigurations []*s3.Tiering) []map[string]interface{} {
+	if tieringConfigurations == nil {
 		return []map[string]interface{}{}
 	}
 
-	ac := make([]map[string]interface{}, 0, len(archiveConfigurations))
-	for _, c := range archiveConfigurations {
+	ac := make([]map[string]interface{}, 0, len(tieringConfigurations))
+	for _, c := range tieringConfigurations {
 		q := make(map[string]interface{})
 		if c.AccessTier != nil {
 			q["access_tier"] = aws.StringValue(c.AccessTier)
 		}
 
 		if c.Days != nil {
-			q["days"] = aws.Int64Value(c.Days)
+			q["days"] = int(aws.Int64Value(c.Days))
 		}
 		ac = append(ac, q)
 	}

@@ -941,3 +941,183 @@ func TestExpandS3IntelligentTieringConfigurations(t *testing.T) {
 		}
 	}
 }
+
+func TestFlattenS3IntelligentTieringFilter(t *testing.T) {
+	testCases := map[string]struct {
+		Input    *s3.IntelligentTieringFilter
+		Expected []map[string]interface{}
+	}{
+		"nil input": {
+			Input:    nil,
+			Expected: nil,
+		},
+		"empty input": {
+			Input:    &s3.IntelligentTieringFilter{},
+			Expected: nil,
+		},
+		"prefix only": {
+			Input: &s3.IntelligentTieringFilter{
+				Prefix: aws.String("prefix/"),
+			},
+			Expected: []map[string]interface{}{
+				{
+					"prefix": "prefix/",
+				},
+			},
+		},
+		"prefix and single tag": {
+			Input: &s3.IntelligentTieringFilter{
+				And: &s3.IntelligentTieringAndOperator{
+					Prefix: aws.String("prefix/"),
+					Tags: []*s3.Tag{
+						{
+							Key:   aws.String("tag1key"),
+							Value: aws.String("tag1value"),
+						},
+					},
+				},
+			},
+			Expected: []map[string]interface{}{
+				{
+					"prefix": "prefix/",
+					"tags": map[string]string{
+						"tag1key": "tag1value",
+					},
+				},
+			},
+		},
+		"prefix and multiple tags": {
+			Input: &s3.IntelligentTieringFilter{
+				And: &s3.IntelligentTieringAndOperator{
+					Prefix: aws.String("prefix/"),
+					Tags: []*s3.Tag{
+						{
+							Key:   aws.String("tag1key"),
+							Value: aws.String("tag1value"),
+						},
+						{
+							Key:   aws.String("tag2key"),
+							Value: aws.String("tag2value"),
+						},
+					},
+				},
+			},
+			Expected: []map[string]interface{}{
+				{
+					"prefix": "prefix/",
+					"tags": map[string]string{
+						"tag1key": "tag1value",
+						"tag2key": "tag2value",
+					},
+				},
+			},
+		},
+		"single tag only": {
+			Input: &s3.IntelligentTieringFilter{
+				Tag: &s3.Tag{
+					Key:   aws.String("tag1key"),
+					Value: aws.String("tag1value"),
+				},
+			},
+			Expected: []map[string]interface{}{
+				{
+					"tags": map[string]string{
+						"tag1key": "tag1value",
+					},
+				},
+			},
+		},
+		"multiple tags only": {
+			Input: &s3.IntelligentTieringFilter{
+				And: &s3.IntelligentTieringAndOperator{
+					Tags: []*s3.Tag{
+						{
+							Key:   aws.String("tag1key"),
+							Value: aws.String("tag1value"),
+						},
+						{
+							Key:   aws.String("tag2key"),
+							Value: aws.String("tag2value"),
+						},
+					},
+				},
+			},
+			Expected: []map[string]interface{}{
+				{
+					"tags": map[string]string{
+						"tag1key": "tag1value",
+						"tag2key": "tag2value",
+					},
+				},
+			},
+		},
+	}
+
+	for k, tc := range testCases {
+		value := flattenS3IntelligentTieringFilter(tc.Input)
+
+		if !reflect.DeepEqual(value, tc.Expected) {
+			t.Errorf("Case %q: Got:\n%v\n\nExpected:\n%v", k, value, tc.Expected)
+		}
+	}
+}
+
+func TestFlattenS3IntelligentTieringConfiguration(t *testing.T) {
+	testCases := map[string]struct {
+		Input    []*s3.Tiering
+		Expected []map[string]interface{}
+	}{
+		"nil value": {
+			Input:    nil,
+			Expected: []map[string]interface{}{},
+		},
+		"empty root": {
+			Input:    []*s3.Tiering{},
+			Expected: []map[string]interface{}{},
+		},
+		"one input": {
+			Input: []*s3.Tiering{
+				{
+					AccessTier: aws.String("testing"),
+					Days:       aws.Int64(123),
+				},
+			},
+			Expected: []map[string]interface{}{
+				{
+					"access_tier": "testing",
+					"days":        123,
+				},
+			},
+		},
+		"two input": {
+			Input: []*s3.Tiering{
+				{
+					AccessTier: aws.String("testing_1"),
+					Days:       aws.Int64(111),
+				},
+				{
+					AccessTier: aws.String("testing_2"),
+					Days:       aws.Int64(222),
+				},
+			},
+			Expected: []map[string]interface{}{
+				{
+					"access_tier": "testing_1",
+					"days":        111,
+				},
+				{
+					"access_tier": "testing_2",
+					"days":        222,
+				},
+			},
+		},
+	}
+
+	for k, tc := range testCases {
+		value := flattenS3IntelligentTieringConfiguration(tc.Input)
+
+		if !reflect.DeepEqual(value, tc.Expected) {
+			t.Errorf("Case %q: Got:\n%v\n\nExpected:\n%v", k, value, tc.Expected)
+		}
+	}
+}
