@@ -529,8 +529,8 @@ resource "aws_budgets_budget" "test" {
   cost_types {
     include_discount     = false
     include_subscription = true
-	include_tax          = false
-	use_blended          = true
+    include_tax          = false
+    use_blended          = true
   }
 }
 `, rName, startDate, endDate, testAccGetRegion(), testAccGetAlternateRegion())
@@ -554,12 +554,12 @@ resource "aws_budgets_budget" "test" {
   }
 
   cost_types {
-	include_credit       = false
+    include_credit       = false
     include_discount     = true
-	include_refund       = false
+    include_refund       = false
     include_subscription = true
-	include_tax          = true
-	use_blended          = false
+    include_tax          = true
+    use_blended          = false
   }
 }
 `, rName, startDate, endDate, testAccGetAlternateRegion(), testAccGetThirdRegion())
@@ -580,18 +580,18 @@ resource "aws_budgets_budget" "test" {
 
   notification {
     comparison_operator       = "GREATER_THAN"
-	notification_type         = "ACTUAL"
-	threshold                 = 150
-	threshold_type            = "PERCENTAGE"
-	subscriber_sns_topic_arns = [aws_sns_topic.test.arn]
+    notification_type         = "ACTUAL"
+    threshold                 = 150
+    threshold_type            = "PERCENTAGE"
+    subscriber_sns_topic_arns = [aws_sns_topic.test.arn]
   }
 
   notification {
     comparison_operator        = "EQUAL_TO"
-	notification_type          = "FORECASTED"
-	threshold                  = 200.10
-	threshold_type             = "ABSOLUTE_VALUE"
-	subscriber_email_addresses = [%[2]q, %[3]q]
+    notification_type          = "FORECASTED"
+    threshold                  = 200.10
+    threshold_type             = "ABSOLUTE_VALUE"
+    subscriber_email_addresses = [%[2]q, %[3]q]
   }
 }
 `, rName, emailAddress1, emailAddress2)
@@ -608,10 +608,10 @@ resource "aws_budgets_budget" "test" {
 
   notification {
     comparison_operator        = "LESS_THAN"
-	notification_type          = "ACTUAL"
-	threshold                  = 123.45
-	threshold_type             = "ABSOLUTE_VALUE"
-	subscriber_email_addresses = [%[2]q]
+    notification_type          = "ACTUAL"
+    threshold                  = 123.45
+    threshold_type             = "ABSOLUTE_VALUE"
+    subscriber_email_addresses = [%[2]q]
   }
 }
 `, rName, emailAddress1)
