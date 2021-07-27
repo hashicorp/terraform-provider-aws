@@ -93,8 +93,8 @@ func resourceAwsKmsKey() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+				ValidateFunc:     validation.StringIsJSON,
 			},
 
 			"tags":     tagsSchema(),

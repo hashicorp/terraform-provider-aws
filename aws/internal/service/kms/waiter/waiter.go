@@ -142,26 +142,3 @@ func TagsPropagated(conn *kms.KMS, id string, tags keyvaluetags.KeyValueTags) er
 
 	return tfresource.WaitUntil(PropagationTimeout, checkFunc, opts)
 }
-
-// TODO: Remove
-
-// KeyStatePendingDeletion waits for KeyState to return PendingDeletion
-func KeyStatePendingDeletion(conn *kms.KMS, keyID string) (*kms.DescribeKeyOutput, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			kms.KeyStateDisabled,
-			kms.KeyStateEnabled,
-		},
-		Target:  []string{kms.KeyStatePendingDeletion},
-		Refresh: KeyState(conn, keyID),
-		Timeout: KeyStatePendingDeletionTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*kms.DescribeKeyOutput); ok {
-		return output, err
-	}
-
-	return nil, err
-}

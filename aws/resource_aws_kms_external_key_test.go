@@ -11,7 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSKmsExternalKey_basic(t *testing.T) {
@@ -67,7 +69,7 @@ func TestAccAWSKmsExternalKey_disappears(t *testing.T) {
 				Config: testAccAWSKmsExternalKeyConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsExternalKeyExists(resourceName, &key1),
-					testAccCheckAWSKmsExternalKeyDisappears(&key1),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsKmsExternalKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -431,19 +433,17 @@ func testAccCheckAWSKmsExternalKeyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		out, err := conn.DescribeKey(&kms.DescribeKeyInput{
-			KeyId: aws.String(rs.Primary.ID),
-		})
+		_, err := finder.KeyByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
 			return err
 		}
 
-		if aws.StringValue(out.KeyMetadata.KeyState) == kms.KeyStatePendingDeletion {
-			continue
-		}
-
-		return fmt.Errorf("KMS key still exists:\n%#v", out.KeyMetadata)
+		return fmt.Errorf("KMS External Key %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -457,45 +457,22 @@ func testAccCheckAWSKmsExternalKeyExists(name string, key *kms.KeyMetadata) reso
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No KMS Key ID is set")
+			return fmt.Errorf("No KMS External Key ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).kmsconn
 
-		o, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
-			return conn.DescribeKey(&kms.DescribeKeyInput{
-				KeyId: aws.String(rs.Primary.ID),
-			})
+		outputRaw, err := tfresource.RetryWhenNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
+			return finder.KeyByID(conn, rs.Primary.ID)
 		})
+
 		if err != nil {
 			return err
 		}
-		out := o.(*kms.DescribeKeyOutput)
 
-		*key = *out.KeyMetadata
+		*key = *(outputRaw.(*kms.KeyMetadata))
 
 		return nil
-	}
-}
-
-func testAccCheckAWSKmsExternalKeyDisappears(key *kms.KeyMetadata) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).kmsconn
-
-		input := &kms.ScheduleKeyDeletionInput{
-			KeyId:               key.KeyId,
-			PendingWindowInDays: aws.Int64(int64(7)),
-		}
-
-		_, err := conn.ScheduleKeyDeletion(input)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = waiter.KeyStatePendingDeletion(conn, aws.StringValue(key.KeyId))
-
-		return err
 	}
 }
 

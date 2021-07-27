@@ -12,12 +12,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
 )
 
@@ -39,40 +39,55 @@ func resourceAwsKmsExternalKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			// TODO
+			// "bypass_policy_lockout_safety_check": {
+			// 	Type:     schema.TypeBool,
+			// 	Optional: true,
+			// 	Default:  false,
+			// },
+
 			"deletion_window_in_days": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      30,
 				ValidateFunc: validation.IntBetween(7, 30),
 			},
+
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 8192),
 			},
+
 			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
+
 			"expiration_model": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
 			"key_material_base64": {
 				Type:      schema.TypeString,
 				Optional:  true,
 				ForceNew:  true,
 				Sensitive: true,
 			},
+
 			"key_state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
 			"key_usage": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -83,8 +98,10 @@ func resourceAwsKmsExternalKey() *schema.Resource {
 					validation.StringIsJSON,
 				),
 			},
+
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
+
 			"valid_to": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -116,46 +133,31 @@ func resourceAwsKmsExternalKeyCreate(d *schema.ResourceData, meta interface{}) e
 		input.Tags = tags.IgnoreAws().KmsTags()
 	}
 
-	var output *kms.CreateKeyOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
-		var err error
+	// AWS requires any principal in the policy to exist before the key is created.
+	// The KMS service's awareness of principals is limited by "eventual consistency".
+	// KMS will report this error until it can validate the policy itself.
+	// They acknowledge this here:
+	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
+	log.Printf("[DEBUG] Creating KMS External Key: %s", input)
 
-		output, err = conn.CreateKey(input)
-
-		// AWS requires any principal in the policy to exist before the key is created.
-		// The KMS service's awareness of principals is limited by "eventual consistency".
-		// KMS will report this error until it can validate the policy itself.
-		// They acknowledge this here:
-		// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
-		if isAWSErr(err, kms.ErrCodeMalformedPolicyDocumentException, "") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
+	outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
+		return conn.CreateKey(input)
 	})
 
-	if isResourceTimeoutError(err) {
-		output, err = conn.CreateKey(input)
-	}
-
 	if err != nil {
-		return fmt.Errorf("error creating KMS External Key: %s", err)
+		return fmt.Errorf("error creating KMS External Key: %w", err)
 	}
 
-	d.SetId(aws.StringValue(output.KeyMetadata.KeyId))
+	d.SetId(aws.StringValue(outputRaw.(*kms.CreateKeyOutput).KeyMetadata.KeyId))
 
 	if v, ok := d.GetOk("key_material_base64"); ok {
 		if err := importKmsExternalKeyMaterial(conn, d.Id(), v.(string), d.Get("valid_to").(string)); err != nil {
 			return fmt.Errorf("error importing KMS External Key (%s) material: %s", d.Id(), err)
 		}
 
-		if !d.Get("enabled").(bool) {
-			if err := updateKmsKeyStatus(conn, d.Id(), false); err != nil {
-				return fmt.Errorf("error disabling KMS External Key (%s): %s", d.Id(), err)
+		if enabled := d.Get("enabled").(bool); !enabled {
+			if err := updateKmsKeyEnabled(conn, d.Id(), enabled); err != nil {
+				return err
 			}
 		}
 	}
@@ -337,28 +339,30 @@ func resourceAwsKmsExternalKeyDelete(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).kmsconn
 
 	input := &kms.ScheduleKeyDeletionInput{
-		KeyId:               aws.String(d.Id()),
-		PendingWindowInDays: aws.Int64(int64(d.Get("deletion_window_in_days").(int))),
+		KeyId: aws.String(d.Id()),
 	}
 
+	if v, ok := d.GetOk("deletion_window_in_days"); ok {
+		input.PendingWindowInDays = aws.Int64(int64(v.(int)))
+	}
+
+	log.Printf("[DEBUG] Deleting KMS External Key: (%s)", d.Id())
 	_, err := conn.ScheduleKeyDeletion(input)
 
-	if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
+		return nil
+	}
+
+	if tfawserr.ErrMessageContains(err, kms.ErrCodeInvalidStateException, "is pending deletion") {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error scheduling deletion for KMS Key (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting KMS External Key (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.KeyStatePendingDeletion(conn, d.Id())
-
-	if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error waiting for KMS Key (%s) to schedule deletion: %w", d.Id(), err)
+	if _, err := waiter.KeyDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for KMS External Key (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil
