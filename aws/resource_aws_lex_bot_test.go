@@ -556,6 +556,54 @@ func TestAccAwsLexBot_intents(t *testing.T) {
 	})
 }
 
+func TestAccAwsLexBot_computeVersion(t *testing.T) {
+	var v1 lexmodelbuildingservice.GetBotOutput
+	var v2 lexmodelbuildingservice.GetBotAliasOutput
+
+	botResourceName := "aws_lex_bot.test"
+	botAliasResourceName := "aws_lex_bot_alias.test"
+
+	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+
+	version := "1"
+	updatedVersion := "2"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLexBotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_createVersion(testBotID),
+					testAccAwsLexBotConfig_intentMultiple(testBotID),
+					testAccAwsLexBotAliasConfig_basic(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExistsWithVersion(botResourceName, version, &v1),
+					resource.TestCheckResourceAttr(botResourceName, "version", version),
+					testAccCheckAwsLexBotAliasExists(botAliasResourceName, &v2),
+					resource.TestCheckResourceAttr(botAliasResourceName, "bot_version", version),
+				),
+			},
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intentMultiple(testBotID),
+					testAccAwsLexBotConfig_multipleIntentsWithVersion(testBotID),
+					testAccAwsLexBotAliasConfig_basic(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExistsWithVersion(botResourceName, updatedVersion, &v1),
+					resource.TestCheckResourceAttr(botResourceName, "version", updatedVersion),
+					resource.TestCheckResourceAttr(botResourceName, "intent.#", "2"),
+					resource.TestCheckResourceAttr(botAliasResourceName, "bot_version", updatedVersion),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAwsLexBot_locale(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
@@ -1107,6 +1155,32 @@ resource "aws_lex_bot" "test" {
   intent {
     intent_name    = aws_lex_intent.test.name
     intent_version = aws_lex_intent.test.version
+  }
+}
+`, rName)
+}
+
+func testAccAwsLexBotConfig_multipleIntentsWithVersion(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lex_bot" "test" {
+  name             = "%s"
+  description      = "Bot to order flowers on the behalf of a user"
+  child_directed   = false
+  create_version   = true
+  process_behavior = "BUILD"
+  abort_statement {
+    message {
+      content      = "Sorry, I'm not able to assist at this time"
+      content_type = "PlainText"
+    }
+  }
+  intent {
+    intent_name    = aws_lex_intent.test.name
+    intent_version = aws_lex_intent.test.version
+  }
+  intent {
+    intent_name    = aws_lex_intent.test_2.name
+    intent_version = aws_lex_intent.test_2.version
   }
 }
 `, rName)

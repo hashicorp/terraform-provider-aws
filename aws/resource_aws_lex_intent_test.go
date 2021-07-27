@@ -639,6 +639,53 @@ func TestAccAwsLexIntent_updateWithExternalChange(t *testing.T) {
 	})
 }
 
+func TestAccAwsLexIntent_computeVersion(t *testing.T) {
+	var v1 lexmodelbuildingservice.GetIntentOutput
+	var v2 lexmodelbuildingservice.GetBotOutput
+
+	intentResourceName := "aws_lex_intent.test"
+	botResourceName := "aws_lex_bot.test"
+	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+
+	version := "1"
+	updatedVersion := "2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLexIntentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: composeConfig(
+					testAccAwsLexIntentConfig_createVersion(testIntentID),
+					testAccAwsLexBotConfig_createVersion(testIntentID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexIntentExistsWithVersion(intentResourceName, version, &v1),
+					resource.TestCheckResourceAttr(intentResourceName, "version", version),
+					testAccCheckAwsLexBotExistsWithVersion(botResourceName, version, &v2),
+					resource.TestCheckResourceAttr(botResourceName, "version", version),
+				),
+			},
+			{
+				Config: composeConfig(
+					testAccAwsLexIntentConfig_sampleUtterancesWithVersion(testIntentID),
+					testAccAwsLexBotConfig_createVersion(testIntentID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexIntentExistsWithVersion(intentResourceName, updatedVersion, &v1),
+					resource.TestCheckResourceAttr(intentResourceName, "version", updatedVersion),
+					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.#", "1"),
+					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.0", "I would like to pick up flowers"),
+					testAccCheckAwsLexBotExistsWithVersion(botResourceName, updatedVersion, &v2),
+					resource.TestCheckResourceAttr(botResourceName, "version", updatedVersion),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsLexIntentExistsWithVersion(rName, intentVersion string, output *lexmodelbuildingservice.GetIntentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[rName]
@@ -1098,6 +1145,44 @@ resource "aws_lex_intent" "test" {
       }
       response_card = "{\"version\":1,\"contentType\":\"application/vnd.amazonaws.card.generic\",\"genericAttachments\":[{\"title\":\"What type of flowers?\",\"buttons\":[{\"text\":\"Tulips\",\"value\":\"tulips\"},{\"text\":\"Lilies\",\"value\":\"lilies\"},{\"text\":\"Roses\",\"value\":\"roses\"}]}]}"
     }
+  }
+}
+`, rName)
+}
+
+func testAccAwsLexIntentConfig_sampleUtterancesWithVersion(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lex_intent" "test" {
+  name           = "%s"
+  create_version = true
+  fulfillment_activity {
+    type = "ReturnIntent"
+  }
+  sample_utterances = [
+    "I would like to pick up flowers",
+  ]
+}
+`, rName)
+}
+
+func testAccAwsLexIntentConfig_slotsWithVersion(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lex_intent" "test" {
+  name           = "%[1]s"
+  create_version = true
+  fulfillment_activity {
+    type = "ReturnIntent"
+  }
+  slot {
+    description = "Types of flowers to pick up"
+    name        = "FlowerType"
+    priority    = 1
+    sample_utterances = [
+      "I would like to order {FlowerType}",
+    ]
+    slot_constraint   = "Required"
+    slot_type         = aws_lex_slot_type.test.name
+    slot_type_version = aws_lex_slot_type.test.version
   }
 }
 `, rName)
