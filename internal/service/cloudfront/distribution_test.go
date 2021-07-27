@@ -2459,7 +2459,7 @@ variable rand_id {
 
 resource "aws_cloudfront_distribution" "main" {
   origin {
-    domain_name = "www.hashicorp.com"
+    domain_name = "www.example.com"
     origin_id   = "myCustomOrigin"
 
     custom_origin_config {
@@ -2558,7 +2558,7 @@ variable rand_id {
 
 resource "aws_cloudfront_distribution" "main" {
   origin {
-    domain_name = "www.hashicorp.com"
+    domain_name = "www.example.com"
     origin_id   = "myCustomOrigin"
 
     custom_origin_config {
@@ -2643,7 +2643,7 @@ variable rand_id {
 
 resource "aws_cloudfront_distribution" "main" {
   origin {
-    domain_name = "www.hashicorp.com"
+    domain_name = "www.example.com"
     origin_id   = "myCustomOrigin"
 
     custom_origin_config {
