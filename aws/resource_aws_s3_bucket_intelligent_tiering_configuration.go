@@ -93,11 +93,7 @@ func resourceAwsS3IntelligentTieringConfigurationPut(d *schema.ResourceData, met
 
 	log.Printf("[DEBUG] S3 bucket: %s, put intelligent tiering configuration: %s", bucket, name)
 
-	// Set status from boolean value
-	status := "Enabled"
-	if d.Get("enabled").(bool) == false {
-		status = "Disabled"
-	}
+	status := resourceAwsS3BucketIntelligentTieringConfigurationParseEnabled(d.Get("enabled").(bool))
 
 	input := &s3.PutBucketIntelligentTieringConfigurationInput{
 		Bucket: aws.String(bucket),
@@ -105,7 +101,7 @@ func resourceAwsS3IntelligentTieringConfigurationPut(d *schema.ResourceData, met
 		IntelligentTieringConfiguration: &s3.IntelligentTieringConfiguration{
 			Filter:   expandS3IntelligentTieringFilter(d.Get("filter").([]interface{})),
 			Id:       aws.String(name),
-			Status:   aws.String(status),
+			Status:   status,
 			Tierings: expandS3IntelligentTieringConfigurations(tiers),
 		},
 	}
@@ -262,11 +258,19 @@ func resourceAwsS3BucketIntelligentTieringConfigurationParseStatus(status *strin
 		return false
 	}
 
-	if *status == "Enabled" {
+	if strings.ToLower(*status) == "enabled" {
 		return true
 	}
 
 	return false
+}
+
+func resourceAwsS3BucketIntelligentTieringConfigurationParseEnabled(enabled bool) *string {
+	if enabled == false {
+		return aws.String("Disabled")
+	}
+
+	return aws.String("Enabled")
 }
 
 func expandS3IntelligentTieringFilter(l []interface{}) *s3.IntelligentTieringFilter {
