@@ -176,53 +176,7 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	type Key struct {
-		metadata *kms.KeyMetadata
-		policy   string
-		rotation *bool
-		tags     keyvaluetags.KeyValueTags
-	}
-
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
-		var err error
-		var key Key
-
-		key.metadata, err = finder.KeyByID(conn, d.Id())
-
-		if err != nil {
-			return nil, fmt.Errorf("error reading KMS Key (%s): %w", d.Id(), err)
-		}
-
-		policy, err := finder.KeyPolicyByKeyIDAndPolicyName(conn, d.Id(), tfkms.PolicyNameDefault)
-
-		if err != nil {
-			return nil, fmt.Errorf("error reading KMS Key (%s) policy: %w", d.Id(), err)
-		}
-
-		key.policy, err = structure.NormalizeJsonString(aws.StringValue(policy))
-
-		if err != nil {
-			return nil, fmt.Errorf("policy contains invalid JSON: %w", err)
-		}
-
-		key.rotation, err = finder.KeyRotationEnabledByKeyID(conn, d.Id())
-
-		if err != nil {
-			return nil, fmt.Errorf("error reading KMS Key (%s) rotation enabled: %w", d.Id(), err)
-		}
-
-		key.tags, err = keyvaluetags.KmsListTags(conn, d.Id())
-
-		if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
-			return nil, &resource.NotFoundError{LastError: err}
-		}
-
-		if err != nil {
-			return nil, fmt.Errorf("error listing tags for KMS Key (%s): %w", d.Id(), err)
-		}
-
-		return &key, nil
-	}, d.IsNewResource())
+	key, err := findKmsKey(conn, d.Id(), d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] KMS Key (%s) not found, removing from state", d.Id())
@@ -233,8 +187,6 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return nil
 	}
-
-	key := outputRaw.(*Key)
 
 	d.Set("arn", key.metadata.Arn)
 	d.Set("customer_master_key_spec", key.metadata.CustomerMasterKeySpec)
@@ -348,6 +300,62 @@ func resourceAwsKmsKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+type kmsKey struct {
+	metadata *kms.KeyMetadata
+	policy   string
+	rotation *bool
+	tags     keyvaluetags.KeyValueTags
+}
+
+func findKmsKey(conn *kms.KMS, keyID string, isNewResource bool) (*kmsKey, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
+		var err error
+		var key kmsKey
+
+		key.metadata, err = finder.KeyByID(conn, keyID)
+
+		if err != nil {
+			return nil, fmt.Errorf("error reading KMS Key (%s): %w", keyID, err)
+		}
+
+		policy, err := finder.KeyPolicyByKeyIDAndPolicyName(conn, keyID, tfkms.PolicyNameDefault)
+
+		if err != nil {
+			return nil, fmt.Errorf("error reading KMS Key (%s) policy: %w", keyID, err)
+		}
+
+		key.policy, err = structure.NormalizeJsonString(aws.StringValue(policy))
+
+		if err != nil {
+			return nil, fmt.Errorf("policy contains invalid JSON: %w", err)
+		}
+
+		key.rotation, err = finder.KeyRotationEnabledByKeyID(conn, keyID)
+
+		if err != nil {
+			return nil, fmt.Errorf("error reading KMS Key (%s) rotation enabled: %w", keyID, err)
+		}
+
+		key.tags, err = keyvaluetags.KmsListTags(conn, keyID)
+
+		if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
+			return nil, &resource.NotFoundError{LastError: err}
+		}
+
+		if err != nil {
+			return nil, fmt.Errorf("error listing tags for KMS Key (%s): %w", keyID, err)
+		}
+
+		return &key, nil
+	}, isNewResource)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return outputRaw.(*kmsKey), nil
 }
 
 func updateKmsKeyEnabled(conn *kms.KMS, keyID string, enabled bool) error {
