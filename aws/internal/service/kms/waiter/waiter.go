@@ -20,6 +20,7 @@ const (
 	KeyStatePendingDeletionTimeout = 20 * time.Minute
 
 	KeyDeletedTimeout          = 20 * time.Minute
+	KeyMaterialImportedTimeout = 10 * time.Minute
 	KeyRotationUpdatedTimeout  = 10 * time.Minute
 	KeyStatePropagationTimeout = 20 * time.Minute
 
@@ -38,6 +39,23 @@ func KeyDeleted(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
 		Target:  []string{},
 		Refresh: KeyState(conn, id),
 		Timeout: KeyDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*kms.KeyMetadata); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func KeyMaterialImported(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{kms.KeyStatePendingImport},
+		Target:  []string{kms.KeyStateDisabled, kms.KeyStateEnabled},
+		Refresh: KeyState(conn, id),
+		Timeout: KeyMaterialImportedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -70,7 +88,7 @@ func KeyPolicyPropagated(conn *kms.KMS, id, policy string) error {
 		return equivalent, nil
 	}
 	opts := tfresource.WaitOpts{
-		ContinuousTargetOccurence: 3,
+		ContinuousTargetOccurence: 5,
 		MinTimeout:                1 * time.Second,
 	}
 
@@ -136,7 +154,7 @@ func TagsPropagated(conn *kms.KMS, id string, tags keyvaluetags.KeyValueTags) er
 		return output.Equal(tags), nil
 	}
 	opts := tfresource.WaitOpts{
-		ContinuousTargetOccurence: 3,
+		ContinuousTargetOccurence: 5,
 		MinTimeout:                1 * time.Second,
 	}
 

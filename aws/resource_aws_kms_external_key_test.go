@@ -12,13 +12,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
+	tfkms "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSKmsExternalKey_basic(t *testing.T) {
-	var key1 kms.KeyMetadata
+	var key kms.KeyMetadata
 	resourceName := "aws_kms_external_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -30,7 +31,7 @@ func TestAccAWSKmsExternalKey_basic(t *testing.T) {
 			{
 				Config: testAccAWSKmsExternalKeyConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsExternalKeyExists(resourceName, &key1),
+					testAccCheckAWSKmsExternalKeyExists(resourceName, &key),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexp.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", "30"),
@@ -59,7 +60,7 @@ func TestAccAWSKmsExternalKey_basic(t *testing.T) {
 }
 
 func TestAccAWSKmsExternalKey_disappears(t *testing.T) {
-	var key1 kms.KeyMetadata
+	var key kms.KeyMetadata
 	resourceName := "aws_kms_external_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -71,7 +72,7 @@ func TestAccAWSKmsExternalKey_disappears(t *testing.T) {
 			{
 				Config: testAccAWSKmsExternalKeyConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsExternalKeyExists(resourceName, &key1),
+					testAccCheckAWSKmsExternalKeyExists(resourceName, &key),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsKmsExternalKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -82,6 +83,7 @@ func TestAccAWSKmsExternalKey_disappears(t *testing.T) {
 
 func TestAccAWSKmsExternalKey_DeletionWindowInDays(t *testing.T) {
 	var key1, key2 kms.KeyMetadata
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_external_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -91,7 +93,7 @@ func TestAccAWSKmsExternalKey_DeletionWindowInDays(t *testing.T) {
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsExternalKeyConfigDeletionWindowInDays(8),
+				Config: testAccAWSKmsExternalKeyConfigDeletionWindowInDays(rName, 8),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsExternalKeyExists(resourceName, &key1),
 					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", "8"),
@@ -108,7 +110,7 @@ func TestAccAWSKmsExternalKey_DeletionWindowInDays(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAWSKmsExternalKeyConfigDeletionWindowInDays(7),
+				Config: testAccAWSKmsExternalKeyConfigDeletionWindowInDays(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsExternalKeyExists(resourceName, &key2),
 					testAccCheckAWSKmsExternalKeyNotRecreated(&key1, &key2),
@@ -121,6 +123,7 @@ func TestAccAWSKmsExternalKey_DeletionWindowInDays(t *testing.T) {
 
 func TestAccAWSKmsExternalKey_Description(t *testing.T) {
 	var key1, key2 kms.KeyMetadata
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_external_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -130,10 +133,10 @@ func TestAccAWSKmsExternalKey_Description(t *testing.T) {
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsExternalKeyConfigDescription("description1"),
+				Config: testAccAWSKmsExternalKeyConfigDescription(rName + "-1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsExternalKeyExists(resourceName, &key1),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, "description", rName+"-1"),
 				),
 			},
 			{
@@ -147,11 +150,11 @@ func TestAccAWSKmsExternalKey_Description(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAWSKmsExternalKeyConfigDescription("description2"),
+				Config: testAccAWSKmsExternalKeyConfigDescription(rName + "-2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsExternalKeyExists(resourceName, &key2),
 					testAccCheckAWSKmsExternalKeyNotRecreated(&key1, &key2),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, "description", rName+"-2"),
 				),
 			},
 		},
@@ -160,6 +163,7 @@ func TestAccAWSKmsExternalKey_Description(t *testing.T) {
 
 func TestAccAWSKmsExternalKey_Enabled(t *testing.T) {
 	var key1, key2, key3 kms.KeyMetadata
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_external_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -169,7 +173,7 @@ func TestAccAWSKmsExternalKey_Enabled(t *testing.T) {
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsExternalKeyConfigEnabled(false),
+				Config: testAccAWSKmsExternalKeyConfigEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsExternalKeyExists(resourceName, &key1),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
@@ -186,7 +190,7 @@ func TestAccAWSKmsExternalKey_Enabled(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAWSKmsExternalKeyConfigEnabled(true),
+				Config: testAccAWSKmsExternalKeyConfigEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsExternalKeyExists(resourceName, &key2),
 					testAccCheckAWSKmsExternalKeyNotRecreated(&key1, &key2),
@@ -194,7 +198,7 @@ func TestAccAWSKmsExternalKey_Enabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSKmsExternalKeyConfigEnabled(false),
+				Config: testAccAWSKmsExternalKeyConfigEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsExternalKeyExists(resourceName, &key3),
 					testAccCheckAWSKmsExternalKeyNotRecreated(&key2, &key3),
@@ -207,6 +211,7 @@ func TestAccAWSKmsExternalKey_Enabled(t *testing.T) {
 
 func TestAccAWSKmsExternalKey_KeyMaterialBase64(t *testing.T) {
 	var key1, key2 kms.KeyMetadata
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_external_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -217,7 +222,7 @@ func TestAccAWSKmsExternalKey_KeyMaterialBase64(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// ACCEPTANCE TESTING ONLY -- NEVER EXPOSE YOUR KEY MATERIAL
-				Config: testAccAWSKmsExternalKeyConfigKeyMaterialBase64("Wblj06fduthWggmsT0cLVoIMOkeLbc2kVfMud77i/JY="),
+				Config: testAccAWSKmsExternalKeyConfigKeyMaterialBase64(rName, "Wblj06fduthWggmsT0cLVoIMOkeLbc2kVfMud77i/JY="),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsExternalKeyExists(resourceName, &key1),
 					resource.TestCheckResourceAttr(resourceName, "key_material_base64", "Wblj06fduthWggmsT0cLVoIMOkeLbc2kVfMud77i/JY="),
@@ -235,7 +240,7 @@ func TestAccAWSKmsExternalKey_KeyMaterialBase64(t *testing.T) {
 			},
 			{
 				// ACCEPTANCE TESTING ONLY -- NEVER EXPOSE YOUR KEY MATERIAL
-				Config: testAccAWSKmsExternalKeyConfigKeyMaterialBase64("O1zsg06cKRCsZnoT5oizMlwHEtnk0HoOmBLkFtwh2Vw="),
+				Config: testAccAWSKmsExternalKeyConfigKeyMaterialBase64(rName, "O1zsg06cKRCsZnoT5oizMlwHEtnk0HoOmBLkFtwh2Vw="),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsExternalKeyExists(resourceName, &key2),
 					testAccCheckAWSKmsExternalKeyRecreated(&key1, &key2),
@@ -324,6 +329,7 @@ func TestAccAWSKmsExternalKey_PolicyBypass(t *testing.T) {
 
 func TestAccAWSKmsExternalKey_Tags(t *testing.T) {
 	var key1, key2, key3 kms.KeyMetadata
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_external_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -333,7 +339,7 @@ func TestAccAWSKmsExternalKey_Tags(t *testing.T) {
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsExternalKeyConfigTags1("value1"),
+				Config: testAccAWSKmsExternalKeyConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsExternalKeyExists(resourceName, &key1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -351,7 +357,7 @@ func TestAccAWSKmsExternalKey_Tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAWSKmsExternalKeyConfigTags2("value1updated", "value2"),
+				Config: testAccAWSKmsExternalKeyConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsExternalKeyExists(resourceName, &key2),
 					testAccCheckAWSKmsExternalKeyNotRecreated(&key1, &key2),
@@ -361,12 +367,12 @@ func TestAccAWSKmsExternalKey_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSKmsExternalKeyConfigTags1("value1updated"),
+				Config: testAccAWSKmsExternalKeyConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsExternalKeyExists(resourceName, &key3),
 					testAccCheckAWSKmsExternalKeyNotRecreated(&key2, &key3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -375,6 +381,7 @@ func TestAccAWSKmsExternalKey_Tags(t *testing.T) {
 
 func TestAccAWSKmsExternalKey_ValidTo(t *testing.T) {
 	var key1, key2, key3, key4 kms.KeyMetadata
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_external_key.test"
 	validTo1 := time.Now().UTC().Add(1 * time.Hour).Format(time.RFC3339)
 	validTo2 := time.Now().UTC().Add(2 * time.Hour).Format(time.RFC3339)
@@ -386,7 +393,7 @@ func TestAccAWSKmsExternalKey_ValidTo(t *testing.T) {
 		CheckDestroy: testAccCheckAWSKmsExternalKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsExternalKeyConfigValidTo(validTo1),
+				Config: testAccAWSKmsExternalKeyConfigValidTo(rName, validTo1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsExternalKeyExists(resourceName, &key1),
 					resource.TestCheckResourceAttr(resourceName, "expiration_model", "KEY_MATERIAL_EXPIRES"),
@@ -404,7 +411,7 @@ func TestAccAWSKmsExternalKey_ValidTo(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAWSKmsExternalKeyConfigEnabled(true),
+				Config: testAccAWSKmsExternalKeyConfigEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsExternalKeyExists(resourceName, &key2),
 					testAccCheckAWSKmsExternalKeyNotRecreated(&key1, &key2),
@@ -413,7 +420,7 @@ func TestAccAWSKmsExternalKey_ValidTo(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSKmsExternalKeyConfigValidTo(validTo1),
+				Config: testAccAWSKmsExternalKeyConfigValidTo(rName, validTo1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsExternalKeyExists(resourceName, &key3),
 					testAccCheckAWSKmsExternalKeyNotRecreated(&key2, &key3),
@@ -422,7 +429,7 @@ func TestAccAWSKmsExternalKey_ValidTo(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSKmsExternalKeyConfigValidTo(validTo2),
+				Config: testAccAWSKmsExternalKeyConfigValidTo(rName, validTo2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsExternalKeyExists(resourceName, &key4),
 					testAccCheckAWSKmsExternalKeyNotRecreated(&key3, &key4),
@@ -442,20 +449,18 @@ func testAccCheckAWSKmsExternalKeyHasPolicy(name string, expectedPolicyText stri
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No KMS Key ID is set")
+			return fmt.Errorf("No KMS External Key ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).kmsconn
 
-		out, err := conn.GetKeyPolicy(&kms.GetKeyPolicyInput{
-			KeyId:      aws.String(rs.Primary.ID),
-			PolicyName: aws.String("default"),
-		})
+		output, err := finder.KeyPolicyByKeyIDAndPolicyName(conn, rs.Primary.ID, tfkms.PolicyNameDefault)
+
 		if err != nil {
 			return err
 		}
 
-		actualPolicyText := *out.Policy
+		actualPolicyText := aws.StringValue(output)
 
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
 		if err != nil {
@@ -547,41 +552,44 @@ resource "aws_kms_external_key" "test" {}
 `
 }
 
-func testAccAWSKmsExternalKeyConfigDeletionWindowInDays(deletionWindowInDays int) string {
+func testAccAWSKmsExternalKeyConfigDeletionWindowInDays(rName string, deletionWindowInDays int) string {
 	return fmt.Sprintf(`
 resource "aws_kms_external_key" "test" {
-  deletion_window_in_days = %[1]d
+  description             = %[1]q
+  deletion_window_in_days = %[2]d
 }
-`, deletionWindowInDays)
+`, rName, deletionWindowInDays)
 }
 
-func testAccAWSKmsExternalKeyConfigDescription(description string) string {
+func testAccAWSKmsExternalKeyConfigDescription(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_external_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
 }
-`, description)
+`, rName)
 }
 
-func testAccAWSKmsExternalKeyConfigEnabled(enabled bool) string {
+func testAccAWSKmsExternalKeyConfigEnabled(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 # ACCEPTANCE TESTING ONLY -- NEVER EXPOSE YOUR KEY MATERIAL
 resource "aws_kms_external_key" "test" {
+  description             = %[1]q
   deletion_window_in_days = 7
-  enabled                 = %[1]t
+  enabled                 = %[2]t
   key_material_base64     = "Wblj06fduthWggmsT0cLVoIMOkeLbc2kVfMud77i/JY="
 }
-`, enabled)
+`, rName, enabled)
 }
 
-func testAccAWSKmsExternalKeyConfigKeyMaterialBase64(keyMaterialBase64 string) string {
+func testAccAWSKmsExternalKeyConfigKeyMaterialBase64(rName, keyMaterialBase64 string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_external_key" "test" {
+  description             = %[1]q
   deletion_window_in_days = 7
-  key_material_base64     = %[1]q
+  key_material_base64     = %[2]q
 }
-`, keyMaterialBase64)
+`, rName, keyMaterialBase64)
 }
 
 func testAccAWSKmsExternalKeyConfigPolicy(rName, policy string) string {
@@ -612,38 +620,41 @@ POLICY
 `, rName, policy)
 }
 
-func testAccAWSKmsExternalKeyConfigTags1(value1 string) string {
+func testAccAWSKmsExternalKeyConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_external_key" "test" {
+  description             = %[1]q
   deletion_window_in_days = 7
 
   tags = {
-    key1 = %[1]q
+    %[2]q = %[3]q
   }
 }
-`, value1)
+`, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSKmsExternalKeyConfigTags2(value1, value2 string) string {
+func testAccAWSKmsExternalKeyConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_external_key" "test" {
+  description             = %[1]q
   deletion_window_in_days = 7
 
   tags = {
-    key1 = %[1]q
-    key2 = %[2]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, value1, value2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAWSKmsExternalKeyConfigValidTo(validTo string) string {
+func testAccAWSKmsExternalKeyConfigValidTo(rName, validTo string) string {
 	return fmt.Sprintf(`
 # ACCEPTANCE TESTING ONLY -- NEVER EXPOSE YOUR KEY MATERIAL
 resource "aws_kms_external_key" "test" {
+  description             = %[1]q
   deletion_window_in_days = 7
   key_material_base64     = "Wblj06fduthWggmsT0cLVoIMOkeLbc2kVfMud77i/JY="
-  valid_to                = %[1]q
+  valid_to                = %[2]q
 }
-`, validTo)
+`, rName, validTo)
 }

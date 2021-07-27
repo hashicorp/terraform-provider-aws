@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -155,6 +154,10 @@ func resourceAwsKmsExternalKeyCreate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("error importing KMS External Key (%s) material: %s", d.Id(), err)
 		}
 
+		if _, err := waiter.KeyMaterialImported(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for KMS External Key (%s) material import: %w", d.Id(), err)
+		}
+
 		if enabled := d.Get("enabled").(bool); !enabled {
 			if err := updateKmsKeyEnabled(conn, d.Id(), enabled); err != nil {
 				return err
@@ -181,8 +184,6 @@ func resourceAwsKmsExternalKeyRead(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return nil
 	}
-
-	log.Printf("[WARN] kmsKey: %v", key)
 
 	d.Set("arn", key.metadata.Arn)
 	d.Set("description", key.metadata.Description)
@@ -245,6 +246,10 @@ func resourceAwsKmsExternalKeyUpdate(d *schema.ResourceData, meta interface{}) e
 		if err := importKmsExternalKeyMaterial(conn, d.Id(), d.Get("key_material_base64").(string), d.Get("valid_to").(string)); err != nil {
 			return fmt.Errorf("error importing KMS External Key (%s) material: %s", d.Id(), err)
 		}
+
+		if _, err := waiter.KeyMaterialImported(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for KMS External Key (%s) material import: %w", d.Id(), err)
+		}
 	}
 
 	if hasChange, enabled, state := d.HasChange("enabled"), d.Get("enabled").(bool), d.Get("key_state").(string); hasChange && !enabled && state != kms.KeyStatePendingImport {
@@ -259,6 +264,10 @@ func resourceAwsKmsExternalKeyUpdate(d *schema.ResourceData, meta interface{}) e
 
 		if err := keyvaluetags.KmsUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating KMS External Key (%s) tags: %w", d.Id(), err)
+		}
+
+		if err := waiter.TagsPropagated(conn, d.Id(), keyvaluetags.New(n)); err != nil {
+			return fmt.Errorf("error waiting for KMS External Key (%s) tag propagation: %w", d.Id(), err)
 		}
 	}
 
@@ -299,64 +308,42 @@ func resourceAwsKmsExternalKeyDelete(d *schema.ResourceData, meta interface{}) e
 }
 
 func importKmsExternalKeyMaterial(conn *kms.KMS, keyID, keyMaterialBase64, validTo string) error {
-	getParametersForImportInput := &kms.GetParametersForImportInput{
-		KeyId:             aws.String(keyID),
-		WrappingAlgorithm: aws.String(kms.AlgorithmSpecRsaesOaepSha256),
-		WrappingKeySpec:   aws.String(kms.WrappingKeySpecRsa2048),
-	}
-
-	var getParametersForImportOutput *kms.GetParametersForImportOutput
-	// Handle KMS eventual consistency
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
-
-		getParametersForImportOutput, err = conn.GetParametersForImport(getParametersForImportInput)
-
-		if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if isResourceTimeoutError(err) {
-		getParametersForImportOutput, err = conn.GetParametersForImport(getParametersForImportInput)
-	}
+	outputRaw, err := tfresource.RetryWhenAwsErrCodeEquals(waiter.PropagationTimeout, func() (interface{}, error) {
+		return conn.GetParametersForImport(&kms.GetParametersForImportInput{
+			KeyId:             aws.String(keyID),
+			WrappingAlgorithm: aws.String(kms.AlgorithmSpecRsaesOaepSha256),
+			WrappingKeySpec:   aws.String(kms.WrappingKeySpecRsa2048),
+		})
+	}, kms.ErrCodeNotFoundException)
 
 	if err != nil {
-		return fmt.Errorf("error getting parameters for import: %s", err)
+		return fmt.Errorf("error getting parameters for import: %w", err)
 	}
 
-	if getParametersForImportOutput == nil {
-		return fmt.Errorf("error getting parameters for import: empty response")
-	}
+	output := outputRaw.(*kms.GetParametersForImportOutput)
 
 	keyMaterial, err := base64.StdEncoding.DecodeString(keyMaterialBase64)
 
 	if err != nil {
-		return fmt.Errorf("error Base64 decoding key material: %s", err)
+		return fmt.Errorf("error Base64 decoding key material: %w", err)
 	}
 
-	publicKey, err := x509.ParsePKIXPublicKey(getParametersForImportOutput.PublicKey)
+	publicKey, err := x509.ParsePKIXPublicKey(output.PublicKey)
 
 	if err != nil {
-		return fmt.Errorf("error parsing public key: %s", err)
+		return fmt.Errorf("error parsing public key: %w", err)
 	}
 
 	encryptedKeyMaterial, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, publicKey.(*rsa.PublicKey), keyMaterial, []byte{})
 
 	if err != nil {
-		return fmt.Errorf("error encrypting key material: %s", err)
+		return fmt.Errorf("error encrypting key material: %w", err)
 	}
 
-	importKeyMaterialInput := &kms.ImportKeyMaterialInput{
+	input := &kms.ImportKeyMaterialInput{
 		EncryptedKeyMaterial: encryptedKeyMaterial,
 		ExpirationModel:      aws.String(kms.ExpirationModelTypeKeyMaterialDoesNotExpire),
-		ImportToken:          getParametersForImportOutput.ImportToken,
+		ImportToken:          output.ImportToken,
 		KeyId:                aws.String(keyID),
 	}
 
@@ -364,169 +351,20 @@ func importKmsExternalKeyMaterial(conn *kms.KMS, keyID, keyMaterialBase64, valid
 		t, err := time.Parse(time.RFC3339, validTo)
 
 		if err != nil {
-			return fmt.Errorf("error parsing valid to timestamp: %s", err)
+			return fmt.Errorf("error parsing valid_to timestamp: %w", err)
 		}
 
-		importKeyMaterialInput.ExpirationModel = aws.String(kms.ExpirationModelTypeKeyMaterialExpires)
-		importKeyMaterialInput.ValidTo = aws.Time(t)
+		input.ExpirationModel = aws.String(kms.ExpirationModelTypeKeyMaterialExpires)
+		input.ValidTo = aws.Time(t)
 	}
 
-	// Handle KMS eventual consistency
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := conn.ImportKeyMaterial(importKeyMaterialInput)
-
-		if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if isResourceTimeoutError(err) {
-		_, err = conn.ImportKeyMaterial(importKeyMaterialInput)
-	}
+	_, err = tfresource.RetryWhenAwsErrCodeEquals(waiter.PropagationTimeout, func() (interface{}, error) {
+		return conn.ImportKeyMaterial(input)
+	}, kms.ErrCodeNotFoundException)
 
 	if err != nil {
-		return fmt.Errorf("error importing key material: %s", err)
+		return fmt.Errorf("error importing key material: %w", err)
 	}
 
 	return nil
-}
-
-func updateKmsKeyStatus(conn *kms.KMS, id string, shouldBeEnabled bool) error {
-	var err error
-
-	if shouldBeEnabled {
-		log.Printf("[DEBUG] Enabling KMS key %q", id)
-		_, err = conn.EnableKey(&kms.EnableKeyInput{
-			KeyId: aws.String(id),
-		})
-	} else {
-		log.Printf("[DEBUG] Disabling KMS key %q", id)
-		_, err = conn.DisableKey(&kms.DisableKeyInput{
-			KeyId: aws.String(id),
-		})
-	}
-
-	if err != nil {
-		return fmt.Errorf("Failed to set KMS key %q status to %t: %q",
-			id, shouldBeEnabled, err.Error())
-	}
-
-	// Wait for propagation since KMS is eventually consistent
-	wait := resource.StateChangeConf{
-		Pending:                   []string{fmt.Sprintf("%t", !shouldBeEnabled)},
-		Target:                    []string{fmt.Sprintf("%t", shouldBeEnabled)},
-		Timeout:                   20 * time.Minute,
-		MinTimeout:                2 * time.Second,
-		ContinuousTargetOccurence: 15,
-		Refresh: func() (interface{}, string, error) {
-			log.Printf("[DEBUG] Checking if KMS key %s enabled status is %t",
-				id, shouldBeEnabled)
-			resp, err := conn.DescribeKey(&kms.DescribeKeyInput{
-				KeyId: aws.String(id),
-			})
-			if err != nil {
-				if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
-					return nil, fmt.Sprintf("%t", !shouldBeEnabled), nil
-				}
-				return resp, "FAILED", err
-			}
-			status := fmt.Sprintf("%t", *resp.KeyMetadata.Enabled)
-			log.Printf("[DEBUG] KMS key %s status received: %s, retrying", id, status)
-
-			return resp, status, nil
-		},
-	}
-
-	_, err = wait.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Failed setting KMS key status to %t: %w", shouldBeEnabled, err)
-	}
-
-	return nil
-}
-
-func updateKmsKeyRotationStatus(conn *kms.KMS, d *schema.ResourceData) error {
-	shouldEnableRotation := d.Get("enable_key_rotation").(bool)
-
-	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
-		err := handleKeyRotation(conn, shouldEnableRotation, aws.String(d.Id()))
-
-		if err != nil {
-			if isAWSErr(err, kms.ErrCodeDisabledException, "") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		err = handleKeyRotation(conn, shouldEnableRotation, aws.String(d.Id()))
-	}
-
-	if err != nil {
-		return fmt.Errorf("Failed to set key rotation for %q to %t: %q",
-			d.Id(), shouldEnableRotation, err.Error())
-	}
-
-	// Wait for propagation since KMS is eventually consistent
-	wait := resource.StateChangeConf{
-		Pending:                   []string{fmt.Sprintf("%t", !shouldEnableRotation)},
-		Target:                    []string{fmt.Sprintf("%t", shouldEnableRotation)},
-		Timeout:                   5 * time.Minute,
-		MinTimeout:                1 * time.Second,
-		ContinuousTargetOccurence: 5,
-		Refresh: func() (interface{}, string, error) {
-			log.Printf("[DEBUG] Checking if KMS key %s rotation status is %t",
-				d.Id(), shouldEnableRotation)
-
-			out, err := retryOnAwsCode(kms.ErrCodeNotFoundException, func() (interface{}, error) {
-				return conn.GetKeyRotationStatus(&kms.GetKeyRotationStatusInput{
-					KeyId: aws.String(d.Id()),
-				})
-			})
-			if err != nil {
-				return 42, "", err
-			}
-			resp, _ := out.(*kms.GetKeyRotationStatusOutput)
-
-			status := fmt.Sprintf("%t", *resp.KeyRotationEnabled)
-			log.Printf("[DEBUG] KMS key %s rotation status received: %s, retrying", d.Id(), status)
-
-			return resp, status, nil
-		},
-	}
-
-	_, err = wait.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Failed setting KMS key rotation status to %t: %s", shouldEnableRotation, err)
-	}
-
-	return nil
-}
-
-func handleKeyRotation(conn *kms.KMS, shouldEnableRotation bool, keyId *string) error {
-	var err error
-	if shouldEnableRotation {
-		log.Printf("[DEBUG] Enabling key rotation for KMS key %q", *keyId)
-		_, err = conn.EnableKeyRotation(&kms.EnableKeyRotationInput{
-			KeyId: keyId,
-		})
-	} else {
-		log.Printf("[DEBUG] Disabling key rotation for KMS key %q", *keyId)
-		_, err = conn.DisableKeyRotation(&kms.DisableKeyRotationInput{
-			KeyId: keyId,
-		})
-	}
-	return err
 }
