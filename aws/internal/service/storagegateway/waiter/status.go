@@ -20,6 +20,8 @@ const (
 	NfsFileShareStatusUnknown            = "Unknown"
 	SmbFileShareStatusNotFound           = "NotFound"
 	SmbFileShareStatusUnknown            = "Unknown"
+	FileSystemAssociationStatusNotFound  = "NotFound"
+	FileSystemAssociationStatusUnknown   = "Unknown"
 )
 
 func StorageGatewayGatewayStatus(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
@@ -126,5 +128,24 @@ func SMBFileShareStatus(conn *storagegateway.StorageGateway, arn string) resourc
 		}
 
 		return output, aws.StringValue(output.FileShareStatus), nil
+	}
+}
+
+func FileSystemAssociationStatus(conn *storagegateway.StorageGateway, fileSystemArn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+
+		output, err := finder.FileSystemAssociationByARN(conn, fileSystemArn)
+
+		// there was an unhandled error in the Finder
+		if err != nil {
+			return nil, "", err
+		}
+
+		// no error, and no File System Association found
+		if output == nil {
+			return nil, FileSystemAssociationStatusNotFound, nil
+		}
+
+		return output, aws.StringValue(output.FileSystemAssociationStatus), nil
 	}
 }

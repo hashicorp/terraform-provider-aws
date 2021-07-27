@@ -1,6 +1,9 @@
 package finder
 
 import (
+	"fmt"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -109,6 +112,32 @@ func SMBFileShareByARN(conn *storagegateway.StorageGateway, arn string) (*storag
 
 	// TODO Check for multiple results.
 	// TODO https://github.com/hashicorp/terraform-provider-aws/pull/17613.
-
 	return output.SMBFileShareInfoList[0], nil
+}
+
+func FileSystemAssociationByARN(conn *storagegateway.StorageGateway, fileSystemAssociationARN string) (*storagegateway.FileSystemAssociationInfo, error) {
+
+	input := &storagegateway.DescribeFileSystemAssociationsInput{
+		FileSystemAssociationARNList: []*string{aws.String(fileSystemAssociationARN)},
+	}
+	log.Printf("[DEBUG] Reading Storage Gateway File System Associations: %s", input)
+
+	output, err := conn.DescribeFileSystemAssociations(input)
+	if err != nil {
+		if tfstoragegateway.InvalidGatewayRequestErrCodeEquals(err, tfstoragegateway.FileSystemAssociationNotFound) {
+			log.Printf("[WARN] Storage Gateway File System Association (%s) not found", fileSystemAssociationARN)
+			return nil, nil
+		}
+
+		return nil, fmt.Errorf("error reading Storage Gateway File System Association (%s): %w", fileSystemAssociationARN, err)
+	}
+
+	if output == nil || len(output.FileSystemAssociationInfoList) == 0 || output.FileSystemAssociationInfoList[0] == nil {
+		log.Printf("[WARN] Storage Gateway File System Association (%s) not found", fileSystemAssociationARN)
+		return nil, nil
+	}
+
+	filesystem := output.FileSystemAssociationInfoList[0]
+
+	return filesystem, nil
 }
