@@ -536,6 +536,7 @@ rules:
     paths:
       include:
         - aws/data_source*.go
+        - aws/resource_aws_workspaces_*.go
     patterns:
       - patterns:
         - pattern-regex: '[\"`].*(?<!(example))\.(com|net|org)\b'
