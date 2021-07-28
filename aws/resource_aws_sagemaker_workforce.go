@@ -194,7 +194,6 @@ func resourceAwsSagemakerWorkforceRead(d *schema.ResourceData, meta interface{})
 
 	if err != nil {
 		return fmt.Errorf("error reading SageMaker Workforce (%s): %w", d.Id(), err)
-
 	}
 
 	d.Set("arn", workforce.WorkforceArn)
