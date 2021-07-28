@@ -19,8 +19,6 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_basic(t *testing.T) {
 	var itc s3.IntelligentTieringConfiguration
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
-	accessTier := "DEEP_ARCHIVE_ACCESS"
-	accessTierDays := "180"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -29,7 +27,7 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSS3BucketIntelligentTieringConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfigurationOneTier(rName, rName, accessTier, accessTierDays),
+				Config: testAccAWSS3BucketIntelligentTieringConfiguration(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -37,8 +35,6 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tier.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tier.0.access_tier", accessTier),
-					resource.TestCheckResourceAttr(resourceName, "tier.0.days", accessTierDays),
 				),
 			},
 			{
@@ -72,6 +68,48 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_removed(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketIntelligentTieringConfigurationRemoved(rName, rName),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3BucketIntelligentTieringConfiguration_disableBasic(t *testing.T) {
+	var itc s3.IntelligentTieringConfiguration
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketIntelligentTieringConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketIntelligentTieringConfiguration(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tier.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketIntelligentTieringConfigurationDisabled(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tier.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -424,6 +462,50 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithTwoTiers_Default(t *t
 	})
 }
 
+func TestAccAWSS3BucketIntelligentTieringConfiguration_WithOneTier_UpdateDays(t *testing.T) {
+	var itc s3.IntelligentTieringConfiguration
+	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
+
+	accessTier := "ARCHIVE_ACCESS"
+	accessTierDays := "120"
+
+	accessTierDaysNew := "240"
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketIntelligentTieringConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketIntelligentTieringConfigurationOneTier(rName, rName, accessTier, accessTierDays),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					resource.TestCheckResourceAttr(resourceName, "tier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tier.0.access_tier", accessTier),
+					resource.TestCheckResourceAttr(resourceName, "tier.0.days", accessTierDays),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketIntelligentTieringConfigurationOneTier(rName, rName, accessTier, accessTierDaysNew),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					resource.TestCheckResourceAttr(resourceName, "tier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tier.0.access_tier", accessTier),
+					resource.TestCheckResourceAttr(resourceName, "tier.0.days", accessTierDaysNew),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSS3BucketIntelligentTieringConfiguration_WithTwoTiers_RemoveOne(t *testing.T) {
 	var itc s3.IntelligentTieringConfiguration
 	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
@@ -476,6 +558,24 @@ func testAccAWSS3BucketIntelligentTieringConfiguration(name, bucket string) stri
 resource "aws_s3_bucket_intelligent_tiering_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
   name   = "%s"
+  tier {
+	access_tier = "DEEP_ARCHIVE_ACCESS"
+	days        = 180
+	}
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = "%s"
+}
+`, name, bucket)
+}
+
+func testAccAWSS3BucketIntelligentTieringConfigurationDisabled(name, bucket string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket_intelligent_tiering_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  name   = "%s"
+  enabled = false
   tier {
 	access_tier = "DEEP_ARCHIVE_ACCESS"
 	days        = 180
