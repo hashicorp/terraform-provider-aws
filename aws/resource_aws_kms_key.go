@@ -228,16 +228,8 @@ func resourceAwsKmsKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("description") {
-		input := &kms.UpdateKeyDescriptionInput{
-			Description: aws.String(d.Get("description").(string)),
-			KeyId:       aws.String(d.Id()),
-		}
-
-		log.Printf("[DEBUG] Updating KMS Key description: %s", input)
-		_, err := conn.UpdateKeyDescription(input)
-
-		if err != nil {
-			return fmt.Errorf("error updating KMS Key (%s) description: %w", d.Id(), err)
+		if err := updateKmsKeyDescription(conn, d.Id(), d.Get("description").(string)); err != nil {
+			return err
 		}
 	}
 
@@ -310,6 +302,7 @@ type kmsKey struct {
 }
 
 func findKmsKey(conn *kms.KMS, keyID string, isNewResource bool) (*kmsKey, error) {
+	// Wait for propagation since KMS is eventually consistent.
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
 		var err error
 		var key kmsKey
@@ -358,6 +351,29 @@ func findKmsKey(conn *kms.KMS, keyID string, isNewResource bool) (*kmsKey, error
 	}
 
 	return outputRaw.(*kmsKey), nil
+}
+
+func updateKmsKeyDescription(conn *kms.KMS, keyID string, description string) error {
+	input := &kms.UpdateKeyDescriptionInput{
+		Description: aws.String(description),
+		KeyId:       aws.String(keyID),
+	}
+
+	log.Printf("[DEBUG] Updating KMS Key description: %s", input)
+	_, err := conn.UpdateKeyDescription(input)
+
+	if err != nil {
+		return fmt.Errorf("error updating KMS Key (%s) description: %w", keyID, err)
+	}
+
+	// Wait for propagation since KMS is eventually consistent.
+	err = waiter.KeyDescriptionPropagated(conn, keyID, description)
+
+	if err != nil {
+		return fmt.Errorf("error waiting for KMS Key (%s) description propagation: %w", keyID, err)
+	}
+
+	return nil
 }
 
 func updateKmsKeyEnabled(conn *kms.KMS, keyID string, enabled bool) error {

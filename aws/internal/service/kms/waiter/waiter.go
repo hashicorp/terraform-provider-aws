@@ -19,10 +19,12 @@ const (
 	// Maximum amount of time to wait for KeyState to return PendingDeletion
 	KeyStatePendingDeletionTimeout = 20 * time.Minute
 
-	KeyDeletedTimeout          = 20 * time.Minute
-	KeyMaterialImportedTimeout = 10 * time.Minute
-	KeyRotationUpdatedTimeout  = 10 * time.Minute
-	KeyStatePropagationTimeout = 20 * time.Minute
+	KeyDeletedTimeout                = 20 * time.Minute
+	KeyDescriptionPropagationTimeout = 5 * time.Minute
+	KeyMaterialImportedTimeout       = 10 * time.Minute
+	KeyRotationUpdatedTimeout        = 10 * time.Minute
+	KeyStatePropagationTimeout       = 20 * time.Minute
+	KeyValidToPropagationTimeout     = 5 * time.Minute
 
 	PropagationTimeout = 2 * time.Minute
 )
@@ -48,6 +50,28 @@ func KeyDeleted(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
 	}
 
 	return nil, err
+}
+
+func KeyDescriptionPropagated(conn *kms.KMS, id string, description string) error {
+	checkFunc := func() (bool, error) {
+		output, err := finder.KeyByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		return aws.StringValue(output.Description) == description, nil
+	}
+	opts := tfresource.WaitOpts{
+		ContinuousTargetOccurence: 5,
+		MinTimeout:                2 * time.Second,
+	}
+
+	return tfresource.WaitUntil(KeyDescriptionPropagationTimeout, checkFunc, opts)
 }
 
 func KeyMaterialImported(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
@@ -137,6 +161,32 @@ func KeyStatePropagated(conn *kms.KMS, id string, enabled bool) error {
 	}
 
 	return tfresource.WaitUntil(KeyStatePropagationTimeout, checkFunc, opts)
+}
+
+func KeyValidToPropagated(conn *kms.KMS, id string, validTo string) error {
+	checkFunc := func() (bool, error) {
+		output, err := finder.KeyByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		if output.ValidTo != nil {
+			return aws.TimeValue(output.ValidTo).Format(time.RFC3339) == validTo, nil
+		}
+
+		return validTo == "", nil
+	}
+	opts := tfresource.WaitOpts{
+		ContinuousTargetOccurence: 5,
+		MinTimeout:                2 * time.Second,
+	}
+
+	return tfresource.WaitUntil(KeyValidToPropagationTimeout, checkFunc, opts)
 }
 
 func TagsPropagated(conn *kms.KMS, id string, tags keyvaluetags.KeyValueTags) error {

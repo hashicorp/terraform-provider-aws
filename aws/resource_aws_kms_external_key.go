@@ -150,7 +150,9 @@ func resourceAwsKmsExternalKeyCreate(d *schema.ResourceData, meta interface{}) e
 	d.SetId(aws.StringValue(outputRaw.(*kms.CreateKeyOutput).KeyMetadata.KeyId))
 
 	if v, ok := d.GetOk("key_material_base64"); ok {
-		if err := importKmsExternalKeyMaterial(conn, d.Id(), v.(string), d.Get("valid_to").(string)); err != nil {
+		validTo := d.Get("valid_to").(string)
+
+		if err := importKmsExternalKeyMaterial(conn, d.Id(), v.(string), validTo); err != nil {
 			return fmt.Errorf("error importing KMS External Key (%s) material: %s", d.Id(), err)
 		}
 
@@ -158,6 +160,12 @@ func resourceAwsKmsExternalKeyCreate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("error waiting for KMS External Key (%s) material import: %w", d.Id(), err)
 		}
 
+		if err := waiter.KeyValidToPropagated(conn, d.Id(), validTo); err != nil {
+			return fmt.Errorf("error waiting for KMS External Key (%s) valid_to propagation: %w", d.Id(), err)
+		}
+
+		// The key can only be disabled if key material has been imported, else:
+		// "KMSInvalidStateException: arn:aws:kms:us-west-2:123456789012:key/47e3edc1-945f-413b-88b1-e7341c2d89f7 is pending import."
 		if enabled := d.Get("enabled").(bool); !enabled {
 			if err := updateKmsKeyEnabled(conn, d.Id(), enabled); err != nil {
 				return err
@@ -223,16 +231,8 @@ func resourceAwsKmsExternalKeyUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if d.HasChange("description") {
-		input := &kms.UpdateKeyDescriptionInput{
-			Description: aws.String(d.Get("description").(string)),
-			KeyId:       aws.String(d.Id()),
-		}
-
-		log.Printf("[DEBUG] Updating KMS External Key description: %s", input)
-		_, err := conn.UpdateKeyDescription(input)
-
-		if err != nil {
-			return fmt.Errorf("error updating KMS External Key (%s) description: %w", d.Id(), err)
+		if err := updateKmsKeyDescription(conn, d.Id(), d.Get("description").(string)); err != nil {
+			return err
 		}
 	}
 
@@ -243,12 +243,18 @@ func resourceAwsKmsExternalKeyUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if d.HasChange("valid_to") {
-		if err := importKmsExternalKeyMaterial(conn, d.Id(), d.Get("key_material_base64").(string), d.Get("valid_to").(string)); err != nil {
+		validTo := d.Get("valid_to").(string)
+
+		if err := importKmsExternalKeyMaterial(conn, d.Id(), d.Get("key_material_base64").(string), validTo); err != nil {
 			return fmt.Errorf("error importing KMS External Key (%s) material: %s", d.Id(), err)
 		}
 
 		if _, err := waiter.KeyMaterialImported(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for KMS External Key (%s) material import: %w", d.Id(), err)
+		}
+
+		if err := waiter.KeyValidToPropagated(conn, d.Id(), validTo); err != nil {
+			return fmt.Errorf("error waiting for KMS External Key (%s) valid_to propagation: %w", d.Id(), err)
 		}
 	}
 
@@ -308,6 +314,7 @@ func resourceAwsKmsExternalKeyDelete(d *schema.ResourceData, meta interface{}) e
 }
 
 func importKmsExternalKeyMaterial(conn *kms.KMS, keyID, keyMaterialBase64, validTo string) error {
+	// Wait for propagation since KMS is eventually consistent.
 	outputRaw, err := tfresource.RetryWhenAwsErrCodeEquals(waiter.PropagationTimeout, func() (interface{}, error) {
 		return conn.GetParametersForImport(&kms.GetParametersForImportInput{
 			KeyId:             aws.String(keyID),
@@ -358,6 +365,7 @@ func importKmsExternalKeyMaterial(conn *kms.KMS, keyID, keyMaterialBase64, valid
 		input.ValidTo = aws.Time(t)
 	}
 
+	// Wait for propagation since KMS is eventually consistent.
 	_, err = tfresource.RetryWhenAwsErrCodeEquals(waiter.PropagationTimeout, func() (interface{}, error) {
 		return conn.ImportKeyMaterial(input)
 	}, kms.ErrCodeNotFoundException)
