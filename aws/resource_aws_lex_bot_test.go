@@ -879,7 +879,7 @@ func testAccAwsLexBotConfig_basic(rName string) string {
 resource "aws_lex_bot" "test" {
   child_directed = false
   description    = "Bot to order flowers on the behalf of a user"
-  name           = "%s" 
+  name           = "%s"
   abort_statement {
     message {
       content      = "Sorry, I'm not able to assist at this time"
@@ -920,7 +920,7 @@ func testAccAwsLexBotConfig_abortStatement(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
   child_directed = false
-  description    = "Bot to order flowers on the behalf of a user" 
+  description    = "Bot to order flowers on the behalf of a user"
   name           = "%s"
   abort_statement {
     message {
@@ -1049,7 +1049,7 @@ func testAccAwsLexBotConfig_descriptionUpdate(rName string) string {
 resource "aws_lex_bot" "test" {
   child_directed = false
   description    = "Bot to order flowers"
-  name           = "%s"  
+  name           = "%s"
   abort_statement {
     message {
       content      = "Sorry, I'm not able to assist at this time"
@@ -1069,7 +1069,7 @@ func testAccAwsLexBotConfig_detectSentimentUpdate(rName string) string {
 resource "aws_lex_bot" "test" {
   child_directed   = false
   description      = "Bot to order flowers on the behalf of a user"
-  detect_sentiment = true 
+  detect_sentiment = true
   name             = "%s"
   abort_statement {
     message {
@@ -1089,8 +1089,8 @@ func testAccAwsLexBotConfig_enableModelImprovementsUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
   child_directed                  = false
-  description                     = "Bot to order flowers on the behalf of a user" 
-  enable_model_improvements       = true 
+  description                     = "Bot to order flowers on the behalf of a user"
+  enable_model_improvements       = true
   name                            = "%s"
   nlu_intent_confidence_threshold = 0.5
   abort_statement {
@@ -1111,8 +1111,8 @@ func testAccAwsLexBotConfig_idleSessionTtlInSecondsUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
   child_directed              = false
-  description                 = "Bot to order flowers on the behalf of a user" 
-  idle_session_ttl_in_seconds = 600 
+  description                 = "Bot to order flowers on the behalf of a user"
+  idle_session_ttl_in_seconds = 600
   name                        = "%s"
   abort_statement {
     message {
@@ -1156,7 +1156,7 @@ func testAccAwsLexBotConfig_localeUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
   child_directed            = false
-  description               = "Bot to order flowers on the behalf of a user" 
+  description               = "Bot to order flowers on the behalf of a user"
   enable_model_improvements = true
   locale                    = "en-GB"
   name                      = "%s"
