@@ -227,7 +227,6 @@ func TestAccAWSCloudWatchEventTarget_EventBusArn(t *testing.T) {
 	if err != nil {
 		t.Skipf("Environment variable %s is missing or is not a valid ARN", key)
 	}
-	busName := strings.Replace(busArn.Resource, "event-bus/", "", 1)
 
 	var target events.Target
 	ruleName := acctest.RandomWithPrefix("tf-acc-test-rule")
@@ -241,11 +240,11 @@ func TestAccAWSCloudWatchEventTarget_EventBusArn(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventTargetConfigEventBusName(ruleName, busName, snsTopicName, targetID),
+				Config: testAccAWSCloudWatchEventTargetConfigEventBusArn(ruleName, busArn.String(), snsTopicName, targetID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventTargetExists(resourceName, &target),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
-					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
+					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busArn.String()),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID),
 				),
 			},
@@ -952,11 +951,11 @@ resource "aws_cloudwatch_event_bus" "test" {
 `, targetID, snsTopicName, ruleName, eventBusName)
 }
 
-func testAccAWSCloudWatchEventTargetConfigEventBusArn(ruleName, eventBusName, snsTopicName, targetID string) string {
+func testAccAWSCloudWatchEventTargetConfigEventBusArn(ruleName, eventBusArn, snsTopicName, targetID string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_target" "test" {
   rule           = aws_cloudwatch_event_rule.test.name
-  event_bus_name = aws_cloudwatch_event_rule.test.event_bus_name
+  event_bus_name = %[4]q
   target_id      = %[1]q
   arn            = aws_sns_topic.test.arn
 }
@@ -967,7 +966,7 @@ resource "aws_sns_topic" "test" {
 
 resource "aws_cloudwatch_event_rule" "test" {
   name           = %[3]q
-  event_bus_name = aws_cloudwatch_event_bus.test.name
+  event_bus_name = %[4]q
   event_pattern  = <<PATTERN
 {
 	"source": [
@@ -976,11 +975,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 }
 PATTERN
 }
-
-resource "aws_cloudwatch_event_bus" "test" {
-  name = %[4]q
-}
-`, targetID, snsTopicName, ruleName, eventBusName)
+`, targetID, snsTopicName, ruleName, eventBusArn)
 }
 
 func testAccAWSCloudWatchEventTargetConfigMissingTargetId(ruleName, snsTopicName string) string {
