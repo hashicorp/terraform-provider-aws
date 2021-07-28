@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsSagemakerWorkforce() *schema.Resource {
@@ -167,10 +169,11 @@ func resourceAwsSagemakerWorkforceCreate(d *schema.ResourceData, meta interface{
 		input.SourceIpConfig = expandSagemakerWorkforceSourceIpConfig(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Sagemaker Workforce create config: %#v", *input)
+	log.Printf("[DEBUG] Creating SageMaker Workforce: %s", input)
 	_, err := conn.CreateWorkforce(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Workforce: %w", err)
+		return fmt.Errorf("error creating SageMaker Workforce (%s): %w", name, err)
 	}
 
 	d.SetId(name)
@@ -182,33 +185,34 @@ func resourceAwsSagemakerWorkforceRead(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).sagemakerconn
 
 	workforce, err := finder.WorkforceByName(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SageMaker Workforce (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if isAWSErr(err, "ValidationException", "No workforce") {
-			d.SetId("")
-			log.Printf("[WARN] Unable to find SageMaker workforce (%s); removing from state", d.Id())
-			return nil
-		}
-		return fmt.Errorf("error reading SageMaker workforce (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading SageMaker Workforce (%s): %w", d.Id(), err)
 
 	}
 
-	arn := aws.StringValue(workforce.WorkforceArn)
-	d.Set("arn", arn)
+	d.Set("arn", workforce.WorkforceArn)
 	d.Set("subdomain", workforce.SubDomain)
 	d.Set("workforce_name", workforce.WorkforceName)
 
 	if err := d.Set("cognito_config", flattenSagemakerWorkforceCognitoConfig(workforce.CognitoConfig)); err != nil {
-		return fmt.Errorf("error setting cognito_config for Sagemaker Workforce (%s): %w", d.Id(), err)
+		return fmt.Errorf("error setting cognito_config : %w", err)
 	}
 
 	if workforce.OidcConfig != nil {
 		if err := d.Set("oidc_config", flattenSagemakerWorkforceOidcConfig(workforce.OidcConfig, d.Get("oidc_config.0.client_secret").(string))); err != nil {
-			return fmt.Errorf("error setting oidc_config for Sagemaker Workforce (%s): %w", d.Id(), err)
+			return fmt.Errorf("error setting oidc_config: %w", err)
 		}
 	}
 
 	if err := d.Set("source_ip_config", flattenSagemakerWorkforceSourceIpConfig(workforce.SourceIpConfig)); err != nil {
-		return fmt.Errorf("error setting source_ip_config for Sagemaker Workforce (%s): %w", d.Id(), err)
+		return fmt.Errorf("error setting source_ip_config: %w", err)
 	}
 
 	return nil
@@ -229,10 +233,11 @@ func resourceAwsSagemakerWorkforceUpdate(d *schema.ResourceData, meta interface{
 		input.OidcConfig = expandSagemakerWorkforceOidcConfig(d.Get("oidc_config").([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Sagemaker Workforce update config: %#v", *input)
+	log.Printf("[DEBUG] Updating SageMaker Workforce: %s", input)
 	_, err := conn.UpdateWorkforce(input)
+
 	if err != nil {
-		return fmt.Errorf("error updating SageMaker Workforce: %w", err)
+		return fmt.Errorf("error updating SageMaker Workforce (%s): %w", d.Id(), err)
 	}
 
 	return resourceAwsSagemakerWorkforceRead(d, meta)
@@ -241,15 +246,17 @@ func resourceAwsSagemakerWorkforceUpdate(d *schema.ResourceData, meta interface{
 func resourceAwsSagemakerWorkforceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
 
-	input := &sagemaker.DeleteWorkforceInput{
+	log.Printf("[DEBUG] Deleting SageMaker Workforce: %s", d.Id())
+	_, err := conn.DeleteWorkforce(&sagemaker.DeleteWorkforceInput{
 		WorkforceName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrMessageContains(err, "ValidationException", "No workforce") {
+		return nil
 	}
 
-	if _, err := conn.DeleteWorkforce(input); err != nil {
-		if isAWSErr(err, "ValidationException", "No workforce found for account") {
-			return nil
-		}
-		return fmt.Errorf("error deleting SageMaker workforce (%s): %w", d.Id(), err)
+	if err != nil {
+		return fmt.Errorf("error deleting SageMaker Workforce (%s): %w", d.Id(), err)
 	}
 
 	return nil

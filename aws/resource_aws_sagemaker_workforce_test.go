@@ -8,12 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -237,18 +237,17 @@ func testAccCheckAWSSagemakerWorkforceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		workforce, err := finder.WorkforceByName(conn, rs.Primary.ID)
-		if tfawserr.ErrMessageContains(err, "ValidationException", "No workforce") {
+		_, err := finder.WorkforceByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Sagemaker Workforce (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if aws.StringValue(workforce.WorkforceName) == rs.Primary.ID {
-			return fmt.Errorf("SageMaker Workforce %q still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("SageMaker Workforce %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -262,16 +261,18 @@ func testAccCheckAWSSagemakerWorkforceExists(n string, workforce *sagemaker.Work
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No sagmaker workforce ID is set")
+			return fmt.Errorf("No SageMaker Workforce ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
-		resp, err := finder.WorkforceByName(conn, rs.Primary.ID)
+
+		output, err := finder.WorkforceByName(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*workforce = *resp
+		*workforce = *output
 
 		return nil
 	}
