@@ -666,6 +666,7 @@ func TestAccAwsLexIntent_computeVersion(t *testing.T) {
 					resource.TestCheckResourceAttr(intentResourceName, "version", version),
 					testAccCheckAwsLexBotExistsWithVersion(botResourceName, version, &v2),
 					resource.TestCheckResourceAttr(botResourceName, "version", version),
+					resource.TestCheckResourceAttr(botResourceName, "intent.0.intent_version", version),
 				),
 			},
 			{
@@ -680,6 +681,7 @@ func TestAccAwsLexIntent_computeVersion(t *testing.T) {
 					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.0", "I would like to pick up flowers"),
 					testAccCheckAwsLexBotExistsWithVersion(botResourceName, updatedVersion, &v2),
 					resource.TestCheckResourceAttr(botResourceName, "version", updatedVersion),
+					resource.TestCheckResourceAttr(botResourceName, "intent.0.intent_version", updatedVersion),
 				),
 			},
 		},
@@ -779,8 +781,8 @@ data "aws_iam_policy_document" "lambda_assume_role" {
 }
 
 resource "aws_iam_role" "test" {
-  name               = "%[1]s"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
+  name               = "%[1]s"
 }
 
 resource "aws_lambda_permission" "lex" {
@@ -813,8 +815,8 @@ resource "aws_lex_intent" "test" {
 func testAccAwsLexIntentConfig_createVersion(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
-  name           = "%s"
   create_version = true
+  name           = "%s"
   fulfillment_activity {
     type = "ReturnIntent"
   }
@@ -1123,7 +1125,7 @@ resource "aws_lex_intent" "test" {
 func testAccAwsLexIntentConfig_slotsCustom(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
-  name = "%[1]s"
+  name = "%s"
   fulfillment_activity {
     type = "ReturnIntent"
   }
@@ -1153,8 +1155,8 @@ resource "aws_lex_intent" "test" {
 func testAccAwsLexIntentConfig_sampleUtterancesWithVersion(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
-  name           = "%s"
   create_version = true
+  name           = "%s"
   fulfillment_activity {
     type = "ReturnIntent"
   }
@@ -1168,8 +1170,8 @@ resource "aws_lex_intent" "test" {
 func testAccAwsLexIntentConfig_slotsWithVersion(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
-  name           = "%[1]s"
   create_version = true
+  name           = "%s"
   fulfillment_activity {
     type = "ReturnIntent"
   }

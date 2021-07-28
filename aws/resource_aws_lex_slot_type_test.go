@@ -373,6 +373,7 @@ func TestAccAwsLexSlotType_computeVersion(t *testing.T) {
 					resource.TestCheckResourceAttr(slotTypeResourceName, "version", version),
 					testAccCheckAwsLexIntentExistsWithVersion(intentResourceName, version, &v2),
 					resource.TestCheckResourceAttr(intentResourceName, "version", version),
+					resource.TestCheckResourceAttr(intentResourceName, "slot.0.slot_type_version", version),
 				),
 			},
 			{
@@ -391,6 +392,7 @@ func TestAccAwsLexSlotType_computeVersion(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(slotTypeResourceName, "enumeration_value.*.synonyms.*", "Podonix"),
 					testAccCheckAwsLexIntentExistsWithVersion(intentResourceName, updatedVersion, &v2),
 					resource.TestCheckResourceAttr(intentResourceName, "version", updatedVersion),
+					resource.TestCheckResourceAttr(intentResourceName, "slot.0.slot_type_version", updatedVersion),
 				),
 			},
 		},
@@ -495,7 +497,8 @@ resource "aws_lex_slot_type" "test" {
 func testAccAwsLexSlotTypeConfig_withVersion(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_slot_type" "test" {
-  name = "%s"
+  create_version = true
+  name           = "%s"
   enumeration_value {
     synonyms = [
       "Lirium",
@@ -503,7 +506,6 @@ resource "aws_lex_slot_type" "test" {
     ]
     value = "lilies"
   }
-  create_version = true
 }
 `, rName)
 }
@@ -527,12 +529,12 @@ resource "aws_lex_slot_type" "test" {
 func testAccAwsLexSlotTypeConfig_enumerationValues(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_slot_type" "test" {
+  name = "%s"
   enumeration_value {
     synonyms = [
       "Lirium",
       "Martagon",
     ]
-
     value = "lilies"
   }
 
@@ -541,11 +543,8 @@ resource "aws_lex_slot_type" "test" {
       "Eduardoregelia",
       "Podonix",
     ]
-
     value = "tulips"
   }
-
-  name = "%s"
 }
 `, rName)
 }
@@ -569,7 +568,8 @@ resource "aws_lex_slot_type" "test" {
 func testAccAwsLexSlotTypeUpdateConfig_enumerationValuesWithVersion(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_slot_type" "test" {
-  name = "%s"
+  create_version = true
+  name           = "%s"
   enumeration_value {
     synonyms = [
       "Lirium",
@@ -583,11 +583,8 @@ resource "aws_lex_slot_type" "test" {
       "Eduardoregelia",
       "Podonix",
     ]
-
     value = "tulips"
   }
-
-  create_version = true
 }
 `, rName)
 }

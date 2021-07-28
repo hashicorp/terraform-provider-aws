@@ -562,6 +562,8 @@ func TestAccAwsLexBot_computeVersion(t *testing.T) {
 
 	botResourceName := "aws_lex_bot.test"
 	botAliasResourceName := "aws_lex_bot_alias.test"
+	intentResourceName := "aws_lex_intent.test"
+	intentResourceName2 := "aws_lex_intent.test_2"
 
 	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
@@ -583,13 +585,16 @@ func TestAccAwsLexBot_computeVersion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsLexBotExistsWithVersion(botResourceName, version, &v1),
 					resource.TestCheckResourceAttr(botResourceName, "version", version),
+					resource.TestCheckResourceAttr(botResourceName, "intent.#", "1"),
+					resource.TestCheckResourceAttr(botResourceName, "intent.0.intent_version", version),
 					testAccCheckAwsLexBotAliasExists(botAliasResourceName, &v2),
 					resource.TestCheckResourceAttr(botAliasResourceName, "bot_version", version),
+					resource.TestCheckResourceAttr(intentResourceName, "version", version),
 				),
 			},
 			{
 				Config: composeConfig(
-					testAccAwsLexBotConfig_intentMultiple(testBotID),
+					testAccAwsLexBotConfig_intentMultipleSecondUpdated(testBotID),
 					testAccAwsLexBotConfig_multipleIntentsWithVersion(testBotID),
 					testAccAwsLexBotAliasConfig_basic(testBotID),
 				),
@@ -597,7 +602,11 @@ func TestAccAwsLexBot_computeVersion(t *testing.T) {
 					testAccCheckAwsLexBotExistsWithVersion(botResourceName, updatedVersion, &v1),
 					resource.TestCheckResourceAttr(botResourceName, "version", updatedVersion),
 					resource.TestCheckResourceAttr(botResourceName, "intent.#", "2"),
+					resource.TestCheckResourceAttr(botResourceName, "intent.0.intent_version", version),
+					resource.TestCheckResourceAttr(botResourceName, "intent.1.intent_version", updatedVersion),
 					resource.TestCheckResourceAttr(botAliasResourceName, "bot_version", updatedVersion),
+					resource.TestCheckResourceAttr(intentResourceName, "version", version),
+					resource.TestCheckResourceAttr(intentResourceName2, "version", updatedVersion),
 				),
 			},
 		},
@@ -801,8 +810,8 @@ func testAccCheckAwsLexBotDestroy(s *terraform.State) error {
 func testAccAwsLexBotConfig_intent(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
-  name           = "%s"
   create_version = true
+  name           = "%s"
   fulfillment_activity {
     type = "ReturnIntent"
   }
@@ -816,8 +825,8 @@ resource "aws_lex_intent" "test" {
 func testAccAwsLexBotConfig_intentMultiple(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
-  name           = "%[1]s"
   create_version = true
+  name           = "%[1]s"
   fulfillment_activity {
     type = "ReturnIntent"
   }
@@ -827,8 +836,8 @@ resource "aws_lex_intent" "test" {
 }
 
 resource "aws_lex_intent" "test_2" {
-  name           = "%[1]stwo"
   create_version = true
+  name           = "%[1]stwo"
   fulfillment_activity {
     type = "ReturnIntent"
   }
@@ -839,12 +848,38 @@ resource "aws_lex_intent" "test_2" {
 `, rName)
 }
 
+func testAccAwsLexBotConfig_intentMultipleSecondUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lex_intent" "test" {
+  create_version = true
+  name           = "%[1]s"
+  fulfillment_activity {
+    type = "ReturnIntent"
+  }
+  sample_utterances = [
+    "I would like to pick up flowers",
+  ]
+}
+
+resource "aws_lex_intent" "test_2" {
+  create_version = true
+  name           = "%[1]stwo"
+  fulfillment_activity {
+    type = "ReturnIntent"
+  }
+  sample_utterances = [
+    "I would like to return these flowers",
+  ]
+}
+`, rName)
+}
+
 func testAccAwsLexBotConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
-  name           = "%s"
-  description    = "Bot to order flowers on the behalf of a user"
   child_directed = false
+  description    = "Bot to order flowers on the behalf of a user"
+  name           = "%s" 
   abort_statement {
     message {
       content      = "Sorry, I'm not able to assist at this time"
@@ -862,10 +897,10 @@ resource "aws_lex_bot" "test" {
 func testAccAwsLexBotConfig_createVersion(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
-  name             = "%s"
-  description      = "Bot to order flowers on the behalf of a user"
   child_directed   = false
   create_version   = true
+  description      = "Bot to order flowers on the behalf of a user"
+  name             = "%s"
   process_behavior = "BUILD"
   abort_statement {
     message {
@@ -884,9 +919,9 @@ resource "aws_lex_bot" "test" {
 func testAccAwsLexBotConfig_abortStatement(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
-  name           = "%s"
-  description    = "Bot to order flowers on the behalf of a user"
   child_directed = false
+  description    = "Bot to order flowers on the behalf of a user" 
+  name           = "%s"
   abort_statement {
     message {
       content      = "Sorry, I'm not able to assist at this time"
@@ -904,9 +939,9 @@ resource "aws_lex_bot" "test" {
 func testAccAwsLexBotConfig_abortStatementUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
-  name           = "%s"
-  description    = "Bot to order flowers on the behalf of a user"
   child_directed = false
+  description    = "Bot to order flowers on the behalf of a user"
+  name           = "%s"
   abort_statement {
     message {
       content      = "Sorry, I'm not able to assist at this time"
@@ -931,9 +966,9 @@ resource "aws_lex_bot" "test" {
 func testAccAwsLexBotConfig_clarificationPrompt(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
-  name           = "%s"
-  description    = "Bot to order flowers on the behalf of a user"
   child_directed = false
+  description    = "Bot to order flowers on the behalf of a user"
+  name           = "%s"
   abort_statement {
     message {
       content      = "Sorry, I'm not able to assist at this time"
@@ -958,9 +993,9 @@ resource "aws_lex_bot" "test" {
 func testAccAwsLexBotConfig_clarificationPromptUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
-  name           = "%s"
-  description    = "Bot to order flowers on the behalf of a user"
   child_directed = false
+  description    = "Bot to order flowers on the behalf of a user"
+  name           = "%s"
   abort_statement {
     message {
       content      = "Sorry, I'm not able to assist at this time"
@@ -992,9 +1027,9 @@ resource "aws_lex_bot" "test" {
 func testAccAwsLexBotConfig_childDirectedUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
-  name           = "%s"
-  description    = "Bot to order flowers on the behalf of a user"
   child_directed = true
+  description    = "Bot to order flowers on the behalf of a user"
+  name           = "%s"
   abort_statement {
     message {
       content      = "Sorry, I'm not able to assist at this time"
@@ -1012,9 +1047,9 @@ resource "aws_lex_bot" "test" {
 func testAccAwsLexBotConfig_descriptionUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
-  name           = "%s"
-  description    = "Bot to order flowers"
   child_directed = false
+  description    = "Bot to order flowers"
+  name           = "%s"  
   abort_statement {
     message {
       content      = "Sorry, I'm not able to assist at this time"
@@ -1032,10 +1067,10 @@ resource "aws_lex_bot" "test" {
 func testAccAwsLexBotConfig_detectSentimentUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
-  name             = "%s"
-  description      = "Bot to order flowers on the behalf of a user"
   child_directed   = false
-  detect_sentiment = true
+  description      = "Bot to order flowers on the behalf of a user"
+  detect_sentiment = true 
+  name             = "%s"
   abort_statement {
     message {
       content      = "Sorry, I'm not able to assist at this time"
@@ -1053,10 +1088,10 @@ resource "aws_lex_bot" "test" {
 func testAccAwsLexBotConfig_enableModelImprovementsUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
-  name                            = "%s"
-  description                     = "Bot to order flowers on the behalf of a user"
   child_directed                  = false
-  enable_model_improvements       = true
+  description                     = "Bot to order flowers on the behalf of a user" 
+  enable_model_improvements       = true 
+  name                            = "%s"
   nlu_intent_confidence_threshold = 0.5
   abort_statement {
     message {
@@ -1075,10 +1110,10 @@ resource "aws_lex_bot" "test" {
 func testAccAwsLexBotConfig_idleSessionTtlInSecondsUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
-  name                        = "%s"
-  description                 = "Bot to order flowers on the behalf of a user"
   child_directed              = false
-  idle_session_ttl_in_seconds = 600
+  description                 = "Bot to order flowers on the behalf of a user" 
+  idle_session_ttl_in_seconds = 600 
+  name                        = "%s"
   abort_statement {
     message {
       content      = "Sorry, I'm not able to assist at this time"
@@ -1096,9 +1131,9 @@ resource "aws_lex_bot" "test" {
 func testAccAwsLexBotConfig_intentsUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
-  name           = "%s"
-  description    = "Bot to order flowers on the behalf of a user"
   child_directed = false
+  description    = "Bot to order flowers on the behalf of a user"
+  name           = "%s"
   abort_statement {
     message {
       content      = "Sorry, I'm not able to assist at this time"
@@ -1120,11 +1155,11 @@ resource "aws_lex_bot" "test" {
 func testAccAwsLexBotConfig_localeUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
-  name                      = "%s"
-  description               = "Bot to order flowers on the behalf of a user"
   child_directed            = false
+  description               = "Bot to order flowers on the behalf of a user" 
   enable_model_improvements = true
   locale                    = "en-GB"
+  name                      = "%s"
   abort_statement {
     message {
       content      = "Sorry, I'm not able to assist at this time"
@@ -1142,9 +1177,9 @@ resource "aws_lex_bot" "test" {
 func testAccAwsLexBotConfig_voiceIdUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
-  name           = "%s"
-  description    = "Bot to order flowers on the behalf of a user"
   child_directed = false
+  description    = "Bot to order flowers on the behalf of a user"
+  name           = "%s"
   voice_id       = "Justin"
   abort_statement {
     message {
@@ -1163,10 +1198,10 @@ resource "aws_lex_bot" "test" {
 func testAccAwsLexBotConfig_multipleIntentsWithVersion(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
-  name             = "%s"
-  description      = "Bot to order flowers on the behalf of a user"
   child_directed   = false
   create_version   = true
+  description      = "Bot to order flowers on the behalf of a user"
+  name             = "%s"
   process_behavior = "BUILD"
   abort_statement {
     message {
