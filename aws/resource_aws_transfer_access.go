@@ -205,9 +205,7 @@ func resourceAwsTransferAccessUpdate(d *schema.ResourceData, meta interface{}) e
 	input := &transfer.UpdateAccessInput{}
 
 	if d.HasChangesExcept() {
-		if d.HasChange("external_id") {
-			input.ExternalId = aws.String(d.Get("external_id").(string))
-		}
+
 
 		if d.HasChange("home_directory") {
 			input.HomeDirectory = aws.String(d.Get("home_directory").(string))
@@ -233,9 +231,11 @@ func resourceAwsTransferAccessUpdate(d *schema.ResourceData, meta interface{}) e
 			input.Role = aws.String(d.Get("role").(string))
 		}
 
-		if d.HasChange("server_id") {
-			input.ServerId = aws.String(d.Get("server_id").(string))
-		}
+		// Always required
+		input.ServerId = aws.String(d.Get("server_id").(string))
+		input.ExternalId = aws.String(d.Get("external_id").(string))
+
+
 
 		log.Printf("[DEBUG] Updating Transfer Access: %s", input)
 		_, err := conn.UpdateAccess(input)
