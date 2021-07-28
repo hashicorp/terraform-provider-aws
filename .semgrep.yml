@@ -566,8 +566,6 @@ rules:
       exclude:
         - internal/service/codebuild/project_test.go
         - internal/service/codepipeline/codepipeline.go
-        - internal/service/codestarconnections/connection_test.go
-        - internal/service/codestarconnections/host_test.go
         - internal/service/cognitoidentity/pool_roles_attachment_test.go
         - internal/service/cognitoidentity/pool_test.go
         - internal/service/cognitoidp/identity_provider_test.go

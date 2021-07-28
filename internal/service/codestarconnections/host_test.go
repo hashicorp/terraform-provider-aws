@@ -206,7 +206,7 @@ func testAccHostBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_host" "test" {
   name              = %[1]q
-  provider_endpoint = "https://test.com"
+  provider_endpoint = "https://example.com"
   provider_type     = "GitHubEnterpriseServer"
 }
 `, rName)
@@ -218,7 +218,7 @@ func testAccHostVPCConfig(rName string) string {
 		fmt.Sprintf(`
 resource "aws_codestarconnections_host" "test" {
   name              = %[1]q
-  provider_endpoint = "https://test.com"
+  provider_endpoint = "https://example.com"
   provider_type     = "GitHubEnterpriseServer"
   vpc_configuration {
     security_group_ids = [aws_security_group.test.id]
