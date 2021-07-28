@@ -16,6 +16,8 @@ ENHANCEMENTS:
 * resource/aws_rds_cluster_instance: Use engine_version and engine_version_actual to set and track engine versions ([#20211](https://github.com/hashicorp/terraform-provider-aws/issues/20211))
 * resource/aws_secretsmanager_secret: Add replica support ([#20293](https://github.com/hashicorp/terraform-provider-aws/issues/20293))
 * resource/aws_storagegateway_gateway: Add new option for gateway_type, FILE_FSX_SMB, to be used with aws_storagegateway_file_system_association ([#20082](https://github.com/hashicorp/terraform-provider-aws/issues/20082))
+* resource/resource_aws_cloudwatch_event_target: Allow to set event_bus_name as ARN.
+* resource/resource_aws_cloudwatch_event_rule: Allow to set event_bus_name as ARN.
 
 BUG FIXES:
 
