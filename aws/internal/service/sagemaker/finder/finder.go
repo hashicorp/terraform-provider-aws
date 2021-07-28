@@ -210,24 +210,29 @@ func WorkforceByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Workfor
 	return output.Workforce, nil
 }
 
-// WorkteamByName returns the workteam corresponding to the specified name.
-// Returns nil if no workteam is found.
 func WorkteamByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Workteam, error) {
 	input := &sagemaker.DescribeWorkteamInput{
 		WorkteamName: aws.String(name),
 	}
 
 	output, err := conn.DescribeWorkteam(input)
+
+	if tfawserr.ErrMessageContains(err, "ValidationException", "The work team") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, nil
-	}
-
-	if output.Workteam == nil {
-		return nil, nil
+	if output == nil || output.Workteam == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
 	}
 
 	return output.Workteam, nil

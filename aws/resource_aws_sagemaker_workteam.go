@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsSagemakerWorkteam() *schema.Resource {
@@ -19,6 +22,7 @@ func resourceAwsSagemakerWorkteam() *schema.Resource {
 		Read:   resourceAwsSagemakerWorkteamRead,
 		Update: resourceAwsSagemakerWorkteamUpdate,
 		Delete: resourceAwsSagemakerWorkteamDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -118,6 +122,7 @@ func resourceAwsSagemakerWorkteam() *schema.Resource {
 				),
 			},
 		},
+
 		CustomizeDiff: SetTagsDiff,
 	}
 }
@@ -143,12 +148,13 @@ func resourceAwsSagemakerWorkteamCreate(d *schema.ResourceData, meta interface{}
 		input.Tags = tags.IgnoreAws().SagemakerTags()
 	}
 
-	log.Printf("[DEBUG] Sagemaker Workteam create config: %#v", *input)
-	_, err := retryOnAwsCode("ValidationException", func() (interface{}, error) {
+	log.Printf("[DEBUG] Updating SageMaker Workteam: %s", input)
+	_, err := tfresource.RetryWhenAwsErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.CreateWorkteam(input)
-	})
+	}, "ValidationException")
+
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Workteam: %w", err)
+		return fmt.Errorf("error creating SageMaker Workteam (%s): %w", name, err)
 	}
 
 	d.SetId(name)
@@ -162,14 +168,15 @@ func resourceAwsSagemakerWorkteamRead(d *schema.ResourceData, meta interface{}) 
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	workteam, err := finder.WorkteamByName(conn, d.Id())
-	if err != nil {
-		if isAWSErr(err, "ValidationException", "The work team") {
-			d.SetId("")
-			log.Printf("[WARN] Unable to find SageMaker workteam (%s); removing from state", d.Id())
-			return nil
-		}
-		return fmt.Errorf("error reading SageMaker workteam (%s): %w", d.Id(), err)
 
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SageMaker Workteam (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading SageMaker Workteam (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(workteam.WorkteamArn)
@@ -179,17 +186,17 @@ func resourceAwsSagemakerWorkteamRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("workteam_name", workteam.WorkteamName)
 
 	if err := d.Set("member_definition", flattenSagemakerWorkteamMemberDefinition(workteam.MemberDefinitions)); err != nil {
-		return fmt.Errorf("error setting member_definition for Sagemaker Workteam (%s): %w", d.Id(), err)
+		return fmt.Errorf("error setting member_definition: %w", err)
 	}
 
 	if err := d.Set("notification_configuration", flattenSagemakerWorkteamNotificationConfiguration(workteam.NotificationConfiguration)); err != nil {
-		return fmt.Errorf("error setting notification_configuration for Sagemaker Workteam (%s): %w", d.Id(), err)
+		return fmt.Errorf("error setting notification_configuration: %w", err)
 	}
 
 	tags, err := keyvaluetags.SagemakerListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker User Profile (%s): %w", d.Id(), err)
+		return fmt.Errorf("error listing tags for SageMaker Workteam (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
@@ -223,10 +230,11 @@ func resourceAwsSagemakerWorkteamUpdate(d *schema.ResourceData, meta interface{}
 			input.NotificationConfiguration = expandSagemakerWorkteamNotificationConfiguration(d.Get("notification_configuration").([]interface{}))
 		}
 
-		log.Printf("[DEBUG] Sagemaker Workteam update config: %#v", *input)
+		log.Printf("[DEBUG] Updating SageMaker Workteam: %s", input)
 		_, err := conn.UpdateWorkteam(input)
+
 		if err != nil {
-			return fmt.Errorf("error updating SageMaker Workteam: %w", err)
+			return fmt.Errorf("error updating SageMaker Workteam (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -234,7 +242,7 @@ func resourceAwsSagemakerWorkteamUpdate(d *schema.ResourceData, meta interface{}
 		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker UserProfile (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("error updating SageMaker Workteam (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -244,15 +252,17 @@ func resourceAwsSagemakerWorkteamUpdate(d *schema.ResourceData, meta interface{}
 func resourceAwsSagemakerWorkteamDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
 
-	input := &sagemaker.DeleteWorkteamInput{
+	log.Printf("[DEBUG] Deleting SageMaker Workteam: %s", d.Id())
+	_, err := conn.DeleteWorkteam(&sagemaker.DeleteWorkteamInput{
 		WorkteamName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrMessageContains(err, "ValidationException", "The work team") {
+		return nil
 	}
 
-	if _, err := conn.DeleteWorkteam(input); err != nil {
-		if isAWSErr(err, "ValidationException", "The work team") {
-			return nil
-		}
-		return fmt.Errorf("error deleting SageMaker workteam (%s): %w", d.Id(), err)
+	if err != nil {
+		return fmt.Errorf("error deleting SageMaker Workteam (%s): %w", d.Id(), err)
 	}
 
 	return nil

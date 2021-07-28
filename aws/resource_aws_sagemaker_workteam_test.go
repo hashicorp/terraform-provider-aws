@@ -8,12 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -60,7 +60,7 @@ func testSweepSagemakerWorkteams(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSagemakerWorkteam_cognitoConfig(t *testing.T) {
+func testAccAWSSagemakerWorkteam_cognitoConfig(t *testing.T) {
 	var workteam sagemaker.Workteam
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_workteam.test"
@@ -131,7 +131,7 @@ func TestAccAWSSagemakerWorkteam_cognitoConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerWorkteam_oidcConfig(t *testing.T) {
+func testAccAWSSagemakerWorkteam_oidcConfig(t *testing.T) {
 	var workteam sagemaker.Workteam
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_workteam.test"
@@ -188,7 +188,7 @@ func TestAccAWSSagemakerWorkteam_oidcConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerWorkteam_tags(t *testing.T) {
+func testAccAWSSagemakerWorkteam_tags(t *testing.T) {
 	var workteam sagemaker.Workteam
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_workteam.test"
@@ -234,7 +234,7 @@ func TestAccAWSSagemakerWorkteam_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerWorkteam_notificationConfig(t *testing.T) {
+func testAccAWSSagemakerWorkteam_notificationConfig(t *testing.T) {
 	var workteam sagemaker.Workteam
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_workteam.test"
@@ -287,7 +287,7 @@ func TestAccAWSSagemakerWorkteam_notificationConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerWorkteam_disappears(t *testing.T) {
+func testAccAWSSagemakerWorkteam_disappears(t *testing.T) {
 	var workteam sagemaker.Workteam
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_workteam.test"
@@ -318,18 +318,17 @@ func testAccCheckAWSSagemakerWorkteamDestroy(s *terraform.State) error {
 			continue
 		}
 
-		workteam, err := finder.WorkteamByName(conn, rs.Primary.ID)
-		if tfawserr.ErrMessageContains(err, "ValidationException", "The work team") {
+		_, err := finder.WorkteamByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Sagemaker Workteam (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if aws.StringValue(workteam.WorkteamName) == rs.Primary.ID {
-			return fmt.Errorf("SageMaker Workteam %q still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("SageMaker Workteam %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -343,16 +342,18 @@ func testAccCheckAWSSagemakerWorkteamExists(n string, workteam *sagemaker.Workte
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No sagmaker workteam ID is set")
+			return fmt.Errorf("No SageMaker Workteam ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
-		resp, err := finder.WorkteamByName(conn, rs.Primary.ID)
+
+		output, err := finder.WorkteamByName(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*workteam = *resp
+		*workteam = *output
 
 		return nil
 	}
