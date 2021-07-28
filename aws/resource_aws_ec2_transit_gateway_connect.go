@@ -73,7 +73,7 @@ func resourceAwsEc2TransitGatewayConnectCreate(d *schema.ResourceData, meta inte
 	d.SetId(aws.StringValue(output.TransitGatewayConnect.TransitGatewayAttachmentId))
 
 	if err := waitForEc2TransitGatewayConnectCreation(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EC2 Transit Gateway VPC Attachment (%s) availability: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for EC2 Transit Gateway Connect (%s) availability: %s", d.Id(), err)
 	}
 
 	transportTransitGatewayAttachment, err := ec2DescribeTransitGatewayVpcAttachment(conn, transportTransitGatewayAttachmentId)

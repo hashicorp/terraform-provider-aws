@@ -134,6 +134,7 @@ func TestAccAWSEc2TransitGateway_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "propagation_default_route_table_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpn_ecmp_support", ec2.VpnEcmpSupportValueEnable),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_cidr_blocks.#", "0"),
 				),
 			},
 			{
@@ -414,6 +415,40 @@ func TestAccAWSEc2TransitGateway_VpnEcmpSupport(t *testing.T) {
 	})
 }
 
+func TestAccAWSEc2TransitGateway_TransitGatewayCidrBlocks(t *testing.T) {
+	var transitGateway1, transitGateway2 ec2.TransitGateway
+	resourceName := "aws_ec2_transit_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEc2TransitGatewayConfigTransitGatewayCidrBlocks("10.0.0.0/24"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEc2TransitGatewayExists(resourceName, &transitGateway1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "transit_gateway_cidr_blocks.*", "10.0.0.0/24"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEc2TransitGatewayConfigTransitGatewayCidrBlocks("10.100.0.0/24"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEc2TransitGatewayExists(resourceName, &transitGateway2),
+					testAccCheckAWSEc2TransitGatewayNotRecreated(&transitGateway1, &transitGateway2),
+					resource.TestCheckTypeSetElemAttr(resourceName, "transit_gateway_cidr_blocks.*", "10.100.0.0/24"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEc2TransitGateway_Description(t *testing.T) {
 	var transitGateway1, transitGateway2 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
@@ -577,6 +612,46 @@ func testAccCheckAWSEc2TransitGatewayRecreated(i, j *ec2.TransitGateway) resourc
 	}
 }
 
+func testAccCheckAWSEc2TransitGatewayAssociationDefaultRouteTableConnectAssociated(transitGateway *ec2.TransitGateway, transitGatewayConnect *ec2.TransitGatewayConnect) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		attachmentID := aws.StringValue(transitGatewayConnect.TransitGatewayAttachmentId)
+		routeTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
+		association, err := ec2DescribeTransitGatewayRouteTableAssociation(conn, routeTableID, attachmentID)
+
+		if err != nil {
+			return err
+		}
+
+		if association == nil {
+			return errors.New("EC2 Transit Gateway Route Table Association not found")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSEc2TransitGatewayAssociationDefaultRouteTableConnectNotAssociated(transitGateway *ec2.TransitGateway, transitGatewayConnect *ec2.TransitGatewayConnect) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		attachmentID := aws.StringValue(transitGatewayConnect.TransitGatewayAttachmentId)
+		routeTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
+		association, err := ec2DescribeTransitGatewayRouteTableAssociation(conn, routeTableID, attachmentID)
+
+		if err != nil {
+			return err
+		}
+
+		if association != nil {
+			return errors.New("EC2 Transit Gateway Route Table Association found")
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckAWSEc2TransitGatewayAssociationDefaultRouteTableVpcAttachmentAssociated(transitGateway *ec2.TransitGateway, transitGatewayVpcAttachment *ec2.TransitGatewayVpcAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
@@ -611,6 +686,46 @@ func testAccCheckAWSEc2TransitGatewayAssociationDefaultRouteTableVpcAttachmentNo
 
 		if association != nil {
 			return errors.New("EC2 Transit Gateway Route Table Association found")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSEc2TransitGatewayPropagationDefaultRouteTableConnectNotPropagated(transitGateway *ec2.TransitGateway, transitGatewayConnect *ec2.TransitGatewayConnect) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		attachmentID := aws.StringValue(transitGatewayConnect.TransitGatewayAttachmentId)
+		routeTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
+		propagation, err := ec2DescribeTransitGatewayRouteTablePropagation(conn, routeTableID, attachmentID)
+
+		if err != nil {
+			return err
+		}
+
+		if propagation != nil {
+			return errors.New("EC2 Transit Gateway Route Table Propagation enabled")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSEc2TransitGatewayPropagationDefaultRouteTableConnectPropagated(transitGateway *ec2.TransitGateway, transitGatewayConnect *ec2.TransitGatewayConnect) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		attachmentID := aws.StringValue(transitGatewayConnect.TransitGatewayAttachmentId)
+		routeTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
+		propagation, err := ec2DescribeTransitGatewayRouteTablePropagation(conn, routeTableID, attachmentID)
+
+		if err != nil {
+			return err
+		}
+
+		if propagation == nil {
+			return errors.New("EC2 Transit Gateway Route Table Propagation not enabled")
 		}
 
 		return nil
@@ -736,6 +851,14 @@ resource "aws_ec2_transit_gateway" "test" {
   vpn_ecmp_support = %q
 }
 `, vpnEcmpSupport)
+}
+
+func testAccAWSEc2TransitGatewayConfigTransitGatewayCidrBlocks(cidrBlock string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+	transit_gateway_cidr_blocks = [%q]
+}
+`, cidrBlock)
 }
 
 func testAccAWSEc2TransitGatewayConfigDescription(description string) string {

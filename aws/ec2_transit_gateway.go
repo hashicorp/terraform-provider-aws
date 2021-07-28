@@ -778,7 +778,6 @@ func waitForEc2TransitGatewayConnectCreation(conn *ec2.EC2, transitGatewayAttach
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.TransitGatewayAttachmentStatePending},
 		Target: []string{
-			ec2.TransitGatewayAttachmentStatePendingAcceptance,
 			ec2.TransitGatewayAttachmentStateAvailable,
 		},
 		Refresh: ec2TransitGatewayConnectRefreshFunc(conn, transitGatewayAttachmentID),
@@ -795,7 +794,6 @@ func waitForEc2TransitGatewayConnectPeerCreation(conn *ec2.EC2, transitGatewayCo
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.TransitGatewayAttachmentStatePending},
 		Target: []string{
-			ec2.TransitGatewayAttachmentStatePendingAcceptance,
 			ec2.TransitGatewayAttachmentStateAvailable,
 		},
 		Refresh: ec2TransitGatewayConnectPeerRefreshFunc(conn, transitGatewayConnectPeerId),
