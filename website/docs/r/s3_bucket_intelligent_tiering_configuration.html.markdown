@@ -44,7 +44,7 @@ resource "aws_s3_bucket_intelligent_tiering_configuration" "example-filtered" {
   name   = "ImportantBlueDocuments"
 
   enabled = false
-  
+
   filter {
     prefix = "documents/"
 
@@ -92,7 +92,7 @@ No additional attributes are exported.
 
 ## Import
 
-S3 bucket analytics configurations can be imported using `bucket:name`, e.g.
+S3 bucket intelligent tiering configurations can be imported using `bucket:name`, e.g.
 
 ```
 $ terraform import aws_s3_bucket_intelligent_tiering_configuration.my-bucket-entire-bucket my-bucket:EntireBucket
