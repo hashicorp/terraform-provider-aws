@@ -202,7 +202,15 @@ func resourceAwsTransferAccessRead(d *schema.ResourceData, meta interface{}) err
 func resourceAwsTransferAccessUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
 
-	input := &transfer.UpdateAccessInput{}
+	serverId, externalId, err := tftransfer.AccessParseResourceID(d.Id())
+	if err != nil {
+		return fmt.Errorf("error parsing Transfer Access ID: %s", err)
+	}
+
+	input := &transfer.UpdateAccessInput{
+		ServerId:   aws.String(serverId),
+		ExternalId: aws.String(externalId),
+	}
 
 	if d.HasChangesExcept() {
 
@@ -230,10 +238,6 @@ func resourceAwsTransferAccessUpdate(d *schema.ResourceData, meta interface{}) e
 			input.Role = aws.String(d.Get("role").(string))
 		}
 
-		// Always required
-		input.ServerId = aws.String(d.Get("server_id").(string))
-		input.ExternalId = aws.String(d.Get("external_id").(string))
-
 		log.Printf("[DEBUG] Updating Transfer Access: %s", input)
 		_, err := conn.UpdateAccess(input)
 		if err != nil {
@@ -247,11 +251,13 @@ func resourceAwsTransferAccessUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsTransferAccessDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
 
-	externalId := d.Get("external_id").(string)
-	serverId := d.Get("server_id").(string)
+	serverId, externalId, err := tftransfer.AccessParseResourceID(d.Id())
+	if err != nil {
+		return fmt.Errorf("error parsing Transfer Access ID: %s", err)
+	}
 
 	log.Printf("[DEBUG] Deleting Transfer Access: (externalID: %s, serverID: %s)", externalId, serverId)
-	_, err := conn.DeleteAccess(&transfer.DeleteAccessInput{
+	_, err = conn.DeleteAccess(&transfer.DeleteAccessInput{
 		ExternalId: aws.String(externalId),
 		ServerId:   aws.String(serverId),
 	})
