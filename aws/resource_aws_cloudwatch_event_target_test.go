@@ -490,6 +490,39 @@ func TestAccAWSCloudWatchEventTarget_ecs(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudWatchEventTarget_redshift(t *testing.T) {
+	resourceName := "aws_cloudwatch_event_target.test"
+	iamRoleResourceName := "aws_iam_role.test"
+	var v events.Target
+	rName := acctest.RandomWithPrefix("tf_ecs_target")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchEventTargetConfigRedshift(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_target.0.database", "redshiftdb"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_target.0.sql", "SELECT * FROM table"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_target.0.statement_name", "NewStatement"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudWatchEventTarget_ecsWithBlankLaunchType(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -1421,6 +1454,35 @@ resource "aws_cloudwatch_event_target" "test" {
   }
 }
 `
+}
+
+func testAccAWSCloudWatchEventTargetConfigRedshift(rName string) string {
+	return composeConfig(testAccAWSCloudWatchEventTargetConfigEcsBase(rName),
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+resource "aws_cloudwatch_event_target" "test" {
+  arn      = aws_redshift_cluster.default.arn
+  rule     = aws_cloudwatch_event_rule.test.id
+  role_arn = aws_iam_role.test.arn
+
+  redshift_target {
+    database       = "redshiftdb"
+    sql            = "SELECT * FROM table"
+    statement_name = "NewStatement"
+    db_user        = "someUser"
+  }
+}
+resource "aws_redshift_cluster" "default" {
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+}
+`, 123))
 }
 
 func testAccAWSCloudWatchEventTargetConfigEcsWithBlankLaunchType(rName string) string {

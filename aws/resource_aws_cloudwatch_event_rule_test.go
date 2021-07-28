@@ -85,6 +85,7 @@ func testSweepCloudWatchEventRules(region string) error {
 func testAccErrorCheckSkipEvents(t *testing.T) resource.ErrorCheckFunc {
 	return testAccErrorCheckSkipMessagesContaining(t,
 		"Operation is disabled in this region",
+		"not a supported service for a target",
 	)
 }
 
