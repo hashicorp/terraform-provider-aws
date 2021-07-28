@@ -196,11 +196,6 @@ func ElastiCacheUserById(conn *elasticache.ElastiCache, userID string) (*elastic
 			Message: "empty result",
 		}
 	case 1:
-		if aws.StringValue(out.Users[0].Status) != "active" {
-			return nil, &resource.NotFoundError{
-				Message: "empty result",
-			}
-		}
 		return out.Users[0], nil
 	default:
 		return nil, &resource.NotFoundError{

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -112,8 +113,8 @@ func resourceAwsElasticacheUserRead(d *schema.ResourceData, meta interface{}) er
 
 	resp, err := finder.ElastiCacheUserById(conn, d.Id())
 	if !d.IsNewResource() && (tfresource.NotFound(err) || isAWSErr(err, elasticache.ErrCodeUserNotFoundFault, "")) {
+		log.Printf("[WARN] ElastiCache User (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		log.Printf("[DEBUG] ElastiCache User (%s) not found", d.Id())
 		return nil
 	}
 
@@ -159,7 +160,7 @@ func resourceAwsElasticacheUserUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if d.HasChangeExcept("tags_all") {
 		req := &elasticache.ModifyUserInput{
-			UserId: aws.String(d.Get("user_id").(string)),
+			UserId: aws.String(d.Id()),
 		}
 
 		if d.HasChange("access_string") {
@@ -180,7 +181,11 @@ func resourceAwsElasticacheUserUpdate(d *schema.ResourceData, meta interface{}) 
 		if hasChange {
 			_, err := conn.ModifyUser(req)
 			if err != nil {
-				return fmt.Errorf("error updating ElastiCache User (%q): %w", d.Id(), err)
+				return fmt.Errorf("error updating ElastiCache User (%s): %w", d.Id(), err)
+			}
+
+			if err := waiter.UserActive(conn, d.Id()); err != nil {
+				return fmt.Errorf("error waiting for ElastiCache User (%s) to be modified: %w", d.Id(), err)
 			}
 		}
 
@@ -206,11 +211,20 @@ func resourceAwsElasticacheUserDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	_, err := conn.DeleteUser(input)
+
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserNotFoundFault) {
+		return nil
+	}
+
 	if err != nil {
+		return fmt.Errorf("error deleting ElastiCache User (%s): %w", d.Id(), err)
+	}
+
+	if err := waiter.UserDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserNotFoundFault) {
 			return nil
 		}
-		return fmt.Errorf("ElastiCache User cannot be deleted: %w", err)
+		return fmt.Errorf("error waiting for ElastiCache User (%s) to be deleted: %w", d.Id(), err)
 	}
 
 	return nil
