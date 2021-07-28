@@ -392,7 +392,7 @@ resource "aws_sagemaker_workforce" "test" {
 }
 
 func testAccAWSSagemakerWorkteamCognitoConfig(rName string) string {
-	return testAccAWSSagemakerWorkteamCognitoBaseConfig(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSagemakerWorkteamCognitoBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workteam" "test" {
   workteam_name  = %[1]q
   workforce_name = aws_sagemaker_workforce.test.id
@@ -406,11 +406,11 @@ resource "aws_sagemaker_workteam" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSagemakerWorkteamCognitoUpdatedConfig(rName string) string {
-	return testAccAWSSagemakerWorkteamCognitoBaseConfig(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSagemakerWorkteamCognitoBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cognito_user_group" "test2" {
   name         = "%[1]s-2"
   user_pool_id = aws_cognito_user_pool.test.id
@@ -437,7 +437,7 @@ resource "aws_sagemaker_workteam" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSagemakerWorkteamOidcBaseConfig(rName string) string {
@@ -460,7 +460,7 @@ resource "aws_sagemaker_workforce" "test" {
 }
 
 func testAccAWSSagemakerWorkteamOidcConfig(rName string) string {
-	return testAccAWSSagemakerWorkteamOidcBaseConfig(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSagemakerWorkteamOidcBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workteam" "test" {
   workteam_name  = %[1]q
   workforce_name = aws_sagemaker_workforce.test.id
@@ -472,11 +472,11 @@ resource "aws_sagemaker_workteam" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSagemakerWorkteamOidcConfig2(rName, group string) string {
-	return testAccAWSSagemakerWorkteamOidcBaseConfig(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSagemakerWorkteamOidcBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workteam" "test" {
   workteam_name  = %[1]q
   workforce_name = aws_sagemaker_workforce.test.id
@@ -488,11 +488,11 @@ resource "aws_sagemaker_workteam" "test" {
     }
   }
 }
-`, rName, group)
+`, rName, group))
 }
 
 func testAccAWSSagemakerWorkteamNotificationConfig(rName string) string {
-	return testAccAWSSagemakerWorkteamOidcBaseConfig(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSagemakerWorkteamOidcBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
 }
@@ -534,11 +534,11 @@ resource "aws_sagemaker_workteam" "test" {
     notification_topic_arn = aws_sns_topic.test.arn
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSagemakerWorkteamTagsConfig1(rName, tagKey1, tagValue1 string) string {
-	return testAccAWSSagemakerWorkteamOidcBaseConfig(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSagemakerWorkteamOidcBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workteam" "test" {
   workteam_name  = %[1]q
   workforce_name = aws_sagemaker_workforce.test.id
@@ -554,11 +554,11 @@ resource "aws_sagemaker_workteam" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccAWSSagemakerWorkteamTagsConfig2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAWSSagemakerWorkteamOidcBaseConfig(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSagemakerWorkteamOidcBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workteam" "test" {
   workteam_name  = %[1]q
   workforce_name = aws_sagemaker_workforce.test.id
@@ -575,5 +575,5 @@ resource "aws_sagemaker_workteam" "test" {
     %[4]q = %[5]q	
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
