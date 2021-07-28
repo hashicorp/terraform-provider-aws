@@ -254,7 +254,7 @@ func testAccAWSTransferAccessUpdatedConfig(rName string) string {
 		testAccAWSTransferAccessConfigBase(rName),
 		`
 		resource "aws_transfer_access" "test" {
-		  external_id = "S-1-0-09-0987654321-098765432-0987654321-0987"
+		  external_id = "S-1-1-12-1234567890-123456789-1234567890-1234"
 		  server_id = aws_transfer_server.test.id
           role = aws_iam_role.test.arn
 		  home_directory = "/${aws_s3_bucket.test.id}/test"
