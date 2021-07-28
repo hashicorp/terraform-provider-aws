@@ -43,6 +43,8 @@ resource "aws_s3_bucket_intelligent_tiering_configuration" "example-filtered" {
   bucket = aws_s3_bucket.example.bucket
   name   = "ImportantBlueDocuments"
 
+  enabled = false
+  
   filter {
     prefix = "documents/"
 
@@ -70,6 +72,7 @@ The following arguments are supported:
 
 * `bucket` - (Required) The name of the bucket this intelligent tiering configuration is associated with.
 * `name` - (Required) Unique identifier of the intelligent tiering configuration for the bucket.
+* `enabled` - (Optional) Whether the configuration is enabled. Defaults to `true`.
 * `filter` - (Optional) Object filtering that accepts a prefix, tags, or a logical AND of prefix and tags (documented below).
 * `tier` - (Required) Access tier configurations that accepts access tier and number of days to move to the tier (documented below).
 
