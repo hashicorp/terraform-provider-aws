@@ -75,13 +75,13 @@ The following arguments are supported:
 
 The `filter` configuration supports the following:
 
-* `prefix` - (Optional) Object prefix for filtering.
-* `tags` - (Optional) Set of object tags for filtering.
+* `prefix` - (Optional) An object key name prefix that identifies the subset of objects to which the configuration applies.
+* `tags` - (Optional) Set of object level key vaue pairs that identifies the subset of objects to which the configuration applies.
 
 The `tier` configuration supports the following:
 
 * `access_tier` - (Required) Specifies the Intelligent Tiering Archive Tier that objects in this filter will transition to. Can be `ARCHIVE_CONFIGURATION`, or `DEEP_ARCHIVE_CONFIGURATION`.
-* `days` - (Required) Number of days until the object is moved to the access tier. Must be over `90` for `ARCHIVE_CONFIGURATION` and over `180` for `DEEP_ARCHIVE_CONFIGURATION`
+* `days` - (Required) The number of consecutive days of no access after which an object will be eligible to be transitioned to the corresponding tier. Must be over `90` for `ARCHIVE_CONFIGURATION` and over `180` for `DEEP_ARCHIVE_CONFIGURATION`
 
 ## Attributes Reference
 
