@@ -3,6 +3,8 @@ package finder
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 // CodeRepositoryByName returns the code repository corresponding to the specified name.
@@ -178,4 +180,32 @@ func AppByName(conn *sagemaker.SageMaker, domainID, userProfileName, appType, ap
 	}
 
 	return output, nil
+}
+
+func WorkforceByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Workforce, error) {
+	input := &sagemaker.DescribeWorkforceInput{
+		WorkforceName: aws.String(name),
+	}
+
+	output, err := conn.DescribeWorkforce(input)
+
+	if tfawserr.ErrMessageContains(err, "ValidationException", "No workforce") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Workforce == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output.Workforce, nil
 }
