@@ -13,6 +13,10 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
+//TODO: Test with EFS
+//TODO: Test with Posix Profile
+//TODO: Test with Policy
+
 func testAccAWSTransferAccess_basic(t *testing.T) {
 	var conf transfer.DescribedAccess
 	resourceName := "aws_transfer_access.test"
@@ -40,7 +44,7 @@ func testAccAWSTransferAccess_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccAWSTransferAccessUpdatedConfig(resourceName),
+				Config: testAccAWSTransferAccessUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferAccessExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
@@ -250,7 +254,7 @@ func testAccAWSTransferAccessUpdatedConfig(rName string) string {
 		testAccAWSTransferAccessConfigBase(rName),
 		`
 		resource "aws_transfer_access" "test" {
-		  external_id = "S-0-0-09-0987654321-098765432-0987654321-0987"
+		  external_id = "S-1-0-09-0987654321-098765432-0987654321-0987"
 		  server_id = aws_transfer_server.test.id
           role = aws_iam_role.test.arn
 		  home_directory = "/${aws_s3_bucket.test.id}/test"
