@@ -1426,6 +1426,7 @@ func init() {
 		"route53",
 		"route53domains",
 		"route53resolver",
+		"route53recoveryreadiness",
 		"s3",
 		"s3control",
 		"s3outposts",

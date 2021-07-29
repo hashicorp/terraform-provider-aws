@@ -49,7 +49,7 @@ func retryOnAwsCode(code string, f func() (interface{}, error)) (interface{}, er
 }
 
 // RetryOnAwsCodes retries AWS error codes for one minute
-// Note: This function will be moved out of the aws package in the future.
+// Note: This function will be moved out of the aws package in the feuture.
 func RetryOnAwsCodes(codes []string, f func() (interface{}, error)) (interface{}, error) {
 	var resp interface{}
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {

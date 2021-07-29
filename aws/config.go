@@ -136,6 +136,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53domains"
+	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3control"
@@ -351,6 +352,7 @@ type AWSClient struct {
 	reverseDnsPrefix                    string
 	route53domainsconn                  *route53domains.Route53Domains
 	route53resolverconn                 *route53resolver.Route53Resolver
+	route53recoveryreadinessconn        *route53recoveryreadiness.Route53RecoveryReadiness
 	s3conn                              *s3.S3
 	s3connUriCleaningDisabled           *s3.S3
 	s3controlconn                       *s3control.S3Control
@@ -599,6 +601,7 @@ func (c *Config) Client() (interface{}, error) {
 		reverseDnsPrefix:                    ReverseDns(dnsSuffix),
 		route53domainsconn:                  route53domains.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53domains"])})),
 		route53resolverconn:                 route53resolver.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53resolver"])})),
+		route53recoveryreadinessconn:        route53recoveryreadiness.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53recoveryreadiness"])})),
 		s3controlconn:                       s3control.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3control"])})),
 		s3outpostsconn:                      s3outposts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3outposts"])})),
 		sagemakerconn:                       sagemaker.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sagemaker"])})),
@@ -640,6 +643,9 @@ func (c *Config) Client() (interface{}, error) {
 	route53Config := &aws.Config{
 		Endpoint: aws.String(c.Endpoints["route53"]),
 	}
+	route53recoveryreadinessConfig := &aws.Config{
+		Endpoint: aws.String(c.Endpoints["route53recoveryreadiness"]),
+	}
 	shieldConfig := &aws.Config{
 		Endpoint: aws.String(c.Endpoints["shield"]),
 	}
@@ -660,6 +666,7 @@ func (c *Config) Client() (interface{}, error) {
 	case endpoints.AwsPartitionID:
 		globalAcceleratorConfig.Region = aws.String(endpoints.UsWest2RegionID)
 		route53Config.Region = aws.String(endpoints.UsEast1RegionID)
+		route53recoveryreadinessConfig.Region = aws.String(endpoints.UsWest2RegionID)
 		shieldConfig.Region = aws.String(endpoints.UsEast1RegionID)
 	case endpoints.AwsCnPartitionID:
 		// The AWS Go SDK is missing endpoint information for Route 53 in the AWS China partition.
@@ -674,6 +681,7 @@ func (c *Config) Client() (interface{}, error) {
 
 	client.globalacceleratorconn = globalaccelerator.New(sess.Copy(globalAcceleratorConfig))
 	client.r53conn = route53.New(sess.Copy(route53Config))
+	client.route53recoveryreadinessconn = route53recoveryreadiness.New(sess.Copy(route53recoveryreadinessConfig))
 	client.shieldconn = shield.New(sess.Copy(shieldConfig))
 
 	client.apigatewayconn.Handlers.Retry.PushBack(func(r *request.Request) {
