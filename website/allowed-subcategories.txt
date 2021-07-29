@@ -112,6 +112,7 @@ Resource Groups Tagging API
 Route53 Domains
 Route53 Recovery Control Config
 Route53 Resolver
+Route53 Application Recovery Controller
 Route53
 S3
 S3 Control
