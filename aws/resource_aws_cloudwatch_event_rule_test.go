@@ -552,7 +552,7 @@ func TestAccAWSCloudWatchEventRule_EventBusArn(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventRulePartnerEventBusConfig(rName, busArn.String()),
+				Config: testAccAWSCloudWatchEventRulePartnerEventBusArn(rName, busArn.String()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName, rName))),
@@ -830,6 +830,21 @@ resource "aws_cloudwatch_event_rule" "test" {
 }
 
 func testAccAWSCloudWatchEventRulePartnerEventBusConfig(rName, eventBusName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_rule" "test" {
+  name           = %[1]q
+  event_bus_name = %[2]q
+
+  event_pattern = <<PATTERN
+{
+  "source": ["aws.ec2"]
+}
+PATTERN
+}
+`, rName, eventBusName)
+}
+
+func testAccAWSCloudWatchEventRulePartnerEventBusArn(rName, eventBusName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name           = %[1]q
