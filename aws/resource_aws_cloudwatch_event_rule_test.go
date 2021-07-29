@@ -555,7 +555,7 @@ func TestAccAWSCloudWatchEventRule_EventBusArn(t *testing.T) {
 				Config: testAccAWSCloudWatchEventRulePartnerEventBusArn(rName, busArn.String()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s`, busName, rName))),
+					testAccCheckRuleARN(resourceName, "arn", fmt.Sprintf(`rule/%s/%s`, busName, rName), "events", busArn),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busArn.String()),
 					testAccCheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
@@ -662,6 +662,26 @@ func testAccAWSCloudWatchEventRuleNoBusNameImportStateIdFunc(resourceName string
 		}
 
 		return rs.Primary.Attributes["name"], nil
+	}
+}
+
+func testAccCheckRuleARN(resourceName, attributeName, arnResource, arnService string, eventBusARN awsarn.ARN) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		arnRegexp := awsarn.ARN{
+			AccountID: eventBusARN.AccountID,
+			Partition: eventBusARN.Partition,
+			Region:    eventBusARN.Region,
+			Resource:  arnResource,
+			Service:   arnService,
+		}.String()
+
+		attributeMatch, err := regexp.Compile(arnRegexp)
+
+		if err != nil {
+			return fmt.Errorf("Unable to compile ARN regexp (%s): %w", arnRegexp, err)
+		}
+
+		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
 	}
 }
 
