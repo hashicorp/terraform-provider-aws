@@ -2939,6 +2939,7 @@ func TestValidateDxConnectionBandWidth(t *testing.T) {
 		"2Gbps",
 		"5Gbps",
 		"10Gbps",
+		"100Gbps",
 		"50Mbps",
 		"100Mbps",
 		"200Mbps",
@@ -2955,7 +2956,6 @@ func TestValidateDxConnectionBandWidth(t *testing.T) {
 
 	invalidBandwidths := []string{
 		"1Tbps",
-		"100Gbps",
 		"10GBpS",
 		"42Mbps",
 		"0",
