@@ -612,7 +612,7 @@ var lexStatementResource = &schema.Resource{
 func getLatestLexIntentVersion(conn *lexmodelbuildingservice.LexModelBuildingService, input *lexmodelbuildingservice.GetIntentVersionsInput) (string, error) {
 	version := LexIntentVersionLatest
 
-  var currentVersion, intentVersion int
+	var currentVersion, intentVersion int
 	for {
 		page, err := conn.GetIntentVersions(input)
 		if err != nil {
@@ -629,17 +629,17 @@ func getLatestLexIntentVersion(conn *lexmodelbuildingservice.LexModelBuildingSer
 				continue
 			}
 
-      currentVersion, err = strconv.Atoi(version)
-      if err != nil {
-        log.Printf("[DEBUG] invalid version for Lex Intent: %s", version)
-        continue
-      }
+			currentVersion, err = strconv.Atoi(version)
+			if err != nil {
+				log.Printf("[DEBUG] invalid version for Lex Intent: %s", version)
+				continue
+			}
 
-      intentVersion, err = strconv.Atoi(*intent.Version)
-      if err != nil {
-        log.Printf("[DEBUG] invalid version for Lex Intent: %s", *intent.Version)
-        continue
-      }
+			intentVersion, err = strconv.Atoi(*intent.Version)
+			if err != nil {
+				log.Printf("[DEBUG] invalid version for Lex Intent: %s", *intent.Version)
+				continue
+			}
 
 			if intentVersion > currentVersion {
 				version = strconv.Itoa(intentVersion)
