@@ -24,6 +24,7 @@ The following arguments are supported:
 
 * `cell` - (Required) A unique identifier describing the channel
 * `cells` - (Optional) A list of cell arns to add as nested fault domains within this cell
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -31,7 +32,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `cell_arn` - The ARN of the cell
 * `parent_readiness_scopes` - A list of readiness scopes (recovery groups or cells) that contain this cell
-
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
