@@ -49,5 +49,5 @@ data "aws_acm_certificate" "rsa_4096" {
 
 * `arn` - Amazon Resource Name (ARN) of the found certificate, suitable for referencing in other resources that support ACM certificates.
 * `id` - Amazon Resource Name (ARN) of the found certificate, suitable for referencing in other resources that support ACM certificates.
-* `status` - Status of the found certificate
+* `status` - Status of the found certificate.
 * `tags` - A mapping of tags for the resource.
