@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsRoute53RecoveryReadinessCell() *schema.Resource {
@@ -45,12 +46,18 @@ func resourceAwsRoute53RecoveryReadinessCell() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsRoute53RecoveryReadinessCellCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53recoveryreadinessconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &route53recoveryreadiness.CreateCellInput{
 		CellName: aws.String(d.Get("cell_name").(string)),
@@ -64,11 +71,20 @@ func resourceAwsRoute53RecoveryReadinessCellCreate(d *schema.ResourceData, meta 
 
 	d.SetId(aws.StringValue(resp.CellName))
 
+	if len(tags) > 0 {
+		arn := aws.StringValue(resp.CellArn)
+		if err := keyvaluetags.Route53recoveryreadinessUpdateTags(conn, arn, nil, tags); err != nil {
+			return fmt.Errorf("error adding Route53 Recovery Readiness Cell (%s) tags: %w", d.Id(), err)
+		}
+	}
+
 	return resourceAwsRoute53RecoveryReadinessCellRead(d, meta)
 }
 
 func resourceAwsRoute53RecoveryReadinessCellRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53recoveryreadinessconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &route53recoveryreadiness.GetCellInput{
 		CellName: aws.String(d.Id()),
@@ -81,6 +97,23 @@ func resourceAwsRoute53RecoveryReadinessCellRead(d *schema.ResourceData, meta in
 	d.Set("cell_name", resp.CellName)
 	d.Set("cells", resp.Cells)
 	d.Set("parent_readiness_scopes", resp.ParentReadinessScopes)
+
+	tags, err := keyvaluetags.Route53recoveryreadinessListTags(conn, d.Get("cell_arn").(string))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Route53 Recovery Readiness Cell (%s): %w", d.Id(), err)
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
 
 	return nil
 }
@@ -96,6 +129,14 @@ func resourceAwsRoute53RecoveryReadinessCellUpdate(d *schema.ResourceData, meta 
 	_, err := conn.UpdateCell(input)
 	if err != nil {
 		return fmt.Errorf("error updating Route53 Recovery Readiness Cell: %s", err)
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		arn := d.Get("cell_arn").(string)
+		if err := keyvaluetags.Route53recoveryreadinessUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating Route53 Recovery Readiness Cell (%s) tags: %w", d.Id(), err)
+		}
 	}
 
 	return resourceAwsRoute53RecoveryReadinessCellRead(d, meta)

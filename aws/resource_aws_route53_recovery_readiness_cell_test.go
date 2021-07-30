@@ -28,6 +28,7 @@ func TestAccAwsRoute53RecoveryReadinessCell_basic(t *testing.T) {
 					testAccMatchResourceAttrGlobalARN(resourceName, "cell_arn", "route53-recovery-readiness", regexp.MustCompile(`cell/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cells.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parent_readiness_scopes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -84,6 +85,49 @@ func TestAccAwsRoute53RecoveryReadinessCell_nestedCell(t *testing.T) {
 				ResourceName:      resourceNameChild,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsRoute53RecoveryReadinessCell_tags(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_route53_recovery_readiness_cell.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		ErrorCheck:        testAccErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessCellDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsRoute53RecoveryReadinessCellConfig_Tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRoute53RecoveryReadinessCellExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAwsRoute53RecoveryReadinessCellConfig_Tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRoute53RecoveryReadinessCellExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAwsRoute53RecoveryReadinessCellConfig_Tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRoute53RecoveryReadinessCellExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -168,4 +212,27 @@ resource "aws_route53_recovery_readiness_cell" "test_parent" {
   cells     = [aws_route53_recovery_readiness_cell.test_child.cell_arn]
 }
 `, rName2))
+}
+
+func testAccAwsRoute53RecoveryReadinessCellConfig_Tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_recovery_readiness_cell" "test" {
+  cell_name = %[1]q
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAwsRoute53RecoveryReadinessCellConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_recovery_readiness_cell" "test" {
+  cell_name = %[1]q
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
