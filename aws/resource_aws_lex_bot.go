@@ -443,7 +443,7 @@ func resourceAwsLexBotDelete(d *schema.ResourceData, meta interface{}) error {
 func getLatestLexBotVersion(conn *lexmodelbuildingservice.LexModelBuildingService, input *lexmodelbuildingservice.GetBotVersionsInput) (string, error) {
 	version := LexBotVersionLatest
 
-  var currentVersion, botVersion int
+	var currentVersion, botVersion int
 	for {
 		page, err := conn.GetBotVersions(input)
 		if err != nil {
@@ -460,17 +460,17 @@ func getLatestLexBotVersion(conn *lexmodelbuildingservice.LexModelBuildingServic
 				continue
 			}
 
-      currentVersion, err = strconv.Atoi(version)
-      if err != nil {
-        log.Printf("[DEBUG] invalid version for Lex Bot: %s", version)
-        continue
-      }
+			currentVersion, err = strconv.Atoi(version)
+			if err != nil {
+				log.Printf("[DEBUG] invalid version for Lex Bot: %s", version)
+				continue
+			}
 
-      botVersion, err = strconv.Atoi(*bot.Version)
-      if err != nil {
-        log.Printf("[DEBUG] invalid version for Lex Bot: %s", *bot.Version)
-        continue
-      }
+			botVersion, err = strconv.Atoi(*bot.Version)
+			if err != nil {
+				log.Printf("[DEBUG] invalid version for Lex Bot: %s", *bot.Version)
+				continue
+			}
 
 			if botVersion > currentVersion {
 				version = strconv.Itoa(botVersion)
