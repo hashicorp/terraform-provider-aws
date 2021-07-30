@@ -64,7 +64,8 @@ func resourceAwsS3IntelligentTieringConfiguration() *schema.Resource {
 			},
 			"tier": {
 				Type:     schema.TypeSet,
-				Optional: true,
+				Required: true,
+				MinItems: 1,
 				MaxItems: 2,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -160,7 +161,7 @@ func resourceAwsS3IntelligentTieringConfigurationRead(d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return fmt.Errorf("here error getting S3 Bucket Intelligent Tiering Configuration (%s): %w", d.Id(), err)
+		return fmt.Errorf("error getting S3 Bucket Intelligent Tiering Configuration (%s): %w", d.Id(), err)
 	}
 
 	if output == nil {
