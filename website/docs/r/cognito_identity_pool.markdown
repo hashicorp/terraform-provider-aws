@@ -21,6 +21,7 @@ resource "aws_iam_saml_provider" "default" {
 resource "aws_cognito_identity_pool" "main" {
   identity_pool_name               = "identity pool"
   allow_unauthenticated_identities = false
+  allow_classic_flow               = false
 
   cognito_identity_providers {
     client_id               = "6lhlkkfbfb4q5kpp90urffae"
@@ -50,6 +51,7 @@ The Cognito Identity Pool argument layout is a structure composed of several sub
 
 * `identity_pool_name` (Required) - The Cognito Identity Pool name.
 * `allow_unauthenticated_identities` (Required) - Whether the identity pool supports unauthenticated logins or not.
+* `allow_classic_flow` (Optional) - Enables or disables the classic / basic authentication flow. Default is `false`.
 * `developer_provider_name` (Optional) - The "domain" by which Cognito will refer to your users. This name acts as a placeholder that allows your
 backend and the Cognito service to communicate about the developer provider.
 * `cognito_identity_providers` (Optional) - An array of [Amazon Cognito Identity user pools](#cognito-identity-providers) and their client IDs.

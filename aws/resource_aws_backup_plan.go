@@ -152,7 +152,8 @@ func resourceAwsBackupPlan() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 
 		CustomizeDiff: SetTagsDiff,

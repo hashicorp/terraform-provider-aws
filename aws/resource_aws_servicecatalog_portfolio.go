@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfservicecatalog "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog"
 )
 
 func resourceAwsServiceCatalogPortfolio() *schema.Resource {
@@ -43,7 +44,7 @@ func resourceAwsServiceCatalogPortfolio() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 20),
+				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -53,8 +54,8 @@ func resourceAwsServiceCatalogPortfolio() *schema.Resource {
 			},
 			"provider_name": {
 				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 20),
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 50),
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
@@ -68,7 +69,7 @@ func resourceAwsServiceCatalogPortfolioCreate(d *schema.ResourceData, meta inter
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	input := servicecatalog.CreatePortfolioInput{
-		AcceptLanguage:   aws.String("en"),
+		AcceptLanguage:   aws.String(tfservicecatalog.AcceptLanguageEnglish),
 		DisplayName:      aws.String(d.Get("name").(string)),
 		IdempotencyToken: aws.String(resource.UniqueId()),
 		Tags:             tags.IgnoreAws().ServicecatalogTags(),
@@ -98,7 +99,7 @@ func resourceAwsServiceCatalogPortfolioRead(d *schema.ResourceData, meta interfa
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := servicecatalog.DescribePortfolioInput{
-		AcceptLanguage: aws.String("en"),
+		AcceptLanguage: aws.String(tfservicecatalog.AcceptLanguageEnglish),
 	}
 	input.Id = aws.String(d.Id())
 
@@ -138,7 +139,7 @@ func resourceAwsServiceCatalogPortfolioRead(d *schema.ResourceData, meta interfa
 func resourceAwsServiceCatalogPortfolioUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
 	input := servicecatalog.UpdatePortfolioInput{
-		AcceptLanguage: aws.String("en"),
+		AcceptLanguage: aws.String(tfservicecatalog.AcceptLanguageEnglish),
 		Id:             aws.String(d.Id()),
 	}
 

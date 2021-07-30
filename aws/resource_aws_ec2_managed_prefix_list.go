@@ -114,7 +114,7 @@ func resourceAwsEc2ManagedPrefixListCreate(d *schema.ResourceData, meta interfac
 		input.PrefixListName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
+	if len(tags) > 0 {
 		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, "prefix-list")
 	}
 
@@ -209,7 +209,7 @@ func resourceAwsEc2ManagedPrefixListRead(d *schema.ResourceData, meta interface{
 func resourceAwsEc2ManagedPrefixListUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	if d.HasChangeExcept("tags") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyManagedPrefixListInput{
 			PrefixListId: aws.String(d.Id()),
 		}
@@ -232,6 +232,67 @@ func resourceAwsEc2ManagedPrefixListUpdate(d *schema.ResourceData, meta interfac
 			input.RemoveEntries = expandEc2RemovePrefixListEntries(removeEntries.List())
 			input.CurrentVersion = aws.Int64(currentVersion)
 			wait = true
+		}
+
+		// Prevent the following error on description-only updates:
+		//   InvalidParameterValue: Request cannot contain Cidr #.#.#.#/# in both AddPrefixListEntries and RemovePrefixListEntries
+		// Attempting to just delete the RemoveEntries item causes:
+		//   InvalidRequest: The request received was invalid.
+		// Therefore it seems we must issue two ModifyManagedPrefixList calls,
+		// one with a collection of all description-only removals and the
+		// second one will add them all back.
+		if len(input.AddEntries) > 0 && len(input.RemoveEntries) > 0 {
+			descriptionOnlyRemovals := []*ec2.RemovePrefixListEntry{}
+			removals := []*ec2.RemovePrefixListEntry{}
+
+			for _, removeEntry := range input.RemoveEntries {
+				inAddAndRemove := false
+
+				for _, addEntry := range input.AddEntries {
+					if aws.StringValue(addEntry.Cidr) == aws.StringValue(removeEntry.Cidr) {
+						inAddAndRemove = true
+						break
+					}
+				}
+
+				if inAddAndRemove {
+					descriptionOnlyRemovals = append(descriptionOnlyRemovals, removeEntry)
+				} else {
+					removals = append(removals, removeEntry)
+				}
+			}
+
+			if len(descriptionOnlyRemovals) > 0 {
+				_, err := conn.ModifyManagedPrefixList(&ec2.ModifyManagedPrefixListInput{
+					CurrentVersion: input.CurrentVersion,
+					PrefixListId:   aws.String(d.Id()),
+					RemoveEntries:  descriptionOnlyRemovals,
+				})
+
+				if err != nil {
+					return fmt.Errorf("error updating EC2 Managed Prefix List (%s): %w", d.Id(), err)
+				}
+
+				managedPrefixList, err := waiter.ManagedPrefixListModified(conn, d.Id())
+
+				if err != nil {
+					return fmt.Errorf("error waiting for EC2 Managed Prefix List (%s) update: %w", d.Id(), err)
+				}
+
+				if managedPrefixList == nil {
+					return fmt.Errorf("error waiting for EC2 Managed Prefix List (%s) update: empty response", d.Id())
+				}
+
+				input.CurrentVersion = managedPrefixList.Version
+			}
+
+			if len(removals) > 0 {
+				input.RemoveEntries = removals
+			} else {
+				// Prevent this error if RemoveEntries is list with no elements after removals:
+				//   InvalidRequest: The request received was invalid.
+				input.RemoveEntries = nil
+			}
 		}
 
 		_, err := conn.ModifyManagedPrefixList(input)

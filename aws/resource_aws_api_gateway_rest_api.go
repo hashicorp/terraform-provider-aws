@@ -372,7 +372,7 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 	// I'm not sure why it needs to be wrapped with double quotes first, but it does
 	normalized_policy, err := structure.NormalizeJsonString(`"` + aws.StringValue(api.Policy) + `"`)
 	if err != nil {
-		fmt.Printf("error normalizing policy JSON: %s\n", err)
+		return fmt.Errorf("error normalizing policy JSON: %w", err)
 	}
 	policy, err := strconv.Unquote(normalized_policy)
 	if err != nil {

@@ -327,7 +327,7 @@ resource "aws_s3_bucket" "bucket" {
 
   grant {
     type        = "Group"
-    permissions = ["READ", "WRITE"]
+    permissions = ["READ_ACP", "WRITE"]
     uri         = "http://acs.amazonaws.com/groups/s3/LogDelivery"
   }
 }
@@ -429,21 +429,18 @@ The `replication_configuration` object supports the following:
 
 The `rules` object supports the following:
 
-* `id` - (Optional) Unique identifier for the rule. Must be less than or equal to 255 characters in length.
-* `priority` - (Optional) The priority associated with the rule.
-* `destination` - (Required) Specifies the destination for the rule (documented below).
-* `source_selection_criteria` - (Optional) Specifies special object selection criteria (documented below).
-* `prefix` - (Optional) Object keyname prefix identifying one or more objects to which the rule applies. Must be less than or equal to 1024 characters in length.
-* `status` - (Required) The status of the rule. Either `Enabled` or `Disabled`. The rule is ignored if status is not Enabled.
-* `filter` - (Optional) Filter that identifies subset of objects to which the replication rule applies (documented below).
-
-~> **NOTE on `prefix` and `filter`:** Amazon S3's latest version of the replication configuration is V2, which includes the `filter` attribute for replication rules.
+~> **NOTE:** Amazon S3's latest version of the replication configuration is V2, which includes the `filter` attribute for replication rules.
 With the `filter` attribute, you can specify object filters based on the object key prefix, tags, or both to scope the objects that the rule applies to.
 Replication configuration V1 supports filtering based on only the `prefix` attribute. For backwards compatibility, Amazon S3 continues to support the V1 configuration.
 
-* For a specific rule, `prefix` conflicts with `filter`
-* If any rule has `filter` specified then they all must
-* `priority` is optional (with a default value of `0`) but must be unique between multiple rules
+* `delete_marker_replication_status` - (Optional) Whether delete markers are replicated. The only valid value is `Enabled`. To disable, omit this argument. This argument is only valid with V2 replication configurations (i.e., when `filter` is used).
+* `destination` - (Required) Specifies the destination for the rule (documented below).
+* `filter` - (Optional, Conflicts with `prefix`) Filter that identifies subset of objects to which the replication rule applies (documented below).
+* `id` - (Optional) Unique identifier for the rule. Must be less than or equal to 255 characters in length.
+* `prefix` - (Optional, Conflicts with `filter`) Object keyname prefix identifying one or more objects to which the rule applies. Must be less than or equal to 1024 characters in length.
+* `priority` - (Optional) The priority associated with the rule. Priority should only be set if `filter` is configured. If not provided, defaults to `0`. Priority must be unique between multiple rules.
+* `source_selection_criteria` - (Optional) Specifies special object selection criteria (documented below).
+* `status` - (Required) The status of the rule. Either `Enabled` or `Disabled`. The rule is ignored if status is not Enabled.
 
 ~> **NOTE:** Replication to multiple destination buckets requires that `priority` is specified in the `rules` object. If the corresponding rule requires no filter, an empty configuration block `filter {}` must be specified.
 

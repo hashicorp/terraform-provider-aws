@@ -77,12 +77,12 @@ or `egress` (outbound).
 
 The following arguments are optional:
 
-* `cidr_blocks` - (Optional) List of CIDR blocks. Cannot be specified with `source_security_group_id`.
+* `cidr_blocks` - (Optional) List of CIDR blocks. Cannot be specified with `source_security_group_id` or `self`.
 * `description` - (Optional) Description of the rule.
-* `ipv6_cidr_blocks` - (Optional) List of IPv6 CIDR blocks.
+* `ipv6_cidr_blocks` - (Optional) List of IPv6 CIDR blocks. Cannot be specified with `source_security_group_id` or `self`.
 * `prefix_list_ids` - (Optional) List of Prefix List IDs.
-* `self` - (Optional) Whether the security group itself will be added as a source to this ingress rule. Cannot be specified with `source_security_group_id`.
-* `source_security_group_id` - (Optional) Security group id to allow access to/from, depending on the `type`. Cannot be specified with `cidr_blocks` and `self`.
+* `self` - (Optional) Whether the security group itself will be added as a source to this ingress rule. Cannot be specified with `cidr_blocks`, `ipv6_cidr_blocks`, or `source_security_group_id`.
+* `source_security_group_id` - (Optional) Security group id to allow access to/from, depending on the `type`. Cannot be specified with `cidr_blocks`, `ipv6_cidr_blocks`, or `self`.
 
 ## Attributes Reference
 

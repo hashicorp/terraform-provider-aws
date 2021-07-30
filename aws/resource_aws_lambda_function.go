@@ -366,7 +366,8 @@ func hasConfigChanges(d resourceDiffer) bool {
 		d.HasChange("layers") ||
 		d.HasChange("dead_letter_config") ||
 		d.HasChange("tracing_config") ||
-		d.HasChange("vpc_config") ||
+		d.HasChange("vpc_config.0.security_group_ids") ||
+		d.HasChange("vpc_config.0.subnet_ids") ||
 		d.HasChange("runtime") ||
 		d.HasChange("environment")
 }
@@ -1009,7 +1010,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			}
 		}
 	}
-	if d.HasChange("vpc_config") {
+	if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids") {
 		configReq.VpcConfig = &lambda.VpcConfig{
 			SecurityGroupIds: []*string{},
 			SubnetIds:        []*string{},
@@ -1114,7 +1115,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if err := waitForLambdaFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Lambda Function (%s) update: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for Lambda Function (%s) configuration update: %w", d.Id(), err)
 		}
 	}
 
@@ -1154,6 +1155,10 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		_, err := conn.UpdateFunctionCode(codeReq)
 		if err != nil {
 			return fmt.Errorf("error modifying Lambda Function (%s) Code: %w", d.Id(), err)
+		}
+
+		if err := waitForLambdaFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for Lambda Function (%s) code update: %w", d.Id(), err)
 		}
 	}
 

@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -10,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
@@ -20,23 +22,29 @@ func dataSourceAwsIAMPolicy() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validateArn,
 			},
-			"name": {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"policy": {
+			"name": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"path": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"description": {
+			"path_prefix": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"policy": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,16 +62,15 @@ func dataSourceAwsIAMPolicyRead(d *schema.ResourceData, meta interface{}) error 
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	arn := d.Get("arn").(string)
+	name := d.Get("name").(string)
+	pathPrefix := d.Get("path_prefix").(string)
 
-	input := &iam.GetPolicyInput{
-		PolicyArn: aws.String(arn),
-	}
+	var results []*iam.Policy
 
 	// Handle IAM eventual consistency
-	var output *iam.GetPolicyOutput
 	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
-		output, err = conn.GetPolicy(input)
+		results, err = finder.Policies(conn, arn, name, pathPrefix)
 
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return resource.RetryableError(err)
@@ -77,23 +84,27 @@ func dataSourceAwsIAMPolicyRead(d *schema.ResourceData, meta interface{}) error 
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.GetPolicy(input)
+		results, err = finder.Policies(conn, arn, name, pathPrefix)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM policy %s: %w", arn, err)
+		return fmt.Errorf("error reading IAM policy (%s): %w", PolicySearchDetails(arn, name, pathPrefix), err)
 	}
 
-	if output == nil || output.Policy == nil {
-		return fmt.Errorf("error reading IAM policy %s: empty output", arn)
+	if len(results) == 0 {
+		return fmt.Errorf("no IAM policy found matching criteria (%s); try different search", PolicySearchDetails(arn, name, pathPrefix))
 	}
 
-	policy := output.Policy
+	if len(results) > 1 {
+		return fmt.Errorf("multiple IAM policies found matching criteria (%s); try different search", PolicySearchDetails(arn, name, pathPrefix))
+	}
 
-	d.SetId(aws.StringValue(policy.Arn))
+	policy := results[0]
+	policyArn := aws.StringValue(policy.Arn)
 
-	d.Set("arn", policy.Arn)
-	d.Set("description", policy.Description)
+	d.SetId(policyArn)
+
+	d.Set("arn", policyArn)
 	d.Set("name", policy.PolicyName)
 	d.Set("path", policy.Path)
 	d.Set("policy_id", policy.PolicyId)
@@ -102,10 +113,26 @@ func dataSourceAwsIAMPolicyRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	// Retrieve policy
+	// Retrieve policy description
+	policyInput := &iam.GetPolicyInput{
+		PolicyArn: policy.Arn,
+	}
 
+	policyOutput, err := conn.GetPolicy(policyInput)
+
+	if err != nil {
+		return fmt.Errorf("error reading IAM policy (%s): %w", policyArn, err)
+	}
+
+	if policyOutput == nil || policyOutput.Policy == nil {
+		return fmt.Errorf("error reading IAM policy (%s): empty output", policyArn)
+	}
+
+	d.Set("description", policyOutput.Policy.Description)
+
+	// Retrieve policy
 	policyVersionInput := &iam.GetPolicyVersionInput{
-		PolicyArn: aws.String(arn),
+		PolicyArn: policy.Arn,
 		VersionId: policy.DefaultVersionId,
 	}
 
@@ -131,11 +158,11 @@ func dataSourceAwsIAMPolicyRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM Policy (%s) version: %w", arn, err)
+		return fmt.Errorf("error reading IAM Policy (%s) version: %w", policyArn, err)
 	}
 
 	if policyVersionOutput == nil || policyVersionOutput.PolicyVersion == nil {
-		return fmt.Errorf("error reading IAM Policy (%s) version: empty output", arn)
+		return fmt.Errorf("error reading IAM Policy (%s) version: empty output", policyArn)
 	}
 
 	policyVersion := policyVersionOutput.PolicyVersion
@@ -144,11 +171,27 @@ func dataSourceAwsIAMPolicyRead(d *schema.ResourceData, meta interface{}) error 
 	if policyVersion != nil {
 		policyDocument, err = url.QueryUnescape(aws.StringValue(policyVersion.Document))
 		if err != nil {
-			return fmt.Errorf("error parsing IAM Policy (%s) document: %w", arn, err)
+			return fmt.Errorf("error parsing IAM Policy (%s) document: %w", policyArn, err)
 		}
 	}
 
 	d.Set("policy", policyDocument)
 
 	return nil
+}
+
+// PolicySearchDetails returns the configured search criteria as a printable string
+func PolicySearchDetails(arn, name, pathPrefix string) string {
+	var policyDetails []string
+	if arn != "" {
+		policyDetails = append(policyDetails, fmt.Sprintf("ARN: %s", arn))
+	}
+	if name != "" {
+		policyDetails = append(policyDetails, fmt.Sprintf("Name: %s", name))
+	}
+	if pathPrefix != "" {
+		policyDetails = append(policyDetails, fmt.Sprintf("PathPrefix: %s", pathPrefix))
+	}
+
+	return strings.Join(policyDetails, ", ")
 }

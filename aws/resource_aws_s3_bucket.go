@@ -524,6 +524,11 @@ func resourceAwsS3Bucket() *schema.Resource {
 											},
 										},
 									},
+									"delete_marker_replication_status": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice([]string{s3.DeleteMarkerReplicationStatusEnabled}, false),
+									},
 								},
 							},
 						},
@@ -2109,8 +2114,15 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 			} else {
 				rcRule.Filter.Prefix = aws.String(filter["prefix"].(string))
 			}
-			rcRule.DeleteMarkerReplication = &s3.DeleteMarkerReplication{
-				Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+
+			if dmr, ok := rr["delete_marker_replication_status"].(string); ok && dmr != "" {
+				rcRule.DeleteMarkerReplication = &s3.DeleteMarkerReplication{
+					Status: aws.String(dmr),
+				}
+			} else {
+				rcRule.DeleteMarkerReplication = &s3.DeleteMarkerReplication{
+					Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+				}
 			}
 		} else {
 			// XML schema V1.
@@ -2407,6 +2419,10 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 				m["tags"] = keyvaluetags.S3KeyValueTags(a.Tags).IgnoreAws().Map()
 			}
 			t["filter"] = []interface{}{m}
+
+			if v.DeleteMarkerReplication != nil && v.DeleteMarkerReplication.Status != nil && aws.StringValue(v.DeleteMarkerReplication.Status) == s3.DeleteMarkerReplicationStatusEnabled {
+				t["delete_marker_replication_status"] = aws.StringValue(v.DeleteMarkerReplication.Status)
+			}
 		}
 
 		rules = append(rules, t)
@@ -2576,6 +2592,10 @@ func rulesHash(v interface{}) int {
 	}
 	if v, ok := m["filter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		buf.WriteString(fmt.Sprintf("%d-", replicationRuleFilterHash(v[0])))
+
+		if v, ok := m["delete_marker_replication_status"]; ok && v.(string) == s3.DeleteMarkerReplicationStatusEnabled {
+			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		}
 	}
 	return hashcode.String(buf.String())
 }

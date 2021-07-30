@@ -111,9 +111,10 @@ func SetTagsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{})
 
 	allTags := defaultTagsConfig.MergeTags(resourceTags).IgnoreConfig(ignoreTagsConfig)
 
-	// To ensure "tags_all" is correctly computed, we explicitly set the attribute
-	// diff when the merger of resource-level tags onto provider-level tags results in n > 0 tags,
-	// otherwise we mark the attribute as "Computed" only when their is a known diff for "tags_all"
+	// To ensure "tags_all" is correctly computed, we explicitly set the attribute diff
+	// when the merger of resource-level tags onto provider-level tags results in n > 0 tags,
+	// otherwise we mark the attribute as "Computed" only when their is a known diff (excluding an empty map)
+	// or a change for "tags_all".
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18366
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19005
 	if len(allTags) > 0 {
@@ -124,7 +125,36 @@ func SetTagsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{})
 		if err := diff.SetNewComputed("tags_all"); err != nil {
 			return fmt.Errorf("error setting tags_all to computed: %w", err)
 		}
+	} else if diff.HasChange("tags_all") {
+		if err := diff.SetNewComputed("tags_all"); err != nil {
+			return fmt.Errorf("error setting tags_all to computed: %w", err)
+		}
 	}
 
 	return nil
+}
+
+// getInstanceTagValue returns instance tag value by name
+func getInstanceTagValue(conn *ec2.EC2, instanceId string, tagKey string) (*string, error) {
+	tagsResp, err := conn.DescribeTags(&ec2.DescribeTagsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("resource-id"),
+				Values: []*string{aws.String(instanceId)},
+			},
+			{
+				Name:   aws.String("key"),
+				Values: []*string{aws.String(tagKey)},
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(tagsResp.Tags) != 1 {
+		return nil, nil
+	}
+
+	return tagsResp.Tags[0].Value, nil
 }

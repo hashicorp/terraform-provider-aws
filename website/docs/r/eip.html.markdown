@@ -16,7 +16,7 @@ Provides an Elastic IP resource.
 
 ## Example Usage
 
-Single EIP associated with an instance:
+### Single EIP associated with an instance
 
 ```terraform
 resource "aws_eip" "lb" {
@@ -25,7 +25,7 @@ resource "aws_eip" "lb" {
 }
 ```
 
-Multiple EIPs associated with a single network interface:
+### Multiple EIPs associated with a single network interface
 
 ```terraform
 resource "aws_network_interface" "multi-ip" {
@@ -46,7 +46,7 @@ resource "aws_eip" "two" {
 }
 ```
 
-Attaching an EIP to an Instance with a pre-assigned private ip (VPC Only):
+### Attaching an EIP to an Instance with a pre-assigned private ip (VPC Only)
 
 ```terraform
 resource "aws_vpc" "default" {
@@ -84,7 +84,7 @@ resource "aws_eip" "bar" {
 }
 ```
 
-Allocating EIP from the BYOIP pool:
+### Allocating EIP from the BYOIP pool
 
 ```terraform
 resource "aws_eip" "byoip-ip" {
@@ -97,6 +97,7 @@ resource "aws_eip" "byoip-ip" {
 
 The following arguments are supported:
 
+* `address` - (Optional) IP address from an EC2 BYOIP pool. This option is only available for VPC EIPs.
 * `associate_with_private_ip` - (Optional) User-specified primary or secondary private IP address to associate with the Elastic IP address. If no private IP address is specified, the Elastic IP address is associated with the primary private IP address.
 * `customer_owned_ipv4_pool` - (Optional) ID  of a customer-owned address pool. For more on customer owned IP addressed check out [Customer-owned IP addresses guide](https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing).
 * `instance` - (Optional) EC2 instance ID.
@@ -107,6 +108,9 @@ The following arguments are supported:
 * `vpc` - (Optional) Boolean if the EIP is in a VPC or not.
 
 ~> **NOTE:** You can specify either the `instance` ID or the `network_interface` ID, but not both. Including both will **not** return an error from the AWS API, but will have undefined behavior. See the relevant [AssociateAddress API Call][1] for more information.
+
+~> **NOTE:** Specifying both `public_ipv4_pool` and `address` won't cause an error but `address` will be used in the
+case both options are defined as the api only requires one or the other.
 
 ## Attributes Reference
 

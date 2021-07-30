@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -28,6 +27,8 @@ func resourceAwsKmsKey() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		CustomizeDiff: SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -38,35 +39,24 @@ func resourceAwsKmsKey() *schema.Resource {
 				Computed: true,
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringLenBetween(0, 8192),
 			},
 			"key_usage": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  kms.KeyUsageTypeEncryptDecrypt,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					kms.KeyUsageTypeEncryptDecrypt,
-					kms.KeyUsageTypeSignVerify,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      kms.KeyUsageTypeEncryptDecrypt,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(kms.KeyUsageType_Values(), false),
 			},
 			"customer_master_key_spec": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  kms.CustomerMasterKeySpecSymmetricDefault,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					kms.CustomerMasterKeySpecSymmetricDefault,
-					kms.CustomerMasterKeySpecRsa2048,
-					kms.CustomerMasterKeySpecRsa3072,
-					kms.CustomerMasterKeySpecRsa4096,
-					kms.CustomerMasterKeySpecEccNistP256,
-					kms.CustomerMasterKeySpecEccNistP384,
-					kms.CustomerMasterKeySpecEccNistP521,
-					kms.CustomerMasterKeySpecEccSecgP256k1,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      kms.CustomerMasterKeySpecSymmetricDefault,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(kms.CustomerMasterKeySpec_Values(), false),
 			},
 			"policy": {
 				Type:             schema.TypeString,
@@ -90,13 +80,16 @@ func resourceAwsKmsKey() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(7, 30),
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Allow aws to chose default values if we don't pass them
 	req := &kms.CreateKeyInput{
@@ -109,8 +102,8 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, exists := d.GetOk("policy"); exists {
 		req.Policy = aws.String(v.(string))
 	}
-	if v, exists := d.GetOk("tags"); exists {
-		req.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().KmsTags()
+	if len(tags) > 0 {
+		req.Tags = tags.IgnoreAws().KmsTags()
 	}
 
 	var resp *kms.CreateKeyOutput
@@ -156,6 +149,7 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &kms.DescribeKeyInput{
@@ -204,7 +198,7 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	p := pOut.(*kms.GetKeyPolicyOutput)
 	policy, err := structure.NormalizeJsonString(*p.Policy)
 	if err != nil {
-		return fmt.Errorf("policy contains an invalid JSON: %s", err)
+		return fmt.Errorf("policy contains an invalid JSON: %w", err)
 	}
 	d.Set("policy", policy)
 
@@ -240,11 +234,18 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for KMS Key (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for KMS Key (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -285,11 +286,11 @@ func resourceAwsKmsKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.KmsUpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating KMS Key (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating KMS Key (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -314,7 +315,7 @@ func resourceAwsKmsKeyDescriptionUpdate(conn *kms.KMS, d *schema.ResourceData) e
 func resourceAwsKmsKeyPolicyUpdate(conn *kms.KMS, d *schema.ResourceData) error {
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
-		return fmt.Errorf("policy contains an invalid JSON: %s", err)
+		return fmt.Errorf("policy contains an invalid JSON: %w", err)
 	}
 	keyId := d.Get("key_id").(string)
 
@@ -364,8 +365,7 @@ func updateKmsKeyStatus(conn *kms.KMS, id string, shouldBeEnabled bool) error {
 				KeyId: aws.String(id),
 			})
 			if err != nil {
-				awsErr, ok := err.(awserr.Error)
-				if ok && awsErr.Code() == "NotFoundException" {
+				if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
 					return nil, fmt.Sprintf("%t", !shouldBeEnabled), nil
 				}
 				return resp, "FAILED", err
@@ -379,7 +379,7 @@ func updateKmsKeyStatus(conn *kms.KMS, id string, shouldBeEnabled bool) error {
 
 	_, err = wait.WaitForState()
 	if err != nil {
-		return fmt.Errorf("Failed setting KMS key status to %t: %s", shouldBeEnabled, err)
+		return fmt.Errorf("Failed setting KMS key status to %t: %w", shouldBeEnabled, err)
 	}
 
 	return nil
@@ -392,11 +392,10 @@ func updateKmsKeyRotationStatus(conn *kms.KMS, d *schema.ResourceData) error {
 		err := handleKeyRotation(conn, shouldEnableRotation, aws.String(d.Id()))
 
 		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if ok && awsErr.Code() == "DisabledException" {
+			if isAWSErr(err, kms.ErrCodeDisabledException, "") {
 				return resource.RetryableError(err)
 			}
-			if ok && awsErr.Code() == "NotFoundException" {
+			if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
 				return resource.RetryableError(err)
 			}
 
@@ -425,7 +424,7 @@ func updateKmsKeyRotationStatus(conn *kms.KMS, d *schema.ResourceData) error {
 			log.Printf("[DEBUG] Checking if KMS key %s rotation status is %t",
 				d.Id(), shouldEnableRotation)
 
-			out, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
+			out, err := retryOnAwsCode(kms.ErrCodeNotFoundException, func() (interface{}, error) {
 				return conn.GetKeyRotationStatus(&kms.GetKeyRotationStatusInput{
 					KeyId: aws.String(d.Id()),
 				})

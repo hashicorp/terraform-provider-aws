@@ -296,6 +296,7 @@ Each `network_interfaces` block supports the following:
 * `delete_on_termination` - Whether the network interface should be destroyed on instance termination. Defaults to `false` if not set.
 * `description` - Description of the network interface.
 * `device_index` - The integer index of the network interface attachment.
+* `interface_type` - The type of network interface. To create an Elastic Fabric Adapter (EFA), specify `efa`.
 * `ipv6_addresses` - One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet. Conflicts with `ipv6_address_count`
 * `ipv6_address_count` - The number of IPv6 addresses to assign to a network interface. Conflicts with `ipv6_addresses`
 * `network_interface_id` - The ID of the network interface to attach.
@@ -315,6 +316,7 @@ The `placement` block supports the following:
 * `availability_zone` - The Availability Zone for the instance.
 * `group_name` - The name of the placement group for the instance.
 * `host_id` - The ID of the Dedicated Host for the instance.
+* `host_resource_group_arn` - The ARN of the Host Resource Group in which to launch instances.
 * `spread_domain` - Reserved for future use.
 * `tenancy` - The tenancy of the instance (if the instance is running in a VPC). Can be `default`, `dedicated`, or `host`.
 * `partition_number` - The number of the partition the instance should launch in. Valid only if the placement group strategy is set to partition.

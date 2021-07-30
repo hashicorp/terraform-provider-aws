@@ -170,6 +170,11 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Computed: true,
 			},
 
+			"engine_version_actual": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"scaling_configuration": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -415,6 +420,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 			"iam_roles": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
@@ -1052,10 +1058,11 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("endpoint", dbc.Endpoint)
 	d.Set("engine_mode", dbc.EngineMode)
-	d.Set("engine_version", dbc.EngineVersion)
 	d.Set("engine", dbc.Engine)
 	d.Set("hosted_zone_id", dbc.HostedZoneId)
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
+
+	rdsClusterSetResourceDataEngineVersionFromCluster(d, dbc)
 
 	var roles []string
 	for _, r := range dbc.AssociatedRoles {
@@ -1494,4 +1501,17 @@ func waitForRDSClusterDeletion(conn *rds.RDS, id string, timeout time.Duration) 
 	_, err := stateConf.WaitForState()
 
 	return err
+}
+
+func rdsClusterSetResourceDataEngineVersionFromCluster(d *schema.ResourceData, c *rds.DBCluster) {
+	oldVersion := d.Get("engine_version").(string)
+	newVersion := aws.StringValue(c.EngineVersion)
+	compareActualEngineVersion(d, oldVersion, newVersion)
+}
+
+func compareActualEngineVersion(d *schema.ResourceData, oldVersion string, newVersion string) {
+	if oldVersion != newVersion && string(append([]byte(oldVersion), []byte(".")...)) != string([]byte(newVersion)[0:len(oldVersion)+1]) {
+		d.Set("engine_version", newVersion)
+	}
+	d.Set("engine_version_actual", newVersion)
 }

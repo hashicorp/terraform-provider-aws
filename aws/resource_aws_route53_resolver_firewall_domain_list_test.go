@@ -18,6 +18,9 @@ func init() {
 	resource.AddTestSweepers("aws_route53_resolver_firewall_domain_list", &resource.Sweeper{
 		Name: "aws_route53_resolver_firewall_domain_list",
 		F:    testSweepRoute53ResolverFirewallDomainLists,
+		Dependencies: []string{
+			"aws_route53_resolver_firewall_rule",
+		},
 	})
 }
 
@@ -96,6 +99,9 @@ func TestAccAWSRoute53ResolverFirewallDomainList_domains(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_resolver_firewall_domain_list.test"
 
+	domainName1 := testAccRandomFQDomainName()
+	domainName2 := testAccRandomFQDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
@@ -103,12 +109,12 @@ func TestAccAWSRoute53ResolverFirewallDomainList_domains(t *testing.T) {
 		CheckDestroy: testAccCheckRoute53ResolverFirewallDomainListDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverFirewallDomainListConfigDomains(rName, "foo.com."),
+				Config: testAccRoute53ResolverFirewallDomainListConfigDomains(rName, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallDomainListExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "domains.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "domains.*", "foo.com."),
+					resource.TestCheckTypeSetElemAttr(resourceName, "domains.*", domainName1),
 				),
 			},
 			{
@@ -117,12 +123,12 @@ func TestAccAWSRoute53ResolverFirewallDomainList_domains(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoute53ResolverFirewallDomainListConfigDomains(rName, "bar.com."),
+				Config: testAccRoute53ResolverFirewallDomainListConfigDomains(rName, domainName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallDomainListExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "domains.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "domains.*", "bar.com."),
+					resource.TestCheckTypeSetElemAttr(resourceName, "domains.*", domainName2),
 				),
 			},
 			{

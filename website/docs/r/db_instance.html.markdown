@@ -74,7 +74,7 @@ documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Crea
 
 The following arguments are supported:
 
-* `allocated_storage` - (Required unless a `snapshot_identifier` or `replicate_source_db` is provided) The allocated storage in gibibytes. If `max_allocated_storage` is configured, this argument represents the initial storage allocation and differences from the configuration will be ignored automatically when Storage Autoscaling occurs.
+* `allocated_storage` - (Required unless a `snapshot_identifier` or `replicate_source_db` is provided) The allocated storage in gibibytes. If `max_allocated_storage` is configured, this argument represents the initial storage allocation and differences from the configuration will be ignored automatically when Storage Autoscaling occurs. If `replicate_source_db` is set, the value is ignored during the creation of the instance.
 * `allow_major_version_upgrade` - (Optional) Indicates that major version
 upgrades are allowed. Changing this parameter does not result in an outage and
 the change is asynchronously applied as soon as possible.
@@ -153,7 +153,7 @@ information on the [AWS
 Documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html)
 what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `multi_az` - (Optional) Specifies if the RDS instance is multi-AZ
-* `name` - (Optional) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](http://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines.
+* `name` - (Optional) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case.
 * `option_group_name` - (Optional) Name of the DB option group to associate.
 * `parameter_group_name` - (Optional) Name of the DB parameter group to
 associate.

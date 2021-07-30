@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfelasticache "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
@@ -80,18 +81,19 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Computed: true,
 			},
 			"cluster_mode": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				Computed:     true,
-				MaxItems:     1,
-				ExactlyOneOf: []string{"cluster_mode", "number_cache_clusters"},
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"replicas_per_node_group": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
 						"num_node_groups": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							Computed:      true,
+							ConflictsWith: []string{"number_cache_clusters", "global_replication_group_id"},
+						},
+						"replicas_per_node_group": {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -106,12 +108,17 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      "redis",
-				ValidateFunc: validation.StringInSlice([]string{"redis"}, true),
+				Default:      tfelasticache.EngineRedis,
+				ValidateFunc: validation.StringInSlice([]string{tfelasticache.EngineRedis}, true),
 			},
 			"engine_version": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: ValidateElastiCacheRedisVersionString,
+			},
+			"engine_version_actual": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"global_replication_group_id": {
@@ -120,8 +127,7 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 				ConflictsWith: []string{
-					"automatic_failover_enabled",
-					"cluster_mode", // should/will be "num_node_groups"
+					"cluster_mode.0.num_node_groups", // should/will be top-level "num_node_groups"
 					"parameter_group_name",
 					"engine",
 					"engine_version",
@@ -165,15 +171,18 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 			"number_cache_clusters": {
-				Type:         schema.TypeInt,
-				Computed:     true,
-				Optional:     true,
-				ExactlyOneOf: []string{"cluster_mode", "number_cache_clusters"},
+				Type:          schema.TypeInt,
+				Computed:      true,
+				Optional:      true,
+				ConflictsWith: []string{"cluster_mode.0.num_node_groups"},
 			},
 			"parameter_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.HasPrefix(old, "global-datastore-")
+				},
 			},
 			"port": {
 				Type:     schema.TypeInt,
@@ -293,15 +302,8 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if v := diff.Get("multi_az_enabled").(bool); !v {
-					return nil
-				}
-				if v := diff.Get("automatic_failover_enabled").(bool); !v {
-					return errors.New(`automatic_failover_enabled must be true if multi_az_enabled is true`)
-				}
-				return nil
-			},
+			CustomizeDiffValidateReplicationGroupAutomaticFailover,
+			CustomizeDiffElastiCacheEngineVersion,
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("number_cache_clusters") ||
 					diff.HasChange("cluster_mode.0.num_node_groups") ||
@@ -413,7 +415,7 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 		clusterModeList := clusterMode.([]interface{})
 		attributes := clusterModeList[0].(map[string]interface{})
 
-		if v, ok := attributes["num_node_groups"]; ok {
+		if v, ok := attributes["num_node_groups"]; ok && v != 0 {
 			params.NumNodeGroups = aws.Int64(int64(v.(int)))
 		}
 
@@ -435,6 +437,16 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 	_, err = waiter.ReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf("error creating ElastiCache Replication Group (%s): waiting for completion: %w", d.Id(), err)
+	}
+
+	if v, ok := d.GetOk("global_replication_group_id"); ok {
+		// When adding a replication group to a global replication group, the replication group can be in the "available"
+		// state, but the global replication group can still be in the "modifying" state. Wait for the replication group
+		// to be fully added to the global replication group.
+		// API calls to the global replication group can be made in any region.
+		if _, err := waiter.GlobalReplicationGroupAvailable(conn, v.(string), waiter.GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
+			return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) availability: %w", v, err)
+		}
 	}
 
 	return resourceAwsElasticacheReplicationGroupRead(d, meta)
@@ -520,18 +532,11 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 		}
 
 		c := res.CacheClusters[0]
-		d.Set("node_type", c.CacheNodeType)
-		d.Set("engine", c.Engine)
-		d.Set("engine_version", c.EngineVersion)
-		d.Set("subnet_group_name", c.CacheSubnetGroupName)
-		d.Set("security_group_names", flattenElastiCacheSecurityGroupNames(c.CacheSecurityGroups))
-		d.Set("security_group_ids", flattenElastiCacheSecurityGroupIds(c.SecurityGroups))
 
-		if c.CacheParameterGroup != nil {
-			d.Set("parameter_group_name", c.CacheParameterGroup.CacheParameterGroupName)
+		if err := elasticacheSetResourceDataFromCacheCluster(d, c); err != nil {
+			return err
 		}
 
-		d.Set("maintenance_window", c.PreferredMaintenanceWindow)
 		d.Set("snapshot_window", rgp.SnapshotWindow)
 		d.Set("snapshot_retention_limit", rgp.SnapshotRetentionLimit)
 
@@ -711,7 +716,7 @@ func resourceAwsElasticacheReplicationGroupDelete(d *schema.ResourceData, meta i
 	conn := meta.(*AWSClient).elasticacheconn
 
 	if globalReplicationGroupID, ok := d.GetOk("global_replication_group_id"); ok {
-		err := disassociateElasticacheReplicationGroup(conn, globalReplicationGroupID.(string), d.Id(), meta.(*AWSClient).region)
+		err := disassociateElasticacheReplicationGroup(conn, globalReplicationGroupID.(string), d.Id(), meta.(*AWSClient).region, waiter.GlobalReplicationGroupDisassociationReadyTimeout)
 		if err != nil {
 			return fmt.Errorf("error disassociating ElastiCache Replication Group (%s) from Global Replication Group (%s): %w", d.Id(), globalReplicationGroupID, err)
 		}
@@ -726,13 +731,13 @@ func resourceAwsElasticacheReplicationGroupDelete(d *schema.ResourceData, meta i
 	return nil
 }
 
-func disassociateElasticacheReplicationGroup(conn *elasticache.ElastiCache, globalReplicationGroupID, id, region string) error {
+func disassociateElasticacheReplicationGroup(conn *elasticache.ElastiCache, globalReplicationGroupID, id, region string, readyTimeout time.Duration) error {
 	input := &elasticache.DisassociateGlobalReplicationGroupInput{
 		GlobalReplicationGroupId: aws.String(globalReplicationGroupID),
 		ReplicationGroupId:       aws.String(id),
 		ReplicationGroupRegion:   aws.String(region),
 	}
-	err := resource.Retry(waiter.GlobalReplicationGroupDisassociationRetryTimeout, func() *resource.RetryError {
+	err := resource.Retry(readyTimeout, func() *resource.RetryError {
 		_, err := conn.DisassociateGlobalReplicationGroup(input)
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeGlobalReplicationGroupNotFoundFault) {
 			return nil
@@ -753,7 +758,7 @@ func disassociateElasticacheReplicationGroup(conn *elasticache.ElastiCache, glob
 		return nil
 	}
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeInvalidGlobalReplicationGroupStateFault) {
-		return fmt.Errorf("tried for %s: %w", waiter.GlobalReplicationGroupDisassociationRetryTimeout.String(), err)
+		return fmt.Errorf("tried for %s: %w", readyTimeout.String(), err)
 	}
 
 	if err != nil {

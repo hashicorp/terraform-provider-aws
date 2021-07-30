@@ -82,13 +82,18 @@ func resourceAwsCodeDeployApp() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsCodeDeployAppCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codedeployconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	application := d.Get("name").(string)
 	computePlatform := d.Get("compute_platform").(string)
@@ -97,7 +102,7 @@ func resourceAwsCodeDeployAppCreate(d *schema.ResourceData, meta interface{}) er
 	resp, err := conn.CreateApplication(&codedeploy.CreateApplicationInput{
 		ApplicationName: aws.String(application),
 		ComputePlatform: aws.String(computePlatform),
-		Tags:            keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CodedeployTags(),
+		Tags:            tags.IgnoreAws().CodedeployTags(),
 	})
 	if err != nil {
 		return err
@@ -116,6 +121,7 @@ func resourceAwsCodeDeployAppCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsCodeDeployAppRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codedeployconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	application := resourceAwsCodeDeployAppParseId(d.Id())
@@ -166,8 +172,15 @@ func resourceAwsCodeDeployAppRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error listing tags for CodeDeploy application (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -189,8 +202,8 @@ func resourceAwsCodeDeployUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.CodedeployUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating CodeDeploy Application (%s) tags: %w", d.Get("arn").(string), err)

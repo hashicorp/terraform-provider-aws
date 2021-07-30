@@ -19,11 +19,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/envvar"
+	organizationsfinder "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/organizations/finder"
+	stsfinder "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sts/finder"
 )
 
 const (
@@ -363,6 +366,17 @@ func testAccCheckResourceAttrHostnameWithPort(resourceName, attributeName, servi
 	}
 }
 
+// testAccCheckResourceAttrPrivateDnsName ensures the Terraform state exactly matches a private DNS name
+//
+// For example: ip-172-16-10-100.us-west-2.compute.internal
+func testAccCheckResourceAttrPrivateDnsName(resourceName, attributeName string, privateIpAddress **string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		privateDnsName := fmt.Sprintf("ip-%s.%s", resourceAwsEc2DashIP(**privateIpAddress), resourceAwsEc2RegionalPrivateDnsSuffix(testAccGetRegion()))
+
+		return resource.TestCheckResourceAttr(resourceName, attributeName, privateDnsName)(s)
+	}
+}
+
 // testAccMatchResourceAttrAccountID ensures the Terraform state regexp matches an account ID
 func testAccMatchResourceAttrAccountID(resourceName, attributeName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -698,10 +712,10 @@ func testAccGetThirdRegionPartition() string {
 }
 
 func testAccAlternateAccountPreCheck(t *testing.T) {
-	envvar.TestFailIfAllEmpty(t, []string{envvar.AwsAlternateProfile, envvar.AwsAlternateAccessKeyId}, "credentials for running acceptance testing in alternate AWS account")
+	envvar.TestSkipIfAllEmpty(t, []string{envvar.AwsAlternateProfile, envvar.AwsAlternateAccessKeyId}, "credentials for running acceptance testing in alternate AWS account")
 
 	if os.Getenv(envvar.AwsAlternateAccessKeyId) != "" {
-		envvar.TestFailIfEmpty(t, envvar.AwsAlternateSecretAccessKey, "static credentials value when using "+envvar.AwsAlternateAccessKeyId)
+		envvar.TestSkipIfEmpty(t, envvar.AwsAlternateSecretAccessKey, "static credentials value when using "+envvar.AwsAlternateAccessKeyId)
 	}
 }
 
@@ -789,6 +803,24 @@ func testAccOrganizationsEnabledPreCheck(t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("error describing AWS Organization: %s", err)
+	}
+}
+
+func testAccOrganizationManagementAccountPreCheck(t *testing.T) {
+	organization, err := organizationsfinder.Organization(testAccProvider.Meta().(*AWSClient).organizationsconn)
+
+	if err != nil {
+		t.Fatalf("error describing AWS Organization: %s", err)
+	}
+
+	callerIdentity, err := stsfinder.CallerIdentity(testAccProvider.Meta().(*AWSClient).stsconn)
+
+	if err != nil {
+		t.Fatalf("error getting current identity: %s", err)
+	}
+
+	if aws.StringValue(organization.MasterAccountId) != aws.StringValue(callerIdentity.Account) {
+		t.Skip("this AWS account must be the management account of an AWS Organization")
 	}
 }
 
@@ -2251,4 +2283,64 @@ func composeConfig(config ...string) string {
 	}
 
 	return str.String()
+}
+
+type domainName string
+
+// The top level domain ".test" is reserved by IANA for testing purposes:
+// https://datatracker.ietf.org/doc/html/rfc6761
+const domainNameTestTopLevelDomain domainName = "test"
+
+// testAccRandomSubdomain creates a random three-level domain name in the form
+// "<random>.<random>.test"
+// The top level domain ".test" is reserved by IANA for testing purposes:
+// https://datatracker.ietf.org/doc/html/rfc6761
+func testAccRandomSubdomain() string {
+	return string(testAccRandomDomain().RandomSubdomain())
+}
+
+// testAccRandomDomainName creates a random two-level domain name in the form
+// "<random>.test"
+// The top level domain ".test" is reserved by IANA for testing purposes:
+// https://datatracker.ietf.org/doc/html/rfc6761
+func testAccRandomDomainName() string {
+	return string(testAccRandomDomain())
+}
+
+// testAccRandomFQDomainName creates a random fully-qualified two-level domain name in the form
+// "<random>.test."
+// The top level domain ".test" is reserved by IANA for testing purposes:
+// https://datatracker.ietf.org/doc/html/rfc6761
+func testAccRandomFQDomainName() string {
+	return string(testAccRandomDomain().FQDN())
+}
+
+func (d domainName) Subdomain(name string) domainName {
+	return domainName(fmt.Sprintf("%s.%s", name, d))
+}
+
+func (d domainName) RandomSubdomain() domainName {
+	return d.Subdomain(acctest.RandString(8))
+}
+
+func (d domainName) FQDN() domainName {
+	return domainName(fmt.Sprintf("%s.", d))
+}
+
+func (d domainName) String() string {
+	return string(d)
+}
+
+func testAccRandomDomain() domainName {
+	return domainNameTestTopLevelDomain.RandomSubdomain()
+}
+
+// testAccDefaultEmailAddress is the default email address to set as a
+// resource or data source parameter for acceptance tests.
+const testAccDefaultEmailAddress = "no-reply@hashicorp.com"
+
+// testAccRandomEmailAddress generates a random email address in the form
+// "tf-acc-test-<random>@<domain>"
+func testAccRandomEmailAddress(domainName string) string {
+	return fmt.Sprintf("%s@%s", acctest.RandomWithPrefix("tf-acc-test"), domainName)
 }

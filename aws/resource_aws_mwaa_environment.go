@@ -61,6 +61,7 @@ func resourceAwsMwaaEnvironment() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateArn,
+				ForceNew:     true,
 			},
 			"last_updated": {
 				Type:     schema.TypeList,
@@ -391,7 +392,7 @@ func resourceAwsMwaaEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 		Name: aws.String(d.Get("name").(string)),
 	}
 
-	if d.HasChangesExcept("tags") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		if d.HasChange("airflow_configuration_options") {
 			options, ok := d.GetOk("airflow_configuration_options")
 			if !ok {
@@ -431,6 +432,10 @@ func resourceAwsMwaaEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 
 		if d.HasChange("network_configuration") {
 			input.NetworkConfiguration = expandMwaaEnvironmentNetworkConfigurationUpdate(d.Get("network_configuration").([]interface{}))
+		}
+
+		if d.HasChange("plugins_s3_object_version") {
+			input.PluginsS3ObjectVersion = aws.String(d.Get("plugins_s3_object_version").(string))
 		}
 
 		if d.HasChange("plugins_s3_path") {

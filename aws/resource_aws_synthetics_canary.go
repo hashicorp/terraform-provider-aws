@@ -70,7 +70,7 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 21),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-z_\-]+$`), "must contain only alphanumeric, hyphen, underscore."),
+					validation.StringMatch(regexp.MustCompile(`^[0-9a-z_\-]+$`), "must contain only lowercase alphanumeric, hyphen, or underscore."),
 				),
 			},
 			"run_config": {
@@ -96,7 +96,7 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 						"timeout_in_seconds": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntBetween(60, 14*60),
+							ValidateFunc: validation.IntBetween(3, 14*60),
 							Default:      840,
 						},
 					},
@@ -401,7 +401,7 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 func resourceAwsSyntheticsCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).syntheticsconn
 
-	if d.HasChangesExcept("tags", "start_canary") {
+	if d.HasChangesExcept("tags", "tags_all", "start_canary") {
 		input := &synthetics.UpdateCanaryInput{
 			Name: aws.String(d.Id()),
 		}

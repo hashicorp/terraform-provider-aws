@@ -12,10 +12,57 @@ Provides a Cloud9 EC2 Development Environment.
 
 ## Example Usage
 
+Basic usage:
+
 ```terraform
 resource "aws_cloud9_environment_ec2" "example" {
   instance_type = "t2.micro"
   name          = "example-env"
+}
+```
+
+Get the URL of the Cloud9 environment after creation:
+
+```terraform
+resource "aws_cloud9_environment_ec2" "example" {
+  instance_type = "t2.micro"
+}
+
+data "aws_instance" "cloud9_instance" {
+  filter {
+    name = "tag:aws:cloud9:environment"
+    values = [
+    aws_cloud9_environment_ec2.example.id]
+  }
+}
+
+output "cloud9_url" {
+  value = "https://${var.region}.console.aws.amazon.com/cloud9/ide/${aws_cloud9_environment_ec2.example.id}"
+}
+```
+
+Allocate a static IP to the Cloud9 environment:
+
+```terraform
+resource "aws_cloud9_environment_ec2" "example" {
+  instance_type = "t2.micro"
+}
+
+data "aws_instance" "cloud9_instance" {
+  filter {
+    name = "tag:aws:cloud9:environment"
+    values = [
+    aws_cloud9_environment_ec2.example.id]
+  }
+}
+
+resource "aws_eip" "cloud9_eip" {
+  instance = data.aws_instance.cloud9_instance.id
+  vpc      = true
+}
+
+output "cloud9_public_ip" {
+  value = aws_eip.cloud9_eip.public_ip
 }
 ```
 

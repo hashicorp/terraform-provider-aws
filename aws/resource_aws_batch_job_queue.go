@@ -38,6 +38,7 @@ func resourceAwsBatchJobQueue() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validateBatchName,
 			},
 			"priority": {

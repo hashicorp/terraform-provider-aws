@@ -22,6 +22,7 @@ func TestAccDataSourceAwsTransferServer_basic(t *testing.T) {
 				Config: testAccDataSourceAwsTransferServerConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "domain", resourceName, "domain"),
 					resource.TestCheckResourceAttrPair(datasourceName, "endpoint", resourceName, "endpoint"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_provider_type", resourceName, "identity_provider_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "logging_role", resourceName, "logging_role"),
@@ -45,9 +46,15 @@ func TestAccDataSourceAwsTransferServer_service_managed(t *testing.T) {
 				Config: testAccDataSourceAwsTransferServerConfig_service_managed(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
 					resource.TestCheckResourceAttrPair(datasourceName, "endpoint", resourceName, "endpoint"),
+					resource.TestCheckResourceAttrPair(datasourceName, "endpoint_type", resourceName, "endpoint_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_provider_type", resourceName, "identity_provider_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "invocation_role", resourceName, "invocation_role"),
 					resource.TestCheckResourceAttrPair(datasourceName, "logging_role", resourceName, "logging_role"),
+					resource.TestCheckResourceAttrPair(datasourceName, "protocols.#", resourceName, "protocols.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "security_policy_name", resourceName, "security_policy_name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "url", resourceName, "url"),
 				),
 			},
 		},

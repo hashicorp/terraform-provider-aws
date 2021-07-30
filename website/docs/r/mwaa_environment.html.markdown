@@ -176,7 +176,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the MWAA Environment
 * `created_at` - The Created At date of the MWAA Environment
-* `logging_configuration.<LOG_TYPE>.cloud_watch_log_group_arn` - Provides the ARN for the CloudWatch group where the logs will be published
+* `logging_configuration[0].<LOG_CONFIGURATION_TYPE>[0].cloud_watch_log_group_arn` - Provides the ARN for the CloudWatch group where the logs will be published
 * `service_role_arn` - The Service Role ARN of the Amazon MWAA Environment
 * `status` - The status of the Amazon MWAA Environment
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).

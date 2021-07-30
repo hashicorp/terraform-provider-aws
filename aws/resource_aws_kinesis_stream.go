@@ -29,6 +29,8 @@ func resourceAwsKinesisStream() *schema.Resource {
 			State: resourceAwsKinesisStreamImport,
 		},
 
+		CustomizeDiff: SetTagsDiff,
+
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
@@ -99,7 +101,8 @@ func resourceAwsKinesisStream() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
@@ -152,8 +155,8 @@ func resourceAwsKinesisStreamUpdate(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*AWSClient).kinesisconn
 
 	sn := d.Get("name").(string)
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.KinesisUpdateTags(conn, sn, o, n); err != nil {
 			return fmt.Errorf("error updating Kinesis Stream (%s) tags: %s", sn, err)
@@ -179,6 +182,7 @@ func resourceAwsKinesisStreamUpdate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsKinesisStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kinesisconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	sn := d.Get("name").(string)
@@ -213,8 +217,15 @@ func resourceAwsKinesisStreamRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error listing tags for Kinesis Stream (%s): %s", sn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil

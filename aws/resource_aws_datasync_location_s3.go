@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfdatasync "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/datasync"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
@@ -28,6 +29,12 @@ func resourceAwsDataSyncLocationS3() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"agent_arns": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"s3_bucket_arn": {
 				Type:         schema.TypeString,
@@ -50,6 +57,13 @@ func resourceAwsDataSyncLocationS3() *schema.Resource {
 						},
 					},
 				},
+			},
+			"s3_storage_class": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(datasync.S3StorageClass_Values(), false),
 			},
 			"subdirectory": {
 				Type:     schema.TypeString,
@@ -88,6 +102,14 @@ func resourceAwsDataSyncLocationS3Create(d *schema.ResourceData, meta interface{
 		S3Config:     expandDataSyncS3Config(d.Get("s3_config").([]interface{})),
 		Subdirectory: aws.String(d.Get("subdirectory").(string)),
 		Tags:         tags.IgnoreAws().DatasyncTags(),
+	}
+
+	if v, ok := d.GetOk("agent_arns"); ok {
+		input.AgentArns = expandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("s3_storage_class"); ok {
+		input.S3StorageClass = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating DataSync Location S3: %s", input)
@@ -151,18 +173,18 @@ func resourceAwsDataSyncLocationS3Read(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error reading DataSync Location S3 (%s): %s", d.Id(), err)
 	}
 
-	subdirectory, err := dataSyncParseLocationURI(aws.StringValue(output.LocationUri))
+	subdirectory, err := tfdatasync.SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
-		return fmt.Errorf("error parsing Location S3 (%s) URI (%s): %s", d.Id(), aws.StringValue(output.LocationUri), err)
+		return err
 	}
 
+	d.Set("agent_arns", flattenStringSet(output.AgentArns))
 	d.Set("arn", output.LocationArn)
-
 	if err := d.Set("s3_config", flattenDataSyncS3Config(output.S3Config)); err != nil {
 		return fmt.Errorf("error setting s3_config: %s", err)
 	}
-
+	d.Set("s3_storage_class", output.S3StorageClass)
 	d.Set("subdirectory", subdirectory)
 	d.Set("uri", output.LocationUri)
 

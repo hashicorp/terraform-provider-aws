@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsLbListener() *schema.Resource {
@@ -256,12 +257,14 @@ func dataSourceAwsLbListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elbv2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &elbv2.DescribeListenersInput{}
 
@@ -331,6 +334,16 @@ func dataSourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error
 
 	if err := d.Set("default_action", flattenLbListenerActions(d, listener.DefaultActions)); err != nil {
 		return fmt.Errorf("error setting default_action: %w", err)
+	}
+
+	tags, err := keyvaluetags.Elbv2ListTags(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil

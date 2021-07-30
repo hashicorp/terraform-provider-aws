@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"log"
+	"net"
 	"regexp"
 	"sort"
 	"time"
@@ -718,7 +719,14 @@ func resourceAwsVpnConnectionRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("transit_gateway_attachment_id", transitGatewayAttachmentID)
 
 	if vpnConnection.CustomerGatewayConfiguration != nil {
-		if tunnelInfo, err := xmlConfigToTunnelInfo(*vpnConnection.CustomerGatewayConfiguration); err != nil {
+		tunnelInfo, err := xmlConfigToTunnelInfo(
+			aws.StringValue(vpnConnection.CustomerGatewayConfiguration),
+			d.Get("tunnel1_preshared_key").(string),    // Not currently available during import
+			d.Get("tunnel1_inside_cidr").(string),      // Not currently available during import
+			d.Get("tunnel1_inside_ipv6_cidr").(string), // Not currently available during import
+		)
+
+		if err != nil {
 			log.Printf("[ERR] Error unmarshaling XML configuration for (%s): %s", d.Id(), err)
 		} else {
 			d.Set("tunnel1_address", tunnelInfo.Tunnel1Address)
@@ -1640,14 +1648,44 @@ func waitForEc2VpnConnectionDeletion(conn *ec2.EC2, id string) error {
 	return err
 }
 
-func xmlConfigToTunnelInfo(xmlConfig string) (*TunnelInfo, error) {
+// The tunnel1 parameters are optionally used to correctly order tunnel configurations.
+func xmlConfigToTunnelInfo(xmlConfig string, tunnel1PreSharedKey string, tunnel1InsideCidr string, tunnel1InsideIpv6Cidr string) (*TunnelInfo, error) {
 	var vpnConfig XmlVpnConnectionConfig
 	if err := xml.Unmarshal([]byte(xmlConfig), &vpnConfig); err != nil {
 		return nil, fmt.Errorf("Error Unmarshalling XML: %s", err)
 	}
 
-	// don't expect consistent ordering from the XML
-	sort.Sort(vpnConfig)
+	// XML tunnel ordering was commented here as being inconsistent since
+	// this logic was originally added. The original sorting is based on
+	// outside address. Given potential tunnel identifying configuration,
+	// we try to correctly align the tunnel ordering before preserving the
+	// original outside address sorting fallback for backwards compatibility
+	// as to not inadvertently flip existing configurations.
+	if tunnel1PreSharedKey != "" {
+		if tunnel1PreSharedKey != vpnConfig.Tunnels[0].PreSharedKey && tunnel1PreSharedKey == vpnConfig.Tunnels[1].PreSharedKey {
+			vpnConfig.Tunnels[0], vpnConfig.Tunnels[1] = vpnConfig.Tunnels[1], vpnConfig.Tunnels[0]
+		}
+	} else if cidr := tunnel1InsideCidr; cidr != "" {
+		if _, ipNet, err := net.ParseCIDR(cidr); err == nil && ipNet != nil {
+			vgwInsideAddressIP1 := net.ParseIP(vpnConfig.Tunnels[0].VgwInsideAddress)
+			vgwInsideAddressIP2 := net.ParseIP(vpnConfig.Tunnels[1].VgwInsideAddress)
+
+			if !ipNet.Contains(vgwInsideAddressIP1) && ipNet.Contains(vgwInsideAddressIP2) {
+				vpnConfig.Tunnels[0], vpnConfig.Tunnels[1] = vpnConfig.Tunnels[1], vpnConfig.Tunnels[0]
+			}
+		}
+	} else if cidr := tunnel1InsideIpv6Cidr; cidr != "" {
+		if _, ipNet, err := net.ParseCIDR(cidr); err == nil && ipNet != nil {
+			vgwInsideAddressIP1 := net.ParseIP(vpnConfig.Tunnels[0].VgwInsideAddress)
+			vgwInsideAddressIP2 := net.ParseIP(vpnConfig.Tunnels[1].VgwInsideAddress)
+
+			if !ipNet.Contains(vgwInsideAddressIP1) && ipNet.Contains(vgwInsideAddressIP2) {
+				vpnConfig.Tunnels[0], vpnConfig.Tunnels[1] = vpnConfig.Tunnels[1], vpnConfig.Tunnels[0]
+			}
+		}
+	} else {
+		sort.Sort(vpnConfig)
+	}
 
 	tunnelInfo := TunnelInfo{
 		Tunnel1Address:          vpnConfig.Tunnels[0].OutsideAddress,
@@ -1704,13 +1742,13 @@ func validateVpnConnectionTunnelInsideIpv6CIDR() schema.SchemaValidateFunc {
 
 func validateLocalIpv4NetworkCidr() schema.SchemaValidateFunc {
 	return validation.All(
-		validation.IsCIDRNetwork(32, 32),
+		validation.IsCIDRNetwork(0, 32),
 	)
 }
 
 func validateLocalIpv6NetworkCidr() schema.SchemaValidateFunc {
 	return validation.All(
-		validation.IsCIDRNetwork(128, 128),
+		validation.IsCIDRNetwork(0, 128),
 	)
 }
 

@@ -2,18 +2,23 @@ package aws
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/mitchellh/copystructure"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/experimental/nullable"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/mq/waiter"
@@ -217,8 +222,10 @@ func resourceAwsMqBroker() *schema.Resource {
 							Optional: true,
 						},
 						"audit": {
-							Type:     schema.TypeBool,
-							Optional: true,
+							Type:             nullable.TypeNullableBool,
+							Optional:         true,
+							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
+							DiffSuppressFunc: nullable.DiffSuppressNullableBoolFalseAsNull,
 						},
 					},
 				},
@@ -319,7 +326,20 @@ func resourceAwsMqBroker() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			SetTagsDiff,
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				if strings.EqualFold(diff.Get("engine_type").(string), mq.EngineTypeRabbitmq) {
+					if v, ok := diff.GetOk("logs.0.audit"); ok {
+						if v, _, _ := nullable.Bool(v.(string)).Value(); v {
+							return errors.New("logs.audit: Can not be configured when engine is RabbitMQ")
+						}
+					}
+				}
+
+				return nil
+			},
+		),
 	}
 }
 
@@ -329,12 +349,13 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("broker_name").(string)
+	engineType := d.Get("engine_type").(string)
 	requestId := resource.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))
 	input := mq.CreateBrokerRequest{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		BrokerName:              aws.String(name),
 		CreatorRequestId:        aws.String(requestId),
-		EngineType:              aws.String(d.Get("engine_type").(string)),
+		EngineType:              aws.String(engineType),
 		EngineVersion:           aws.String(d.Get("engine_version").(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
@@ -354,7 +375,7 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 		input.EncryptionOptions = expandMqEncryptionOptions(d.Get("encryption_options").([]interface{}))
 	}
 	if v, ok := d.GetOk("logs"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Logs = expandMqLogs(v.([]interface{}))
+		input.Logs = expandMqLogs(engineType, v.([]interface{}))
 	}
 	if v, ok := d.GetOk("ldap_server_metadata"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.LdapServerMetadata = expandMQLDAPServerMetadata(v.([]interface{}))
@@ -493,10 +514,11 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChanges("configuration", "logs", "engine_version") {
+		engineType := d.Get("engine_type").(string)
 		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
 			BrokerId:      aws.String(d.Id()),
 			Configuration: expandMqConfigurationId(d.Get("configuration").([]interface{})),
-			Logs:          expandMqLogs(d.Get("logs").([]interface{})),
+			Logs:          expandMqLogs(engineType, d.Get("logs").([]interface{})),
 			EngineVersion: aws.String(d.Get("engine_version").(string)),
 		})
 		if err != nil {
@@ -925,13 +947,13 @@ func flattenMqLogs(logs *mq.LogsSummary) []interface{} {
 	}
 
 	if logs.Audit != nil {
-		m["audit"] = aws.BoolValue(logs.Audit)
+		m["audit"] = strconv.FormatBool(aws.BoolValue(logs.Audit))
 	}
 
 	return []interface{}{m}
 }
 
-func expandMqLogs(l []interface{}) *mq.Logs {
+func expandMqLogs(engineType string, l []interface{}) *mq.Logs {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -944,8 +966,13 @@ func expandMqLogs(l []interface{}) *mq.Logs {
 		logs.General = aws.Bool(v.(bool))
 	}
 
+	// When the engine type is "RabbitMQ", the parameter audit cannot be set at all.
 	if v, ok := m["audit"]; ok {
-		logs.Audit = aws.Bool(v.(bool))
+		if v, null, _ := nullable.Bool(v.(string)).Value(); !null {
+			if !strings.EqualFold(engineType, mq.EngineTypeRabbitmq) {
+				logs.Audit = aws.Bool(v)
+			}
+		}
 	}
 
 	return logs

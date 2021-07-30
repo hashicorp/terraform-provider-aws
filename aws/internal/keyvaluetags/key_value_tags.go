@@ -55,6 +55,15 @@ func (tags KeyValueTags) IgnoreAws() KeyValueTags {
 	return result
 }
 
+// GetTags is convenience method that returns the DefaultConfig's Tags, if any
+func (dc *DefaultConfig) GetTags() KeyValueTags {
+	if dc == nil {
+		return nil
+	}
+
+	return dc.Tags
+}
+
 // MergeTags returns the result of keyvaluetags.Merge() on the given
 // DefaultConfig.Tags with KeyValueTags provided as an argument,
 // overriding the value of any tag with a matching key.
@@ -489,6 +498,30 @@ func (tags KeyValueTags) UrlEncode() string {
 	}
 
 	return values.Encode()
+}
+
+// UrlQueryString returns the KeyValueTags formatted as URL Query parameters without encoding.
+func (tags KeyValueTags) UrlQueryString() string {
+	keys := make([]string, 0, len(tags))
+	for k, v := range tags {
+		if v == nil || v.Value == nil {
+			continue
+		}
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	var buf strings.Builder
+	for _, k := range keys {
+		if buf.Len() > 0 {
+			buf.WriteByte('&')
+		}
+		buf.WriteString(k)
+		buf.WriteByte('=')
+		buf.WriteString(*tags[k].Value)
+	}
+
+	return buf.String()
 }
 
 // New creates KeyValueTags from common types or returns an empty KeyValueTags.
