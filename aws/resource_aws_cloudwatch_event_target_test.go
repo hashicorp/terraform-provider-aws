@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	awsarn "github.com/aws/aws-sdk-go/aws/arn"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -222,16 +221,12 @@ func TestAccAWSCloudWatchEventTarget_EventBusName(t *testing.T) {
 
 func TestAccAWSCloudWatchEventTarget_EventBusArn(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
-	key := "EVENT_BRIDGE_EVENT_BUS_ARN"
-	busArn, err := awsarn.Parse(os.Getenv(key))
-	if err != nil {
-		t.Skipf("Environment variable %s is missing or is not a valid ARN", key)
-	}
 
 	var target events.Target
 	ruleName := acctest.RandomWithPrefix("tf-acc-test-rule")
-	snsTopicName := acctest.RandomWithPrefix("tf-acc-test-sns")
 	targetID := acctest.RandomWithPrefix("tf-acc-test-target")
+	originEventBusName := acctest.RandomWithPrefix("tf-acc-test")
+	targetEventBusName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -240,11 +235,12 @@ func TestAccAWSCloudWatchEventTarget_EventBusArn(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventTargetConfigEventBusArn(ruleName, busArn.String(), snsTopicName, targetID),
+				Config: testAccAWSCloudWatchEventTargetConfigEventBusArn(ruleName, originEventBusName, targetID, targetEventBusName, acctest.RandomWithPrefix("tf-acc-test-target"), acctest.RandomWithPrefix("tf-acc-test-target")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventTargetExists(resourceName, &target),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
-					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busArn.String()),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("event-bus/%s", targetEventBusName))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "event_bus_name", "events", regexp.MustCompile(fmt.Sprintf("event-bus/%s", originEventBusName))),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID),
 				),
 			},
@@ -984,23 +980,30 @@ resource "aws_cloudwatch_event_bus" "test" {
 `, targetID, snsTopicName, ruleName, eventBusName)
 }
 
-func testAccAWSCloudWatchEventTargetConfigEventBusArn(ruleName, eventBusArn, snsTopicName, targetID string) string {
+func testAccAWSCloudWatchEventTargetConfigEventBusArn(ruleName, originEventBusName, targetID, targetEventBusName, roleName, policyName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_target" "test" {
-  rule           = aws_cloudwatch_event_rule.test.name
-  event_bus_name = %[4]q
-  target_id      = %[1]q
-  arn            = aws_sns_topic.test.arn
+data "aws_partition" "current" {}
+
+resource "aws_cloudwatch_event_bus" "test_origin_bus" {
+	name = %[1]q
 }
 
-resource "aws_sns_topic" "test" {
-  name = %[2]q
+resource "aws_cloudwatch_event_bus" "test_destination_bus" {
+	name = %[4]q
+}
+	
+resource "aws_cloudwatch_event_target" "test" {
+	rule           = aws_cloudwatch_event_rule.test.name
+	event_bus_name = aws_cloudwatch_event_bus.test_origin_bus.arn
+	target_id      = %[3]q
+	arn            = aws_cloudwatch_event_bus.test_destination_bus.arn
+	role_arn		= aws_iam_role.test.arn
 }
 
 resource "aws_cloudwatch_event_rule" "test" {
-  name           = %[3]q
-  event_bus_name = %[4]q
-  event_pattern  = <<PATTERN
+	name           = %[2]q
+	event_bus_name = aws_cloudwatch_event_bus.test_origin_bus.name
+	event_pattern  = <<PATTERN
 {
 	"source": [
 		"aws.ec2"
@@ -1008,7 +1011,26 @@ resource "aws_cloudwatch_event_rule" "test" {
 }
 PATTERN
 }
-`, targetID, snsTopicName, ruleName, eventBusArn)
+
+resource "aws_iam_role" "test" {
+	name = %[5]q
+	
+	assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Action": "sts:AssumeRole",
+			"Principal": {
+				"Service": "events.${data.aws_partition.current.dns_suffix}"
+			},
+			"Effect": "Allow"
+		}
+	]
+}
+EOF
+}
+`, originEventBusName, ruleName, targetID, targetEventBusName, roleName, policyName)
 }
 
 func testAccAWSCloudWatchEventTargetConfigMissingTargetId(ruleName, snsTopicName string) string {
