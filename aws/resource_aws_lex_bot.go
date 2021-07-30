@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -442,6 +443,7 @@ func resourceAwsLexBotDelete(d *schema.ResourceData, meta interface{}) error {
 func getLatestLexBotVersion(conn *lexmodelbuildingservice.LexModelBuildingService, input *lexmodelbuildingservice.GetBotVersionsInput) (string, error) {
 	version := LexBotVersionLatest
 
+  var currentVersion, botVersion int
 	for {
 		page, err := conn.GetBotVersions(input)
 		if err != nil {
@@ -457,8 +459,21 @@ func getLatestLexBotVersion(conn *lexmodelbuildingservice.LexModelBuildingServic
 			if *bot.Version == LexBotVersionLatest {
 				continue
 			}
-			if *bot.Version > version {
-				version = *bot.Version
+
+      currentVersion, err = strconv.Atoi(version)
+      if err != nil {
+        log.Printf("[DEBUG] invalid version for Lex Bot: %s", version)
+        continue
+      }
+
+      botVersion, err = strconv.Atoi(*bot.Version)
+      if err != nil {
+        log.Printf("[DEBUG] invalid version for Lex Bot: %s", *bot.Version)
+        continue
+      }
+
+			if botVersion > currentVersion {
+				version = strconv.Itoa(botVersion)
 			}
 		}
 
