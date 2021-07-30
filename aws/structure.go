@@ -720,8 +720,8 @@ func flattenRedshiftParameters(list []*redshift.Parameter) []map[string]interfac
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, i := range list {
 		result = append(result, map[string]interface{}{
-			"name":  *i.ParameterName,
-			"value": *i.ParameterValue,
+			"name":  aws.StringValue(i.ParameterName),
+			"value": aws.StringValue(i.ParameterValue),
 		})
 	}
 	return result
