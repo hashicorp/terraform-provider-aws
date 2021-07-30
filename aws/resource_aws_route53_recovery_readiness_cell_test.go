@@ -26,6 +26,8 @@ func TestAccAwsRoute53RecoveryReadinessCell_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRoute53RecoveryReadinessCellExists(resourceName),
 					testAccMatchResourceAttrGlobalARN(resourceName, "cell_arn", "route53-recovery-readiness", regexp.MustCompile(`cell/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cells.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parent_readiness_scopes.#", "0"),
 				),
 			},
 			{
