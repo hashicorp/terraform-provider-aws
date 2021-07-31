@@ -424,52 +424,7 @@ func resourceUserPool() *schema.Resource {
 				Optional: true,
 				MinItems: 1,
 				MaxItems: 50,
-				Set: func(v any) int {
-					var buf bytes.Buffer
-					m := v.(map[string]any)
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["attribute_data_type"].(string)))
-					buf.WriteString(fmt.Sprintf("%t-", m["developer_only_attribute"].(bool)))
-					buf.WriteString(fmt.Sprintf("%t-", m["mutable"].(bool)))
-					buf.WriteString(fmt.Sprintf("%t-", m["required"].(bool)))
-
-					if v, ok := m["string_attribute_constraints"]; ok {
-						data := v.([]any)
-
-						if len(data) > 0 {
-							buf.WriteString("string_attribute_constraints-")
-							m, _ := data[0].(map[string]any)
-							if ok {
-								if l, ok := m["min_length"]; ok && l.(string) != "" {
-									buf.WriteString(fmt.Sprintf("%s-", l.(string)))
-								}
-
-								if l, ok := m["max_length"]; ok && l.(string) != "" {
-									buf.WriteString(fmt.Sprintf("%s-", l.(string)))
-								}
-							}
-						}
-					}
-
-					if v, ok := m["number_attribute_constraints"]; ok {
-						data := v.([]any)
-
-						if len(data) > 0 {
-							buf.WriteString("number_attribute_constraints-")
-							m, _ := data[0].(map[string]any)
-							if ok {
-								if l, ok := m["min_value"]; ok && l.(string) != "" {
-									buf.WriteString(fmt.Sprintf("%s-", l.(string)))
-								}
-
-								if l, ok := m["max_value"]; ok && l.(string) != "" {
-									buf.WriteString(fmt.Sprintf("%s-", l.(string)))
-								}
-							}
-						}
-					}
-					return create.StringHashcode(buf.String())
-				},
+				Set:      resourceUserPoolSchemaHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attribute_data_type": {
@@ -2330,4 +2285,51 @@ func userPoolSchemaAttributeMatchesStandardAttribute(apiObject *awstypes.SchemaA
 	}
 
 	return false
+}
+
+func resourceUserPoolSchemaHash(v any) int {
+	var buf bytes.Buffer
+	m := v.(map[string]any)
+	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["attribute_data_type"].(string)))
+	buf.WriteString(fmt.Sprintf("%t-", m["developer_only_attribute"].(bool)))
+	buf.WriteString(fmt.Sprintf("%t-", m["mutable"].(bool)))
+	buf.WriteString(fmt.Sprintf("%t-", m["required"].(bool)))
+
+	if v, ok := m["string_attribute_constraints"]; ok {
+		data := v.([]any)
+
+		if len(data) > 0 {
+			buf.WriteString("string_attribute_constraints-")
+			m, _ := data[0].(map[string]any)
+			if ok {
+				if l, ok := m["min_length"]; ok && l.(string) != "" {
+					buf.WriteString(fmt.Sprintf("%s-", l.(string)))
+				}
+
+				if l, ok := m["max_length"]; ok && l.(string) != "" {
+					buf.WriteString(fmt.Sprintf("%s-", l.(string)))
+				}
+			}
+		}
+	}
+
+	if v, ok := m["number_attribute_constraints"]; ok {
+		data := v.([]any)
+
+		if len(data) > 0 {
+			buf.WriteString("number_attribute_constraints-")
+			m, _ := data[0].(map[string]any)
+			if ok {
+				if l, ok := m["min_value"]; ok && l.(string) != "" {
+					buf.WriteString(fmt.Sprintf("%s-", l.(string)))
+				}
+
+				if l, ok := m["max_value"]; ok && l.(string) != "" {
+					buf.WriteString(fmt.Sprintf("%s-", l.(string)))
+				}
+			}
+		}
+	}
+	return create.StringHashcode(buf.String())
 }
