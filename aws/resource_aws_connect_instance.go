@@ -10,22 +10,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/waiter"
 )
-
-var resourceConnectInstanceAttributesMapping = map[string]string{
-	connect.InstanceAttributeTypeInboundCalls:          "inbound_calls_enabled",
-	connect.InstanceAttributeTypeOutboundCalls:         "outbound_calls_enabled",
-	connect.InstanceAttributeTypeContactflowLogs:       "contact_flow_logs_enabled",
-	connect.InstanceAttributeTypeContactLens:           "contact_lens_enabled",
-	connect.InstanceAttributeTypeAutoResolveBestVoices: "auto_resolve_best_voices",
-	connect.InstanceAttributeTypeUseCustomTtsVoices:    "use_custom_tts_voices",
-	connect.InstanceAttributeTypeEarlyMedia:            "early_media_enabled",
-}
 
 func resourceAwsConnectInstance() *schema.Resource {
 	return &schema.Resource{
@@ -43,7 +35,7 @@ func resourceAwsConnectInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_resolve_best_voices": {
+			"auto_resolve_best_voices_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -108,7 +100,7 @@ func resourceAwsConnectInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"use_custom_tts_voices": {
+			"use_custom_tts_voices_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -146,13 +138,19 @@ func resourceAwsConnectInstanceCreate(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(fmt.Errorf("error waiting for Connect instance creation (%s): %s", d.Id(), err))
 	}
 
-	for att := range resourceConnectInstanceAttributesMapping {
-		rKey := resourceConnectInstanceAttributesMapping[att]
-		val := d.Get(rKey)
-		err := resourceAwsConnectInstanceUpdateAttribute(ctx, conn, d.Id(), att, strconv.FormatBool(val.(bool)))
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error setting Connect instance (%s) attribute (%s): %s", d.Id(), att, err))
+	for att := range tfconnect.InstanceAttributeMapping() {
+		rKey := tfconnect.InstanceAttributeMapping()[att]
+
+		if v, ok := d.GetOk(rKey); ok {
+			err := resourceAwsConnectInstanceUpdateAttribute(ctx, conn, d.Id(), att, strconv.FormatBool(v.(bool)))
+			//Pre-release attribute, user/account/instance now allow-listed
+			if err != nil && tfawserr.ErrCodeEquals(err, tfconnect.ErrCodeAccessDeniedException) || tfawserr.ErrMessageContains(err, tfconnect.ErrCodeAccessDeniedException, "not authorized to update") {
+				log.Printf("[WARN] error setting Connect instance (%s) attribute (%s): %s", d.Id(), att, err)
+			} else if err != nil {
+				return diag.FromErr(fmt.Errorf("error setting Connect instance (%s) attribute (%s): %s", d.Id(), att, err))
+			}
 		}
+
 	}
 
 	return resourceAwsConnectInstanceRead(ctx, d, meta)
@@ -161,13 +159,16 @@ func resourceAwsConnectInstanceCreate(ctx context.Context, d *schema.ResourceDat
 func resourceAwsConnectInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).connectconn
 
-	for att := range resourceConnectInstanceAttributesMapping {
-		rKey := resourceConnectInstanceAttributesMapping[att]
+	for att := range tfconnect.InstanceAttributeMapping() {
+		rKey := tfconnect.InstanceAttributeMapping()[att]
 		if d.HasChange(rKey) {
 			_, n := d.GetChange(rKey)
 			err := resourceAwsConnectInstanceUpdateAttribute(ctx, conn, d.Id(), att, strconv.FormatBool(n.(bool)))
-			if err != nil {
-				return diag.FromErr(fmt.Errorf("error updating Connect instance (%s) attribute (%s): %s", d.Id(), att, err))
+			//Pre-release attribute, user/account/instance now allow-listed
+			if err != nil && tfawserr.ErrCodeEquals(err, tfconnect.ErrCodeAccessDeniedException) || tfawserr.ErrMessageContains(err, tfconnect.ErrCodeAccessDeniedException, "not authorized to update") {
+				log.Printf("[WARN] error setting Connect instance (%s) attribute (%s): %s", d.Id(), att, err)
+			} else if err != nil {
+				return diag.FromErr(fmt.Errorf("error setting Connect instance (%s) attribute (%s): %s", d.Id(), att, err))
 			}
 		}
 	}
@@ -202,18 +203,18 @@ func resourceAwsConnectInstanceRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("arn", instance.Arn)
 	d.Set("created_time", instance.CreatedTime.Format(time.RFC3339))
 	d.Set("identity_management_type", instance.IdentityManagementType)
-	d.Set("instance_alias", instance.InstanceAlias)
 	d.Set("inbound_calls_enabled", instance.InboundCallsEnabled)
+	d.Set("instance_alias", instance.InstanceAlias)
 	d.Set("outbound_calls_enabled", instance.OutboundCallsEnabled)
-	d.Set("status", instance.InstanceStatus)
 	d.Set("service_role", instance.ServiceRole)
+	d.Set("status", instance.InstanceStatus)
 
-	for att := range resourceConnectInstanceAttributesMapping {
+	for att := range tfconnect.InstanceAttributeMapping() {
 		value, err := resourceAwsConnectInstanceReadAttribute(ctx, conn, d.Id(), att)
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error reading Connect instance (%s) attribute (%s): %s", d.Id(), att, err))
 		}
-		d.Set(resourceConnectInstanceAttributesMapping[att], value)
+		d.Set(tfconnect.InstanceAttributeMapping()[att], value)
 	}
 
 	return nil

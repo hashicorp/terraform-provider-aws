@@ -88,8 +88,8 @@ func TestAccAwsConnectInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "outbound_calls_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "contact_flow_logs_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "contact_lens_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "auto_resolve_best_voices", "true"),
-					resource.TestCheckResourceAttr(resourceName, "use_custom_tts_voices", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_resolve_best_voices_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_custom_tts_voices_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "early_media_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "status", connect.InstanceStatusActive),
 					testAccMatchResourceAttrGlobalARN(resourceName, "service_role", "iam", regexp.MustCompile(`role/aws-service-role/connect.amazonaws.com/.+`)),
@@ -127,8 +127,8 @@ func TestAccAwsConnectInstance_custom(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "outbound_calls_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "contact_flow_logs_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "contact_lens_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "auto_resolve_best_voices", "false"),
-					resource.TestCheckResourceAttr(resourceName, "use_custom_tts_voices", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_resolve_best_voices_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "use_custom_tts_voices_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "early_media_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "status", connect.InstanceStatusActive),
 					testAccMatchResourceAttrGlobalARN(resourceName, "service_role", "iam", regexp.MustCompile(`role/aws-service-role/connect.amazonaws.com/.+`)),
@@ -272,8 +272,8 @@ resource "aws_connect_instance" "foo" {
   early_media_enabled       = false
   contact_flow_logs_enabled = true
   contact_lens_enabled      = false
-  auto_resolve_best_voices  = false
-  use_custom_tts_voices     = true
+  auto_resolve_best_voices_enabled  = false
+  use_custom_tts_voices_enabled     = true
 }
 `, rName)
 }

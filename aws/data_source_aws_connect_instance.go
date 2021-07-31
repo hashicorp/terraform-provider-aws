@@ -12,53 +12,18 @@ import (
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
 )
-
-var dataResourceConnectInstanceAttributesMapping = map[string]string{
-	connect.InstanceAttributeTypeInboundCalls:          "inbound_calls_enabled",
-	connect.InstanceAttributeTypeOutboundCalls:         "outbound_calls_enabled",
-	connect.InstanceAttributeTypeContactflowLogs:       "contact_flow_logs_enabled",
-	connect.InstanceAttributeTypeContactLens:           "contact_lens_enabled",
-	connect.InstanceAttributeTypeAutoResolveBestVoices: "auto_resolve_best_voices",
-	connect.InstanceAttributeTypeUseCustomTtsVoices:    "use_custom_tts_voices",
-	connect.InstanceAttributeTypeEarlyMedia:            "early_media_enabled",
-}
 
 func dataSourceAwsConnectInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceAwsConnectInstanceRead,
 		Schema: map[string]*schema.Schema{
-			"instance_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"instance_alias": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"created_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"identity_management_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"inbound_calls_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"outbound_calls_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"early_media_enabled": {
+			"auto_resolve_best_voices_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -70,11 +35,33 @@ func dataSourceAwsConnectInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"auto_resolve_best_voices": {
+			"created_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"early_media_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"use_custom_tts_voices": {
+			"identity_management_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"inbound_calls_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"instance_alias": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"instance_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"outbound_calls_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -84,6 +71,10 @@ func dataSourceAwsConnectInstance() *schema.Resource {
 			},
 			"service_role": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"use_custom_tts_voices_enabled": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 		},
@@ -152,18 +143,18 @@ func dataSourceAwsConnectInstanceRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("arn", matchedInstance.Arn)
 	d.Set("created_time", matchedInstance.CreatedTime.Format(time.RFC3339))
 	d.Set("identity_management_type", matchedInstance.IdentityManagementType)
-	d.Set("instance_alias", matchedInstance.InstanceAlias)
 	d.Set("inbound_calls_enabled", matchedInstance.InboundCallsEnabled)
+	d.Set("instance_alias", matchedInstance.InstanceAlias)
 	d.Set("outbound_calls_enabled", matchedInstance.OutboundCallsEnabled)
-	d.Set("status", matchedInstance.InstanceStatus)
 	d.Set("service_role", matchedInstance.ServiceRole)
+	d.Set("status", matchedInstance.InstanceStatus)
 
-	for att := range dataResourceConnectInstanceAttributesMapping {
+	for att := range tfconnect.InstanceAttributeMapping() {
 		value, err := dataResourceAwsConnectInstanceReadAttribute(ctx, conn, d.Id(), att)
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error reading Connect instance (%s) attribute (%s): %s", d.Id(), att, err))
 		}
-		d.Set(resourceConnectInstanceAttributesMapping[att], value)
+		d.Set(tfconnect.InstanceAttributeMapping()[att], value)
 	}
 	return nil
 }
