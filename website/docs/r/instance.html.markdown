@@ -92,7 +92,7 @@ The following arguments are supported:
 
 * `ami` - (Optional) AMI to use for the instance. Required unless `launch_template` is specified and the Launch Template specifes an AMI. If an AMI is specified in the Launch Template, setting `ami` will override the AMI specified in the Launch Template.
 * `associate_public_ip_address` - (Optional) Whether to associate a public IP address with an instance in a VPC.
-* `availability_zone` - (Optional) AZ to start the instance in.
+* `availability_zone` - (Optional) The AZ to start the instance in. Conflicts with `subnet_id`.
 * `capacity_reservation_specification` - (Optional) Describes an instance's Capacity Reservation targeting option. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
 
 -> **NOTE:** Changing `cpu_core_count` and/or `cpu_threads_per_core` will cause the resource to be destroyed and re-created.
@@ -128,7 +128,7 @@ The following arguments are supported:
 -> **NOTE:** If you are creating Instances in a VPC, use `vpc_security_group_ids` instead.
 
 * `source_dest_check` - (Optional) Controls if traffic is routed to the instance when the destination address does not match the instance. Used for NAT or VPNs. Defaults true.
-* `subnet_id` - (Optional) VPC Subnet ID to launch in.
+* `subnet_id` - (Optional) The VPC Subnet ID to launch in. Conflicts with `availability_zone`.
 * `tags` - (Optional) A map of tags to assign to the resource. Note that these tags apply to the instance and not block storage devices. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tenancy` - (Optional) Tenancy of the instance (if the instance is running in a VPC). An instance with a tenancy of dedicated runs on single-tenant hardware. The host tenancy is not supported for the import-instance command.
 * `user_data` - (Optional) User data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `user_data_base64` instead.
