@@ -39,40 +39,11 @@ func resourceAwsConnectInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"identity_management_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      connect.DirectoryTypeConnectManaged,
-				ValidateFunc: validation.StringInSlice(connect.DirectoryType_Values(), false),
-			},
-			"directory_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(12, 12),
-			},
-			"instance_alias": {
+			"arn": {
 				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^([\da-zA-Z]+)([\da-zA-Z-]+)$`), "must contain only alphanumeric hyphen and underscore characters"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`^(d-).+$`), "can not start with d-"),
-				),
+				Computed: true,
 			},
-			"inbound_calls_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"outbound_calls_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"early_media_enabled": {
+			"auto_resolve_best_voices": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -87,21 +58,49 @@ func resourceAwsConnectInstance() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"auto_resolve_best_voices": {
+			"created_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"directory_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(12, 12),
+			},
+			"early_media_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"use_custom_tts_voices": {
+			"identity_management_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      connect.DirectoryTypeConnectManaged,
+				ValidateFunc: validation.StringInSlice(connect.DirectoryType_Values(), false),
+			},
+			"inbound_calls_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Default:  true,
 			},
-			"arn": {
+			"instance_alias": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`^([\da-zA-Z]+)([\da-zA-Z-]+)$`), "must contain only alphanumeric hyphen and underscore characters"),
+					validation.StringDoesNotMatch(regexp.MustCompile(`^(d-).+$`), "can not start with d-"),
+				),
 			},
-			"created_time": {
+			"outbound_calls_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"service_role": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,9 +108,10 @@ func resourceAwsConnectInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"service_role": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"use_custom_tts_voices": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 		},
 	}
