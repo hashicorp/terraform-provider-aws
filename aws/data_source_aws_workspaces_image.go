@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsWorkspacesImage() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsWorkspacesImageRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsWorkspacesImageRead),
 
 		Schema: map[string]*schema.Schema{
 			"image_id": {

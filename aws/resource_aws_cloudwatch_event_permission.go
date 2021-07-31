@@ -19,10 +19,10 @@ import (
 
 func resourceAwsCloudWatchEventPermission() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchEventPermissionCreate,
-		Read:   resourceAwsCloudWatchEventPermissionRead,
-		Update: resourceAwsCloudWatchEventPermissionUpdate,
-		Delete: resourceAwsCloudWatchEventPermissionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventPermissionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudWatchEventPermissionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventPermissionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventPermissionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

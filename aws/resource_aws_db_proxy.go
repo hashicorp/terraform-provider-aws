@@ -15,10 +15,10 @@ import (
 
 func resourceAwsDbProxy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbProxyCreate,
-		Read:   resourceAwsDbProxyRead,
-		Update: resourceAwsDbProxyUpdate,
-		Delete: resourceAwsDbProxyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDbProxyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDbProxyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDbProxyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDbProxyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -112,7 +112,7 @@ func resourceAwsDbProxy() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

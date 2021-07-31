@@ -17,10 +17,10 @@ import (
 
 func resourceAwsRoute53HealthCheck() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53HealthCheckCreate,
-		Read:   resourceAwsRoute53HealthCheckRead,
-		Update: resourceAwsRoute53HealthCheckUpdate,
-		Delete: resourceAwsRoute53HealthCheckDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRoute53HealthCheckCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRoute53HealthCheckRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRoute53HealthCheckUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRoute53HealthCheckDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -157,7 +157,7 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

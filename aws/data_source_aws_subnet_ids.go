@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsSubnetIDs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSubnetIDsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsSubnetIDsRead),
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),
 

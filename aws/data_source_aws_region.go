@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsRegion() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRegionRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsRegionRead),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

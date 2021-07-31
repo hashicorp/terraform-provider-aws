@@ -14,10 +14,10 @@ import (
 
 func resourceAwsGuardDutyPublishingDestination() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGuardDutyPublishingDestinationCreate,
-		Read:   resourceAwsGuardDutyPublishingDestinationRead,
-		Update: resourceAwsGuardDutyPublishingDestinationUpdate,
-		Delete: resourceAwsGuardDutyPublishingDestinationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGuardDutyPublishingDestinationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGuardDutyPublishingDestinationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGuardDutyPublishingDestinationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGuardDutyPublishingDestinationDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsEcsContainerDefinition() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEcsContainerDefinitionRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEcsContainerDefinitionRead),
 
 		Schema: map[string]*schema.Schema{
 			"task_definition": {

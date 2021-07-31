@@ -18,9 +18,9 @@ const (
 
 func resourceAwsWafv2WebACLAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafv2WebACLAssociationCreate,
-		Read:   resourceAwsWafv2WebACLAssociationRead,
-		Delete: resourceAwsWafv2WebACLAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafv2WebACLAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafv2WebACLAssociationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafv2WebACLAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				webAclArn, resourceArn, err := resourceAwsWafv2ACLAssociationDecodeId(d.Id())

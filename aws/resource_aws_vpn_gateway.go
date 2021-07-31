@@ -18,10 +18,10 @@ import (
 
 func resourceAwsVpnGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpnGatewayCreate,
-		Read:   resourceAwsVpnGatewayRead,
-		Update: resourceAwsVpnGatewayUpdate,
-		Delete: resourceAwsVpnGatewayDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsVpnGatewayCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsVpnGatewayRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsVpnGatewayUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsVpnGatewayDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -56,7 +56,7 @@ func resourceAwsVpnGateway() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -14,7 +14,7 @@ import (
 
 func dataSourceAwsEc2TransitGatewayRouteTable() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2TransitGatewayRouteTableRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEc2TransitGatewayRouteTableRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

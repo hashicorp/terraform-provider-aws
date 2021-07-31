@@ -13,10 +13,10 @@ import (
 
 func resourceAwsElasticBeanstalkConfigurationTemplate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticBeanstalkConfigurationTemplateCreate,
-		Read:   resourceAwsElasticBeanstalkConfigurationTemplateRead,
-		Update: resourceAwsElasticBeanstalkConfigurationTemplateUpdate,
-		Delete: resourceAwsElasticBeanstalkConfigurationTemplateDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsElasticBeanstalkConfigurationTemplateCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsElasticBeanstalkConfigurationTemplateRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsElasticBeanstalkConfigurationTemplateUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsElasticBeanstalkConfigurationTemplateDelete),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

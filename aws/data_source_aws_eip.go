@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsEip() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEipRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEipRead),
 
 		Schema: map[string]*schema.Schema{
 			"association_id": {

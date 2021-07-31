@@ -26,10 +26,10 @@ const (
 
 func resourceAwsLexBotAlias() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLexBotAliasCreate,
-		Read:   resourceAwsLexBotAliasRead,
-		Update: resourceAwsLexBotAliasUpdate,
-		Delete: resourceAwsLexBotAliasDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLexBotAliasCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLexBotAliasRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsLexBotAliasUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLexBotAliasDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsLexBotAliasImport,
 		},

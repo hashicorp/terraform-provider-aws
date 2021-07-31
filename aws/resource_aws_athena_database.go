@@ -15,10 +15,10 @@ import (
 
 func resourceAwsAthenaDatabase() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAthenaDatabaseCreate,
-		Read:   resourceAwsAthenaDatabaseRead,
-		Update: resourceAwsAthenaDatabaseUpdate,
-		Delete: resourceAwsAthenaDatabaseDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAthenaDatabaseCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAthenaDatabaseRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAthenaDatabaseUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAthenaDatabaseDelete),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

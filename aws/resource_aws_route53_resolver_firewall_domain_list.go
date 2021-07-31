@@ -15,10 +15,10 @@ import (
 
 func resourceAwsRoute53ResolverFirewallDomainList() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ResolverFirewallDomainListCreate,
-		Read:   resourceAwsRoute53ResolverFirewallDomainListRead,
-		Update: resourceAwsRoute53ResolverFirewallDomainListUpdate,
-		Delete: resourceAwsRoute53ResolverFirewallDomainListDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverFirewallDomainListCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRoute53ResolverFirewallDomainListRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverFirewallDomainListUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverFirewallDomainListDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -49,7 +49,7 @@ func resourceAwsRoute53ResolverFirewallDomainList() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

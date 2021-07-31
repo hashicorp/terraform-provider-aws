@@ -42,10 +42,10 @@ var routeTableValidTargets = []string{
 
 func resourceAwsRouteTable() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRouteTableCreate,
-		Read:   resourceAwsRouteTableRead,
-		Update: resourceAwsRouteTableUpdate,
-		Delete: resourceAwsRouteTableDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRouteTableCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRouteTableRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRouteTableUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRouteTableDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -158,7 +158,7 @@ func resourceAwsRouteTable() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

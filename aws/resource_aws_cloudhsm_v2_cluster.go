@@ -16,10 +16,10 @@ import (
 
 func resourceAwsCloudHsmV2Cluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudHsmV2ClusterCreate,
-		Read:   resourceAwsCloudHsmV2ClusterRead,
-		Update: resourceAwsCloudHsmV2ClusterUpdate,
-		Delete: resourceAwsCloudHsmV2ClusterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudHsmV2ClusterCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudHsmV2ClusterRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudHsmV2ClusterUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudHsmV2ClusterDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -105,7 +105,7 @@ func resourceAwsCloudHsmV2Cluster() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

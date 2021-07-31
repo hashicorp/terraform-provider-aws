@@ -14,9 +14,9 @@ import (
 
 func resourceAwsSnapshotCreateVolumePermission() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSnapshotCreateVolumePermissionCreate,
-		Read:   resourceAwsSnapshotCreateVolumePermissionRead,
-		Delete: resourceAwsSnapshotCreateVolumePermissionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSnapshotCreateVolumePermissionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSnapshotCreateVolumePermissionRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSnapshotCreateVolumePermissionDelete),
 
 		Schema: map[string]*schema.Schema{
 			"snapshot_id": {

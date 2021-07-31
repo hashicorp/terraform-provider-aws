@@ -14,7 +14,7 @@ import (
 
 func dataSourceAwsServiceCatalogLaunchPaths() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsServiceCatalogLaunchPathsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsServiceCatalogLaunchPathsRead),
 
 		Schema: map[string]*schema.Schema{
 			"accept_language": {

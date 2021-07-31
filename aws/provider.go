@@ -1,11 +1,14 @@
 package aws
 
 import (
+	"context"
 	"log"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/mutexkv"
 )
@@ -180,6 +183,13 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				Default:     false,
 				Description: descriptions["s3_force_path_style"],
+			},
+
+			"lazy_init": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: descriptions["lazy_init"],
 			},
 		},
 
@@ -1298,6 +1308,8 @@ func init() {
 			"i.e., http://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
 			"use virtual hosted bucket addressing when possible\n" +
 			"(http://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
+
+		"lazy_init": "Set this to true to delay AWSClient initialization until necessary.",
 	}
 
 	endpointServiceNames = []string{
@@ -1471,6 +1483,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		Region:                  d.Get("region").(string),
 		CredsFilename:           d.Get("shared_credentials_file").(string),
 		DefaultTagsConfig:       expandProviderDefaultTags(d.Get("default_tags").([]interface{})),
+		LazyInit:                d.Get("lazy_init").(bool),
 		Endpoints:               make(map[string]string),
 		MaxRetries:              d.Get("max_retries").(int),
 		IgnoreTagsConfig:        expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
@@ -1698,4 +1711,76 @@ func ReverseDns(hostname string) string {
 	}
 
 	return strings.Join(parts, ".")
+}
+
+func ClientInitCrudBaseFunc(f func(d *schema.ResourceData, meta interface{}) error) func(d *schema.ResourceData, meta interface{}) error {
+	return func(d *schema.ResourceData, meta interface{}) error {
+		if meta != nil {
+			err := meta.(*AWSClient).Init()
+			if err != nil {
+				return err
+			}
+		}
+		return f(d, meta)
+	}
+}
+
+func ClientInitCrudContextFunc(f func(c context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics) func(c context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return func(c context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+		if meta != nil {
+			err := meta.(*AWSClient).Init()
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+		return f(c, d, meta)
+	}
+}
+
+func ClientInitExistsFunc(f func(d *schema.ResourceData, meta interface{}) (bool, error)) func(d *schema.ResourceData, meta interface{}) (bool, error) {
+	return func(d *schema.ResourceData, meta interface{}) (bool, error) {
+		if meta != nil {
+			err := meta.(*AWSClient).Init()
+			if err != nil {
+				return false, err
+			}
+		}
+		return f(d, meta)
+	}
+}
+
+func ClientInitMigrateStateFunc(f func(v int, s *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error)) func(v int, s *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
+	return func(v int, s *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
+		if meta != nil {
+			err := meta.(*AWSClient).Init()
+			if err != nil {
+				return nil, err
+			}
+		}
+		return f(v, s, meta)
+	}
+}
+
+func ClientInitCustomizeDiffFunc(f func(c context.Context, d *schema.ResourceDiff, meta interface{}) error) func(c context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	return func(c context.Context, d *schema.ResourceDiff, meta interface{}) error {
+		if meta != nil {
+			err := meta.(*AWSClient).Init()
+			if err != nil {
+				return err
+			}
+		}
+		return f(c, d, meta)
+	}
+}
+
+func ClientInitStateUpgraderFunc(f func(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error)) func(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	return func(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+		if meta != nil {
+			err := meta.(*AWSClient).Init()
+			if err != nil {
+				return nil, err
+			}
+		}
+		return f(ctx, rawState, meta)
+	}
 }

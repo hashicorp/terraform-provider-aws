@@ -12,9 +12,9 @@ import (
 
 func resourceAwsVpcEndpointServiceAllowedPrincipal() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcEndpointServiceAllowedPrincipalCreate,
-		Read:   resourceAwsVpcEndpointServiceAllowedPrincipalRead,
-		Delete: resourceAwsVpcEndpointServiceAllowedPrincipalDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsVpcEndpointServiceAllowedPrincipalCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsVpcEndpointServiceAllowedPrincipalRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsVpcEndpointServiceAllowedPrincipalDelete),
 
 		Schema: map[string]*schema.Schema{
 			"vpc_endpoint_service_id": {

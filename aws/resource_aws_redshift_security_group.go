@@ -19,10 +19,10 @@ import (
 
 func resourceAwsRedshiftSecurityGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRedshiftSecurityGroupCreate,
-		Read:   resourceAwsRedshiftSecurityGroupRead,
-		Update: resourceAwsRedshiftSecurityGroupUpdate,
-		Delete: resourceAwsRedshiftSecurityGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRedshiftSecurityGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRedshiftSecurityGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRedshiftSecurityGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRedshiftSecurityGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

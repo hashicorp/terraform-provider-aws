@@ -16,10 +16,10 @@ import (
 
 func resourceAwsLambdaFunctionEventInvokeConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLambdaFunctionEventInvokeConfigCreate,
-		Read:   resourceAwsLambdaFunctionEventInvokeConfigRead,
-		Update: resourceAwsLambdaFunctionEventInvokeConfigUpdate,
-		Delete: resourceAwsLambdaFunctionEventInvokeConfigDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLambdaFunctionEventInvokeConfigCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLambdaFunctionEventInvokeConfigRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsLambdaFunctionEventInvokeConfigUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLambdaFunctionEventInvokeConfigDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

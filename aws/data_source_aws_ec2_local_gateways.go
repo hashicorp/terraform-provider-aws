@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsEc2LocalGateways() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2LocalGatewaysRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEc2LocalGatewaysRead),
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),
 

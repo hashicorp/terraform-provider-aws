@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsEc2LocalGatewayRouteTable() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2LocalGatewayRouteTableRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEc2LocalGatewayRouteTableRead),
 
 		Schema: map[string]*schema.Schema{
 			"local_gateway_route_table_id": {

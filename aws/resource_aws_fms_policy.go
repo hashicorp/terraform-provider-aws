@@ -13,10 +13,10 @@ import (
 
 func resourceAwsFmsPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsFmsPolicyCreate,
-		Read:   resourceAwsFmsPolicyRead,
-		Update: resourceAwsFmsPolicyUpdate,
-		Delete: resourceAwsFmsPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsFmsPolicyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsFmsPolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsFmsPolicyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsFmsPolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -22,10 +22,10 @@ var snsPlatformRequiresPlatformPrincipal = map[string]bool{
 
 func resourceAwsSnsPlatformApplication() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSnsPlatformApplicationCreate,
-		Read:   resourceAwsSnsPlatformApplicationRead,
-		Update: resourceAwsSnsPlatformApplicationUpdate,
-		Delete: resourceAwsSnsPlatformApplicationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSnsPlatformApplicationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSnsPlatformApplicationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSnsPlatformApplicationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSnsPlatformApplicationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

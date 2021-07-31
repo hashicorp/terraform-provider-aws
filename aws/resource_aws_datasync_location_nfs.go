@@ -15,10 +15,10 @@ import (
 
 func resourceAwsDataSyncLocationNfs() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDataSyncLocationNfsCreate,
-		Read:   resourceAwsDataSyncLocationNfsRead,
-		Update: resourceAwsDataSyncLocationNfsUpdate,
-		Delete: resourceAwsDataSyncLocationNfsDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDataSyncLocationNfsCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDataSyncLocationNfsRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDataSyncLocationNfsUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDataSyncLocationNfsDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -92,7 +92,7 @@ func resourceAwsDataSyncLocationNfs() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

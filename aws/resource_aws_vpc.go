@@ -24,10 +24,10 @@ import (
 func resourceAwsVpc() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsVpcCreate,
-		Read:   resourceAwsVpcRead,
-		Update: resourceAwsVpcUpdate,
-		Delete: resourceAwsVpcDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsVpcCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsVpcRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsVpcUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsVpcDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsVpcInstanceImport,
 		},
@@ -38,7 +38,7 @@ func resourceAwsVpc() *schema.Resource {
 		),
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsVpcMigrateState,
+		MigrateState:  ClientInitMigrateStateFunc(resourceAwsVpcMigrateState),
 
 		Schema: map[string]*schema.Schema{
 			"cidr_block": {

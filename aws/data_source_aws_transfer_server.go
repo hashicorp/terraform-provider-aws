@@ -74,7 +74,7 @@ func dataSourceAwsTransferServer() *schema.Resource {
 			},
 		},
 
-		Read: dataSourceAwsTransferServerRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsTransferServerRead),
 	}
 }
 

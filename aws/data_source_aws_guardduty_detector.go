@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsGuarddutyDetector() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsGuarddutyDetectorRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsGuarddutyDetectorRead),
 
 		Schema: map[string]*schema.Schema{
 			"id": {

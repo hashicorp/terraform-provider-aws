@@ -16,10 +16,10 @@ import (
 
 func resourceAwsCloudWatchLogGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchLogGroupCreate,
-		Read:   resourceAwsCloudWatchLogGroupRead,
-		Update: resourceAwsCloudWatchLogGroupUpdate,
-		Delete: resourceAwsCloudWatchLogGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudWatchLogGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudWatchLogGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudWatchLogGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudWatchLogGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -61,7 +61,7 @@ func resourceAwsCloudWatchLogGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

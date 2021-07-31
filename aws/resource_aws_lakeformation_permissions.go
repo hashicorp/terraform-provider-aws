@@ -20,9 +20,9 @@ import (
 
 func resourceAwsLakeFormationPermissions() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLakeFormationPermissionsCreate,
-		Read:   resourceAwsLakeFormationPermissionsRead,
-		Delete: resourceAwsLakeFormationPermissionsDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLakeFormationPermissionsCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLakeFormationPermissionsRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLakeFormationPermissionsDelete),
 
 		Schema: map[string]*schema.Schema{
 			"catalog_id": {

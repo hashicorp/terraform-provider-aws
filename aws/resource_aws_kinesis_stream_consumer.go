@@ -15,9 +15,9 @@ import (
 
 func resourceAwsKinesisStreamConsumer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsKinesisStreamConsumerCreate,
-		Read:   resourceAwsKinesisStreamConsumerRead,
-		Delete: resourceAwsKinesisStreamConsumerDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsKinesisStreamConsumerCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsKinesisStreamConsumerRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsKinesisStreamConsumerDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

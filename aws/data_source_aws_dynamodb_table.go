@@ -14,7 +14,7 @@ import (
 
 func dataSourceAwsDynamoDbTable() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDynamoDbTableRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsDynamoDbTableRead),
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

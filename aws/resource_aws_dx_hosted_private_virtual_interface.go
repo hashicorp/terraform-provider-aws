@@ -15,9 +15,9 @@ import (
 
 func resourceAwsDxHostedPrivateVirtualInterface() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxHostedPrivateVirtualInterfaceCreate,
-		Read:   resourceAwsDxHostedPrivateVirtualInterfaceRead,
-		Delete: resourceAwsDxHostedPrivateVirtualInterfaceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDxHostedPrivateVirtualInterfaceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDxHostedPrivateVirtualInterfaceRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDxHostedPrivateVirtualInterfaceDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDxHostedPrivateVirtualInterfaceImport,
 		},

@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsSfnStateMachine() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSfnStateMachineRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsSfnStateMachineRead),
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

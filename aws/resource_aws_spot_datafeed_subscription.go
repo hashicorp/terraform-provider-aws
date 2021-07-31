@@ -12,9 +12,9 @@ import (
 
 func resourceAwsSpotDataFeedSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSpotDataFeedSubscriptionCreate,
-		Read:   resourceAwsSpotDataFeedSubscriptionRead,
-		Delete: resourceAwsSpotDataFeedSubscriptionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSpotDataFeedSubscriptionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSpotDataFeedSubscriptionRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSpotDataFeedSubscriptionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

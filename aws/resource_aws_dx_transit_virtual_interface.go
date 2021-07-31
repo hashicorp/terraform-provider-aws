@@ -16,10 +16,10 @@ import (
 
 func resourceAwsDxTransitVirtualInterface() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxTransitVirtualInterfaceCreate,
-		Read:   resourceAwsDxTransitVirtualInterfaceRead,
-		Update: resourceAwsDxTransitVirtualInterfaceUpdate,
-		Delete: resourceAwsDxTransitVirtualInterfaceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDxTransitVirtualInterfaceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDxTransitVirtualInterfaceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDxTransitVirtualInterfaceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDxTransitVirtualInterfaceDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDxTransitVirtualInterfaceImport,
 		},
@@ -110,7 +110,7 @@ func resourceAwsDxTransitVirtualInterface() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

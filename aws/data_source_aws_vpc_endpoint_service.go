@@ -16,7 +16,7 @@ import (
 
 func dataSourceAwsVpcEndpointService() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsVpcEndpointServiceRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsVpcEndpointServiceRead),
 
 		Schema: map[string]*schema.Schema{
 			"acceptance_required": {

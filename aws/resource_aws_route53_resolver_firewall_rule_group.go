@@ -14,10 +14,10 @@ import (
 
 func resourceAwsRoute53ResolverFirewallRuleGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ResolverFirewallRuleGroupCreate,
-		Read:   resourceAwsRoute53ResolverFirewallRuleGroupRead,
-		Update: resourceAwsRoute53ResolverFirewallRuleGroupUpdate,
-		Delete: resourceAwsRoute53ResolverFirewallRuleGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverFirewallRuleGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRoute53ResolverFirewallRuleGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverFirewallRuleGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverFirewallRuleGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -54,7 +54,7 @@ func resourceAwsRoute53ResolverFirewallRuleGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

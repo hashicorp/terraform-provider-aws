@@ -17,10 +17,10 @@ import (
 
 func resourceAwsServiceCatalogPortfolio() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogPortfolioCreate,
-		Read:   resourceAwsServiceCatalogPortfolioRead,
-		Update: resourceAwsServiceCatalogPortfolioUpdate,
-		Delete: resourceAwsServiceCatalogPortfolioDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsServiceCatalogPortfolioCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsServiceCatalogPortfolioRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsServiceCatalogPortfolioUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsServiceCatalogPortfolioDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -61,7 +61,7 @@ func resourceAwsServiceCatalogPortfolio() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 func resourceAwsServiceCatalogPortfolioCreate(d *schema.ResourceData, meta interface{}) error {

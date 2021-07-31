@@ -15,7 +15,7 @@ import (
 
 func dataSourceAwsLakeFormationPermissions() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLakeFormationPermissionsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsLakeFormationPermissionsRead),
 
 		Schema: map[string]*schema.Schema{
 			"catalog_id": {

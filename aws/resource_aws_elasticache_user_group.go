@@ -20,14 +20,14 @@ import (
 
 func resourceAwsElasticacheUserGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticacheUserGroupCreate,
-		Read:   resourceAwsElasticacheUserGroupRead,
-		Update: resourceAwsElasticacheUserGroupUpdate,
-		Delete: resourceAwsElasticacheUserGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsElasticacheUserGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsElasticacheUserGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsElasticacheUserGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsElasticacheUserGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

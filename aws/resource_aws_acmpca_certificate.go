@@ -22,9 +22,9 @@ import (
 
 func resourceAwsAcmpcaCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAcmpcaCertificateCreate,
-		Read:   resourceAwsAcmpcaCertificateRead,
-		Delete: resourceAwsAcmpcaCertificateRevoke,
+		Create: ClientInitCrudBaseFunc(resourceAwsAcmpcaCertificateCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAcmpcaCertificateRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAcmpcaCertificateRevoke),
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

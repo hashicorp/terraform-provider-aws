@@ -17,10 +17,10 @@ import (
 
 func resourceAwsSecretsManagerSecretVersion() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecretsManagerSecretVersionCreate,
-		Read:   resourceAwsSecretsManagerSecretVersionRead,
-		Update: resourceAwsSecretsManagerSecretVersionUpdate,
-		Delete: resourceAwsSecretsManagerSecretVersionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSecretsManagerSecretVersionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSecretsManagerSecretVersionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSecretsManagerSecretVersionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSecretsManagerSecretVersionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

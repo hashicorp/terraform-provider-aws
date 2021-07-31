@@ -19,7 +19,7 @@ import (
 
 func dataSourceAwsAmi() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAmiRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsAmiRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

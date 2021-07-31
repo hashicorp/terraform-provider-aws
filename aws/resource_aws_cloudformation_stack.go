@@ -17,10 +17,10 @@ import (
 
 func resourceAwsCloudFormationStack() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudFormationStackCreate,
-		Read:   resourceAwsCloudFormationStackRead,
-		Update: resourceAwsCloudFormationStackUpdate,
-		Delete: resourceAwsCloudFormationStackDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudFormationStackCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudFormationStackRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudFormationStackUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudFormationStackDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -116,7 +116,7 @@ func resourceAwsCloudFormationStack() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

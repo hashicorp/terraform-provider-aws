@@ -13,9 +13,9 @@ import (
 
 func resourceAwsStorageGatewayWorkingStorage() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsStorageGatewayWorkingStorageCreate,
-		Read:   resourceAwsStorageGatewayWorkingStorageRead,
-		Delete: schema.Noop,
+		Create: ClientInitCrudBaseFunc(resourceAwsStorageGatewayWorkingStorageCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsStorageGatewayWorkingStorageRead),
+		Delete: ClientInitCrudBaseFunc(schema.Noop),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

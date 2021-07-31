@@ -26,10 +26,10 @@ const (
 
 func resourceAwsRDSCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRDSClusterCreate,
-		Read:   resourceAwsRDSClusterRead,
-		Update: resourceAwsRDSClusterUpdate,
-		Delete: resourceAwsRDSClusterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRDSClusterCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRDSClusterRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRDSClusterUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRDSClusterDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsRdsClusterImport,
 		},
@@ -465,7 +465,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

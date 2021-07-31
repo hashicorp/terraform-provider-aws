@@ -12,9 +12,9 @@ import (
 
 func resourceAwsSecurityHubProductSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecurityHubProductSubscriptionCreate,
-		Read:   resourceAwsSecurityHubProductSubscriptionRead,
-		Delete: resourceAwsSecurityHubProductSubscriptionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSecurityHubProductSubscriptionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSecurityHubProductSubscriptionRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSecurityHubProductSubscriptionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

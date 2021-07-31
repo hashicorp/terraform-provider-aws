@@ -14,10 +14,10 @@ import (
 
 func resourceAwsAppsyncDatasource() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppsyncDatasourceCreate,
-		Read:   resourceAwsAppsyncDatasourceRead,
-		Update: resourceAwsAppsyncDatasourceUpdate,
-		Delete: resourceAwsAppsyncDatasourceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAppsyncDatasourceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAppsyncDatasourceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAppsyncDatasourceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAppsyncDatasourceDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

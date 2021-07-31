@@ -14,10 +14,10 @@ import (
 
 func resourceAwsCognitoUserGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCognitoUserGroupCreate,
-		Read:   resourceAwsCognitoUserGroupRead,
-		Update: resourceAwsCognitoUserGroupUpdate,
-		Delete: resourceAwsCognitoUserGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCognitoUserGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCognitoUserGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCognitoUserGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCognitoUserGroupDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsCognitoUserGroupImport,

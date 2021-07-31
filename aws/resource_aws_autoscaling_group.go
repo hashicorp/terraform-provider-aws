@@ -36,10 +36,10 @@ const (
 
 func resourceAwsAutoscalingGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAutoscalingGroupCreate,
-		Read:   resourceAwsAutoscalingGroupRead,
-		Update: resourceAwsAutoscalingGroupUpdate,
-		Delete: resourceAwsAutoscalingGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAutoscalingGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAutoscalingGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAutoscalingGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAutoscalingGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

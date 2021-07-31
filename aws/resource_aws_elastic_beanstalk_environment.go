@@ -45,18 +45,18 @@ func resourceAwsElasticBeanstalkOptionSetting() *schema.Resource {
 func resourceAwsElasticBeanstalkEnvironment() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsElasticBeanstalkEnvironmentCreate,
-		Read:   resourceAwsElasticBeanstalkEnvironmentRead,
-		Update: resourceAwsElasticBeanstalkEnvironmentUpdate,
-		Delete: resourceAwsElasticBeanstalkEnvironmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsElasticBeanstalkEnvironmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsElasticBeanstalkEnvironmentRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsElasticBeanstalkEnvironmentUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsElasticBeanstalkEnvironmentDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsElasticBeanstalkEnvironmentMigrateState,
+		MigrateState:  ClientInitMigrateStateFunc(resourceAwsElasticBeanstalkEnvironmentMigrateState),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

@@ -12,10 +12,10 @@ import (
 
 func resourceAwsCodeArtifactRepositoryPermissionsPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeArtifactRepositoryPermissionsPolicyPut,
-		Update: resourceAwsCodeArtifactRepositoryPermissionsPolicyPut,
-		Read:   resourceAwsCodeArtifactRepositoryPermissionsPolicyRead,
-		Delete: resourceAwsCodeArtifactRepositoryPermissionsPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCodeArtifactRepositoryPermissionsPolicyPut),
+		Update: ClientInitCrudBaseFunc(resourceAwsCodeArtifactRepositoryPermissionsPolicyPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCodeArtifactRepositoryPermissionsPolicyRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCodeArtifactRepositoryPermissionsPolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

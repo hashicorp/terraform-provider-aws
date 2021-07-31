@@ -19,9 +19,9 @@ import (
 
 func resourceAwsLaunchConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLaunchConfigurationCreate,
-		Read:   resourceAwsLaunchConfigurationRead,
-		Delete: resourceAwsLaunchConfigurationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLaunchConfigurationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLaunchConfigurationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLaunchConfigurationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

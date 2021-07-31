@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsRdsOrderableDbInstance() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRdsOrderableDbInstanceRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsRdsOrderableDbInstanceRead),
 		Schema: map[string]*schema.Schema{
 			"availability_zone_group": {
 				Type:     schema.TypeString,

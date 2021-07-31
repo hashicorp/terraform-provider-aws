@@ -11,10 +11,10 @@ import (
 
 func resourceAwsVpcEndpointConnectionNotification() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcEndpointConnectionNotificationCreate,
-		Read:   resourceAwsVpcEndpointConnectionNotificationRead,
-		Update: resourceAwsVpcEndpointConnectionNotificationUpdate,
-		Delete: resourceAwsVpcEndpointConnectionNotificationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsVpcEndpointConnectionNotificationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsVpcEndpointConnectionNotificationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsVpcEndpointConnectionNotificationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsVpcEndpointConnectionNotificationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

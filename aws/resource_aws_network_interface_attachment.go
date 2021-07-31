@@ -14,9 +14,9 @@ import (
 
 func resourceAwsNetworkInterfaceAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNetworkInterfaceAttachmentCreate,
-		Read:   resourceAwsNetworkInterfaceAttachmentRead,
-		Delete: resourceAwsNetworkInterfaceAttachmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsNetworkInterfaceAttachmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsNetworkInterfaceAttachmentRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsNetworkInterfaceAttachmentDelete),
 
 		Schema: map[string]*schema.Schema{
 			"device_index": {

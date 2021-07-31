@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsPricingProduct() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsPricingProductRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsPricingProductRead),
 		Schema: map[string]*schema.Schema{
 			"service_code": {
 				Type:     schema.TypeString,

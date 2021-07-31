@@ -16,10 +16,10 @@ import (
 
 func resourceAwsMqConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMqConfigurationCreate,
-		Read:   resourceAwsMqConfigurationRead,
-		Update: resourceAwsMqConfigurationUpdate,
-		Delete: resourceAwsMqConfigurationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsMqConfigurationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsMqConfigurationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsMqConfigurationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsMqConfigurationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

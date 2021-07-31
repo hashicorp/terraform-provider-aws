@@ -17,10 +17,10 @@ import (
 
 func resourceAwsCloudWatchCompositeAlarm() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsCloudWatchCompositeAlarmCreate,
-		ReadContext:   resourceAwsCloudWatchCompositeAlarmRead,
-		UpdateContext: resourceAwsCloudWatchCompositeAlarmUpdate,
-		DeleteContext: resourceAwsCloudWatchCompositeAlarmDelete,
+		CreateContext: ClientInitCrudContextFunc(resourceAwsCloudWatchCompositeAlarmCreate),
+		ReadContext:   ClientInitCrudContextFunc(resourceAwsCloudWatchCompositeAlarmRead),
+		UpdateContext: ClientInitCrudContextFunc(resourceAwsCloudWatchCompositeAlarmUpdate),
+		DeleteContext: ClientInitCrudContextFunc(resourceAwsCloudWatchCompositeAlarmDelete),
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -87,7 +87,7 @@ func resourceAwsCloudWatchCompositeAlarm() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

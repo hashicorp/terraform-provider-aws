@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsGlobalAcceleratorAccelerator() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsGlobalAcceleratorAcceleratorRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsGlobalAcceleratorAcceleratorRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

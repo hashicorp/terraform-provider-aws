@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsAvailabilityZone() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAvailabilityZoneRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsAvailabilityZoneRead),
 
 		Schema: map[string]*schema.Schema{
 			"all_availability_zones": {

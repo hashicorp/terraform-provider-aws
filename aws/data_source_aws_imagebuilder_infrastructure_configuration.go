@@ -11,7 +11,7 @@ import (
 
 func datasourceAwsImageBuilderInfrastructureConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Read: datasourceAwsImageBuilderInfrastructureConfigurationRead,
+		Read: ClientInitCrudBaseFunc(datasourceAwsImageBuilderInfrastructureConfigurationRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

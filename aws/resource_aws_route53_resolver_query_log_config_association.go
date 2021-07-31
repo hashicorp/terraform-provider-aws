@@ -13,9 +13,9 @@ import (
 
 func resourceAwsRoute53ResolverQueryLogConfigAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ResolverQueryLogConfigAssociationCreate,
-		Read:   resourceAwsRoute53ResolverQueryLogConfigAssociationRead,
-		Delete: resourceAwsRoute53ResolverQueryLogConfigAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverQueryLogConfigAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRoute53ResolverQueryLogConfigAssociationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverQueryLogConfigAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

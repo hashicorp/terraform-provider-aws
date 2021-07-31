@@ -14,10 +14,10 @@ import (
 
 func resourceAwsEc2AvailabilityZoneGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2AvailabilityZoneGroupCreate,
-		Read:   resourceAwsEc2AvailabilityZoneGroupRead,
-		Update: resourceAwsEc2AvailabilityZoneGroupUpdate,
-		Delete: schema.Noop,
+		Create: ClientInitCrudBaseFunc(resourceAwsEc2AvailabilityZoneGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEc2AvailabilityZoneGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEc2AvailabilityZoneGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(schema.Noop),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				d.Set("group_name", d.Id())

@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsEksClusterAuth() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEksClusterAuthRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEksClusterAuthRead),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

@@ -15,10 +15,10 @@ import (
 
 func resourceAwsDmsReplicationInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDmsReplicationInstanceCreate,
-		Read:   resourceAwsDmsReplicationInstanceRead,
-		Update: resourceAwsDmsReplicationInstanceUpdate,
-		Delete: resourceAwsDmsReplicationInstanceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDmsReplicationInstanceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDmsReplicationInstanceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDmsReplicationInstanceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDmsReplicationInstanceDelete),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -128,7 +128,7 @@ func resourceAwsDmsReplicationInstance() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

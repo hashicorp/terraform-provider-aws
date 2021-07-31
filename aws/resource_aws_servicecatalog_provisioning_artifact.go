@@ -19,10 +19,10 @@ import (
 
 func resourceAwsServiceCatalogProvisioningArtifact() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogProvisioningArtifactCreate,
-		Read:   resourceAwsServiceCatalogProvisioningArtifactRead,
-		Update: resourceAwsServiceCatalogProvisioningArtifactUpdate,
-		Delete: resourceAwsServiceCatalogProvisioningArtifactDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsServiceCatalogProvisioningArtifactCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsServiceCatalogProvisioningArtifactRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsServiceCatalogProvisioningArtifactUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsServiceCatalogProvisioningArtifactDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

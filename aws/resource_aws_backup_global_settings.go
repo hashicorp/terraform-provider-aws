@@ -10,10 +10,10 @@ import (
 
 func resourceAwsBackupGlobalSettings() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBackupGlobalSettingsUpdate,
-		Update: resourceAwsBackupGlobalSettingsUpdate,
-		Read:   resourceAwsBackupGlobalSettingsRead,
-		Delete: schema.Noop,
+		Create: ClientInitCrudBaseFunc(resourceAwsBackupGlobalSettingsUpdate),
+		Update: ClientInitCrudBaseFunc(resourceAwsBackupGlobalSettingsUpdate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsBackupGlobalSettingsRead),
+		Delete: ClientInitCrudBaseFunc(schema.Noop),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

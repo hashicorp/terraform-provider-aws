@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsEc2CoipPools() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2CoipPoolsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEc2CoipPoolsRead),
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),
 

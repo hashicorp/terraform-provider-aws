@@ -24,10 +24,10 @@ const awsMutexCanary = `aws_synthetics_canary`
 
 func resourceAwsSyntheticsCanary() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSyntheticsCanaryCreate,
-		Read:   resourceAwsSyntheticsCanaryRead,
-		Update: resourceAwsSyntheticsCanaryUpdate,
-		Delete: resourceAwsSyntheticsCanaryDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSyntheticsCanaryCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSyntheticsCanaryRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSyntheticsCanaryUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSyntheticsCanaryDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -218,7 +218,7 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

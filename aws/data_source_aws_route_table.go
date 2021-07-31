@@ -14,7 +14,7 @@ import (
 
 func dataSourceAwsRouteTable() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRouteTableRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsRouteTableRead),
 
 		Schema: map[string]*schema.Schema{
 			"subnet_id": {

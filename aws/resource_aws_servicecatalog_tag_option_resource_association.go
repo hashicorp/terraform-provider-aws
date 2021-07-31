@@ -18,9 +18,9 @@ import (
 
 func resourceAwsServiceCatalogTagOptionResourceAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogTagOptionResourceAssociationCreate,
-		Read:   resourceAwsServiceCatalogTagOptionResourceAssociationRead,
-		Delete: resourceAwsServiceCatalogTagOptionResourceAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsServiceCatalogTagOptionResourceAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsServiceCatalogTagOptionResourceAssociationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsServiceCatalogTagOptionResourceAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

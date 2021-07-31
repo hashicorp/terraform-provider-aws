@@ -18,10 +18,10 @@ import (
 
 func resourceAwsGuardDutyFilter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGuardDutyFilterCreate,
-		Read:   resourceAwsGuardDutyFilterRead,
-		Update: resourceAwsGuardDutyFilterUpdate,
-		Delete: resourceAwsGuardDutyFilterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGuardDutyFilterCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGuardDutyFilterRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGuardDutyFilterUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGuardDutyFilterDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -117,7 +117,7 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

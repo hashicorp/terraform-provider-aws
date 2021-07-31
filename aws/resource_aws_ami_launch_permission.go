@@ -13,9 +13,9 @@ import (
 
 func resourceAwsAmiLaunchPermission() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAmiLaunchPermissionCreate,
-		Read:   resourceAwsAmiLaunchPermissionRead,
-		Delete: resourceAwsAmiLaunchPermissionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAmiLaunchPermissionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAmiLaunchPermissionRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAmiLaunchPermissionDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")

@@ -20,9 +20,9 @@ func resourceAwsKmsGrant() *schema.Resource {
 	return &schema.Resource{
 		// There is no API for updating/modifying grants, hence no Update
 		// Instead changes to most fields will force a new resource
-		Create: resourceAwsKmsGrantCreate,
-		Read:   resourceAwsKmsGrantRead,
-		Delete: resourceAwsKmsGrantDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsKmsGrantCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsKmsGrantRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsKmsGrantDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				keyId, grantId, err := decodeKmsGrantId(d.Id())

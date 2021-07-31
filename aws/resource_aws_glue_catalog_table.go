@@ -16,10 +16,10 @@ import (
 
 func resourceAwsGlueCatalogTable() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueCatalogTableCreate,
-		Read:   resourceAwsGlueCatalogTableRead,
-		Update: resourceAwsGlueCatalogTableUpdate,
-		Delete: resourceAwsGlueCatalogTableDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGlueCatalogTableCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGlueCatalogTableRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGlueCatalogTableUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGlueCatalogTableDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

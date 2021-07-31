@@ -15,10 +15,10 @@ import (
 
 func resourceAwsCloudWatchEventBusPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchEventBusPolicyCreate,
-		Read:   resourceAwsCloudWatchEventBusPolicyRead,
-		Update: resourceAwsCloudWatchEventBusPolicyUpdate,
-		Delete: resourceAwsCloudWatchEventBusPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventBusPolicyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudWatchEventBusPolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventBusPolicyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventBusPolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("event_bus_name", d.Id())

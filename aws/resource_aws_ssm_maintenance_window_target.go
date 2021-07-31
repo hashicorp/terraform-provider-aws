@@ -14,10 +14,10 @@ import (
 
 func resourceAwsSsmMaintenanceWindowTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsmMaintenanceWindowTargetCreate,
-		Read:   resourceAwsSsmMaintenanceWindowTargetRead,
-		Update: resourceAwsSsmMaintenanceWindowTargetUpdate,
-		Delete: resourceAwsSsmMaintenanceWindowTargetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSsmMaintenanceWindowTargetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSsmMaintenanceWindowTargetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSsmMaintenanceWindowTargetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSsmMaintenanceWindowTargetDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")

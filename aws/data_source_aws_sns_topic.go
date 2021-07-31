@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsSnsTopic() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSnsTopicsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsSnsTopicsRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

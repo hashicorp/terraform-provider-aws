@@ -18,10 +18,10 @@ import (
 
 func resourceAwsS3BucketInventory() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3BucketInventoryPut,
-		Read:   resourceAwsS3BucketInventoryRead,
-		Update: resourceAwsS3BucketInventoryPut,
-		Delete: resourceAwsS3BucketInventoryDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsS3BucketInventoryPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsS3BucketInventoryRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsS3BucketInventoryPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsS3BucketInventoryDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

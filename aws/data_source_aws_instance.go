@@ -17,7 +17,7 @@ import (
 
 func dataSourceAwsInstance() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsInstanceRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsInstanceRead),
 
 		Schema: map[string]*schema.Schema{
 			"filter":        dataSourceFiltersSchema(),

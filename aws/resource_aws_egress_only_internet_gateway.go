@@ -14,15 +14,15 @@ import (
 
 func resourceAwsEgressOnlyInternetGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEgressOnlyInternetGatewayCreate,
-		Read:   resourceAwsEgressOnlyInternetGatewayRead,
-		Update: resourceAwsEgressOnlyInternetGatewayUpdate,
-		Delete: resourceAwsEgressOnlyInternetGatewayDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEgressOnlyInternetGatewayCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEgressOnlyInternetGatewayRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEgressOnlyInternetGatewayUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEgressOnlyInternetGatewayDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {

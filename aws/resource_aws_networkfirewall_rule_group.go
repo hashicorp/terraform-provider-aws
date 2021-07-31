@@ -21,10 +21,10 @@ import (
 
 func resourceAwsNetworkFirewallRuleGroup() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsNetworkFirewallRuleGroupCreate,
-		ReadContext:   resourceAwsNetworkFirewallRuleGroupRead,
-		UpdateContext: resourceAwsNetworkFirewallRuleGroupUpdate,
-		DeleteContext: resourceAwsNetworkFirewallRuleGroupDelete,
+		CreateContext: ClientInitCrudContextFunc(resourceAwsNetworkFirewallRuleGroupCreate),
+		ReadContext:   ClientInitCrudContextFunc(resourceAwsNetworkFirewallRuleGroupRead),
+		UpdateContext: ClientInitCrudContextFunc(resourceAwsNetworkFirewallRuleGroupUpdate),
+		DeleteContext: ClientInitCrudContextFunc(resourceAwsNetworkFirewallRuleGroupDelete),
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -395,7 +395,7 @@ func resourceAwsNetworkFirewallRuleGroup() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

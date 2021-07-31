@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsEc2CoipPool() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2CoipPoolRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEc2CoipPoolRead),
 
 		Schema: map[string]*schema.Schema{
 			"local_gateway_route_table_id": {

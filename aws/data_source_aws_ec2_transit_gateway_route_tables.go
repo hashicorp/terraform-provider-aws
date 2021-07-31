@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsEc2TransitGatewayRouteTables() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2TransitGatewayRouteTablesRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEc2TransitGatewayRouteTablesRead),
 
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),

@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsEbsVolumes() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEbsVolumesRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEbsVolumesRead),
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),
 

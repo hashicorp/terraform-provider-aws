@@ -17,10 +17,10 @@ import (
 
 func resourceAwsAmplifyDomainAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAmplifyDomainAssociationCreate,
-		Read:   resourceAwsAmplifyDomainAssociationRead,
-		Update: resourceAwsAmplifyDomainAssociationUpdate,
-		Delete: resourceAwsAmplifyDomainAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAmplifyDomainAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAmplifyDomainAssociationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAmplifyDomainAssociationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAmplifyDomainAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

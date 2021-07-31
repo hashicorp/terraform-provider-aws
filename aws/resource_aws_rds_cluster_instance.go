@@ -16,10 +16,10 @@ import (
 
 func resourceAwsRDSClusterInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRDSClusterInstanceCreate,
-		Read:   resourceAwsRDSClusterInstanceRead,
-		Update: resourceAwsRDSClusterInstanceUpdate,
-		Delete: resourceAwsRDSClusterInstanceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRDSClusterInstanceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRDSClusterInstanceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRDSClusterInstanceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRDSClusterInstanceDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -221,7 +221,7 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

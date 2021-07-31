@@ -10,9 +10,9 @@ import (
 
 func resourceAwsEbsDefaultKmsKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEbsDefaultKmsKeyCreate,
-		Read:   resourceAwsEbsDefaultKmsKeyRead,
-		Delete: resourceAwsEbsDefaultKmsKeyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEbsDefaultKmsKeyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEbsDefaultKmsKeyRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEbsDefaultKmsKeyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

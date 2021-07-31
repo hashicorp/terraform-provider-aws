@@ -13,9 +13,9 @@ import (
 
 func resourceAwsCodeDeployDeploymentConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeDeployDeploymentConfigCreate,
-		Read:   resourceAwsCodeDeployDeploymentConfigRead,
-		Delete: resourceAwsCodeDeployDeploymentConfigDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCodeDeployDeploymentConfigCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCodeDeployDeploymentConfigRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCodeDeployDeploymentConfigDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsQLDBLedger() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsQLDBLedgerRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsQLDBLedgerRead),
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

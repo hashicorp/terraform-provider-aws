@@ -19,14 +19,14 @@ import (
 
 func resourceAwsElasticacheUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticacheUserCreate,
-		Read:   resourceAwsElasticacheUserRead,
-		Update: resourceAwsElasticacheUserUpdate,
-		Delete: resourceAwsElasticacheUserDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsElasticacheUserCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsElasticacheUserRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsElasticacheUserUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsElasticacheUserDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"access_string": {

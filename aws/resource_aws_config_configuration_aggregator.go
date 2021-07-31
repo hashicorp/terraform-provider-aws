@@ -15,10 +15,10 @@ import (
 
 func resourceAwsConfigConfigurationAggregator() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsConfigConfigurationAggregatorPut,
-		Read:   resourceAwsConfigConfigurationAggregatorRead,
-		Update: resourceAwsConfigConfigurationAggregatorPut,
-		Delete: resourceAwsConfigConfigurationAggregatorDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsConfigConfigurationAggregatorPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsConfigConfigurationAggregatorRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsConfigConfigurationAggregatorPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsConfigConfigurationAggregatorDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

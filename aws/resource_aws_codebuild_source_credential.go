@@ -12,9 +12,9 @@ import (
 
 func resourceAwsCodeBuildSourceCredential() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeBuildSourceCredentialCreate,
-		Read:   resourceAwsCodeBuildSourceCredentialRead,
-		Delete: resourceAwsCodeBuildSourceCredentialDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCodeBuildSourceCredentialCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCodeBuildSourceCredentialRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCodeBuildSourceCredentialDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

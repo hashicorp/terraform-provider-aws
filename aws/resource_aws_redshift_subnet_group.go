@@ -15,10 +15,10 @@ import (
 
 func resourceAwsRedshiftSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRedshiftSubnetGroupCreate,
-		Read:   resourceAwsRedshiftSubnetGroupRead,
-		Update: resourceAwsRedshiftSubnetGroupUpdate,
-		Delete: resourceAwsRedshiftSubnetGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRedshiftSubnetGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRedshiftSubnetGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRedshiftSubnetGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRedshiftSubnetGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -57,7 +57,7 @@ func resourceAwsRedshiftSubnetGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

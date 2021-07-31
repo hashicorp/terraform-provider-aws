@@ -21,10 +21,10 @@ import (
 
 func resourceAwsSnsTopic() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSnsTopicCreate,
-		Read:   resourceAwsSnsTopicRead,
-		Update: resourceAwsSnsTopicUpdate,
-		Delete: resourceAwsSnsTopicDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSnsTopicCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSnsTopicRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSnsTopicUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSnsTopicDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

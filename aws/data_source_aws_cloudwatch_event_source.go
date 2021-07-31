@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsCloudWatchEventSource() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudWatchEventSourceRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsCloudWatchEventSourceRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

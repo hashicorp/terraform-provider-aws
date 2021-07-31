@@ -22,9 +22,9 @@ import (
 
 func resourceAwsIamUserLoginProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamUserLoginProfileCreate,
-		Read:   resourceAwsIamUserLoginProfileRead,
-		Delete: resourceAwsIamUserLoginProfileDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIamUserLoginProfileCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIamUserLoginProfileRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIamUserLoginProfileDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("encrypted_password", "")

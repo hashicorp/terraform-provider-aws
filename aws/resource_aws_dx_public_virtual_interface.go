@@ -18,10 +18,10 @@ import (
 
 func resourceAwsDxPublicVirtualInterface() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxPublicVirtualInterfaceCreate,
-		Read:   resourceAwsDxPublicVirtualInterfaceRead,
-		Update: resourceAwsDxPublicVirtualInterfaceUpdate,
-		Delete: resourceAwsDxPublicVirtualInterfaceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDxPublicVirtualInterfaceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDxPublicVirtualInterfaceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDxPublicVirtualInterfaceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDxPublicVirtualInterfaceDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDxPublicVirtualInterfaceImport,
 		},

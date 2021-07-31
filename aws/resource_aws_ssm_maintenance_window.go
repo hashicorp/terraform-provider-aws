@@ -13,10 +13,10 @@ import (
 
 func resourceAwsSsmMaintenanceWindow() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsmMaintenanceWindowCreate,
-		Read:   resourceAwsSsmMaintenanceWindowRead,
-		Update: resourceAwsSsmMaintenanceWindowUpdate,
-		Delete: resourceAwsSsmMaintenanceWindowDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSsmMaintenanceWindowCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSsmMaintenanceWindowRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSsmMaintenanceWindowUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSsmMaintenanceWindowDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -83,7 +83,7 @@ func resourceAwsSsmMaintenanceWindow() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

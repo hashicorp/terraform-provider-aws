@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsNeptuneOrderableDbInstance() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsNeptuneOrderableDbInstanceRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsNeptuneOrderableDbInstanceRead),
 		Schema: map[string]*schema.Schema{
 			"availability_zones": {
 				Type:     schema.TypeList,

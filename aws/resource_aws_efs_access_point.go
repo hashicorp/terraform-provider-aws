@@ -14,16 +14,16 @@ import (
 
 func resourceAwsEfsAccessPoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEfsAccessPointCreate,
-		Read:   resourceAwsEfsAccessPointRead,
-		Update: resourceAwsEfsAccessPointUpdate,
-		Delete: resourceAwsEfsAccessPointDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEfsAccessPointCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEfsAccessPointRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEfsAccessPointUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEfsAccessPointDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"file_system_arn": {

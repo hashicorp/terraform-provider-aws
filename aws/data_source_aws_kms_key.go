@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsKmsKey() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsKmsKeyRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsKmsKeyRead),
 		Schema: map[string]*schema.Schema{
 			"key_id": {
 				Type:         schema.TypeString,

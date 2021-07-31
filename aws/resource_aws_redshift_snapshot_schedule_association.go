@@ -15,9 +15,9 @@ import (
 func resourceAwsRedshiftSnapshotScheduleAssociation() *schema.Resource {
 
 	return &schema.Resource{
-		Create: resourceAwsRedshiftSnapshotScheduleAssociationCreate,
-		Read:   resourceAwsRedshiftSnapshotScheduleAssociationRead,
-		Delete: resourceAwsRedshiftSnapshotScheduleAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRedshiftSnapshotScheduleAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRedshiftSnapshotScheduleAssociationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRedshiftSnapshotScheduleAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				clusterIdentifier, scheduleIdentifier, err := resourceAwsRedshiftSnapshotScheduleAssociationParseId(d.Id())

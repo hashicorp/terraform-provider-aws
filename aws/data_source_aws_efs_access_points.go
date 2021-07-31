@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsEfsAccessPoints() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEfsAccessPointsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEfsAccessPointsRead),
 
 		Schema: map[string]*schema.Schema{
 			"arns": {

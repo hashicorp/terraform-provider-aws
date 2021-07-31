@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsEksCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEksClusterRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEksClusterRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

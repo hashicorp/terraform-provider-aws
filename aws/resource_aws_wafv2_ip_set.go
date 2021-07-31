@@ -17,10 +17,10 @@ import (
 
 func resourceAwsWafv2IPSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafv2IPSetCreate,
-		Read:   resourceAwsWafv2IPSetRead,
-		Update: resourceAwsWafv2IPSetUpdate,
-		Delete: resourceAwsWafv2IPSetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafv2IPSetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafv2IPSetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWafv2IPSetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafv2IPSetDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -106,7 +106,7 @@ func resourceAwsWafv2IPSet() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -17,10 +17,10 @@ import (
 
 func resourceAwsIamServiceLinkedRole() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamServiceLinkedRoleCreate,
-		Read:   resourceAwsIamServiceLinkedRoleRead,
-		Update: resourceAwsIamServiceLinkedRoleUpdate,
-		Delete: resourceAwsIamServiceLinkedRoleDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIamServiceLinkedRoleCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIamServiceLinkedRoleRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIamServiceLinkedRoleUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIamServiceLinkedRoleDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

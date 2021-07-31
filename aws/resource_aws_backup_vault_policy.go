@@ -16,10 +16,10 @@ import (
 
 func resourceAwsBackupVaultPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBackupVaultPolicyPut,
-		Update: resourceAwsBackupVaultPolicyPut,
-		Read:   resourceAwsBackupVaultPolicyRead,
-		Delete: resourceAwsBackupVaultPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsBackupVaultPolicyPut),
+		Update: ClientInitCrudBaseFunc(resourceAwsBackupVaultPolicyPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsBackupVaultPolicyRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsBackupVaultPolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

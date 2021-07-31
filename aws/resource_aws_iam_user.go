@@ -18,10 +18,10 @@ import (
 
 func resourceAwsIamUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamUserCreate,
-		Read:   resourceAwsIamUserRead,
-		Update: resourceAwsIamUserUpdate,
-		Delete: resourceAwsIamUserDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIamUserCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIamUserRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIamUserUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIamUserDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -71,7 +71,7 @@ func resourceAwsIamUser() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

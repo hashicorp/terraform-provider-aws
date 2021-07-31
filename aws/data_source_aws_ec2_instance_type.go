@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsEc2InstanceType() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2InstanceTypeRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEc2InstanceTypeRead),
 
 		Schema: map[string]*schema.Schema{
 			"auto_recovery_supported": {

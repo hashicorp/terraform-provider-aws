@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsInternetGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsInternetGatewayRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsInternetGatewayRead),
 		Schema: map[string]*schema.Schema{
 			"internet_gateway_id": {
 				Type:     schema.TypeString,

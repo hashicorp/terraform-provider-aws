@@ -14,10 +14,10 @@ import (
 
 func resourceAwsWorkspacesIpGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWorkspacesIpGroupCreate,
-		Read:   resourceAwsWorkspacesIpGroupRead,
-		Update: resourceAwsWorkspacesIpGroupUpdate,
-		Delete: resourceAwsWorkspacesIpGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWorkspacesIpGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWorkspacesIpGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWorkspacesIpGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWorkspacesIpGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -54,7 +54,7 @@ func resourceAwsWorkspacesIpGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

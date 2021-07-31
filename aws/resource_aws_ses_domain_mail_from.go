@@ -11,10 +11,10 @@ import (
 
 func resourceAwsSesDomainMailFrom() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesDomainMailFromSet,
-		Read:   resourceAwsSesDomainMailFromRead,
-		Update: resourceAwsSesDomainMailFromSet,
-		Delete: resourceAwsSesDomainMailFromDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSesDomainMailFromSet),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSesDomainMailFromRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSesDomainMailFromSet),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSesDomainMailFromDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

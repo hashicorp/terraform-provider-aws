@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsCodeStarConnectionsConnection() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCodeStarConnectionsConnectionRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsCodeStarConnectionsConnectionRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

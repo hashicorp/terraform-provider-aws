@@ -13,10 +13,10 @@ import (
 
 func resourceAWSInspectorAssessmentTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsInspectorAssessmentTargetCreate,
-		Read:   resourceAwsInspectorAssessmentTargetRead,
-		Update: resourceAwsInspectorAssessmentTargetUpdate,
-		Delete: resourceAwsInspectorAssessmentTargetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsInspectorAssessmentTargetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsInspectorAssessmentTargetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsInspectorAssessmentTargetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsInspectorAssessmentTargetDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -12,10 +12,10 @@ import (
 
 func resourceAwsEfsFileSystemPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEfsFileSystemPolicyPut,
-		Read:   resourceAwsEfsFileSystemPolicyRead,
-		Update: resourceAwsEfsFileSystemPolicyPut,
-		Delete: resourceAwsEfsFileSystemPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEfsFileSystemPolicyPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEfsFileSystemPolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEfsFileSystemPolicyPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEfsFileSystemPolicyDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

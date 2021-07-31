@@ -12,10 +12,10 @@ import (
 
 func resourceAwsWafByteMatchSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafByteMatchSetCreate,
-		Read:   resourceAwsWafByteMatchSetRead,
-		Update: resourceAwsWafByteMatchSetUpdate,
-		Delete: resourceAwsWafByteMatchSetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafByteMatchSetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafByteMatchSetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWafByteMatchSetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafByteMatchSetDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

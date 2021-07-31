@@ -17,10 +17,10 @@ import (
 
 func resourceAwsAppconfigConfigurationProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppconfigConfigurationProfileCreate,
-		Read:   resourceAwsAppconfigConfigurationProfileRead,
-		Update: resourceAwsAppconfigConfigurationProfileUpdate,
-		Delete: resourceAwsAppconfigConfigurationProfileDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAppconfigConfigurationProfileCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAppconfigConfigurationProfileRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAppconfigConfigurationProfileUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAppconfigConfigurationProfileDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -88,7 +88,7 @@ func resourceAwsAppconfigConfigurationProfile() *schema.Resource {
 				},
 			},
 		},
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -18,10 +18,10 @@ const rdsDbClusterSnapshotCreateTimeout = 2 * time.Minute
 
 func resourceAwsDbClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbClusterSnapshotCreate,
-		Read:   resourceAwsDbClusterSnapshotRead,
-		Delete: resourceAwsDbClusterSnapshotDelete,
-		Update: resourceAwsdbClusterSnapshotUpdate,
+		Create: ClientInitCrudBaseFunc(resourceAwsDbClusterSnapshotCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDbClusterSnapshotRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDbClusterSnapshotDelete),
+		Update: ClientInitCrudBaseFunc(resourceAwsdbClusterSnapshotUpdate),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -106,7 +106,7 @@ func resourceAwsDbClusterSnapshot() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

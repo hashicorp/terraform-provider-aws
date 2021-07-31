@@ -11,9 +11,9 @@ import (
 
 func resourceAwsIotPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIotPolicyAttachmentCreate,
-		Read:   resourceAwsIotPolicyAttachmentRead,
-		Delete: resourceAwsIotPolicyAttachmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIotPolicyAttachmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIotPolicyAttachmentRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIotPolicyAttachmentDelete),
 		Schema: map[string]*schema.Schema{
 			"policy": {
 				Type:     schema.TypeString,

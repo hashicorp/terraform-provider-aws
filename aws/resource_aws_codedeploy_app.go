@@ -15,10 +15,10 @@ import (
 
 func resourceAwsCodeDeployApp() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeDeployAppCreate,
-		Read:   resourceAwsCodeDeployAppRead,
-		Update: resourceAwsCodeDeployUpdate,
-		Delete: resourceAwsCodeDeployAppDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCodeDeployAppCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCodeDeployAppRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCodeDeployUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCodeDeployAppDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ":")
@@ -86,7 +86,7 @@ func resourceAwsCodeDeployApp() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

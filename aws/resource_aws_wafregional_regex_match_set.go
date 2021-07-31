@@ -15,10 +15,10 @@ import (
 
 func resourceAwsWafRegionalRegexMatchSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegionalRegexMatchSetCreate,
-		Read:   resourceAwsWafRegionalRegexMatchSetRead,
-		Update: resourceAwsWafRegionalRegexMatchSetUpdate,
-		Delete: resourceAwsWafRegionalRegexMatchSetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafRegionalRegexMatchSetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafRegionalRegexMatchSetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWafRegionalRegexMatchSetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafRegionalRegexMatchSetDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -13,10 +13,10 @@ import (
 
 func resourceAwsEc2ClientVpnNetworkAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2ClientVpnNetworkAssociationCreate,
-		Read:   resourceAwsEc2ClientVpnNetworkAssociationRead,
-		Update: resourceAwsEc2ClientVpnNetworkAssociationUpdate,
-		Delete: resourceAwsEc2ClientVpnNetworkAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEc2ClientVpnNetworkAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEc2ClientVpnNetworkAssociationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEc2ClientVpnNetworkAssociationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEc2ClientVpnNetworkAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsEc2ClientVpnNetworkAssociationImport,
 		},

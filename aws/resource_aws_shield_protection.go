@@ -12,10 +12,10 @@ import (
 
 func resourceAwsShieldProtection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsShieldProtectionCreate,
-		Update: resourceAwsShieldProtectionUpdate,
-		Read:   resourceAwsShieldProtectionRead,
-		Delete: resourceAwsShieldProtectionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsShieldProtectionCreate),
+		Update: ClientInitCrudBaseFunc(resourceAwsShieldProtectionUpdate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsShieldProtectionRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsShieldProtectionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -39,7 +39,7 @@ func resourceAwsShieldProtection() *schema.Resource {
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 		},
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

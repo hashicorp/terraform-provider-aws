@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsSecretsManagerSecretRotation() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSecretsManagerSecretRotationRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsSecretsManagerSecretRotationRead),
 
 		Schema: map[string]*schema.Schema{
 			"secret_id": {

@@ -15,10 +15,10 @@ import (
 
 func resourceAwsElasticSearchDomainSAMLOptions() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticSearchDomainSAMLOptionsPut,
-		Read:   resourceAwsElasticSearchDomainSAMLOptionsRead,
-		Update: resourceAwsElasticSearchDomainSAMLOptionsPut,
-		Delete: resourceAwsElasticSearchDomainSAMLOptionsDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsElasticSearchDomainSAMLOptionsPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsElasticSearchDomainSAMLOptionsRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsElasticSearchDomainSAMLOptionsPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsElasticSearchDomainSAMLOptionsDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("domain_name", d.Id())

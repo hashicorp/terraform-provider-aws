@@ -13,10 +13,10 @@ import (
 
 func resourceAwsS3BucketOwnershipControls() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3BucketOwnershipControlsCreate,
-		Read:   resourceAwsS3BucketOwnershipControlsRead,
-		Update: resourceAwsS3BucketOwnershipControlsUpdate,
-		Delete: resourceAwsS3BucketOwnershipControlsDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsS3BucketOwnershipControlsCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsS3BucketOwnershipControlsRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsS3BucketOwnershipControlsUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsS3BucketOwnershipControlsDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

@@ -17,15 +17,15 @@ import (
 
 func resourceAwsEc2CarrierGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2CarrierGatewayCreate,
-		Read:   resourceAwsEc2CarrierGatewayRead,
-		Update: resourceAwsEc2CarrierGatewayUpdate,
-		Delete: resourceAwsEc2CarrierGatewayDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEc2CarrierGatewayCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEc2CarrierGatewayRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEc2CarrierGatewayUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEc2CarrierGatewayDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

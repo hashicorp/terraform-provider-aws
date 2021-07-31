@@ -12,10 +12,10 @@ import (
 
 func resourceAwsSsoAdminPermissionSetInlinePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsoAdminPermissionSetInlinePolicyPut,
-		Read:   resourceAwsSsoAdminPermissionSetInlinePolicyRead,
-		Update: resourceAwsSsoAdminPermissionSetInlinePolicyPut,
-		Delete: resourceAwsSsoAdminPermissionSetInlinePolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSsoAdminPermissionSetInlinePolicyPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSsoAdminPermissionSetInlinePolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSsoAdminPermissionSetInlinePolicyPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSsoAdminPermissionSetInlinePolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

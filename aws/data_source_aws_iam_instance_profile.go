@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsIAMInstanceProfile() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIAMInstanceProfileRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsIAMInstanceProfileRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

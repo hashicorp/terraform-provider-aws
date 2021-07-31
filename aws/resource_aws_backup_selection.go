@@ -19,9 +19,9 @@ import (
 
 func resourceAwsBackupSelection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBackupSelectionCreate,
-		Read:   resourceAwsBackupSelectionRead,
-		Delete: resourceAwsBackupSelectionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsBackupSelectionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsBackupSelectionRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsBackupSelectionDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsBackupSelectionImportState,
 		},

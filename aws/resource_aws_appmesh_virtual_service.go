@@ -19,10 +19,10 @@ import (
 
 func resourceAwsAppmeshVirtualService() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppmeshVirtualServiceCreate,
-		Read:   resourceAwsAppmeshVirtualServiceRead,
-		Update: resourceAwsAppmeshVirtualServiceUpdate,
-		Delete: resourceAwsAppmeshVirtualServiceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAppmeshVirtualServiceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAppmeshVirtualServiceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAppmeshVirtualServiceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAppmeshVirtualServiceDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAppmeshVirtualServiceImport,
 		},
@@ -129,7 +129,7 @@ func resourceAwsAppmeshVirtualService() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

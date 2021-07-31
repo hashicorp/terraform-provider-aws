@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsElasticacheReplicationGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsElasticacheReplicationGroupRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsElasticacheReplicationGroupRead),
 		Schema: map[string]*schema.Schema{
 			"replication_group_id": {
 				Type:         schema.TypeString,

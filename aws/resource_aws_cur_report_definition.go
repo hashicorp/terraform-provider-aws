@@ -15,10 +15,10 @@ import (
 
 func resourceAwsCurReportDefinition() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCurReportDefinitionCreate,
-		Read:   resourceAwsCurReportDefinitionRead,
-		Update: resourceAwsCurReportDefinitionUpdate,
-		Delete: resourceAwsCurReportDefinitionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCurReportDefinitionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCurReportDefinitionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCurReportDefinitionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCurReportDefinitionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

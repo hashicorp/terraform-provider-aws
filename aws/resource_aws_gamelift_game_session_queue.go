@@ -13,10 +13,10 @@ import (
 
 func resourceAwsGameliftGameSessionQueue() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGameliftGameSessionQueueCreate,
-		Read:   resourceAwsGameliftGameSessionQueueRead,
-		Update: resourceAwsGameliftGameSessionQueueUpdate,
-		Delete: resourceAwsGameliftGameSessionQueueDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGameliftGameSessionQueueCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGameliftGameSessionQueueRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGameliftGameSessionQueueUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGameliftGameSessionQueueDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -65,7 +65,7 @@ func resourceAwsGameliftGameSessionQueue() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsEc2TransitGatewayDxGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2TransitGatewayDxGatewayAttachmentRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEc2TransitGatewayDxGatewayAttachmentRead),
 
 		Schema: map[string]*schema.Schema{
 			"dx_gateway_id": {

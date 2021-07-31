@@ -15,10 +15,10 @@ import (
 
 func resourceAwsGuardDutyDetector() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGuardDutyDetectorCreate,
-		Read:   resourceAwsGuardDutyDetectorRead,
-		Update: resourceAwsGuardDutyDetectorUpdate,
-		Delete: resourceAwsGuardDutyDetectorDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGuardDutyDetectorCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGuardDutyDetectorRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGuardDutyDetectorUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGuardDutyDetectorDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -78,7 +78,7 @@ func resourceAwsGuardDutyDetector() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

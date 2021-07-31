@@ -15,10 +15,10 @@ import (
 
 func resourceAwsAthenaWorkgroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAthenaWorkgroupCreate,
-		Read:   resourceAwsAthenaWorkgroupRead,
-		Update: resourceAwsAthenaWorkgroupUpdate,
-		Delete: resourceAwsAthenaWorkgroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAthenaWorkgroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAthenaWorkgroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAthenaWorkgroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAthenaWorkgroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -124,7 +124,7 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

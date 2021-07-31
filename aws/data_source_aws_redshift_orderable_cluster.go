@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsRedshiftOrderableCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRedshiftOrderableClusterRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsRedshiftOrderableClusterRead),
 		Schema: map[string]*schema.Schema{
 			"availability_zones": {
 				Type:     schema.TypeList,

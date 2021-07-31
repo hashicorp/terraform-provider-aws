@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsNatGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsNatGatewayRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsNatGatewayRead),
 
 		Schema: map[string]*schema.Schema{
 			"id": {

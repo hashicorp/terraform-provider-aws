@@ -15,10 +15,10 @@ import (
 
 func resourceAwsStorageGatewayStoredIscsiVolume() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsStorageGatewayStoredIscsiVolumeCreate,
-		Read:   resourceAwsStorageGatewayStoredIscsiVolumeRead,
-		Update: resourceAwsStorageGatewayStoredIscsiVolumeUpdate,
-		Delete: resourceAwsStorageGatewayStoredIscsiVolumeDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsStorageGatewayStoredIscsiVolumeCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsStorageGatewayStoredIscsiVolumeRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsStorageGatewayStoredIscsiVolumeUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsStorageGatewayStoredIscsiVolumeDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -112,7 +112,7 @@ func resourceAwsStorageGatewayStoredIscsiVolume() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

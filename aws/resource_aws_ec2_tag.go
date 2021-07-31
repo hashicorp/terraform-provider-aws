@@ -11,10 +11,10 @@ import (
 
 func resourceAwsEc2Tag() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TagCreate,
-		Read:   resourceAwsEc2TagRead,
-		Update: resourceAwsEc2TagUpdate,
-		Delete: resourceAwsEc2TagDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEc2TagCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEc2TagRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEc2TagUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEc2TagDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

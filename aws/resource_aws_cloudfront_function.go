@@ -15,10 +15,10 @@ import (
 
 func resourceAwsCloudFrontFunction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudFrontFunctionCreate,
-		Read:   resourceAwsCloudFrontFunctionRead,
-		Update: resourceAwsCloudFrontFunctionUpdate,
-		Delete: resourceAwsCloudFrontFunctionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudFrontFunctionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudFrontFunctionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudFrontFunctionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudFrontFunctionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsElasticSearchDomain() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsElasticSearchDomainRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsElasticSearchDomainRead),
 
 		Schema: map[string]*schema.Schema{
 			"access_policies": {

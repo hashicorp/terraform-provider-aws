@@ -13,10 +13,10 @@ import (
 
 func resourceAwsApiGatewayDeployment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayDeploymentCreate,
-		Read:   resourceAwsApiGatewayDeploymentRead,
-		Update: resourceAwsApiGatewayDeploymentUpdate,
-		Delete: resourceAwsApiGatewayDeploymentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsApiGatewayDeploymentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsApiGatewayDeploymentRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsApiGatewayDeploymentUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsApiGatewayDeploymentDelete),
 
 		Schema: map[string]*schema.Schema{
 			"rest_api_id": {

@@ -12,10 +12,10 @@ import (
 
 func resourceAwsMskConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMskConfigurationCreate,
-		Read:   resourceAwsMskConfigurationRead,
-		Update: resourceAwsMskConfigurationUpdate,
-		Delete: resourceAwsMskConfigurationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsMskConfigurationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsMskConfigurationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsMskConfigurationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsMskConfigurationDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

@@ -21,15 +21,15 @@ import (
 
 func resourceAwsEksFargateProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEksFargateProfileCreate,
-		Read:   resourceAwsEksFargateProfileRead,
-		Update: resourceAwsEksFargateProfileUpdate,
-		Delete: resourceAwsEksFargateProfileDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEksFargateProfileCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEksFargateProfileRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEksFargateProfileUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEksFargateProfileDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),

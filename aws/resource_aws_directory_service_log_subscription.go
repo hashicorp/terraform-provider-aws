@@ -11,9 +11,9 @@ import (
 
 func resourceAwsDirectoryServiceLogSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDirectoryServiceLogSubscriptionCreate,
-		Read:   resourceAwsDirectoryServiceLogSubscriptionRead,
-		Delete: resourceAwsDirectoryServiceLogSubscriptionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDirectoryServiceLogSubscriptionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDirectoryServiceLogSubscriptionRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDirectoryServiceLogSubscriptionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

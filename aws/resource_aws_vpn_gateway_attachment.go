@@ -14,9 +14,9 @@ import (
 
 func resourceAwsVpnGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpnGatewayAttachmentCreate,
-		Read:   resourceAwsVpnGatewayAttachmentRead,
-		Delete: resourceAwsVpnGatewayAttachmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsVpnGatewayAttachmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsVpnGatewayAttachmentRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsVpnGatewayAttachmentDelete),
 
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {

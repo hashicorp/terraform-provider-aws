@@ -14,10 +14,10 @@ import (
 
 func resourceAwsGuardDutyMember() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGuardDutyMemberCreate,
-		Read:   resourceAwsGuardDutyMemberRead,
-		Update: resourceAwsGuardDutyMemberUpdate,
-		Delete: resourceAwsGuardDutyMemberDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGuardDutyMemberCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGuardDutyMemberRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGuardDutyMemberUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGuardDutyMemberDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

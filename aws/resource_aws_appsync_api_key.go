@@ -15,10 +15,10 @@ import (
 func resourceAwsAppsyncApiKey() *schema.Resource {
 
 	return &schema.Resource{
-		Create: resourceAwsAppsyncApiKeyCreate,
-		Read:   resourceAwsAppsyncApiKeyRead,
-		Update: resourceAwsAppsyncApiKeyUpdate,
-		Delete: resourceAwsAppsyncApiKeyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAppsyncApiKeyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAppsyncApiKeyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAppsyncApiKeyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAppsyncApiKeyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

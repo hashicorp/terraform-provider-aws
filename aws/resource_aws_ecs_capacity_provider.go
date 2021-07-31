@@ -19,15 +19,15 @@ import (
 
 func resourceAwsEcsCapacityProvider() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEcsCapacityProviderCreate,
-		Read:   resourceAwsEcsCapacityProviderRead,
-		Update: resourceAwsEcsCapacityProviderUpdate,
-		Delete: resourceAwsEcsCapacityProviderDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEcsCapacityProviderCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEcsCapacityProviderRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEcsCapacityProviderUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEcsCapacityProviderDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsEcsCapacityProviderImport,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

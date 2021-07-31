@@ -14,15 +14,15 @@ import (
 
 func resourceAwsGlueJob() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueJobCreate,
-		Read:   resourceAwsGlueJobRead,
-		Update: resourceAwsGlueJobUpdate,
-		Delete: resourceAwsGlueJobDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGlueJobCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGlueJobRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGlueJobUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGlueJobDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

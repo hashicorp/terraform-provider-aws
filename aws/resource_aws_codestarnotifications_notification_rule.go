@@ -22,10 +22,10 @@ const (
 
 func resourceAwsCodeStarNotificationsNotificationRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeStarNotificationsNotificationRuleCreate,
-		Read:   resourceAwsCodeStarNotificationsNotificationRuleRead,
-		Update: resourceAwsCodeStarNotificationsNotificationRuleUpdate,
-		Delete: resourceAwsCodeStarNotificationsNotificationRuleDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCodeStarNotificationsNotificationRuleCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCodeStarNotificationsNotificationRuleRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCodeStarNotificationsNotificationRuleUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCodeStarNotificationsNotificationRuleDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -107,7 +107,7 @@ func resourceAwsCodeStarNotificationsNotificationRule() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

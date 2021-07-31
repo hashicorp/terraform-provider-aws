@@ -15,10 +15,10 @@ import (
 
 func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsmMaintenanceWindowTaskCreate,
-		Read:   resourceAwsSsmMaintenanceWindowTaskRead,
-		Update: resourceAwsSsmMaintenanceWindowTaskUpdate,
-		Delete: resourceAwsSsmMaintenanceWindowTaskDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSsmMaintenanceWindowTaskCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSsmMaintenanceWindowTaskRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSsmMaintenanceWindowTaskUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSsmMaintenanceWindowTaskDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsSsmMaintenanceWindowTaskImport,
 		},

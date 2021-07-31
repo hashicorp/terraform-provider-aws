@@ -17,10 +17,10 @@ import (
 
 func resourceAwsAppautoscalingPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppautoscalingPolicyCreate,
-		Read:   resourceAwsAppautoscalingPolicyRead,
-		Update: resourceAwsAppautoscalingPolicyUpdate,
-		Delete: resourceAwsAppautoscalingPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAppautoscalingPolicyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAppautoscalingPolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAppautoscalingPolicyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAppautoscalingPolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAppautoscalingPolicyImport,
 		},

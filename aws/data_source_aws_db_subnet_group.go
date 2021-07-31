@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsDbSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDbSubnetGroupRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsDbSubnetGroupRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsStorageGatewayLocalDisk() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsStorageGatewayLocalDiskRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsStorageGatewayLocalDiskRead),
 
 		Schema: map[string]*schema.Schema{
 			"disk_id": {

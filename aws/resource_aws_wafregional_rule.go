@@ -15,10 +15,10 @@ import (
 
 func resourceAwsWafRegionalRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegionalRuleCreate,
-		Read:   resourceAwsWafRegionalRuleRead,
-		Update: resourceAwsWafRegionalRuleUpdate,
-		Delete: resourceAwsWafRegionalRuleDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafRegionalRuleCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafRegionalRuleRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWafRegionalRuleUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafRegionalRuleDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -64,7 +64,7 @@ func resourceAwsWafRegionalRule() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

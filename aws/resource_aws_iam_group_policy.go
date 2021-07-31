@@ -18,11 +18,11 @@ import (
 func resourceAwsIamGroupPolicy() *schema.Resource {
 	return &schema.Resource{
 		// PutGroupPolicy API is idempotent, so these can be the same.
-		Create: resourceAwsIamGroupPolicyPut,
-		Update: resourceAwsIamGroupPolicyPut,
+		Create: ClientInitCrudBaseFunc(resourceAwsIamGroupPolicyPut),
+		Update: ClientInitCrudBaseFunc(resourceAwsIamGroupPolicyPut),
 
-		Read:   resourceAwsIamGroupPolicyRead,
-		Delete: resourceAwsIamGroupPolicyDelete,
+		Read:   ClientInitCrudBaseFunc(resourceAwsIamGroupPolicyRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIamGroupPolicyDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

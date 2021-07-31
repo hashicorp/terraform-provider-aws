@@ -16,10 +16,10 @@ import (
 
 func resourceAwsDmsCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDmsCertificateCreate,
-		Read:   resourceAwsDmsCertificateRead,
-		Update: resourceAwsDmsCertificateUpdate,
-		Delete: resourceAwsDmsCertificateDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDmsCertificateCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDmsCertificateRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDmsCertificateUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDmsCertificateDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -57,7 +57,7 @@ func resourceAwsDmsCertificate() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsEc2TransitGatewayVpnAttachment() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2TransitGatewayVpnAttachmentRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEc2TransitGatewayVpnAttachmentRead),
 
 		Schema: map[string]*schema.Schema{
 			"tags": tagsSchemaComputed(),

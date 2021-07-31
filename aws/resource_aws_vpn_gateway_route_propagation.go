@@ -13,9 +13,9 @@ import (
 
 func resourceAwsVpnGatewayRoutePropagation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpnGatewayRoutePropagationEnable,
-		Read:   resourceAwsVpnGatewayRoutePropagationRead,
-		Delete: resourceAwsVpnGatewayRoutePropagationDisable,
+		Create: ClientInitCrudBaseFunc(resourceAwsVpnGatewayRoutePropagationEnable),
+		Read:   ClientInitCrudBaseFunc(resourceAwsVpnGatewayRoutePropagationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsVpnGatewayRoutePropagationDisable),
 
 		Schema: map[string]*schema.Schema{
 			"vpn_gateway_id": {

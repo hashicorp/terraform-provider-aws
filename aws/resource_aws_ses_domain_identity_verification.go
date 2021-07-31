@@ -16,9 +16,9 @@ import (
 
 func resourceAwsSesDomainIdentityVerification() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesDomainIdentityVerificationCreate,
-		Read:   resourceAwsSesDomainIdentityVerificationRead,
-		Delete: resourceAwsSesDomainIdentityVerificationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSesDomainIdentityVerificationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSesDomainIdentityVerificationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSesDomainIdentityVerificationDelete),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

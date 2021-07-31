@@ -16,10 +16,10 @@ import (
 
 func resourceAwsQLDBLedger() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsQLDBLedgerCreate,
-		Read:   resourceAwsQLDBLedgerRead,
-		Update: resourceAwsQLDBLedgerUpdate,
-		Delete: resourceAwsQLDBLedgerDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsQLDBLedgerCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsQLDBLedgerRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsQLDBLedgerUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsQLDBLedgerDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -58,7 +58,7 @@ func resourceAwsQLDBLedger() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

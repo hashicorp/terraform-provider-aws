@@ -15,7 +15,7 @@ import (
 
 func dataSourceAwsServiceCatalogPortfolio() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsServiceCatalogPortfolioRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsServiceCatalogPortfolioRead),
 
 		Schema: map[string]*schema.Schema{
 			"accept_language": {

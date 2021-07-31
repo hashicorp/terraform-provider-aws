@@ -15,10 +15,10 @@ import (
 
 func resourceAwsS3AccountPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3AccountPublicAccessBlockCreate,
-		Read:   resourceAwsS3AccountPublicAccessBlockRead,
-		Update: resourceAwsS3AccountPublicAccessBlockUpdate,
-		Delete: resourceAwsS3AccountPublicAccessBlockDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsS3AccountPublicAccessBlockCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsS3AccountPublicAccessBlockRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsS3AccountPublicAccessBlockUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsS3AccountPublicAccessBlockDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

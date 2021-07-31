@@ -22,10 +22,10 @@ const (
 
 func resourceAwsSsmDocument() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsmDocumentCreate,
-		Read:   resourceAwsSsmDocumentRead,
-		Update: resourceAwsSsmDocumentUpdate,
-		Delete: resourceAwsSsmDocumentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSsmDocumentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSsmDocumentRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSsmDocumentUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSsmDocumentDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -183,7 +183,7 @@ func resourceAwsSsmDocument() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

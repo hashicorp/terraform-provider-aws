@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsSsmParameter() *schema.Resource {
 	return &schema.Resource{
-		Read: dataAwsSsmParameterRead,
+		Read: ClientInitCrudBaseFunc(dataAwsSsmParameterRead),
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

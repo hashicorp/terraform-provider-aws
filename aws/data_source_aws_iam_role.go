@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsIAMRole() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIAMRoleRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsIAMRoleRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

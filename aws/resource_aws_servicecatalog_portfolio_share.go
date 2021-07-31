@@ -20,10 +20,10 @@ import (
 
 func resourceAwsServiceCatalogPortfolioShare() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogPortfolioShareCreate,
-		Read:   resourceAwsServiceCatalogPortfolioShareRead,
-		Update: resourceAwsServiceCatalogPortfolioShareUpdate,
-		Delete: resourceAwsServiceCatalogPortfolioShareDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsServiceCatalogPortfolioShareCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsServiceCatalogPortfolioShareRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsServiceCatalogPortfolioShareUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsServiceCatalogPortfolioShareDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

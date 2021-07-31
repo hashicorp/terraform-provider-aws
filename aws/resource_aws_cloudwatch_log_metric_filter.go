@@ -16,10 +16,10 @@ import (
 
 func resourceAwsCloudWatchLogMetricFilter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchLogMetricFilterUpdate,
-		Read:   resourceAwsCloudWatchLogMetricFilterRead,
-		Update: resourceAwsCloudWatchLogMetricFilterUpdate,
-		Delete: resourceAwsCloudWatchLogMetricFilterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudWatchLogMetricFilterUpdate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudWatchLogMetricFilterRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudWatchLogMetricFilterUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudWatchLogMetricFilterDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsCloudWatchLogMetricFilterImport,
 		},

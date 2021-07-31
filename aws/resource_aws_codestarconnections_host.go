@@ -14,10 +14,10 @@ import (
 
 func resourceAwsCodeStarConnectionsHost() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeStarConnectionsHostCreate,
-		Read:   resourceAwsCodeStarConnectionsHostRead,
-		Update: resourceAwsCodeStarConnectionsHostUpdate,
-		Delete: resourceAwsCodeStarConnectionsHostDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCodeStarConnectionsHostCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCodeStarConnectionsHostRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCodeStarConnectionsHostUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCodeStarConnectionsHostDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

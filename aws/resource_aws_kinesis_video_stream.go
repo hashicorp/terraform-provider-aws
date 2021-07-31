@@ -16,15 +16,15 @@ import (
 
 func resourceAwsKinesisVideoStream() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsKinesisVideoStreamCreate,
-		Read:   resourceAwsKinesisVideoStreamRead,
-		Update: resourceAwsKinesisVideoStreamUpdate,
-		Delete: resourceAwsKinesisVideoStreamDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsKinesisVideoStreamCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsKinesisVideoStreamRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsKinesisVideoStreamUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsKinesisVideoStreamDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),

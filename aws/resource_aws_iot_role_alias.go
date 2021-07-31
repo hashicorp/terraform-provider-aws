@@ -12,10 +12,10 @@ import (
 
 func resourceAwsIotRoleAlias() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIotRoleAliasCreate,
-		Read:   resourceAwsIotRoleAliasRead,
-		Update: resourceAwsIotRoleAliasUpdate,
-		Delete: resourceAwsIotRoleAliasDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIotRoleAliasCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIotRoleAliasRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIotRoleAliasUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIotRoleAliasDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

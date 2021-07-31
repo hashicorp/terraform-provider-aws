@@ -15,10 +15,10 @@ import (
 
 func resourceAwsRedshiftSnapshotSchedule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRedshiftSnapshotScheduleCreate,
-		Read:   resourceAwsRedshiftSnapshotScheduleRead,
-		Update: resourceAwsRedshiftSnapshotScheduleUpdate,
-		Delete: resourceAwsRedshiftSnapshotScheduleDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRedshiftSnapshotScheduleCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRedshiftSnapshotScheduleRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRedshiftSnapshotScheduleUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRedshiftSnapshotScheduleDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -61,7 +61,7 @@ func resourceAwsRedshiftSnapshotSchedule() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 
 }

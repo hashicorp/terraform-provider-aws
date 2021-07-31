@@ -18,10 +18,10 @@ import (
 
 func resourceAwsDbOptionGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbOptionGroupCreate,
-		Read:   resourceAwsDbOptionGroupRead,
-		Update: resourceAwsDbOptionGroupUpdate,
-		Delete: resourceAwsDbOptionGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDbOptionGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDbOptionGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDbOptionGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDbOptionGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -122,7 +122,7 @@ func resourceAwsDbOptionGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

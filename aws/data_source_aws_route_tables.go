@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsRouteTables() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRouteTablesRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsRouteTablesRead),
 		Schema: map[string]*schema.Schema{
 
 			"filter": ec2CustomFiltersSchema(),

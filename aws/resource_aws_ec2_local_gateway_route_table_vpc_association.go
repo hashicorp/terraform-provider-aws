@@ -18,15 +18,15 @@ const (
 
 func resourceAwsEc2LocalGatewayRouteTableVpcAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2LocalGatewayRouteTableVpcAssociationCreate,
-		Read:   resourceAwsEc2LocalGatewayRouteTableVpcAssociationRead,
-		Update: resourceAwsEc2LocalGatewayRouteTableVpcAssociationUpdate,
-		Delete: resourceAwsEc2LocalGatewayRouteTableVpcAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEc2LocalGatewayRouteTableVpcAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEc2LocalGatewayRouteTableVpcAssociationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEc2LocalGatewayRouteTableVpcAssociationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEc2LocalGatewayRouteTableVpcAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"local_gateway_id": {

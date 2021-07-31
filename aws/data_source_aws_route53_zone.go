@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsRoute53Zone() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRoute53ZoneRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsRoute53ZoneRead),
 
 		Schema: map[string]*schema.Schema{
 			"zone_id": {

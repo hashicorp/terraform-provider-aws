@@ -15,10 +15,10 @@ import (
 
 func resourceAwsAutoscalingLifecycleHook() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAutoscalingLifecycleHookPut,
-		Read:   resourceAwsAutoscalingLifecycleHookRead,
-		Update: resourceAwsAutoscalingLifecycleHookPut,
-		Delete: resourceAwsAutoscalingLifecycleHookDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAutoscalingLifecycleHookPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAutoscalingLifecycleHookRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAutoscalingLifecycleHookPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAutoscalingLifecycleHookDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAutoscalingLifecycleHookImport,

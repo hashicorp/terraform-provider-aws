@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsRoute53ResolverEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRoute53ResolverEndpointRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsRoute53ResolverEndpointRead),
 
 		Schema: map[string]*schema.Schema{
 			"filter": {

@@ -11,9 +11,9 @@ import (
 
 func resourceAwsCodeCommitTrigger() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeCommitTriggerCreate,
-		Read:   resourceAwsCodeCommitTriggerRead,
-		Delete: resourceAwsCodeCommitTriggerDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCodeCommitTriggerCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCodeCommitTriggerRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCodeCommitTriggerDelete),
 
 		Schema: map[string]*schema.Schema{
 			"repository_name": {

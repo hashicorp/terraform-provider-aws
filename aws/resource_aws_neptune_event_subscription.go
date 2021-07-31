@@ -14,10 +14,10 @@ import (
 
 func resourceAwsNeptuneEventSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNeptuneEventSubscriptionCreate,
-		Read:   resourceAwsNeptuneEventSubscriptionRead,
-		Update: resourceAwsNeptuneEventSubscriptionUpdate,
-		Delete: resourceAwsNeptuneEventSubscriptionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsNeptuneEventSubscriptionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsNeptuneEventSubscriptionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsNeptuneEventSubscriptionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsNeptuneEventSubscriptionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -82,7 +82,7 @@ func resourceAwsNeptuneEventSubscription() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

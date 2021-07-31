@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsElastiCacheCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsElastiCacheClusterRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsElastiCacheClusterRead),
 
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {

@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsElasticBeanstalkSolutionStack() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsElasticBeanstalkSolutionStackRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsElasticBeanstalkSolutionStackRead),
 
 		Schema: map[string]*schema.Schema{
 			"name_regex": {

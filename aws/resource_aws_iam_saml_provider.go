@@ -16,10 +16,10 @@ import (
 
 func resourceAwsIamSamlProvider() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamSamlProviderCreate,
-		Read:   resourceAwsIamSamlProviderRead,
-		Update: resourceAwsIamSamlProviderUpdate,
-		Delete: resourceAwsIamSamlProviderDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIamSamlProviderCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIamSamlProviderRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIamSamlProviderUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIamSamlProviderDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -49,7 +49,7 @@ func resourceAwsIamSamlProvider() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

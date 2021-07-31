@@ -12,10 +12,10 @@ import (
 
 func resourceAwsApiGatewayDocumentationPart() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayDocumentationPartCreate,
-		Read:   resourceAwsApiGatewayDocumentationPartRead,
-		Update: resourceAwsApiGatewayDocumentationPartUpdate,
-		Delete: resourceAwsApiGatewayDocumentationPartDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsApiGatewayDocumentationPartCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsApiGatewayDocumentationPartRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsApiGatewayDocumentationPartUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsApiGatewayDocumentationPartDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

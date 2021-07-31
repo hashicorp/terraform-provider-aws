@@ -16,9 +16,9 @@ import (
 
 func resourceAwsEcrLifecyclePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEcrLifecyclePolicyCreate,
-		Read:   resourceAwsEcrLifecyclePolicyRead,
-		Delete: resourceAwsEcrLifecyclePolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEcrLifecyclePolicyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEcrLifecyclePolicyRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEcrLifecyclePolicyDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

@@ -16,10 +16,10 @@ import (
 
 func resourceAwsCloudFormationStackSetInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudFormationStackSetInstanceCreate,
-		Read:   resourceAwsCloudFormationStackSetInstanceRead,
-		Update: resourceAwsCloudFormationStackSetInstanceUpdate,
-		Delete: resourceAwsCloudFormationStackSetInstanceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudFormationStackSetInstanceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudFormationStackSetInstanceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudFormationStackSetInstanceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudFormationStackSetInstanceDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

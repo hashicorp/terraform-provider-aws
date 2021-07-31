@@ -16,11 +16,11 @@ const defaultAuthorizerTTL = 300
 
 func resourceAwsApiGatewayAuthorizer() *schema.Resource {
 	return &schema.Resource{
-		Create:        resourceAwsApiGatewayAuthorizerCreate,
-		Read:          resourceAwsApiGatewayAuthorizerRead,
-		Update:        resourceAwsApiGatewayAuthorizerUpdate,
-		Delete:        resourceAwsApiGatewayAuthorizerDelete,
-		CustomizeDiff: resourceAwsApiGatewayAuthorizerCustomizeDiff,
+		Create:        ClientInitCrudBaseFunc(resourceAwsApiGatewayAuthorizerCreate),
+		Read:          ClientInitCrudBaseFunc(resourceAwsApiGatewayAuthorizerRead),
+		Update:        ClientInitCrudBaseFunc(resourceAwsApiGatewayAuthorizerUpdate),
+		Delete:        ClientInitCrudBaseFunc(resourceAwsApiGatewayAuthorizerDelete),
+		CustomizeDiff: ClientInitCustomizeDiffFunc(resourceAwsApiGatewayAuthorizerCustomizeDiff),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")

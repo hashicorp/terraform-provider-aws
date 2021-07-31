@@ -17,9 +17,9 @@ import (
 
 func resourceAwsServiceCatalogBudgetResourceAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogBudgetResourceAssociationCreate,
-		Read:   resourceAwsServiceCatalogBudgetResourceAssociationRead,
-		Delete: resourceAwsServiceCatalogBudgetResourceAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsServiceCatalogBudgetResourceAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsServiceCatalogBudgetResourceAssociationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsServiceCatalogBudgetResourceAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

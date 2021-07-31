@@ -14,7 +14,7 @@ import (
 
 func dataSourceAwsServiceCatalogProduct() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsServiceCatalogProductRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsServiceCatalogProductRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

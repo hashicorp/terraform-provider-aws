@@ -18,10 +18,10 @@ import (
 
 func resourceAwsAppmeshMesh() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppmeshMeshCreate,
-		Read:   resourceAwsAppmeshMeshRead,
-		Update: resourceAwsAppmeshMeshUpdate,
-		Delete: resourceAwsAppmeshMeshDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAppmeshMeshCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAppmeshMeshRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAppmeshMeshUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAppmeshMeshDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -95,7 +95,7 @@ func resourceAwsAppmeshMesh() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

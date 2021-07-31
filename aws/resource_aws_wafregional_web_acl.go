@@ -15,10 +15,10 @@ import (
 
 func resourceAwsWafRegionalWebAcl() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegionalWebAclCreate,
-		Read:   resourceAwsWafRegionalWebAclRead,
-		Update: resourceAwsWafRegionalWebAclUpdate,
-		Delete: resourceAwsWafRegionalWebAclDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafRegionalWebAclCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafRegionalWebAclRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWafRegionalWebAclUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafRegionalWebAclDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -169,7 +169,7 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -16,10 +16,10 @@ import (
 
 func resourceAwsDmsEventSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDmsEventSubscriptionCreate,
-		Read:   resourceAwsDmsEventSubscriptionRead,
-		Update: resourceAwsDmsEventSubscriptionUpdate,
-		Delete: resourceAwsDmsEventSubscriptionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDmsEventSubscriptionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDmsEventSubscriptionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDmsEventSubscriptionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDmsEventSubscriptionDelete),
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
@@ -78,7 +78,7 @@ func resourceAwsDmsEventSubscription() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

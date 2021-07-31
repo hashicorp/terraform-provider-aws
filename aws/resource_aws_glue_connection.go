@@ -14,10 +14,10 @@ import (
 
 func resourceAwsGlueConnection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueConnectionCreate,
-		Read:   resourceAwsGlueConnectionRead,
-		Update: resourceAwsGlueConnectionUpdate,
-		Delete: resourceAwsGlueConnectionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGlueConnectionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGlueConnectionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGlueConnectionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGlueConnectionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

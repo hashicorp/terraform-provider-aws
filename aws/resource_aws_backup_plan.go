@@ -18,10 +18,10 @@ import (
 
 func resourceAwsBackupPlan() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBackupPlanCreate,
-		Read:   resourceAwsBackupPlanRead,
-		Update: resourceAwsBackupPlanUpdate,
-		Delete: resourceAwsBackupPlanDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsBackupPlanCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsBackupPlanRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsBackupPlanUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsBackupPlanDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -156,7 +156,7 @@ func resourceAwsBackupPlan() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

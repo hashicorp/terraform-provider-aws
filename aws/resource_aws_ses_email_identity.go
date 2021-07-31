@@ -13,9 +13,9 @@ import (
 
 func resourceAwsSesEmailIdentity() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesEmailIdentityCreate,
-		Read:   resourceAwsSesEmailIdentityRead,
-		Delete: resourceAwsSesEmailIdentityDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSesEmailIdentityCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSesEmailIdentityRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSesEmailIdentityDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

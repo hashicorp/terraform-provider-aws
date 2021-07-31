@@ -13,10 +13,10 @@ import (
 
 func resourceAwsApiGatewayV2Integration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayV2IntegrationCreate,
-		Read:   resourceAwsApiGatewayV2IntegrationRead,
-		Update: resourceAwsApiGatewayV2IntegrationUpdate,
-		Delete: resourceAwsApiGatewayV2IntegrationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsApiGatewayV2IntegrationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsApiGatewayV2IntegrationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsApiGatewayV2IntegrationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsApiGatewayV2IntegrationDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsApiGatewayV2IntegrationImport,
 		},

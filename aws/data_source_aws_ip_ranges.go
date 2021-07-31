@@ -34,7 +34,7 @@ type dataSourceAwsIPRangesIpv6Prefix struct {
 
 func dataSourceAwsIPRanges() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIPRangesRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsIPRangesRead),
 
 		Schema: map[string]*schema.Schema{
 			"cidr_blocks": {

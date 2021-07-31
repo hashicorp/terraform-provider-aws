@@ -12,9 +12,9 @@ import (
 
 func resourceAwsSecurityHubInviteAccepter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecurityHubInviteAccepterCreate,
-		Read:   resourceAwsSecurityHubInviteAccepterRead,
-		Delete: resourceAwsSecurityHubInviteAccepterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSecurityHubInviteAccepterCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSecurityHubInviteAccepterRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSecurityHubInviteAccepterDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

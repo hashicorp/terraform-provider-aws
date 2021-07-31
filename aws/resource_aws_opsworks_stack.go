@@ -18,10 +18,10 @@ import (
 
 func resourceAwsOpsworksStack() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsOpsworksStackCreate,
-		Read:   resourceAwsOpsworksStackRead,
-		Update: resourceAwsOpsworksStackUpdate,
-		Delete: resourceAwsOpsworksStackDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsOpsworksStackCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsOpsworksStackRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsOpsworksStackUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsOpsworksStackDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -199,7 +199,7 @@ func resourceAwsOpsworksStack() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

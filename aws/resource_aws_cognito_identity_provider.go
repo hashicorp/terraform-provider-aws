@@ -14,10 +14,10 @@ import (
 
 func resourceAwsCognitoIdentityProvider() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCognitoIdentityProviderCreate,
-		Read:   resourceAwsCognitoIdentityProviderRead,
-		Update: resourceAwsCognitoIdentityProviderUpdate,
-		Delete: resourceAwsCognitoIdentityProviderDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCognitoIdentityProviderCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCognitoIdentityProviderRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCognitoIdentityProviderUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCognitoIdentityProviderDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

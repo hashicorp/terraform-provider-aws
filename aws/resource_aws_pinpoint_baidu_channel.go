@@ -11,10 +11,10 @@ import (
 
 func resourceAwsPinpointBaiduChannel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsPinpointBaiduChannelUpsert,
-		Read:   resourceAwsPinpointBaiduChannelRead,
-		Update: resourceAwsPinpointBaiduChannelUpsert,
-		Delete: resourceAwsPinpointBaiduChannelDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsPinpointBaiduChannelUpsert),
+		Read:   ClientInitCrudBaseFunc(resourceAwsPinpointBaiduChannelRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsPinpointBaiduChannelUpsert),
+		Delete: ClientInitCrudBaseFunc(resourceAwsPinpointBaiduChannelDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

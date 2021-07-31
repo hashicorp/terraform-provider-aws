@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsVpcPeeringConnections() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsVpcPeeringConnectionsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsVpcPeeringConnectionsRead),
 
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),

@@ -11,10 +11,10 @@ import (
 
 func resourceAwsWafSqlInjectionMatchSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafSqlInjectionMatchSetCreate,
-		Read:   resourceAwsWafSqlInjectionMatchSetRead,
-		Update: resourceAwsWafSqlInjectionMatchSetUpdate,
-		Delete: resourceAwsWafSqlInjectionMatchSetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafSqlInjectionMatchSetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafSqlInjectionMatchSetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWafSqlInjectionMatchSetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafSqlInjectionMatchSetDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsMqBroker() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsmQBrokerRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsmQBrokerRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

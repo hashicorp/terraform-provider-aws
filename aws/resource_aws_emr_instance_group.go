@@ -22,10 +22,10 @@ const (
 
 func resourceAwsEMRInstanceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEMRInstanceGroupCreate,
-		Read:   resourceAwsEMRInstanceGroupRead,
-		Update: resourceAwsEMRInstanceGroupUpdate,
-		Delete: resourceAwsEMRInstanceGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEMRInstanceGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEMRInstanceGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEMRInstanceGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEMRInstanceGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")

@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsEc2LocalGatewayVirtualInterfaceGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2LocalGatewayVirtualInterfaceGroupsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEc2LocalGatewayVirtualInterfaceGroupsRead),
 
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),

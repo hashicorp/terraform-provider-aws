@@ -20,10 +20,10 @@ import (
 
 func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsStorageGatewaySmbFileShareCreate,
-		Read:   resourceAwsStorageGatewaySmbFileShareRead,
-		Update: resourceAwsStorageGatewaySmbFileShareUpdate,
-		Delete: resourceAwsStorageGatewaySmbFileShareDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsStorageGatewaySmbFileShareCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsStorageGatewaySmbFileShareRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsStorageGatewaySmbFileShareUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsStorageGatewaySmbFileShareDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -196,7 +196,7 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

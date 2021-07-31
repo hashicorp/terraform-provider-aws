@@ -18,15 +18,15 @@ import (
 
 func resourceAwsEcrRepository() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEcrRepositoryCreate,
-		Read:   resourceAwsEcrRepositoryRead,
-		Update: resourceAwsEcrRepositoryUpdate,
-		Delete: resourceAwsEcrRepositoryDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEcrRepositoryCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEcrRepositoryRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEcrRepositoryUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEcrRepositoryDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Timeouts: &schema.ResourceTimeout{
 			Delete: schema.DefaultTimeout(20 * time.Minute),

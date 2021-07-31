@@ -20,16 +20,16 @@ import (
 func resourceAwsAppmeshVirtualNode() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsAppmeshVirtualNodeCreate,
-		Read:   resourceAwsAppmeshVirtualNodeRead,
-		Update: resourceAwsAppmeshVirtualNodeUpdate,
-		Delete: resourceAwsAppmeshVirtualNodeDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAppmeshVirtualNodeCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAppmeshVirtualNodeRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAppmeshVirtualNodeUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAppmeshVirtualNodeDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAppmeshVirtualNodeImport,
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsAppmeshVirtualNodeMigrateState,
+		MigrateState:  ClientInitMigrateStateFunc(resourceAwsAppmeshVirtualNodeMigrateState),
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -874,7 +874,7 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

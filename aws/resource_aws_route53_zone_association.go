@@ -15,9 +15,9 @@ import (
 
 func resourceAwsRoute53ZoneAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ZoneAssociationCreate,
-		Read:   resourceAwsRoute53ZoneAssociationRead,
-		Delete: resourceAwsRoute53ZoneAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRoute53ZoneAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRoute53ZoneAssociationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRoute53ZoneAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

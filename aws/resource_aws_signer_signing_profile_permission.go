@@ -18,9 +18,9 @@ import (
 
 func resourceAwsSignerSigningProfilePermission() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSignerSigningProfilePermissionCreate,
-		Read:   resourceAwsSignerSigningProfilePermissionRead,
-		Delete: resourceAwsSignerSigningProfilePermissionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSignerSigningProfilePermissionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSignerSigningProfilePermissionRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSignerSigningProfilePermissionDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsSignerSigningProfilePermissionImport,

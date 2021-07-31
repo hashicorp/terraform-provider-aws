@@ -15,7 +15,7 @@ import (
 
 func dataSourceAwsCustomerGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCustomerGatewayRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsCustomerGatewayRead),
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),
 			"id": {

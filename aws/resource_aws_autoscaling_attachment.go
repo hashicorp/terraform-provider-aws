@@ -12,9 +12,9 @@ import (
 
 func resourceAwsAutoscalingAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAutoscalingAttachmentCreate,
-		Read:   resourceAwsAutoscalingAttachmentRead,
-		Delete: resourceAwsAutoscalingAttachmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAutoscalingAttachmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAutoscalingAttachmentRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAutoscalingAttachmentDelete),
 
 		Schema: map[string]*schema.Schema{
 			"autoscaling_group_name": {

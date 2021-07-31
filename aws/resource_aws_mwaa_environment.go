@@ -15,10 +15,10 @@ import (
 
 func resourceAwsMwaaEnvironment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMwaaEnvironmentCreate,
-		Read:   resourceAwsMwaaEnvironmentRead,
-		Update: resourceAwsMwaaEnvironmentUpdate,
-		Delete: resourceAwsMwaaEnvironmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsMwaaEnvironmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsMwaaEnvironmentRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsMwaaEnvironmentUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsMwaaEnvironmentDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -229,7 +229,7 @@ func resourceAwsMwaaEnvironment() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

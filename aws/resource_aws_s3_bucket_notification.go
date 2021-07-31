@@ -16,10 +16,10 @@ import (
 
 func resourceAwsS3BucketNotification() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3BucketNotificationPut,
-		Read:   resourceAwsS3BucketNotificationRead,
-		Update: resourceAwsS3BucketNotificationPut,
-		Delete: resourceAwsS3BucketNotificationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsS3BucketNotificationPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsS3BucketNotificationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsS3BucketNotificationPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsS3BucketNotificationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -17,10 +17,10 @@ import (
 
 func resourceAwsImageBuilderInfrastructureConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsImageBuilderInfrastructureConfigurationCreate,
-		Read:   resourceAwsImageBuilderInfrastructureConfigurationRead,
-		Update: resourceAwsImageBuilderInfrastructureConfigurationUpdate,
-		Delete: resourceAwsImageBuilderInfrastructureConfigurationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsImageBuilderInfrastructureConfigurationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsImageBuilderInfrastructureConfigurationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsImageBuilderInfrastructureConfigurationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsImageBuilderInfrastructureConfigurationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -119,7 +119,7 @@ func resourceAwsImageBuilderInfrastructureConfiguration() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

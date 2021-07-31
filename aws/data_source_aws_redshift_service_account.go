@@ -41,7 +41,7 @@ var redshiftServiceAccountPerRegionMap = map[string]string{
 
 func dataSourceAwsRedshiftServiceAccount() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRedshiftServiceAccountRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsRedshiftServiceAccountRead),
 
 		Schema: map[string]*schema.Schema{
 			"region": {

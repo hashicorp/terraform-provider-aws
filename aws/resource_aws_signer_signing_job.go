@@ -14,9 +14,9 @@ import (
 
 func resourceAwsSignerSigningJob() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSignerSigningJobCreate,
-		Read:   resourceAwsSignerSigningJobRead,
-		Delete: schema.Noop,
+		Create: ClientInitCrudBaseFunc(resourceAwsSignerSigningJobCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSignerSigningJobRead),
+		Delete: ClientInitCrudBaseFunc(schema.Noop),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

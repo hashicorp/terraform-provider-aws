@@ -14,7 +14,7 @@ import (
 
 func dataSourceAwsLexIntent() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLexIntentRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsLexIntentRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

@@ -17,18 +17,18 @@ import (
 func resourceAwsKeyPair() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsKeyPairCreate,
-		Read:   resourceAwsKeyPairRead,
-		Update: resourceAwsKeyPairUpdate,
-		Delete: resourceAwsKeyPairDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsKeyPairCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsKeyPairRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsKeyPairUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsKeyPairDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsKeyPairMigrateState,
+		MigrateState:  ClientInitMigrateStateFunc(resourceAwsKeyPairMigrateState),
 
 		Schema: map[string]*schema.Schema{
 			"key_name": {

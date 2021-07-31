@@ -259,7 +259,7 @@ var sageMakerPrebuiltECRImageIDByRegion_TensorFlowServing = map[string]string{
 
 func dataSourceAwsSageMakerPrebuiltECRImage() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSageMakerPrebuiltECRImageRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsSageMakerPrebuiltECRImageRead),
 		Schema: map[string]*schema.Schema{
 			"repository_name": {
 				Type:     schema.TypeString,

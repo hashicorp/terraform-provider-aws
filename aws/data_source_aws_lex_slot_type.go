@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsLexSlotType() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLexSlotTypeRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsLexSlotTypeRead),
 
 		Schema: map[string]*schema.Schema{
 			"checksum": {

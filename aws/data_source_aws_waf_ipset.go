@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsWafIpSet() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAWSWafIpSetRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAWSWafIpSetRead),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

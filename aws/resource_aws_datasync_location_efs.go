@@ -15,10 +15,10 @@ import (
 
 func resourceAwsDataSyncLocationEfs() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDataSyncLocationEfsCreate,
-		Read:   resourceAwsDataSyncLocationEfsRead,
-		Update: resourceAwsDataSyncLocationEfsUpdate,
-		Delete: resourceAwsDataSyncLocationEfsDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDataSyncLocationEfsCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDataSyncLocationEfsRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDataSyncLocationEfsUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDataSyncLocationEfsDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -80,7 +80,7 @@ func resourceAwsDataSyncLocationEfs() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

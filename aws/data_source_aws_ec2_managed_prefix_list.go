@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsEc2ManagedPrefixList() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceAwsEc2ManagedPrefixListRead,
+		ReadContext: ClientInitCrudContextFunc(dataSourceAwsEc2ManagedPrefixListRead),
 		Schema: map[string]*schema.Schema{
 			"address_family": {
 				Type:     schema.TypeString,

@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsLaunchConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLaunchConfigurationRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsLaunchConfigurationRead),
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

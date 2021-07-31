@@ -13,10 +13,10 @@ import (
 
 func resourceAwsWafRegionalXssMatchSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegionalXssMatchSetCreate,
-		Read:   resourceAwsWafRegionalXssMatchSetRead,
-		Update: resourceAwsWafRegionalXssMatchSetUpdate,
-		Delete: resourceAwsWafRegionalXssMatchSetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafRegionalXssMatchSetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafRegionalXssMatchSetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWafRegionalXssMatchSetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafRegionalXssMatchSetDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

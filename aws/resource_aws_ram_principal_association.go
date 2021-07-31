@@ -18,9 +18,9 @@ import (
 
 func resourceAwsRamPrincipalAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRamPrincipalAssociationCreate,
-		Read:   resourceAwsRamPrincipalAssociationRead,
-		Delete: resourceAwsRamPrincipalAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRamPrincipalAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRamPrincipalAssociationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRamPrincipalAssociationDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

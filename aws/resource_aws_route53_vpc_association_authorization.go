@@ -12,9 +12,9 @@ import (
 
 func resourceAwsRoute53VPCAssociationAuthorization() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53VPCAssociationAuthorizationCreate,
-		Read:   resourceAwsRoute53VPCAssociationAuthorizationRead,
-		Delete: resourceAwsRoute53VPCAssociationAuthorizationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRoute53VPCAssociationAuthorizationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRoute53VPCAssociationAuthorizationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRoute53VPCAssociationAuthorizationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

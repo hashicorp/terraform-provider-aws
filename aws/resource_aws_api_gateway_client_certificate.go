@@ -13,10 +13,10 @@ import (
 
 func resourceAwsApiGatewayClientCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayClientCertificateCreate,
-		Read:   resourceAwsApiGatewayClientCertificateRead,
-		Update: resourceAwsApiGatewayClientCertificateUpdate,
-		Delete: resourceAwsApiGatewayClientCertificateDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsApiGatewayClientCertificateCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsApiGatewayClientCertificateRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsApiGatewayClientCertificateUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsApiGatewayClientCertificateDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -46,7 +46,7 @@ func resourceAwsApiGatewayClientCertificate() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

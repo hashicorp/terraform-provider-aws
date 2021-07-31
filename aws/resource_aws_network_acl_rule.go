@@ -20,9 +20,9 @@ import (
 
 func resourceAwsNetworkAclRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNetworkAclRuleCreate,
-		Read:   resourceAwsNetworkAclRuleRead,
-		Delete: resourceAwsNetworkAclRuleDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsNetworkAclRuleCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsNetworkAclRuleRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsNetworkAclRuleDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ":")

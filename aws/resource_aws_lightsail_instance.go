@@ -17,10 +17,10 @@ import (
 
 func resourceAwsLightsailInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLightsailInstanceCreate,
-		Read:   resourceAwsLightsailInstanceRead,
-		Update: resourceAwsLightsailInstanceUpdate,
-		Delete: resourceAwsLightsailInstanceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLightsailInstanceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLightsailInstanceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsLightsailInstanceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLightsailInstanceDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -121,7 +121,7 @@ func resourceAwsLightsailInstance() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -11,10 +11,10 @@ import (
 
 func resourceAwsEcrReplicationConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEcrReplicationConfigurationPut,
-		Read:   resourceAwsEcrReplicationConfigurationRead,
-		Update: resourceAwsEcrReplicationConfigurationPut,
-		Delete: resourceAwsEcrReplicationConfigurationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEcrReplicationConfigurationPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEcrReplicationConfigurationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEcrReplicationConfigurationPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEcrReplicationConfigurationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

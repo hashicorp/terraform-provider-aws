@@ -17,10 +17,10 @@ import (
 
 func resourceAwsApiGatewayRestApi() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayRestApiCreate,
-		Read:   resourceAwsApiGatewayRestApiRead,
-		Update: resourceAwsApiGatewayRestApiUpdate,
-		Delete: resourceAwsApiGatewayRestApiDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsApiGatewayRestApiCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsApiGatewayRestApiRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsApiGatewayRestApiUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsApiGatewayRestApiDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -139,7 +139,7 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

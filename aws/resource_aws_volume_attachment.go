@@ -17,10 +17,10 @@ import (
 
 func resourceAwsVolumeAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVolumeAttachmentCreate,
-		Read:   resourceAwsVolumeAttachmentRead,
-		Update: resourceAwsVolumeAttachmentUpdate,
-		Delete: resourceAwsVolumeAttachmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsVolumeAttachmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsVolumeAttachmentRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsVolumeAttachmentUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsVolumeAttachmentDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ":")

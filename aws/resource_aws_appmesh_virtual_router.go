@@ -20,16 +20,16 @@ import (
 func resourceAwsAppmeshVirtualRouter() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsAppmeshVirtualRouterCreate,
-		Read:   resourceAwsAppmeshVirtualRouterRead,
-		Update: resourceAwsAppmeshVirtualRouterUpdate,
-		Delete: resourceAwsAppmeshVirtualRouterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAppmeshVirtualRouterCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAppmeshVirtualRouterRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAppmeshVirtualRouterUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAppmeshVirtualRouterDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAppmeshVirtualRouterImport,
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsAppmeshVirtualRouterMigrateState,
+		MigrateState:  ClientInitMigrateStateFunc(resourceAwsAppmeshVirtualRouterMigrateState),
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -121,7 +121,7 @@ func resourceAwsAppmeshVirtualRouter() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

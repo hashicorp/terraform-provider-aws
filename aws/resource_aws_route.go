@@ -39,10 +39,10 @@ var routeValidTargets = []string{
 
 func resourceAwsRoute() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRouteCreate,
-		Read:   resourceAwsRouteRead,
-		Update: resourceAwsRouteUpdate,
-		Delete: resourceAwsRouteDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRouteCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRouteRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRouteUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRouteDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsRouteImport,
 		},

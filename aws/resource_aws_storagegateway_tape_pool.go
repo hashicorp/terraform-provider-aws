@@ -13,10 +13,10 @@ import (
 
 func resourceAwsStorageGatewayTapePool() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsStorageGatewayTapePoolCreate,
-		Read:   resourceAwsStorageGatewayTapePoolRead,
-		Update: resourceAwsStorageGatewayTapePoolUpdate,
-		Delete: resourceAwsStorageGatewayTapePoolDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsStorageGatewayTapePoolCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsStorageGatewayTapePoolRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsStorageGatewayTapePoolUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsStorageGatewayTapePoolDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -56,7 +56,7 @@ func resourceAwsStorageGatewayTapePool() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsCallerIdentity() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCallerIdentityRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsCallerIdentityRead),
 
 		Schema: map[string]*schema.Schema{
 			"account_id": {

@@ -18,10 +18,10 @@ import (
 
 func resourceAwsS3BucketMetric() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3BucketMetricPut,
-		Read:   resourceAwsS3BucketMetricRead,
-		Update: resourceAwsS3BucketMetricPut,
-		Delete: resourceAwsS3BucketMetricDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsS3BucketMetricPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsS3BucketMetricRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsS3BucketMetricPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsS3BucketMetricDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

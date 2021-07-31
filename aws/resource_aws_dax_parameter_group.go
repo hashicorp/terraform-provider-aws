@@ -10,10 +10,10 @@ import (
 
 func resourceAwsDaxParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDaxParameterGroupCreate,
-		Read:   resourceAwsDaxParameterGroupRead,
-		Update: resourceAwsDaxParameterGroupUpdate,
-		Delete: resourceAwsDaxParameterGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDaxParameterGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDaxParameterGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDaxParameterGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDaxParameterGroupDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

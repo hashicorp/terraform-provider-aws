@@ -12,10 +12,10 @@ import (
 
 func resourceAwsCloudWatchEventBus() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchEventBusCreate,
-		Read:   resourceAwsCloudWatchEventBusRead,
-		Update: resourceAwsCloudWatchEventBusUpdate,
-		Delete: resourceAwsCloudWatchEventBusDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventBusCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudWatchEventBusRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventBusUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventBusDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -41,7 +41,7 @@ func resourceAwsCloudWatchEventBus() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

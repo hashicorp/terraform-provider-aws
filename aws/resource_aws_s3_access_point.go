@@ -16,10 +16,10 @@ import (
 
 func resourceAwsS3AccessPoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3AccessPointCreate,
-		Read:   resourceAwsS3AccessPointRead,
-		Update: resourceAwsS3AccessPointUpdate,
-		Delete: resourceAwsS3AccessPointDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsS3AccessPointCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsS3AccessPointRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsS3AccessPointUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsS3AccessPointDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

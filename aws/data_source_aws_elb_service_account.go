@@ -39,7 +39,7 @@ var elbAccountIdPerRegionMap = map[string]string{
 
 func dataSourceAwsElbServiceAccount() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsElbServiceAccountRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsElbServiceAccountRead),
 
 		Schema: map[string]*schema.Schema{
 			"region": {

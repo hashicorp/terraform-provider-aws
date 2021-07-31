@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsSsmDocument() *schema.Resource {
 	return &schema.Resource{
-		Read: dataAwsSsmDocumentRead,
+		Read: ClientInitCrudBaseFunc(dataAwsSsmDocumentRead),
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

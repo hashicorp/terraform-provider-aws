@@ -16,10 +16,10 @@ import (
 
 func resourceAwsServiceCatalogTagOption() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogTagOptionCreate,
-		Read:   resourceAwsServiceCatalogTagOptionRead,
-		Update: resourceAwsServiceCatalogTagOptionUpdate,
-		Delete: resourceAwsServiceCatalogTagOptionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsServiceCatalogTagOptionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsServiceCatalogTagOptionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsServiceCatalogTagOptionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsServiceCatalogTagOptionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

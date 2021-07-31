@@ -16,10 +16,10 @@ import (
 
 func resourceAwsSsmPatchBaseline() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsmPatchBaselineCreate,
-		Read:   resourceAwsSsmPatchBaselineRead,
-		Update: resourceAwsSsmPatchBaselineUpdate,
-		Delete: resourceAwsSsmPatchBaselineDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSsmPatchBaselineCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSsmPatchBaselineRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSsmPatchBaselineUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSsmPatchBaselineDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -210,7 +210,7 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

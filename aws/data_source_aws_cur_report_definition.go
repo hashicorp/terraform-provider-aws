@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsCurReportDefinition() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCurReportDefinitionRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsCurReportDefinitionRead),
 
 		Schema: map[string]*schema.Schema{
 			"report_name": {

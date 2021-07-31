@@ -13,10 +13,10 @@ import (
 
 func resourceAwsSesActiveReceiptRuleSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesActiveReceiptRuleSetUpdate,
-		Update: resourceAwsSesActiveReceiptRuleSetUpdate,
-		Read:   resourceAwsSesActiveReceiptRuleSetRead,
-		Delete: resourceAwsSesActiveReceiptRuleSetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSesActiveReceiptRuleSetUpdate),
+		Update: ClientInitCrudBaseFunc(resourceAwsSesActiveReceiptRuleSetUpdate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSesActiveReceiptRuleSetRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSesActiveReceiptRuleSetDelete),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

@@ -11,10 +11,10 @@ import (
 
 func resourceAwsIotCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIotCertificateCreate,
-		Read:   resourceAwsIotCertificateRead,
-		Update: resourceAwsIotCertificateUpdate,
-		Delete: resourceAwsIotCertificateDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIotCertificateCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIotCertificateRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIotCertificateUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIotCertificateDelete),
 		Schema: map[string]*schema.Schema{
 			"csr": {
 				Type:     schema.TypeString,

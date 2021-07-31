@@ -20,10 +20,10 @@ import (
 
 func resourceAwsDbInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbInstanceCreate,
-		Read:   resourceAwsDbInstanceRead,
-		Update: resourceAwsDbInstanceUpdate,
-		Delete: resourceAwsDbInstanceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDbInstanceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDbInstanceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDbInstanceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDbInstanceDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDbInstanceImport,
 		},
@@ -32,7 +32,7 @@ func resourceAwsDbInstance() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceAwsDbInstanceResourceV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: resourceAwsDbInstanceStateUpgradeV0,
+				Upgrade: ClientInitStateUpgraderFunc(resourceAwsDbInstanceStateUpgradeV0),
 				Version: 0,
 			},
 		},
@@ -475,7 +475,7 @@ func resourceAwsDbInstance() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

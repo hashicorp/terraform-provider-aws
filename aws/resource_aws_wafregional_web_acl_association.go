@@ -14,9 +14,9 @@ import (
 
 func resourceAwsWafRegionalWebAclAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegionalWebAclAssociationCreate,
-		Read:   resourceAwsWafRegionalWebAclAssociationRead,
-		Delete: resourceAwsWafRegionalWebAclAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafRegionalWebAclAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafRegionalWebAclAssociationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafRegionalWebAclAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

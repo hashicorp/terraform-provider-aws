@@ -20,10 +20,10 @@ import (
 
 func resourceAwsBatchComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBatchComputeEnvironmentCreate,
-		Read:   resourceAwsBatchComputeEnvironmentRead,
-		Update: resourceAwsBatchComputeEnvironmentUpdate,
-		Delete: resourceAwsBatchComputeEnvironmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsBatchComputeEnvironmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsBatchComputeEnvironmentRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsBatchComputeEnvironmentUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsBatchComputeEnvironmentDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

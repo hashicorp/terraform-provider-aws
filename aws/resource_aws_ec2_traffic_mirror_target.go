@@ -13,15 +13,15 @@ import (
 
 func resourceAwsEc2TrafficMirrorTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TrafficMirrorTargetCreate,
-		Read:   resourceAwsEc2TrafficMirrorTargetRead,
-		Update: resourceAwsEc2TrafficMirrorTargetUpdate,
-		Delete: resourceAwsEc2TrafficMirrorTargetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEc2TrafficMirrorTargetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEc2TrafficMirrorTargetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEc2TrafficMirrorTargetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEc2TrafficMirrorTargetDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

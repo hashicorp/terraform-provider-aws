@@ -13,10 +13,10 @@ import (
 
 func resourceAWSInspectorAssessmentTemplate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsInspectorAssessmentTemplateCreate,
-		Read:   resourceAwsInspectorAssessmentTemplateRead,
-		Update: resourceAwsInspectorAssessmentTemplateUpdate,
-		Delete: resourceAwsInspectorAssessmentTemplateDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsInspectorAssessmentTemplateCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsInspectorAssessmentTemplateRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsInspectorAssessmentTemplateUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsInspectorAssessmentTemplateDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -52,7 +52,7 @@ func resourceAWSInspectorAssessmentTemplate() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

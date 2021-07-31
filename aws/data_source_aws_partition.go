@@ -8,7 +8,7 @@ import (
 
 func dataSourceAwsPartition() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsPartitionRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsPartitionRead),
 
 		Schema: map[string]*schema.Schema{
 			"partition": {

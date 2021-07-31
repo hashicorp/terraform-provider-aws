@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsOutpostsOutpostInstanceTypes() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsOutpostsOutpostInstanceTypesRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsOutpostsOutpostInstanceTypesRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

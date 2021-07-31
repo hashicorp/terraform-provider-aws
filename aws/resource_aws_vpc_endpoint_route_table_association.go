@@ -17,9 +17,9 @@ import (
 
 func resourceAwsVpcEndpointRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcEndpointRouteTableAssociationCreate,
-		Read:   resourceAwsVpcEndpointRouteTableAssociationRead,
-		Delete: resourceAwsVpcEndpointRouteTableAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsVpcEndpointRouteTableAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsVpcEndpointRouteTableAssociationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsVpcEndpointRouteTableAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsVpcEndpointRouteTableAssociationImport,
 		},

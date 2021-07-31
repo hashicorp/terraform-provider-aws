@@ -16,10 +16,10 @@ var resourceAwsApiGatewayMethodResponseMutex = &sync.Mutex{}
 
 func resourceAwsApiGatewayMethodResponse() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayMethodResponseCreate,
-		Read:   resourceAwsApiGatewayMethodResponseRead,
-		Update: resourceAwsApiGatewayMethodResponseUpdate,
-		Delete: resourceAwsApiGatewayMethodResponseDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsApiGatewayMethodResponseCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsApiGatewayMethodResponseRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsApiGatewayMethodResponseUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsApiGatewayMethodResponseDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")

@@ -16,10 +16,10 @@ import (
 
 func resourceAwsSecretsManagerSecretRotation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecretsManagerSecretRotationCreate,
-		Read:   resourceAwsSecretsManagerSecretRotationRead,
-		Update: resourceAwsSecretsManagerSecretRotationUpdate,
-		Delete: resourceAwsSecretsManagerSecretRotationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSecretsManagerSecretRotationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSecretsManagerSecretRotationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSecretsManagerSecretRotationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSecretsManagerSecretRotationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

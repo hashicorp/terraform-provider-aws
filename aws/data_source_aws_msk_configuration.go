@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsMskConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsMskConfigurationRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsMskConfigurationRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

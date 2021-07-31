@@ -19,10 +19,10 @@ import (
 
 func resourceAwsCloudWatchEventTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchEventTargetCreate,
-		Read:   resourceAwsCloudWatchEventTargetRead,
-		Update: resourceAwsCloudWatchEventTargetUpdate,
-		Delete: resourceAwsCloudWatchEventTargetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventTargetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudWatchEventTargetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventTargetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventTargetDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsCloudWatchEventTargetImport,
@@ -32,7 +32,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceAwsCloudWatchEventTargetV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: resourceAwsCloudWatchEventTargetStateUpgradeV0,
+				Upgrade: ClientInitStateUpgraderFunc(resourceAwsCloudWatchEventTargetStateUpgradeV0),
 				Version: 0,
 			},
 		},

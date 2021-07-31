@@ -15,10 +15,10 @@ import (
 
 func resourceAwsDxLag() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxLagCreate,
-		Read:   resourceAwsDxLagRead,
-		Update: resourceAwsDxLagUpdate,
-		Delete: resourceAwsDxLagDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDxLagCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDxLagRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDxLagUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDxLagDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -60,7 +60,7 @@ func resourceAwsDxLag() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

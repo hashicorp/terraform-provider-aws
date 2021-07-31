@@ -15,12 +15,12 @@ import (
 
 func resourceAwsEbsSnapshotCopy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEbsSnapshotCopyCreate,
-		Read:   resourceAwsEbsSnapshotCopyRead,
-		Update: resourceAwsEbsSnapshotCopyUpdate,
-		Delete: resourceAwsEbsSnapshotCopyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEbsSnapshotCopyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEbsSnapshotCopyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEbsSnapshotCopyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEbsSnapshotCopyDelete),
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

@@ -15,10 +15,10 @@ import (
 
 func resourceAwsRoute53ResolverQueryLogConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ResolverQueryLogConfigCreate,
-		Read:   resourceAwsRoute53ResolverQueryLogConfigRead,
-		Update: resourceAwsRoute53ResolverQueryLogConfigUpdate,
-		Delete: resourceAwsRoute53ResolverQueryLogConfigDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverQueryLogConfigCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRoute53ResolverQueryLogConfigRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverQueryLogConfigUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverQueryLogConfigDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -57,7 +57,7 @@ func resourceAwsRoute53ResolverQueryLogConfig() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

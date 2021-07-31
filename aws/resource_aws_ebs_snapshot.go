@@ -15,15 +15,15 @@ import (
 
 func resourceAwsEbsSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEbsSnapshotCreate,
-		Read:   resourceAwsEbsSnapshotRead,
-		Update: resourceAwsEbsSnapshotUpdate,
-		Delete: resourceAwsEbsSnapshotDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEbsSnapshotCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEbsSnapshotRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEbsSnapshotUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEbsSnapshotDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),

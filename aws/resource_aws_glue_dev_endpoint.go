@@ -20,15 +20,15 @@ import (
 
 func resourceAwsGlueDevEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueDevEndpointCreate,
-		Read:   resourceAwsGlueDevEndpointRead,
-		Update: resourceAwsDevEndpointUpdate,
-		Delete: resourceAwsDevEndpointDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGlueDevEndpointCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGlueDevEndpointRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDevEndpointUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDevEndpointDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"arguments": {

@@ -18,10 +18,10 @@ import (
 
 func resourceAwsDefaultRouteTable() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDefaultRouteTableCreate,
-		Read:   resourceAwsDefaultRouteTableRead,
-		Update: resourceAwsRouteTableUpdate,
-		Delete: resourceAwsDefaultRouteTableDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDefaultRouteTableCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDefaultRouteTableRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRouteTableUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDefaultRouteTableDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDefaultRouteTableImport,
@@ -136,7 +136,7 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

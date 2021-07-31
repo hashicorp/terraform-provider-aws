@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsDirectoryServiceDirectory() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDirectoryServiceDirectoryRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsDirectoryServiceDirectoryRead),
 
 		Schema: map[string]*schema.Schema{
 			"directory_id": {

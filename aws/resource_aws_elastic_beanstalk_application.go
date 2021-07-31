@@ -14,15 +14,15 @@ import (
 
 func resourceAwsElasticBeanstalkApplication() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticBeanstalkApplicationCreate,
-		Read:   resourceAwsElasticBeanstalkApplicationRead,
-		Update: resourceAwsElasticBeanstalkApplicationUpdate,
-		Delete: resourceAwsElasticBeanstalkApplicationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsElasticBeanstalkApplicationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsElasticBeanstalkApplicationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsElasticBeanstalkApplicationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsElasticBeanstalkApplicationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

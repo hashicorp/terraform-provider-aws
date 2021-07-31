@@ -13,9 +13,9 @@ import (
 
 func resourceAwsEMRSecurityConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEmrSecurityConfigurationCreate,
-		Read:   resourceAwsEmrSecurityConfigurationRead,
-		Delete: resourceAwsEmrSecurityConfigurationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEmrSecurityConfigurationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEmrSecurityConfigurationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEmrSecurityConfigurationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

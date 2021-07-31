@@ -13,10 +13,10 @@ import (
 
 func resourceAwsDynamoDbGlobalTable() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDynamoDbGlobalTableCreate,
-		Read:   resourceAwsDynamoDbGlobalTableRead,
-		Update: resourceAwsDynamoDbGlobalTableUpdate,
-		Delete: resourceAwsDynamoDbGlobalTableDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDynamoDbGlobalTableCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDynamoDbGlobalTableRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDynamoDbGlobalTableUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDynamoDbGlobalTableDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

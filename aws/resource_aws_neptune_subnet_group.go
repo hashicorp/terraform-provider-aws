@@ -13,10 +13,10 @@ import (
 
 func resourceAwsNeptuneSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNeptuneSubnetGroupCreate,
-		Read:   resourceAwsNeptuneSubnetGroupRead,
-		Update: resourceAwsNeptuneSubnetGroupUpdate,
-		Delete: resourceAwsNeptuneSubnetGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsNeptuneSubnetGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsNeptuneSubnetGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsNeptuneSubnetGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsNeptuneSubnetGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -62,7 +62,7 @@ func resourceAwsNeptuneSubnetGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

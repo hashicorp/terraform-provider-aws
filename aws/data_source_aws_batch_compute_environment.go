@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsBatchComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsBatchComputeEnvironmentRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsBatchComputeEnvironmentRead),
 
 		Schema: map[string]*schema.Schema{
 			"compute_environment_name": {

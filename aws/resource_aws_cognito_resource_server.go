@@ -13,10 +13,10 @@ import (
 
 func resourceAwsCognitoResourceServer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCognitoResourceServerCreate,
-		Read:   resourceAwsCognitoResourceServerRead,
-		Update: resourceAwsCognitoResourceServerUpdate,
-		Delete: resourceAwsCognitoResourceServerDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCognitoResourceServerCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCognitoResourceServerRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCognitoResourceServerUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCognitoResourceServerDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

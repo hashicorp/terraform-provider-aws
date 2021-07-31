@@ -12,10 +12,10 @@ import (
 
 func resourceAwsIotTopicRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIotTopicRuleCreate,
-		Read:   resourceAwsIotTopicRuleRead,
-		Update: resourceAwsIotTopicRuleUpdate,
-		Delete: resourceAwsIotTopicRuleDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIotTopicRuleCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIotTopicRuleRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIotTopicRuleUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIotTopicRuleDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -1077,7 +1077,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

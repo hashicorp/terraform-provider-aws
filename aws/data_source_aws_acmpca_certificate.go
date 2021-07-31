@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsAcmpcaCertificate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAcmpcaCertificateRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsAcmpcaCertificateRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

@@ -25,10 +25,10 @@ const (
 
 func resourceAwsAccessAnalyzerAnalyzer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAccessAnalyzerAnalyzerCreate,
-		Read:   resourceAwsAccessAnalyzerAnalyzerRead,
-		Update: resourceAwsAccessAnalyzerAnalyzerUpdate,
-		Delete: resourceAwsAccessAnalyzerAnalyzerDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAccessAnalyzerAnalyzerCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAccessAnalyzerAnalyzerRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAccessAnalyzerAnalyzerUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAccessAnalyzerAnalyzerDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -61,7 +61,7 @@ func resourceAwsAccessAnalyzerAnalyzer() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

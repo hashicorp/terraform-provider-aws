@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsEcsCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEcsClusterRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEcsClusterRead),
 
 		Schema: map[string]*schema.Schema{
 			"cluster_name": {

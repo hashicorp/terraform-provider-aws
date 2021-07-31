@@ -19,10 +19,10 @@ import (
 
 func resourceAwsEc2ManagedPrefixList() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2ManagedPrefixListCreate,
-		Read:   resourceAwsEc2ManagedPrefixListRead,
-		Update: resourceAwsEc2ManagedPrefixListUpdate,
-		Delete: resourceAwsEc2ManagedPrefixListDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEc2ManagedPrefixListCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEc2ManagedPrefixListRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEc2ManagedPrefixListUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEc2ManagedPrefixListDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

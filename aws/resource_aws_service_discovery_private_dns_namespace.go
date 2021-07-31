@@ -14,10 +14,10 @@ import (
 
 func resourceAwsServiceDiscoveryPrivateDnsNamespace() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceDiscoveryPrivateDnsNamespaceCreate,
-		Read:   resourceAwsServiceDiscoveryPrivateDnsNamespaceRead,
-		Update: resourceAwsServiceDiscoveryPrivateDnsNamespaceUpdate,
-		Delete: resourceAwsServiceDiscoveryPrivateDnsNamespaceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsServiceDiscoveryPrivateDnsNamespaceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsServiceDiscoveryPrivateDnsNamespaceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsServiceDiscoveryPrivateDnsNamespaceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsServiceDiscoveryPrivateDnsNamespaceDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ":")
@@ -59,7 +59,7 @@ func resourceAwsServiceDiscoveryPrivateDnsNamespace() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

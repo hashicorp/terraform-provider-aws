@@ -11,9 +11,9 @@ import (
 
 func resourceAWSInspectorResourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsInspectorResourceGroupCreate,
-		Read:   resourceAwsInspectorResourceGroupRead,
-		Delete: resourceAwsInspectorResourceGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsInspectorResourceGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsInspectorResourceGroupRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsInspectorResourceGroupDelete),
 
 		Schema: map[string]*schema.Schema{
 			"tags": {

@@ -26,10 +26,10 @@ import (
 
 func resourceAwsLb() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLbCreate,
-		Read:   resourceAwsLbRead,
-		Update: resourceAwsLbUpdate,
-		Delete: resourceAwsLbDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLbCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLbRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsLbUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLbDelete),
 		// Subnets are ForceNew for Network Load Balancers
 		CustomizeDiff: customdiff.Sequence(
 			customizeDiffNLBSubnets,

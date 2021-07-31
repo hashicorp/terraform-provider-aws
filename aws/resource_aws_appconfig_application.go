@@ -15,10 +15,10 @@ import (
 
 func resourceAwsAppconfigApplication() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppconfigApplicationCreate,
-		Read:   resourceAwsAppconfigApplicationRead,
-		Update: resourceAwsAppconfigApplicationUpdate,
-		Delete: resourceAwsAppconfigApplicationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAppconfigApplicationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAppconfigApplicationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAppconfigApplicationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAppconfigApplicationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -41,7 +41,7 @@ func resourceAwsAppconfigApplication() *schema.Resource {
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 		},
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -23,14 +23,14 @@ var (
 func resourceAwsSqsQueuePolicy() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsSqsQueuePolicyUpsert,
-		Read:   resourceAwsSqsQueuePolicyRead,
-		Update: resourceAwsSqsQueuePolicyUpsert,
-		Delete: resourceAwsSqsQueuePolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSqsQueuePolicyUpsert),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSqsQueuePolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSqsQueuePolicyUpsert),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSqsQueuePolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		MigrateState:  resourceAwsSqsQueuePolicyMigrateState,
+		MigrateState:  ClientInitMigrateStateFunc(resourceAwsSqsQueuePolicyMigrateState),
 		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{

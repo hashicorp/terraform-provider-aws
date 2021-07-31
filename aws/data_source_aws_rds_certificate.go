@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsRdsCertificate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRdsCertificateRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsRdsCertificateRead),
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

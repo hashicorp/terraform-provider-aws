@@ -18,10 +18,10 @@ import (
 
 func resourceAwsFsxLustreFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsFsxLustreFileSystemCreate,
-		Read:   resourceAwsFsxLustreFileSystemRead,
-		Update: resourceAwsFsxLustreFileSystemUpdate,
-		Delete: resourceAwsFsxLustreFileSystemDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsFsxLustreFileSystemCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsFsxLustreFileSystemRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsFsxLustreFileSystemUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsFsxLustreFileSystemDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

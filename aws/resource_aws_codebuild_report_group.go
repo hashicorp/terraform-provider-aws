@@ -16,10 +16,10 @@ import (
 
 func resourceAwsCodeBuildReportGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeBuildReportGroupCreate,
-		Read:   resourceAwsCodeBuildReportGroupRead,
-		Update: resourceAwsCodeBuildReportGroupUpdate,
-		Delete: resourceAwsCodeBuildReportGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCodeBuildReportGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCodeBuildReportGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCodeBuildReportGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCodeBuildReportGroupDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -101,7 +101,7 @@ func resourceAwsCodeBuildReportGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

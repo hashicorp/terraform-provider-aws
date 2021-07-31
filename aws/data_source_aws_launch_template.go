@@ -15,7 +15,7 @@ import (
 
 func dataSourceAwsLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLaunchTemplateRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsLaunchTemplateRead),
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

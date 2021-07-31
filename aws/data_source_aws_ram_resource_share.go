@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsRamResourceShare() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRamResourceShareRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsRamResourceShareRead),
 
 		Schema: map[string]*schema.Schema{
 			"filter": {

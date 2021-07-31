@@ -15,10 +15,10 @@ import (
 
 func resourceAwsKmsAlias() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsKmsAliasCreate,
-		Read:   resourceAwsKmsAliasRead,
-		Update: resourceAwsKmsAliasUpdate,
-		Delete: resourceAwsKmsAliasDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsKmsAliasCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsKmsAliasRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsKmsAliasUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsKmsAliasDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsKmsAliasImport,

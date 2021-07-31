@@ -14,10 +14,10 @@ import (
 
 func resourceAwsApiGatewayV2Route() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayV2RouteCreate,
-		Read:   resourceAwsApiGatewayV2RouteRead,
-		Update: resourceAwsApiGatewayV2RouteUpdate,
-		Delete: resourceAwsApiGatewayV2RouteDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsApiGatewayV2RouteCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsApiGatewayV2RouteRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsApiGatewayV2RouteUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsApiGatewayV2RouteDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsApiGatewayV2RouteImport,
 		},

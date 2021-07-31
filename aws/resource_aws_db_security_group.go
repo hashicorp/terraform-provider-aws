@@ -17,10 +17,10 @@ import (
 
 func resourceAwsDbSecurityGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbSecurityGroupCreate,
-		Read:   resourceAwsDbSecurityGroupRead,
-		Update: resourceAwsDbSecurityGroupUpdate,
-		Delete: resourceAwsDbSecurityGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDbSecurityGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDbSecurityGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDbSecurityGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDbSecurityGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -80,7 +80,7 @@ func resourceAwsDbSecurityGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

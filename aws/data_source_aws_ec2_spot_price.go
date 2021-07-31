@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsEc2SpotPrice() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2SpotPriceRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEc2SpotPriceRead),
 
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),

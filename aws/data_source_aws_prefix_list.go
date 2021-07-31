@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsPrefixList() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsPrefixListRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsPrefixListRead),
 
 		Schema: map[string]*schema.Schema{
 			"prefix_list_id": {

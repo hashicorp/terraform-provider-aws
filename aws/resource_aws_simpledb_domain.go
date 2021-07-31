@@ -12,9 +12,9 @@ import (
 
 func resourceAwsSimpleDBDomain() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSimpleDBDomainCreate,
-		Read:   resourceAwsSimpleDBDomainRead,
-		Delete: resourceAwsSimpleDBDomainDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSimpleDBDomainCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSimpleDBDomainRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSimpleDBDomainDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsAppmeshMesh() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAppmeshMeshRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsAppmeshMeshRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

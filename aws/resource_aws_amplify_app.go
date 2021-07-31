@@ -20,10 +20,10 @@ import (
 
 func resourceAwsAmplifyApp() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAmplifyAppCreate,
-		Read:   resourceAwsAmplifyAppRead,
-		Update: resourceAwsAmplifyAppUpdate,
-		Delete: resourceAwsAmplifyAppDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAmplifyAppCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAmplifyAppRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAmplifyAppUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAmplifyAppDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsAppmeshVirtualService() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAppmeshVirtualServiceRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsAppmeshVirtualServiceRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

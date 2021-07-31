@@ -18,7 +18,7 @@ import (
 
 func dataSourceAwsIAMPolicy() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIAMPolicyRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsIAMPolicyRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

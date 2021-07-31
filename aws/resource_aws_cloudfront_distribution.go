@@ -17,10 +17,10 @@ import (
 func resourceAwsCloudFrontDistribution() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsCloudFrontDistributionCreate,
-		Read:   resourceAwsCloudFrontDistributionRead,
-		Update: resourceAwsCloudFrontDistributionUpdate,
-		Delete: resourceAwsCloudFrontDistributionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudFrontDistributionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudFrontDistributionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudFrontDistributionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudFrontDistributionDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				// Set non API attributes to their Default settings in the schema
@@ -29,7 +29,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 				return []*schema.ResourceData{d}, nil
 			},
 		},
-		MigrateState:  resourceAwsCloudFrontDistributionMigrateState,
+		MigrateState:  ClientInitMigrateStateFunc(resourceAwsCloudFrontDistributionMigrateState),
 		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
@@ -792,7 +792,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

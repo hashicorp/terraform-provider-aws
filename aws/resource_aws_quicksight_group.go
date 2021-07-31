@@ -13,10 +13,10 @@ import (
 
 func resourceAwsQuickSightGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsQuickSightGroupCreate,
-		Read:   resourceAwsQuickSightGroupRead,
-		Update: resourceAwsQuickSightGroupUpdate,
-		Delete: resourceAwsQuickSightGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsQuickSightGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsQuickSightGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsQuickSightGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsQuickSightGroupDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

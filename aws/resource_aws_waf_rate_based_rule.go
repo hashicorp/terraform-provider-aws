@@ -15,10 +15,10 @@ import (
 
 func resourceAwsWafRateBasedRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRateBasedRuleCreate,
-		Read:   resourceAwsWafRateBasedRuleRead,
-		Update: resourceAwsWafRateBasedRuleUpdate,
-		Delete: resourceAwsWafRateBasedRuleDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafRateBasedRuleCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafRateBasedRuleRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWafRateBasedRuleUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafRateBasedRuleDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -74,7 +74,7 @@ func resourceAwsWafRateBasedRule() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

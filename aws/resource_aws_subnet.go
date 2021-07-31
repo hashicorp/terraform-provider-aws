@@ -19,15 +19,15 @@ import (
 func resourceAwsSubnet() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsSubnetCreate,
-		Read:   resourceAwsSubnetRead,
-		Update: resourceAwsSubnetUpdate,
-		Delete: resourceAwsSubnetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSubnetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSubnetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSubnetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSubnetDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -35,7 +35,7 @@ func resourceAwsSubnet() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsSubnetMigrateState,
+		MigrateState:  ClientInitMigrateStateFunc(resourceAwsSubnetMigrateState),
 
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {

@@ -18,10 +18,10 @@ import (
 
 func resourceAwsSagemakerDomain() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerDomainCreate,
-		Read:   resourceAwsSagemakerDomainRead,
-		Update: resourceAwsSagemakerDomainUpdate,
-		Delete: resourceAwsSagemakerDomainDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSagemakerDomainCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSagemakerDomainRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSagemakerDomainUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSagemakerDomainDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -256,7 +256,7 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

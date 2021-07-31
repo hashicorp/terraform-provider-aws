@@ -11,10 +11,10 @@ import (
 
 func resourceAwsOpsworksRdsDbInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsOpsworksRdsDbInstanceRegister,
-		Update: resourceAwsOpsworksRdsDbInstanceUpdate,
-		Delete: resourceAwsOpsworksRdsDbInstanceDeregister,
-		Read:   resourceAwsOpsworksRdsDbInstanceRead,
+		Create: ClientInitCrudBaseFunc(resourceAwsOpsworksRdsDbInstanceRegister),
+		Update: ClientInitCrudBaseFunc(resourceAwsOpsworksRdsDbInstanceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsOpsworksRdsDbInstanceDeregister),
+		Read:   ClientInitCrudBaseFunc(resourceAwsOpsworksRdsDbInstanceRead),
 
 		Schema: map[string]*schema.Schema{
 			"stack_id": {

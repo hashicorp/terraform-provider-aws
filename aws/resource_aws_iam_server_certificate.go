@@ -21,10 +21,10 @@ import (
 
 func resourceAwsIAMServerCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIAMServerCertificateCreate,
-		Read:   resourceAwsIAMServerCertificateRead,
-		Update: resourceAwsIAMServerCertificateUpdate,
-		Delete: resourceAwsIAMServerCertificateDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIAMServerCertificateCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIAMServerCertificateRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIAMServerCertificateUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIAMServerCertificateDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsIAMServerCertificateImport,
 		},
@@ -95,7 +95,7 @@ func resourceAwsIAMServerCertificate() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

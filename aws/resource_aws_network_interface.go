@@ -19,10 +19,10 @@ import (
 
 func resourceAwsNetworkInterface() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNetworkInterfaceCreate,
-		Read:   resourceAwsNetworkInterfaceRead,
-		Update: resourceAwsNetworkInterfaceUpdate,
-		Delete: resourceAwsNetworkInterfaceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsNetworkInterfaceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsNetworkInterfaceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsNetworkInterfaceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsNetworkInterfaceDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -138,7 +138,7 @@ func resourceAwsNetworkInterface() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

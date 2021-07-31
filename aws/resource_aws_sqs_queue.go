@@ -170,10 +170,10 @@ var (
 // default values specified below)
 func resourceAwsSqsQueue() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSqsQueueCreate,
-		Read:   resourceAwsSqsQueueRead,
-		Update: resourceAwsSqsQueueUpdate,
-		Delete: resourceAwsSqsQueueDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSqsQueueCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSqsQueueRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSqsQueueUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSqsQueueDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

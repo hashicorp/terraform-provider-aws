@@ -41,7 +41,7 @@ var cloudTrailServiceAccountPerRegionMap = map[string]string{
 
 func dataSourceAwsCloudTrailServiceAccount() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudTrailServiceAccountRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsCloudTrailServiceAccountRead),
 
 		Schema: map[string]*schema.Schema{
 			"region": {

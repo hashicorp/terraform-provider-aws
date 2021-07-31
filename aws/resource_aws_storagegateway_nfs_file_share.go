@@ -18,10 +18,10 @@ import (
 
 func resourceAwsStorageGatewayNfsFileShare() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsStorageGatewayNfsFileShareCreate,
-		Read:   resourceAwsStorageGatewayNfsFileShareRead,
-		Update: resourceAwsStorageGatewayNfsFileShareUpdate,
-		Delete: resourceAwsStorageGatewayNfsFileShareDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsStorageGatewayNfsFileShareCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsStorageGatewayNfsFileShareRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsStorageGatewayNfsFileShareUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsStorageGatewayNfsFileShareDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -193,7 +193,7 @@ func resourceAwsStorageGatewayNfsFileShare() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

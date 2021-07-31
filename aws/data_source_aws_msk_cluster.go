@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsMskCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsMskClusterRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsMskClusterRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

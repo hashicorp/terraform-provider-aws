@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsKmsPublicKey() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsKmsPublicKeyRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsKmsPublicKeyRead),
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

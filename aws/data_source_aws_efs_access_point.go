@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsEfsAccessPoint() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEfsAccessPointRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEfsAccessPointRead),
 
 		Schema: map[string]*schema.Schema{
 			"access_point_id": {

@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsGlueScript() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsGlueScriptRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsGlueScriptRead),
 		Schema: map[string]*schema.Schema{
 			"dag_edge": {
 				Type:     schema.TypeList,

@@ -16,10 +16,10 @@ import (
 
 func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLakeFormationDataLakeSettingsCreate,
-		Update: resourceAwsLakeFormationDataLakeSettingsCreate,
-		Read:   resourceAwsLakeFormationDataLakeSettingsRead,
-		Delete: resourceAwsLakeFormationDataLakeSettingsDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLakeFormationDataLakeSettingsCreate),
+		Update: ClientInitCrudBaseFunc(resourceAwsLakeFormationDataLakeSettingsCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLakeFormationDataLakeSettingsRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLakeFormationDataLakeSettingsDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -13,10 +13,10 @@ import (
 
 func resourceAwsIamOpenIDConnectProvider() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamOpenIDConnectProviderCreate,
-		Read:   resourceAwsIamOpenIDConnectProviderRead,
-		Update: resourceAwsIamOpenIDConnectProviderUpdate,
-		Delete: resourceAwsIamOpenIDConnectProviderDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIamOpenIDConnectProviderCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIamOpenIDConnectProviderRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIamOpenIDConnectProviderUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIamOpenIDConnectProviderDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -54,7 +54,7 @@ func resourceAwsIamOpenIDConnectProvider() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

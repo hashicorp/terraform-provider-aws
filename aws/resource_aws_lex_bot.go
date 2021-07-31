@@ -27,10 +27,10 @@ const (
 
 func resourceAwsLexBot() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLexBotCreate,
-		Read:   resourceAwsLexBotRead,
-		Update: resourceAwsLexBotUpdate,
-		Delete: resourceAwsLexBotDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLexBotCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLexBotRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsLexBotUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLexBotDelete),
 
 		// TODO add to other lex resources
 		Importer: &schema.ResourceImporter{
@@ -178,7 +178,7 @@ func resourceAwsLexBot() *schema.Resource {
 				Computed: true,
 			},
 		},
-		CustomizeDiff: updateComputedAttributesOnBotCreateVersion,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(updateComputedAttributesOnBotCreateVersion),
 	}
 }
 

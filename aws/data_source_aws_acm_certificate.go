@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsAcmCertificate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAcmCertificateRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsAcmCertificateRead),
 		Schema: map[string]*schema.Schema{
 			"domain": {
 				Type:     schema.TypeString,

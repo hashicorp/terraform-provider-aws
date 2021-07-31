@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsDxGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDxGatewayRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsDxGatewayRead),
 
 		Schema: map[string]*schema.Schema{
 			"amazon_side_asn": {

@@ -19,10 +19,10 @@ import (
 
 func resourceAwsMskCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMskClusterCreate,
-		Read:   resourceAwsMskClusterRead,
-		Update: resourceAwsMskClusterUpdate,
-		Delete: resourceAwsMskClusterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsMskClusterCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsMskClusterRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsMskClusterUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsMskClusterDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

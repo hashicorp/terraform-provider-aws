@@ -17,10 +17,10 @@ import (
 
 func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDirectoryServiceDirectoryCreate,
-		Read:   resourceAwsDirectoryServiceDirectoryRead,
-		Update: resourceAwsDirectoryServiceDirectoryUpdate,
-		Delete: resourceAwsDirectoryServiceDirectoryDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDirectoryServiceDirectoryCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDirectoryServiceDirectoryRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDirectoryServiceDirectoryUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDirectoryServiceDirectoryDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -184,7 +184,7 @@ func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

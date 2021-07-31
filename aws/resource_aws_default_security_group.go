@@ -22,16 +22,16 @@ const DefaultSecurityGroupName = "default"
 func resourceAwsDefaultSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsDefaultSecurityGroupCreate,
-		Read:   resourceAwsDefaultSecurityGroupRead,
-		Update: resourceAwsDefaultSecurityGroupUpdate,
-		Delete: resourceAwsDefaultSecurityGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDefaultSecurityGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDefaultSecurityGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDefaultSecurityGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDefaultSecurityGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsDefaultSecurityGroupMigrateState,
+		MigrateState:  ClientInitMigrateStateFunc(resourceAwsDefaultSecurityGroupMigrateState),
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -188,7 +188,7 @@ func resourceAwsDefaultSecurityGroup() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

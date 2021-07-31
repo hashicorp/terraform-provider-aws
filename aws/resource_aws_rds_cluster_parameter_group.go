@@ -18,10 +18,10 @@ const rdsClusterParameterGroupMaxParamsBulkEdit = 20
 
 func resourceAwsRDSClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRDSClusterParameterGroupCreate,
-		Read:   resourceAwsRDSClusterParameterGroupRead,
-		Update: resourceAwsRDSClusterParameterGroupUpdate,
-		Delete: resourceAwsRDSClusterParameterGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRDSClusterParameterGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRDSClusterParameterGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRDSClusterParameterGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRDSClusterParameterGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -86,7 +86,7 @@ func resourceAwsRDSClusterParameterGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

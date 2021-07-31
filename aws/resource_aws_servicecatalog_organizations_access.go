@@ -12,9 +12,9 @@ import (
 
 func resourceAwsServiceCatalogOrganizationsAccess() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogOrganizationsAccessCreate,
-		Read:   resourceAwsServiceCatalogOrganizationsAccessRead,
-		Delete: resourceAwsServiceCatalogOrganizationsAccessDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsServiceCatalogOrganizationsAccessCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsServiceCatalogOrganizationsAccessRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsServiceCatalogOrganizationsAccessDelete),
 
 		Schema: map[string]*schema.Schema{
 			"enabled": {

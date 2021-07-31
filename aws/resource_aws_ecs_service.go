@@ -24,15 +24,15 @@ import (
 
 func resourceAwsEcsService() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEcsServiceCreate,
-		Read:   resourceAwsEcsServiceRead,
-		Update: resourceAwsEcsServiceUpdate,
-		Delete: resourceAwsEcsServiceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEcsServiceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEcsServiceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEcsServiceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEcsServiceDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsEcsServiceImport,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Timeouts: &schema.ResourceTimeout{
 			Delete: schema.DefaultTimeout(20 * time.Minute),

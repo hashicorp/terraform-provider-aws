@@ -22,16 +22,16 @@ import (
 
 func resourceAwsEksIdentityProviderConfig() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsEksIdentityProviderConfigCreate,
-		ReadContext:   resourceAwsEksIdentityProviderConfigRead,
-		UpdateContext: resourceAwsEksIdentityProviderConfigUpdate,
-		DeleteContext: resourceAwsEksIdentityProviderConfigDelete,
+		CreateContext: ClientInitCrudContextFunc(resourceAwsEksIdentityProviderConfigCreate),
+		ReadContext:   ClientInitCrudContextFunc(resourceAwsEksIdentityProviderConfigRead),
+		UpdateContext: ClientInitCrudContextFunc(resourceAwsEksIdentityProviderConfigUpdate),
+		DeleteContext: ClientInitCrudContextFunc(resourceAwsEksIdentityProviderConfigDelete),
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(25 * time.Minute),

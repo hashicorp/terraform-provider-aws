@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsApiGatewayResource() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsApiGatewayResourceRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsApiGatewayResourceRead),
 		Schema: map[string]*schema.Schema{
 			"rest_api_id": {
 				Type:     schema.TypeString,

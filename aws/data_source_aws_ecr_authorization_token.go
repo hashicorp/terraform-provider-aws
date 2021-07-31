@@ -14,7 +14,7 @@ import (
 
 func dataSourceAwsEcrAuthorizationToken() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEcrAuthorizationTokenRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEcrAuthorizationTokenRead),
 
 		Schema: map[string]*schema.Schema{
 			"registry_id": {

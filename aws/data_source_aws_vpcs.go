@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsVpcs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsVpcsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsVpcsRead),
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),
 

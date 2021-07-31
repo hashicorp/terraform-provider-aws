@@ -15,10 +15,10 @@ import (
 
 func resourceAwsSfnActivity() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSfnActivityCreate,
-		Read:   resourceAwsSfnActivityRead,
-		Update: resourceAwsSfnActivityUpdate,
-		Delete: resourceAwsSfnActivityDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSfnActivityCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSfnActivityRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSfnActivityUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSfnActivityDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -39,7 +39,7 @@ func resourceAwsSfnActivity() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

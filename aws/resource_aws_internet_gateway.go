@@ -16,10 +16,10 @@ import (
 
 func resourceAwsInternetGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsInternetGatewayCreate,
-		Read:   resourceAwsInternetGatewayRead,
-		Update: resourceAwsInternetGatewayUpdate,
-		Delete: resourceAwsInternetGatewayDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsInternetGatewayCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsInternetGatewayRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsInternetGatewayUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsInternetGatewayDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -41,7 +41,7 @@ func resourceAwsInternetGateway() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

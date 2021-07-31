@@ -17,10 +17,10 @@ import (
 
 func resourceAwsRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRouteTableAssociationCreate,
-		Read:   resourceAwsRouteTableAssociationRead,
-		Update: resourceAwsRouteTableAssociationUpdate,
-		Delete: resourceAwsRouteTableAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRouteTableAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRouteTableAssociationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRouteTableAssociationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRouteTableAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsRouteTableAssociationImport,
 		},

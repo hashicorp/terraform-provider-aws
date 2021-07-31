@@ -11,9 +11,9 @@ import (
 
 func resourceAwsSsmResourceDataSync() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsmResourceDataSyncCreate,
-		Read:   resourceAwsSsmResourceDataSyncRead,
-		Delete: resourceAwsSsmResourceDataSyncDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSsmResourceDataSyncCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSsmResourceDataSyncRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSsmResourceDataSyncDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

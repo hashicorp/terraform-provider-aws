@@ -21,10 +21,10 @@ const (
 
 func resourceAwsRDSGlobalCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRDSGlobalClusterCreate,
-		Read:   resourceAwsRDSGlobalClusterRead,
-		Update: resourceAwsRDSGlobalClusterUpdate,
-		Delete: resourceAwsRDSGlobalClusterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRDSGlobalClusterCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRDSGlobalClusterRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRDSGlobalClusterUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRDSGlobalClusterDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

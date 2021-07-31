@@ -14,10 +14,10 @@ import (
 
 func resourceAwsApiGatewayRestApiPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayRestApiPolicyPut,
-		Read:   resourceAwsApiGatewayRestApiPolicyRead,
-		Update: resourceAwsApiGatewayRestApiPolicyPut,
-		Delete: resourceAwsApiGatewayRestApiPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsApiGatewayRestApiPolicyPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsApiGatewayRestApiPolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsApiGatewayRestApiPolicyPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsApiGatewayRestApiPolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

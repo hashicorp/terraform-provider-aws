@@ -14,12 +14,12 @@ import (
 
 func resourceAwsElasticBeanstalkApplicationVersion() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticBeanstalkApplicationVersionCreate,
-		Read:   resourceAwsElasticBeanstalkApplicationVersionRead,
-		Update: resourceAwsElasticBeanstalkApplicationVersionUpdate,
-		Delete: resourceAwsElasticBeanstalkApplicationVersionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsElasticBeanstalkApplicationVersionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsElasticBeanstalkApplicationVersionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsElasticBeanstalkApplicationVersionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsElasticBeanstalkApplicationVersionDelete),
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"application": {

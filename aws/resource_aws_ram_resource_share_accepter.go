@@ -17,9 +17,9 @@ import (
 
 func resourceAwsRamResourceShareAccepter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRamResourceShareAccepterCreate,
-		Read:   resourceAwsRamResourceShareAccepterRead,
-		Delete: resourceAwsRamResourceShareAccepterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRamResourceShareAccepterCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRamResourceShareAccepterRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRamResourceShareAccepterDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

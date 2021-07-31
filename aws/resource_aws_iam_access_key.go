@@ -17,10 +17,10 @@ import (
 
 func resourceAwsIamAccessKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamAccessKeyCreate,
-		Read:   resourceAwsIamAccessKeyRead,
-		Update: resourceAwsIamAccessKeyUpdate,
-		Delete: resourceAwsIamAccessKeyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIamAccessKeyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIamAccessKeyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIamAccessKeyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIamAccessKeyDelete),
 
 		Importer: &schema.ResourceImporter{
 			// ListAccessKeys requires UserName field in certain scenarios:

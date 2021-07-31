@@ -14,10 +14,10 @@ import (
 
 func resourceAwsRamResourceShare() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRamResourceShareCreate,
-		Read:   resourceAwsRamResourceShareRead,
-		Update: resourceAwsRamResourceShareUpdate,
-		Delete: resourceAwsRamResourceShareDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRamResourceShareCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRamResourceShareRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRamResourceShareUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRamResourceShareDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -49,7 +49,7 @@ func resourceAwsRamResourceShare() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

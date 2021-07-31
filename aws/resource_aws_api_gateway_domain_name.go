@@ -15,10 +15,10 @@ import (
 
 func resourceAwsApiGatewayDomainName() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayDomainNameCreate,
-		Read:   resourceAwsApiGatewayDomainNameRead,
-		Update: resourceAwsApiGatewayDomainNameUpdate,
-		Delete: resourceAwsApiGatewayDomainNameDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsApiGatewayDomainNameCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsApiGatewayDomainNameRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsApiGatewayDomainNameUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsApiGatewayDomainNameDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -167,7 +167,7 @@ func resourceAwsApiGatewayDomainName() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

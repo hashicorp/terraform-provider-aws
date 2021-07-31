@@ -33,16 +33,16 @@ import (
 func resourceAwsInstance() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsInstanceCreate,
-		Read:   resourceAwsInstanceRead,
-		Update: resourceAwsInstanceUpdate,
-		Delete: resourceAwsInstanceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsInstanceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsInstanceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsInstanceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsInstanceDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsInstanceMigrateState,
+		MigrateState:  ClientInitMigrateStateFunc(resourceAwsInstanceMigrateState),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),

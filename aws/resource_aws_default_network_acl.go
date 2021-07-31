@@ -22,11 +22,11 @@ const (
 
 func resourceAwsDefaultNetworkAcl() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDefaultNetworkAclCreate,
+		Create: ClientInitCrudBaseFunc(resourceAwsDefaultNetworkAclCreate),
 		// We reuse aws_network_acl's read method, the operations are the same
-		Read:   resourceAwsNetworkAclRead,
-		Delete: resourceAwsDefaultNetworkAclDelete,
-		Update: resourceAwsDefaultNetworkAclUpdate,
+		Read:   ClientInitCrudBaseFunc(resourceAwsNetworkAclRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDefaultNetworkAclDelete),
+		Update: ClientInitCrudBaseFunc(resourceAwsDefaultNetworkAclUpdate),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("default_network_acl_id", d.Id())
@@ -192,7 +192,7 @@ func resourceAwsDefaultNetworkAcl() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

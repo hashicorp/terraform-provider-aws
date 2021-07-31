@@ -18,10 +18,10 @@ import (
 func resourceAwsIamUserPolicy() *schema.Resource {
 	return &schema.Resource{
 		// PutUserPolicy API is idempotent, so these can be the same.
-		Create: resourceAwsIamUserPolicyPut,
-		Read:   resourceAwsIamUserPolicyRead,
-		Update: resourceAwsIamUserPolicyPut,
-		Delete: resourceAwsIamUserPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIamUserPolicyPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIamUserPolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIamUserPolicyPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIamUserPolicyDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

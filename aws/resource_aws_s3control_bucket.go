@@ -25,10 +25,10 @@ const (
 
 func resourceAwsS3ControlBucket() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3ControlBucketCreate,
-		Read:   resourceAwsS3ControlBucketRead,
-		Update: resourceAwsS3ControlBucketUpdate,
-		Delete: resourceAwsS3ControlBucketDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsS3ControlBucketCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsS3ControlBucketRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsS3ControlBucketUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsS3ControlBucketDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -68,7 +68,7 @@ func resourceAwsS3ControlBucket() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

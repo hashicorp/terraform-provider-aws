@@ -14,10 +14,10 @@ import (
 
 func resourceAwsCognitoIdentityPool() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCognitoIdentityPoolCreate,
-		Read:   resourceAwsCognitoIdentityPoolRead,
-		Update: resourceAwsCognitoIdentityPoolUpdate,
-		Delete: resourceAwsCognitoIdentityPoolDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCognitoIdentityPoolCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCognitoIdentityPoolRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCognitoIdentityPoolUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCognitoIdentityPoolDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -109,7 +109,7 @@ func resourceAwsCognitoIdentityPool() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

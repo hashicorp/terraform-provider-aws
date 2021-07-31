@@ -14,7 +14,7 @@ import (
 
 func dataSourceAwsEbsSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEbsSnapshotRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEbsSnapshotRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

@@ -21,9 +21,9 @@ const (
 
 func resourceAwsDbInstanceRoleAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbInstanceRoleAssociationCreate,
-		Read:   resourceAwsDbInstanceRoleAssociationRead,
-		Delete: resourceAwsDbInstanceRoleAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDbInstanceRoleAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDbInstanceRoleAssociationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDbInstanceRoleAssociationDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

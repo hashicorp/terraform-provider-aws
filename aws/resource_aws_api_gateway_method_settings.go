@@ -14,10 +14,10 @@ import (
 
 func resourceAwsApiGatewayMethodSettings() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayMethodSettingsUpdate,
-		Read:   resourceAwsApiGatewayMethodSettingsRead,
-		Update: resourceAwsApiGatewayMethodSettingsUpdate,
-		Delete: resourceAwsApiGatewayMethodSettingsDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsApiGatewayMethodSettingsUpdate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsApiGatewayMethodSettingsRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsApiGatewayMethodSettingsUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsApiGatewayMethodSettingsDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsApiGatewayMethodSettingsImport,

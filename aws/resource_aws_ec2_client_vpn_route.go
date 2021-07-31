@@ -14,9 +14,9 @@ import (
 
 func resourceAwsEc2ClientVpnRoute() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2ClientVpnRouteCreate,
-		Read:   resourceAwsEc2ClientVpnRouteRead,
-		Delete: resourceAwsEc2ClientVpnRouteDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEc2ClientVpnRouteCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEc2ClientVpnRouteRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEc2ClientVpnRouteDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsEc2ClientVpnRouteImport,
 		},

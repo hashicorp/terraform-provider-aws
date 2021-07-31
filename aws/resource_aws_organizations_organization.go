@@ -18,10 +18,10 @@ const organizationsPolicyTypeStatusDisabled = "DISABLED"
 
 func resourceAwsOrganizationsOrganization() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsOrganizationsOrganizationCreate,
-		Read:   resourceAwsOrganizationsOrganizationRead,
-		Update: resourceAwsOrganizationsOrganizationUpdate,
-		Delete: resourceAwsOrganizationsOrganizationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsOrganizationsOrganizationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsOrganizationsOrganizationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsOrganizationsOrganizationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsOrganizationsOrganizationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

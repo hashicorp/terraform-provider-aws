@@ -45,10 +45,10 @@ func BucketCannedACL_Values() []string {
 
 func resourceAwsS3Bucket() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3BucketCreate,
-		Read:   resourceAwsS3BucketRead,
-		Update: resourceAwsS3BucketUpdate,
-		Delete: resourceAwsS3BucketDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsS3BucketCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsS3BucketRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsS3BucketUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsS3BucketDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -634,7 +634,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

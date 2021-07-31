@@ -11,7 +11,7 @@ import (
 
 func dataSourceCloudHsmV2Cluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCloudHsmV2ClusterRead,
+		Read: ClientInitCrudBaseFunc(dataSourceCloudHsmV2ClusterRead),
 
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {

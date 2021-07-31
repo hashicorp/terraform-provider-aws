@@ -12,9 +12,9 @@ import (
 
 func resourceAwsElasticTranscoderPreset() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticTranscoderPresetCreate,
-		Read:   resourceAwsElasticTranscoderPresetRead,
-		Delete: resourceAwsElasticTranscoderPresetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsElasticTranscoderPresetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsElasticTranscoderPresetRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsElasticTranscoderPresetDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

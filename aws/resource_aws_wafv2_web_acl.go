@@ -24,10 +24,10 @@ const (
 
 func resourceAwsWafv2WebACL() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafv2WebACLCreate,
-		Read:   resourceAwsWafv2WebACLRead,
-		Update: resourceAwsWafv2WebACLUpdate,
-		Delete: resourceAwsWafv2WebACLDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafv2WebACLCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafv2WebACLRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWafv2WebACLUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafv2WebACLDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -138,7 +138,7 @@ func resourceAwsWafv2WebACL() *schema.Resource {
 			"visibility_config": wafv2VisibilityConfigSchema(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

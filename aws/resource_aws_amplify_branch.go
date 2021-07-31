@@ -18,15 +18,15 @@ import (
 
 func resourceAwsAmplifyBranch() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAmplifyBranchCreate,
-		Read:   resourceAwsAmplifyBranchRead,
-		Update: resourceAwsAmplifyBranchUpdate,
-		Delete: resourceAwsAmplifyBranchDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAmplifyBranchCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAmplifyBranchRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAmplifyBranchUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAmplifyBranchDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"app_id": {

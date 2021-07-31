@@ -19,15 +19,15 @@ const (
 
 func resourceAwsEc2CapacityReservation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2CapacityReservationCreate,
-		Read:   resourceAwsEc2CapacityReservationRead,
-		Update: resourceAwsEc2CapacityReservationUpdate,
-		Delete: resourceAwsEc2CapacityReservationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEc2CapacityReservationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEc2CapacityReservationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEc2CapacityReservationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEc2CapacityReservationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"availability_zone": {

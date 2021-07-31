@@ -16,10 +16,10 @@ import (
 
 func resourceAwsWafv2WebACLLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafv2WebACLLoggingConfigurationPut,
-		Read:   resourceAwsWafv2WebACLLoggingConfigurationRead,
-		Update: resourceAwsWafv2WebACLLoggingConfigurationPut,
-		Delete: resourceAwsWafv2WebACLLoggingConfigurationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafv2WebACLLoggingConfigurationPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafv2WebACLLoggingConfigurationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWafv2WebACLLoggingConfigurationPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafv2WebACLLoggingConfigurationDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

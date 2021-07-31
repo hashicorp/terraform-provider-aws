@@ -11,10 +11,10 @@ import (
 
 func resourceAwsGlueDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueDataCatalogEncryptionSettingsPut,
-		Read:   resourceAwsGlueDataCatalogEncryptionSettingsRead,
-		Update: resourceAwsGlueDataCatalogEncryptionSettingsPut,
-		Delete: schema.Noop,
+		Create: ClientInitCrudBaseFunc(resourceAwsGlueDataCatalogEncryptionSettingsPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGlueDataCatalogEncryptionSettingsRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGlueDataCatalogEncryptionSettingsPut),
+		Delete: ClientInitCrudBaseFunc(schema.Noop),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

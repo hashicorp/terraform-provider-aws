@@ -15,10 +15,10 @@ import (
 
 func resourceAwsCloud9EnvironmentEc2() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloud9EnvironmentEc2Create,
-		Read:   resourceAwsCloud9EnvironmentEc2Read,
-		Update: resourceAwsCloud9EnvironmentEc2Update,
-		Delete: resourceAwsCloud9EnvironmentEc2Delete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloud9EnvironmentEc2Create),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloud9EnvironmentEc2Read),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloud9EnvironmentEc2Update),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloud9EnvironmentEc2Delete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -67,7 +67,7 @@ func resourceAwsCloud9EnvironmentEc2() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

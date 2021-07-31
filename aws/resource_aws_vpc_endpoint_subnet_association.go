@@ -18,9 +18,9 @@ import (
 
 func resourceAwsVpcEndpointSubnetAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcEndpointSubnetAssociationCreate,
-		Read:   resourceAwsVpcEndpointSubnetAssociationRead,
-		Delete: resourceAwsVpcEndpointSubnetAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsVpcEndpointSubnetAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsVpcEndpointSubnetAssociationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsVpcEndpointSubnetAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

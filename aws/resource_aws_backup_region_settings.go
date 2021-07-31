@@ -10,10 +10,10 @@ import (
 
 func resourceAwsBackupRegionSettings() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBackupRegionSettingsUpdate,
-		Update: resourceAwsBackupRegionSettingsUpdate,
-		Read:   resourceAwsBackupRegionSettingsRead,
-		Delete: schema.Noop,
+		Create: ClientInitCrudBaseFunc(resourceAwsBackupRegionSettingsUpdate),
+		Update: ClientInitCrudBaseFunc(resourceAwsBackupRegionSettingsUpdate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsBackupRegionSettingsRead),
+		Delete: ClientInitCrudBaseFunc(schema.Noop),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

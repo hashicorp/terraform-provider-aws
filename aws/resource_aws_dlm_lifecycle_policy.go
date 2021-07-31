@@ -14,10 +14,10 @@ import (
 
 func resourceAwsDlmLifecyclePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDlmLifecyclePolicyCreate,
-		Read:   resourceAwsDlmLifecyclePolicyRead,
-		Update: resourceAwsDlmLifecyclePolicyUpdate,
-		Delete: resourceAwsDlmLifecyclePolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDlmLifecyclePolicyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDlmLifecyclePolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDlmLifecyclePolicyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDlmLifecyclePolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -141,7 +141,7 @@ func resourceAwsDlmLifecyclePolicy() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

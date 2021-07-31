@@ -14,10 +14,10 @@ import (
 func resourceAwsOpsworksApplication() *schema.Resource {
 	return &schema.Resource{
 
-		Create: resourceAwsOpsworksApplicationCreate,
-		Read:   resourceAwsOpsworksApplicationRead,
-		Update: resourceAwsOpsworksApplicationUpdate,
-		Delete: resourceAwsOpsworksApplicationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsOpsworksApplicationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsOpsworksApplicationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsOpsworksApplicationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsOpsworksApplicationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

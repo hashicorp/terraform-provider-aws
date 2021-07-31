@@ -12,10 +12,10 @@ import (
 
 func resourceAwsCloudFrontCachePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudFrontCachePolicyCreate,
-		Read:   resourceAwsCloudFrontCachePolicyRead,
-		Update: resourceAwsCloudFrontCachePolicyUpdate,
-		Delete: resourceAwsCloudFrontCachePolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudFrontCachePolicyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudFrontCachePolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudFrontCachePolicyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudFrontCachePolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

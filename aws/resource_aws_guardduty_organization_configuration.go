@@ -12,10 +12,10 @@ import (
 
 func resourceAwsGuardDutyOrganizationConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGuardDutyOrganizationConfigurationUpdate,
-		Read:   resourceAwsGuardDutyOrganizationConfigurationRead,
-		Update: resourceAwsGuardDutyOrganizationConfigurationUpdate,
-		Delete: schema.Noop,
+		Create: ClientInitCrudBaseFunc(resourceAwsGuardDutyOrganizationConfigurationUpdate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGuardDutyOrganizationConfigurationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGuardDutyOrganizationConfigurationUpdate),
+		Delete: ClientInitCrudBaseFunc(schema.Noop),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

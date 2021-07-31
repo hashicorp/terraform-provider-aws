@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsCanonicalUserId() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCanonicalUserIdRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsCanonicalUserIdRead),
 
 		Schema: map[string]*schema.Schema{
 			"display_name": {

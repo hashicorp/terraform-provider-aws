@@ -14,7 +14,7 @@ import (
 
 func dataSourceAwsVpcEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsVpcEndpointRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsVpcEndpointRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

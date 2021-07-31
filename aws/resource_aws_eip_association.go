@@ -15,9 +15,9 @@ import (
 
 func resourceAwsEipAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEipAssociationCreate,
-		Read:   resourceAwsEipAssociationRead,
-		Delete: resourceAwsEipAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEipAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEipAssociationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEipAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

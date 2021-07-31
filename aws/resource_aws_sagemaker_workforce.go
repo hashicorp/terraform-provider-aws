@@ -16,10 +16,10 @@ import (
 
 func resourceAwsSagemakerWorkforce() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerWorkforceCreate,
-		Read:   resourceAwsSagemakerWorkforceRead,
-		Update: resourceAwsSagemakerWorkforceUpdate,
-		Delete: resourceAwsSagemakerWorkforceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSagemakerWorkforceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSagemakerWorkforceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSagemakerWorkforceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSagemakerWorkforceDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

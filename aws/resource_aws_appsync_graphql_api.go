@@ -15,10 +15,10 @@ import (
 
 func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppsyncGraphqlApiCreate,
-		Read:   resourceAwsAppsyncGraphqlApiRead,
-		Update: resourceAwsAppsyncGraphqlApiUpdate,
-		Delete: resourceAwsAppsyncGraphqlApiDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAppsyncGraphqlApiCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAppsyncGraphqlApiRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAppsyncGraphqlApiUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAppsyncGraphqlApiDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -204,7 +204,7 @@ func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -18,16 +18,16 @@ import (
 
 func resourceAwsKmsKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsKmsKeyCreate,
-		Read:   resourceAwsKmsKeyRead,
-		Update: resourceAwsKmsKeyUpdate,
-		Delete: resourceAwsKmsKeyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsKmsKeyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsKmsKeyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsKmsKeyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsKmsKeyDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

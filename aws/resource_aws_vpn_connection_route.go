@@ -17,9 +17,9 @@ func resourceAwsVpnConnectionRoute() *schema.Resource {
 	return &schema.Resource{
 		// You can't update a route. You can just delete one and make
 		// a new one.
-		Create: resourceAwsVpnConnectionRouteCreate,
-		Read:   resourceAwsVpnConnectionRouteRead,
-		Delete: resourceAwsVpnConnectionRouteDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsVpnConnectionRouteCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsVpnConnectionRouteRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsVpnConnectionRouteDelete),
 
 		Schema: map[string]*schema.Schema{
 			"destination_cidr_block": {

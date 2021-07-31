@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsCodeArtifactRepositoryEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCodeArtifactRepositoryEndpointRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsCodeArtifactRepositoryEndpointRead),
 
 		Schema: map[string]*schema.Schema{
 			"domain": {

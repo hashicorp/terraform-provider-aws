@@ -19,10 +19,10 @@ import (
 
 func resourceAwsGlobalAcceleratorListener() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlobalAcceleratorListenerCreate,
-		Read:   resourceAwsGlobalAcceleratorListenerRead,
-		Update: resourceAwsGlobalAcceleratorListenerUpdate,
-		Delete: resourceAwsGlobalAcceleratorListenerDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGlobalAcceleratorListenerCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGlobalAcceleratorListenerRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGlobalAcceleratorListenerUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGlobalAcceleratorListenerDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

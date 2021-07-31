@@ -14,15 +14,15 @@ import (
 
 func resourceAwsGlueWorkflow() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueWorkflowCreate,
-		Read:   resourceAwsGlueWorkflowRead,
-		Update: resourceAwsGlueWorkflowUpdate,
-		Delete: resourceAwsGlueWorkflowDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGlueWorkflowCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGlueWorkflowRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGlueWorkflowUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGlueWorkflowDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

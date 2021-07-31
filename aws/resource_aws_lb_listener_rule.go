@@ -24,10 +24,10 @@ import (
 
 func resourceAwsLbbListenerRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLbListenerRuleCreate,
-		Read:   resourceAwsLbListenerRuleRead,
-		Update: resourceAwsLbListenerRuleUpdate,
-		Delete: resourceAwsLbListenerRuleDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLbListenerRuleCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLbListenerRuleRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsLbListenerRuleUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLbListenerRuleDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

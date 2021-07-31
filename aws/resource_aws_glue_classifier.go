@@ -14,10 +14,10 @@ import (
 
 func resourceAwsGlueClassifier() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueClassifierCreate,
-		Read:   resourceAwsGlueClassifierRead,
-		Update: resourceAwsGlueClassifierUpdate,
-		Delete: resourceAwsGlueClassifierDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGlueClassifierCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGlueClassifierRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGlueClassifierUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGlueClassifierDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

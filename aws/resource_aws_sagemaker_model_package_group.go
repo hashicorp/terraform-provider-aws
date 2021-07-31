@@ -16,10 +16,10 @@ import (
 
 func resourceAwsSagemakerModelPackageGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerModelPackageGroupCreate,
-		Read:   resourceAwsSagemakerModelPackageGroupRead,
-		Update: resourceAwsSagemakerModelPackageGroupUpdate,
-		Delete: resourceAwsSagemakerModelPackageGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSagemakerModelPackageGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSagemakerModelPackageGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSagemakerModelPackageGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSagemakerModelPackageGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -49,7 +49,7 @@ func resourceAwsSagemakerModelPackageGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -19,10 +19,10 @@ import (
 
 func resourceAwsEbsVolume() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEbsVolumeCreate,
-		Read:   resourceAwsEbsVolumeRead,
-		Update: resourceAWSEbsVolumeUpdate,
-		Delete: resourceAwsEbsVolumeDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEbsVolumeCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEbsVolumeRead),
+		Update: ClientInitCrudBaseFunc(resourceAWSEbsVolumeUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEbsVolumeDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

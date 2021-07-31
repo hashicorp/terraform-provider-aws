@@ -13,9 +13,9 @@ import (
 
 func resourceAwsSagemakerImageVersion() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerImageVersionCreate,
-		Read:   resourceAwsSagemakerImageVersionRead,
-		Delete: resourceAwsSagemakerImageVersionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSagemakerImageVersionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSagemakerImageVersionRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSagemakerImageVersionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsKinesisStreamConsumer() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsKinesisStreamConsumerRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsKinesisStreamConsumerRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

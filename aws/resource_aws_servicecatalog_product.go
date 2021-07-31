@@ -20,10 +20,10 @@ import (
 
 func resourceAwsServiceCatalogProduct() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogProductCreate,
-		Read:   resourceAwsServiceCatalogProductRead,
-		Update: resourceAwsServiceCatalogProductUpdate,
-		Delete: resourceAwsServiceCatalogProductDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsServiceCatalogProductCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsServiceCatalogProductRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsServiceCatalogProductUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsServiceCatalogProductDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -137,7 +137,7 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

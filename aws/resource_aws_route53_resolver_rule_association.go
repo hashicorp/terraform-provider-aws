@@ -18,9 +18,9 @@ const (
 
 func resourceAwsRoute53ResolverRuleAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ResolverRuleAssociationCreate,
-		Read:   resourceAwsRoute53ResolverRuleAssociationRead,
-		Delete: resourceAwsRoute53ResolverRuleAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverRuleAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRoute53ResolverRuleAssociationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverRuleAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -30,10 +30,10 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 			SetTagsDiff,
 		),
 
-		Create: resourceAwsLbTargetGroupCreate,
-		Read:   resourceAwsLbTargetGroupRead,
-		Update: resourceAwsLbTargetGroupUpdate,
-		Delete: resourceAwsLbTargetGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLbTargetGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLbTargetGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsLbTargetGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLbTargetGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

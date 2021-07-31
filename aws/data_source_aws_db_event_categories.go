@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsDbEventCategories() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDbEventCategoriesRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsDbEventCategoriesRead),
 
 		Schema: map[string]*schema.Schema{
 			"source_type": {

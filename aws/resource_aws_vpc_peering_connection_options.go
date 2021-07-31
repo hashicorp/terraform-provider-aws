@@ -13,10 +13,10 @@ import (
 
 func resourceAwsVpcPeeringConnectionOptions() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcPeeringConnectionOptionsCreate,
-		Read:   resourceAwsVpcPeeringConnectionOptionsRead,
-		Update: resourceAwsVpcPeeringConnectionOptionsUpdate,
-		Delete: resourceAwsVpcPeeringConnectionOptionsDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsVpcPeeringConnectionOptionsCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsVpcPeeringConnectionOptionsRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsVpcPeeringConnectionOptionsUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsVpcPeeringConnectionOptionsDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

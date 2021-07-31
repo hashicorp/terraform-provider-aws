@@ -14,7 +14,7 @@ import (
 
 func dataSourceAwsEbsVolume() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEbsVolumeRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEbsVolumeRead),
 
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),

@@ -13,10 +13,10 @@ import (
 
 func resourceAwsDmsReplicationSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDmsReplicationSubnetGroupCreate,
-		Read:   resourceAwsDmsReplicationSubnetGroupRead,
-		Update: resourceAwsDmsReplicationSubnetGroupUpdate,
-		Delete: resourceAwsDmsReplicationSubnetGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDmsReplicationSubnetGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDmsReplicationSubnetGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDmsReplicationSubnetGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDmsReplicationSubnetGroupDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -51,7 +51,7 @@ func resourceAwsDmsReplicationSubnetGroup() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -11,9 +11,9 @@ import (
 
 func resourceAwsLightsailDomain() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLightsailDomainCreate,
-		Read:   resourceAwsLightsailDomainRead,
-		Delete: resourceAwsLightsailDomainDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLightsailDomainCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLightsailDomainRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLightsailDomainDelete),
 
 		Schema: map[string]*schema.Schema{
 			"domain_name": {

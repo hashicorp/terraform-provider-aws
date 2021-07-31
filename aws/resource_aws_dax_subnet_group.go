@@ -10,10 +10,10 @@ import (
 
 func resourceAwsDaxSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDaxSubnetGroupCreate,
-		Read:   resourceAwsDaxSubnetGroupRead,
-		Update: resourceAwsDaxSubnetGroupUpdate,
-		Delete: resourceAwsDaxSubnetGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDaxSubnetGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDaxSubnetGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDaxSubnetGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDaxSubnetGroupDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

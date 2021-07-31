@@ -8,7 +8,7 @@ import (
 
 func dataSourceAwsDefaultTags() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDefaultTagsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsDefaultTagsRead),
 
 		Schema: map[string]*schema.Schema{
 			"tags": tagsSchemaComputed(),

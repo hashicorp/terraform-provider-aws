@@ -14,9 +14,9 @@ import (
 
 func resourceAwsDbProxyTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbProxyTargetCreate,
-		Read:   resourceAwsDbProxyTargetRead,
-		Delete: resourceAwsDbProxyTargetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDbProxyTargetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDbProxyTargetRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDbProxyTargetDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

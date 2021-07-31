@@ -13,10 +13,10 @@ import (
 
 func resourceAwsIamPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamPolicyAttachmentCreate,
-		Read:   resourceAwsIamPolicyAttachmentRead,
-		Update: resourceAwsIamPolicyAttachmentUpdate,
-		Delete: resourceAwsIamPolicyAttachmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIamPolicyAttachmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIamPolicyAttachmentRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIamPolicyAttachmentUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIamPolicyAttachmentDelete),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

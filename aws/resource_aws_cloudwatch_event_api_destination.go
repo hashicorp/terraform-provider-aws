@@ -13,10 +13,10 @@ import (
 
 func resourceAwsCloudWatchEventApiDestination() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchEventApiDestinationCreate,
-		Read:   resourceAwsCloudWatchEventApiDestinationRead,
-		Update: resourceAwsCloudWatchEventApiDestinationUpdate,
-		Delete: resourceAwsCloudWatchEventApiDestinationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventApiDestinationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudWatchEventApiDestinationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventApiDestinationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventApiDestinationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

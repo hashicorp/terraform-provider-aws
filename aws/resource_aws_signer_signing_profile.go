@@ -18,10 +18,10 @@ import (
 
 func resourceAwsSignerSigningProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSignerSigningProfileCreate,
-		Read:   resourceAwsSignerSigningProfileRead,
-		Update: resourceAwsSignerSigningProfileUpdate,
-		Delete: resourceAwsSignerSigningProfileDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSignerSigningProfileCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSignerSigningProfileRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSignerSigningProfileUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSignerSigningProfileDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -117,7 +117,7 @@ func resourceAwsSignerSigningProfile() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

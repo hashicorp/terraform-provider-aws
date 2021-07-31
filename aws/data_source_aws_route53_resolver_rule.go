@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsRoute53ResolverRule() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRoute53ResolverRuleRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsRoute53ResolverRuleRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

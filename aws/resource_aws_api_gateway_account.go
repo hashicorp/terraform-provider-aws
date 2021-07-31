@@ -13,10 +13,10 @@ import (
 
 func resourceAwsApiGatewayAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayAccountUpdate,
-		Read:   resourceAwsApiGatewayAccountRead,
-		Update: resourceAwsApiGatewayAccountUpdate,
-		Delete: resourceAwsApiGatewayAccountDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsApiGatewayAccountUpdate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsApiGatewayAccountRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsApiGatewayAccountUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsApiGatewayAccountDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

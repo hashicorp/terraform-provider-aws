@@ -16,10 +16,10 @@ import (
 
 func resourceAwsImageBuilderImagePipeline() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsImageBuilderImagePipelineCreate,
-		Read:   resourceAwsImageBuilderImagePipelineRead,
-		Update: resourceAwsImageBuilderImagePipelineUpdate,
-		Delete: resourceAwsImageBuilderImagePipelineDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsImageBuilderImagePipelineCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsImageBuilderImagePipelineRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsImageBuilderImagePipelineUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsImageBuilderImagePipelineDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -131,7 +131,7 @@ func resourceAwsImageBuilderImagePipeline() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

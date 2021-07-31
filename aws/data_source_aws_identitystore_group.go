@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsIdentityStoreGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIdentityStoreGroupRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsIdentityStoreGroupRead),
 
 		Schema: map[string]*schema.Schema{
 			"display_name": {

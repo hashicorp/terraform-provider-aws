@@ -14,10 +14,10 @@ import (
 
 func resourceAwsApiGatewayV2Authorizer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayV2AuthorizerCreate,
-		Read:   resourceAwsApiGatewayV2AuthorizerRead,
-		Update: resourceAwsApiGatewayV2AuthorizerUpdate,
-		Delete: resourceAwsApiGatewayV2AuthorizerDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsApiGatewayV2AuthorizerCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsApiGatewayV2AuthorizerRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsApiGatewayV2AuthorizerUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsApiGatewayV2AuthorizerDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsApiGatewayV2AuthorizerImport,
 		},

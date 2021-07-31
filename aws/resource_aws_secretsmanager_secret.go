@@ -22,10 +22,10 @@ import (
 
 func resourceAwsSecretsManagerSecret() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecretsManagerSecretCreate,
-		Read:   resourceAwsSecretsManagerSecretRead,
-		Update: resourceAwsSecretsManagerSecretUpdate,
-		Delete: resourceAwsSecretsManagerSecretDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSecretsManagerSecretCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSecretsManagerSecretRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSecretsManagerSecretUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSecretsManagerSecretDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -141,7 +141,7 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -13,9 +13,9 @@ import (
 
 func resourceAwsEMRManagedScalingPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEMRManagedScalingPolicyCreate,
-		Read:   resourceAwsEMRManagedScalingPolicyRead,
-		Delete: resourceAwsEMRManagedScalingPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEMRManagedScalingPolicyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEMRManagedScalingPolicyRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEMRManagedScalingPolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

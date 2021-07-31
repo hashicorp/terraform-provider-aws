@@ -16,10 +16,10 @@ const wafUpdateIPSetUpdatesLimit = 1000
 
 func resourceAwsWafIPSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafIPSetCreate,
-		Read:   resourceAwsWafIPSetRead,
-		Update: resourceAwsWafIPSetUpdate,
-		Delete: resourceAwsWafIPSetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafIPSetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafIPSetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWafIPSetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafIPSetDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

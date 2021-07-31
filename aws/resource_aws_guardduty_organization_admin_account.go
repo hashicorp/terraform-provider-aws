@@ -12,9 +12,9 @@ import (
 
 func resourceAwsGuardDutyOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGuardDutyOrganizationAdminAccountCreate,
-		Read:   resourceAwsGuardDutyOrganizationAdminAccountRead,
-		Delete: resourceAwsGuardDutyOrganizationAdminAccountDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGuardDutyOrganizationAdminAccountCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGuardDutyOrganizationAdminAccountRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGuardDutyOrganizationAdminAccountDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

@@ -15,9 +15,9 @@ import (
 
 func resourceAwsCloudHsmV2Hsm() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudHsmV2HsmCreate,
-		Read:   resourceAwsCloudHsmV2HsmRead,
-		Delete: resourceAwsCloudHsmV2HsmDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudHsmV2HsmCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudHsmV2HsmRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudHsmV2HsmDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

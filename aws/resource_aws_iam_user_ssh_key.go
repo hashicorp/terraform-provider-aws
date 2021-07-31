@@ -18,10 +18,10 @@ import (
 
 func resourceAwsIamUserSshKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamUserSshKeyCreate,
-		Read:   resourceAwsIamUserSshKeyRead,
-		Update: resourceAwsIamUserSshKeyUpdate,
-		Delete: resourceAwsIamUserSshKeyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIamUserSshKeyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIamUserSshKeyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIamUserSshKeyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIamUserSshKeyDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsIamUserSshKeyImport,
 		},

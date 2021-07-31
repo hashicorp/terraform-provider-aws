@@ -15,10 +15,10 @@ import (
 
 func resourceAwsLambdaProvisionedConcurrencyConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLambdaProvisionedConcurrencyConfigCreate,
-		Read:   resourceAwsLambdaProvisionedConcurrencyConfigRead,
-		Update: resourceAwsLambdaProvisionedConcurrencyConfigUpdate,
-		Delete: resourceAwsLambdaProvisionedConcurrencyConfigDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLambdaProvisionedConcurrencyConfigCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLambdaProvisionedConcurrencyConfigRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsLambdaProvisionedConcurrencyConfigUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLambdaProvisionedConcurrencyConfigDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

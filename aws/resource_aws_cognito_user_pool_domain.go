@@ -14,9 +14,9 @@ import (
 
 func resourceAwsCognitoUserPoolDomain() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCognitoUserPoolDomainCreate,
-		Read:   resourceAwsCognitoUserPoolDomainRead,
-		Delete: resourceAwsCognitoUserPoolDomainDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCognitoUserPoolDomainCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCognitoUserPoolDomainRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCognitoUserPoolDomainDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

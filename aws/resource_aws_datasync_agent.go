@@ -20,10 +20,10 @@ import (
 
 func resourceAwsDataSyncAgent() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDataSyncAgentCreate,
-		Read:   resourceAwsDataSyncAgentRead,
-		Update: resourceAwsDataSyncAgentUpdate,
-		Delete: resourceAwsDataSyncAgentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDataSyncAgentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDataSyncAgentRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDataSyncAgentUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDataSyncAgentDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -82,7 +82,7 @@ func resourceAwsDataSyncAgent() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

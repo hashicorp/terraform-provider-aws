@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsEc2LocalGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2LocalGatewayRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEc2LocalGatewayRead),
 
 		Schema: map[string]*schema.Schema{
 			"id": {

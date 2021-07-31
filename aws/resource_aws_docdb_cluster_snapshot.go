@@ -13,9 +13,9 @@ import (
 
 func resourceAwsDocDBClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDocDBClusterSnapshotCreate,
-		Read:   resourceAwsDocDBClusterSnapshotRead,
-		Delete: resourceAwsDocDBClusterSnapshotDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDocDBClusterSnapshotCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDocDBClusterSnapshotRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDocDBClusterSnapshotDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

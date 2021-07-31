@@ -11,9 +11,9 @@ import (
 
 func resourceAwsRoute53QueryLog() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53QueryLogCreate,
-		Read:   resourceAwsRoute53QueryLogRead,
-		Delete: resourceAwsRoute53QueryLogDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRoute53QueryLogCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRoute53QueryLogRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRoute53QueryLogDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

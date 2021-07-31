@@ -19,10 +19,10 @@ import (
 func resourceAwsTransferUser() *schema.Resource {
 
 	return &schema.Resource{
-		Create: resourceAwsTransferUserCreate,
-		Read:   resourceAwsTransferUserRead,
-		Update: resourceAwsTransferUserUpdate,
-		Delete: resourceAwsTransferUserDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsTransferUserCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsTransferUserRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsTransferUserUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsTransferUserDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -119,7 +119,7 @@ func resourceAwsTransferUser() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

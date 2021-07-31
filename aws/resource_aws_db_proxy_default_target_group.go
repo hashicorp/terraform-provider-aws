@@ -14,10 +14,10 @@ import (
 
 func resourceAwsDbProxyDefaultTargetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbProxyDefaultTargetGroupCreate,
-		Read:   resourceAwsDbProxyDefaultTargetGroupRead,
-		Update: resourceAwsDbProxyDefaultTargetGroupUpdate,
-		Delete: schema.Noop,
+		Create: ClientInitCrudBaseFunc(resourceAwsDbProxyDefaultTargetGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDbProxyDefaultTargetGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDbProxyDefaultTargetGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(schema.Noop),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

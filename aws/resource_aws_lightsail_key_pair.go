@@ -15,9 +15,9 @@ import (
 
 func resourceAwsLightsailKeyPair() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLightsailKeyPairCreate,
-		Read:   resourceAwsLightsailKeyPairRead,
-		Delete: resourceAwsLightsailKeyPairDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLightsailKeyPairCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLightsailKeyPairRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLightsailKeyPairDelete),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

@@ -28,10 +28,10 @@ const s3BucketObjectCreationTimeout = 2 * time.Minute
 
 func resourceAwsS3BucketObject() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3BucketObjectCreate,
-		Read:   resourceAwsS3BucketObjectRead,
-		Update: resourceAwsS3BucketObjectUpdate,
-		Delete: resourceAwsS3BucketObjectDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsS3BucketObjectCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsS3BucketObjectRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsS3BucketObjectUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsS3BucketObjectDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsS3BucketObjectImport,

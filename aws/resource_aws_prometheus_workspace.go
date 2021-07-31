@@ -15,10 +15,10 @@ import (
 
 func resourceAwsPrometheusWorkspace() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsPrometheusWorkspaceCreate,
-		ReadContext:   resourceAwsPrometheusWorkspaceRead,
-		UpdateContext: resourceAwsPrometheusWorkspaceUpdate,
-		DeleteContext: resourceAwsPrometheusWorkspaceDelete,
+		CreateContext: ClientInitCrudContextFunc(resourceAwsPrometheusWorkspaceCreate),
+		ReadContext:   ClientInitCrudContextFunc(resourceAwsPrometheusWorkspaceRead),
+		UpdateContext: ClientInitCrudContextFunc(resourceAwsPrometheusWorkspaceUpdate),
+		DeleteContext: ClientInitCrudContextFunc(resourceAwsPrometheusWorkspaceDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

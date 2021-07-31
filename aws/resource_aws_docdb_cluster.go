@@ -18,10 +18,10 @@ import (
 
 func resourceAwsDocDBCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDocDBClusterCreate,
-		Read:   resourceAwsDocDBClusterRead,
-		Update: resourceAwsDocDBClusterUpdate,
-		Delete: resourceAwsDocDBClusterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDocDBClusterCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDocDBClusterRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDocDBClusterUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDocDBClusterDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDocDBClusterImport,
 		},
@@ -246,7 +246,7 @@ func resourceAwsDocDBCluster() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

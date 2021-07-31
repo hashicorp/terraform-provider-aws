@@ -14,10 +14,10 @@ import (
 
 func resourceAwsDocDBSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDocDBSubnetGroupCreate,
-		Read:   resourceAwsDocDBSubnetGroupRead,
-		Update: resourceAwsDocDBSubnetGroupUpdate,
-		Delete: resourceAwsDocDBSubnetGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDocDBSubnetGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDocDBSubnetGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDocDBSubnetGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDocDBSubnetGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -63,7 +63,7 @@ func resourceAwsDocDBSubnetGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

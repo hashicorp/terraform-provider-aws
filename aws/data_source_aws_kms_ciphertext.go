@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsKmsCiphertext() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsKmsCiphertextRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsKmsCiphertextRead),
 
 		Schema: map[string]*schema.Schema{
 			"plaintext": {

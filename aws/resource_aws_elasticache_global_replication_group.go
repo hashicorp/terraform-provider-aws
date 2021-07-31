@@ -31,10 +31,10 @@ const (
 
 func resourceAwsElasticacheGlobalReplicationGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticacheGlobalReplicationGroupCreate,
-		Read:   resourceAwsElasticacheGlobalReplicationGroupRead,
-		Update: resourceAwsElasticacheGlobalReplicationGroupUpdate,
-		Delete: resourceAwsElasticacheGlobalReplicationGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsElasticacheGlobalReplicationGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsElasticacheGlobalReplicationGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsElasticacheGlobalReplicationGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsElasticacheGlobalReplicationGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				re := regexp.MustCompile("^" + elasticacheGlobalReplicationGroupRegionPrefixFormat)

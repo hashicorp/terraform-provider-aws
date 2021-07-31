@@ -23,16 +23,16 @@ import (
 
 func resourceAwsKmsExternalKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsKmsExternalKeyCreate,
-		Read:   resourceAwsKmsExternalKeyRead,
-		Update: resourceAwsKmsExternalKeyUpdate,
-		Delete: resourceAwsKmsExternalKeyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsKmsExternalKeyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsKmsExternalKeyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsKmsExternalKeyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsKmsExternalKeyDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

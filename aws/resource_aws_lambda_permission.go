@@ -20,9 +20,9 @@ var LambdaFunctionRegexp = `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1
 
 func resourceAwsLambdaPermission() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLambdaPermissionCreate,
-		Read:   resourceAwsLambdaPermissionRead,
-		Delete: resourceAwsLambdaPermissionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLambdaPermissionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLambdaPermissionRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLambdaPermissionDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsLambdaPermissionImport,
 		},

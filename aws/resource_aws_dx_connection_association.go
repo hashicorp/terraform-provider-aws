@@ -12,9 +12,9 @@ import (
 
 func resourceAwsDxConnectionAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxConnectionAssociationCreate,
-		Read:   resourceAwsDxConnectionAssociationRead,
-		Delete: resourceAwsDxConnectionAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDxConnectionAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDxConnectionAssociationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDxConnectionAssociationDelete),
 
 		Schema: map[string]*schema.Schema{
 			"connection_id": {

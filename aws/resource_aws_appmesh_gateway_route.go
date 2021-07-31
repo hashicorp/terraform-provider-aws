@@ -21,10 +21,10 @@ import (
 
 func resourceAwsAppmeshGatewayRoute() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppmeshGatewayRouteCreate,
-		Read:   resourceAwsAppmeshGatewayRouteRead,
-		Update: resourceAwsAppmeshGatewayRouteUpdate,
-		Delete: resourceAwsAppmeshGatewayRouteDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAppmeshGatewayRouteCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAppmeshGatewayRouteRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAppmeshGatewayRouteUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAppmeshGatewayRouteDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAppmeshGatewayRouteImport,
 		},
@@ -294,7 +294,7 @@ func resourceAwsAppmeshGatewayRoute() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

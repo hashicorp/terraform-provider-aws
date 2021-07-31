@@ -15,10 +15,10 @@ import (
 
 func resourceAwsWorkspacesWorkspace() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWorkspacesWorkspaceCreate,
-		Read:   resourceAwsWorkspacesWorkspaceRead,
-		Update: resourceAwsWorkspacesWorkspaceUpdate,
-		Delete: resourceAwsWorkspacesWorkspaceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWorkspacesWorkspaceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWorkspacesWorkspaceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWorkspacesWorkspaceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWorkspacesWorkspaceDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -140,7 +140,7 @@ func resourceAwsWorkspacesWorkspace() *schema.Resource {
 			Delete: schema.DefaultTimeout(waiter.WorkspaceTerminatedTimeout),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -14,10 +14,10 @@ import (
 
 func resourceAwsSecurityHubActionTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecurityHubActionTargetCreate,
-		Read:   resourceAwsSecurityHubActionTargetRead,
-		Update: resourceAwsSecurityHubActionTargetUpdate,
-		Delete: resourceAwsSecurityHubActionTargetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSecurityHubActionTargetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSecurityHubActionTargetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSecurityHubActionTargetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSecurityHubActionTargetDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

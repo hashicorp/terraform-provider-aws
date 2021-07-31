@@ -14,10 +14,10 @@ import (
 
 func resourceAwsDbSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbSnapshotCreate,
-		Read:   resourceAwsDbSnapshotRead,
-		Update: resourceAwsDbSnapshotUpdate,
-		Delete: resourceAwsDbSnapshotDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDbSnapshotCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDbSnapshotRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDbSnapshotUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDbSnapshotDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -110,7 +110,7 @@ func resourceAwsDbSnapshot() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

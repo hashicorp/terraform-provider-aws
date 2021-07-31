@@ -17,10 +17,10 @@ import (
 
 func resourceAwsOrganizationsPolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsOrganizationsPolicyCreate,
-		ReadContext:   resourceAwsOrganizationsPolicyRead,
-		UpdateContext: resourceAwsOrganizationsPolicyUpdate,
-		DeleteContext: resourceAwsOrganizationsPolicyDelete,
+		CreateContext: ClientInitCrudContextFunc(resourceAwsOrganizationsPolicyCreate),
+		ReadContext:   ClientInitCrudContextFunc(resourceAwsOrganizationsPolicyRead),
+		UpdateContext: ClientInitCrudContextFunc(resourceAwsOrganizationsPolicyUpdate),
+		DeleteContext: ClientInitCrudContextFunc(resourceAwsOrganizationsPolicyDelete),
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAwsOrganizationsPolicyImport,
 		},
@@ -55,7 +55,7 @@ func resourceAwsOrganizationsPolicy() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

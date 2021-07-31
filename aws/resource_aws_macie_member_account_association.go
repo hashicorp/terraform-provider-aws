@@ -11,9 +11,9 @@ import (
 
 func resourceAwsMacieMemberAccountAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMacieMemberAccountAssociationCreate,
-		Read:   resourceAwsMacieMemberAccountAssociationRead,
-		Delete: resourceAwsMacieMemberAccountAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsMacieMemberAccountAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsMacieMemberAccountAssociationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsMacieMemberAccountAssociationDelete),
 
 		Schema: map[string]*schema.Schema{
 			"member_account_id": {

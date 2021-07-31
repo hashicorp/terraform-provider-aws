@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsLb() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLbRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsLbRead),
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:         schema.TypeString,

@@ -17,10 +17,10 @@ import (
 
 func resourceAwsSchemasRegistry() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSchemasRegistryCreate,
-		Read:   resourceAwsSchemasRegistryRead,
-		Update: resourceAwsSchemasRegistryUpdate,
-		Delete: resourceAwsSchemasRegistryDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSchemasRegistryCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSchemasRegistryRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSchemasRegistryUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSchemasRegistryDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -51,7 +51,7 @@ func resourceAwsSchemasRegistry() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

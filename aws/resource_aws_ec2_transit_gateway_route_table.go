@@ -14,15 +14,15 @@ import (
 
 func resourceAwsEc2TransitGatewayRouteTable() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TransitGatewayRouteTableCreate,
-		Read:   resourceAwsEc2TransitGatewayRouteTableRead,
-		Update: resourceAwsEc2TransitGatewayRouteTableUpdate,
-		Delete: resourceAwsEc2TransitGatewayRouteTableDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEc2TransitGatewayRouteTableCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEc2TransitGatewayRouteTableRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEc2TransitGatewayRouteTableUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEc2TransitGatewayRouteTableDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

@@ -13,10 +13,10 @@ import (
 
 func resourceAwsQuickSightUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsQuickSightUserCreate,
-		Read:   resourceAwsQuickSightUserRead,
-		Update: resourceAwsQuickSightUserUpdate,
-		Delete: resourceAwsQuickSightUserDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsQuickSightUserCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsQuickSightUserRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsQuickSightUserUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsQuickSightUserDelete),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

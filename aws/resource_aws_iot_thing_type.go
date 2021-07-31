@@ -14,10 +14,10 @@ import (
 // https://docs.aws.amazon.com/iot/latest/apireference/API_CreateThingType.html
 func resourceAwsIotThingType() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIotThingTypeCreate,
-		Read:   resourceAwsIotThingTypeRead,
-		Update: resourceAwsIotThingTypeUpdate,
-		Delete: resourceAwsIotThingTypeDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIotThingTypeCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIotThingTypeRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIotThingTypeUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIotThingTypeDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

@@ -27,10 +27,10 @@ const (
 
 func resourceAwsVpcEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcEndpointCreate,
-		Read:   resourceAwsVpcEndpointRead,
-		Update: resourceAwsVpcEndpointUpdate,
-		Delete: resourceAwsVpcEndpointDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsVpcEndpointCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsVpcEndpointRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsVpcEndpointUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsVpcEndpointDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -151,7 +151,7 @@ func resourceAwsVpcEndpoint() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

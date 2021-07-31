@@ -19,10 +19,10 @@ import (
 
 func resourceAwsElasticacheParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticacheParameterGroupCreate,
-		Read:   resourceAwsElasticacheParameterGroupRead,
-		Update: resourceAwsElasticacheParameterGroupUpdate,
-		Delete: resourceAwsElasticacheParameterGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsElasticacheParameterGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsElasticacheParameterGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsElasticacheParameterGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsElasticacheParameterGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -70,7 +70,7 @@ func resourceAwsElasticacheParameterGroup() *schema.Resource {
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 		},
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

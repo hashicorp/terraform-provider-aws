@@ -11,9 +11,9 @@ import (
 
 func resourceAwsSesDomainDkim() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesDomainDkimCreate,
-		Read:   resourceAwsSesDomainDkimRead,
-		Delete: resourceAwsSesDomainDkimDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSesDomainDkimCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSesDomainDkimRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSesDomainDkimDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

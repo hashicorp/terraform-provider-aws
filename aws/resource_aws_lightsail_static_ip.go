@@ -11,9 +11,9 @@ import (
 
 func resourceAwsLightsailStaticIp() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLightsailStaticIpCreate,
-		Read:   resourceAwsLightsailStaticIpRead,
-		Delete: resourceAwsLightsailStaticIpDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLightsailStaticIpCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLightsailStaticIpRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLightsailStaticIpDelete),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

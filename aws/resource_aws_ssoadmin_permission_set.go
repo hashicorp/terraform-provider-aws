@@ -20,10 +20,10 @@ import (
 
 func resourceAwsSsoAdminPermissionSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsoAdminPermissionSetCreate,
-		Read:   resourceAwsSsoAdminPermissionSetRead,
-		Update: resourceAwsSsoAdminPermissionSetUpdate,
-		Delete: resourceAwsSsoAdminPermissionSetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSsoAdminPermissionSetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSsoAdminPermissionSetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSsoAdminPermissionSetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSsoAdminPermissionSetDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -84,7 +84,7 @@ func resourceAwsSsoAdminPermissionSet() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsSsoAdminInstances() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSsoAdminInstancesRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsSsoAdminInstancesRead),
 
 		Schema: map[string]*schema.Schema{
 			"arns": {

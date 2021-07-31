@@ -18,9 +18,9 @@ import (
 
 func resourceAwsServiceCatalogProductPortfolioAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogProductPortfolioAssociationCreate,
-		Read:   resourceAwsServiceCatalogProductPortfolioAssociationRead,
-		Delete: resourceAwsServiceCatalogProductPortfolioAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsServiceCatalogProductPortfolioAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsServiceCatalogProductPortfolioAssociationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsServiceCatalogProductPortfolioAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

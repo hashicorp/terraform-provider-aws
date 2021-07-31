@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsBackupSelection() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsBackupSelectionRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsBackupSelectionRead),
 
 		Schema: map[string]*schema.Schema{
 			"plan_id": {

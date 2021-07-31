@@ -25,15 +25,15 @@ const (
 
 func resourceAwsEcsCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEcsClusterCreate,
-		Read:   resourceAwsEcsClusterRead,
-		Update: resourceAwsEcsClusterUpdate,
-		Delete: resourceAwsEcsClusterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEcsClusterCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEcsClusterRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEcsClusterUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEcsClusterDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsEcsClusterImport,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

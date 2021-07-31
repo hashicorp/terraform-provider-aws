@@ -17,9 +17,9 @@ func resourceAwsAppCookieStickinessPolicy() *schema.Resource {
 	return &schema.Resource{
 		// There is no concept of "updating" an App Stickiness policy in
 		// the AWS API.
-		Create: resourceAwsAppCookieStickinessPolicyCreate,
-		Read:   resourceAwsAppCookieStickinessPolicyRead,
-		Delete: resourceAwsAppCookieStickinessPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAppCookieStickinessPolicyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAppCookieStickinessPolicyRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAppCookieStickinessPolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

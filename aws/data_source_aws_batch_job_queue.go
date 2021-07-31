@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsBatchJobQueue() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsBatchJobQueueRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsBatchJobQueueRead),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

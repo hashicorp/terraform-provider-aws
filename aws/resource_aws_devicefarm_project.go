@@ -13,10 +13,10 @@ import (
 
 func resourceAwsDevicefarmProject() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDevicefarmProjectCreate,
-		Read:   resourceAwsDevicefarmProjectRead,
-		Update: resourceAwsDevicefarmProjectUpdate,
-		Delete: resourceAwsDevicefarmProjectDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDevicefarmProjectCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDevicefarmProjectRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDevicefarmProjectUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDevicefarmProjectDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -39,7 +39,7 @@ func resourceAwsDevicefarmProject() *schema.Resource {
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 		},
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

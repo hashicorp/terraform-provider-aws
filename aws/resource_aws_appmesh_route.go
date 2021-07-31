@@ -20,10 +20,10 @@ import (
 
 func resourceAwsAppmeshRoute() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppmeshRouteCreate,
-		Read:   resourceAwsAppmeshRouteRead,
-		Update: resourceAwsAppmeshRouteUpdate,
-		Delete: resourceAwsAppmeshRouteDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAppmeshRouteCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAppmeshRouteRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAppmeshRouteUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAppmeshRouteDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAppmeshRouteImport,
 		},
@@ -443,7 +443,7 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

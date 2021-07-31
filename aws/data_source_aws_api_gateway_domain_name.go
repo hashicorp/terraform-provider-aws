@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsApiGatewayDomainName() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsApiGatewayDomainNameRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsApiGatewayDomainNameRead),
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

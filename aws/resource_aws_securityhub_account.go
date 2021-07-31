@@ -14,9 +14,9 @@ import (
 
 func resourceAwsSecurityHubAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecurityHubAccountCreate,
-		Read:   resourceAwsSecurityHubAccountRead,
-		Delete: resourceAwsSecurityHubAccountDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSecurityHubAccountCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSecurityHubAccountRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSecurityHubAccountDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

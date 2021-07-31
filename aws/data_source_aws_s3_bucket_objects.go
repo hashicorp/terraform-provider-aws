@@ -12,7 +12,7 @@ const keyRequestPageSize = 1000
 
 func dataSourceAwsS3BucketObjects() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsS3BucketObjectsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsS3BucketObjectsRead),
 
 		Schema: map[string]*schema.Schema{
 			"bucket": {

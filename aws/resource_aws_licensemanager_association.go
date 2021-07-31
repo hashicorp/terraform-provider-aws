@@ -12,9 +12,9 @@ import (
 
 func resourceAwsLicenseManagerAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLicenseManagerAssociationCreate,
-		Read:   resourceAwsLicenseManagerAssociationRead,
-		Delete: resourceAwsLicenseManagerAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLicenseManagerAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLicenseManagerAssociationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLicenseManagerAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -24,10 +24,10 @@ const (
 
 func resourceAwsSsmParameter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsmParameterCreate,
-		Read:   resourceAwsSsmParameterRead,
-		Update: resourceAwsSsmParameterUpdate,
-		Delete: resourceAwsSsmParameterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSsmParameterCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSsmParameterRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSsmParameterUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSsmParameterDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

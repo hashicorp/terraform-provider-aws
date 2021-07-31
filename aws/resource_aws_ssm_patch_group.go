@@ -14,15 +14,15 @@ import (
 
 func resourceAwsSsmPatchGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsmPatchGroupCreate,
-		Read:   resourceAwsSsmPatchGroupRead,
-		Delete: resourceAwsSsmPatchGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSsmPatchGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSsmPatchGroupRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSsmPatchGroupDelete),
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceAwsSsmPatchGroupV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: resourceAwsSsmPatchGroupStateUpgradeV0,
+				Upgrade: ClientInitStateUpgraderFunc(resourceAwsSsmPatchGroupStateUpgradeV0),
 				Version: 0,
 			},
 		},

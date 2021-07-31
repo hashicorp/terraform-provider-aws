@@ -18,9 +18,9 @@ const (
 
 func resourceAwsVpcIpv4CidrBlockAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcIpv4CidrBlockAssociationCreate,
-		Read:   resourceAwsVpcIpv4CidrBlockAssociationRead,
-		Delete: resourceAwsVpcIpv4CidrBlockAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsVpcIpv4CidrBlockAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsVpcIpv4CidrBlockAssociationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsVpcIpv4CidrBlockAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

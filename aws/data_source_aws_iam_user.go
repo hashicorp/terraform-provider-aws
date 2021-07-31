@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsIAMUser() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIAMUserRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsIAMUserRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

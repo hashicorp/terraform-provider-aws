@@ -14,10 +14,10 @@ import (
 
 func resourceAwsServiceQuotasServiceQuota() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceQuotasServiceQuotaCreate,
-		Read:   resourceAwsServiceQuotasServiceQuotaRead,
-		Update: resourceAwsServiceQuotasServiceQuotaUpdate,
-		Delete: schema.Noop,
+		Create: ClientInitCrudBaseFunc(resourceAwsServiceQuotasServiceQuotaCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsServiceQuotasServiceQuotaRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsServiceQuotasServiceQuotaUpdate),
+		Delete: ClientInitCrudBaseFunc(schema.Noop),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

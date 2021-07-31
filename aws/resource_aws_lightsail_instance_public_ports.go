@@ -16,9 +16,9 @@ import (
 
 func resourceAwsLightsailInstancePublicPorts() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLightsailInstancePublicPortsCreate,
-		Read:   resourceAwsLightsailInstancePublicPortsRead,
-		Delete: resourceAwsLightsailInstancePublicPortsDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLightsailInstancePublicPortsCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLightsailInstancePublicPortsRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLightsailInstancePublicPortsDelete),
 
 		Schema: map[string]*schema.Schema{
 			"instance_name": {

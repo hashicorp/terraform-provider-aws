@@ -18,10 +18,10 @@ import (
 
 func resourceAwsOrganizationsOrganizationalUnit() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsOrganizationsOrganizationalUnitCreate,
-		Read:   resourceAwsOrganizationsOrganizationalUnitRead,
-		Update: resourceAwsOrganizationsOrganizationalUnitUpdate,
-		Delete: resourceAwsOrganizationsOrganizationalUnitDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsOrganizationsOrganizationalUnitCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsOrganizationsOrganizationalUnitRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsOrganizationsOrganizationalUnitUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsOrganizationsOrganizationalUnitDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -70,7 +70,7 @@ func resourceAwsOrganizationsOrganizationalUnit() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

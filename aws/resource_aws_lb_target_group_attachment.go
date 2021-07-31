@@ -13,9 +13,9 @@ import (
 
 func resourceAwsLbTargetGroupAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLbAttachmentCreate,
-		Read:   resourceAwsLbAttachmentRead,
-		Delete: resourceAwsLbAttachmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLbAttachmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLbAttachmentRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLbAttachmentDelete),
 
 		Schema: map[string]*schema.Schema{
 			"target_group_arn": {

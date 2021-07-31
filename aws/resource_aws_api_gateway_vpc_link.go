@@ -21,10 +21,10 @@ const (
 
 func resourceAwsApiGatewayVpcLink() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayVpcLinkCreate,
-		Read:   resourceAwsApiGatewayVpcLinkRead,
-		Update: resourceAwsApiGatewayVpcLinkUpdate,
-		Delete: resourceAwsApiGatewayVpcLinkDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsApiGatewayVpcLinkCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsApiGatewayVpcLinkRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsApiGatewayVpcLinkUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsApiGatewayVpcLinkDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -54,7 +54,7 @@ func resourceAwsApiGatewayVpcLink() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -14,9 +14,9 @@ import (
 
 func resourceAwsLbListenerCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLbListenerCertificateCreate,
-		Read:   resourceAwsLbListenerCertificateRead,
-		Delete: resourceAwsLbListenerCertificateDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLbListenerCertificateCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLbListenerCertificateRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLbListenerCertificateDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -19,10 +19,10 @@ import (
 func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsAcmpcaCertificateAuthorityCreate,
-		Read:   resourceAwsAcmpcaCertificateAuthorityRead,
-		Update: resourceAwsAcmpcaCertificateAuthorityUpdate,
-		Delete: resourceAwsAcmpcaCertificateAuthorityDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAcmpcaCertificateAuthorityCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAcmpcaCertificateAuthorityRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAcmpcaCertificateAuthorityUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAcmpcaCertificateAuthorityDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("permanent_deletion_time_in_days", 30)
@@ -33,7 +33,7 @@ func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(1 * time.Minute),
 		},
-		MigrateState:  resourceAwsAcmpcaCertificateAuthorityMigrateState,
+		MigrateState:  ClientInitMigrateStateFunc(resourceAwsAcmpcaCertificateAuthorityMigrateState),
 		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
@@ -276,7 +276,7 @@ func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -15,7 +15,7 @@ import (
 
 func dataSourceAwsVpcDhcpOptions() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsVpcDhcpOptionsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsVpcDhcpOptionsRead),
 
 		Schema: map[string]*schema.Schema{
 			"dhcp_options_id": {

@@ -25,10 +25,10 @@ const globalAcceleratorRoute53ZoneID = "Z2BJ6XQ5FK7U4H"
 
 func resourceAwsGlobalAcceleratorAccelerator() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlobalAcceleratorAcceleratorCreate,
-		Read:   resourceAwsGlobalAcceleratorAcceleratorRead,
-		Update: resourceAwsGlobalAcceleratorAcceleratorUpdate,
-		Delete: resourceAwsGlobalAcceleratorAcceleratorDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGlobalAcceleratorAcceleratorCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGlobalAcceleratorAcceleratorRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGlobalAcceleratorAcceleratorUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGlobalAcceleratorAcceleratorDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -115,7 +115,7 @@ func resourceAwsGlobalAcceleratorAccelerator() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

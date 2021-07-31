@@ -12,10 +12,10 @@ import (
 
 func resourceAwsCognitoIdentityPoolRolesAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCognitoIdentityPoolRolesAttachmentCreate,
-		Read:   resourceAwsCognitoIdentityPoolRolesAttachmentRead,
-		Update: resourceAwsCognitoIdentityPoolRolesAttachmentUpdate,
-		Delete: resourceAwsCognitoIdentityPoolRolesAttachmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCognitoIdentityPoolRolesAttachmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCognitoIdentityPoolRolesAttachmentRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCognitoIdentityPoolRolesAttachmentUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCognitoIdentityPoolRolesAttachmentDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

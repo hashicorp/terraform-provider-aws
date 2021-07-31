@@ -18,10 +18,10 @@ const docdbClusterParameterGroupMaxParamsBulkEdit = 20
 func resourceAwsDocDBClusterParameterGroup() *schema.Resource {
 
 	return &schema.Resource{
-		Create: resourceAwsDocDBClusterParameterGroupCreate,
-		Read:   resourceAwsDocDBClusterParameterGroupRead,
-		Update: resourceAwsDocDBClusterParameterGroupUpdate,
-		Delete: resourceAwsDocDBClusterParameterGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDocDBClusterParameterGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDocDBClusterParameterGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDocDBClusterParameterGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDocDBClusterParameterGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -88,7 +88,7 @@ func resourceAwsDocDBClusterParameterGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 
 }

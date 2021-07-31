@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsIAMGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIAMGroupRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsIAMGroupRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

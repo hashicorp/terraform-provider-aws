@@ -19,10 +19,10 @@ import (
 
 func resourceAwsDataSyncTask() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDataSyncTaskCreate,
-		Read:   resourceAwsDataSyncTaskRead,
-		Update: resourceAwsDataSyncTaskUpdate,
-		Delete: resourceAwsDataSyncTaskDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDataSyncTaskCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDataSyncTaskRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDataSyncTaskUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDataSyncTaskDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -184,7 +184,7 @@ func resourceAwsDataSyncTask() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

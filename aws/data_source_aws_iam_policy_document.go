@@ -25,7 +25,7 @@ func dataSourceAwsIamPolicyDocument() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		Read: dataSourceAwsIamPolicyDocumentRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsIamPolicyDocumentRead),
 
 		Schema: map[string]*schema.Schema{
 			"json": {

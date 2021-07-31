@@ -12,10 +12,10 @@ import (
 
 func resourceAwsPinpointAPNSVoipChannel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsPinpointAPNSVoipChannelUpsert,
-		Read:   resourceAwsPinpointAPNSVoipChannelRead,
-		Update: resourceAwsPinpointAPNSVoipChannelUpsert,
-		Delete: resourceAwsPinpointAPNSVoipChannelDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsPinpointAPNSVoipChannelUpsert),
+		Read:   ClientInitCrudBaseFunc(resourceAwsPinpointAPNSVoipChannelRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsPinpointAPNSVoipChannelUpsert),
+		Delete: ClientInitCrudBaseFunc(resourceAwsPinpointAPNSVoipChannelDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

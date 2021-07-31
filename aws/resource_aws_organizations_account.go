@@ -16,10 +16,10 @@ import (
 
 func resourceAwsOrganizationsAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsOrganizationsAccountCreate,
-		Read:   resourceAwsOrganizationsAccountRead,
-		Update: resourceAwsOrganizationsAccountUpdate,
-		Delete: resourceAwsOrganizationsAccountDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsOrganizationsAccountCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsOrganizationsAccountRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsOrganizationsAccountUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsOrganizationsAccountDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -78,7 +78,7 @@ func resourceAwsOrganizationsAccount() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

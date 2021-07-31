@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsEc2InstanceTypeOfferings() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2InstanceTypeOfferingsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEc2InstanceTypeOfferingsRead),
 
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),

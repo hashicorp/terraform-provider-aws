@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsCognitoUserPools() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCognitoUserPoolsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsCognitoUserPoolsRead),
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

@@ -18,10 +18,10 @@ import (
 
 func resourceAwsDmsReplicationTask() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDmsReplicationTaskCreate,
-		Read:   resourceAwsDmsReplicationTaskRead,
-		Update: resourceAwsDmsReplicationTaskUpdate,
-		Delete: resourceAwsDmsReplicationTaskDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDmsReplicationTaskCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDmsReplicationTaskRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDmsReplicationTaskUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDmsReplicationTaskDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -86,7 +86,7 @@ func resourceAwsDmsReplicationTask() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

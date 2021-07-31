@@ -17,10 +17,10 @@ import (
 
 func resourceAwsDataSyncLocationS3() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDataSyncLocationS3Create,
-		Read:   resourceAwsDataSyncLocationS3Read,
-		Update: resourceAwsDataSyncLocationS3Update,
-		Delete: resourceAwsDataSyncLocationS3Delete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDataSyncLocationS3Create),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDataSyncLocationS3Read),
+		Update: ClientInitCrudBaseFunc(resourceAwsDataSyncLocationS3Update),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDataSyncLocationS3Delete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -88,7 +88,7 @@ func resourceAwsDataSyncLocationS3() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

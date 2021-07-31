@@ -16,10 +16,10 @@ import (
 
 func resourceAwsVpcPeeringConnection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVPCPeeringCreate,
-		Read:   resourceAwsVPCPeeringRead,
-		Update: resourceAwsVPCPeeringUpdate,
-		Delete: resourceAwsVPCPeeringDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsVPCPeeringCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsVPCPeeringRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsVPCPeeringUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsVPCPeeringDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -67,7 +67,7 @@ func resourceAwsVpcPeeringConnection() *schema.Resource {
 			"tags_all":  tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

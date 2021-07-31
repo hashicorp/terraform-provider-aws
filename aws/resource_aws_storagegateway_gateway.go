@@ -22,10 +22,10 @@ import (
 
 func resourceAwsStorageGatewayGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsStorageGatewayGatewayCreate,
-		Read:   resourceAwsStorageGatewayGatewayRead,
-		Update: resourceAwsStorageGatewayGatewayUpdate,
-		Delete: resourceAwsStorageGatewayGatewayDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsStorageGatewayGatewayCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsStorageGatewayGatewayRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsStorageGatewayGatewayUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsStorageGatewayGatewayDelete),
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("smb_active_directory_settings", func(_ context.Context, old, new, meta interface{}) bool {
 				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0

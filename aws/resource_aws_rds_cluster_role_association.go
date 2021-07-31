@@ -16,9 +16,9 @@ import (
 
 func resourceAwsRDSClusterRoleAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRDSClusterRoleAssociationCreate,
-		Read:   resourceAwsRDSClusterRoleAssociationRead,
-		Delete: resourceAwsRDSClusterRoleAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRDSClusterRoleAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRDSClusterRoleAssociationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRDSClusterRoleAssociationDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

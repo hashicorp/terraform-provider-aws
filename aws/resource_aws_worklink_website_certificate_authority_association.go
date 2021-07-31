@@ -15,9 +15,9 @@ import (
 
 func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationCreate,
-		Read:   resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationRead,
-		Delete: resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

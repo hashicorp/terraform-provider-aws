@@ -16,12 +16,12 @@ import (
 func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create:        resourceAwsCloudWatchMetricAlarmCreate,
-		Read:          resourceAwsCloudWatchMetricAlarmRead,
-		Update:        resourceAwsCloudWatchMetricAlarmUpdate,
-		Delete:        resourceAwsCloudWatchMetricAlarmDelete,
+		Create:        ClientInitCrudBaseFunc(resourceAwsCloudWatchMetricAlarmCreate),
+		Read:          ClientInitCrudBaseFunc(resourceAwsCloudWatchMetricAlarmRead),
+		Update:        ClientInitCrudBaseFunc(resourceAwsCloudWatchMetricAlarmUpdate),
+		Delete:        ClientInitCrudBaseFunc(resourceAwsCloudWatchMetricAlarmDelete),
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsCloudWatchMetricAlarmMigrateState,
+		MigrateState:  ClientInitMigrateStateFunc(resourceAwsCloudWatchMetricAlarmMigrateState),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -246,7 +246,7 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

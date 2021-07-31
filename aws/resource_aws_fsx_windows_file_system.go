@@ -18,10 +18,10 @@ import (
 
 func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsFsxWindowsFileSystemCreate,
-		Read:   resourceAwsFsxWindowsFileSystemRead,
-		Update: resourceAwsFsxWindowsFileSystemUpdate,
-		Delete: resourceAwsFsxWindowsFileSystemDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsFsxWindowsFileSystemCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsFsxWindowsFileSystemRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsFsxWindowsFileSystemUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsFsxWindowsFileSystemDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("skip_final_backup", false)
@@ -252,7 +252,7 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

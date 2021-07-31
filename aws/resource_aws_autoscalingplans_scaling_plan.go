@@ -15,10 +15,10 @@ import (
 
 func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAutoScalingPlansScalingPlanCreate,
-		Read:   resourceAwsAutoScalingPlansScalingPlanRead,
-		Update: resourceAwsAutoScalingPlansScalingPlanUpdate,
-		Delete: resourceAwsAutoScalingPlansScalingPlanDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAutoScalingPlansScalingPlanCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAutoScalingPlansScalingPlanRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAutoScalingPlansScalingPlanUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAutoScalingPlansScalingPlanDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAutoScalingPlansScalingPlanImport,
 		},

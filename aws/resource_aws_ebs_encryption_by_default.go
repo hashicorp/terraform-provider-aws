@@ -10,10 +10,10 @@ import (
 
 func resourceAwsEbsEncryptionByDefault() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEbsEncryptionByDefaultCreate,
-		Read:   resourceAwsEbsEncryptionByDefaultRead,
-		Update: resourceAwsEbsEncryptionByDefaultUpdate,
-		Delete: resourceAwsEbsEncryptionByDefaultDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEbsEncryptionByDefaultCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEbsEncryptionByDefaultRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEbsEncryptionByDefaultUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEbsEncryptionByDefaultDelete),
 
 		Schema: map[string]*schema.Schema{
 			"enabled": {

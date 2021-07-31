@@ -15,10 +15,10 @@ import (
 
 func resourceAwsGameliftBuild() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGameliftBuildCreate,
-		Read:   resourceAwsGameliftBuildRead,
-		Update: resourceAwsGameliftBuildUpdate,
-		Delete: resourceAwsGameliftBuildDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGameliftBuildCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGameliftBuildRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGameliftBuildUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGameliftBuildDelete),
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -72,7 +72,7 @@ func resourceAwsGameliftBuild() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -14,10 +14,10 @@ import (
 
 func resourceAwsCodeBuildWebhook() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeBuildWebhookCreate,
-		Read:   resourceAwsCodeBuildWebhookRead,
-		Delete: resourceAwsCodeBuildWebhookDelete,
-		Update: resourceAwsCodeBuildWebhookUpdate,
+		Create: ClientInitCrudBaseFunc(resourceAwsCodeBuildWebhookCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCodeBuildWebhookRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCodeBuildWebhookDelete),
+		Update: ClientInitCrudBaseFunc(resourceAwsCodeBuildWebhookUpdate),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

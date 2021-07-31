@@ -13,9 +13,9 @@ import (
 
 func resourceAwsLakeFormationResource() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLakeFormationResourceCreate,
-		Read:   resourceAwsLakeFormationResourceRead,
-		Delete: resourceAwsLakeFormationResourceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLakeFormationResourceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLakeFormationResourceRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLakeFormationResourceDelete),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

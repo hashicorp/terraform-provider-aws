@@ -17,10 +17,10 @@ import (
 
 func resourceAwsIamInstanceProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamInstanceProfileCreate,
-		Read:   resourceAwsIamInstanceProfileRead,
-		Update: resourceAwsIamInstanceProfileUpdate,
-		Delete: resourceAwsIamInstanceProfileDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIamInstanceProfileCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIamInstanceProfileRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIamInstanceProfileUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIamInstanceProfileDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -73,7 +73,7 @@ func resourceAwsIamInstanceProfile() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

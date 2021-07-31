@@ -13,10 +13,10 @@ import (
 
 func resourceAwsEcrRegistryPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEcrRegistryPolicyPut,
-		Read:   resourceAwsEcrRegistryPolicyRead,
-		Update: resourceAwsEcrRegistryPolicyPut,
-		Delete: resourceAwsEcrRegistryPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEcrRegistryPolicyPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEcrRegistryPolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEcrRegistryPolicyPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEcrRegistryPolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsWorkspacesDirectory() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsWorkspacesDirectoryRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsWorkspacesDirectoryRead),
 
 		Schema: map[string]*schema.Schema{
 			"alias": {

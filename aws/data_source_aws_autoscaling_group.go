@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsAutoscalingGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAutoscalingGroupRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsAutoscalingGroupRead),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

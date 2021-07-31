@@ -17,10 +17,10 @@ import (
 
 func resourceAwsNatGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNatGatewayCreate,
-		Read:   resourceAwsNatGatewayRead,
-		Update: resourceAwsNatGatewayUpdate,
-		Delete: resourceAwsNatGatewayDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsNatGatewayCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsNatGatewayRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsNatGatewayUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsNatGatewayDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -65,7 +65,7 @@ func resourceAwsNatGateway() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

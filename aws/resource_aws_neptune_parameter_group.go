@@ -20,10 +20,10 @@ const maxParams = 20
 
 func resourceAwsNeptuneParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNeptuneParameterGroupCreate,
-		Read:   resourceAwsNeptuneParameterGroupRead,
-		Update: resourceAwsNeptuneParameterGroupUpdate,
-		Delete: resourceAwsNeptuneParameterGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsNeptuneParameterGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsNeptuneParameterGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsNeptuneParameterGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsNeptuneParameterGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -80,7 +80,7 @@ func resourceAwsNeptuneParameterGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

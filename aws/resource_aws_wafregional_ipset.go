@@ -14,10 +14,10 @@ import (
 
 func resourceAwsWafRegionalIPSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegionalIPSetCreate,
-		Read:   resourceAwsWafRegionalIPSetRead,
-		Update: resourceAwsWafRegionalIPSetUpdate,
-		Delete: resourceAwsWafRegionalIPSetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafRegionalIPSetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafRegionalIPSetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWafRegionalIPSetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafRegionalIPSetDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -14,7 +14,7 @@ import (
 
 func dataSourceAwsVpnGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsVpnGatewayRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsVpnGatewayRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

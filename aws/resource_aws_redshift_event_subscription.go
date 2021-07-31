@@ -14,10 +14,10 @@ import (
 
 func resourceAwsRedshiftEventSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRedshiftEventSubscriptionCreate,
-		Read:   resourceAwsRedshiftEventSubscriptionRead,
-		Update: resourceAwsRedshiftEventSubscriptionUpdate,
-		Delete: resourceAwsRedshiftEventSubscriptionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRedshiftEventSubscriptionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRedshiftEventSubscriptionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRedshiftEventSubscriptionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRedshiftEventSubscriptionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -79,7 +79,7 @@ func resourceAwsRedshiftEventSubscription() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

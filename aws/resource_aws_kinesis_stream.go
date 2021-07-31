@@ -21,21 +21,21 @@ const (
 
 func resourceAwsKinesisStream() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsKinesisStreamCreate,
-		Read:   resourceAwsKinesisStreamRead,
-		Update: resourceAwsKinesisStreamUpdate,
-		Delete: resourceAwsKinesisStreamDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsKinesisStreamCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsKinesisStreamRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsKinesisStreamUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsKinesisStreamDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsKinesisStreamImport,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceAwsKinesisStreamResourceV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: resourceAwsKinesisStreamStateUpgradeV0,
+				Upgrade: ClientInitStateUpgraderFunc(resourceAwsKinesisStreamStateUpgradeV0),
 				Version: 0,
 			},
 		},

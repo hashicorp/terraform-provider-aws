@@ -15,9 +15,9 @@ import (
 
 func resourceAwsRoute53ResolverDnssecConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ResolverDnssecConfigCreate,
-		Read:   resourceAwsRoute53ResolverDnssecConfigRead,
-		Delete: resourceAwsRoute53ResolverDnssecConfigDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverDnssecConfigCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRoute53ResolverDnssecConfigRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverDnssecConfigDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

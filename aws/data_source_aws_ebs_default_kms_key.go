@@ -9,7 +9,7 @@ import (
 
 func dataSourceAwsEbsDefaultKmsKey() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEbsDefaultKmsKeyRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEbsDefaultKmsKeyRead),
 
 		Schema: map[string]*schema.Schema{
 			"key_arn": {

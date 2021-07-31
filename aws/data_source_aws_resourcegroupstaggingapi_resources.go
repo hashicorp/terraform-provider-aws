@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsResourceGroupsTaggingAPIResources() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsResourceGroupsTaggingAPIResourcesRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsResourceGroupsTaggingAPIResourcesRead),
 
 		Schema: map[string]*schema.Schema{
 			"exclude_compliant_resources": {

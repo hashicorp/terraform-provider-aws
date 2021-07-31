@@ -21,10 +21,10 @@ const (
 
 func resourceAwsConfigRemediationConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsConfigRemediationConfigurationPut,
-		Read:   resourceAwsConfigRemediationConfigurationRead,
-		Update: resourceAwsConfigRemediationConfigurationPut,
-		Delete: resourceAwsConfigRemediationConfigurationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsConfigRemediationConfigurationPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsConfigRemediationConfigurationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsConfigRemediationConfigurationPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsConfigRemediationConfigurationDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

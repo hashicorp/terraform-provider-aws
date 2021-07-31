@@ -14,10 +14,10 @@ import (
 
 func resourceAwsS3ControlBucketPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3ControlBucketPolicyCreate,
-		Read:   resourceAwsS3ControlBucketPolicyRead,
-		Update: resourceAwsS3ControlBucketPolicyUpdate,
-		Delete: resourceAwsS3ControlBucketPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsS3ControlBucketPolicyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsS3ControlBucketPolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsS3ControlBucketPolicyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsS3ControlBucketPolicyDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

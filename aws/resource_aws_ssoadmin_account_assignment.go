@@ -17,9 +17,9 @@ import (
 
 func resourceAwsSsoAdminAccountAssignment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsoAdminAccountAssignmentCreate,
-		Read:   resourceAwsSsoAdminAccountAssignmentRead,
-		Delete: resourceAwsSsoAdminAccountAssignmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSsoAdminAccountAssignmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSsoAdminAccountAssignmentRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSsoAdminAccountAssignmentDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

@@ -14,10 +14,10 @@ import (
 
 func resourceAwsSagemakerCodeRepository() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerCodeRepositoryCreate,
-		Read:   resourceAwsSagemakerCodeRepositoryRead,
-		Update: resourceAwsSagemakerCodeRepositoryUpdate,
-		Delete: resourceAwsSagemakerCodeRepositoryDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSagemakerCodeRepositoryCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSagemakerCodeRepositoryRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSagemakerCodeRepositoryUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSagemakerCodeRepositoryDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

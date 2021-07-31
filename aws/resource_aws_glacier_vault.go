@@ -16,10 +16,10 @@ import (
 
 func resourceAwsGlacierVault() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlacierVaultCreate,
-		Read:   resourceAwsGlacierVaultRead,
-		Update: resourceAwsGlacierVaultUpdate,
-		Delete: resourceAwsGlacierVaultDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGlacierVaultCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGlacierVaultRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGlacierVaultUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGlacierVaultDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -86,7 +86,7 @@ func resourceAwsGlacierVault() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

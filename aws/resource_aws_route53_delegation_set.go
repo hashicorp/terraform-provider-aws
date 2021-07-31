@@ -13,9 +13,9 @@ import (
 
 func resourceAwsRoute53DelegationSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53DelegationSetCreate,
-		Read:   resourceAwsRoute53DelegationSetRead,
-		Delete: resourceAwsRoute53DelegationSetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRoute53DelegationSetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRoute53DelegationSetRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRoute53DelegationSetDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

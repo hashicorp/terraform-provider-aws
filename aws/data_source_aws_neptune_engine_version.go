@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsNeptuneEngineVersion() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsNeptuneEngineVersionRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsNeptuneEngineVersionRead),
 		Schema: map[string]*schema.Schema{
 			"engine": {
 				Type:     schema.TypeString,

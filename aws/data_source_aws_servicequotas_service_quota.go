@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsServiceQuotasServiceQuota() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsServiceQuotasServiceQuotaRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsServiceQuotasServiceQuotaRead),
 
 		Schema: map[string]*schema.Schema{
 			"adjustable": {

@@ -20,10 +20,10 @@ import (
 func resourceAwsSpotFleetRequest() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsSpotFleetRequestCreate,
-		Read:   resourceAwsSpotFleetRequestRead,
-		Delete: resourceAwsSpotFleetRequestDelete,
-		Update: resourceAwsSpotFleetRequestUpdate,
+		Create: ClientInitCrudBaseFunc(resourceAwsSpotFleetRequestCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSpotFleetRequestRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSpotFleetRequestDelete),
+		Update: ClientInitCrudBaseFunc(resourceAwsSpotFleetRequestUpdate),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("instance_pools_to_use_count", 1)
@@ -36,7 +36,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsSpotFleetRequestMigrateState,
+		MigrateState:  ClientInitMigrateStateFunc(resourceAwsSpotFleetRequestMigrateState),
 
 		Schema: map[string]*schema.Schema{
 			"iam_fleet_role": {
@@ -547,7 +547,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

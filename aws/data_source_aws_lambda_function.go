@@ -14,7 +14,7 @@ import (
 
 func dataSourceAwsLambdaFunction() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLambdaFunctionRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsLambdaFunctionRead),
 
 		Schema: map[string]*schema.Schema{
 			"function_name": {

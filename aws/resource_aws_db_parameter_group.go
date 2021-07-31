@@ -17,10 +17,10 @@ import (
 
 func resourceAwsDbParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbParameterGroupCreate,
-		Read:   resourceAwsDbParameterGroupRead,
-		Update: resourceAwsDbParameterGroupUpdate,
-		Delete: resourceAwsDbParameterGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDbParameterGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDbParameterGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDbParameterGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDbParameterGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -91,7 +91,7 @@ func resourceAwsDbParameterGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

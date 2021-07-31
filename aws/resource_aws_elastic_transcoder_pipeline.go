@@ -14,10 +14,10 @@ import (
 
 func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticTranscoderPipelineCreate,
-		Read:   resourceAwsElasticTranscoderPipelineRead,
-		Update: resourceAwsElasticTranscoderPipelineUpdate,
-		Delete: resourceAwsElasticTranscoderPipelineDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsElasticTranscoderPipelineCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsElasticTranscoderPipelineRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsElasticTranscoderPipelineUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsElasticTranscoderPipelineDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -14,7 +14,7 @@ import (
 
 func dataSourceAwsGlueConnection() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceAwsGlueConnectionRead,
+		ReadContext: ClientInitCrudContextFunc(dataSourceAwsGlueConnectionRead),
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

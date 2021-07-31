@@ -21,10 +21,10 @@ import (
 func resourceAwsEcsTaskDefinition() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsEcsTaskDefinitionCreate,
-		Read:   resourceAwsEcsTaskDefinitionRead,
-		Update: resourceAwsEcsTaskDefinitionUpdate,
-		Delete: resourceAwsEcsTaskDefinitionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEcsTaskDefinitionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEcsTaskDefinitionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEcsTaskDefinitionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEcsTaskDefinitionDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("arn", d.Id())
@@ -45,10 +45,10 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsEcsTaskDefinitionMigrateState,
+		MigrateState:  ClientInitMigrateStateFunc(resourceAwsEcsTaskDefinitionMigrateState),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

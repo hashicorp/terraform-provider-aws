@@ -14,9 +14,9 @@ import (
 
 func resourceAwsDxBgpPeer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxBgpPeerCreate,
-		Read:   resourceAwsDxBgpPeerRead,
-		Delete: resourceAwsDxBgpPeerDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDxBgpPeerCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDxBgpPeerRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDxBgpPeerDelete),
 
 		Schema: map[string]*schema.Schema{
 			"address_family": {

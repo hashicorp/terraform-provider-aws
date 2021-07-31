@@ -13,10 +13,10 @@ import (
 
 func resourceAwsSesTemplate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesTemplateCreate,
-		Read:   resourceAwsSesTemplateRead,
-		Update: resourceAwsSesTemplateUpdate,
-		Delete: resourceAwsSesTemplateDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSesTemplateCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSesTemplateRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSesTemplateUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSesTemplateDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

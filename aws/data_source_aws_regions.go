@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsRegions() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRegionsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsRegionsRead),
 
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),

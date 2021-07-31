@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsServiceQuotasService() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsServiceQuotasServiceRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsServiceQuotasServiceRead),
 
 		Schema: map[string]*schema.Schema{
 			"service_code": {

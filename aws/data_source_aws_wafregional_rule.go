@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsWafRegionalRule() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsWafRegionalRuleRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsWafRegionalRuleRead),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

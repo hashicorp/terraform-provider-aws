@@ -11,10 +11,10 @@ import (
 
 func resourceAwsIotPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIotPolicyCreate,
-		Read:   resourceAwsIotPolicyRead,
-		Update: resourceAwsIotPolicyUpdate,
-		Delete: resourceAwsIotPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIotPolicyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIotPolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIotPolicyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIotPolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

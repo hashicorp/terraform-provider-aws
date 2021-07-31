@@ -25,15 +25,15 @@ import (
 
 func resourceAwsEMRCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEMRClusterCreate,
-		Read:   resourceAwsEMRClusterRead,
-		Update: resourceAwsEMRClusterUpdate,
-		Delete: resourceAwsEMRClusterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEMRClusterCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEMRClusterRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEMRClusterUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEMRClusterDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

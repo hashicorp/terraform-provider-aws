@@ -17,10 +17,10 @@ import (
 
 func resourceAwsSagemakerImage() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerImageCreate,
-		Read:   resourceAwsSagemakerImageRead,
-		Update: resourceAwsSagemakerImageUpdate,
-		Delete: resourceAwsSagemakerImageDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSagemakerImageCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSagemakerImageRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSagemakerImageUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSagemakerImageDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -60,7 +60,7 @@ func resourceAwsSagemakerImage() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

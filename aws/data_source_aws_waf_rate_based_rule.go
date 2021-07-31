@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsWafRateBasedRule() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsWafRateBasedRuleRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsWafRateBasedRuleRead),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

@@ -12,10 +12,10 @@ import (
 
 func resourceAwsApiGatewayRequestValidator() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayRequestValidatorCreate,
-		Read:   resourceAwsApiGatewayRequestValidatorRead,
-		Update: resourceAwsApiGatewayRequestValidatorUpdate,
-		Delete: resourceAwsApiGatewayRequestValidatorDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsApiGatewayRequestValidatorCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsApiGatewayRequestValidatorRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsApiGatewayRequestValidatorUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsApiGatewayRequestValidatorDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")

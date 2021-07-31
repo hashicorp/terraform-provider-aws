@@ -17,9 +17,9 @@ import (
 
 func resourceAwsAmplifyBackendEnvironment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAmplifyBackendEnvironmentCreate,
-		Read:   resourceAwsAmplifyBackendEnvironmentRead,
-		Delete: resourceAwsAmplifyBackendEnvironmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAmplifyBackendEnvironmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAmplifyBackendEnvironmentRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAmplifyBackendEnvironmentDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

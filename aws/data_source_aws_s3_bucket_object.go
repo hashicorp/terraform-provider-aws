@@ -16,7 +16,7 @@ import (
 
 func dataSourceAwsS3BucketObject() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsS3BucketObjectRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsS3BucketObjectRead),
 
 		Schema: map[string]*schema.Schema{
 			"body": {

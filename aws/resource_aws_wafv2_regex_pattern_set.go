@@ -16,10 +16,10 @@ import (
 
 func resourceAwsWafv2RegexPatternSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafv2RegexPatternSetCreate,
-		Read:   resourceAwsWafv2RegexPatternSetRead,
-		Update: resourceAwsWafv2RegexPatternSetUpdate,
-		Delete: resourceAwsWafv2RegexPatternSetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafv2RegexPatternSetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafv2RegexPatternSetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWafv2RegexPatternSetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafv2RegexPatternSetDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -83,7 +83,7 @@ func resourceAwsWafv2RegexPatternSet() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

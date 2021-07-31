@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsDbSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDbSnapshotRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsDbSnapshotRead),
 
 		Schema: map[string]*schema.Schema{
 			//selection criteria

@@ -21,10 +21,10 @@ import (
 
 func resourceAwsIamRole() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamRoleCreate,
-		Read:   resourceAwsIamRoleRead,
-		Update: resourceAwsIamRoleUpdate,
-		Delete: resourceAwsIamRoleDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIamRoleCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIamRoleRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIamRoleUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIamRoleDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsIamRoleImport,
 		},
@@ -146,7 +146,7 @@ func resourceAwsIamRole() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

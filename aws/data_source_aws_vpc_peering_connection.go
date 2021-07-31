@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsVpcPeeringConnection() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsVpcPeeringConnectionRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsVpcPeeringConnectionRead),
 
 		Schema: map[string]*schema.Schema{
 			"id": {

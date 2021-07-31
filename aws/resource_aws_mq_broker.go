@@ -26,10 +26,10 @@ import (
 
 func resourceAwsMqBroker() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMqBrokerCreate,
-		Read:   resourceAwsMqBrokerRead,
-		Update: resourceAwsMqBrokerUpdate,
-		Delete: resourceAwsMqBrokerDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsMqBrokerCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsMqBrokerRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsMqBrokerUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsMqBrokerDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

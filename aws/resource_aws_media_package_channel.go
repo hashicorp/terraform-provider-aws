@@ -15,10 +15,10 @@ import (
 
 func resourceAwsMediaPackageChannel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMediaPackageChannelCreate,
-		Read:   resourceAwsMediaPackageChannelRead,
-		Update: resourceAwsMediaPackageChannelUpdate,
-		Delete: resourceAwsMediaPackageChannelDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsMediaPackageChannelCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsMediaPackageChannelRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsMediaPackageChannelUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsMediaPackageChannelDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -71,7 +71,7 @@ func resourceAwsMediaPackageChannel() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -11,9 +11,9 @@ import (
 
 func resourceAwsLightsailStaticIpAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLightsailStaticIpAttachmentCreate,
-		Read:   resourceAwsLightsailStaticIpAttachmentRead,
-		Delete: resourceAwsLightsailStaticIpAttachmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLightsailStaticIpAttachmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLightsailStaticIpAttachmentRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLightsailStaticIpAttachmentDelete),
 
 		Schema: map[string]*schema.Schema{
 			"static_ip_name": {

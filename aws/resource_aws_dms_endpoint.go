@@ -18,10 +18,10 @@ import (
 
 func resourceAwsDmsEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDmsEndpointCreate,
-		Read:   resourceAwsDmsEndpointRead,
-		Update: resourceAwsDmsEndpointUpdate,
-		Delete: resourceAwsDmsEndpointDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDmsEndpointCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDmsEndpointRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDmsEndpointUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDmsEndpointDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -336,7 +336,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

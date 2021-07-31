@@ -15,7 +15,7 @@ import (
 
 func dataSourceAwsSsoAdminPermissionSet() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSsoAdminPermissionSetRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsSsoAdminPermissionSetRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

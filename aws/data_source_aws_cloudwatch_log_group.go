@@ -9,7 +9,7 @@ import (
 
 func dataSourceAwsCloudwatchLogGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudwatchLogGroupRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsCloudwatchLogGroupRead),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

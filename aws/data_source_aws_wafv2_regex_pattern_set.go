@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsWafv2RegexPatternSet() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsWafv2RegexPatternSetRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsWafv2RegexPatternSetRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

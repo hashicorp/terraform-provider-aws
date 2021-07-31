@@ -792,10 +792,10 @@ func flattenFirehoseHttpEndpointConfiguration(description *firehose.HttpEndpoint
 func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsKinesisFirehoseDeliveryStreamCreate,
-		Read:   resourceAwsKinesisFirehoseDeliveryStreamRead,
-		Update: resourceAwsKinesisFirehoseDeliveryStreamUpdate,
-		Delete: resourceAwsKinesisFirehoseDeliveryStreamDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsKinesisFirehoseDeliveryStreamCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsKinesisFirehoseDeliveryStreamRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsKinesisFirehoseDeliveryStreamUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsKinesisFirehoseDeliveryStreamDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -813,10 +813,10 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsKinesisFirehoseMigrateState,
+		MigrateState:  ClientInitMigrateStateFunc(resourceAwsKinesisFirehoseMigrateState),
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:         schema.TypeString,

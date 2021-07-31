@@ -14,10 +14,10 @@ import (
 
 func resourceAwsSagemakerAppImageConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerAppImageConfigCreate,
-		Read:   resourceAwsSagemakerAppImageConfigRead,
-		Update: resourceAwsSagemakerAppImageConfigUpdate,
-		Delete: resourceAwsSagemakerAppImageConfigDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSagemakerAppImageConfigCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSagemakerAppImageConfigRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSagemakerAppImageConfigUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSagemakerAppImageConfigDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

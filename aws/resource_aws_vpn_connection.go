@@ -62,10 +62,10 @@ func (slice XmlVpnConnectionConfig) Swap(i, j int) {
 
 func resourceAwsVpnConnection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpnConnectionCreate,
-		Read:   resourceAwsVpnConnectionRead,
-		Update: resourceAwsVpnConnectionUpdate,
-		Delete: resourceAwsVpnConnectionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsVpnConnectionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsVpnConnectionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsVpnConnectionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsVpnConnectionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -514,7 +514,7 @@ func resourceAwsVpnConnection() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

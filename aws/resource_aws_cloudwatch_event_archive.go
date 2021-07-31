@@ -14,10 +14,10 @@ import (
 
 func resourceAwsCloudWatchEventArchive() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchEventArchiveCreate,
-		Read:   resourceAwsCloudWatchEventArchiveRead,
-		Update: resourceAwsCloudWatchEventArchiveUpdate,
-		Delete: resourceAwsCloudWatchEventArchiveDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventArchiveCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudWatchEventArchiveRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventArchiveUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventArchiveDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

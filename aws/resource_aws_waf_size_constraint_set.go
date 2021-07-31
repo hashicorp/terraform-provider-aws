@@ -13,10 +13,10 @@ import (
 
 func resourceAwsWafSizeConstraintSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafSizeConstraintSetCreate,
-		Read:   resourceAwsWafSizeConstraintSetRead,
-		Update: resourceAwsWafSizeConstraintSetUpdate,
-		Delete: resourceAwsWafSizeConstraintSetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafSizeConstraintSetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafSizeConstraintSetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWafSizeConstraintSetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafSizeConstraintSetDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

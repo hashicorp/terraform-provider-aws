@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsSfnActivity() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSfnActivityRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsSfnActivityRead),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

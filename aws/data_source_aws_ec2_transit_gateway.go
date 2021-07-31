@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsEc2TransitGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2TransitGatewayRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEc2TransitGatewayRead),
 
 		Schema: map[string]*schema.Schema{
 			"amazon_side_asn": {

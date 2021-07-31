@@ -17,10 +17,10 @@ import (
 
 func resourceAwsEcrRepositoryPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEcrRepositoryPolicyPut,
-		Read:   resourceAwsEcrRepositoryPolicyRead,
-		Update: resourceAwsEcrRepositoryPolicyPut,
-		Delete: resourceAwsEcrRepositoryPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEcrRepositoryPolicyPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEcrRepositoryPolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEcrRepositoryPolicyPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEcrRepositoryPolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

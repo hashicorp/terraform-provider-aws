@@ -17,10 +17,10 @@ import (
 
 func resourceAwsS3ObjectCopy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3ObjectCopyCreate,
-		Read:   resourceAwsS3ObjectCopyRead,
-		Update: resourceAwsS3ObjectCopyUpdate,
-		Delete: resourceAwsS3ObjectCopyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsS3ObjectCopyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsS3ObjectCopyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsS3ObjectCopyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsS3ObjectCopyDelete),
 
 		Schema: map[string]*schema.Schema{
 			"acl": {
@@ -283,7 +283,7 @@ func resourceAwsS3ObjectCopy() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -22,9 +22,9 @@ const (
 
 func resourceAwsSecurityHubMember() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecurityHubMemberCreate,
-		Read:   resourceAwsSecurityHubMemberRead,
-		Delete: resourceAwsSecurityHubMemberDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSecurityHubMemberCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSecurityHubMemberRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSecurityHubMemberDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

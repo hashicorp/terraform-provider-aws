@@ -12,10 +12,10 @@ import (
 
 func resourceAwsPinpointAPNSChannel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsPinpointAPNSChannelUpsert,
-		Read:   resourceAwsPinpointAPNSChannelRead,
-		Update: resourceAwsPinpointAPNSChannelUpsert,
-		Delete: resourceAwsPinpointAPNSChannelDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsPinpointAPNSChannelUpsert),
+		Read:   ClientInitCrudBaseFunc(resourceAwsPinpointAPNSChannelRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsPinpointAPNSChannelUpsert),
+		Delete: ClientInitCrudBaseFunc(resourceAwsPinpointAPNSChannelDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

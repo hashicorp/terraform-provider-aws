@@ -13,10 +13,10 @@ import (
 
 func resourceAwsCodeCommitRepository() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeCommitRepositoryCreate,
-		Update: resourceAwsCodeCommitRepositoryUpdate,
-		Read:   resourceAwsCodeCommitRepositoryRead,
-		Delete: resourceAwsCodeCommitRepositoryDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCodeCommitRepositoryCreate),
+		Update: ClientInitCrudBaseFunc(resourceAwsCodeCommitRepositoryUpdate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCodeCommitRepositoryRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCodeCommitRepositoryDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -63,7 +63,7 @@ func resourceAwsCodeCommitRepository() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

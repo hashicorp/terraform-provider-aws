@@ -16,10 +16,10 @@ import (
 
 func resourceAwsPlacementGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsPlacementGroupCreate,
-		Read:   resourceAwsPlacementGroupRead,
-		Update: resourceAwsPlacementGroupUpdate,
-		Delete: resourceAwsPlacementGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsPlacementGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsPlacementGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsPlacementGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsPlacementGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -52,7 +52,7 @@ func resourceAwsPlacementGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

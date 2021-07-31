@@ -17,10 +17,10 @@ import (
 
 func resourceAwsWafv2RuleGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafv2RuleGroupCreate,
-		Read:   resourceAwsWafv2RuleGroupRead,
-		Update: resourceAwsWafv2RuleGroupUpdate,
-		Delete: resourceAwsWafv2RuleGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafv2RuleGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafv2RuleGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWafv2RuleGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafv2RuleGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -111,7 +111,7 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 			"visibility_config": wafv2VisibilityConfigSchema(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

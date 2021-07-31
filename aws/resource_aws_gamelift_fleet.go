@@ -19,10 +19,10 @@ import (
 
 func resourceAwsGameliftFleet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGameliftFleetCreate,
-		Read:   resourceAwsGameliftFleetRead,
-		Update: resourceAwsGameliftFleetUpdate,
-		Delete: resourceAwsGameliftFleetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGameliftFleetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGameliftFleetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGameliftFleetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGameliftFleetDelete),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(70 * time.Minute),
@@ -196,7 +196,7 @@ func resourceAwsGameliftFleet() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

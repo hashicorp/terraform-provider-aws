@@ -18,10 +18,10 @@ import (
 
 func resourceAwsSagemakerUserProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerUserProfileCreate,
-		Read:   resourceAwsSagemakerUserProfileRead,
-		Update: resourceAwsSagemakerUserProfileUpdate,
-		Delete: resourceAwsSagemakerUserProfileDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSagemakerUserProfileCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSagemakerUserProfileRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSagemakerUserProfileUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSagemakerUserProfileDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -216,7 +216,7 @@ func resourceAwsSagemakerUserProfile() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

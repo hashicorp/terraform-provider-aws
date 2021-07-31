@@ -13,10 +13,10 @@ import (
 
 func resourceAwsCloudWatchDashboard() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchDashboardPut,
-		Read:   resourceAwsCloudWatchDashboardRead,
-		Update: resourceAwsCloudWatchDashboardPut,
-		Delete: resourceAwsCloudWatchDashboardDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudWatchDashboardPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudWatchDashboardRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudWatchDashboardPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudWatchDashboardDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

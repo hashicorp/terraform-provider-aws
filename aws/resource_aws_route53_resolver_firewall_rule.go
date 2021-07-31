@@ -15,10 +15,10 @@ import (
 
 func resourceAwsRoute53ResolverFirewallRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ResolverFirewallRuleCreate,
-		Read:   resourceAwsRoute53ResolverFirewallRuleRead,
-		Update: resourceAwsRoute53ResolverFirewallRuleUpdate,
-		Delete: resourceAwsRoute53ResolverFirewallRuleDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverFirewallRuleCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRoute53ResolverFirewallRuleRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverFirewallRuleUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverFirewallRuleDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

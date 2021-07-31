@@ -12,10 +12,10 @@ import (
 
 func resourceAwsAutoscalingNotification() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAutoscalingNotificationCreate,
-		Read:   resourceAwsAutoscalingNotificationRead,
-		Update: resourceAwsAutoscalingNotificationUpdate,
-		Delete: resourceAwsAutoscalingNotificationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAutoscalingNotificationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAutoscalingNotificationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAutoscalingNotificationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAutoscalingNotificationDelete),
 
 		Schema: map[string]*schema.Schema{
 			"topic_arn": {

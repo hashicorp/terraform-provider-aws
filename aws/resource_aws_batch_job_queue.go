@@ -16,10 +16,10 @@ import (
 
 func resourceAwsBatchJobQueue() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBatchJobQueueCreate,
-		Read:   resourceAwsBatchJobQueueRead,
-		Update: resourceAwsBatchJobQueueUpdate,
-		Delete: resourceAwsBatchJobQueueDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsBatchJobQueueCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsBatchJobQueueRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsBatchJobQueueUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsBatchJobQueueDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -58,7 +58,7 @@ func resourceAwsBatchJobQueue() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

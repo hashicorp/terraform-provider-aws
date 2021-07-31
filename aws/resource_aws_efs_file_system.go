@@ -16,16 +16,16 @@ import (
 
 func resourceAwsEfsFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEfsFileSystemCreate,
-		Read:   resourceAwsEfsFileSystemRead,
-		Update: resourceAwsEfsFileSystemUpdate,
-		Delete: resourceAwsEfsFileSystemDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEfsFileSystemCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEfsFileSystemRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEfsFileSystemUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEfsFileSystemDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

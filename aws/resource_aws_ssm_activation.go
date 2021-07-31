@@ -16,9 +16,9 @@ import (
 
 func resourceAwsSsmActivation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsmActivationCreate,
-		Read:   resourceAwsSsmActivationRead,
-		Delete: resourceAwsSsmActivationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSsmActivationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSsmActivationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSsmActivationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -67,7 +67,7 @@ func resourceAwsSsmActivation() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

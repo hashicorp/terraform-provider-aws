@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsCloudFrontOriginRequestPolicy() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudFrontOriginRequestPolicyRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsCloudFrontOriginRequestPolicyRead),
 
 		Schema: map[string]*schema.Schema{
 			"comment": {

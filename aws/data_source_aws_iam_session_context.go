@@ -17,7 +17,7 @@ import (
 
 func dataSourceAwsIAMSessionContext() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIAMSessionContextRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsIAMSessionContextRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

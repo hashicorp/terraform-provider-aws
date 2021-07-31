@@ -18,9 +18,9 @@ func resourceAwsLBSSLNegotiationPolicy() *schema.Resource {
 	return &schema.Resource{
 		// There is no concept of "updating" an LB policy in
 		// the AWS API.
-		Create: resourceAwsLBSSLNegotiationPolicyCreate,
-		Read:   resourceAwsLBSSLNegotiationPolicyRead,
-		Delete: resourceAwsLBSSLNegotiationPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLBSSLNegotiationPolicyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLBSSLNegotiationPolicyRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLBSSLNegotiationPolicyDelete),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

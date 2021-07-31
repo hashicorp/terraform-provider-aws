@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsSsmPatchBaseline() *schema.Resource {
 	return &schema.Resource{
-		Read: dataAwsSsmPatchBaselineRead,
+		Read: ClientInitCrudBaseFunc(dataAwsSsmPatchBaselineRead),
 		Schema: map[string]*schema.Schema{
 			"owner": {
 				Type:         schema.TypeString,

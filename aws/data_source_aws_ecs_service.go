@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsEcsService() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEcsServiceRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEcsServiceRead),
 
 		Schema: map[string]*schema.Schema{
 			"service_name": {

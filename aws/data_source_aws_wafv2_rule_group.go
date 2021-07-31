@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsWafv2RuleGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsWafv2RuleGroupRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsWafv2RuleGroupRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

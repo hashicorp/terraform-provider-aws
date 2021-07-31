@@ -17,10 +17,10 @@ import (
 
 func resourceAwsCustomerGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCustomerGatewayCreate,
-		Read:   resourceAwsCustomerGatewayRead,
-		Update: resourceAwsCustomerGatewayUpdate,
-		Delete: resourceAwsCustomerGatewayDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCustomerGatewayCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCustomerGatewayRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCustomerGatewayUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCustomerGatewayDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -68,7 +68,7 @@ func resourceAwsCustomerGateway() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

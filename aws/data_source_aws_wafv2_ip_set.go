@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsWafv2IPSet() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsWafv2IPSetRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsWafv2IPSetRead),
 
 		Schema: map[string]*schema.Schema{
 			"addresses": {

@@ -19,10 +19,10 @@ import (
 
 func resourceAwsConfigConfigRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsConfigConfigRulePut,
-		Read:   resourceAwsConfigConfigRuleRead,
-		Update: resourceAwsConfigConfigRulePut,
-		Delete: resourceAwsConfigConfigRuleDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsConfigConfigRulePut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsConfigConfigRuleRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsConfigConfigRulePut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsConfigConfigRuleDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -141,7 +141,7 @@ func resourceAwsConfigConfigRule() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -11,9 +11,9 @@ import (
 
 func resourceAwsIotThingPrincipalAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIotThingPrincipalAttachmentCreate,
-		Read:   resourceAwsIotThingPrincipalAttachmentRead,
-		Delete: resourceAwsIotThingPrincipalAttachmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIotThingPrincipalAttachmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIotThingPrincipalAttachmentRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIotThingPrincipalAttachmentDelete),
 
 		Schema: map[string]*schema.Schema{
 			"principal": {

@@ -13,9 +13,9 @@ import (
 
 func resourceAwsNeptuneClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNeptuneClusterSnapshotCreate,
-		Read:   resourceAwsNeptuneClusterSnapshotRead,
-		Delete: resourceAwsNeptuneClusterSnapshotDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsNeptuneClusterSnapshotCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsNeptuneClusterSnapshotRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsNeptuneClusterSnapshotDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

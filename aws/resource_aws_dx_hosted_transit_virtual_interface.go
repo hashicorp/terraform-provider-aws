@@ -15,9 +15,9 @@ import (
 
 func resourceAwsDxHostedTransitVirtualInterface() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxHostedTransitVirtualInterfaceCreate,
-		Read:   resourceAwsDxHostedTransitVirtualInterfaceRead,
-		Delete: resourceAwsDxHostedTransitVirtualInterfaceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDxHostedTransitVirtualInterfaceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDxHostedTransitVirtualInterfaceRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDxHostedTransitVirtualInterfaceDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDxHostedTransitVirtualInterfaceImport,
 		},

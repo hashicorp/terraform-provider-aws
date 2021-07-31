@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsRoute53ResolverRules() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRoute53ResolverRulesRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsRoute53ResolverRulesRead),
 
 		Schema: map[string]*schema.Schema{
 			"owner_id": {

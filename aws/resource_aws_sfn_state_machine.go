@@ -19,10 +19,10 @@ import (
 
 func resourceAwsSfnStateMachine() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSfnStateMachineCreate,
-		Read:   resourceAwsSfnStateMachineRead,
-		Update: resourceAwsSfnStateMachineUpdate,
-		Delete: resourceAwsSfnStateMachineDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSfnStateMachineCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSfnStateMachineRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSfnStateMachineUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSfnStateMachineDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -115,7 +115,7 @@ func resourceAwsSfnStateMachine() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

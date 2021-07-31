@@ -19,10 +19,10 @@ import (
 
 func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppautoscalingScheduledActionPut,
-		Read:   resourceAwsAppautoscalingScheduledActionRead,
-		Update: resourceAwsAppautoscalingScheduledActionPut,
-		Delete: resourceAwsAppautoscalingScheduledActionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAppautoscalingScheduledActionPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAppautoscalingScheduledActionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAppautoscalingScheduledActionPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAppautoscalingScheduledActionDelete),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

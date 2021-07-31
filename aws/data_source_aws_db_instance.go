@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsDbInstance() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDbInstanceRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsDbInstanceRead),
 
 		Schema: map[string]*schema.Schema{
 			"db_instance_identifier": {

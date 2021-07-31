@@ -18,10 +18,10 @@ import (
 
 func resourceAwsSesReceiptRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesReceiptRuleCreate,
-		Update: resourceAwsSesReceiptRuleUpdate,
-		Read:   resourceAwsSesReceiptRuleRead,
-		Delete: resourceAwsSesReceiptRuleDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSesReceiptRuleCreate),
+		Update: ClientInitCrudBaseFunc(resourceAwsSesReceiptRuleUpdate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSesReceiptRuleRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSesReceiptRuleDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsSesReceiptRuleImport,
 		},

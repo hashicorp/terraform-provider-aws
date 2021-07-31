@@ -14,10 +14,10 @@ import (
 
 func resourceAwsPinpointApp() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsPinpointAppCreate,
-		Read:   resourceAwsPinpointAppRead,
-		Update: resourceAwsPinpointAppUpdate,
-		Delete: resourceAwsPinpointAppDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsPinpointAppCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsPinpointAppRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsPinpointAppUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsPinpointAppDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -141,7 +141,7 @@ func resourceAwsPinpointApp() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

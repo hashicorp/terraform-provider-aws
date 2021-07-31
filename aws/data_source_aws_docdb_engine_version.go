@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsDocdbEngineVersion() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDocdbEngineVersionRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsDocdbEngineVersionRead),
 		Schema: map[string]*schema.Schema{
 			"engine": {
 				Type:     schema.TypeString,

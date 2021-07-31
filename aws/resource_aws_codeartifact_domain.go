@@ -15,10 +15,10 @@ import (
 
 func resourceAwsCodeArtifactDomain() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeArtifactDomainCreate,
-		Read:   resourceAwsCodeArtifactDomainRead,
-		Delete: resourceAwsCodeArtifactDomainDelete,
-		Update: resourceAwsCodeArtifactDomainUpdate,
+		Create: ClientInitCrudBaseFunc(resourceAwsCodeArtifactDomainCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCodeArtifactDomainRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCodeArtifactDomainDelete),
+		Update: ClientInitCrudBaseFunc(resourceAwsCodeArtifactDomainUpdate),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -60,7 +60,7 @@ func resourceAwsCodeArtifactDomain() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

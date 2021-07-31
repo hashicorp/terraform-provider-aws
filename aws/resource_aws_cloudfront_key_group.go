@@ -11,10 +11,10 @@ import (
 
 func resourceAwsCloudFrontKeyGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudFrontKeyGroupCreate,
-		Read:   resourceAwsCloudFrontKeyGroupRead,
-		Update: resourceAwsCloudFrontKeyGroupUpdate,
-		Delete: resourceAwsCloudFrontKeyGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudFrontKeyGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudFrontKeyGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudFrontKeyGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudFrontKeyGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

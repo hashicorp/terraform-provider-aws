@@ -19,10 +19,10 @@ import (
 
 func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlobalAcceleratorEndpointGroupCreate,
-		Read:   resourceAwsGlobalAcceleratorEndpointGroupRead,
-		Update: resourceAwsGlobalAcceleratorEndpointGroupUpdate,
-		Delete: resourceAwsGlobalAcceleratorEndpointGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGlobalAcceleratorEndpointGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGlobalAcceleratorEndpointGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGlobalAcceleratorEndpointGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGlobalAcceleratorEndpointGroupDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

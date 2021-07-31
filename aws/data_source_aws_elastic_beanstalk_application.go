@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsElasticBeanstalkApplication() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsElasticBeanstalkApplicationRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsElasticBeanstalkApplicationRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

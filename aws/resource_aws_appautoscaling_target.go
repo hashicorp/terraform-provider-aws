@@ -15,10 +15,10 @@ import (
 
 func resourceAwsAppautoscalingTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppautoscalingTargetPut,
-		Read:   resourceAwsAppautoscalingTargetRead,
-		Update: resourceAwsAppautoscalingTargetPut,
-		Delete: resourceAwsAppautoscalingTargetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAppautoscalingTargetPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAppautoscalingTargetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAppautoscalingTargetPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAppautoscalingTargetDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAppautoscalingTargetImport,
 		},

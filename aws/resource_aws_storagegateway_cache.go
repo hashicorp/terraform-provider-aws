@@ -13,9 +13,9 @@ import (
 
 func resourceAwsStorageGatewayCache() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsStorageGatewayCacheCreate,
-		Read:   resourceAwsStorageGatewayCacheRead,
-		Delete: schema.Noop,
+		Create: ClientInitCrudBaseFunc(resourceAwsStorageGatewayCacheCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsStorageGatewayCacheRead),
+		Delete: ClientInitCrudBaseFunc(schema.Noop),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

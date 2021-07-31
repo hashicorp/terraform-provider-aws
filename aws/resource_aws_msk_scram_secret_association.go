@@ -20,10 +20,10 @@ const (
 
 func resourceAwsMskScramSecretAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMskScramSecretAssociationCreate,
-		Read:   resourceAwsMskScramSecretAssociationRead,
-		Update: resourceAwsMskScramSecretAssociationUpdate,
-		Delete: resourceAwsMskScramSecretAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsMskScramSecretAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsMskScramSecretAssociationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsMskScramSecretAssociationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsMskScramSecretAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

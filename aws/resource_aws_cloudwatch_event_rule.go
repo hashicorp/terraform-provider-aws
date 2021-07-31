@@ -25,10 +25,10 @@ const (
 
 func resourceAwsCloudWatchEventRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchEventRuleCreate,
-		Read:   resourceAwsCloudWatchEventRuleRead,
-		Update: resourceAwsCloudWatchEventRuleUpdate,
-		Delete: resourceAwsCloudWatchEventRuleDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventRuleCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudWatchEventRuleRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventRuleUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventRuleDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -96,7 +96,7 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

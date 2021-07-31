@@ -12,10 +12,10 @@ import (
 
 func resourceAwsWafGeoMatchSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafGeoMatchSetCreate,
-		Read:   resourceAwsWafGeoMatchSetRead,
-		Update: resourceAwsWafGeoMatchSetUpdate,
-		Delete: resourceAwsWafGeoMatchSetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafGeoMatchSetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafGeoMatchSetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWafGeoMatchSetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafGeoMatchSetDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsEc2TransitGatewayPeeringAttachment() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2TransitGatewayPeeringAttachmentRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEc2TransitGatewayPeeringAttachmentRead),
 
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),

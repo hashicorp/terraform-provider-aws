@@ -14,10 +14,10 @@ import (
 
 func resourceAwsMainRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMainRouteTableAssociationCreate,
-		Read:   resourceAwsMainRouteTableAssociationRead,
-		Update: resourceAwsMainRouteTableAssociationUpdate,
-		Delete: resourceAwsMainRouteTableAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsMainRouteTableAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsMainRouteTableAssociationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsMainRouteTableAssociationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsMainRouteTableAssociationDelete),
 
 		Schema: map[string]*schema.Schema{
 			// We use this field to record the main route table that is automatically

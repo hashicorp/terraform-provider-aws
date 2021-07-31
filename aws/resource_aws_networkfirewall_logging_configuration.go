@@ -17,10 +17,10 @@ import (
 
 func resourceAwsNetworkFirewallLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsNetworkFirewallLoggingConfigurationCreate,
-		ReadContext:   resourceAwsNetworkFirewallLoggingConfigurationRead,
-		UpdateContext: resourceAwsNetworkFirewallLoggingConfigurationUpdate,
-		DeleteContext: resourceAwsNetworkFirewallLoggingConfigurationDelete,
+		CreateContext: ClientInitCrudContextFunc(resourceAwsNetworkFirewallLoggingConfigurationCreate),
+		ReadContext:   ClientInitCrudContextFunc(resourceAwsNetworkFirewallLoggingConfigurationRead),
+		UpdateContext: ClientInitCrudContextFunc(resourceAwsNetworkFirewallLoggingConfigurationUpdate),
+		DeleteContext: ClientInitCrudContextFunc(resourceAwsNetworkFirewallLoggingConfigurationDelete),
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

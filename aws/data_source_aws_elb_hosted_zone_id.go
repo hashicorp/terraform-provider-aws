@@ -39,7 +39,7 @@ var elbHostedZoneIdPerRegionMap = map[string]string{
 
 func dataSourceAwsElbHostedZoneId() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsElbHostedZoneIdRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsElbHostedZoneIdRead),
 
 		Schema: map[string]*schema.Schema{
 			"region": {

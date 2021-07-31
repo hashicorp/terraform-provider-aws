@@ -14,10 +14,10 @@ import (
 
 func resourceAwsDataPipelinePipeline() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDataPipelinePipelineCreate,
-		Read:   resourceAwsDataPipelinePipelineRead,
-		Update: resourceAwsDataPipelinePipelineUpdate,
-		Delete: resourceAwsDataPipelinePipelineDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDataPipelinePipelineCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDataPipelinePipelineRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDataPipelinePipelineUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDataPipelinePipelineDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -39,7 +39,7 @@ func resourceAwsDataPipelinePipeline() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

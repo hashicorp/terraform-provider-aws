@@ -13,10 +13,10 @@ import (
 
 func resourceAwsConfigAggregateAuthorization() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsConfigAggregateAuthorizationPut,
-		Read:   resourceAwsConfigAggregateAuthorizationRead,
-		Update: resourceAwsConfigAggregateAuthorizationUpdate,
-		Delete: resourceAwsConfigAggregateAuthorizationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsConfigAggregateAuthorizationPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsConfigAggregateAuthorizationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsConfigAggregateAuthorizationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsConfigAggregateAuthorizationDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -42,7 +42,7 @@ func resourceAwsConfigAggregateAuthorization() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -15,7 +15,7 @@ import (
 
 func dataSourceAwsEfsFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEfsFileSystemRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEfsFileSystemRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

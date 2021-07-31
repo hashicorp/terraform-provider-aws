@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsSignerSigningProfile() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSignerSigningProfileRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsSignerSigningProfileRead),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

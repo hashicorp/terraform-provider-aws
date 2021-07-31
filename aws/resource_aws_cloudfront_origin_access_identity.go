@@ -13,10 +13,10 @@ import (
 
 func resourceAwsCloudFrontOriginAccessIdentity() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudFrontOriginAccessIdentityCreate,
-		Read:   resourceAwsCloudFrontOriginAccessIdentityRead,
-		Update: resourceAwsCloudFrontOriginAccessIdentityUpdate,
-		Delete: resourceAwsCloudFrontOriginAccessIdentityDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudFrontOriginAccessIdentityCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudFrontOriginAccessIdentityRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudFrontOriginAccessIdentityUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudFrontOriginAccessIdentityDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsEcsTaskDefinition() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEcsTaskDefinitionRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEcsTaskDefinitionRead),
 
 		Schema: map[string]*schema.Schema{
 			"task_definition": {

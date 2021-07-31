@@ -17,10 +17,10 @@ import (
 
 func resourceAwsElasticacheSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticacheSubnetGroupCreate,
-		Read:   resourceAwsElasticacheSubnetGroupRead,
-		Update: resourceAwsElasticacheSubnetGroupUpdate,
-		Delete: resourceAwsElasticacheSubnetGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsElasticacheSubnetGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsElasticacheSubnetGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsElasticacheSubnetGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsElasticacheSubnetGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -56,7 +56,7 @@ func resourceAwsElasticacheSubnetGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: resourceAwsElasticacheSubnetGroupDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(resourceAwsElasticacheSubnetGroupDiff),
 	}
 }
 

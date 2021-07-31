@@ -12,10 +12,10 @@ import (
 
 func resourceAwsCloudFrontPublicKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudFrontPublicKeyCreate,
-		Read:   resourceAwsCloudFrontPublicKeyRead,
-		Update: resourceAwsCloudFrontPublicKeyUpdate,
-		Delete: resourceAwsCloudFrontPublicKeyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudFrontPublicKeyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudFrontPublicKeyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudFrontPublicKeyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudFrontPublicKeyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

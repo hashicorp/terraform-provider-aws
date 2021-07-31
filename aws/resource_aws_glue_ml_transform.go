@@ -15,15 +15,15 @@ import (
 
 func resourceAwsGlueMLTransform() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueMLTransformCreate,
-		Read:   resourceAwsGlueMLTransformRead,
-		Update: resourceAwsGlueMLTransformUpdate,
-		Delete: resourceAwsGlueMLTransformDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGlueMLTransformCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGlueMLTransformRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGlueMLTransformUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGlueMLTransformDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

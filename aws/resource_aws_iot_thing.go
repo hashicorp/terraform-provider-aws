@@ -11,10 +11,10 @@ import (
 
 func resourceAwsIotThing() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIotThingCreate,
-		Read:   resourceAwsIotThingRead,
-		Update: resourceAwsIotThingUpdate,
-		Delete: resourceAwsIotThingDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIotThingCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIotThingRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIotThingUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIotThingDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

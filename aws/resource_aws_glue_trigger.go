@@ -20,10 +20,10 @@ import (
 
 func resourceAwsGlueTrigger() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueTriggerCreate,
-		Read:   resourceAwsGlueTriggerRead,
-		Update: resourceAwsGlueTriggerUpdate,
-		Delete: resourceAwsGlueTriggerDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGlueTriggerCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGlueTriggerRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGlueTriggerUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGlueTriggerDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -32,7 +32,7 @@ func resourceAwsGlueTrigger() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"actions": {

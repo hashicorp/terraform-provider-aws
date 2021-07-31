@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLakeFormationDataLakeSettingsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsLakeFormationDataLakeSettingsRead),
 
 		Schema: map[string]*schema.Schema{
 			"admins": {

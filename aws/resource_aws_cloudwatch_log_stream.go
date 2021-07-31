@@ -15,9 +15,9 @@ import (
 
 func resourceAwsCloudWatchLogStream() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchLogStreamCreate,
-		Read:   resourceAwsCloudWatchLogStreamRead,
-		Delete: resourceAwsCloudWatchLogStreamDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudWatchLogStreamCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudWatchLogStreamRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudWatchLogStreamDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsCloudWatchLogStreamImport,
 		},

@@ -16,7 +16,7 @@ import (
 
 func dataSourceAwsAmiIds() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAmiIdsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsAmiIdsRead),
 
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),

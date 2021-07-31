@@ -36,7 +36,7 @@ var elasticBeanstalkHostedZoneIds = map[string]string{
 
 func dataSourceAwsElasticBeanstalkHostedZone() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsElasticBeanstalkHostedZoneRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsElasticBeanstalkHostedZoneRead),
 
 		Schema: map[string]*schema.Schema{
 			"region": {

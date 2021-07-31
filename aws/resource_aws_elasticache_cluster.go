@@ -31,10 +31,10 @@ const (
 
 func resourceAwsElasticacheCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticacheClusterCreate,
-		Read:   resourceAwsElasticacheClusterRead,
-		Update: resourceAwsElasticacheClusterUpdate,
-		Delete: resourceAwsElasticacheClusterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsElasticacheClusterCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsElasticacheClusterRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsElasticacheClusterUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsElasticacheClusterDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

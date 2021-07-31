@@ -17,9 +17,9 @@ import (
 
 func resourceAwsDxGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxGatewayCreate,
-		Read:   resourceAwsDxGatewayRead,
-		Delete: resourceAwsDxGatewayDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDxGatewayCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDxGatewayRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDxGatewayDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

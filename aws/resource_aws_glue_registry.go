@@ -17,15 +17,15 @@ import (
 
 func resourceAwsGlueRegistry() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueRegistryCreate,
-		Read:   resourceAwsGlueRegistryRead,
-		Update: resourceAwsGlueRegistryUpdate,
-		Delete: resourceAwsGlueRegistryDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGlueRegistryCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGlueRegistryRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGlueRegistryUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGlueRegistryDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

@@ -13,9 +13,9 @@ import (
 
 func resourceAwsGuardDutyInviteAccepter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGuardDutyInviteAccepterCreate,
-		Read:   resourceAwsGuardDutyInviteAccepterRead,
-		Delete: resourceAwsGuardDutyInviteAccepterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGuardDutyInviteAccepterCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGuardDutyInviteAccepterRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGuardDutyInviteAccepterDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

@@ -14,9 +14,9 @@ import (
 
 func resourceAwsEc2TransitGatewayRoute() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TransitGatewayRouteCreate,
-		Read:   resourceAwsEc2TransitGatewayRouteRead,
-		Delete: resourceAwsEc2TransitGatewayRouteDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEc2TransitGatewayRouteCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEc2TransitGatewayRouteRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEc2TransitGatewayRouteDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

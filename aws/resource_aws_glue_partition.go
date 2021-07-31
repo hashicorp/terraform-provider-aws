@@ -15,10 +15,10 @@ import (
 
 func resourceAwsGluePartition() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGluePartitionCreate,
-		Read:   resourceAwsGluePartitionRead,
-		Update: resourceAwsGluePartitionUpdate,
-		Delete: resourceAwsGluePartitionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGluePartitionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGluePartitionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGluePartitionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGluePartitionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

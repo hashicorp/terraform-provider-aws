@@ -12,10 +12,10 @@ import (
 
 func resourceAwsIamAccountPasswordPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamAccountPasswordPolicyUpdate,
-		Read:   resourceAwsIamAccountPasswordPolicyRead,
-		Update: resourceAwsIamAccountPasswordPolicyUpdate,
-		Delete: resourceAwsIamAccountPasswordPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIamAccountPasswordPolicyUpdate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIamAccountPasswordPolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIamAccountPasswordPolicyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIamAccountPasswordPolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

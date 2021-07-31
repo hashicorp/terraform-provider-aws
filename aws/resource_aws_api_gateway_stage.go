@@ -17,10 +17,10 @@ import (
 
 func resourceAwsApiGatewayStage() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayStageCreate,
-		Read:   resourceAwsApiGatewayStageRead,
-		Update: resourceAwsApiGatewayStageUpdate,
-		Delete: resourceAwsApiGatewayStageDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsApiGatewayStageCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsApiGatewayStageRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsApiGatewayStageUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsApiGatewayStageDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -123,7 +123,7 @@ func resourceAwsApiGatewayStage() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

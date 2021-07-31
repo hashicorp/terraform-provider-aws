@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsCodeCommitRepository() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCodeCommitRepositoryRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsCodeCommitRepositoryRead),
 
 		Schema: map[string]*schema.Schema{
 			"repository_name": {

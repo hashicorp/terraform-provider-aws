@@ -17,10 +17,10 @@ const neptuneClusterParameterGroupMaxParamsBulkEdit = 20
 
 func resourceAwsNeptuneClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNeptuneClusterParameterGroupCreate,
-		Read:   resourceAwsNeptuneClusterParameterGroupRead,
-		Update: resourceAwsNeptuneClusterParameterGroupUpdate,
-		Delete: resourceAwsNeptuneClusterParameterGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsNeptuneClusterParameterGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsNeptuneClusterParameterGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsNeptuneClusterParameterGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsNeptuneClusterParameterGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -87,7 +87,7 @@ func resourceAwsNeptuneClusterParameterGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

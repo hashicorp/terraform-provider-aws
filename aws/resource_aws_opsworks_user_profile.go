@@ -11,10 +11,10 @@ import (
 
 func resourceAwsOpsworksUserProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsOpsworksUserProfileCreate,
-		Read:   resourceAwsOpsworksUserProfileRead,
-		Update: resourceAwsOpsworksUserProfileUpdate,
-		Delete: resourceAwsOpsworksUserProfileDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsOpsworksUserProfileCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsOpsworksUserProfileRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsOpsworksUserProfileUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsOpsworksUserProfileDelete),
 
 		Schema: map[string]*schema.Schema{
 			"user_arn": {

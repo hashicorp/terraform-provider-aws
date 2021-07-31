@@ -13,9 +13,9 @@ import (
 
 func resourceAwsElbAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElbAttachmentCreate,
-		Read:   resourceAwsElbAttachmentRead,
-		Delete: resourceAwsElbAttachmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsElbAttachmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsElbAttachmentRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsElbAttachmentDelete),
 
 		Schema: map[string]*schema.Schema{
 			"elb": {

@@ -27,13 +27,13 @@ const (
 
 func resourceAwsAmi() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAmiCreate,
+		Create: ClientInitCrudBaseFunc(resourceAwsAmiCreate),
 		// The Read, Update and Delete operations are shared with aws_ami_copy
 		// and aws_ami_from_instance, since they differ only in how the image
 		// is created.
-		Read:   resourceAwsAmiRead,
-		Update: resourceAwsAmiUpdate,
-		Delete: resourceAwsAmiDelete,
+		Read:   ClientInitCrudBaseFunc(resourceAwsAmiRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAmiUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAmiDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -245,7 +245,7 @@ func resourceAwsAmi() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

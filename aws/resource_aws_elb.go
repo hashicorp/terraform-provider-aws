@@ -24,15 +24,15 @@ import (
 
 func resourceAwsElb() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElbCreate,
-		Read:   resourceAwsElbRead,
-		Update: resourceAwsElbUpdate,
-		Delete: resourceAwsElbDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsElbCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsElbRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsElbUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsElbDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

@@ -18,10 +18,10 @@ import (
 
 func resourceAwsServiceCatalogServiceAction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogServiceActionCreate,
-		Read:   resourceAwsServiceCatalogServiceActionRead,
-		Update: resourceAwsServiceCatalogServiceActionUpdate,
-		Delete: resourceAwsServiceCatalogServiceActionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsServiceCatalogServiceActionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsServiceCatalogServiceActionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsServiceCatalogServiceActionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsServiceCatalogServiceActionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

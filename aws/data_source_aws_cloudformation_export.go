@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsCloudFormationExport() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudFormationExportRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsCloudFormationExportRead),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

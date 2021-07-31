@@ -14,10 +14,10 @@ import (
 
 func resourceAwsDirectoryServiceConditionalForwarder() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDirectoryServiceConditionalForwarderCreate,
-		Read:   resourceAwsDirectoryServiceConditionalForwarderRead,
-		Update: resourceAwsDirectoryServiceConditionalForwarderUpdate,
-		Delete: resourceAwsDirectoryServiceConditionalForwarderDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDirectoryServiceConditionalForwarderCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDirectoryServiceConditionalForwarderRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDirectoryServiceConditionalForwarderUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDirectoryServiceConditionalForwarderDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

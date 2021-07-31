@@ -24,10 +24,10 @@ import (
 
 func resourceAwsRoute53Zone() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ZoneCreate,
-		Read:   resourceAwsRoute53ZoneRead,
-		Update: resourceAwsRoute53ZoneUpdate,
-		Delete: resourceAwsRoute53ZoneDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRoute53ZoneCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRoute53ZoneRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRoute53ZoneUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRoute53ZoneDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -102,7 +102,7 @@ func resourceAwsRoute53Zone() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

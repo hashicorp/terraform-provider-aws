@@ -13,15 +13,15 @@ import (
 
 func resourceAwsEc2TransitGatewayVpcAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TransitGatewayVpcAttachmentCreate,
-		Read:   resourceAwsEc2TransitGatewayVpcAttachmentRead,
-		Update: resourceAwsEc2TransitGatewayVpcAttachmentUpdate,
-		Delete: resourceAwsEc2TransitGatewayVpcAttachmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEc2TransitGatewayVpcAttachmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEc2TransitGatewayVpcAttachmentRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEc2TransitGatewayVpcAttachmentUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEc2TransitGatewayVpcAttachmentDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"appliance_mode_support": {

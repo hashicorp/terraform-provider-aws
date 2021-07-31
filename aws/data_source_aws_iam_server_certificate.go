@@ -16,7 +16,7 @@ import (
 
 func dataSourceAwsIAMServerCertificate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIAMServerCertificateRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsIAMServerCertificateRead),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

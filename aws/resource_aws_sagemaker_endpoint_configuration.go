@@ -15,10 +15,10 @@ import (
 
 func resourceAwsSagemakerEndpointConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerEndpointConfigurationCreate,
-		Read:   resourceAwsSagemakerEndpointConfigurationRead,
-		Update: resourceAwsSagemakerEndpointConfigurationUpdate,
-		Delete: resourceAwsSagemakerEndpointConfigurationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSagemakerEndpointConfigurationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSagemakerEndpointConfigurationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSagemakerEndpointConfigurationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSagemakerEndpointConfigurationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -194,7 +194,7 @@ func resourceAwsSagemakerEndpointConfiguration() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

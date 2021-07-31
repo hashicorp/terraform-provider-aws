@@ -28,10 +28,10 @@ import (
 func resourceAwsSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsSecurityGroupCreate,
-		Read:   resourceAwsSecurityGroupRead,
-		Update: resourceAwsSecurityGroupUpdate,
-		Delete: resourceAwsSecurityGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSecurityGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSecurityGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSecurityGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSecurityGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -42,7 +42,7 @@ func resourceAwsSecurityGroup() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsSecurityGroupMigrateState,
+		MigrateState:  ClientInitMigrateStateFunc(resourceAwsSecurityGroupMigrateState),
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -238,7 +238,7 @@ func resourceAwsSecurityGroup() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

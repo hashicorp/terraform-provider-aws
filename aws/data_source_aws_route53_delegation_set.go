@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsDelegationSet() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDelegationSetRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsDelegationSetRead),
 
 		Schema: map[string]*schema.Schema{
 			"id": {

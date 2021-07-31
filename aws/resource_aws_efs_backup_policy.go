@@ -16,10 +16,10 @@ import (
 
 func resourceAwsEfsBackupPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEfsBackupPolicyCreate,
-		Read:   resourceAwsEfsBackupPolicyRead,
-		Update: resourceAwsEfsBackupPolicyUpdate,
-		Delete: resourceAwsEfsBackupPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEfsBackupPolicyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEfsBackupPolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEfsBackupPolicyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEfsBackupPolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

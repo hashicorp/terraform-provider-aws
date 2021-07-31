@@ -26,10 +26,10 @@ import (
 
 func resourceAwsTransferServer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsTransferServerCreate,
-		Read:   resourceAwsTransferServerRead,
-		Update: resourceAwsTransferServerUpdate,
-		Delete: resourceAwsTransferServerDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsTransferServerCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsTransferServerRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsTransferServerUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsTransferServerDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

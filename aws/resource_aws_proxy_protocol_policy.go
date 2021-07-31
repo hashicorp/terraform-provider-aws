@@ -13,10 +13,10 @@ import (
 
 func resourceAwsProxyProtocolPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsProxyProtocolPolicyCreate,
-		Read:   resourceAwsProxyProtocolPolicyRead,
-		Update: resourceAwsProxyProtocolPolicyUpdate,
-		Delete: resourceAwsProxyProtocolPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsProxyProtocolPolicyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsProxyProtocolPolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsProxyProtocolPolicyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsProxyProtocolPolicyDelete),
 
 		Schema: map[string]*schema.Schema{
 			"load_balancer": {

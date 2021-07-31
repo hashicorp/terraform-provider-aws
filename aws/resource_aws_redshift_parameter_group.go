@@ -18,10 +18,10 @@ import (
 
 func resourceAwsRedshiftParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRedshiftParameterGroupCreate,
-		Read:   resourceAwsRedshiftParameterGroupRead,
-		Update: resourceAwsRedshiftParameterGroupUpdate,
-		Delete: resourceAwsRedshiftParameterGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRedshiftParameterGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRedshiftParameterGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRedshiftParameterGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRedshiftParameterGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -81,7 +81,7 @@ func resourceAwsRedshiftParameterGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

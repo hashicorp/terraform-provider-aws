@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsEbsSnapshotIds() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEbsSnapshotIdsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEbsSnapshotIdsRead),
 
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),

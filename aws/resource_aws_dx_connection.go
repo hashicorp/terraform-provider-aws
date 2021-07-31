@@ -15,10 +15,10 @@ import (
 
 func resourceAwsDxConnection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxConnectionCreate,
-		Read:   resourceAwsDxConnectionRead,
-		Update: resourceAwsDxConnectionUpdate,
-		Delete: resourceAwsDxConnectionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDxConnectionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDxConnectionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDxConnectionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDxConnectionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -60,7 +60,7 @@ func resourceAwsDxConnection() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

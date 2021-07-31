@@ -18,10 +18,10 @@ import (
 
 func resourceAwsAmplifyWebhook() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAmplifyWebhookCreate,
-		Read:   resourceAwsAmplifyWebhookRead,
-		Update: resourceAwsAmplifyWebhookUpdate,
-		Delete: resourceAwsAmplifyWebhookDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAmplifyWebhookCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAmplifyWebhookRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAmplifyWebhookUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAmplifyWebhookDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

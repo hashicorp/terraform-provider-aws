@@ -12,10 +12,10 @@ import (
 
 func resourceAwsXrayEncryptionConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsXrayEncryptionConfigPut,
-		Read:   resourceAwsXrayEncryptionConfigRead,
-		Update: resourceAwsXrayEncryptionConfigPut,
-		Delete: schema.Noop,
+		Create: ClientInitCrudBaseFunc(resourceAwsXrayEncryptionConfigPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsXrayEncryptionConfigRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsXrayEncryptionConfigPut),
+		Delete: ClientInitCrudBaseFunc(schema.Noop),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

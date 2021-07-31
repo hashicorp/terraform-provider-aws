@@ -14,10 +14,10 @@ import (
 
 func resourceAwsCloudWatchLogDestination() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchLogDestinationPut,
-		Update: resourceAwsCloudWatchLogDestinationPut,
-		Read:   resourceAwsCloudWatchLogDestinationRead,
-		Delete: resourceAwsCloudWatchLogDestinationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudWatchLogDestinationPut),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudWatchLogDestinationPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudWatchLogDestinationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudWatchLogDestinationDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

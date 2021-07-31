@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsIdentityStoreUser() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIdentityStoreUserRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsIdentityStoreUserRead),
 
 		Schema: map[string]*schema.Schema{
 			"filter": {

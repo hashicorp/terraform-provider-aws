@@ -17,10 +17,10 @@ import (
 
 func resourceAwsSecurityHubStandardsControl() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsSecurityHubStandardsControlPut,
-		ReadContext:   resourceAwsSecurityHubStandardsControlRead,
-		UpdateContext: resourceAwsSecurityHubStandardsControlPut,
-		DeleteContext: resourceAwsSecurityHubStandardsControlDelete,
+		CreateContext: ClientInitCrudContextFunc(resourceAwsSecurityHubStandardsControlPut),
+		ReadContext:   ClientInitCrudContextFunc(resourceAwsSecurityHubStandardsControlRead),
+		UpdateContext: ClientInitCrudContextFunc(resourceAwsSecurityHubStandardsControlPut),
+		DeleteContext: ClientInitCrudContextFunc(resourceAwsSecurityHubStandardsControlDelete),
 
 		Schema: map[string]*schema.Schema{
 			"control_id": {

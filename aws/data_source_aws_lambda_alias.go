@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsLambdaAlias() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLambdaAliasRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsLambdaAliasRead),
 
 		Schema: map[string]*schema.Schema{
 			"function_name": {

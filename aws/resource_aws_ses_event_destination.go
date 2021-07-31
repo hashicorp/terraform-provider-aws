@@ -15,9 +15,9 @@ import (
 
 func resourceAwsSesEventDestination() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesEventDestinationCreate,
-		Read:   resourceAwsSesEventDestinationRead,
-		Delete: resourceAwsSesEventDestinationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSesEventDestinationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSesEventDestinationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSesEventDestinationDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsSesEventDestinationImport,
 		},

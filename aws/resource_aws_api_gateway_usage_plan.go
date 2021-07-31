@@ -16,10 +16,10 @@ import (
 
 func resourceAwsApiGatewayUsagePlan() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayUsagePlanCreate,
-		Read:   resourceAwsApiGatewayUsagePlanRead,
-		Update: resourceAwsApiGatewayUsagePlanUpdate,
-		Delete: resourceAwsApiGatewayUsagePlanDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsApiGatewayUsagePlanCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsApiGatewayUsagePlanRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsApiGatewayUsagePlanUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsApiGatewayUsagePlanDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -114,7 +114,7 @@ func resourceAwsApiGatewayUsagePlan() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

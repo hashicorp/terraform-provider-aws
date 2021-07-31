@@ -31,10 +31,10 @@ const LambdaFunctionVersionLatest = "$LATEST"
 
 func resourceAwsLambdaFunction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLambdaFunctionCreate,
-		Read:   resourceAwsLambdaFunctionRead,
-		Update: resourceAwsLambdaFunctionUpdate,
-		Delete: resourceAwsLambdaFunctionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLambdaFunctionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLambdaFunctionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsLambdaFunctionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLambdaFunctionDelete),
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 		},

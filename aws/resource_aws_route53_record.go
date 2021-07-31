@@ -26,15 +26,15 @@ var r53ValidRecordTypes = regexp.MustCompile("^(A|AAAA|CAA|CNAME|MX|NAPTR|NS|PTR
 func resourceAwsRoute53Record() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsRoute53RecordCreate,
-		Read:   resourceAwsRoute53RecordRead,
-		Update: resourceAwsRoute53RecordUpdate,
-		Delete: resourceAwsRoute53RecordDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRoute53RecordCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRoute53RecordRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRoute53RecordUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRoute53RecordDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 		SchemaVersion: 2,
-		MigrateState:  resourceAwsRoute53RecordMigrateState,
+		MigrateState:  ClientInitMigrateStateFunc(resourceAwsRoute53RecordMigrateState),
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

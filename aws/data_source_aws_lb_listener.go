@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsLbListener() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLbListenerRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsLbListenerRead),
 
 		Schema: map[string]*schema.Schema{
 			"alpn_policy": {

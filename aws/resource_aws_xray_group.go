@@ -12,16 +12,16 @@ import (
 
 func resourceAwsXrayGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsXrayGroupCreate,
-		Read:   resourceAwsXrayGroupRead,
-		Update: resourceAwsXrayGroupUpdate,
-		Delete: resourceAwsXrayGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsXrayGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsXrayGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsXrayGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsXrayGroupDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

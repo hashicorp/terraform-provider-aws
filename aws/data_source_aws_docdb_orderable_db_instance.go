@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsDocdbOrderableDbInstance() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDocdbOrderableDbInstanceRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsDocdbOrderableDbInstanceRead),
 		Schema: map[string]*schema.Schema{
 			"availability_zones": {
 				Type:     schema.TypeList,

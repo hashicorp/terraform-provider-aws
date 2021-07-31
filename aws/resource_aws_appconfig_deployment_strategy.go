@@ -15,10 +15,10 @@ import (
 
 func resourceAwsAppconfigDeploymentStrategy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppconfigDeploymentStrategyCreate,
-		Read:   resourceAwsAppconfigDeploymentStrategyRead,
-		Update: resourceAwsAppconfigDeploymentStrategyUpdate,
-		Delete: resourceAwsAppconfigDeploymentStrategyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAppconfigDeploymentStrategyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAppconfigDeploymentStrategyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAppconfigDeploymentStrategyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAppconfigDeploymentStrategyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -69,7 +69,7 @@ func resourceAwsAppconfigDeploymentStrategy() *schema.Resource {
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 		},
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

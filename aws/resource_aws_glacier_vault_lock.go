@@ -14,11 +14,11 @@ import (
 
 func resourceAwsGlacierVaultLock() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlacierVaultLockCreate,
-		Read:   resourceAwsGlacierVaultLockRead,
+		Create: ClientInitCrudBaseFunc(resourceAwsGlacierVaultLockCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGlacierVaultLockRead),
 		// Allow ignore_deletion_error update
-		Update: schema.Noop,
-		Delete: resourceAwsGlacierVaultLockDelete,
+		Update: ClientInitCrudBaseFunc(schema.Noop),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGlacierVaultLockDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

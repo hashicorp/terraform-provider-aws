@@ -17,9 +17,9 @@ import (
 
 func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxGatewayAssociationProposalCreate,
-		Read:   resourceAwsDxGatewayAssociationProposalRead,
-		Delete: resourceAwsDxGatewayAssociationProposalDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDxGatewayAssociationProposalCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDxGatewayAssociationProposalRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDxGatewayAssociationProposalDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDxGatewayAssociationProposalImport,

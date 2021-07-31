@@ -16,10 +16,10 @@ import (
 
 func resourceAwsOpsworksInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsOpsworksInstanceCreate,
-		Read:   resourceAwsOpsworksInstanceRead,
-		Update: resourceAwsOpsworksInstanceUpdate,
-		Delete: resourceAwsOpsworksInstanceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsOpsworksInstanceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsOpsworksInstanceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsOpsworksInstanceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsOpsworksInstanceDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsOpsworksInstanceImport,
 		},

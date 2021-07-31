@@ -13,10 +13,10 @@ import (
 
 func resourceAwsConfigOrganizationManagedRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsConfigOrganizationManagedRuleCreate,
-		Delete: resourceAwsConfigOrganizationManagedRuleDelete,
-		Read:   resourceAwsConfigOrganizationManagedRuleRead,
-		Update: resourceAwsConfigOrganizationManagedRuleUpdate,
+		Create: ClientInitCrudBaseFunc(resourceAwsConfigOrganizationManagedRuleCreate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsConfigOrganizationManagedRuleDelete),
+		Read:   ClientInitCrudBaseFunc(resourceAwsConfigOrganizationManagedRuleRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsConfigOrganizationManagedRuleUpdate),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

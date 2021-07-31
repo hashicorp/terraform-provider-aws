@@ -17,10 +17,10 @@ import (
 
 func resourceAwsVpcDhcpOptionsAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcDhcpOptionsAssociationCreate,
-		Read:   resourceAwsVpcDhcpOptionsAssociationRead,
-		Update: resourceAwsVpcDhcpOptionsAssociationUpdate,
-		Delete: resourceAwsVpcDhcpOptionsAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsVpcDhcpOptionsAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsVpcDhcpOptionsAssociationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsVpcDhcpOptionsAssociationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsVpcDhcpOptionsAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsVpcDhcpOptionsAssociationImport,
 		},

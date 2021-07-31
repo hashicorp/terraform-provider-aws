@@ -14,10 +14,10 @@ import (
 
 func resourceAwsCodePipelineWebhook() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodePipelineWebhookCreate,
-		Read:   resourceAwsCodePipelineWebhookRead,
-		Update: resourceAwsCodePipelineWebhookUpdate,
-		Delete: resourceAwsCodePipelineWebhookDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCodePipelineWebhookCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCodePipelineWebhookRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCodePipelineWebhookUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCodePipelineWebhookDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -100,7 +100,7 @@ func resourceAwsCodePipelineWebhook() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

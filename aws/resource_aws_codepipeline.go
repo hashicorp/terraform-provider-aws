@@ -27,10 +27,10 @@ const (
 
 func resourceAwsCodePipeline() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodePipelineCreate,
-		Read:   resourceAwsCodePipelineRead,
-		Update: resourceAwsCodePipelineUpdate,
-		Delete: resourceAwsCodePipelineDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCodePipelineCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCodePipelineRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCodePipelineUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCodePipelineDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -173,7 +173,7 @@ func resourceAwsCodePipeline() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsLexBot() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLexBotRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsLexBotRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

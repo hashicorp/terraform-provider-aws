@@ -13,10 +13,10 @@ import (
 
 func resourceAwsCloudFrontOriginRequestPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudFrontOriginRequestPolicyCreate,
-		Read:   resourceAwsCloudFrontOriginRequestPolicyRead,
-		Update: resourceAwsCloudFrontOriginRequestPolicyUpdate,
-		Delete: resourceAwsCloudFrontOriginRequestPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudFrontOriginRequestPolicyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudFrontOriginRequestPolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudFrontOriginRequestPolicyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudFrontOriginRequestPolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

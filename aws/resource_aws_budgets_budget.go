@@ -20,10 +20,10 @@ import (
 
 func resourceAwsBudgetsBudget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBudgetsBudgetCreate,
-		Read:   resourceAwsBudgetsBudgetRead,
-		Update: resourceAwsBudgetsBudgetUpdate,
-		Delete: resourceAwsBudgetsBudgetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsBudgetsBudgetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsBudgetsBudgetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsBudgetsBudgetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsBudgetsBudgetDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

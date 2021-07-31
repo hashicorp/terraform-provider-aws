@@ -18,9 +18,9 @@ import (
 
 func resourceAwsNetworkInterfaceSGAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNetworkInterfaceSGAttachmentCreate,
-		Read:   resourceAwsNetworkInterfaceSGAttachmentRead,
-		Delete: resourceAwsNetworkInterfaceSGAttachmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsNetworkInterfaceSGAttachmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsNetworkInterfaceSGAttachmentRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsNetworkInterfaceSGAttachmentDelete),
 		Schema: map[string]*schema.Schema{
 			"security_group_id": {
 				Type:     schema.TypeString,

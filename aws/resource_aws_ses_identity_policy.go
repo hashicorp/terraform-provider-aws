@@ -14,10 +14,10 @@ import (
 
 func resourceAwsSesIdentityPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesIdentityPolicyCreate,
-		Read:   resourceAwsSesIdentityPolicyRead,
-		Update: resourceAwsSesIdentityPolicyUpdate,
-		Delete: resourceAwsSesIdentityPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSesIdentityPolicyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSesIdentityPolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSesIdentityPolicyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSesIdentityPolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsBackupPlan() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsBackupPlanRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsBackupPlanRead),
 
 		Schema: map[string]*schema.Schema{
 			"plan_id": {

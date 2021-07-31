@@ -11,10 +11,10 @@ import (
 
 func resourceAwsVpcPeeringConnectionAccepter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVPCPeeringAccepterCreate,
-		Read:   resourceAwsVPCPeeringRead,
-		Update: resourceAwsVPCPeeringUpdate,
-		Delete: resourceAwsVPCPeeringAccepterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsVPCPeeringAccepterCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsVPCPeeringRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsVPCPeeringUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsVPCPeeringAccepterDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) (result []*schema.ResourceData, err error) {
 				d.Set("vpc_peering_connection_id", d.Id())
@@ -59,7 +59,7 @@ func resourceAwsVpcPeeringConnectionAccepter() *schema.Resource {
 			"tags_all":  tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

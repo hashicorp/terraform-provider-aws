@@ -24,10 +24,10 @@ import (
 
 func resourceAwsEksCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEksClusterCreate,
-		Read:   resourceAwsEksClusterRead,
-		Update: resourceAwsEksClusterUpdate,
-		Delete: resourceAwsEksClusterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEksClusterCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEksClusterRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEksClusterUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEksClusterDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

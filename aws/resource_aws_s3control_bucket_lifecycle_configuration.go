@@ -16,10 +16,10 @@ import (
 
 func resourceAwsS3ControlBucketLifecycleConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3ControlBucketLifecycleConfigurationCreate,
-		Read:   resourceAwsS3ControlBucketLifecycleConfigurationRead,
-		Update: resourceAwsS3ControlBucketLifecycleConfigurationUpdate,
-		Delete: resourceAwsS3ControlBucketLifecycleConfigurationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsS3ControlBucketLifecycleConfigurationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsS3ControlBucketLifecycleConfigurationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsS3ControlBucketLifecycleConfigurationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsS3ControlBucketLifecycleConfigurationDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsCloudFormationStack() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudFormationStackRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsCloudFormationStackRead),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

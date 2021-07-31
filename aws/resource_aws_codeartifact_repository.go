@@ -14,10 +14,10 @@ import (
 
 func resourceAwsCodeArtifactRepository() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeArtifactRepositoryCreate,
-		Read:   resourceAwsCodeArtifactRepositoryRead,
-		Update: resourceAwsCodeArtifactRepositoryUpdate,
-		Delete: resourceAwsCodeArtifactRepositoryDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCodeArtifactRepositoryCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCodeArtifactRepositoryRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCodeArtifactRepositoryUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCodeArtifactRepositoryDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -90,7 +90,7 @@ func resourceAwsCodeArtifactRepository() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsSqsQueue() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSqsQueueRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsSqsQueueRead),
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

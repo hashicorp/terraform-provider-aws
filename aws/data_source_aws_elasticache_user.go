@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsElastiCacheUser() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsElastiCacheUserRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsElastiCacheUserRead),
 
 		Schema: map[string]*schema.Schema{
 			"access_string": {

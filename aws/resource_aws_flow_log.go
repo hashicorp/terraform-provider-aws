@@ -15,10 +15,10 @@ import (
 
 func resourceAwsFlowLog() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLogFlowCreate,
-		Read:   resourceAwsLogFlowRead,
-		Update: resourceAwsLogFlowUpdate,
-		Delete: resourceAwsLogFlowDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLogFlowCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLogFlowRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsLogFlowUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLogFlowDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -115,7 +115,7 @@ func resourceAwsFlowLog() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsSubnet() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSubnetRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsSubnetRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

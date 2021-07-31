@@ -18,10 +18,10 @@ import (
 
 func resourceAwsVpcEndpointService() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcEndpointServiceCreate,
-		Read:   resourceAwsVpcEndpointServiceRead,
-		Update: resourceAwsVpcEndpointServiceUpdate,
-		Delete: resourceAwsVpcEndpointServiceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsVpcEndpointServiceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsVpcEndpointServiceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsVpcEndpointServiceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsVpcEndpointServiceDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -123,7 +123,7 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsNetworkAcls() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsNetworkAclsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsNetworkAclsRead),
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),
 

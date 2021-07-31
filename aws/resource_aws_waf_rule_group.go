@@ -13,10 +13,10 @@ import (
 
 func resourceAwsWafRuleGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRuleGroupCreate,
-		Read:   resourceAwsWafRuleGroupRead,
-		Update: resourceAwsWafRuleGroupUpdate,
-		Delete: resourceAwsWafRuleGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafRuleGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafRuleGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWafRuleGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafRuleGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -75,7 +75,7 @@ func resourceAwsWafRuleGroup() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

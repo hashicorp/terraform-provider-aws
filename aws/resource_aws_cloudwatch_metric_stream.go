@@ -20,10 +20,10 @@ import (
 
 func resourceAwsCloudWatchMetricStream() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsCloudWatchMetricStreamCreate,
-		ReadContext:   resourceAwsCloudWatchMetricStreamRead,
-		UpdateContext: resourceAwsCloudWatchMetricStreamCreate,
-		DeleteContext: resourceAwsCloudWatchMetricStreamDelete,
+		CreateContext: ClientInitCrudContextFunc(resourceAwsCloudWatchMetricStreamCreate),
+		ReadContext:   ClientInitCrudContextFunc(resourceAwsCloudWatchMetricStreamRead),
+		UpdateContext: ClientInitCrudContextFunc(resourceAwsCloudWatchMetricStreamCreate),
+		DeleteContext: ClientInitCrudContextFunc(resourceAwsCloudWatchMetricStreamDelete),
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -34,7 +34,7 @@ func resourceAwsCloudWatchMetricStream() *schema.Resource {
 			Delete: schema.DefaultTimeout(waiter.MetricStreamDeleteTimeout),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

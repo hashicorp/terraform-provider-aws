@@ -13,10 +13,10 @@ import (
 
 func resourceAwsSesNotificationTopic() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesNotificationTopicSet,
-		Read:   resourceAwsSesNotificationTopicRead,
-		Update: resourceAwsSesNotificationTopicSet,
-		Delete: resourceAwsSesNotificationTopicDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSesNotificationTopicSet),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSesNotificationTopicRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSesNotificationTopicSet),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSesNotificationTopicDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

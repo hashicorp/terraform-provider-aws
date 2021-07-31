@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsGlueDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceAwsGlueDataCatalogEncryptionSettingsRead,
+		ReadContext: ClientInitCrudContextFunc(dataSourceAwsGlueDataCatalogEncryptionSettingsRead),
 		Schema: map[string]*schema.Schema{
 			"catalog_id": {
 				Type:     schema.TypeString,

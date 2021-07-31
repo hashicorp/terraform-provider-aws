@@ -18,10 +18,10 @@ import (
 
 func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerNotebookInstanceCreate,
-		Read:   resourceAwsSagemakerNotebookInstanceRead,
-		Update: resourceAwsSagemakerNotebookInstanceUpdate,
-		Delete: resourceAwsSagemakerNotebookInstanceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSagemakerNotebookInstanceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSagemakerNotebookInstanceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSagemakerNotebookInstanceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSagemakerNotebookInstanceDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

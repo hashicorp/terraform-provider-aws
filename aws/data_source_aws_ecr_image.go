@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsEcrImage() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEcrImageRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEcrImageRead),
 		Schema: map[string]*schema.Schema{
 			"registry_id": {
 				Type:         schema.TypeString,

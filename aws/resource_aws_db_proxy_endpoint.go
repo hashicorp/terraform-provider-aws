@@ -18,14 +18,14 @@ import (
 
 func resourceAwsDbProxyEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbProxyEndpointCreate,
-		Read:   resourceAwsDbProxyEndpointRead,
-		Delete: resourceAwsDbProxyEndpointDelete,
-		Update: resourceAwsDbProxyEndpointUpdate,
+		Create: ClientInitCrudBaseFunc(resourceAwsDbProxyEndpointCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDbProxyEndpointRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDbProxyEndpointDelete),
+		Update: ClientInitCrudBaseFunc(resourceAwsDbProxyEndpointUpdate),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),

@@ -16,9 +16,9 @@ import (
 
 func resourceAwsAcmCertificateValidation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAcmCertificateValidationCreate,
-		Read:   resourceAwsAcmCertificateValidationRead,
-		Delete: resourceAwsAcmCertificateValidationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAcmCertificateValidationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAcmCertificateValidationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAcmCertificateValidationDelete),
 
 		Schema: map[string]*schema.Schema{
 			"certificate_arn": {

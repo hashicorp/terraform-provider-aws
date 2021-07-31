@@ -18,10 +18,10 @@ import (
 
 func resourceAwsServiceCatalogConstraint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogConstraintCreate,
-		Read:   resourceAwsServiceCatalogConstraintRead,
-		Update: resourceAwsServiceCatalogConstraintUpdate,
-		Delete: resourceAwsServiceCatalogConstraintDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsServiceCatalogConstraintCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsServiceCatalogConstraintRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsServiceCatalogConstraintUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsServiceCatalogConstraintDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

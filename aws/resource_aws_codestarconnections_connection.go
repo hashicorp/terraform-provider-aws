@@ -15,10 +15,10 @@ import (
 
 func resourceAwsCodeStarConnectionsConnection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeStarConnectionsConnectionCreate,
-		Read:   resourceAwsCodeStarConnectionsConnectionRead,
-		Update: resourceAwsCodeStarConnectionsConnectionUpdate,
-		Delete: resourceAwsCodeStarConnectionsConnectionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCodeStarConnectionsConnectionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCodeStarConnectionsConnectionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCodeStarConnectionsConnectionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCodeStarConnectionsConnectionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -61,7 +61,7 @@ func resourceAwsCodeStarConnectionsConnection() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

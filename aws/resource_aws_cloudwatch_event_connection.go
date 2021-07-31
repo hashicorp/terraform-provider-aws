@@ -88,10 +88,10 @@ func resourceAwsCloudWatchEventConnection() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchEventConnectionCreate,
-		Read:   resourceAwsCloudWatchEventConnectionRead,
-		Update: resourceAwsCloudWatchEventConnectionUpdate,
-		Delete: resourceAwsCloudWatchEventConnectionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventConnectionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudWatchEventConnectionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventConnectionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudWatchEventConnectionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

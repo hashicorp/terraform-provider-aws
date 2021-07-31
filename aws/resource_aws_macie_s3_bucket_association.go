@@ -13,10 +13,10 @@ import (
 
 func resourceAwsMacieS3BucketAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMacieS3BucketAssociationCreate,
-		Read:   resourceAwsMacieS3BucketAssociationRead,
-		Update: resourceAwsMacieS3BucketAssociationUpdate,
-		Delete: resourceAwsMacieS3BucketAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsMacieS3BucketAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsMacieS3BucketAssociationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsMacieS3BucketAssociationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsMacieS3BucketAssociationDelete),
 
 		Schema: map[string]*schema.Schema{
 			"bucket_name": {

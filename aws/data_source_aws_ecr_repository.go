@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsEcrRepository() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEcrRepositoryRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEcrRepositoryRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

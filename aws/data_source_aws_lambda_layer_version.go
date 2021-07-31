@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsLambdaLayerVersion() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLambdaLayerVersionRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsLambdaLayerVersionRead),
 
 		Schema: map[string]*schema.Schema{
 			"layer_name": {

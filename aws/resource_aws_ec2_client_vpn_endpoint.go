@@ -16,15 +16,15 @@ import (
 
 func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2ClientVpnEndpointCreate,
-		Read:   resourceAwsEc2ClientVpnEndpointRead,
-		Delete: resourceAwsEc2ClientVpnEndpointDelete,
-		Update: resourceAwsEc2ClientVpnEndpointUpdate,
+		Create: ClientInitCrudBaseFunc(resourceAwsEc2ClientVpnEndpointCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEc2ClientVpnEndpointRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEc2ClientVpnEndpointDelete),
+		Update: ClientInitCrudBaseFunc(resourceAwsEc2ClientVpnEndpointUpdate),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"description": {

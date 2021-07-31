@@ -27,10 +27,10 @@ const (
 
 func resourceAwsLexIntent() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLexIntentCreate,
-		Read:   resourceAwsLexIntentRead,
-		Update: resourceAwsLexIntentUpdate,
-		Delete: resourceAwsLexIntentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLexIntentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLexIntentRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsLexIntentUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLexIntentDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -248,7 +248,7 @@ func resourceAwsLexIntent() *schema.Resource {
 				Computed: true,
 			},
 		},
-		CustomizeDiff: updateComputedAttributesOnIntentCreateVersion,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(updateComputedAttributesOnIntentCreateVersion),
 	}
 }
 

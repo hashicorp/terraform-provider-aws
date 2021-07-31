@@ -25,10 +25,10 @@ import (
 
 func resourceAwsSpotInstanceRequest() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSpotInstanceRequestCreate,
-		Read:   resourceAwsSpotInstanceRequestRead,
-		Delete: resourceAwsSpotInstanceRequestDelete,
-		Update: resourceAwsSpotInstanceRequestUpdate,
+		Create: ClientInitCrudBaseFunc(resourceAwsSpotInstanceRequestCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSpotInstanceRequestRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSpotInstanceRequestDelete),
+		Update: ClientInitCrudBaseFunc(resourceAwsSpotInstanceRequestUpdate),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

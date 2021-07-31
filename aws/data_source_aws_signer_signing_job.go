@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsSignerSigningJob() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSignerSigningJobRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsSignerSigningJobRead),
 
 		Schema: map[string]*schema.Schema{
 			"job_id": {

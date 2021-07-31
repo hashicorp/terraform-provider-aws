@@ -14,10 +14,10 @@ import (
 
 func resourceAwsDbEventSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbEventSubscriptionCreate,
-		Read:   resourceAwsDbEventSubscriptionRead,
-		Update: resourceAwsDbEventSubscriptionUpdate,
-		Delete: resourceAwsDbEventSubscriptionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDbEventSubscriptionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDbEventSubscriptionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDbEventSubscriptionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDbEventSubscriptionDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("name", d.Id())
@@ -84,7 +84,7 @@ func resourceAwsDbEventSubscription() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

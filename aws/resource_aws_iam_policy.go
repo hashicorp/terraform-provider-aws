@@ -19,10 +19,10 @@ import (
 
 func resourceAwsIamPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamPolicyCreate,
-		Read:   resourceAwsIamPolicyRead,
-		Update: resourceAwsIamPolicyUpdate,
-		Delete: resourceAwsIamPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIamPolicyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIamPolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIamPolicyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIamPolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -78,7 +78,7 @@ func resourceAwsIamPolicy() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

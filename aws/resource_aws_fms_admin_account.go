@@ -14,9 +14,9 @@ import (
 
 func resourceAwsFmsAdminAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsFmsAdminAccountCreate,
-		Read:   resourceAwsFmsAdminAccountRead,
-		Delete: resourceAwsFmsAdminAccountDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsFmsAdminAccountCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsFmsAdminAccountRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsFmsAdminAccountDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

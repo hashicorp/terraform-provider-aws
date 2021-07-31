@@ -12,10 +12,10 @@ import (
 
 func resourceAwsWafRegexPatternSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegexPatternSetCreate,
-		Read:   resourceAwsWafRegexPatternSetRead,
-		Update: resourceAwsWafRegexPatternSetUpdate,
-		Delete: resourceAwsWafRegexPatternSetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafRegexPatternSetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafRegexPatternSetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWafRegexPatternSetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafRegexPatternSetDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

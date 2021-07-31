@@ -14,9 +14,9 @@ import (
 
 func resourceAwsSesDomainIdentity() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesDomainIdentityCreate,
-		Read:   resourceAwsSesDomainIdentityRead,
-		Delete: resourceAwsSesDomainIdentityDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSesDomainIdentityCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSesDomainIdentityRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSesDomainIdentityDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

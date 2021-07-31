@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsNetworkInterface() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsNetworkInterfaceRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsNetworkInterfaceRead),
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeString,

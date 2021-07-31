@@ -13,10 +13,10 @@ import (
 
 func resourceAwsGameliftAlias() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGameliftAliasCreate,
-		Read:   resourceAwsGameliftAliasRead,
-		Update: resourceAwsGameliftAliasUpdate,
-		Delete: resourceAwsGameliftAliasDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGameliftAliasCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGameliftAliasRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGameliftAliasUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGameliftAliasDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -67,7 +67,7 @@ func resourceAwsGameliftAlias() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

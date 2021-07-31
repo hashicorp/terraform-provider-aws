@@ -14,10 +14,10 @@ import (
 
 func resourceAwsLicenseManagerLicenseConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLicenseManagerLicenseConfigurationCreate,
-		Read:   resourceAwsLicenseManagerLicenseConfigurationRead,
-		Update: resourceAwsLicenseManagerLicenseConfigurationUpdate,
-		Delete: resourceAwsLicenseManagerLicenseConfigurationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLicenseManagerLicenseConfigurationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLicenseManagerLicenseConfigurationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsLicenseManagerLicenseConfigurationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLicenseManagerLicenseConfigurationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -72,7 +72,7 @@ func resourceAwsLicenseManagerLicenseConfiguration() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

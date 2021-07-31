@@ -12,10 +12,10 @@ import (
 
 func resourceAwsConfigConfigurationRecorder() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsConfigConfigurationRecorderPut,
-		Read:   resourceAwsConfigConfigurationRecorderRead,
-		Update: resourceAwsConfigConfigurationRecorderPut,
-		Delete: resourceAwsConfigConfigurationRecorderDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsConfigConfigurationRecorderPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsConfigConfigurationRecorderRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsConfigConfigurationRecorderPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsConfigConfigurationRecorderDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

@@ -15,10 +15,10 @@ import (
 
 func resourceAwsCloudTrail() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudTrailCreate,
-		Read:   resourceAwsCloudTrailRead,
-		Update: resourceAwsCloudTrailUpdate,
-		Delete: resourceAwsCloudTrailDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudTrailCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudTrailRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudTrailUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudTrailDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -149,7 +149,7 @@ func resourceAwsCloudTrail() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

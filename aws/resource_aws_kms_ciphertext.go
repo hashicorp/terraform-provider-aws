@@ -13,9 +13,9 @@ import (
 func resourceAwsKmsCiphertext() *schema.Resource {
 
 	return &schema.Resource{
-		Create: resourceAwsKmsCiphertextCreate,
-		Read:   schema.Noop,
-		Delete: schema.Noop,
+		Create: ClientInitCrudBaseFunc(resourceAwsKmsCiphertextCreate),
+		Read:   ClientInitCrudBaseFunc(schema.Noop),
+		Delete: ClientInitCrudBaseFunc(schema.Noop),
 
 		Schema: map[string]*schema.Schema{
 			"plaintext": {

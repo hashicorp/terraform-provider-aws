@@ -25,10 +25,10 @@ const (
 
 func resourceAwsLexSlotType() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLexSlotTypeCreate,
-		Read:   resourceAwsLexSlotTypeRead,
-		Update: resourceAwsLexSlotTypeUpdate,
-		Delete: resourceAwsLexSlotTypeDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLexSlotTypeCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLexSlotTypeRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsLexSlotTypeUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLexSlotTypeDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -107,7 +107,7 @@ func resourceAwsLexSlotType() *schema.Resource {
 				Computed: true,
 			},
 		},
-		CustomizeDiff: updateComputedAttributesOnSlotTypeCreateVersion,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(updateComputedAttributesOnSlotTypeCreateVersion),
 	}
 }
 

@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsCloudFrontFunction() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudFrontFunctionRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsCloudFrontFunctionRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

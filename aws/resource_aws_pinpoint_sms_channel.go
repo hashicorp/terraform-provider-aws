@@ -11,10 +11,10 @@ import (
 
 func resourceAwsPinpointSMSChannel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsPinpointSMSChannelUpsert,
-		Read:   resourceAwsPinpointSMSChannelRead,
-		Update: resourceAwsPinpointSMSChannelUpsert,
-		Delete: resourceAwsPinpointSMSChannelDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsPinpointSMSChannelUpsert),
+		Read:   ClientInitCrudBaseFunc(resourceAwsPinpointSMSChannelRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsPinpointSMSChannelUpsert),
+		Delete: ClientInitCrudBaseFunc(resourceAwsPinpointSMSChannelDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -14,10 +14,10 @@ import (
 
 func resourceAwsWorkspacesDirectory() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWorkspacesDirectoryCreate,
-		Read:   resourceAwsWorkspacesDirectoryRead,
-		Update: resourceAwsWorkspacesDirectoryUpdate,
-		Delete: resourceAwsWorkspacesDirectoryDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWorkspacesDirectoryCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWorkspacesDirectoryRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWorkspacesDirectoryUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWorkspacesDirectoryDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -190,7 +190,7 @@ func resourceAwsWorkspacesDirectory() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

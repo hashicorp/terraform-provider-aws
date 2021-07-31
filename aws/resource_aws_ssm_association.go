@@ -14,15 +14,15 @@ import (
 func resourceAwsSsmAssociation() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsSsmAssociationCreate,
-		Read:   resourceAwsSsmAssociationRead,
-		Update: resourceAwsSsmAssociationUpdate,
-		Delete: resourceAwsSsmAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSsmAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSsmAssociationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSsmAssociationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSsmAssociationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		MigrateState:  resourceAwsSsmAssociationMigrateState,
+		MigrateState:  ClientInitMigrateStateFunc(resourceAwsSsmAssociationMigrateState),
 		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{

@@ -23,10 +23,10 @@ const (
 
 func resourceAwsRoute53ResolverRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ResolverRuleCreate,
-		Read:   resourceAwsRoute53ResolverRuleRead,
-		Update: resourceAwsRoute53ResolverRuleUpdate,
-		Delete: resourceAwsRoute53ResolverRuleDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverRuleCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRoute53ResolverRuleRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverRuleUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverRuleDelete),
 		CustomizeDiff: customdiff.Sequence(
 			resourceAwsRoute53ResolverRuleCustomizeDiff,
 			SetTagsDiff,

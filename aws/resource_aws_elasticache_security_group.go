@@ -14,9 +14,9 @@ import (
 
 func resourceAwsElasticacheSecurityGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticacheSecurityGroupCreate,
-		Read:   resourceAwsElasticacheSecurityGroupRead,
-		Delete: resourceAwsElasticacheSecurityGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsElasticacheSecurityGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsElasticacheSecurityGroupRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsElasticacheSecurityGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

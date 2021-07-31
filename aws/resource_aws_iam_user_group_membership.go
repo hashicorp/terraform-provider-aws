@@ -16,10 +16,10 @@ import (
 
 func resourceAwsIamUserGroupMembership() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamUserGroupMembershipCreate,
-		Read:   resourceAwsIamUserGroupMembershipRead,
-		Update: resourceAwsIamUserGroupMembershipUpdate,
-		Delete: resourceAwsIamUserGroupMembershipDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIamUserGroupMembershipCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIamUserGroupMembershipRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIamUserGroupMembershipUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIamUserGroupMembershipDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsIamUserGroupMembershipImport,
 		},

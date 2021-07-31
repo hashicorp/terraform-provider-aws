@@ -24,10 +24,10 @@ import (
 func resourceAwsSecurityGroupRule() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsSecurityGroupRuleCreate,
-		Read:   resourceAwsSecurityGroupRuleRead,
-		Update: resourceAwsSecurityGroupRuleUpdate,
-		Delete: resourceAwsSecurityGroupRuleDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSecurityGroupRuleCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSecurityGroupRuleRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSecurityGroupRuleUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSecurityGroupRuleDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				importParts, err := validateSecurityGroupRuleImportString(d.Id())
@@ -42,7 +42,7 @@ func resourceAwsSecurityGroupRule() *schema.Resource {
 		},
 
 		SchemaVersion: 2,
-		MigrateState:  resourceAwsSecurityGroupRuleMigrateState,
+		MigrateState:  ClientInitMigrateStateFunc(resourceAwsSecurityGroupRuleMigrateState),
 
 		Schema: map[string]*schema.Schema{
 			"type": {

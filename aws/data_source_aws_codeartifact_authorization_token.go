@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsCodeArtifactAuthorizationToken() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCodeArtifactAuthorizationTokenRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsCodeArtifactAuthorizationTokenRead),
 
 		Schema: map[string]*schema.Schema{
 			"domain": {

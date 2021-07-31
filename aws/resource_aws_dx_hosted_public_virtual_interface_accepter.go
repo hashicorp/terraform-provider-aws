@@ -14,10 +14,10 @@ import (
 
 func resourceAwsDxHostedPublicVirtualInterfaceAccepter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxHostedPublicVirtualInterfaceAccepterCreate,
-		Read:   resourceAwsDxHostedPublicVirtualInterfaceAccepterRead,
-		Update: resourceAwsDxHostedPublicVirtualInterfaceAccepterUpdate,
-		Delete: resourceAwsDxHostedPublicVirtualInterfaceAccepterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDxHostedPublicVirtualInterfaceAccepterCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDxHostedPublicVirtualInterfaceAccepterRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDxHostedPublicVirtualInterfaceAccepterUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDxHostedPublicVirtualInterfaceAccepterDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDxHostedPublicVirtualInterfaceAccepterImport,
 		},
@@ -41,7 +41,7 @@ func resourceAwsDxHostedPublicVirtualInterfaceAccepter() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

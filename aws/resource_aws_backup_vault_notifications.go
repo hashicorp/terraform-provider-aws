@@ -13,9 +13,9 @@ import (
 
 func resourceAwsBackupVaultNotifications() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBackupVaultNotificationsCreate,
-		Read:   resourceAwsBackupVaultNotificationsRead,
-		Delete: resourceAwsBackupVaultNotificationsDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsBackupVaultNotificationsCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsBackupVaultNotificationsRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsBackupVaultNotificationsDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

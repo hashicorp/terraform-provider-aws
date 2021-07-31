@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsEc2TransitGatewayVpcAttachment() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2TransitGatewayVpcAttachmentRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEc2TransitGatewayVpcAttachmentRead),
 
 		Schema: map[string]*schema.Schema{
 			"appliance_mode_support": {

@@ -22,10 +22,10 @@ import (
 
 func resourceAwsElasticSearchDomain() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticSearchDomainCreate,
-		Read:   resourceAwsElasticSearchDomainRead,
-		Update: resourceAwsElasticSearchDomainUpdate,
-		Delete: resourceAwsElasticSearchDomainDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsElasticSearchDomainCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsElasticSearchDomainRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsElasticSearchDomainUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsElasticSearchDomainDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsElasticSearchDomainImport,
 		},

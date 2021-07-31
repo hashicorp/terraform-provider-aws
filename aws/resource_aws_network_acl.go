@@ -25,10 +25,10 @@ import (
 func resourceAwsNetworkAcl() *schema.Resource {
 
 	return &schema.Resource{
-		Create: resourceAwsNetworkAclCreate,
-		Read:   resourceAwsNetworkAclRead,
-		Delete: resourceAwsNetworkAclDelete,
-		Update: resourceAwsNetworkAclUpdate,
+		Create: ClientInitCrudBaseFunc(resourceAwsNetworkAclCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsNetworkAclRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsNetworkAclDelete),
+		Update: ClientInitCrudBaseFunc(resourceAwsNetworkAclUpdate),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -187,7 +187,7 @@ func resourceAwsNetworkAcl() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

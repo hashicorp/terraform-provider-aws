@@ -16,7 +16,7 @@ import (
 
 func dataSourceAwsSecurityGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSecurityGroupRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsSecurityGroupRead),
 
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {

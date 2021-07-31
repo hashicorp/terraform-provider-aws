@@ -23,10 +23,10 @@ import (
 
 func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsKinesisAnalyticsV2ApplicationCreate,
-		Read:   resourceAwsKinesisAnalyticsV2ApplicationRead,
-		Update: resourceAwsKinesisAnalyticsV2ApplicationUpdate,
-		Delete: resourceAwsKinesisAnalyticsV2ApplicationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsKinesisAnalyticsV2ApplicationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsKinesisAnalyticsV2ApplicationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsKinesisAnalyticsV2ApplicationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsKinesisAnalyticsV2ApplicationDelete),
 
 		CustomizeDiff: customdiff.Sequence(
 			SetTagsDiff,

@@ -14,10 +14,10 @@ import (
 
 func resourceAwsServiceDiscoveryService() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceDiscoveryServiceCreate,
-		Read:   resourceAwsServiceDiscoveryServiceRead,
-		Update: resourceAwsServiceDiscoveryServiceUpdate,
-		Delete: resourceAwsServiceDiscoveryServiceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsServiceDiscoveryServiceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsServiceDiscoveryServiceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsServiceDiscoveryServiceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsServiceDiscoveryServiceDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -136,7 +136,7 @@ func resourceAwsServiceDiscoveryService() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

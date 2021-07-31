@@ -16,13 +16,13 @@ import (
 
 func resourceAwsDxHostedPublicVirtualInterface() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxHostedPublicVirtualInterfaceCreate,
-		Read:   resourceAwsDxHostedPublicVirtualInterfaceRead,
-		Delete: resourceAwsDxHostedPublicVirtualInterfaceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDxHostedPublicVirtualInterfaceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDxHostedPublicVirtualInterfaceRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDxHostedPublicVirtualInterfaceDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDxHostedPublicVirtualInterfaceImport,
 		},
-		CustomizeDiff: resourceAwsDxHostedPublicVirtualInterfaceCustomizeDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(resourceAwsDxHostedPublicVirtualInterfaceCustomizeDiff),
 
 		Schema: map[string]*schema.Schema{
 			"address_family": {

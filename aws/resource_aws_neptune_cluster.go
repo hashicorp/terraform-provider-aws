@@ -29,10 +29,10 @@ const (
 
 func resourceAwsNeptuneCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNeptuneClusterCreate,
-		Read:   resourceAwsNeptuneClusterRead,
-		Update: resourceAwsNeptuneClusterUpdate,
-		Delete: resourceAwsNeptuneClusterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsNeptuneClusterCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsNeptuneClusterRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsNeptuneClusterUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsNeptuneClusterDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -271,7 +271,7 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -16,10 +16,10 @@ const emptyBasePathMappingValue = "(none)"
 
 func resourceAwsApiGatewayBasePathMapping() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayBasePathMappingCreate,
-		Read:   resourceAwsApiGatewayBasePathMappingRead,
-		Update: resourceAwsApiGatewayBasePathMappingUpdate,
-		Delete: resourceAwsApiGatewayBasePathMappingDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsApiGatewayBasePathMappingCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsApiGatewayBasePathMappingRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsApiGatewayBasePathMappingUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsApiGatewayBasePathMappingDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -24,10 +24,10 @@ import (
 func resourceAwsDynamoDbTable() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsDynamoDbTableCreate,
-		Read:   resourceAwsDynamoDbTableRead,
-		Update: resourceAwsDynamoDbTableUpdate,
-		Delete: resourceAwsDynamoDbTableDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDynamoDbTableCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDynamoDbTableRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDynamoDbTableUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDynamoDbTableDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -67,7 +67,7 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 		),
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsDynamoDbTableMigrateState,
+		MigrateState:  ClientInitMigrateStateFunc(resourceAwsDynamoDbTableMigrateState),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

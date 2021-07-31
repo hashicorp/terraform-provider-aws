@@ -14,10 +14,10 @@ import (
 
 func resourceAwsCloudFrontRealtimeLogConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudFrontRealtimeLogConfigCreate,
-		Read:   resourceAwsCloudFrontRealtimeLogConfigRead,
-		Update: resourceAwsCloudFrontRealtimeLogConfigUpdate,
-		Delete: resourceAwsCloudFrontRealtimeLogConfigDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudFrontRealtimeLogConfigCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudFrontRealtimeLogConfigRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudFrontRealtimeLogConfigUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudFrontRealtimeLogConfigDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

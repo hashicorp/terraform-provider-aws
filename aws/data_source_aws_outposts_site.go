@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsOutpostsSite() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsOutpostsSiteRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsOutpostsSiteRead),
 
 		Schema: map[string]*schema.Schema{
 			"account_id": {

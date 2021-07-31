@@ -18,10 +18,10 @@ import (
 
 func resourceAwsSagemakerWorkteam() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerWorkteamCreate,
-		Read:   resourceAwsSagemakerWorkteamRead,
-		Update: resourceAwsSagemakerWorkteamUpdate,
-		Delete: resourceAwsSagemakerWorkteamDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSagemakerWorkteamCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSagemakerWorkteamRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSagemakerWorkteamUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSagemakerWorkteamDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -123,7 +123,7 @@ func resourceAwsSagemakerWorkteam() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

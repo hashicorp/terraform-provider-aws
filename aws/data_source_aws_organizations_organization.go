@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsOrganizationsOrganization() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsOrganizationsOrganizationRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsOrganizationsOrganizationRead),
 
 		Schema: map[string]*schema.Schema{
 			"accounts": {

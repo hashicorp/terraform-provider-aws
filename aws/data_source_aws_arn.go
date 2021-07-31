@@ -9,7 +9,7 @@ import (
 
 func dataSourceAwsArn() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsArnRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsArnRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

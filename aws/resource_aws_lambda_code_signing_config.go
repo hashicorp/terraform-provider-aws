@@ -13,10 +13,10 @@ import (
 
 func resourceAwsLambdaCodeSigningConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLambdaCodeSigningConfigCreate,
-		Read:   resourceAwsLambdaCodeSigningConfigRead,
-		Update: resourceAwsLambdaCodeSigningConfigUpdate,
-		Delete: resourceAwsLambdaCodeSigningConfigDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLambdaCodeSigningConfigCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLambdaCodeSigningConfigRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsLambdaCodeSigningConfigUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLambdaCodeSigningConfigDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

@@ -16,10 +16,10 @@ import (
 
 func resourceAwsMediaStoreContainer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMediaStoreContainerCreate,
-		Read:   resourceAwsMediaStoreContainerRead,
-		Update: resourceAwsMediaStoreContainerUpdate,
-		Delete: resourceAwsMediaStoreContainerDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsMediaStoreContainerCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsMediaStoreContainerRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsMediaStoreContainerUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsMediaStoreContainerDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -42,7 +42,7 @@ func resourceAwsMediaStoreContainer() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -17,9 +17,9 @@ import (
 
 func resourceAwsIamUserPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamUserPolicyAttachmentCreate,
-		Read:   resourceAwsIamUserPolicyAttachmentRead,
-		Delete: resourceAwsIamUserPolicyAttachmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIamUserPolicyAttachmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIamUserPolicyAttachmentRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIamUserPolicyAttachmentDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsIamUserPolicyAttachmentImport,
 		},

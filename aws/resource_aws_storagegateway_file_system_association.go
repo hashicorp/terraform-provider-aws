@@ -19,11 +19,11 @@ import (
 
 func resourceAwsStorageGatewayFileSystemAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create:        resourceAwsStorageGatewayFileSystemAssociationCreate,
-		Read:          resourceAwsStorageGatewayFileSystemAssociationRead,
-		Update:        resourceAwsStorageGatewayFileSystemAssociationUpdate,
-		Delete:        resourceAwsStorageGatewayFileSystemAssociationDelete,
-		CustomizeDiff: customdiff.Sequence(SetTagsDiff),
+		Create:        ClientInitCrudBaseFunc(resourceAwsStorageGatewayFileSystemAssociationCreate),
+		Read:          ClientInitCrudBaseFunc(resourceAwsStorageGatewayFileSystemAssociationRead),
+		Update:        ClientInitCrudBaseFunc(resourceAwsStorageGatewayFileSystemAssociationUpdate),
+		Delete:        ClientInitCrudBaseFunc(resourceAwsStorageGatewayFileSystemAssociationDelete),
+		CustomizeDiff: ClientInitCustomizeDiffFunc(customdiff.Sequence(SetTagsDiff)),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

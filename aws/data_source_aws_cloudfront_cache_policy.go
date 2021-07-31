@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsCloudFrontCachePolicy() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudFrontCachePolicyRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsCloudFrontCachePolicyRead),
 
 		Schema: map[string]*schema.Schema{
 			"comment": {

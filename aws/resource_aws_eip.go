@@ -24,15 +24,15 @@ const (
 
 func resourceAwsEip() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEipCreate,
-		Read:   resourceAwsEipRead,
-		Update: resourceAwsEipUpdate,
-		Delete: resourceAwsEipDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEipCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEipRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEipUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEipDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Timeouts: &schema.ResourceTimeout{
 			Read:   schema.DefaultTimeout(15 * time.Minute),

@@ -20,10 +20,10 @@ import (
 
 func resourceAwsAppmeshVirtualGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppmeshVirtualGatewayCreate,
-		Read:   resourceAwsAppmeshVirtualGatewayRead,
-		Update: resourceAwsAppmeshVirtualGatewayUpdate,
-		Delete: resourceAwsAppmeshVirtualGatewayDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAppmeshVirtualGatewayCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAppmeshVirtualGatewayRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAppmeshVirtualGatewayUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAppmeshVirtualGatewayDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAppmeshVirtualGatewayImport,
 		},
@@ -681,7 +681,7 @@ func resourceAwsAppmeshVirtualGateway() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

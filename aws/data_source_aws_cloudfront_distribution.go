@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsCloudFrontDistribution() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudFrontDistributionRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsCloudFrontDistributionRead),
 
 		Schema: map[string]*schema.Schema{
 			"id": {

@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsKmsSecrets() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsKmsSecretsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsKmsSecretsRead),
 
 		Schema: map[string]*schema.Schema{
 			"secret": {

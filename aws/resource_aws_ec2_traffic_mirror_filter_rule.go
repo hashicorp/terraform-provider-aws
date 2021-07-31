@@ -14,10 +14,10 @@ import (
 
 func resourceAwsEc2TrafficMirrorFilterRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TrafficMirrorFilterRuleCreate,
-		Read:   resourceAwsEc2TrafficMirrorFilterRuleRead,
-		Update: resourceAwsEc2TrafficMirrorFilterRuleUpdate,
-		Delete: resourceAwsEc2TrafficMirrorFilterRuleDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEc2TrafficMirrorFilterRuleCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEc2TrafficMirrorFilterRuleRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEc2TrafficMirrorFilterRuleUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEc2TrafficMirrorFilterRuleDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsEc2TrafficMirrorFilterRuleImport,
 		},

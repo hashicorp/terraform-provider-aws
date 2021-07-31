@@ -15,10 +15,10 @@ import (
 
 func resourceAwsGlueUserDefinedFunction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueUserDefinedFunctionCreate,
-		Read:   resourceAwsGlueUserDefinedFunctionRead,
-		Update: resourceAwsGlueUserDefinedFunctionUpdate,
-		Delete: resourceAwsGlueUserDefinedFunctionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGlueUserDefinedFunctionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGlueUserDefinedFunctionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGlueUserDefinedFunctionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGlueUserDefinedFunctionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

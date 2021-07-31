@@ -19,10 +19,10 @@ const (
 
 func resourceAwsApiGatewayV2Stage() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayV2StageCreate,
-		Read:   resourceAwsApiGatewayV2StageRead,
-		Update: resourceAwsApiGatewayV2StageUpdate,
-		Delete: resourceAwsApiGatewayV2StageDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsApiGatewayV2StageCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsApiGatewayV2StageRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsApiGatewayV2StageUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsApiGatewayV2StageDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsApiGatewayV2StageImport,
 		},
@@ -178,7 +178,7 @@ func resourceAwsApiGatewayV2Stage() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

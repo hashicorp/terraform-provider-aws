@@ -14,10 +14,10 @@ import (
 
 func resourceAwsElasticSearchDomainPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticSearchDomainPolicyUpsert,
-		Read:   resourceAwsElasticSearchDomainPolicyRead,
-		Update: resourceAwsElasticSearchDomainPolicyUpsert,
-		Delete: resourceAwsElasticSearchDomainPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsElasticSearchDomainPolicyUpsert),
+		Read:   ClientInitCrudBaseFunc(resourceAwsElasticSearchDomainPolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsElasticSearchDomainPolicyUpsert),
+		Delete: ClientInitCrudBaseFunc(resourceAwsElasticSearchDomainPolicyDelete),
 
 		Schema: map[string]*schema.Schema{
 			"domain_name": {

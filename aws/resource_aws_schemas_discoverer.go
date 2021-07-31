@@ -16,10 +16,10 @@ import (
 
 func resourceAwsSchemasDiscoverer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSchemasDiscovererCreate,
-		Read:   resourceAwsSchemasDiscovererRead,
-		Update: resourceAwsSchemasDiscovererUpdate,
-		Delete: resourceAwsSchemasDiscovererDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSchemasDiscovererCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSchemasDiscovererRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSchemasDiscovererUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSchemasDiscovererDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -47,7 +47,7 @@ func resourceAwsSchemasDiscoverer() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

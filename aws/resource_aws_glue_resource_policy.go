@@ -12,10 +12,10 @@ import (
 
 func resourceAwsGlueResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueResourcePolicyPut(glue.ExistConditionNotExist),
-		Read:   resourceAwsGlueResourcePolicyRead,
-		Update: resourceAwsGlueResourcePolicyPut(glue.ExistConditionMustExist),
-		Delete: resourceAwsGlueResourcePolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGlueResourcePolicyPut(glue.ExistConditionNotExist)),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGlueResourcePolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGlueResourcePolicyPut(glue.ExistConditionMustExist)),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGlueResourcePolicyDelete),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

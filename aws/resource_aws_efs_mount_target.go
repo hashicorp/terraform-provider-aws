@@ -16,10 +16,10 @@ import (
 
 func resourceAwsEfsMountTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEfsMountTargetCreate,
-		Read:   resourceAwsEfsMountTargetRead,
-		Update: resourceAwsEfsMountTargetUpdate,
-		Delete: resourceAwsEfsMountTargetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEfsMountTargetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEfsMountTargetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEfsMountTargetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEfsMountTargetDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

@@ -23,10 +23,10 @@ import (
 
 func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLambdaEventSourceMappingCreate,
-		Read:   resourceAwsLambdaEventSourceMappingRead,
-		Update: resourceAwsLambdaEventSourceMappingUpdate,
-		Delete: resourceAwsLambdaEventSourceMappingDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLambdaEventSourceMappingCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLambdaEventSourceMappingRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsLambdaEventSourceMappingUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLambdaEventSourceMappingDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

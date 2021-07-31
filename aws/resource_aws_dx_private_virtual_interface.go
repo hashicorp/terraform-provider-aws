@@ -16,10 +16,10 @@ import (
 
 func resourceAwsDxPrivateVirtualInterface() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxPrivateVirtualInterfaceCreate,
-		Read:   resourceAwsDxPrivateVirtualInterfaceRead,
-		Update: resourceAwsDxPrivateVirtualInterfaceUpdate,
-		Delete: resourceAwsDxPrivateVirtualInterfaceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDxPrivateVirtualInterfaceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDxPrivateVirtualInterfaceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDxPrivateVirtualInterfaceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDxPrivateVirtualInterfaceDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDxPrivateVirtualInterfaceImport,
 		},
@@ -117,7 +117,7 @@ func resourceAwsDxPrivateVirtualInterface() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

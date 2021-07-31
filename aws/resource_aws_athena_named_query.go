@@ -10,9 +10,9 @@ import (
 
 func resourceAwsAthenaNamedQuery() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAthenaNamedQueryCreate,
-		Read:   resourceAwsAthenaNamedQueryRead,
-		Delete: resourceAwsAthenaNamedQueryDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAthenaNamedQueryCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAthenaNamedQueryRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAthenaNamedQueryDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

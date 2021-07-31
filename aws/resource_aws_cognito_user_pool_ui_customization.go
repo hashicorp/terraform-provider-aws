@@ -16,10 +16,10 @@ import (
 
 func resourceAwsCognitoUserPoolUICustomization() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCognitoUserPoolUICustomizationPut,
-		Read:   resourceAwsCognitoUserPoolUICustomizationRead,
-		Update: resourceAwsCognitoUserPoolUICustomizationPut,
-		Delete: resourceAwsCognitoUserPoolUICustomizationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCognitoUserPoolUICustomizationPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCognitoUserPoolUICustomizationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCognitoUserPoolUICustomizationPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCognitoUserPoolUICustomizationDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

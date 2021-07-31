@@ -16,15 +16,15 @@ import (
 
 func resourceAwsEc2Fleet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2FleetCreate,
-		Read:   resourceAwsEc2FleetRead,
-		Update: resourceAwsEc2FleetUpdate,
-		Delete: resourceAwsEc2FleetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEc2FleetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEc2FleetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEc2FleetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEc2FleetDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),

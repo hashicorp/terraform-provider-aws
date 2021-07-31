@@ -10,7 +10,7 @@ var billingAccountId = "386209384616"
 
 func dataSourceAwsBillingServiceAccount() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsBillingServiceAccountRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsBillingServiceAccountRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsLambdaCodeSigningConfig() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLambdaCodeSigningConfigRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsLambdaCodeSigningConfigRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

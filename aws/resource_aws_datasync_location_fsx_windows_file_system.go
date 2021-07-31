@@ -16,10 +16,10 @@ import (
 
 func resourceAwsDataSyncLocationFsxWindowsFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDataSyncLocationFsxWindowsFileSystemCreate,
-		Read:   resourceAwsDataSyncLocationFsxWindowsFileSystemRead,
-		Update: resourceAwsDataSyncLocationFsxWindowsFileSystemUpdate,
-		Delete: resourceAwsDataSyncLocationFsxWindowsFileSystemDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDataSyncLocationFsxWindowsFileSystemCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDataSyncLocationFsxWindowsFileSystemRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDataSyncLocationFsxWindowsFileSystemUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDataSyncLocationFsxWindowsFileSystemDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "#")
@@ -97,7 +97,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystem() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

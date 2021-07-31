@@ -13,10 +13,10 @@ import (
 
 func resourceAwsResourceGroupsGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsResourceGroupsGroupCreate,
-		Read:   resourceAwsResourceGroupsGroupRead,
-		Update: resourceAwsResourceGroupsGroupUpdate,
-		Delete: resourceAwsResourceGroupsGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsResourceGroupsGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsResourceGroupsGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsResourceGroupsGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsResourceGroupsGroupDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -66,7 +66,7 @@ func resourceAwsResourceGroupsGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

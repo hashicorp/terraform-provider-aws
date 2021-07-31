@@ -14,10 +14,10 @@ import (
 
 func resourceAwsSwfDomain() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSwfDomainCreate,
-		Read:   resourceAwsSwfDomainRead,
-		Update: resourceAwsSwfDomainUpdate,
-		Delete: resourceAwsSwfDomainDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSwfDomainCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSwfDomainRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSwfDomainUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSwfDomainDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -62,7 +62,7 @@ func resourceAwsSwfDomain() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

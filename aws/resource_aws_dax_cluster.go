@@ -19,10 +19,10 @@ import (
 
 func resourceAwsDaxCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDaxClusterCreate,
-		Read:   resourceAwsDaxClusterRead,
-		Update: resourceAwsDaxClusterUpdate,
-		Delete: resourceAwsDaxClusterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDaxClusterCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDaxClusterRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDaxClusterUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDaxClusterDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -171,7 +171,7 @@ func resourceAwsDaxCluster() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

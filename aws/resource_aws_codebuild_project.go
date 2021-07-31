@@ -21,10 +21,10 @@ import (
 
 func resourceAwsCodeBuildProject() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeBuildProjectCreate,
-		Read:   resourceAwsCodeBuildProjectRead,
-		Update: resourceAwsCodeBuildProjectUpdate,
-		Delete: resourceAwsCodeBuildProjectDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCodeBuildProjectCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCodeBuildProjectRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCodeBuildProjectUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCodeBuildProjectDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

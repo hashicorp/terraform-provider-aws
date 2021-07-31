@@ -13,7 +13,7 @@ import (
 
 func resourceAwsAmiCopy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAmiCopyCreate,
+		Create: ClientInitCrudBaseFunc(resourceAwsAmiCopyCreate),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(AWSAMIRetryTimeout),
@@ -230,13 +230,13 @@ func resourceAwsAmiCopy() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		// The remaining operations are shared with the generic aws_ami resource,
 		// since the aws_ami_copy resource only differs in how it's created.
-		Read:   resourceAwsAmiRead,
-		Update: resourceAwsAmiUpdate,
-		Delete: resourceAwsAmiDelete,
+		Read:   ClientInitCrudBaseFunc(resourceAwsAmiRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAmiUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAmiDelete),
 	}
 }
 

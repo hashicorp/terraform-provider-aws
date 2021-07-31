@@ -14,10 +14,10 @@ import (
 
 func resourceAwsCloudFrontMonitoringSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudFrontMonitoringSubscriptionCreate,
-		Read:   resourceAwsCloudFrontMonitoringSubscriptionRead,
-		Update: resourceAwsCloudFrontMonitoringSubscriptionCreate,
-		Delete: resourceAwsCloudFrontMonitoringSubscriptionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCloudFrontMonitoringSubscriptionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCloudFrontMonitoringSubscriptionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCloudFrontMonitoringSubscriptionCreate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCloudFrontMonitoringSubscriptionDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsCloudFrontMonitoringSubscriptionImport,
 		},

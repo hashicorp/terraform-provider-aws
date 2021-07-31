@@ -35,10 +35,10 @@ const (
 
 func resourceAwsAcmCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAcmCertificateCreate,
-		Read:   resourceAwsAcmCertificateRead,
-		Update: resourceAwsAcmCertificateUpdate,
-		Delete: resourceAwsAcmCertificateDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAcmCertificateCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAcmCertificateRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAcmCertificateUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAcmCertificateDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

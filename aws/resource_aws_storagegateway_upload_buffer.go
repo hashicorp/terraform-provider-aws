@@ -14,9 +14,9 @@ import (
 
 func resourceAwsStorageGatewayUploadBuffer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsStorageGatewayUploadBufferCreate,
-		Read:   resourceAwsStorageGatewayUploadBufferRead,
-		Delete: schema.Noop,
+		Create: ClientInitCrudBaseFunc(resourceAwsStorageGatewayUploadBufferCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsStorageGatewayUploadBufferRead),
+		Delete: ClientInitCrudBaseFunc(schema.Noop),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

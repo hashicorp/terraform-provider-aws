@@ -14,9 +14,9 @@ import (
 
 func resourceAwsEc2ClientVpnAuthorizationRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2ClientVpnAuthorizationRuleCreate,
-		Read:   resourceAwsEc2ClientVpnAuthorizationRuleRead,
-		Delete: resourceAwsEc2ClientVpnAuthorizationRuleDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEc2ClientVpnAuthorizationRuleCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEc2ClientVpnAuthorizationRuleRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEc2ClientVpnAuthorizationRuleDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsEc2ClientVpnAuthorizationRuleImport,
 		},

@@ -13,10 +13,10 @@ import (
 
 func resourceAwsLoadBalancerBackendServerPolicies() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLoadBalancerBackendServerPoliciesCreate,
-		Read:   resourceAwsLoadBalancerBackendServerPoliciesRead,
-		Update: resourceAwsLoadBalancerBackendServerPoliciesCreate,
-		Delete: resourceAwsLoadBalancerBackendServerPoliciesDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLoadBalancerBackendServerPoliciesCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLoadBalancerBackendServerPoliciesRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsLoadBalancerBackendServerPoliciesCreate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLoadBalancerBackendServerPoliciesDelete),
 
 		Schema: map[string]*schema.Schema{
 			"load_balancer_name": {

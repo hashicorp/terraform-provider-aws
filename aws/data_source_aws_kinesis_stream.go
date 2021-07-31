@@ -9,7 +9,7 @@ import (
 
 func dataSourceAwsKinesisStream() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsKinesisStreamRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsKinesisStreamRead),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

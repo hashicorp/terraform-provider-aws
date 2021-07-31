@@ -16,10 +16,10 @@ import (
 
 func resourceAwsRoute53HostedZoneDnssec() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53HostedZoneDnssecCreate,
-		Read:   resourceAwsRoute53HostedZoneDnssecRead,
-		Update: resourceAwsRoute53HostedZoneDnssecUpdate,
-		Delete: resourceAwsRoute53HostedZoneDnssecDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRoute53HostedZoneDnssecCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRoute53HostedZoneDnssecRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRoute53HostedZoneDnssecUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRoute53HostedZoneDnssecDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

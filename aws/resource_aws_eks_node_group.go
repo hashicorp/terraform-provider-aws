@@ -23,15 +23,15 @@ import (
 
 func resourceAwsEksNodeGroup() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsEksNodeGroupCreate,
-		ReadContext:   resourceAwsEksNodeGroupRead,
-		UpdateContext: resourceAwsEksNodeGroupUpdate,
-		DeleteContext: resourceAwsEksNodeGroupDelete,
+		CreateContext: ClientInitCrudContextFunc(resourceAwsEksNodeGroupCreate),
+		ReadContext:   ClientInitCrudContextFunc(resourceAwsEksNodeGroupRead),
+		UpdateContext: ClientInitCrudContextFunc(resourceAwsEksNodeGroupUpdate),
+		DeleteContext: ClientInitCrudContextFunc(resourceAwsEksNodeGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),

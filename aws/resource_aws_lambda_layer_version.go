@@ -18,9 +18,9 @@ const awsMutexLambdaLayerKey = `aws_lambda_layer_version`
 
 func resourceAwsLambdaLayerVersion() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLambdaLayerVersionPublish,
-		Read:   resourceAwsLambdaLayerVersionRead,
-		Delete: resourceAwsLambdaLayerVersionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLambdaLayerVersionPublish),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLambdaLayerVersionRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLambdaLayerVersionDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

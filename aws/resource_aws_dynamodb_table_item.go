@@ -13,10 +13,10 @@ import (
 
 func resourceAwsDynamoDbTableItem() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDynamoDbTableItemCreate,
-		Read:   resourceAwsDynamoDbTableItemRead,
-		Update: resourceAwsDynamoDbTableItemUpdate,
-		Delete: resourceAwsDynamoDbTableItemDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDynamoDbTableItemCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDynamoDbTableItemRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDynamoDbTableItemUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDynamoDbTableItemDelete),
 
 		Schema: map[string]*schema.Schema{
 			"table_name": {

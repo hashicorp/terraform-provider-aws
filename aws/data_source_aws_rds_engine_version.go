@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsRdsEngineVersion() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRdsEngineVersionRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsRdsEngineVersionRead),
 		Schema: map[string]*schema.Schema{
 			"default_character_set": {
 				Type:     schema.TypeString,

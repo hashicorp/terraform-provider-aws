@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsSecurityGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSecurityGroupsRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsSecurityGroupsRead),
 
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),

@@ -12,10 +12,10 @@ import (
 
 func resourceAwsSnsTopicPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSnsTopicPolicyUpsert,
-		Read:   resourceAwsSnsTopicPolicyRead,
-		Update: resourceAwsSnsTopicPolicyUpsert,
-		Delete: resourceAwsSnsTopicPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSnsTopicPolicyUpsert),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSnsTopicPolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSnsTopicPolicyUpsert),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSnsTopicPolicyDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

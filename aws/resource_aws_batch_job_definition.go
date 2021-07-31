@@ -21,10 +21,10 @@ import (
 
 func resourceAwsBatchJobDefinition() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBatchJobDefinitionCreate,
-		Read:   resourceAwsBatchJobDefinitionRead,
-		Update: resourceAwsBatchJobDefinitionUpdate,
-		Delete: resourceAwsBatchJobDefinitionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsBatchJobDefinitionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsBatchJobDefinitionRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsBatchJobDefinitionUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsBatchJobDefinitionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -169,7 +169,7 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

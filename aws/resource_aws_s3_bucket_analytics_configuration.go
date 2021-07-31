@@ -19,10 +19,10 @@ import (
 
 func resourceAwsS3BucketAnalyticsConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3BucketAnalyticsConfigurationPut,
-		Read:   resourceAwsS3BucketAnalyticsConfigurationRead,
-		Update: resourceAwsS3BucketAnalyticsConfigurationPut,
-		Delete: resourceAwsS3BucketAnalyticsConfigurationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsS3BucketAnalyticsConfigurationPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsS3BucketAnalyticsConfigurationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsS3BucketAnalyticsConfigurationPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsS3BucketAnalyticsConfigurationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

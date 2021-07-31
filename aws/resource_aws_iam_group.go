@@ -17,10 +17,10 @@ import (
 
 func resourceAwsIamGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamGroupCreate,
-		Read:   resourceAwsIamGroupRead,
-		Update: resourceAwsIamGroupUpdate,
-		Delete: resourceAwsIamGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIamGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIamGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsIamGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIamGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

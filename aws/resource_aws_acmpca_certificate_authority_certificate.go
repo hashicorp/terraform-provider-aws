@@ -14,9 +14,9 @@ import (
 
 func resourceAwsAcmpcaCertificateAuthorityCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAcmpcaCertificateAuthorityCertificateCreate,
-		Read:   resourceAwsAcmpcaCertificateAuthorityCertificateRead,
-		Delete: schema.Noop,
+		Create: ClientInitCrudBaseFunc(resourceAwsAcmpcaCertificateAuthorityCertificateCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAcmpcaCertificateAuthorityCertificateRead),
+		Delete: ClientInitCrudBaseFunc(schema.Noop),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

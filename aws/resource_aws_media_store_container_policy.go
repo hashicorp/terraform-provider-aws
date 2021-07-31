@@ -10,10 +10,10 @@ import (
 
 func resourceAwsMediaStoreContainerPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMediaStoreContainerPolicyPut,
-		Read:   resourceAwsMediaStoreContainerPolicyRead,
-		Update: resourceAwsMediaStoreContainerPolicyPut,
-		Delete: resourceAwsMediaStoreContainerPolicyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsMediaStoreContainerPolicyPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsMediaStoreContainerPolicyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsMediaStoreContainerPolicyPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsMediaStoreContainerPolicyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

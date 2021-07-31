@@ -14,10 +14,10 @@ import (
 
 func resourceAwsConfigOrganizationConformancePack() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsConfigOrganizationConformancePackCreate,
-		Read:   resourceAwsConfigOrganizationConformancePackRead,
-		Update: resourceAwsConfigOrganizationConformancePackUpdate,
-		Delete: resourceAwsConfigOrganizationConformancePackDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsConfigOrganizationConformancePackCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsConfigOrganizationConformancePackRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsConfigOrganizationConformancePackUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsConfigOrganizationConformancePackDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

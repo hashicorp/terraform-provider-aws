@@ -17,9 +17,9 @@ import (
 
 func resourceAwsS3OutpostsEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3OutpostsEndpointCreate,
-		Read:   resourceAwsS3OutpostsEndpointRead,
-		Delete: resourceAwsS3OutpostsEndpointDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsS3OutpostsEndpointCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsS3OutpostsEndpointRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsS3OutpostsEndpointDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsS3OutpostsEndpointImportState,

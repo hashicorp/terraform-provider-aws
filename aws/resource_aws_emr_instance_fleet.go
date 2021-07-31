@@ -16,10 +16,10 @@ import (
 
 func resourceAwsEMRInstanceFleet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEMRInstanceFleetCreate,
-		Read:   resourceAwsEMRInstanceFleetRead,
-		Update: resourceAwsEMRInstanceFleetUpdate,
-		Delete: resourceAwsEMRInstanceFleetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEMRInstanceFleetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEMRInstanceFleetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEMRInstanceFleetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEMRInstanceFleetDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")

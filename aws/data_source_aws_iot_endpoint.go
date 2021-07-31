@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsIotEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIotEndpointRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsIotEndpointRead),
 		Schema: map[string]*schema.Schema{
 			"endpoint_address": {
 				Type:     schema.TypeString,

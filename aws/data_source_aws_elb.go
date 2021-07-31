@@ -14,7 +14,7 @@ import (
 
 func dataSourceAwsElb() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsElbRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsElbRead),
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

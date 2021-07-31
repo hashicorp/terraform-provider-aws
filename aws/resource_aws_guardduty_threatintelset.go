@@ -17,10 +17,10 @@ import (
 
 func resourceAwsGuardDutyThreatintelset() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGuardDutyThreatintelsetCreate,
-		Read:   resourceAwsGuardDutyThreatintelsetRead,
-		Update: resourceAwsGuardDutyThreatintelsetUpdate,
-		Delete: resourceAwsGuardDutyThreatintelsetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGuardDutyThreatintelsetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGuardDutyThreatintelsetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGuardDutyThreatintelsetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGuardDutyThreatintelsetDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -66,7 +66,7 @@ func resourceAwsGuardDutyThreatintelset() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

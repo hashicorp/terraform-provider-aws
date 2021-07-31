@@ -16,10 +16,10 @@ import (
 
 func resourceAwsEc2TransitGatewayPrefixListReference() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TransitGatewayPrefixListReferenceCreate,
-		Read:   resourceAwsEc2TransitGatewayPrefixListReferenceRead,
-		Update: resourceAwsEc2TransitGatewayPrefixListReferenceUpdate,
-		Delete: resourceAwsEc2TransitGatewayPrefixListReferenceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEc2TransitGatewayPrefixListReferenceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEc2TransitGatewayPrefixListReferenceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEc2TransitGatewayPrefixListReferenceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEc2TransitGatewayPrefixListReferenceDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

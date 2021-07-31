@@ -9,7 +9,7 @@ import (
 
 func dataSourceAwsEbsEncryptionByDefault() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEbsEncryptionByDefaultRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEbsEncryptionByDefaultRead),
 
 		Schema: map[string]*schema.Schema{
 			"enabled": {

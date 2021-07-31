@@ -18,10 +18,10 @@ import (
 
 func resourceAwsRedshiftCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRedshiftClusterCreate,
-		Read:   resourceAwsRedshiftClusterRead,
-		Update: resourceAwsRedshiftClusterUpdate,
-		Delete: resourceAwsRedshiftClusterDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRedshiftClusterCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRedshiftClusterRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRedshiftClusterUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRedshiftClusterDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsRedshiftClusterImport,
 		},
@@ -324,7 +324,7 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

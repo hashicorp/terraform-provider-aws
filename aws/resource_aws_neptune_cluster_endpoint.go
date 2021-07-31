@@ -18,10 +18,10 @@ import (
 
 func resourceAwsNeptuneClusterEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNeptuneClusterEndpointCreate,
-		Read:   resourceAwsNeptuneClusterEndpointRead,
-		Update: resourceAwsNeptuneClusterEndpointUpdate,
-		Delete: resourceAwsNeptuneClusterEndpointDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsNeptuneClusterEndpointCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsNeptuneClusterEndpointRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsNeptuneClusterEndpointUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsNeptuneClusterEndpointDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -67,7 +67,7 @@ func resourceAwsNeptuneClusterEndpoint() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

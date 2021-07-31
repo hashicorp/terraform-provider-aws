@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsEc2LocalGatewayVirtualInterface() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2LocalGatewayVirtualInterfaceRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsEc2LocalGatewayVirtualInterfaceRead),
 
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),

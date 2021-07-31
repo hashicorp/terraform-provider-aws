@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsBackupVault() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsBackupVaultRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsBackupVaultRead),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

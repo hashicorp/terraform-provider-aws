@@ -13,10 +13,10 @@ import (
 
 func resourceAwsAppsyncResolver() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppsyncResolverCreate,
-		Read:   resourceAwsAppsyncResolverRead,
-		Update: resourceAwsAppsyncResolverUpdate,
-		Delete: resourceAwsAppsyncResolverDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAppsyncResolverCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAppsyncResolverRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAppsyncResolverUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAppsyncResolverDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

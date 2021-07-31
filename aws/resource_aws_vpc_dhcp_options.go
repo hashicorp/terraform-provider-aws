@@ -17,10 +17,10 @@ import (
 
 func resourceAwsVpcDhcpOptions() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcDhcpOptionsCreate,
-		Read:   resourceAwsVpcDhcpOptionsRead,
-		Update: resourceAwsVpcDhcpOptionsUpdate,
-		Delete: resourceAwsVpcDhcpOptionsDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsVpcDhcpOptionsCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsVpcDhcpOptionsRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsVpcDhcpOptionsUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsVpcDhcpOptionsDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -73,7 +73,7 @@ func resourceAwsVpcDhcpOptions() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

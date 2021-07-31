@@ -19,10 +19,10 @@ import (
 
 func resourceAwsSagemakerFeatureGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerFeatureGroupCreate,
-		Read:   resourceAwsSagemakerFeatureGroupRead,
-		Update: resourceAwsSagemakerFeatureGroupUpdate,
-		Delete: resourceAwsSagemakerFeatureGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSagemakerFeatureGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSagemakerFeatureGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSagemakerFeatureGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSagemakerFeatureGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -192,7 +192,7 @@ func resourceAwsSagemakerFeatureGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

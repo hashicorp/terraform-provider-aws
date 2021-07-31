@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsApiGatewayV2Apis() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAwsApiGatewayV2ApisRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsAwsApiGatewayV2ApisRead),
 
 		Schema: map[string]*schema.Schema{
 			"ids": {

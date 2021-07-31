@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsWorkspacesBundle() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsWorkspaceBundleRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsWorkspaceBundleRead),
 
 		Schema: map[string]*schema.Schema{
 			"bundle_id": {

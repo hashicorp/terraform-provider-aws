@@ -14,9 +14,9 @@ import (
 
 func resourceAwsSsoAdminManagedPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsoAdminManagedPolicyAttachmentCreate,
-		Read:   resourceAwsSsoAdminManagedPolicyAttachmentRead,
-		Delete: resourceAwsSsoAdminManagedPolicyAttachmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSsoAdminManagedPolicyAttachmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSsoAdminManagedPolicyAttachmentRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSsoAdminManagedPolicyAttachmentDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

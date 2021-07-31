@@ -14,7 +14,7 @@ import (
 
 func dataSourceAwsSecretsManagerSecret() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSecretsManagerSecretRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsSecretsManagerSecretRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

@@ -10,10 +10,10 @@ import (
 
 func resourceAwsSecurityHubOrganizationConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecurityHubOrganizationConfigurationUpdate,
-		Read:   resourceAwsSecurityHubOrganizationConfigurationRead,
-		Update: resourceAwsSecurityHubOrganizationConfigurationUpdate,
-		Delete: schema.Noop,
+		Create: ClientInitCrudBaseFunc(resourceAwsSecurityHubOrganizationConfigurationUpdate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSecurityHubOrganizationConfigurationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSecurityHubOrganizationConfigurationUpdate),
+		Delete: ClientInitCrudBaseFunc(schema.Noop),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

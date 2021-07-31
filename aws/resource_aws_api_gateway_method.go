@@ -13,10 +13,10 @@ import (
 
 func resourceAwsApiGatewayMethod() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayMethodCreate,
-		Read:   resourceAwsApiGatewayMethodRead,
-		Update: resourceAwsApiGatewayMethodUpdate,
-		Delete: resourceAwsApiGatewayMethodDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsApiGatewayMethodCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsApiGatewayMethodRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsApiGatewayMethodUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsApiGatewayMethodDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")

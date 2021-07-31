@@ -23,10 +23,10 @@ const (
 
 func resourceAwsWafRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRuleCreate,
-		Read:   resourceAwsWafRuleRead,
-		Update: resourceAwsWafRuleUpdate,
-		Delete: resourceAwsWafRuleDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWafRuleCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWafRuleRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWafRuleUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWafRuleDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -73,7 +73,7 @@ func resourceAwsWafRule() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsLambdaInvocation() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLambdaInvocationRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsLambdaInvocationRead),
 
 		Schema: map[string]*schema.Schema{
 			"function_name": {

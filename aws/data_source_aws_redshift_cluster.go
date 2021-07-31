@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsRedshiftCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRedshiftClusterRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsRedshiftClusterRead),
 
 		Schema: map[string]*schema.Schema{
 

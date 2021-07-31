@@ -14,10 +14,10 @@ import (
 
 func resourceAwsSesConfigurationSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesConfigurationSetCreate,
-		Read:   resourceAwsSesConfigurationSetRead,
-		Update: resourceAwsSesConfigurationSetUpdate,
-		Delete: resourceAwsSesConfigurationSetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSesConfigurationSetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSesConfigurationSetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSesConfigurationSetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSesConfigurationSetDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

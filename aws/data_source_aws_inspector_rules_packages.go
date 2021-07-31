@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsInspectorRulesPackages() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsInspectorRulesPackagesRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsInspectorRulesPackagesRead),
 
 		Schema: map[string]*schema.Schema{
 			"arns": {

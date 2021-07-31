@@ -12,15 +12,15 @@ import (
 
 func resourceAwsEc2TransitGatewayPeeringAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2TransitGatewayPeeringAttachmentCreate,
-		Read:   resourceAwsEc2TransitGatewayPeeringAttachmentRead,
-		Update: resourceAwsEc2TransitGatewayPeeringAttachmentUpdate,
-		Delete: resourceAwsEc2TransitGatewayPeeringAttachmentDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEc2TransitGatewayPeeringAttachmentCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEc2TransitGatewayPeeringAttachmentRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEc2TransitGatewayPeeringAttachmentUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEc2TransitGatewayPeeringAttachmentDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"peer_account_id": {

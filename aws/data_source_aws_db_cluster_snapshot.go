@@ -15,7 +15,7 @@ import (
 
 func dataSourceAwsDbClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDbClusterSnapshotRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsDbClusterSnapshotRead),
 
 		Schema: map[string]*schema.Schema{
 			//selection criteria

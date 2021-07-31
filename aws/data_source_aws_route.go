@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsRoute() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRouteRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsRouteRead),
 
 		Schema: map[string]*schema.Schema{
 			"route_table_id": {

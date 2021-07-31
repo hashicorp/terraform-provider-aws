@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsIamAccountAlias() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIamAccountAliasRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsIamAccountAliasRead),
 
 		Schema: map[string]*schema.Schema{
 			"account_alias": {

@@ -21,10 +21,10 @@ import (
 
 func resourceAwsLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLaunchTemplateCreate,
-		Read:   resourceAwsLaunchTemplateRead,
-		Update: resourceAwsLaunchTemplateUpdate,
-		Delete: resourceAwsLaunchTemplateDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLaunchTemplateCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLaunchTemplateRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsLaunchTemplateUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLaunchTemplateDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -18,10 +18,10 @@ import (
 
 func resourceAwsRoute53KeySigningKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53KeySigningKeyCreate,
-		Read:   resourceAwsRoute53KeySigningKeyRead,
-		Update: resourceAwsRoute53KeySigningKeyUpdate,
-		Delete: resourceAwsRoute53KeySigningKeyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRoute53KeySigningKeyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRoute53KeySigningKeyRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRoute53KeySigningKeyUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRoute53KeySigningKeyDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsApiGatewayVpcLink() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsApiGatewayVpcLinkRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsApiGatewayVpcLinkRead),
 
 		Schema: map[string]*schema.Schema{
 			"id": {

@@ -13,10 +13,10 @@ import (
 
 func resourceAwsLambdaAlias() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLambdaAliasCreate,
-		Read:   resourceAwsLambdaAliasRead,
-		Update: resourceAwsLambdaAliasUpdate,
-		Delete: resourceAwsLambdaAliasDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsLambdaAliasCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsLambdaAliasRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsLambdaAliasUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsLambdaAliasDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsLambdaAliasImport,
 		},

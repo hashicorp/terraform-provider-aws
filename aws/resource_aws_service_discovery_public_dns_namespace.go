@@ -13,10 +13,10 @@ import (
 
 func resourceAwsServiceDiscoveryPublicDnsNamespace() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceDiscoveryPublicDnsNamespaceCreate,
-		Read:   resourceAwsServiceDiscoveryPublicDnsNamespaceRead,
-		Update: resourceAwsServiceDiscoveryPublicDnsNamespaceUpdate,
-		Delete: resourceAwsServiceDiscoveryPublicDnsNamespaceDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsServiceDiscoveryPublicDnsNamespaceCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsServiceDiscoveryPublicDnsNamespaceRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsServiceDiscoveryPublicDnsNamespaceUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsServiceDiscoveryPublicDnsNamespaceDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -46,7 +46,7 @@ func resourceAwsServiceDiscoveryPublicDnsNamespace() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

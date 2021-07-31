@@ -16,10 +16,10 @@ import (
 
 func resourceAwsEcrPublicRepository() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEcrPublicRepositoryCreate,
-		Read:   resourceAwsEcrPublicRepositoryRead,
-		Update: resourceAwsEcrPublicRepositoryUpdate,
-		Delete: resourceAwsEcrPublicRepositoryDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEcrPublicRepositoryCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEcrPublicRepositoryRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsEcrPublicRepositoryUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEcrPublicRepositoryDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -15,10 +15,10 @@ import (
 
 func resourceAwsWorkLinkFleet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWorkLinkFleetCreate,
-		Read:   resourceAwsWorkLinkFleetRead,
-		Update: resourceAwsWorkLinkFleetUpdate,
-		Delete: resourceAwsWorkLinkFleetDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsWorkLinkFleetCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsWorkLinkFleetRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsWorkLinkFleetUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsWorkLinkFleetDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

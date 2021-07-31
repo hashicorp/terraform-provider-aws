@@ -28,10 +28,10 @@ import (
 func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsElasticacheReplicationGroupCreate,
-		Read:   resourceAwsElasticacheReplicationGroupRead,
-		Update: resourceAwsElasticacheReplicationGroupUpdate,
-		Delete: resourceAwsElasticacheReplicationGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsElasticacheReplicationGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsElasticacheReplicationGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsElasticacheReplicationGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsElasticacheReplicationGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

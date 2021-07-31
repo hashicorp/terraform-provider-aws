@@ -18,10 +18,10 @@ import (
 
 func resourceAwsDxGatewayAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxGatewayAssociationCreate,
-		Read:   resourceAwsDxGatewayAssociationRead,
-		Update: resourceAwsDxGatewayAssociationUpdate,
-		Delete: resourceAwsDxGatewayAssociationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsDxGatewayAssociationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsDxGatewayAssociationRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsDxGatewayAssociationUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsDxGatewayAssociationDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDxGatewayAssociationImport,
@@ -31,7 +31,7 @@ func resourceAwsDxGatewayAssociation() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceAwsDxGatewayAssociationResourceV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: resourceAwsDxGatewayAssociationStateUpgradeV0,
+				Upgrade: ClientInitStateUpgraderFunc(resourceAwsDxGatewayAssociationStateUpgradeV0),
 				Version: 0,
 			},
 		},

@@ -15,10 +15,10 @@ import (
 
 func resourceAwsRedshiftSnapshotCopyGrant() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRedshiftSnapshotCopyGrantCreate,
-		Read:   resourceAwsRedshiftSnapshotCopyGrantRead,
-		Update: resourceAwsRedshiftSnapshotCopyGrantUpdate,
-		Delete: resourceAwsRedshiftSnapshotCopyGrantDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRedshiftSnapshotCopyGrantCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRedshiftSnapshotCopyGrantRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRedshiftSnapshotCopyGrantUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRedshiftSnapshotCopyGrantDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -44,7 +44,7 @@ func resourceAwsRedshiftSnapshotCopyGrant() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

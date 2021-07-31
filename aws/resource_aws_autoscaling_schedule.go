@@ -16,10 +16,10 @@ const awsAutoscalingScheduleTimeLayout = "2006-01-02T15:04:05Z"
 
 func resourceAwsAutoscalingSchedule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAutoscalingScheduleCreate,
-		Read:   resourceAwsAutoscalingScheduleRead,
-		Update: resourceAwsAutoscalingScheduleCreate,
-		Delete: resourceAwsAutoscalingScheduleDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAutoscalingScheduleCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAutoscalingScheduleRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsAutoscalingScheduleCreate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAutoscalingScheduleDelete),
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAutoscalingScheduleImport,
 		},

@@ -21,10 +21,10 @@ const (
 
 func resourceAwsRoute53ResolverEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ResolverEndpointCreate,
-		Read:   resourceAwsRoute53ResolverEndpointRead,
-		Update: resourceAwsRoute53ResolverEndpointUpdate,
-		Delete: resourceAwsRoute53ResolverEndpointDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverEndpointCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsRoute53ResolverEndpointRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverEndpointUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsRoute53ResolverEndpointDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -102,7 +102,7 @@ func resourceAwsRoute53ResolverEndpoint() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsWafv2WebACL() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsWafv2WebACLRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsWafv2WebACLRead),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

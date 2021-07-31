@@ -20,10 +20,10 @@ import (
 
 func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeDeployDeploymentGroupCreate,
-		Read:   resourceAwsCodeDeployDeploymentGroupRead,
-		Update: resourceAwsCodeDeployDeploymentGroupUpdate,
-		Delete: resourceAwsCodeDeployDeploymentGroupDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsCodeDeployDeploymentGroupCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsCodeDeployDeploymentGroupRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsCodeDeployDeploymentGroupUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsCodeDeployDeploymentGroupDelete),
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ":")
@@ -475,7 +475,7 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

@@ -29,10 +29,10 @@ func validateDeliverySamplingRate(v interface{}, k string) (ws []string, errors 
 
 func resourceAwsSnsSmsPreferences() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSnsSmsPreferencesSet,
-		Read:   resourceAwsSnsSmsPreferencesGet,
-		Update: resourceAwsSnsSmsPreferencesSet,
-		Delete: resourceAwsSnsSmsPreferencesDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSnsSmsPreferencesSet),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSnsSmsPreferencesGet),
+		Update: ClientInitCrudBaseFunc(resourceAwsSnsSmsPreferencesSet),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSnsSmsPreferencesDelete),
 
 		Schema: map[string]*schema.Schema{
 			"monthly_spend_limit": {

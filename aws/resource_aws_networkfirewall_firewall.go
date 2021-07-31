@@ -19,10 +19,10 @@ import (
 
 func resourceAwsNetworkFirewallFirewall() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsNetworkFirewallFirewallCreate,
-		ReadContext:   resourceAwsNetworkFirewallFirewallRead,
-		UpdateContext: resourceAwsNetworkFirewallFirewallUpdate,
-		DeleteContext: resourceAwsNetworkFirewallFirewallDelete,
+		CreateContext: ClientInitCrudContextFunc(resourceAwsNetworkFirewallFirewallCreate),
+		ReadContext:   ClientInitCrudContextFunc(resourceAwsNetworkFirewallFirewallRead),
+		UpdateContext: ClientInitCrudContextFunc(resourceAwsNetworkFirewallFirewallUpdate),
+		DeleteContext: ClientInitCrudContextFunc(resourceAwsNetworkFirewallFirewallDelete),
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

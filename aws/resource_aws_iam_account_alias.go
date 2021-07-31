@@ -10,9 +10,9 @@ import (
 
 func resourceAwsIamAccountAlias() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamAccountAliasCreate,
-		Read:   resourceAwsIamAccountAliasRead,
-		Delete: resourceAwsIamAccountAliasDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsIamAccountAliasCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsIamAccountAliasRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsIamAccountAliasDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

@@ -13,9 +13,9 @@ import (
 func resourceAwsTransferSshKey() *schema.Resource {
 
 	return &schema.Resource{
-		Create: resourceAwsTransferSshKeyCreate,
-		Read:   resourceAwsTransferSshKeyRead,
-		Delete: resourceAwsTransferSshKeyDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsTransferSshKeyCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsTransferSshKeyRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsTransferSshKeyDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

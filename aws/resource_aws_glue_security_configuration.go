@@ -12,9 +12,9 @@ import (
 
 func resourceAwsGlueSecurityConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueSecurityConfigurationCreate,
-		Read:   resourceAwsGlueSecurityConfigurationRead,
-		Delete: resourceAwsGlueSecurityConfigurationDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGlueSecurityConfigurationCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGlueSecurityConfigurationRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGlueSecurityConfigurationDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -18,9 +18,9 @@ const (
 
 func resourceAwsEc2LocalGatewayRoute() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2LocalGatewayRouteCreate,
-		Read:   resourceAwsEc2LocalGatewayRouteRead,
-		Delete: resourceAwsEc2LocalGatewayRouteDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsEc2LocalGatewayRouteCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsEc2LocalGatewayRouteRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsEc2LocalGatewayRouteDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsWafWebAcl() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsWafWebAclRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsWafWebAclRead),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

@@ -15,10 +15,10 @@ import (
 
 func resourceAwsPinpointEventStream() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsPinpointEventStreamUpsert,
-		Read:   resourceAwsPinpointEventStreamRead,
-		Update: resourceAwsPinpointEventStreamUpsert,
-		Delete: resourceAwsPinpointEventStreamDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsPinpointEventStreamUpsert),
+		Read:   ClientInitCrudBaseFunc(resourceAwsPinpointEventStreamRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsPinpointEventStreamUpsert),
+		Delete: ClientInitCrudBaseFunc(resourceAwsPinpointEventStreamDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

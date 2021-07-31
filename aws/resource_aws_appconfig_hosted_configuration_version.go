@@ -17,9 +17,9 @@ import (
 
 func resourceAwsAppconfigHostedConfigurationVersion() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAppconfigHostedConfigurationVersionCreate,
-		Read:   resourceAwsAppconfigHostedConfigurationVersionRead,
-		Delete: resourceAwsAppconfigHostedConfigurationVersionDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsAppconfigHostedConfigurationVersionCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsAppconfigHostedConfigurationVersionRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsAppconfigHostedConfigurationVersionDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

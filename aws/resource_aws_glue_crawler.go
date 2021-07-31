@@ -21,15 +21,15 @@ import (
 
 func resourceAwsGlueCrawler() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueCrawlerCreate,
-		Read:   resourceAwsGlueCrawlerRead,
-		Update: resourceAwsGlueCrawlerUpdate,
-		Delete: resourceAwsGlueCrawlerDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsGlueCrawlerCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsGlueCrawlerRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsGlueCrawlerUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsGlueCrawlerDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"name": {

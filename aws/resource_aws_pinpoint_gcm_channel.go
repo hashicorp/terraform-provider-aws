@@ -11,10 +11,10 @@ import (
 
 func resourceAwsPinpointGCMChannel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsPinpointGCMChannelUpsert,
-		Read:   resourceAwsPinpointGCMChannelRead,
-		Update: resourceAwsPinpointGCMChannelUpsert,
-		Delete: resourceAwsPinpointGCMChannelDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsPinpointGCMChannelUpsert),
+		Read:   ClientInitCrudBaseFunc(resourceAwsPinpointGCMChannelRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsPinpointGCMChannelUpsert),
+		Delete: ClientInitCrudBaseFunc(resourceAwsPinpointGCMChannelDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

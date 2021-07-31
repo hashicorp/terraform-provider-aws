@@ -19,9 +19,9 @@ import (
 
 func resourceAwsKinesisAnalyticsV2ApplicationSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsKinesisAnalyticsV2ApplicationSnapshotCreate,
-		Read:   resourceAwsKinesisAnalyticsV2ApplicationSnapshotRead,
-		Delete: resourceAwsKinesisAnalyticsV2ApplicationSnapshotDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsKinesisAnalyticsV2ApplicationSnapshotCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsKinesisAnalyticsV2ApplicationSnapshotRead),
+		Delete: ClientInitCrudBaseFunc(resourceAwsKinesisAnalyticsV2ApplicationSnapshotDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

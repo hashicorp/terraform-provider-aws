@@ -14,10 +14,10 @@ import (
 
 func resourceAwsOpsworksPermission() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsOpsworksSetPermission,
-		Update: resourceAwsOpsworksSetPermission,
-		Delete: resourceAwsOpsworksPermissionDelete,
-		Read:   resourceAwsOpsworksPermissionRead,
+		Create: ClientInitCrudBaseFunc(resourceAwsOpsworksSetPermission),
+		Update: ClientInitCrudBaseFunc(resourceAwsOpsworksSetPermission),
+		Delete: ClientInitCrudBaseFunc(resourceAwsOpsworksPermissionDelete),
+		Read:   ClientInitCrudBaseFunc(resourceAwsOpsworksPermissionRead),
 
 		Schema: map[string]*schema.Schema{
 			"allow_ssh": {

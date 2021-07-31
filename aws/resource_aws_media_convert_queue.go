@@ -14,10 +14,10 @@ import (
 
 func resourceAwsMediaConvertQueue() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMediaConvertQueueCreate,
-		Read:   resourceAwsMediaConvertQueueRead,
-		Update: resourceAwsMediaConvertQueueUpdate,
-		Delete: resourceAwsMediaConvertQueueDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsMediaConvertQueueCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsMediaConvertQueueRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsMediaConvertQueueUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsMediaConvertQueueDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -89,7 +89,7 @@ func resourceAwsMediaConvertQueue() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

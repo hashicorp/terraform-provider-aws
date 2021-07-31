@@ -11,7 +11,7 @@ import (
 
 func dataSourceAwsKmsAlias() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsKmsAliasRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsKmsAliasRead),
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:         schema.TypeString,

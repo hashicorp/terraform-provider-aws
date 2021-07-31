@@ -14,10 +14,10 @@ import (
 
 func resourceAwsBackupVault() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBackupVaultCreate,
-		Read:   resourceAwsBackupVaultRead,
-		Update: resourceAwsBackupVaultUpdate,
-		Delete: resourceAwsBackupVaultDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsBackupVaultCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsBackupVaultRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsBackupVaultUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsBackupVaultDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -48,7 +48,7 @@ func resourceAwsBackupVault() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 

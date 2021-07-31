@@ -16,10 +16,10 @@ import (
 
 func resourceAwsConfigDeliveryChannel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsConfigDeliveryChannelPut,
-		Read:   resourceAwsConfigDeliveryChannelRead,
-		Update: resourceAwsConfigDeliveryChannelPut,
-		Delete: resourceAwsConfigDeliveryChannelDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsConfigDeliveryChannelPut),
+		Read:   ClientInitCrudBaseFunc(resourceAwsConfigDeliveryChannelRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsConfigDeliveryChannelPut),
+		Delete: ClientInitCrudBaseFunc(resourceAwsConfigDeliveryChannelDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,

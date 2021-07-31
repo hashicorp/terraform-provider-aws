@@ -13,16 +13,16 @@ import (
 
 func resourceAwsXraySamplingRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsXraySamplingRuleCreate,
-		Read:   resourceAwsXraySamplingRuleRead,
-		Update: resourceAwsXraySamplingRuleUpdate,
-		Delete: resourceAwsXraySamplingRuleDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsXraySamplingRuleCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsXraySamplingRuleRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsXraySamplingRuleUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsXraySamplingRuleDelete),
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 
 		Schema: map[string]*schema.Schema{
 			"rule_name": {

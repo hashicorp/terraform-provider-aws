@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsRdsCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRdsClusterRead,
+		Read: ClientInitCrudBaseFunc(dataSourceAwsRdsClusterRead),
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

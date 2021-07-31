@@ -19,10 +19,10 @@ import (
 
 func resourceAwsSchemasSchema() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSchemasSchemaCreate,
-		Read:   resourceAwsSchemasSchemaRead,
-		Update: resourceAwsSchemasSchemaUpdate,
-		Delete: resourceAwsSchemasSchemaDelete,
+		Create: ClientInitCrudBaseFunc(resourceAwsSchemasSchemaCreate),
+		Read:   ClientInitCrudBaseFunc(resourceAwsSchemasSchemaRead),
+		Update: ClientInitCrudBaseFunc(resourceAwsSchemasSchemaUpdate),
+		Delete: ClientInitCrudBaseFunc(resourceAwsSchemasSchemaDelete),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -86,7 +86,7 @@ func resourceAwsSchemasSchema() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: ClientInitCustomizeDiffFunc(SetTagsDiff),
 	}
 }
 
