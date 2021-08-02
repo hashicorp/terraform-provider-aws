@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -534,16 +533,10 @@ func TestAccAWSCloudWatchEventRule_PartnerEventBus(t *testing.T) {
 }
 
 func TestAccAWSCloudWatchEventRule_EventBusArn(t *testing.T) {
-	key := "EVENT_BRIDGE_EVENT_BUS_ARN"
-	busArn, err := awsarn.Parse(os.Getenv(key))
-	if err != nil {
-		t.Skipf("Environment variable %s is missing or is not a valid ARN", key)
-	}
-	busName := strings.Replace(busArn.Resource, "event-bus/", "", 1)
-
 	var v events.DescribeRuleOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test-rule")
 	resourceName := "aws_cloudwatch_event_rule.test"
+	eventBusName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -552,12 +545,12 @@ func TestAccAWSCloudWatchEventRule_EventBusArn(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventRulePartnerEventBusArn(rName, busArn.String()),
+				Config: testAccAWSCloudWatchEventRuleEventBusArn(rName, eventBusName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v),
-					testAccCheckRuleARN(resourceName, "arn", fmt.Sprintf(`rule/%s/%s`, busName, rName), "events", busArn),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s$`, eventBusName, rName))),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busArn.String()),
+					resource.TestCheckResourceAttrPair(resourceName, "event_bus_name", "aws_cloudwatch_event_bus.test", "arn"),
 					testAccCheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -864,11 +857,15 @@ PATTERN
 `, rName, eventBusName)
 }
 
-func testAccAWSCloudWatchEventRulePartnerEventBusArn(rName, eventBusName string) string {
+func testAccAWSCloudWatchEventRuleEventBusArn(rName, eventBusName string) string {
 	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+	name = %[2]q
+}
+
 resource "aws_cloudwatch_event_rule" "test" {
   name           = %[1]q
-  event_bus_name = %[2]q
+  event_bus_name = aws_cloudwatch_event_bus.test.arn
 
   event_pattern = <<PATTERN
 {
