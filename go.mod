@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/agl/ed25519 v0.0.0-20170116200512-5312a6153412 // indirect
-	github.com/aws/aws-sdk-go v1.40.5
+	github.com/aws/aws-sdk-go v1.40.9
 	github.com/beevik/etree v1.1.0
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/hashicorp/aws-sdk-go-base v0.7.1
@@ -20,6 +20,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-testing-interface v1.14.1
 	github.com/pquerna/otp v1.3.0
+	github.com/shopspring/decimal v1.2.0
 	golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b
 	gopkg.in/yaml.v2 v2.4.0
 )

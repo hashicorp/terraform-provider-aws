@@ -17,6 +17,8 @@ const (
 	NfsFileShareDeletedDelay                                = 5 * time.Second
 	SmbFileShareAvailableDelay                              = 5 * time.Second
 	SmbFileShareDeletedDelay                                = 5 * time.Second
+	FileSystemAssociationAvailableDelay                     = 5 * time.Second
+	FileSystemAssociationDeletedDelay                       = 5 * time.Second
 )
 
 func StorageGatewayGatewayConnected(conn *storagegateway.StorageGateway, gatewayARN string, timeout time.Duration) (*storagegateway.DescribeGatewayInformationOutput, error) {
@@ -161,6 +163,44 @@ func SMBFileShareUpdated(conn *storagegateway.StorageGateway, arn string, timeou
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*storagegateway.SMBFileShareInfo); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// FileSystemAssociationAvailable waits for a File System Association to return Available
+func FileSystemAssociationAvailable(conn *storagegateway.StorageGateway, fileSystemArn string, timeout time.Duration) (*storagegateway.FileSystemAssociationInfo, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: tfstoragegateway.FileSystemAssociationStatusAvailableStatusPending(),
+		Target:  tfstoragegateway.FileSystemAssociationStatusAvailableStatusTarget(),
+		Refresh: FileSystemAssociationStatus(conn, fileSystemArn),
+		Timeout: timeout,
+		Delay:   FileSystemAssociationAvailableDelay,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*storagegateway.FileSystemAssociationInfo); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func FileSystemAssociationDeleted(conn *storagegateway.StorageGateway, fileSystemArn string, timeout time.Duration) (*storagegateway.FileSystemAssociationInfo, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:        tfstoragegateway.FileSystemAssociationStatusDeletedStatusPending(),
+		Target:         tfstoragegateway.FileSystemAssociationStatusDeletedStatusTarget(),
+		Refresh:        FileSystemAssociationStatus(conn, fileSystemArn),
+		Timeout:        timeout,
+		Delay:          FileSystemAssociationDeletedDelay,
+		NotFoundChecks: 1,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*storagegateway.FileSystemAssociationInfo); ok {
 		return output, err
 	}
 
