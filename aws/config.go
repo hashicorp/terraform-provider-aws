@@ -600,7 +600,7 @@ func (c *Config) Client() (interface{}, error) {
 		resourcegroupstaggingapiconn:        resourcegroupstaggingapi.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["resourcegroupstaggingapi"])})),
 		reverseDnsPrefix:                    ReverseDns(dnsSuffix),
 		route53domainsconn:                  route53domains.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53domains"])})),
-		route53recoverycontrolconfigconn:    route53recoverycontrolconfig..New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53recoverycontrolconfig"])})),
+		route53recoverycontrolconfigconn:    route53recoverycontrolconfig.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53recoverycontrolconfig"])})),
 		route53resolverconn:                 route53resolver.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53resolver"])})),
 		s3controlconn:                       s3control.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3control"])})),
 		s3outpostsconn:                      s3outposts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3outposts"])})),
@@ -643,6 +643,9 @@ func (c *Config) Client() (interface{}, error) {
 	route53Config := &aws.Config{
 		Endpoint: aws.String(c.Endpoints["route53"]),
 	}
+	route53recoverycontrolconfigConfig := &aws.Config{
+		Endpoint: aws.String(c.Endpoints["route53recoverycontrolconfig"]),
+	}
 	shieldConfig := &aws.Config{
 		Endpoint: aws.String(c.Endpoints["shield"]),
 	}
@@ -663,6 +666,7 @@ func (c *Config) Client() (interface{}, error) {
 	case endpoints.AwsPartitionID:
 		globalAcceleratorConfig.Region = aws.String(endpoints.UsWest2RegionID)
 		route53Config.Region = aws.String(endpoints.UsEast1RegionID)
+		route53recoverycontrolconfigConfig.Region = aws.String(endpoints.UsWest2RegionID)
 		shieldConfig.Region = aws.String(endpoints.UsEast1RegionID)
 	case endpoints.AwsCnPartitionID:
 		// The AWS Go SDK is missing endpoint information for Route 53 in the AWS China partition.
@@ -677,6 +681,7 @@ func (c *Config) Client() (interface{}, error) {
 
 	client.globalacceleratorconn = globalaccelerator.New(sess.Copy(globalAcceleratorConfig))
 	client.r53conn = route53.New(sess.Copy(route53Config))
+	client.route53recoverycontrolconfigconn = route53recoverycontrolconfig.New(sess.Copy(route53recoverycontrolconfigConfig))
 	client.shieldconn = shield.New(sess.Copy(shieldConfig))
 
 	client.apigatewayconn.Handlers.Retry.PushBack(func(r *request.Request) {
