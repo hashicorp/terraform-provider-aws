@@ -52,10 +52,12 @@ func ResourceReplicationGroup() *schema.Resource {
 				Computed: true,
 			},
 			"auth_token": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ValidateFunc: validReplicationGroupAuthToken,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				ForceNew:      true,
+				ValidateFunc:  validReplicationGroupAuthToken,
+				ConflictsWith: []string{"user_group_ids"},
 			},
 			"auto_minor_version_upgrade": {
 				Type:     schema.TypeBool,
@@ -281,13 +283,13 @@ func ResourceReplicationGroup() *schema.Resource {
 				Computed: true,
 			},
 			"user_group_ids": {
-				Type:       schema.TypeSet,
-				ConfigMode: 0,
-				Optional:   true,
-				Default:    nil,
-				Elem:       &schema.Schema{Type: schema.TypeString},
-				MaxItems:   1, //at the moment the aws sdk only supports 1 user group id to be associated with a cluster
-				Set:        schema.HashString,
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Default:       nil,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				MaxItems:      1, //at the moment the aws sdk only supports 1 user group id to be associated with a cluster
+				Set:           schema.HashString,
+				ConflictsWith: []string{"auth_token"},
 			},
 			"kms_key_id": {
 				Type:     schema.TypeString,
