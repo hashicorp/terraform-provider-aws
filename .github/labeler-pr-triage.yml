@@ -668,7 +668,7 @@ service/route53resolver:
   - 'aws/internal/service/route53resolver/**/*'
   - '**/*_route53_resolver_*'
   - '**/route53_resolver_*'
-service/route53resolver:
+service/route53recoveryreadiness:
   - 'aws/internal/service/route53recoveryreadiness/**/*'
   - '**/*_route53_recovery_readiness_*'
   - '**/route53_recovery_readiness_*'
