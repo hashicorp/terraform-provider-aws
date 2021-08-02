@@ -22,7 +22,7 @@ resource "aws_route_53_recovery_readiness_cell" "us-west-2-failover-cell" {
 
 The following arguments are supported:
 
-* `cell` - (Required) A unique identifier describing the channel
+* `cell_name` - (Required) A unique name describing the cell
 * `cells` - (Optional) A list of cell arns to add as nested fault domains within this cell
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
