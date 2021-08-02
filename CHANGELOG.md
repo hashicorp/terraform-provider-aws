@@ -1,4 +1,10 @@
 ## 3.53.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_acm_certificate: Add status attribute ([#20232](https://github.com/hashicorp/terraform-provider-aws/issues/20232))
+* resource/aws_redshift_parameter_group: Make Redshift parameters case sensitive. ([#19772](https://github.com/hashicorp/terraform-provider-aws/issues/19772))
+
 ## 3.52.0 (July 29, 2021)
 
 FEATURES:
