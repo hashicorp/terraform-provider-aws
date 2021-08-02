@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_instance: Fix creating instance with launch template that sets `instance_interruption_behavior` to `stop`
+```
