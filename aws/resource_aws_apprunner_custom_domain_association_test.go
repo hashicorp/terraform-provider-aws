@@ -3,6 +3,7 @@ package aws
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/apprunner"
@@ -16,6 +17,11 @@ import (
 )
 
 func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
+	domain := os.Getenv("APPRUNNER_CUSTOM_DOMAIN")
+	if domain == "" {
+		t.Skip("Environment variable APPRUNNER_CUSTOM_DOMAIN is not set")
+	}
+
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_custom_domain_association.test"
 	serviceResourceName := "aws_apprunner_service.test"
@@ -27,7 +33,7 @@ func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAppRunnerCustomDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppRunnerCustomDomainAssociation_basic(rName),
+				Config: testAccAppRunnerCustomDomainAssociation_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerCustomDomainAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "certificate_validation_records.#", "3"),
@@ -49,6 +55,11 @@ func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 }
 
 func TestAccAwsAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
+	domain := os.Getenv("APPRUNNER_CUSTOM_DOMAIN")
+	if domain == "" {
+		t.Skip("Environment variable APPRUNNER_CUSTOM_DOMAIN is not set")
+	}
+
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_custom_domain_association.test"
 
@@ -59,7 +70,7 @@ func TestAccAwsAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAppRunnerCustomDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppRunnerCustomDomainAssociation_basic(rName),
+				Config: testAccAppRunnerCustomDomainAssociation_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerCustomDomainAssociationExists(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppRunnerCustomDomainAssociation(), resourceName),
@@ -135,10 +146,10 @@ func testAccCheckAwsAppRunnerCustomDomainAssociationExists(n string) resource.Te
 	}
 }
 
-func testAccAppRunnerCustomDomainAssociation_basic(rName string) string {
+func testAccAppRunnerCustomDomainAssociation_basic(rName, domain string) string {
 	return fmt.Sprintf(`
 resource "aws_apprunner_service" "test" {
-  service_name = %q
+  service_name = %[1]q
 
   source_configuration {
     auto_deployments_enabled = false
@@ -153,8 +164,8 @@ resource "aws_apprunner_service" "test" {
 }
 
 resource "aws_apprunner_custom_domain_association" "test" {
-  domain_name = "hashicorp.com"
+  domain_name = %[2]q
   service_arn = aws_apprunner_service.test.arn
 }
-`, rName)
+`, rName, domain)
 }
