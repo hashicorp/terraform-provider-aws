@@ -2052,11 +2052,7 @@ func fetchLaunchTemplateAmi(specs []interface{}, conn *ec2.EC2) (string, error) 
 		return "", fmt.Errorf("failed fetching Launch Template AMI ID: %w", err)
 	}
 
-	if ltData.ImageId != nil {
-		return *ltData.ImageId, nil
-	}
-
-	return "", nil
+	return aws.StringValue(ltData.ImageId), nil
 }
 
 func fetchLaunchTemplateData(specs []interface{}, conn *ec2.EC2) (*ec2.ResponseLaunchTemplateData, error) {
@@ -2595,9 +2591,7 @@ func buildAwsInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanc
 		}
 
 		if ltData.InstanceMarketOptions != nil && ltData.InstanceMarketOptions.SpotOptions != nil {
-			if v := ltData.InstanceMarketOptions.SpotOptions.InstanceInterruptionBehavior; v != nil {
-				interruptionBehavior = *v
-			}
+			interruptionBehavior = aws.StringValue(ltData.InstanceMarketOptions.SpotOptions.InstanceInterruptionBehavior)
 		}
 	}
 
