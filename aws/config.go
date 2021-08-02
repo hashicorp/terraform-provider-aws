@@ -695,6 +695,17 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	// StartDeployment operations can return a ConflictException
+	// if ongoing deployments are in-progress, thus we handle them
+	// here for the service client.
+	client.appconfigconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if r.Operation.Name == "StartDeployment" {
+			if tfawserr.ErrCodeEquals(r.Error, appconfig.ErrCodeConflictException) {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+	})
+
 	client.appsyncconn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if r.Operation.Name == "CreateGraphqlApi" {
 			if isAWSErr(r.Error, appsync.ErrCodeConcurrentModificationException, "a GraphQL API creation is already in progress") {
@@ -717,6 +728,23 @@ func (c *Config) Client() (interface{}, error) {
 		switch r.Operation.Name {
 		case "DeleteOrganizationConfigRule", "DescribeOrganizationConfigRules", "DescribeOrganizationConfigRuleStatuses", "PutOrganizationConfigRule":
 			if !isAWSErr(r.Error, configservice.ErrCodeOrganizationAccessDeniedException, "This action can be only made by AWS Organization's master account.") {
+				return
+			}
+
+			// We only want to retry briefly as the default max retry count would
+			// excessively retry when the error could be legitimate.
+			// We currently depend on the DefaultRetryer exponential backoff here.
+			// ~10 retries gives a fair backoff of a few seconds.
+			if r.RetryCount < 9 {
+				r.Retryable = aws.Bool(true)
+			} else {
+				r.Retryable = aws.Bool(false)
+			}
+		case "DeleteOrganizationConformancePack", "DescribeOrganizationConformancePacks", "DescribeOrganizationConformancePackStatuses", "PutOrganizationConformancePack":
+			if !tfawserr.ErrCodeEquals(r.Error, configservice.ErrCodeOrganizationAccessDeniedException) {
+				if r.Operation.Name == "DeleteOrganizationConformancePack" && tfawserr.ErrCodeEquals(err, configservice.ErrCodeResourceInUseException) {
+					r.Retryable = aws.Bool(true)
+				}
 				return
 			}
 

@@ -2,13 +2,12 @@ package waiter
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	tfeks "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/eks"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -30,12 +29,7 @@ func AddonCreated(ctx context.Context, conn *eks.EKS, clusterName, addonName str
 
 	if output, ok := outputRaw.(*eks.Addon); ok {
 		if status, health := aws.StringValue(output.Status), output.Health; status == eks.AddonStatusCreateFailed && health != nil {
-			var errs *multierror.Error
-
-			for _, issue := range health.Issues {
-				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(issue.Code), aws.StringValue(issue.Message)))
-			}
-			tfresource.SetLastError(err, errs.ErrorOrNil())
+			tfresource.SetLastError(err, tfeks.AddonIssuesError(health.Issues))
 		}
 
 		return output, err
@@ -55,6 +49,10 @@ func AddonDeleted(ctx context.Context, conn *eks.EKS, clusterName, addonName str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*eks.Addon); ok {
+		if status, health := aws.StringValue(output.Status), output.Health; status == eks.AddonStatusDeleteFailed && health != nil {
+			tfresource.SetLastError(err, tfeks.AddonIssuesError(health.Issues))
+		}
+
 		return output, err
 	}
 
@@ -73,12 +71,7 @@ func AddonUpdateSuccessful(ctx context.Context, conn *eks.EKS, clusterName, addo
 
 	if output, ok := outputRaw.(*eks.Update); ok {
 		if status := aws.StringValue(output.Status); status == eks.UpdateStatusCancelled || status == eks.UpdateStatusFailed {
-			var errs *multierror.Error
-
-			for _, e := range output.Errors {
-				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(e.ErrorCode), aws.StringValue(e.ErrorMessage)))
-			}
-			tfresource.SetLastError(err, errs.ErrorOrNil())
+			tfresource.SetLastError(err, tfeks.ErrorDetailsError(output.Errors))
 		}
 
 		return output, err
@@ -133,12 +126,7 @@ func ClusterUpdateSuccessful(conn *eks.EKS, name, id string, timeout time.Durati
 
 	if output, ok := outputRaw.(*eks.Update); ok {
 		if status := aws.StringValue(output.Status); status == eks.UpdateStatusCancelled || status == eks.UpdateStatusFailed {
-			var errs *multierror.Error
-
-			for _, e := range output.Errors {
-				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(e.ErrorCode), aws.StringValue(e.ErrorMessage)))
-			}
-			tfresource.SetLastError(err, errs.ErrorOrNil())
+			tfresource.SetLastError(err, tfeks.ErrorDetailsError(output.Errors))
 		}
 
 		return output, err
@@ -181,7 +169,7 @@ func FargateProfileDeleted(conn *eks.EKS, clusterName, fargateProfileName string
 	return nil, err
 }
 
-func NodegroupCreated(conn *eks.EKS, clusterName, nodeGroupName string, timeout time.Duration) (*eks.Nodegroup, error) {
+func NodegroupCreated(ctx context.Context, conn *eks.EKS, clusterName, nodeGroupName string, timeout time.Duration) (*eks.Nodegroup, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{eks.NodegroupStatusCreating},
 		Target:  []string{eks.NodegroupStatusActive},
@@ -189,16 +177,20 @@ func NodegroupCreated(conn *eks.EKS, clusterName, nodeGroupName string, timeout 
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*eks.Nodegroup); ok {
+		if status, health := aws.StringValue(output.Status), output.Health; status == eks.NodegroupStatusCreateFailed && health != nil {
+			tfresource.SetLastError(err, tfeks.IssuesError(health.Issues))
+		}
+
 		return output, err
 	}
 
 	return nil, err
 }
 
-func NodegroupDeleted(conn *eks.EKS, clusterName, nodeGroupName string, timeout time.Duration) (*eks.Nodegroup, error) {
+func NodegroupDeleted(ctx context.Context, conn *eks.EKS, clusterName, nodeGroupName string, timeout time.Duration) (*eks.Nodegroup, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{eks.NodegroupStatusActive, eks.NodegroupStatusDeleting},
 		Target:  []string{},
@@ -209,13 +201,17 @@ func NodegroupDeleted(conn *eks.EKS, clusterName, nodeGroupName string, timeout 
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*eks.Nodegroup); ok {
+		if status, health := aws.StringValue(output.Status), output.Health; status == eks.NodegroupStatusDeleteFailed && health != nil {
+			tfresource.SetLastError(err, tfeks.IssuesError(health.Issues))
+		}
+
 		return output, err
 	}
 
 	return nil, err
 }
 
-func NodegroupUpdateSuccessful(conn *eks.EKS, clusterName, nodeGroupName, id string, timeout time.Duration) (*eks.Update, error) {
+func NodegroupUpdateSuccessful(ctx context.Context, conn *eks.EKS, clusterName, nodeGroupName, id string, timeout time.Duration) (*eks.Update, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{eks.UpdateStatusInProgress},
 		Target:  []string{eks.UpdateStatusSuccessful},
@@ -227,14 +223,43 @@ func NodegroupUpdateSuccessful(conn *eks.EKS, clusterName, nodeGroupName, id str
 
 	if output, ok := outputRaw.(*eks.Update); ok {
 		if status := aws.StringValue(output.Status); status == eks.UpdateStatusCancelled || status == eks.UpdateStatusFailed {
-			var errs *multierror.Error
-
-			for _, e := range output.Errors {
-				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(e.ErrorCode), aws.StringValue(e.ErrorMessage)))
-			}
-			tfresource.SetLastError(err, errs.ErrorOrNil())
+			tfresource.SetLastError(err, tfeks.ErrorDetailsError(output.Errors))
 		}
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+func OidcIdentityProviderConfigCreated(ctx context.Context, conn *eks.EKS, clusterName, configName string, timeout time.Duration) (*eks.OidcIdentityProviderConfig, error) {
+	stateConf := resource.StateChangeConf{
+		Pending: []string{eks.ConfigStatusCreating},
+		Target:  []string{eks.ConfigStatusActive},
+		Refresh: OidcIdentityProviderConfigStatus(ctx, conn, clusterName, configName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*eks.OidcIdentityProviderConfig); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func OidcIdentityProviderConfigDeleted(ctx context.Context, conn *eks.EKS, clusterName, configName string, timeout time.Duration) (*eks.OidcIdentityProviderConfig, error) {
+	stateConf := resource.StateChangeConf{
+		Pending: []string{eks.ConfigStatusActive, eks.ConfigStatusDeleting},
+		Target:  []string{},
+		Refresh: OidcIdentityProviderConfigStatus(ctx, conn, clusterName, configName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*eks.OidcIdentityProviderConfig); ok {
 		return output, err
 	}
 

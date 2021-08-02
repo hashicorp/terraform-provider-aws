@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_kms_key
 
-Provides a KMS customer master key.
+Provides a KMS single-Region customer master key (CMK).
 
 ## Example Usage
 
