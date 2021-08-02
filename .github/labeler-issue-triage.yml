@@ -300,7 +300,7 @@ service/route53recoverycontrolconfig:
   - '((\*|-) ?`?|(data|resource) "?)aws_route53recoverycontrolconfig_'  
 service/route53resolver:
   - '((\*|-) ?`?|(data|resource) "?)aws_route53_resolver_'
-service/route53resolver:
+service/route53recoveryreadiness:
   - '((\*|-) ?`?|(data|resource) "?)aws_route53_recovery_readiness_'
 service/s3:
   - '((\*|-) ?`?|(data|resource) "?)aws_(canonical_user_id|s3_bucket|s3_object)'
