@@ -40,6 +40,36 @@ func TestAccDataSourceAwsEfsFileSystem_id(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAwsEfsFileSystem_tags(t *testing.T) {
+	dataSourceName := "data.aws_efs_file_system.test"
+	resourceName := "aws_efs_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, efs.EndpointsID),
+		Providers:  testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsEfsFileSystemTagsConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccDataSourceAwsEfsFileSystemCheck(dataSourceName, resourceName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "performance_mode", resourceName, "performance_mode"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "creation_token", resourceName, "creation_token"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "encrypted", resourceName, "encrypted"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "kms_key_id", resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "dns_name", resourceName, "dns_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "provisioned_throughput_in_mibps", resourceName, "provisioned_throughput_in_mibps"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "throughput_mode", resourceName, "throughput_mode"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "lifecycle_policy", resourceName, "lifecycle_policy"),
+					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexp.MustCompile(`^\d+$`)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDataSourceAwsEfsFileSystem_name(t *testing.T) {
 	dataSourceName := "data.aws_efs_file_system.test"
 	resourceName := "aws_efs_file_system.test"
@@ -159,6 +189,28 @@ resource "aws_efs_file_system" "test" {}
 
 data "aws_efs_file_system" "test" {
   file_system_id = aws_efs_file_system.test.id
+}
+`
+
+const testAccDataSourceAwsEfsFileSystemTagsConfig = `
+
+resource "aws_efs_file_system" "test" {
+	tags = {
+    Name        = "default-efs"
+    Environment = "dev"
+  }
+}
+
+resource "aws_efs_file_system" "wrong-env" {
+	tags = {
+    Environment = "test"
+  }
+}
+
+resource "aws_efs_file_system" "no-tags" {}
+
+data "aws_efs_file_system" "test" {
+  tags = aws_efs_file_system.test.tags
 }
 `
 
