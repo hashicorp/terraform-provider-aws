@@ -1,11 +1,11 @@
 package aws
 
 import (
-	//"errors"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -33,6 +33,43 @@ func TestAccAWSElasticacheUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "no_password_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, "user_name", "username1"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"no_password_required",
+					"passwords",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheUser_update(t *testing.T) {
+	var user elasticache.User
+	rName := acctest.RandomWithPrefix("tf-acc")
+	resourceName := "aws_elasticache_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheUserConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheUserExists(resourceName, &user),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheUserConfigUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* +@all"),
 				),
 			},
 			{
@@ -133,14 +170,19 @@ func testAccCheckAWSElasticacheUserDestroyWithProvider(s *terraform.State, provi
 			continue
 		}
 
-		_, err := finder.ElastiCacheUserById(conn, rs.Primary.ID)
-		if err != nil {
-			if tfresource.NotFound(err) {
-				return nil
-			}
+		user, err := finder.ElastiCacheUserById(conn, rs.Primary.ID)
+
+		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserNotFoundFault) || tfresource.NotFound(err) {
+			continue
 		}
 
-		return err
+		if err != nil {
+			return err
+		}
+
+		if user != nil {
+			return fmt.Errorf("Elasticache User (%s) still exists", rs.Primary.ID)
+		}
 	}
 
 	return nil
@@ -180,6 +222,18 @@ resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
   user_name     = "username1"
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
+}
+`, rName))
+}
+
+func testAccAWSElasticacheUserConfigUpdate(rName string) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  user_id       = %[1]q
+  user_name     = "username1"
+  access_string = "on ~* +@all"
   engine        = "REDIS"
   passwords     = ["password123456789"]
 }

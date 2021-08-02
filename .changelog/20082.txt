@@ -1,6 +1,7 @@
 ```release-note:new-resource
-resource/aws_storagegateway_file_system_association: Add new resource for associating FSx Storage Gateway with FSx File Systems
+aws_storagegateway_file_system_association
 ```
+
 ```release-note:enhancement
-resource/aws_storagegateway_gateway: Add new option for gateway_type, FILE_FSX_SMB, to be used with aws_storagegateway_file_system_association
+resource/aws_storagegateway_gateway: Add new option for gateway_type, `FILE_FSX_SMB`, to be used with `aws_storagegateway_file_system_association`
 ```
