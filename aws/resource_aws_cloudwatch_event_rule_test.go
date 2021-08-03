@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	awsarn "github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/go-multierror"
@@ -655,26 +654,6 @@ func testAccAWSCloudWatchEventRuleNoBusNameImportStateIdFunc(resourceName string
 		}
 
 		return rs.Primary.Attributes["name"], nil
-	}
-}
-
-func testAccCheckRuleARN(resourceName, attributeName, arnResource, arnService string, eventBusARN awsarn.ARN) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		arnRegexp := awsarn.ARN{
-			AccountID: eventBusARN.AccountID,
-			Partition: eventBusARN.Partition,
-			Region:    eventBusARN.Region,
-			Resource:  arnResource,
-			Service:   arnService,
-		}.String()
-
-		attributeMatch, err := regexp.Compile(arnRegexp)
-
-		if err != nil {
-			return fmt.Errorf("Unable to compile ARN regexp (%s): %w", arnRegexp, err)
-		}
-
-		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
 	}
 }
 
