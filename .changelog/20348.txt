@@ -1,3 +1,0 @@
-```release-note:new-service
-Adds aws_route53_recovery_control_config service
-```
