@@ -3,6 +3,10 @@
 ENHANCEMENTS:
 
 * data-source/aws_acm_certificate: Add status attribute ([#20232](https://github.com/hashicorp/terraform-provider-aws/issues/20232))
+* data-source/aws_ec2_coip_pool: Add `arn` attribute ([#17046](https://github.com/hashicorp/terraform-provider-aws/issues/17046))
+* resource/aws_autoscaling_schedule: Add `time_zone` argument ([#19829](https://github.com/hashicorp/terraform-provider-aws/issues/19829))
+* resource/aws_kms_external_key: Add `bypass_policy_lockout_safety_check` argument ([#18117](https://github.com/hashicorp/terraform-provider-aws/issues/18117))
+* resource/aws_kms_key: Add `bypass_policy_lockout_safety_check` argument ([#18117](https://github.com/hashicorp/terraform-provider-aws/issues/18117))
 * resource/aws_redshift_parameter_group: Make Redshift parameters case sensitive. ([#19772](https://github.com/hashicorp/terraform-provider-aws/issues/19772))
 
 ## 3.52.0 (July 29, 2021)
