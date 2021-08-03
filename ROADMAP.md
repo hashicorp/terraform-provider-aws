@@ -28,12 +28,13 @@ From August-October ‘21, we will be prioritizing the following areas of work:
 
 ## Provider Version v4.0.0
 
+Issue: [#20433](https://github.com/hashicorp/terraform-provider-aws/issues/20433)
+
 The next major release of the provider will include the adoption of the AWS Go SDK v2.0 as well as a refactor of one of our oldest and most used resources: S3.
 
 There will also be the usual deprecations and sometimes breaking changes to existing resources which are necessary to maintain consistency of behavior across resources. Our goal is to focus on standardization to reduce technical debt and lay a strong foundation for future enhancement initiatives within the provider.
 
-For details of the changes in full please refer to #TODOISSUE. We would love to hear your feedback.
-
+For details of the changes in full please refer to #20433. We would love to hear your feedback.
 
 ## New Services
 
@@ -90,20 +91,20 @@ New Data Source(s):
 
 ## Enhancements to Existing Services
 - [Support for KMS Multi-Region Keys](https://github.com/hashicorp/terraform-provider-aws/issues/19896)
-- [terraform-provider-aws 3.13.0 and later including 3.25.0 cause lambdas in a VPC to be updated on every apply](https://github.com/hashicorp/terraform-provider-aws/issues/17385)
 - [S3 Replication Time Control](https://github.com/hashicorp/terraform-provider-aws/issues/10974)
 - [New Data Source: aws_iam_roles](https://github.com/hashicorp/terraform-provider-aws/issues/14470)
 
-## Provider Package Restructuring
+## Project Restructure: Service Level Packages
+
+The scale of the provider (now 1000 resources/datasources) has led to its existing package structure being difficult to work with and maintain. This quarter we are going to perform a large refactor of the codebase, to align on a single go package per AWS service. More details can be found in the encompassing issue [#20431](https://github.com/hashicorp/terraform-provider-aws/issues/20431)
 
 ## Research Topics
 
 Research topics include features, architectural changes, and ideas that we are pursuing in the longer term that may significantly impact the core user experience of the AWS provider. Research topics are discovery only and are not guaranteed to be included in a future release.
 
-We are interested in your thoughts and feedback about the proposals below and encourage you to comment on the linked issues or schedule time with @maryelizbeth via the link on her GitHub profile to discuss.
+### Scaffolding for new resources, datasources and associated tests. 
 
-- Scaffolding for new resources, datasources and associated tests. 
-
+Adding resources, datasources and test files to the provider is a repetitive task which should be automated to ensure consistency and speed up contributor and maintainer workflow. A simple cli tool should be able to generate these files in place, and ensure that any code reference additions required (ie adding to `provider.go`) are performed as part of the process.
 
 ## Disclosures
 
