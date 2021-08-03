@@ -353,8 +353,8 @@ type AWSClient struct {
 	reverseDnsPrefix                    string
 	route53domainsconn                  *route53domains.Route53Domains
 	route53recoverycontrolconfigconn    *route53recoverycontrolconfig.Route53RecoveryControlConfig
-	route53resolverconn                 *route53resolver.Route53Resolver
 	route53recoveryreadinessconn        *route53recoveryreadiness.Route53RecoveryReadiness
+	route53resolverconn                 *route53resolver.Route53Resolver
 	s3conn                              *s3.S3
 	s3connUriCleaningDisabled           *s3.S3
 	s3controlconn                       *s3control.S3Control
@@ -603,8 +603,8 @@ func (c *Config) Client() (interface{}, error) {
 		reverseDnsPrefix:                    ReverseDns(dnsSuffix),
 		route53domainsconn:                  route53domains.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53domains"])})),
 		route53recoverycontrolconfigconn:    route53recoverycontrolconfig.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53recoverycontrolconfig"])})),
-		route53resolverconn:                 route53resolver.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53resolver"])})),
 		route53recoveryreadinessconn:        route53recoveryreadiness.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53recoveryreadiness"])})),
+		route53resolverconn:                 route53resolver.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53resolver"])})),
 		s3controlconn:                       s3control.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3control"])})),
 		s3outpostsconn:                      s3outposts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3outposts"])})),
 		sagemakerconn:                       sagemaker.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sagemaker"])})),
