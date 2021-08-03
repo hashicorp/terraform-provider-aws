@@ -190,7 +190,7 @@ func resourceAwsKmsExternalKeyRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err != nil {
-		return nil
+		return err
 	}
 
 	d.Set("arn", key.metadata.Arn)
