@@ -995,7 +995,7 @@ func Provider() *schema.Provider {
 			"aws_route53_resolver_query_log_config_association":       resourceAwsRoute53ResolverQueryLogConfigAssociation(),
 			"aws_route53_resolver_rule_association":                   resourceAwsRoute53ResolverRuleAssociation(),
 			"aws_route53_resolver_rule":                               resourceAwsRoute53ResolverRule(),
-			"aws_route53_recovery_readiness_cell":                     resourceAwsRoute53RecoveryReadinessCell(),
+			"aws_route53recoveryreadiness_cell":                       resourceAwsRoute53RecoveryReadinessCell(),
 			"aws_route":                                               resourceAwsRoute(),
 			"aws_route_table":                                         resourceAwsRouteTable(),
 			"aws_default_route_table":                                 resourceAwsDefaultRouteTable(),
