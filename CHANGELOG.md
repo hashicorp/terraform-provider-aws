@@ -2,6 +2,8 @@
 
 ENHANCEMENTS:
 
+* data-source/aws_acm_certificate: Add status attribute ([#20232](https://github.com/hashicorp/terraform-provider-aws/issues/20232))
+* resource/aws_redshift_parameter_group: Make Redshift parameters case sensitive. ([#19772](https://github.com/hashicorp/terraform-provider-aws/issues/19772))
 * resource/resource_aws_cloudwatch_event_target: Allow to set event_bus_name as ARN.
 * resource/resource_aws_cloudwatch_event_rule: Allow to set event_bus_name as ARN.
 
