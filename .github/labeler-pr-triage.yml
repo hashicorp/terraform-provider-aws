@@ -668,6 +668,10 @@ service/route53recoverycontrolconfig:
   - 'aws/internal/service/route53recoverycontrolconfig/**/*'
   - '**/*_route53recoverycontrolconfig_*'
   - '**/route53recoverycontrolconfig_*'
+service/route53recoveryreadiness:
+  - 'aws/internal/service/route53recoveryreadiness/**/*'
+  - '**/*_route53recoveryreadiness_*'
+  - '**/route53recoveryreadiness_*'
 service/route53resolver:
   - 'aws/internal/service/route53resolver/**/*'
   - '**/*_route53_resolver_*'

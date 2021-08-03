@@ -168,6 +168,7 @@ variable "service_labels" {
     "route53",
     "route53domains",
     "route53recoverycontrolconfig",
+    "route53recoveryreadiness",
     "route53resolver",
     "s3",
     "s3control",
