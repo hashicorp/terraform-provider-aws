@@ -5,7 +5,6 @@ import (
 	"log"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
@@ -15,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	tfeks "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/eks"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/eks/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -28,64 +29,64 @@ func init() {
 
 func testSweepEksNodeGroups(region string) error {
 	client, err := sharedClientForRegion(region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.(*AWSClient).eksconn
-	sweepResources := make([]*testSweepResource, 0)
-	var errs *multierror.Error
-
 	input := &eks.ListClustersInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]*testSweepResource, 0)
 
 	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
 		for _, cluster := range page.Clusters {
-			clusterName := aws.StringValue(cluster)
 			input := &eks.ListNodegroupsInput{
 				ClusterName: cluster,
 			}
 
 			err := conn.ListNodegroupsPages(input, func(page *eks.ListNodegroupsOutput, lastPage bool) bool {
-				for _, nodeGroup := range page.Nodegroups {
-					nodeGroupName := aws.StringValue(nodeGroup)
+				if page == nil {
+					return !lastPage
+				}
 
+				for _, nodeGroup := range page.Nodegroups {
 					r := resourceAwsEksNodeGroup()
 					d := r.Data(nil)
-
-					d.Set("cluster_name", clusterName)
-					d.Set("node_group_name", nodeGroupName)
-					d.SetId(tfeks.NodeGroupCreateResourceID(clusterName, nodeGroupName))
+					d.SetId(tfeks.NodeGroupCreateResourceID(aws.StringValue(cluster), aws.StringValue(nodeGroup)))
 
 					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 				}
+
 				return !lastPage
 			})
 
 			if err != nil {
-				errs = multierror.Append(errs, fmt.Errorf("error listing EKS Node Groups: %w", err))
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Node Groups (%s): %w", region, err))
 			}
 		}
 
 		return !lastPage
 	})
 
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EKS Node Groups sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing EKS Clusters: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping EKS Node Groups for %s: %w", region, err))
+	err = testSweepResourceOrchestrator(sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EKS Node Groups (%s): %w", region, err))
 	}
 
-	// waiting for deletion is not necessary in the sweeper since the resource's delete waits
-
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping EKS Node Group sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSEksNodeGroup_basic(t *testing.T) {
@@ -126,6 +127,7 @@ func TestAccAWSEksNodeGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", eks.NodegroupStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "taint.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "version", eksClusterResourceName, "version"),
 				),
 			},
@@ -209,7 +211,7 @@ func TestAccAWSEksNodeGroup_disappears(t *testing.T) {
 				Config: testAccAWSEksNodeGroupConfigNodeGroupName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup),
-					testAccCheckAWSEksNodeGroupDisappears(&nodeGroup),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEksNodeGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -317,10 +319,10 @@ func TestAccAWSEksNodeGroup_ForceUpdateVersion(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigForceUpdateVersion(rName, "1.15"),
+				Config: testAccAWSEksNodeGroupConfigForceUpdateVersion(rName, "1.19"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.15"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.19"),
 				),
 			},
 			{
@@ -330,10 +332,10 @@ func TestAccAWSEksNodeGroup_ForceUpdateVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_update_version"},
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigForceUpdateVersion(rName, "1.16"),
+				Config: testAccAWSEksNodeGroupConfigForceUpdateVersion(rName, "1.20"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.16"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.20"),
 				),
 			},
 		},
@@ -597,6 +599,11 @@ func TestAccAWSEksNodeGroup_RemoteAccess_Ec2SshKey(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
+	publicKey, _, err := acctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
@@ -604,7 +611,7 @@ func TestAccAWSEksNodeGroup_RemoteAccess_Ec2SshKey(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigRemoteAccessEc2SshKey(rName),
+				Config: testAccAWSEksNodeGroupConfigRemoteAccessEc2SshKey(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "remote_access.#", "1"),
@@ -625,6 +632,11 @@ func TestAccAWSEksNodeGroup_RemoteAccess_SourceSecurityGroupIds(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
+	publicKey, _, err := acctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
@@ -632,7 +644,7 @@ func TestAccAWSEksNodeGroup_RemoteAccess_SourceSecurityGroupIds(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigRemoteAccessSourceSecurityGroupIds1(rName),
+				Config: testAccAWSEksNodeGroupConfigRemoteAccessSourceSecurityGroupIds1(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "remote_access.#", "1"),
@@ -771,6 +783,57 @@ func TestAccAWSEksNodeGroup_ScalingConfig_MinSize(t *testing.T) {
 	})
 }
 
+func TestAccAWSEksNodeGroup_ScalingConfig_Zero_DesiredSize_MinSize(t *testing.T) {
+	var nodeGroup1, nodeGroup2 eks.Nodegroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_eks_node_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEksNodeGroupConfigScalingConfigSizes(rName, 0, 1, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.min_size", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEksNodeGroupConfigScalingConfigSizes(rName, 1, 2, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup2),
+					testAccCheckAWSEksNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.min_size", "1"),
+				),
+			},
+			{
+				Config: testAccAWSEksNodeGroupConfigScalingConfigSizes(rName, 0, 1, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.min_size", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEksNodeGroup_Tags(t *testing.T) {
 	var nodeGroup1, nodeGroup2, nodeGroup3 eks.Nodegroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -818,6 +881,69 @@ func TestAccAWSEksNodeGroup_Tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSEksNodeGroup_Taints(t *testing.T) {
+	var nodeGroup1 eks.Nodegroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_eks_node_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEksNodeGroupConfigTaints1(rName, "key1", "value1", "NO_SCHEDULE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "taint.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taint.*", map[string]string{
+						"key":    "key1",
+						"value":  "value1",
+						"effect": "NO_SCHEDULE",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEksNodeGroupConfigTaints2(rName,
+					"key1", "value1updated", "NO_EXECUTE",
+					"key2", "value2", "NO_SCHEDULE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "taint.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taint.*", map[string]string{
+						"key":    "key1",
+						"value":  "value1updated",
+						"effect": "NO_EXECUTE",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taint.*", map[string]string{
+						"key":    "key2",
+						"value":  "value2",
+						"effect": "NO_SCHEDULE",
+					}),
+				),
+			},
+			{
+				Config: testAccAWSEksNodeGroupConfigTaints1(rName, "key2", "value2", "NO_SCHEDULE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "taint.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taint.*", map[string]string{
+						"key":    "key2",
+						"value":  "value2",
+						"effect": "NO_SCHEDULE",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEksNodeGroup_Version(t *testing.T) {
 	var nodeGroup1, nodeGroup2 eks.Nodegroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -830,10 +956,10 @@ func TestAccAWSEksNodeGroup_Version(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigVersion(rName, "1.15"),
+				Config: testAccAWSEksNodeGroupConfigVersion(rName, "1.19"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.15"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.19"),
 				),
 			},
 			{
@@ -842,11 +968,11 @@ func TestAccAWSEksNodeGroup_Version(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksNodeGroupConfigVersion(rName, "1.16"),
+				Config: testAccAWSEksNodeGroupConfigVersion(rName, "1.20"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup2),
 					testAccCheckAWSEksNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.16"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.20"),
 				),
 			},
 		},
@@ -871,36 +997,20 @@ func testAccCheckAWSEksNodeGroupExists(resourceName string, nodeGroup *eks.Nodeg
 		}
 
 		clusterName, nodeGroupName, err := tfeks.NodeGroupParseResourceID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).eksconn
 
-		input := &eks.DescribeNodegroupInput{
-			ClusterName:   aws.String(clusterName),
-			NodegroupName: aws.String(nodeGroupName),
-		}
-
-		output, err := conn.DescribeNodegroup(input)
+		output, err := finder.NodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil || output.Nodegroup == nil {
-			return fmt.Errorf("EKS Node Group (%s) not found", rs.Primary.ID)
-		}
-
-		if aws.StringValue(output.Nodegroup.NodegroupName) != nodeGroupName {
-			return fmt.Errorf("EKS Node Group (%s) not found", rs.Primary.ID)
-		}
-
-		if got, want := aws.StringValue(output.Nodegroup.Status), eks.NodegroupStatusActive; got != want {
-			return fmt.Errorf("EKS Node Group (%s) not in %s status, got: %s", rs.Primary.ID, want, got)
-		}
-
-		*nodeGroup = *output.Nodegroup
+		*nodeGroup = *output
 
 		return nil
 	}
@@ -915,50 +1025,25 @@ func testAccCheckAWSEksNodeGroupDestroy(s *terraform.State) error {
 		}
 
 		clusterName, nodeGroupName, err := tfeks.NodeGroupParseResourceID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		input := &eks.DescribeNodegroupInput{
-			ClusterName:   aws.String(clusterName),
-			NodegroupName: aws.String(nodeGroupName),
-		}
+		_, err = finder.NodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
 
-		output, err := conn.DescribeNodegroup(input)
-
-		if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
-		if output != nil && output.Nodegroup != nil && aws.StringValue(output.Nodegroup.NodegroupName) == nodeGroupName {
-			return fmt.Errorf("EKS Node Group (%s) still exists", rs.Primary.ID)
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckAWSEksNodeGroupDisappears(nodeGroup *eks.Nodegroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).eksconn
-
-		input := &eks.DeleteNodegroupInput{
-			ClusterName:   nodeGroup.ClusterName,
-			NodegroupName: nodeGroup.NodegroupName,
-		}
-
-		_, err := conn.DeleteNodegroup(input)
-
-		if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
-
 		if err != nil {
 			return err
 		}
 
-		return waitForEksNodeGroupDeletion(conn, aws.StringValue(nodeGroup.ClusterName), aws.StringValue(nodeGroup.NodegroupName), 60*time.Minute)
+		return fmt.Errorf("EKS Node Group %s still exists", rs.Primary.ID)
 	}
+
+	return nil
 }
 
 func testAccCheckAWSEksNodeGroupNotRecreated(i, j *eks.Nodegroup) resource.TestCheckFunc {
@@ -1757,11 +1842,11 @@ resource "aws_eks_node_group" "test" {
 `, rName))
 }
 
-func testAccAWSEksNodeGroupConfigRemoteAccessEc2SshKey(rName string) string {
+func testAccAWSEksNodeGroupConfigRemoteAccessEc2SshKey(rName, publicKey string) string {
 	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
-  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 example@example.com"
+  public_key = %[2]q
 }
 
 resource "aws_eks_node_group" "test" {
@@ -1786,14 +1871,14 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-`, rName))
+`, rName, publicKey))
 }
 
-func testAccAWSEksNodeGroupConfigRemoteAccessSourceSecurityGroupIds1(rName string) string {
+func testAccAWSEksNodeGroupConfigRemoteAccessSourceSecurityGroupIds1(rName, publicKey string) string {
 	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
-  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 example@example.com"
+  public_key = %[2]q
 }
 
 resource "aws_eks_node_group" "test" {
@@ -1819,7 +1904,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-`, rName))
+`, rName, publicKey))
 }
 
 func testAccAWSEksNodeGroupConfigScalingConfigSizes(rName string, desiredSize, maxSize, minSize int) string {
@@ -1898,6 +1983,70 @@ resource "aws_eks_node_group" "test" {
   ]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccAWSEksNodeGroupConfigTaints1(rName, taintKey1, taintValue1, taintEffect1 string) string {
+	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.test[*].id
+
+  taint {
+    key    = %[2]q
+    value  = %[3]q
+    effect = %[4]q
+  }
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 1
+    min_size     = 1
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+  ]
+}
+`, rName, taintKey1, taintValue1, taintEffect1))
+}
+
+func testAccAWSEksNodeGroupConfigTaints2(rName, taintKey1, taintValue1, taintEffect1, taintKey2, taintValue2, taintEffect2 string) string {
+	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.test[*].id
+
+  taint {
+    key    = %[2]q
+    value  = %[3]q
+    effect = %[4]q
+  }
+
+  taint {
+    key    = %[5]q
+    value  = %[6]q
+    effect = %[7]q
+  }
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 1
+    min_size     = 1
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+  ]
+}
+`, rName, taintKey1, taintValue1, taintEffect1, taintKey2, taintValue2, taintEffect2))
 }
 
 func testAccAWSEksNodeGroupConfigVersion(rName, version string) string {

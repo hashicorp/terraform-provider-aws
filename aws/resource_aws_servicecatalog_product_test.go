@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfservicecatalog "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 )
 
@@ -80,7 +81,9 @@ func testSweepServiceCatalogProducts(region string) error {
 
 func TestAccAWSServiceCatalogProduct_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
+
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	domain := fmt.Sprintf("http://%s", testAccRandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -89,11 +92,11 @@ func TestAccAWSServiceCatalogProduct_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProductConfig_basic(rName, "beskrivning", "supportbeskrivning"),
+				Config: testAccAWSServiceCatalogProductConfig_basic(rName, "beskrivning", "supportbeskrivning", domain, testAccDefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductExists(resourceName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexp.MustCompile(`product/prod-.*`)),
-					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
+					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "description", "beskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "distributor", "distributör"),
@@ -108,8 +111,8 @@ func TestAccAWSServiceCatalogProduct_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.type", servicecatalog.ProvisioningArtifactTypeCloudFormationTemplate),
 					resource.TestCheckResourceAttr(resourceName, "status", waiter.StatusCreated),
 					resource.TestCheckResourceAttr(resourceName, "support_description", "supportbeskrivning"),
-					resource.TestCheckResourceAttr(resourceName, "support_email", "support@example.com"),
-					resource.TestCheckResourceAttr(resourceName, "support_url", "http://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "support_email", testAccDefaultEmailAddress),
+					resource.TestCheckResourceAttr(resourceName, "support_url", domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", servicecatalog.ProductTypeCloudFormationTemplate),
@@ -130,7 +133,9 @@ func TestAccAWSServiceCatalogProduct_basic(t *testing.T) {
 
 func TestAccAWSServiceCatalogProduct_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
+
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	domain := fmt.Sprintf("http://%s", testAccRandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -139,7 +144,7 @@ func TestAccAWSServiceCatalogProduct_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProductConfig_basic(rName, rName, rName),
+				Config: testAccAWSServiceCatalogProductConfig_basic(rName, rName, rName, domain, testAccDefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductExists(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogProduct(), resourceName),
@@ -152,7 +157,9 @@ func TestAccAWSServiceCatalogProduct_disappears(t *testing.T) {
 
 func TestAccAWSServiceCatalogProduct_update(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
+
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	domain := fmt.Sprintf("http://%s", testAccRandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -161,7 +168,7 @@ func TestAccAWSServiceCatalogProduct_update(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProductConfig_basic(rName, "beskrivning", "supportbeskrivning"),
+				Config: testAccAWSServiceCatalogProductConfig_basic(rName, "beskrivning", "supportbeskrivning", domain, testAccDefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "beskrivning"),
@@ -171,7 +178,7 @@ func TestAccAWSServiceCatalogProduct_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSServiceCatalogProductConfig_basic(rName, "ny beskrivning", "ny supportbeskrivning"),
+				Config: testAccAWSServiceCatalogProductConfig_basic(rName, "ny beskrivning", "ny supportbeskrivning", domain, testAccDefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "ny beskrivning"),
@@ -186,7 +193,9 @@ func TestAccAWSServiceCatalogProduct_update(t *testing.T) {
 
 func TestAccAWSServiceCatalogProduct_updateTags(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
+
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	domain := fmt.Sprintf("http://%s", testAccRandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -195,7 +204,7 @@ func TestAccAWSServiceCatalogProduct_updateTags(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProductConfig_basic(rName, "beskrivning", "supportbeskrivning"),
+				Config: testAccAWSServiceCatalogProductConfig_basic(rName, "beskrivning", "supportbeskrivning", domain, testAccDefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -203,7 +212,7 @@ func TestAccAWSServiceCatalogProduct_updateTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSServiceCatalogProductConfig_updateTags(rName, "beskrivning", "supportbeskrivning"),
+				Config: testAccAWSServiceCatalogProductConfig_updateTags(rName, "beskrivning", "supportbeskrivning", domain, testAccDefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -217,7 +226,9 @@ func TestAccAWSServiceCatalogProduct_updateTags(t *testing.T) {
 
 func TestAccAWSServiceCatalogProduct_physicalID(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
+
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	domain := fmt.Sprintf("http://%s", testAccRandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -226,7 +237,7 @@ func TestAccAWSServiceCatalogProduct_physicalID(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProductConfig_physicalID(rName),
+				Config: testAccAWSServiceCatalogProductConfig_physicalID(rName, domain, testAccDefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductExists(resourceName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexp.MustCompile(`product/prod-.*`)),
@@ -347,7 +358,7 @@ resource "aws_s3_bucket_object" "test" {
 `, rName)
 }
 
-func testAccAWSServiceCatalogProductConfig_basic(rName, description, supportDescription string) string {
+func testAccAWSServiceCatalogProductConfig_basic(rName, description, supportDescription, domain, email string) string {
 	return composeConfig(testAccAWSServiceCatalogProductConfigTemplateURLBase(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -358,8 +369,8 @@ resource "aws_servicecatalog_product" "test" {
   owner               = "ägare"
   type                = "CLOUD_FORMATION_TEMPLATE"
   support_description = %[3]q
-  support_email       = "support@example.com"
-  support_url         = "http://example.com"
+  support_email       = %[5]q
+  support_url         = %[4]q
 
   provisioning_artifact_parameters {
     description                 = "artefaktbeskrivning"
@@ -373,10 +384,10 @@ resource "aws_servicecatalog_product" "test" {
     Name = %[1]q
   }
 }
-`, rName, description, supportDescription))
+`, rName, description, supportDescription, domain, email))
 }
 
-func testAccAWSServiceCatalogProductConfig_updateTags(rName, description, supportDescription string) string {
+func testAccAWSServiceCatalogProductConfig_updateTags(rName, description, supportDescription, domain, email string) string {
 	return composeConfig(testAccAWSServiceCatalogProductConfigTemplateURLBase(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -387,8 +398,8 @@ resource "aws_servicecatalog_product" "test" {
   owner               = "ägare"
   type                = "CLOUD_FORMATION_TEMPLATE"
   support_description = %[3]q
-  support_email       = "support@example.com"
-  support_url         = "http://example.com"
+  support_email       = %[5]q
+  support_url         = %[4]q
 
   provisioning_artifact_parameters {
     description                 = "artefaktbeskrivning"
@@ -403,10 +414,10 @@ resource "aws_servicecatalog_product" "test" {
     Environment = "natural"
   }
 }
-`, rName, description, supportDescription))
+`, rName, description, supportDescription, domain, email))
 }
 
-func testAccAWSServiceCatalogProductConfig_physicalID(rName string) string {
+func testAccAWSServiceCatalogProductConfig_physicalID(rName, domain, email string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "test" {
   name = %[1]q
@@ -441,8 +452,8 @@ resource "aws_servicecatalog_product" "test" {
   owner               = "ägare"
   type                = "CLOUD_FORMATION_TEMPLATE"
   support_description = "supportbeskrivning"
-  support_email       = "support@example.com"
-  support_url         = "http://example.com"
+  support_email       = %[3]q
+  support_url         = %[2]q
 
   provisioning_artifact_parameters {
     description          = "artefaktbeskrivning"
@@ -455,5 +466,5 @@ resource "aws_servicecatalog_product" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName, domain, email)
 }

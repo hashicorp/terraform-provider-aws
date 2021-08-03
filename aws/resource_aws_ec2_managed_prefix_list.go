@@ -242,22 +242,32 @@ func resourceAwsEc2ManagedPrefixListUpdate(d *schema.ResourceData, meta interfac
 		// one with a collection of all description-only removals and the
 		// second one will add them all back.
 		if len(input.AddEntries) > 0 && len(input.RemoveEntries) > 0 {
-			removalInput := &ec2.ModifyManagedPrefixListInput{
-				CurrentVersion: input.CurrentVersion,
-				PrefixListId:   aws.String(d.Id()),
-			}
+			descriptionOnlyRemovals := []*ec2.RemovePrefixListEntry{}
+			removals := []*ec2.RemovePrefixListEntry{}
 
-			for idx, removeEntry := range input.RemoveEntries {
+			for _, removeEntry := range input.RemoveEntries {
+				inAddAndRemove := false
+
 				for _, addEntry := range input.AddEntries {
 					if aws.StringValue(addEntry.Cidr) == aws.StringValue(removeEntry.Cidr) {
-						removalInput.RemoveEntries = append(removalInput.RemoveEntries, input.RemoveEntries[idx])
-						input.RemoveEntries = append(input.RemoveEntries[:idx], input.RemoveEntries[idx+1:]...)
+						inAddAndRemove = true
+						break
 					}
+				}
+
+				if inAddAndRemove {
+					descriptionOnlyRemovals = append(descriptionOnlyRemovals, removeEntry)
+				} else {
+					removals = append(removals, removeEntry)
 				}
 			}
 
-			if len(removalInput.RemoveEntries) > 0 {
-				_, err := conn.ModifyManagedPrefixList(removalInput)
+			if len(descriptionOnlyRemovals) > 0 {
+				_, err := conn.ModifyManagedPrefixList(&ec2.ModifyManagedPrefixListInput{
+					CurrentVersion: input.CurrentVersion,
+					PrefixListId:   aws.String(d.Id()),
+					RemoveEntries:  descriptionOnlyRemovals,
+				})
 
 				if err != nil {
 					return fmt.Errorf("error updating EC2 Managed Prefix List (%s): %w", d.Id(), err)
@@ -274,12 +284,14 @@ func resourceAwsEc2ManagedPrefixListUpdate(d *schema.ResourceData, meta interfac
 				}
 
 				input.CurrentVersion = managedPrefixList.Version
+			}
 
+			if len(removals) > 0 {
+				input.RemoveEntries = removals
+			} else {
 				// Prevent this error if RemoveEntries is list with no elements after removals:
 				//   InvalidRequest: The request received was invalid.
-				if len(input.RemoveEntries) == 0 {
-					input.RemoveEntries = nil
-				}
+				input.RemoveEntries = nil
 			}
 		}
 

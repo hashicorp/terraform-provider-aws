@@ -516,6 +516,10 @@ service/lightsail:
   - 'aws/internal/service/lightsail/**/*'
   - '**/*_lightsail_*'
   - '**/lightsail_*'
+service/location:
+  - 'aws/internal/service/location/**/*'
+  - '**/*_location_*'
+  - '**/location_*'
 service/machinelearning:
   - 'aws/internal/service/machinelearning/**/*'
   - '**/*_machinelearning_*'
@@ -686,6 +690,10 @@ service/sagemaker:
   - 'aws/internal/service/sagemaker/**/*'
   - '**/*_sagemaker_*'
   - '**/sagemaker_*'
+service/schemas:
+  - 'aws/internal/service/schemas/**/*'
+  - '**/*_schemas_*'
+  - '**/schemas_*'
 service/secretsmanager:
   - 'aws/internal/service/secretsmanager/**/*'
   - '**/*_secretsmanager_*'

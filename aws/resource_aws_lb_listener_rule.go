@@ -168,7 +168,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "#{query}",
-										ValidateFunc: validation.StringLenBetween(1, 128),
+										ValidateFunc: validation.StringLenBetween(0, 128),
 									},
 
 									"status_code": {

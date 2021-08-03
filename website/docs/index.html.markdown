@@ -2,16 +2,21 @@
 layout: "aws"
 page_title: "Provider: AWS"
 description: |-
-  The Amazon Web Services (AWS) provider is used to interact with the many resources supported by AWS. The provider needs to be configured with the proper credentials before it can be used.
+  Use the Amazon Web Services (AWS) provider to interact with the many resources supported by AWS. You must configure the provider with the proper credentials before you can use it.
 ---
 
 # AWS Provider
 
-The Amazon Web Services (AWS) provider is used to interact with the
-many resources supported by AWS. The provider needs to be configured
-with the proper credentials before it can be used.
+Use the Amazon Web Services (AWS) provider to interact with the
+many resources supported by AWS. You must configure the provider
+with the proper credentials before you can use it.
 
 Use the navigation to the left to read about the available resources.
+
+To learn the basics of Terraform using this provider, follow the
+hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) on HashiCorp's Learn platform. Interact with AWS services,
+including Lambda, RDS, and IAM by following the [AWS services
+tutorials](https://learn.hashicorp.com/collections/terraform/aws?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS).
 
 ## Example Usage
 
@@ -121,7 +126,7 @@ provider "aws" {
 }
 ```
 
-Please note that the [AWS Go SDK](https://aws.amazon.com/sdk-for-go/), the underlying authentication handler used by the Terraform AWS Provider, does not support all AWS CLI features, such as Single Sign On (SSO) configuration or credentials.
+Please note that the [AWS Go SDK](https://aws.amazon.com/sdk-for-go/), the underlying authentication handler used by the Terraform AWS Provider, does not support all AWS CLI features.
 
 ### CodeBuild, ECS, and EKS Roles
 
@@ -246,6 +251,12 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
     - [`aws_apigatewayv2_api` data source](/docs/providers/aws/d/apigatewayv2_api.html)
     - [`aws_apigatewayv2_api` resource](/docs/providers/aws/r/apigatewayv2_api.html)
     - [`aws_apigatewayv2_stage` resource](/docs/providers/aws/r/apigatewayv2_stage.html)
+    - [`aws_appconfig_application` resource](/docs/providers/aws/r/appconfig_application.html)
+    - [`aws_appconfig_configuration_profile` resource](/docs/providers/aws/r/appconfig_configuration_profile.html)
+    - [`aws_appconfig_deployment` resource](/docs/providers/aws/r/appconfig_deployment.html)
+    - [`aws_appconfig_deployment_strategy` resource](/docs/providers/aws/r/appconfig_deployment_strategy.html)
+    - [`aws_appconfig_environment` resource](/docs/providers/aws/r/appconfig_environment.html)
+    - [`aws_appconfig_hosted_configuration_version` resource](/docs/providers/aws/r/appconfig_hosted_configuration_version.html)
     - [`aws_athena_workgroup` resource](/docs/providers/aws/r/athena_workgroup.html)
     - [`aws_budgets_budget` resource](/docs/providers/aws/r/budgets_budget.html)
     - [`aws_codedeploy_app` resource](/docs/providers/aws/r/codedeploy_app.html)
@@ -377,6 +388,8 @@ The `assume_role` configuration block supports the following optional arguments:
 * `transitive_tag_keys` - (Optional) Set of assume role session tag keys to pass to any subsequent sessions.
 
 ### default_tags Configuration Block
+
++> **Hands-on:** Try the [Configure Default Tags for AWS Resources](https://learn.hashicorp.com/tutorials/terraform/aws-default-tags?in=terraform/aws) tutorial on HashiCorp Learn.
 
 Example: Resource with provider default tags
 

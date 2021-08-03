@@ -29,7 +29,6 @@ func init() {
 		Name: "aws_ec2_client_vpn_endpoint",
 		F:    testSweepEc2ClientVpnEndpoints,
 		Dependencies: []string{
-			"aws_directory_service_directory",
 			"aws_ec2_client_vpn_network_association",
 		},
 	})

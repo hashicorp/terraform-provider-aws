@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -26,8 +27,9 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateUserPoolClient.html
 		Schema: map[string]*schema.Schema{
 			"access_token_validity": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(0, 86400),
 			},
 			"allowed_oauth_flows": {
 				Type:     schema.TypeSet,
@@ -114,10 +116,15 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 1024),
+					validation.StringLenBetween(0, 1024),
 					validation.StringMatch(regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
 						"must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+`"),
 				),
+			},
+			"enable_token_revocation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
 			},
 			"explicit_auth_flows": {
 				Type:     schema.TypeSet,
@@ -133,8 +140,9 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 				ForceNew: true,
 			},
 			"id_token_validity": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(0, 86400),
 			},
 			"logout_urls": {
 				Type:     schema.TypeSet,
@@ -175,7 +183,7 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      30,
-				ValidateFunc: validation.IntBetween(0, 3650),
+				ValidateFunc: validation.IntBetween(0, 315360000),
 			},
 			"supported_identity_providers": {
 				Type:     schema.TypeSet,
@@ -308,6 +316,10 @@ func resourceAwsCognitoUserPoolClientCreate(d *schema.ResourceData, meta interfa
 		params.PreventUserExistenceErrors = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("enable_token_revocation"); ok {
+		params.EnableTokenRevocation = aws.Bool(v.(bool))
+	}
+
 	log.Printf("[DEBUG] Creating Cognito User Pool Client: %s", params)
 
 	resp, err := conn.CreateUserPoolClient(params)
@@ -360,6 +372,7 @@ func resourceAwsCognitoUserPoolClientRead(d *schema.ResourceData, meta interface
 	d.Set("logout_urls", flattenStringSet(userPoolClient.LogoutURLs))
 	d.Set("prevent_user_existence_errors", userPoolClient.PreventUserExistenceErrors)
 	d.Set("supported_identity_providers", flattenStringSet(userPoolClient.SupportedIdentityProviders))
+	d.Set("enable_token_revocation", userPoolClient.EnableTokenRevocation)
 
 	if err := d.Set("analytics_configuration", flattenAwsCognitoUserPoolClientAnalyticsConfig(userPoolClient.AnalyticsConfiguration)); err != nil {
 		return fmt.Errorf("error setting analytics_configuration: %w", err)
@@ -376,8 +389,9 @@ func resourceAwsCognitoUserPoolClientUpdate(d *schema.ResourceData, meta interfa
 	conn := meta.(*AWSClient).cognitoidpconn
 
 	params := &cognitoidentityprovider.UpdateUserPoolClientInput{
-		ClientId:   aws.String(d.Id()),
-		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+		ClientId:              aws.String(d.Id()),
+		UserPoolId:            aws.String(d.Get("user_pool_id").(string)),
+		EnableTokenRevocation: aws.Bool(d.Get("enable_token_revocation").(bool)),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -450,7 +464,9 @@ func resourceAwsCognitoUserPoolClientUpdate(d *schema.ResourceData, meta interfa
 
 	log.Printf("[DEBUG] Updating Cognito User Pool Client: %s", params)
 
-	_, err := conn.UpdateUserPoolClient(params)
+	_, err := retryOnAwsCode(cognitoidentityprovider.ErrCodeConcurrentModificationException, func() (interface{}, error) {
+		return conn.UpdateUserPoolClient(params)
+	})
 	if err != nil {
 		return fmt.Errorf("error updating Cognito User Pool Client (%s): %w", d.Id(), err)
 	}
@@ -469,6 +485,10 @@ func resourceAwsCognitoUserPoolClientDelete(d *schema.ResourceData, meta interfa
 	log.Printf("[DEBUG] Deleting Cognito User Pool Client: %s", params)
 
 	_, err := conn.DeleteUserPoolClient(params)
+
+	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("error deleting Cognito User Pool Client (%s): %w", d.Id(), err)

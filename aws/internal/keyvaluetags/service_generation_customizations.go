@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/aws/aws-sdk-go/service/appstream"
@@ -103,6 +104,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go/service/schemas"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
@@ -145,6 +147,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(apigateway.New)
 	case "apigatewayv2":
 		funcType = reflect.TypeOf(apigatewayv2.New)
+	case "appconfig":
+		funcType = reflect.TypeOf(appconfig.New)
 	case "appmesh":
 		funcType = reflect.TypeOf(appmesh.New)
 	case "apprunner":
@@ -333,6 +337,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(securityhub.New)
 	case "servicediscovery":
 		funcType = reflect.TypeOf(servicediscovery.New)
+	case "schemas":
+		funcType = reflect.TypeOf(schemas.New)
 	case "sfn":
 		funcType = reflect.TypeOf(sfn.New)
 	case "shield":

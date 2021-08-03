@@ -30,7 +30,7 @@ func resourceAwsServiceCatalogConstraint() *schema.Resource {
 			"accept_language": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "en",
+				Default:      tfservicecatalog.AcceptLanguageEnglish,
 				ValidateFunc: validation.StringInSlice(tfservicecatalog.AcceptLanguage_Values(), false),
 			},
 			"description": {
@@ -144,14 +144,14 @@ func resourceAwsServiceCatalogConstraintRead(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error describing Service Catalog Constraint (%s): %w", d.Id(), err)
 	}
 
-	if output == nil {
+	if output == nil || output.ConstraintDetail == nil {
 		return fmt.Errorf("error getting Service Catalog Constraint (%s): empty response", d.Id())
 	}
 
 	acceptLanguage := d.Get("accept_language").(string)
 
 	if acceptLanguage == "" {
-		acceptLanguage = "en"
+		acceptLanguage = tfservicecatalog.AcceptLanguageEnglish
 	}
 
 	d.Set("accept_language", acceptLanguage)

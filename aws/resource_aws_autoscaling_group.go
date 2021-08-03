@@ -25,6 +25,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/experimental/nullable"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscaling/waiter"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
@@ -56,24 +57,26 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validation.StringLenBetween(0, 255),
 			},
+
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255-resource.UniqueIDSuffixLength),
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validation.StringLenBetween(0, 255-resource.UniqueIDSuffixLength),
 			},
 
 			"launch_configuration": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"launch_template"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"launch_configuration", "launch_template", "mixed_instances_policy"},
 			},
 
 			"launch_template": {
-				Type:          schema.TypeList,
-				MaxItems:      1,
-				Optional:      true,
-				ConflictsWith: []string{"launch_configuration"},
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -97,6 +100,7 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 						},
 					},
 				},
+				ExactlyOneOf: []string{"launch_configuration", "launch_template", "mixed_instances_policy"},
 			},
 
 			"mixed_instances_policy": {
@@ -233,6 +237,7 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 						},
 					},
 				},
+				ExactlyOneOf: []string{"launch_configuration", "launch_template", "mixed_instances_policy"},
 			},
 
 			"capacity_rebalance": {
@@ -641,17 +646,7 @@ func generatePutLifecycleHookInputs(asgName string, cfgs []interface{}) []autosc
 func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).autoscalingconn
 
-	var asgName string
-	if v, ok := d.GetOk("name"); ok {
-		asgName = v.(string)
-	} else {
-		if v, ok := d.GetOk("name_prefix"); ok {
-			asgName = resource.PrefixedUniqueId(v.(string))
-		} else {
-			asgName = resource.PrefixedUniqueId("tf-asg-")
-		}
-		d.Set("name", asgName)
-	}
+	asgName := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
 
 	createOpts := autoscaling.CreateAutoScalingGroupInput{
 		AutoScalingGroupName:             aws.String(asgName),
@@ -687,23 +682,12 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	launchConfigurationValue, launchConfigurationOk := d.GetOk("launch_configuration")
-	launchTemplateValue, launchTemplateOk := d.GetOk("launch_template")
-
-	if createOpts.MixedInstancesPolicy == nil && !launchConfigurationOk && !launchTemplateOk {
-		return fmt.Errorf("One of `launch_configuration`, `launch_template`, or `mixed_instances_policy` must be set for an Auto Scaling Group")
+	if v, ok := d.GetOk("launch_configuration"); ok {
+		createOpts.LaunchConfigurationName = aws.String(v.(string))
 	}
 
-	if launchConfigurationOk {
-		createOpts.LaunchConfigurationName = aws.String(launchConfigurationValue.(string))
-	}
-
-	if launchTemplateOk {
-		var err error
-		createOpts.LaunchTemplate, err = expandLaunchTemplateSpecification(launchTemplateValue.([]interface{}))
-		if err != nil {
-			return err
-		}
+	if v, ok := d.GetOk("launch_template"); ok {
+		createOpts.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{}))
 	}
 
 	// Availability Zones are optional if VPC Zone Identifier(s) are specified
@@ -711,14 +695,12 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 		createOpts.AvailabilityZones = expandStringSet(v.(*schema.Set))
 	}
 
-	resourceID := d.Get("name").(string)
-
 	if v, ok := d.GetOk("tag"); ok {
-		createOpts.Tags = keyvaluetags.AutoscalingKeyValueTags(v, resourceID, autoscalingTagResourceTypeAutoScalingGroup).IgnoreAws().AutoscalingTags()
+		createOpts.Tags = keyvaluetags.AutoscalingKeyValueTags(v, asgName, autoscalingTagResourceTypeAutoScalingGroup).IgnoreAws().AutoscalingTags()
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		createOpts.Tags = keyvaluetags.AutoscalingKeyValueTags(v, resourceID, autoscalingTagResourceTypeAutoScalingGroup).IgnoreAws().AutoscalingTags()
+		createOpts.Tags = keyvaluetags.AutoscalingKeyValueTags(v, asgName, autoscalingTagResourceTypeAutoScalingGroup).IgnoreAws().AutoscalingTags()
 	}
 
 	if v, ok := d.GetOk("capacity_rebalance"); ok {
@@ -789,7 +771,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error creating Auto Scaling Group: %s", err)
 	}
 
-	d.SetId(d.Get("name").(string))
+	d.SetId(asgName)
 	log.Printf("[INFO] Auto Scaling Group ID: %s", d.Id())
 
 	if twoPhases {
@@ -891,6 +873,7 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("name", g.AutoScalingGroupName)
+	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(g.AutoScalingGroupName)))
 	d.Set("placement_group", g.PlacementGroup)
 	d.Set("protect_from_scale_in", g.NewInstancesProtectedFromScaleIn)
 	d.Set("service_linked_role_arn", g.ServiceLinkedRoleARN)
@@ -1068,7 +1051,7 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("launch_template") {
 		if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 {
-			opts.LaunchTemplate, _ = expandLaunchTemplateSpecification(v.([]interface{}))
+			opts.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{}))
 		}
 		shouldRefreshInstances = true
 	}
@@ -1904,7 +1887,7 @@ func expandAutoScalingInstancesDistribution(l []interface{}) *autoscaling.Instan
 	return instancesDistribution
 }
 
-func expandAutoScalingLaunchTemplate(l []interface{}) *autoscaling.LaunchTemplate {
+func expandMixedInstancesLaunchTemplate(l []interface{}) *autoscaling.LaunchTemplate {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1912,7 +1895,7 @@ func expandAutoScalingLaunchTemplate(l []interface{}) *autoscaling.LaunchTemplat
 	m := l[0].(map[string]interface{})
 
 	launchTemplate := &autoscaling.LaunchTemplate{
-		LaunchTemplateSpecification: expandAutoScalingLaunchTemplateSpecification(m["launch_template_specification"].([]interface{})),
+		LaunchTemplateSpecification: expandMixedInstancesLaunchTemplateSpecification(m["launch_template_specification"].([]interface{})),
 	}
 
 	if v, ok := m["override"]; ok {
@@ -1947,7 +1930,7 @@ func expandAutoScalingLaunchTemplateOverride(m map[string]interface{}) *autoscal
 	}
 
 	if v, ok := m["launch_template_specification"]; ok && v.([]interface{}) != nil {
-		launchTemplateOverrides.LaunchTemplateSpecification = expandAutoScalingLaunchTemplateSpecification(m["launch_template_specification"].([]interface{}))
+		launchTemplateOverrides.LaunchTemplateSpecification = expandMixedInstancesLaunchTemplateSpecification(m["launch_template_specification"].([]interface{}))
 	}
 
 	if v, ok := m["weighted_capacity"]; ok && v.(string) != "" {
@@ -1957,7 +1940,7 @@ func expandAutoScalingLaunchTemplateOverride(m map[string]interface{}) *autoscal
 	return launchTemplateOverrides
 }
 
-func expandAutoScalingLaunchTemplateSpecification(l []interface{}) *autoscaling.LaunchTemplateSpecification {
+func expandMixedInstancesLaunchTemplateSpecification(l []interface{}) *autoscaling.LaunchTemplateSpecification {
 	launchTemplateSpecification := &autoscaling.LaunchTemplateSpecification{}
 
 	if len(l) == 0 || l[0] == nil {
@@ -1992,7 +1975,7 @@ func expandAutoScalingMixedInstancesPolicy(l []interface{}) *autoscaling.MixedIn
 	m := l[0].(map[string]interface{})
 
 	mixedInstancesPolicy := &autoscaling.MixedInstancesPolicy{
-		LaunchTemplate: expandAutoScalingLaunchTemplate(m["launch_template"].([]interface{})),
+		LaunchTemplate: expandMixedInstancesLaunchTemplate(m["launch_template"].([]interface{})),
 	}
 
 	if v, ok := m["instances_distribution"]; ok {
@@ -2306,4 +2289,55 @@ func validateAutoScalingGroupInstanceRefreshTriggerFields(i interface{}, path ct
 	}
 
 	return diag.Errorf("'%s' is not a recognized parameter name for aws_autoscaling_group", v)
+}
+
+func expandLaunchTemplateSpecification(specs []interface{}) *autoscaling.LaunchTemplateSpecification {
+	if len(specs) < 1 {
+		return nil
+	}
+
+	spec := specs[0].(map[string]interface{})
+
+	idValue, idOk := spec["id"]
+	nameValue, nameOk := spec["name"]
+
+	result := &autoscaling.LaunchTemplateSpecification{}
+
+	// DescribeAutoScalingGroups returns both name and id but LaunchTemplateSpecification
+	// allows only one of them to be set
+	if idOk && idValue != "" {
+		result.LaunchTemplateId = aws.String(idValue.(string))
+	} else if nameOk && nameValue != "" {
+		result.LaunchTemplateName = aws.String(nameValue.(string))
+	}
+
+	if v, ok := spec["version"]; ok && v != "" {
+		result.Version = aws.String(v.(string))
+	}
+
+	return result
+}
+
+func flattenLaunchTemplateSpecification(lt *autoscaling.LaunchTemplateSpecification) []map[string]interface{} {
+	if lt == nil {
+		return []map[string]interface{}{}
+	}
+
+	attrs := map[string]interface{}{}
+	result := make([]map[string]interface{}, 0)
+
+	// id and name are always returned by DescribeAutoscalingGroups
+	attrs["id"] = aws.StringValue(lt.LaunchTemplateId)
+	attrs["name"] = aws.StringValue(lt.LaunchTemplateName)
+
+	// version is returned only if it was previously set
+	if lt.Version != nil {
+		attrs["version"] = aws.StringValue(lt.Version)
+	} else {
+		attrs["version"] = nil
+	}
+
+	result = append(result, attrs)
+
+	return result
 }

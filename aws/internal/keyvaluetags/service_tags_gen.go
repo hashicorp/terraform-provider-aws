@@ -137,6 +137,16 @@ func Apigatewayv2KeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// AppconfigTags returns appconfig service tags.
+func (tags KeyValueTags) AppconfigTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// AppconfigKeyValueTags creates KeyValueTags from appconfig service tags.
+func AppconfigKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // AppstreamTags returns appstream service tags.
 func (tags KeyValueTags) AppstreamTags() map[string]*string {
 	return aws.StringMap(tags.Map())
@@ -444,6 +454,16 @@ func (tags KeyValueTags) ResourcegroupsTags() map[string]*string {
 
 // ResourcegroupsKeyValueTags creates KeyValueTags from resourcegroups service tags.
 func ResourcegroupsKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
+// SchemasTags returns schemas service tags.
+func (tags KeyValueTags) SchemasTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// SchemasKeyValueTags creates KeyValueTags from schemas service tags.
+func SchemasKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 

@@ -125,6 +125,7 @@ variable "service_labels" {
     "lexmodelbuildingservice",
     "licensemanager",
     "lightsail",
+    "location",
     "machinelearning",
     "macie",
     "macie2",
@@ -172,6 +173,7 @@ variable "service_labels" {
     "s3outposts",
     "sagemaker",
     "savingsplans",
+    "schemas",
     "secretsmanager",
     "securityhub",
     "serverlessapplicationrepository",
@@ -218,5 +220,5 @@ resource "github_issue_label" "service" {
 
   repository = "terraform-provider-aws"
   name       = "service/${each.value}"
-  color      = "bfd4f2"
+  color      = "7b42bc" # color:terraform (logomark)
 }
