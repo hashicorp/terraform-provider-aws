@@ -1425,6 +1425,7 @@ func init() {
 		"resourcegroupstaggingapi",
 		"route53",
 		"route53domains",
+		"route53recoverycontrolconfig",
 		"route53resolver",
 		"s3",
 		"s3control",
