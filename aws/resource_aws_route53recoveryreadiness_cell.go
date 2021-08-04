@@ -1,11 +1,13 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -40,7 +42,6 @@ func resourceAwsRoute53RecoveryReadinessCell() *schema.Resource {
 			},
 			"parent_readiness_scopes": {
 				Type:     schema.TypeList,
-				Optional: true,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -50,7 +51,17 @@ func resourceAwsRoute53RecoveryReadinessCell() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		// Enable downstream updates for resources referencing schema attributes
+		// to prevent non-empty plans after "terraform apply"
+		CustomizeDiff: customdiff.Sequence(
+			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+				if _, ok := diff.GetOk("cells.#"); ok {
+					diff.SetNewComputed("parent_readiness_scopes")
+				}
+				return nil
+			},
+			SetTagsDiff,
+		),
 	}
 }
 
