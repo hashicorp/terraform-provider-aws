@@ -68,6 +68,10 @@ func TestAccAwsRoute53RecoveryReadinessCell_nestedCell(t *testing.T) {
 					testAccCheckAwsRoute53RecoveryReadinessCellExists(resourceNameChild),
 					testAccMatchResourceAttrGlobalARN(resourceNameChild, "cell_arn", "route53-recovery-readiness", regexp.MustCompile(`cell/.+`)),
 					resource.TestCheckResourceAttr(resourceNameChild, "cells.#", "0"),
+					// We believe that a change to the test_parent.cells attribute should cause the
+					// test_child.parent_readiness_scopes to be updated without another test-step/apply.
+					// See route53recoveryreadiness_cell_test.go CustomizeDiff()
+					resource.TestCheckResourceAttr(resourceNameChild, "parent_readiness_scopes.#", "1"),
 				),
 			},
 			{
