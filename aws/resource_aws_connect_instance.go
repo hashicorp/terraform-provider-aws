@@ -38,17 +38,17 @@ func resourceAwsConnectInstance() *schema.Resource {
 			"auto_resolve_best_voices_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Default:  true, //verified default result from ListInstanceAttributes()
 			},
 			"contact_flow_logs_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Default:  false, //verified default result from ListInstanceAttributes()
 			},
 			"contact_lens_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Default:  true, //verified default result from ListInstanceAttributes()
 			},
 			"created_time": {
 				Type:     schema.TypeString,
@@ -59,28 +59,28 @@ func resourceAwsConnectInstance() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(12, 12),
+				AtLeastOneOf: []string{"directory_id", "instance_alias"},
 			},
 			"early_media_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Default:  true, //verified default result from ListInstanceAttributes()
 			},
 			"identity_management_type": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
 				ForceNew:     true,
-				Default:      connect.DirectoryTypeConnectManaged,
 				ValidateFunc: validation.StringInSlice(connect.DirectoryType_Values(), false),
 			},
 			"inbound_calls_enabled": {
 				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
+				Required: true,
 			},
 			"instance_alias": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				AtLeastOneOf: []string{"directory_id", "instance_alias"},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
 					validation.StringMatch(regexp.MustCompile(`^([\da-zA-Z]+)([\da-zA-Z-]+)$`), "must contain only alphanumeric hyphen and underscore characters"),
@@ -89,8 +89,7 @@ func resourceAwsConnectInstance() *schema.Resource {
 			},
 			"outbound_calls_enabled": {
 				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
+				Required: true,
 			},
 			"service_role": {
 				Type:     schema.TypeString,
@@ -103,7 +102,7 @@ func resourceAwsConnectInstance() *schema.Resource {
 			"use_custom_tts_voices_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Default:  false, //verified default result from ListInstanceAttributes()
 			},
 		},
 	}
@@ -115,7 +114,6 @@ func resourceAwsConnectInstanceCreate(ctx context.Context, d *schema.ResourceDat
 	input := &connect.CreateInstanceInput{
 		ClientToken:            aws.String(resource.UniqueId()),
 		IdentityManagementType: aws.String(d.Get("identity_management_type").(string)),
-		InstanceAlias:          aws.String(d.Get("instance_alias").(string)),
 		InboundCallsEnabled:    aws.Bool(d.Get("inbound_calls_enabled").(bool)),
 		OutboundCallsEnabled:   aws.Bool(d.Get("outbound_calls_enabled").(bool)),
 	}
@@ -123,9 +121,11 @@ func resourceAwsConnectInstanceCreate(ctx context.Context, d *schema.ResourceDat
 	if _, ok := d.GetOk("directory_id"); ok {
 		input.DirectoryId = aws.String(d.Get("directory_id").(string))
 	}
+	if _, ok := d.GetOk("instance_alias"); ok {
+		input.InstanceAlias = aws.String(d.Get("instance_alias").(string))
+	}
 
 	log.Printf("[DEBUG] Creating Connect Instance %s", input)
-
 	output, err := conn.CreateInstanceWithContext(ctx, input)
 
 	if err != nil {
@@ -150,7 +150,6 @@ func resourceAwsConnectInstanceCreate(ctx context.Context, d *schema.ResourceDat
 				return diag.FromErr(fmt.Errorf("error setting Connect instance (%s) attribute (%s): %s", d.Id(), att, err))
 			}
 		}
-
 	}
 
 	return resourceAwsConnectInstanceRead(ctx, d, meta)
@@ -183,7 +182,6 @@ func resourceAwsConnectInstanceRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[DEBUG] Reading Connect Instance %s", d.Id())
-
 	output, err := conn.DescribeInstanceWithContext(ctx, &input)
 
 	if isAWSErr(err, connect.ErrCodeResourceNotFoundException, "") {
@@ -199,7 +197,6 @@ func resourceAwsConnectInstanceRead(ctx context.Context, d *schema.ResourceData,
 	instance := output.Instance
 
 	d.SetId(aws.StringValue(instance.Id))
-
 	d.Set("arn", instance.Arn)
 	d.Set("created_time", instance.CreatedTime.Format(time.RFC3339))
 	d.Set("identity_management_type", instance.IdentityManagementType)
@@ -230,26 +227,13 @@ func resourceAwsConnectInstanceDelete(ctx context.Context, d *schema.ResourceDat
 	log.Printf("[DEBUG] Deleting Connect Instance %s", d.Id())
 
 	_, err := conn.DeleteInstance(input)
-
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error deleting Connect Instance (%s): %s", d.Id(), err))
 	}
 
-	// For using an existing directory,
-	// There is no proper way. If the Connect instance was unregistered from the attached directory.
-	// We don't have a PENDING_DELETION or DELETED for the Connect instance.
-	// Deleting the directory immediately after removing the connect instance
-	// will cause an error because it is still has authorized applications.
-	// There is no specific wait time for this check, so we'll wait a few seconds
-	// to make sure the Connect instance will deregister.
-
-	imt := d.Get("identity_management_type")
-
-	if imt.(string) == connect.DirectoryTypeExistingDirectory {
-		log.Print("[INFO] Waiting for Connect to deregister from the Directory Service")
-		time.Sleep(30 * time.Second)
+	if _, err := waiter.InstanceDeleted(ctx, conn, d.Id()); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for Connect Instance deletion (%s): %s", d.Id(), err))
 	}
-
 	return nil
 }
 
@@ -261,11 +245,9 @@ func resourceAwsConnectInstanceUpdateAttribute(ctx context.Context, conn *connec
 	}
 
 	_, err := conn.UpdateInstanceAttributeWithContext(ctx, input)
-
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -276,11 +258,9 @@ func resourceAwsConnectInstanceReadAttribute(ctx context.Context, conn *connect.
 	}
 
 	output, err := conn.DescribeInstanceAttributeWithContext(ctx, input)
-
 	if err != nil {
 		return false, err
 	}
-
 	result, parseerr := strconv.ParseBool(*output.Attribute.Value)
 	return result, parseerr
 }

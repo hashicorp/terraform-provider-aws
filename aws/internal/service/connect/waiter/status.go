@@ -5,7 +5,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
 )
 
 func InstanceStatus(ctx context.Context, conn *connect.Connect, instanceId string) resource.StateRefreshFunc {
@@ -16,12 +18,14 @@ func InstanceStatus(ctx context.Context, conn *connect.Connect, instanceId strin
 
 		output, err := conn.DescribeInstanceWithContext(ctx, input)
 
-		if err != nil {
-			return nil, connect.ErrCodeResourceNotFoundException, err
+		if tfawserr.ErrCodeEquals(err, tfconnect.InstanceStatusStatusNotFound) {
+			return output, tfconnect.InstanceStatusStatusNotFound, nil
 		}
 
-		state := aws.StringValue(output.Instance.InstanceStatus)
+		if err != nil {
+			return nil, "", err
+		}
 
-		return output, state, nil
+		return output, aws.StringValue(output.Instance.InstanceStatus), nil
 	}
 }
