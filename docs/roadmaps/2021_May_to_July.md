@@ -35,6 +35,7 @@ _AWS Amplify is a set of tools and services that can be used together or on thei
 Support for AWS Amplify will include:
 
 New Resource(s):
+
 - aws_amplify_app
 - aws_amplify_backend_environment
 - aws_amplify_branch
@@ -62,6 +63,7 @@ _Use AWS AppConfig, a capability of AWS Systems Manager, to create, manage, and 
 Support for AWS AppConfig will include:
 
 New Resource(s)
+
 - aws_appconfig_application
 - aws_appconfig_configuration_profile
 - aws_appconfig_deployment_strategy
@@ -70,6 +72,7 @@ New Resource(s)
 
 
 ## Enhancements to Existing Services
+
 - [AWS Transfer Server: Attach VPC security groups at creation](https://github.com/hashicorp/terraform-provider-aws/issues/15788)
 - [EC2 Launch Templates](https://github.com/hashicorp/terraform-provider-aws/issues/4264)
 - [AWS ElasticSearch Native SAML for Kibana](https://github.com/hashicorp/terraform-provider-aws/issues/16259)
