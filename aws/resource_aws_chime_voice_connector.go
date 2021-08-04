@@ -23,21 +23,21 @@ func resourceAwsChimeVoiceConnector() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"outbound_host_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
 			"aws_region": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Optional:     true,
 				Default:      chime.VoiceConnectorAwsRegionUsEast1,
 				ValidateFunc: validation.StringInSlice([]string{chime.VoiceConnectorAwsRegionUsEast1, chime.VoiceConnectorAwsRegionUsWest2}, false),
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.NoZeroValues,
+			},
+			"outbound_host_name": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"require_encryption": {
 				Type:     schema.TypeBool,
@@ -60,7 +60,7 @@ func resourceAwsChimeVoiceConnectorCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	resp, err := conn.CreateVoiceConnectorWithContext(ctx, createInput)
-	if err != nil {
+	if err != nil || resp.VoiceConnector == nil {
 		return diag.Errorf("Error creating Chime Voice connector: %s", err)
 	}
 
@@ -77,13 +77,13 @@ func resourceAwsChimeVoiceConnectorRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	resp, err := conn.GetVoiceConnectorWithContext(ctx, getInput)
-	if isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && isAWSErr(err, chime.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Chime Voice connector %s not found", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	if err != nil {
+	if err != nil || resp.VoiceConnector == nil {
 		return diag.Errorf("Error getting Voice connector (%s): %s", d.Id(), err)
 	}
 
@@ -125,8 +125,11 @@ func resourceAwsChimeVoiceConnectorDelete(ctx context.Context, d *schema.Resourc
 	}
 
 	if _, err := conn.DeleteVoiceConnectorWithContext(ctx, input); err != nil {
+		if isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+			log.Printf("[WARN] Chime Voice connector %s not found", d.Id())
+			return nil
+		}
 		return diag.Errorf("Error deleting Voice connector (%s)", d.Id())
 	}
-
 	return nil
 }

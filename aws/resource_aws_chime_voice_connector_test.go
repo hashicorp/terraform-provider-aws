@@ -15,7 +15,37 @@ func TestAccAWSChimeVoiceConnector_basic(t *testing.T) {
 	var voiceConnector *chime.VoiceConnector
 
 	vcName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_chime_voice_connector.default"
+	resourceName := "aws_chime_voice_connector.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, chime.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSChimeVoiceConnectorConfig(vcName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSChimeVoiceConnectorExists(resourceName, voiceConnector),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vc-%s", vcName)),
+					resource.TestCheckResourceAttr(resourceName, "aws_region", chime.VoiceConnectorAwsRegionUsEast1),
+					resource.TestCheckResourceAttr(resourceName, "require_encryption", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSChimeVoiceConnector_disappears(t *testing.T) {
+	var voiceConnector *chime.VoiceConnector
+
+	vcName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_chime_voice_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -27,8 +57,39 @@ func TestAccAWSChimeVoiceConnector_basic(t *testing.T) {
 				Config: testAccAWSChimeVoiceConnectorConfig(vcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSChimeVoiceConnectorExists(resourceName, voiceConnector),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsChimeVoiceConnector(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSChimeVoiceConnector_update(t *testing.T) {
+	var voiceConnector *chime.VoiceConnector
+
+	vcName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_chime_voice_connector.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, chime.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSChimeVoiceConnectorConfig(vcName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSChimeVoiceConnectorExists(resourceName, voiceConnector),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vc-%s", vcName)),
 					resource.TestCheckResourceAttr(resourceName, "aws_region", chime.VoiceConnectorAwsRegionUsEast1),
+					resource.TestCheckResourceAttr(resourceName, "require_encryption", "true"),
+				),
+			},
+			{
+				Config: testAccAWSChimeVoiceConnectorUpdated(vcName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "require_encryption", "false"),
 				),
 			},
 			{
@@ -42,9 +103,18 @@ func TestAccAWSChimeVoiceConnector_basic(t *testing.T) {
 
 func testAccAWSChimeVoiceConnectorConfig(name string) string {
 	return fmt.Sprintf(`
-resource "aws_chime_voice_connector" "default" {
+resource "aws_chime_voice_connector" "test" {
   name               = "vc-%s"
   require_encryption = true
+}
+`, name)
+}
+
+func testAccAWSChimeVoiceConnectorUpdated(name string) string {
+	return fmt.Sprintf(`
+resource "aws_chime_voice_connector" "test" {
+  name               = "vc-%s"
+  require_encryption = false
 }
 `, name)
 }
