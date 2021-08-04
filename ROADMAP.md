@@ -1,4 +1,4 @@
-# Roadmap:  May 2021 - July 2021
+# Roadmap:  August 2021 - October 2021
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
@@ -8,85 +8,103 @@ Each weekly release will include necessary tasks that lead to the completion of 
 
 This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur .
 
-In the period spanning February to April 2021 846 Pull Requests were opened in the provider and 947 were merged, adding support for:
+In the period spanning May to July 2021 539 Pull Requests were opened in the provider and 449 were merged, adding support for:
 
-- Default Tags
-- CloudFront Origin Request and Cache Policies
-- Cloudwatch Synthetics
-- SecurityHub
-- Elasticache Global Replication Group
-- ACM Private Certificate Authorities
-- Managed Workflows for Apache Airflow
-- Managed Add Ons for EKS
-- ECR Cross Region Replication
-- SNS FIFO Topics
-- EC2 Autoscaling Warm Pools
+- Amazon Timestream
+- AWS AppConfig
+- AWS Amplify
+- AWS Service Catalog
+- AWS ElasticSearch Native SAML for Kibana
+- Amazon Macie 2
+- Delegated Administrators for Organisations
+- Predictive Autoscaling
+- Amazon EKS OIDC
+- AWS Transfer Family support for Amazon Elastic File System
+- Amazon Kinesis Data Streams for Amazon DynamoDB
 
 Among many other enhancements, bug fixes and resolutions to technical debt items.
 
-From May-July ‘21, we will be prioritizing the following areas of work:
+From August-October ‘21, we will be prioritizing the following areas of work:
+
+## Provider Version v4.0.0
+
+Issue: [#20433](https://github.com/hashicorp/terraform-provider-aws/issues/20433)
+
+The next major release of the provider will include the adoption of the AWS Go SDK v2.0 as well as a refactor of one of our oldest and most used resources: S3.
+
+There will also be the usual deprecations and sometimes breaking changes to existing resources which are necessary to maintain consistency of behavior across resources. Our goal is to focus on standardization to reduce technical debt and lay a strong foundation for future enhancement initiatives within the provider.
+
+For details of the changes in full please refer to #20433. We would love to hear your feedback.
 
 ## New Services
 
-### AWS Amplify
-Issue: [#6917](https://github.com/hashicorp/terraform-provider-aws/issues/6917)
+### Amazon Quicksight
+Issue: [#10990](https://github.com/hashicorp/terraform-provider-aws/issues/10990)
 
-_AWS Amplify is a set of tools and services that can be used together or on their own, to help front-end web and mobile developers build scalable full stack applications, powered by AWS. With Amplify, you can configure app backends and connect your app in minutes, deploy static web apps in a few clicks, and easily manage app content outside the AWS console._
-Support for AWS Amplify will include:
+_Amazon QuickSight is a scalable, serverless, embeddable, machine learning-powered business intelligence (BI) service built for the cloud. QuickSight lets you easily create and publish interactive BI dashboards that include Machine Learning-powered insights. QuickSight dashboards can be accessed from any device, and seamlessly embedded into your applications, portals, and websites._
 
-New Resource(s):
-- aws_amplify_app
-- aws_amplify_backend_environment
-- aws_amplify_branch
-- aws_amplify_domain_association
-- aws_amplify_webhook
-
-### Amazon Timestream
-
-Issue: [#15421](https://github.com/hashicorp/terraform-provider-aws/issues/15421)
-
-_Amazon Timestream is a fast, scalable, and serverless time series database service for IoT and operational applications that makes it easy to store and analyze trillions of events per day up to 1,000 times faster and at as little as 1/10th the cost of relational databases. Amazon Timestream saves you time and cost in managing the lifecycle of time series data, and its purpose-built query engine lets you access and analyze recent and historical data together with a single query. Amazon Timestream has built-in time series analytics functions, helping you identify trends and patterns in near real-time. Amazon Timestream is serverless and automatically scales up or down to adjust capacity and performance, so you don’t need to manage the underlying infrastructure, freeing you to focus on building your applications._
-
-Support for Amazon Timestream will include:
+Support for Amazon Quicksight will include:
 
 New Resource(s):
+- aws_quicksight_data_source
+- aws_quicksight_group_membership
+- aws_quicksight_iam_policy_assignment
+- aws_quicksight_data_set
+- aws_quicksight_ingestion
+- aws_quicksight_template
+- aws_quicksight_dashboard
+- aws_quicksight_template_alias
 
-- aws_timestreamwrite_database
 
-### AWS AppConfig
+### Amazon AppStream
+Issue: [#6058](https://github.com/hashicorp/terraform-provider-aws/issues/6508)
 
-Issue: [#11973](https://github.com/hashicorp/terraform-provider-aws/issues/11973)
+_Amazon AppStream 2.0 is a fully managed non-persistent desktop and application virtualization service that allows your users to securely access the data, applications, and resources they need, anywhere, anytime, from any supported device. With AppStream 2.0, you can easily scale your applications and desktops to any number of users across the globe without acquiring, provisioning, and operating hardware or infrastructure. AppStream 2.0 is built on AWS, so you benefit from a data center and network architecture designed for the most security-sensitive organizations. Each end user has a fluid and responsive experience because your applications run on virtual machines optimized for specific use cases and each streaming sessions automatically adjusts to network conditions._
 
-_Use AWS AppConfig, a capability of AWS Systems Manager, to create, manage, and quickly deploy application configurations. You can use AWS AppConfig with applications hosted on Amazon Elastic Compute Cloud (Amazon EC2) instances, AWS Lambda, containers, mobile applications, or IoT devices._
+Support for Amazon AppStream will include:
 
-Support for AWS AppConfig will include:
+New Resource(s):
+- aws_appstream_stack
+- aws_appstream_fleet
+- aws_appstream_imagebuilder
 
-New Resource(s)
-- aws_appconfig_application
-- aws_appconfig_configuration_profile
-- aws_appconfig_deployment_strategy
-- aws_appconfig_environment
-- aws_appconfig_deployment
+### Amazon Connect 
+Issue: [#16392](https://github.com/hashicorp/terraform-provider-aws/issues/16392)
 
+_Amazon Connect is an easy to use omnichannel cloud contact center that helps you provide superior customer service at a lower cost. Designed from the ground up to be omnichannel, Amazon Connect provides a seamless experience across voice and chat for your customers and agents. This includes one set of tools for skills-based routing, task management, powerful real-time and historical analytics, and intuitive management tools – all with pay-as-you-go pricing, which means Amazon Connect simplifies contact center operations, improves agent efficiency, and lowers costs. You can set up a contact center in minutes that can scale to support millions of customers from the office or as a virtual contact center._
+
+Support for Amazon AppStream will include:
+
+New Resource(s):
+- aws_connect_instance
+- aws_connect_contact_flow
+- aws_connect_bot_association
+- aws_connect_lex_bot_association
+- aws_connect_lambda_function_association
+
+New Data Source(s): 
+- aws_connect_instance
+- aws_connect_contact_flow
+- aws_connect_bot_association
+- aws_connect_lex_bot_association
+- aws_connect_lambda_function_association
 
 ## Enhancements to Existing Services
-- [AWS Transfer Server: Attach VPC security groups at creation](https://github.com/hashicorp/terraform-provider-aws/issues/15788)
-- [EC2 Launch Templates](https://github.com/hashicorp/terraform-provider-aws/issues/4264)
-- [AWS ElasticSearch Native SAML for Kibana](https://github.com/hashicorp/terraform-provider-aws/issues/16259)
+- [Support for KMS Multi-Region Keys](https://github.com/hashicorp/terraform-provider-aws/issues/19896)
+- [S3 Replication Time Control](https://github.com/hashicorp/terraform-provider-aws/issues/10974)
+- [New Data Source: aws_iam_roles](https://github.com/hashicorp/terraform-provider-aws/issues/14470)
 
-## Core Service Reliability
+## Project Restructure: Service Level Packages
 
-Core Services are areas of high usage or strategic importance for our users. We strive to offer rock solid reliability in these areas. This quarter we will have a focus on S3. We will be preparing a wholesale re-design of the `aws_s3_bucket` resource that we are planning to introduce in our major version release (v4.0) this year. Our focus will be on understanding how we can better break up the currently monolithic S3 bucket resource.
+The scale of the provider (now 1000 resources/datasources) has led to its existing package structure being difficult to work with and maintain. This quarter we are going to perform a large refactor of the codebase, to align on a single go package per AWS service. More details can be found in the encompassing issue [#20431](https://github.com/hashicorp/terraform-provider-aws/issues/20431)
 
 ## Research Topics
 
 Research topics include features, architectural changes, and ideas that we are pursuing in the longer term that may significantly impact the core user experience of the AWS provider. Research topics are discovery only and are not guaranteed to be included in a future release.
 
-We are interested in your thoughts and feedback about the proposals below and encourage you to comment on the linked issues or schedule time with @maryelizbeth via the link on her GitHub profile to discuss.
+### Scaffolding for new resources, datasources and associated tests. 
 
-- Major Version Planning (v4.0) including wholesale redesign of the aws_s3_bucket resource to break it up into more manageable resources.
-- AWS Go SDK v2 Adoption
-- Test Discovery - Enable the automation of running the correct subset of acceptance tests for a given PR.
+Adding resources, datasources and test files to the provider is a repetitive task which should be automated to ensure consistency and speed up contributor and maintainer workflow. A simple cli tool should be able to generate these files in place, and ensure that any code reference additions required (ie adding to `provider.go`) are performed as part of the process.
 
 ## Disclosures
 
