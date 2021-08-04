@@ -226,7 +226,7 @@ func TestAccAWSCloudWatchEventTarget_EventBusArn(t *testing.T) {
 	ruleName := acctest.RandomWithPrefix("tf-acc-test-rule")
 	targetID := acctest.RandomWithPrefix("tf-acc-test-target")
 	originEventBusName := acctest.RandomWithPrefix("tf-acc-test")
-	targetEventBusName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationEventBusName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -235,11 +235,11 @@ func TestAccAWSCloudWatchEventTarget_EventBusArn(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventTargetConfigEventBusArn(ruleName, originEventBusName, targetID, targetEventBusName, acctest.RandomWithPrefix("tf-acc-test-target"), acctest.RandomWithPrefix("tf-acc-test-target")),
+				Config: testAccAWSCloudWatchEventTargetConfigEventBusArn(ruleName, originEventBusName, targetID, destinationEventBusName, acctest.RandomWithPrefix("tf-acc-test-target"), acctest.RandomWithPrefix("tf-acc-test-target")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventTargetExists(resourceName, &target),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("event-bus/%s", targetEventBusName))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("event-bus/%s", destinationEventBusName))),
 					testAccMatchResourceAttrRegionalARN(resourceName, "event_bus_name", "events", regexp.MustCompile(fmt.Sprintf("event-bus/%s", originEventBusName))),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID),
 				),
@@ -980,7 +980,7 @@ resource "aws_cloudwatch_event_bus" "test" {
 `, targetID, snsTopicName, ruleName, eventBusName)
 }
 
-func testAccAWSCloudWatchEventTargetConfigEventBusArn(ruleName, originEventBusName, targetID, targetEventBusName, roleName, policyName string) string {
+func testAccAWSCloudWatchEventTargetConfigEventBusArn(ruleName, originEventBusName, targetID, destinationEventBusName, roleName, policyName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1030,7 +1030,7 @@ resource "aws_iam_role" "test" {
 }
 EOF
 }
-`, originEventBusName, ruleName, targetID, targetEventBusName, roleName, policyName)
+`, originEventBusName, ruleName, targetID, destinationEventBusName, roleName, policyName)
 }
 
 func testAccAWSCloudWatchEventTargetConfigMissingTargetId(ruleName, snsTopicName string) string {
