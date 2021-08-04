@@ -3290,6 +3290,75 @@ func TestAccAWSDBInstance_RestoreToPointInTime_SourceResourceID(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_NationalCharacterSet_Oracle(t *testing.T) {
+	var dbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_NationalCharacterSet_Oracle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "national_character_set", "UTF8"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_NoNationalCharacterSet_Oracle(t *testing.T) {
+	var dbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_NoNationalCharacterSet_Oracle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "national_character_set", "AL16UTF16"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+				},
+			},
+		},
+	})
+}
 func testAccAWSDBInstanceConfig_orderableClass(engine, version, license string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
@@ -5120,8 +5189,7 @@ resource "aws_db_instance" "test" {
 func testAccAWSDBInstanceConfig_EnabledCloudwatchLogsExports_Oracle(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
-  engine         = "oracle-se"
-  engine_version = "11.2.0.4.v25"
+  engine         = "oracle-se2"
   license_model  = "bring-your-own-license"
   storage_type   = "standard"
 
@@ -5134,6 +5202,54 @@ resource "aws_db_instance" "test" {
   engine                          = data.aws_rds_orderable_db_instance.test.engine
   identifier                      = %q
   instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model  				  = "bring-your-own-license"
+  password                        = "avoid-plaintext-passwords"
+  username                        = "tfacctest"
+  skip_final_snapshot             = true
+}
+`, rName)
+}
+
+func testAccAWSDBInstanceConfig_NationalCharacterSet_Oracle(rName string) string {
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = "oracle-se2"
+  license_model  = "bring-your-own-license"
+  storage_type   = "standard"
+
+  preferred_instance_classes = ["db.m5.large", "db.m4.large", "db.r4.large"]
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage               = 10
+  engine                          = data.aws_rds_orderable_db_instance.test.engine
+  identifier                      = %q
+  instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model  				  = "bring-your-own-license"
+  national_character_set 		  = "UTF8"
+  password                        = "avoid-plaintext-passwords"
+  username                        = "tfacctest"
+  skip_final_snapshot             = true
+}
+`, rName)
+}
+
+func testAccAWSDBInstanceConfig_NoNationalCharacterSet_Oracle(rName string) string {
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = "oracle-se2"
+  license_model  = "bring-your-own-license"
+  storage_type   = "standard"
+
+  preferred_instance_classes = ["db.m5.large", "db.m4.large", "db.r4.large"]
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage               = 10
+  engine                          = data.aws_rds_orderable_db_instance.test.engine
+  identifier                      = %q
+  instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model  				  = "bring-your-own-license"
   password                        = "avoid-plaintext-passwords"
   username                        = "tfacctest"
   skip_final_snapshot             = true
