@@ -341,7 +341,7 @@ The tags to apply to the resources during launch. You can tag instances, volumes
 
 Each `tag_specifications` block supports the following:
 
-* `resource_type` - The type of resource to tag. Valid values are `instance`, `volume`, `elastic-gpu` and `spot-instances-request`.
+* `resource_type` - The type of resource to tag.
 * `tags` - A map of tags to assign to the resource.
 
 
