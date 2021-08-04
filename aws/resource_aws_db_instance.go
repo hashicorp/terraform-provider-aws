@@ -292,7 +292,7 @@ func resourceAwsDbInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"national_character_set": {
+			"nchar_character_set_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -1157,7 +1157,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.CharacterSetName = aws.String(attr.(string))
 		}
 
-		if attr, ok := d.GetOk("national_character_set"); ok {
+		if attr, ok := d.GetOk("nchar_character_set_name"); ok {
 			opts.NcharCharacterSetName = aws.String(attr.(string))
 		}
 
@@ -1386,15 +1386,8 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group_name", v.DBSubnetGroup.DBSubnetGroupName)
 	}
-
-	if v.CharacterSetName != nil {
-		d.Set("character_set_name", v.CharacterSetName)
-	}
-
-	if v.NcharCharacterSetName != nil {
-		d.Set("national_character_set", v.NcharCharacterSetName)
-	}
-
+	d.Set("character_set_name", v.CharacterSetName)
+	d.Set("nchar_character_set_name", v.NcharCharacterSetName)
 	d.Set("timezone", v.Timezone)
 
 	if len(v.DBParameterGroups) > 0 {

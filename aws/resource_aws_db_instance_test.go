@@ -3306,7 +3306,7 @@ func TestAccAWSDBInstance_NationalCharacterSet_Oracle(t *testing.T) {
 				Config: testAccAWSDBInstanceConfig_NationalCharacterSet_Oracle(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "national_character_set", "UTF8"),
+					resource.TestCheckResourceAttr(resourceName, "nchar_character_set_name", "UTF8"),
 				),
 			},
 			{
@@ -3341,7 +3341,7 @@ func TestAccAWSDBInstance_NoNationalCharacterSet_Oracle(t *testing.T) {
 				Config: testAccAWSDBInstanceConfig_NoNationalCharacterSet_Oracle(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "national_character_set", "AL16UTF16"),
+					resource.TestCheckResourceAttr(resourceName, "nchar_character_set_name", "AL16UTF16"),
 				),
 			},
 			{
@@ -5202,7 +5202,7 @@ resource "aws_db_instance" "test" {
   engine                          = data.aws_rds_orderable_db_instance.test.engine
   identifier                      = %q
   instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
-  license_model  				  = "bring-your-own-license"
+  license_model                   = "bring-your-own-license"
   password                        = "avoid-plaintext-passwords"
   username                        = "tfacctest"
   skip_final_snapshot             = true
@@ -5226,7 +5226,7 @@ resource "aws_db_instance" "test" {
   identifier                      = %q
   instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
   license_model                   = "bring-your-own-license"
-  national_character_set          = "UTF8"
+  nchar_character_set_name        = "UTF8"
   password                        = "avoid-plaintext-passwords"
   username                        = "tfacctest"
   skip_final_snapshot             = true
