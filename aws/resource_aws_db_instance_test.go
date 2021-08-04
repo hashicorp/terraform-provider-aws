@@ -5189,9 +5189,9 @@ resource "aws_db_instance" "test" {
 func testAccAWSDBInstanceConfig_EnabledCloudwatchLogsExports_Oracle(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
-  engine         = "oracle-se2"
-  license_model  = "bring-your-own-license"
-  storage_type   = "standard"
+  engine        = "oracle-se2"
+  license_model = "bring-your-own-license"
+  storage_type  = "standard"
 
   preferred_instance_classes = ["db.m5.large", "db.m4.large", "db.r4.large"]
 }
@@ -5200,7 +5200,7 @@ resource "aws_db_instance" "test" {
   allocated_storage               = 10
   enabled_cloudwatch_logs_exports = ["alert", "listener", "trace"]
   engine                          = data.aws_rds_orderable_db_instance.test.engine
-  identifier                      = %q
+  identifier                      = %[1]q
   instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
   license_model                   = "bring-your-own-license"
   password                        = "avoid-plaintext-passwords"
@@ -5213,23 +5213,23 @@ resource "aws_db_instance" "test" {
 func testAccAWSDBInstanceConfig_NationalCharacterSet_Oracle(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
-  engine         = "oracle-se2"
-  license_model  = "bring-your-own-license"
-  storage_type   = "standard"
+  engine        = "oracle-se2"
+  license_model = "bring-your-own-license"
+  storage_type  = "standard"
 
   preferred_instance_classes = ["db.m5.large", "db.m4.large", "db.r4.large"]
 }
 
 resource "aws_db_instance" "test" {
-  allocated_storage               = 10
-  engine                          = data.aws_rds_orderable_db_instance.test.engine
-  identifier                      = %q
-  instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
-  license_model                   = "bring-your-own-license"
-  nchar_character_set_name        = "UTF8"
-  password                        = "avoid-plaintext-passwords"
-  username                        = "tfacctest"
-  skip_final_snapshot             = true
+  allocated_storage        = 10
+  engine                   = data.aws_rds_orderable_db_instance.test.engine
+  identifier               = %[1]q
+  instance_class           = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model            = "bring-your-own-license"
+  nchar_character_set_name = "UTF8"
+  password                 = "avoid-plaintext-passwords"
+  username                 = "tfacctest"
+  skip_final_snapshot      = true
 }
 `, rName)
 }
@@ -5237,22 +5237,22 @@ resource "aws_db_instance" "test" {
 func testAccAWSDBInstanceConfig_NoNationalCharacterSet_Oracle(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
-  engine         = "oracle-se2"
-  license_model  = "bring-your-own-license"
-  storage_type   = "standard"
+  engine        = "oracle-se2"
+  license_model = "bring-your-own-license"
+  storage_type  = "standard"
 
   preferred_instance_classes = ["db.m5.large", "db.m4.large", "db.r4.large"]
 }
 
 resource "aws_db_instance" "test" {
-  allocated_storage               = 10
-  engine                          = data.aws_rds_orderable_db_instance.test.engine
-  identifier                      = %q
-  instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
-  license_model                   = "bring-your-own-license"
-  password                        = "avoid-plaintext-passwords"
-  username                        = "tfacctest"
-  skip_final_snapshot             = true
+  allocated_storage   = 10
+  engine              = data.aws_rds_orderable_db_instance.test.engine
+  identifier          = %[1]q
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model       = "bring-your-own-license"
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
 }
 `, rName)
 }
