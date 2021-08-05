@@ -6,6 +6,7 @@ ENHANCEMENTS:
 * data-source/aws_ec2_coip_pool: Add `arn` attribute ([#17046](https://github.com/hashicorp/terraform-provider-aws/issues/17046))
 * resource/aws_appconfig_deployment: Include predefined strategies in plan time validation of `deployment_strategy_id` ([#20420](https://github.com/hashicorp/terraform-provider-aws/issues/20420))
 * resource/aws_autoscaling_schedule: Add `time_zone` argument ([#19829](https://github.com/hashicorp/terraform-provider-aws/issues/19829))
+* resource/aws_db_instance: Add `customer_owned_ip_enabled` argument ([#17864](https://github.com/hashicorp/terraform-provider-aws/issues/17864))
 * resource/aws_db_instance: Add `nchar_character_set_name` argument ([#20437](https://github.com/hashicorp/terraform-provider-aws/issues/20437))
 * resource/aws_kms_external_key: Add `bypass_policy_lockout_safety_check` argument ([#18117](https://github.com/hashicorp/terraform-provider-aws/issues/18117))
 * resource/aws_kms_key: Add `bypass_policy_lockout_safety_check` argument ([#18117](https://github.com/hashicorp/terraform-provider-aws/issues/18117))
@@ -15,6 +16,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * aws/resource_aws_amplify_branch: Correctly handle branch names that contain '/' ([#20426](https://github.com/hashicorp/terraform-provider-aws/issues/20426))
+* aws/resource_aws_apigateway_vpc_link: Ensure deletion does not return an error when resource is not found ([#20441](https://github.com/hashicorp/terraform-provider-aws/issues/20441))
 * aws/resource_aws_instance: Fix running `terraform plan` with with `skip_credentials_validation=true` ([#20357](https://github.com/hashicorp/terraform-provider-aws/issues/20357))
 * aws/resource_aws_instance: Fix state refresh when launch template was deleted ([#20357](https://github.com/hashicorp/terraform-provider-aws/issues/20357))
 
