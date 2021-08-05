@@ -1,6 +1,8 @@
 package finder
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
@@ -119,4 +121,30 @@ func DBClusterByID(conn *rds.RDS, id string) (*rds.DBCluster, error) {
 	}
 
 	return dbCluster, nil
+}
+
+// DBInstanceAutomatedBackup returns matching DBInstanceAutomatedBackup
+func DBInstanceAutomatedBackup(ctx context.Context, conn *rds.RDS, dbInstanceAutomatedBackupsArn string) (*rds.DBInstanceAutomatedBackup, error) {
+	input := &rds.DescribeDBInstanceAutomatedBackupsInput{
+		DBInstanceAutomatedBackupsArn: aws.String(dbInstanceAutomatedBackupsArn),
+	}
+
+	var dbInstanceAutomatedBackup *rds.DBInstanceAutomatedBackup
+
+	err := conn.DescribeDBInstanceAutomatedBackupsPagesWithContext(ctx, input, func(page *rds.DescribeDBInstanceAutomatedBackupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, backup := range page.DBInstanceAutomatedBackups {
+			if aws.StringValue(backup.DBInstanceAutomatedBackupsArn) == dbInstanceAutomatedBackupsArn {
+				dbInstanceAutomatedBackup = backup
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	return dbInstanceAutomatedBackup, err
 }

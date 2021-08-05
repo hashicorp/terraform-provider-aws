@@ -1,6 +1,7 @@
 package waiter
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -15,6 +16,15 @@ const (
 
 	DBClusterRoleAssociationCreatedTimeout = 5 * time.Minute
 	DBClusterRoleAssociationDeletedTimeout = 5 * time.Minute
+
+	// DB Instance Automated Backups Replication timeouts
+	DBInstanceAutomatedBackupsReplicationStartedTimeout = 30 * time.Minute
+	DBInstanceAutomatedBackupsReplicationDeletedTimeout = 5 * time.Minute
+
+	// DB Instance Automated Backups Replication states
+	DBInstanceAutomatedBackupsPending     = "pending"
+	DBInstanceAutomatedBackupsReplicating = "replicating"
+	DBInstanceAutomatedBackupsDeleting    = "deleting"
 )
 
 // EventSubscriptionDeleted waits for a EventSubscription to return Deleted
@@ -102,6 +112,42 @@ func DBClusterRoleAssociationDeleted(conn *rds.RDS, dbClusterID, roleARN string)
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*rds.DBClusterRole); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// DBInstanceAutomatedBackupsReplicationStarted waits for a DBInstanceAutomatedBackup to return replicating
+func DBInstanceAutomatedBackupsReplicationStarted(ctx context.Context, conn *rds.RDS, dbInstanceAutomatedBackupsArn string) (*rds.DBInstanceAutomatedBackup, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{DBInstanceAutomatedBackupsPending},
+		Target:  []string{DBInstanceAutomatedBackupsReplicating},
+		Refresh: DBInstanceAutomatedBackupsReplicationStatus(ctx, conn, dbInstanceAutomatedBackupsArn),
+		Timeout: DBInstanceAutomatedBackupsReplicationStartedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.DBInstanceAutomatedBackup); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// DBInstanceAutomatedBackupsReplicationDeleted waits for a DBInstanceAutomatedBackup to return deleting
+func DBInstanceAutomatedBackupsReplicationDeleted(ctx context.Context, conn *rds.RDS, dbInstanceAutomatedBackupsArn string) (*rds.DBInstanceAutomatedBackup, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{DBInstanceAutomatedBackupsReplicating},
+		Target:  []string{DBInstanceAutomatedBackupsDeleting},
+		Refresh: DBInstanceAutomatedBackupsReplicationStatus(ctx, conn, dbInstanceAutomatedBackupsArn),
+		Timeout: DBInstanceAutomatedBackupsReplicationDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.DBInstanceAutomatedBackup); ok {
 		return output, err
 	}
 

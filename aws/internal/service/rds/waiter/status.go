@@ -1,6 +1,8 @@
 package waiter
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -63,6 +65,23 @@ func DBProxyEndpointStatus(conn *rds.RDS, id string) resource.StateRefreshFunc {
 func DBClusterRoleStatus(conn *rds.RDS, dbClusterID, roleARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := finder.DBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+// DBInstanceAutomatedBackupsReplicationStatus fetches the DBInstanceAutomatedBackup and its Status
+func DBInstanceAutomatedBackupsReplicationStatus(ctx context.Context, conn *rds.RDS, dbInstanceAutomatedBackupsArn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.DBInstanceAutomatedBackup(ctx, conn, dbInstanceAutomatedBackupsArn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
