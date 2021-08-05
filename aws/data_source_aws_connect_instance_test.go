@@ -12,7 +12,7 @@ import (
 
 func TestAccAwsConnectInstanceDataSource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("datasource-test-terraform")
-	resourceName := "aws_connect_instance.foo"
+	resourceName := "aws_connect_instance.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
 		ErrorCheck: testAccErrorCheck(t, connect.EndpointsID),
@@ -50,7 +50,7 @@ func TestAccAwsConnectInstanceDataSource_basic(t *testing.T) {
 
 func TestAccAwsConnectInstanceDataSource_alias(t *testing.T) {
 	rName := acctest.RandomWithPrefix("datasource-test-terraform")
-	resourceName := "aws_connect_instance.foo"
+	resourceName := "aws_connect_instance.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
 		ErrorCheck: testAccErrorCheck(t, connect.EndpointsID),
@@ -79,37 +79,43 @@ func TestAccAwsConnectInstanceDataSource_alias(t *testing.T) {
 }
 
 const testAccAwsConnectInstanceDataSourceConfig_nonExistentId = `
-data "aws_connect_instance" "foo" {
+data "aws_connect_instance" "test" {
   instance_id = "97afc98d-101a-ba98-ab97-ae114fc115ec"
 }
 `
 
 const testAccAwsConnectInstanceDataSourceConfig_nonExistentAlias = `
-data "aws_connect_instance" "foo" {
+data "aws_connect_instance" "test" {
   instance_alias = "tf-acc-test-does-not-exist"
 }
 `
 
 func testAccAwsConnectInstanceDataSourceConfigBasic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_connect_instance" "foo" {
+resource "aws_connect_instance" "test" {
   instance_alias = %[1]q
+  identity_management_type = "CONNECT_MANAGED"
+  inbound_calls_enabled    = true
+  outbound_calls_enabled   = true
 }
 
-data "aws_connect_instance" "foo" {
-  instance_id = aws_connect_instance.foo.id
+data "aws_connect_instance" "test" {
+  instance_id = aws_connect_instance.test.id
 }
 `, rName)
 }
 
 func testAccAwsConnectInstanceDataSourceConfigAlias(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_connect_instance" "foo" {
+resource "aws_connect_instance" "test" {
   instance_alias = %[1]q
+  identity_management_type = "CONNECT_MANAGED"
+  inbound_calls_enabled    = true
+  outbound_calls_enabled   = true
 }
 
-data "aws_connect_instance" "foo" {
-  instance_alias = aws_connect_instance.foo.instance_alias
+data "aws_connect_instance" "test" {
+  instance_alias = aws_connect_instance.test.instance_alias
 }
 `, rName)
 }
