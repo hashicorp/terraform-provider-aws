@@ -3,20 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apigateway/waiter"
-)
-
-const (
-	// Maximum amount of time for VpcLink to become available
-	apigatewayVpcLinkAvailableTimeout = 20 * time.Minute
 )
 
 func resourceAwsApiGatewayVpcLink() *schema.Resource {
@@ -79,17 +72,8 @@ func resourceAwsApiGatewayVpcLinkCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(aws.StringValue(resp.Id))
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{apigateway.VpcLinkStatusPending},
-		Target:     []string{apigateway.VpcLinkStatusAvailable},
-		Refresh:    apigatewayVpcLinkRefreshStatusFunc(conn, *resp.Id),
-		Timeout:    apigatewayVpcLinkAvailableTimeout,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("error waiting for APIGateway Vpc Link status to be \"%s\": %w", apigateway.VpcLinkStatusAvailable, err)
+	if err := waiter.ApiGatewayVpcLinkAvailable(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for API Gateway VPC Link (%s) availability after creation: %w", d.Id(), err)
 	}
 
 	return resourceAwsApiGatewayVpcLinkRead(d, meta)
@@ -182,17 +166,8 @@ func resourceAwsApiGatewayVpcLinkUpdate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{apigateway.VpcLinkStatusPending},
-		Target:     []string{apigateway.VpcLinkStatusAvailable},
-		Refresh:    apigatewayVpcLinkRefreshStatusFunc(conn, d.Id()),
-		Timeout:    apigatewayVpcLinkAvailableTimeout,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for APIGateway Vpc Link status to be \"%s\": %s", apigateway.VpcLinkStatusAvailable, err)
+	if err := waiter.ApiGatewayVpcLinkAvailable(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for API Gateway VPC Link (%s) availability after update: %w", d.Id(), err)
 	}
 
 	return resourceAwsApiGatewayVpcLinkRead(d, meta)
@@ -220,17 +195,4 @@ func resourceAwsApiGatewayVpcLinkDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	return nil
-}
-
-func apigatewayVpcLinkRefreshStatusFunc(conn *apigateway.APIGateway, vl string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &apigateway.GetVpcLinkInput{
-			VpcLinkId: aws.String(vl),
-		}
-		resp, err := conn.GetVpcLink(input)
-		if err != nil {
-			return nil, "failed", err
-		}
-		return resp, *resp.Status, nil
-	}
 }
