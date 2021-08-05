@@ -589,7 +589,32 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("arn", rule.RuleArn)
 
-	tags, err := keyvaluetags.Elbv2ListTags(elbconn, d.Id())
+	var tags keyvaluetags.KeyValueTags
+
+	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+		tags, err = keyvaluetags.Elbv2ListTags(elbconn, d.Id())
+		if err != nil {
+			if d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeRuleNotFoundException, "") {
+				return resource.RetryableError(err)
+			} else {
+				return resource.NonRetryableError(err)
+			}
+		}
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		tags, err = keyvaluetags.Elbv2ListTags(elbconn, d.Id())
+	}
+	if err != nil {
+		if isAWSErr(err, elbv2.ErrCodeRuleNotFoundException, "") {
+			log.Printf("[WARN] Elbv2ListTags - removing %s from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("Error retrieving tags for listener rule %q: %w", d.Id(), err)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
