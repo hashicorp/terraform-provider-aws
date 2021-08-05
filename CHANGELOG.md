@@ -1,4 +1,4 @@
-## 3.53.0 (Unreleased)
+## 3.53.0 (August 05, 2021)
 
 ENHANCEMENTS:
 
