@@ -95,9 +95,10 @@ The following arguments are supported:
 * `vpc_id` - (Required) The ID of the Amazon Virtual Private Cloud (VPC) that Studio uses for communication.
 * `subnet_ids` - (Required) The VPC subnets that Studio uses for communication.
 * `default_user_settings` - (Required) The default user settings. See [Default User Settings](#default-user-settings) below.
+* `retention_policy` - (Optional) The retention policy for this domain, which specifies whether resources will be retained after the Domain is deleted. By default, all resources are retained. See [Retention Policy](#retention-policy) below.
 * `kms_key_id` - (Optional) The AWS KMS customer managed CMK used to encrypt the EFS volume attached to the domain.
 * `app_network_access_type` - (Optional) Specifies the VPC used for non-EFS traffic. The default value is `PublicInternetOnly`. Valid values are `PublicInternetOnly` and `VpcOnly`.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Default User Settings
 
@@ -138,6 +139,10 @@ The following arguments are supported:
 * `image_name` - (Required) The name of the Custom Image.
 * `image_version_number` - (Optional) The version number of the Custom Image.
 
+### Retention Policy
+
+* `home_efs_file_system` - (Optional) The retention policy for data stored on an Amazon Elastic File System (EFS) volume. Default value is `Retain`.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -147,6 +152,7 @@ In addition to all arguments above, the following attributes are exported:
 * `url` - The domain's URL.
 * `single_sign_on_managed_application_instance_id` - The SSO managed application instance ID.
 * `home_efs_file_system_id` - The ID of the Amazon Elastic File System (EFS) managed by this Domain.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 

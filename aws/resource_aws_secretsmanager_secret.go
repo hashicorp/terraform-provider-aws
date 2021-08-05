@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/secretsmanager/waiter"
@@ -36,6 +38,11 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"force_overwrite_replica_secret": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"kms_key_id": {
 				Type:     schema.TypeString,
@@ -73,6 +80,37 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 					validation.IntInSlice([]int{0}),
 				),
 			},
+			"replica": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Set:      secretReplicaHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"last_accessed_date": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"region": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"status_message": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"rotation_enabled": {
 				Deprecated: "Use the aws_secretsmanager_secret_rotation resource instead",
 				Type:       schema.TypeBool,
@@ -99,13 +137,18 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 					},
 				},
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).secretsmanagerconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var secretName string
 	if v, ok := d.GetOk("name"); ok {
@@ -117,16 +160,21 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 	}
 
 	input := &secretsmanager.CreateSecretInput{
-		Description: aws.String(d.Get("description").(string)),
-		Name:        aws.String(secretName),
+		Description:                 aws.String(d.Get("description").(string)),
+		Name:                        aws.String(secretName),
+		ForceOverwriteReplicaSecret: aws.Bool(d.Get("force_overwrite_replica_secret").(bool)),
 	}
 
-	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SecretsmanagerTags()
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().SecretsmanagerTags()
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("replica"); ok && v.(*schema.Set).Len() > 0 {
+		input.AddReplicaRegions = expandSecretsManagerSecretReplicas(v.(*schema.Set).List())
 	}
 
 	log.Printf("[DEBUG] Creating Secrets Manager Secret: %s", input)
@@ -214,6 +262,7 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 
 func resourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).secretsmanagerconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &secretsmanager.DescribeSecretInput{
@@ -261,6 +310,10 @@ func resourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interface{
 	d.Set("kms_key_id", output.KmsKeyId)
 	d.Set("name", output.Name)
 
+	if err := d.Set("replica", flattenSecretsManagerSecretReplicas(output.ReplicationStatus)); err != nil {
+		return fmt.Errorf("error setting replica: %w", err)
+	}
+
 	pIn := &secretsmanager.GetResourcePolicyInput{
 		SecretId: aws.String(d.Id()),
 	}
@@ -290,8 +343,15 @@ func resourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interface{
 		d.Set("rotation_rules", []interface{}{})
 	}
 
-	if err := d.Set("tags", keyvaluetags.SecretsmanagerKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	tags := keyvaluetags.SecretsmanagerKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -299,6 +359,25 @@ func resourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interface{
 
 func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).secretsmanagerconn
+
+	if d.HasChange("replica") {
+		o, n := d.GetChange("replica")
+
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		err := removeSecretsManagerSecretReplicas(conn, d.Id(), os.Difference(ns).List())
+
+		if err != nil {
+			return fmt.Errorf("error deleting Secrets Manager Secret replica: %w", err)
+		}
+
+		err = addSecretsManagerSecretReplicas(conn, d.Id(), d.Get("force_overwrite_replica_secret").(bool), ns.Difference(os).List())
+
+		if err != nil {
+			return fmt.Errorf("error adding Secrets Manager Secret replica: %w", err)
+		}
+	}
 
 	if d.HasChanges("description", "kms_key_id") {
 		input := &secretsmanager.UpdateSecretInput{
@@ -399,8 +478,8 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.SecretsmanagerUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
@@ -411,6 +490,14 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 
 func resourceAwsSecretsManagerSecretDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).secretsmanagerconn
+
+	if v, ok := d.GetOk("replica"); ok && v.(*schema.Set).Len() > 0 {
+		err := removeSecretsManagerSecretReplicas(conn, d.Id(), v.(*schema.Set).List())
+
+		if err != nil {
+			return fmt.Errorf("error deleting Secrets Manager Secret replica: %w", err)
+		}
+	}
 
 	input := &secretsmanager.DeleteSecretInput{
 		SecretId: aws.String(d.Id()),
@@ -433,4 +520,172 @@ func resourceAwsSecretsManagerSecretDelete(d *schema.ResourceData, meta interfac
 	}
 
 	return nil
+}
+
+func removeSecretsManagerSecretReplicas(conn *secretsmanager.SecretsManager, id string, tfList []interface{}) error {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	input := &secretsmanager.RemoveRegionsFromReplicationInput{
+		SecretId: aws.String(id),
+	}
+
+	var regions []string
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		regions = append(regions, tfMap["region"].(string))
+	}
+
+	input.RemoveReplicaRegions = aws.StringSlice(regions)
+
+	log.Printf("[DEBUG] Removing Secrets Manager Secret Replicas: %s", input)
+
+	_, err := conn.RemoveRegionsFromReplication(input)
+
+	if err != nil {
+		if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+			return nil
+		}
+
+		return err
+	}
+
+	return nil
+}
+
+func addSecretsManagerSecretReplicas(conn *secretsmanager.SecretsManager, id string, forceOverwrite bool, tfList []interface{}) error {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	input := &secretsmanager.ReplicateSecretToRegionsInput{
+		SecretId:                    aws.String(id),
+		ForceOverwriteReplicaSecret: aws.Bool(forceOverwrite),
+		AddReplicaRegions:           expandSecretsManagerSecretReplicas(tfList),
+	}
+
+	log.Printf("[DEBUG] Removing Secrets Manager Secret Replica: %s", input)
+
+	_, err := conn.ReplicateSecretToRegions(input)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func expandSecretsManagerSecretReplica(tfMap map[string]interface{}) *secretsmanager.ReplicaRegionType {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &secretsmanager.ReplicaRegionType{}
+
+	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
+		apiObject.KmsKeyId = aws.String(v)
+	}
+
+	if v, ok := tfMap["region"].(string); ok && v != "" {
+		apiObject.Region = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandSecretsManagerSecretReplicas(tfList []interface{}) []*secretsmanager.ReplicaRegionType {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*secretsmanager.ReplicaRegionType
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandSecretsManagerSecretReplica(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenSecretsManagerSecretReplica(apiObject *secretsmanager.ReplicationStatusType) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.KmsKeyId; v != nil {
+		tfMap["kms_key_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.LastAccessedDate; v != nil {
+		tfMap["last_accessed_date"] = aws.TimeValue(v).Format(time.RFC3339)
+	}
+
+	if v := apiObject.Region; v != nil {
+		tfMap["region"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Status; v != nil {
+		tfMap["status"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.StatusMessage; v != nil {
+		tfMap["status_message"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenSecretsManagerSecretReplicas(apiObjects []*secretsmanager.ReplicationStatusType) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenSecretsManagerSecretReplica(apiObject))
+	}
+
+	return tfList
+}
+
+func secretReplicaHash(v interface{}) int {
+	var buf bytes.Buffer
+
+	m := v.(map[string]interface{})
+
+	if v, ok := m["kms_key_id"].(string); ok {
+		buf.WriteString(fmt.Sprintf("%s-", v))
+	}
+
+	if v, ok := m["region"].(string); ok {
+		buf.WriteString(fmt.Sprintf("%s-", v))
+	}
+
+	return hashcode.String(buf.String())
 }

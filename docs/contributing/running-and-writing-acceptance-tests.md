@@ -43,6 +43,8 @@
         - [Hardcoded Partition in ARN](#hardcoded-partition-in-arn)
         - [Hardcoded Region](#hardcoded-region)
         - [Hardcoded Spot Price](#hardcoded-spot-price)
+        - [Hardcoded SSH Keys](#hardcoded-ssh-keys)
+        - [Hardcoded Email Addresses](#hardcoded-email-addresses)
 
 Terraform includes an acceptance test harness that does most of the repetitive
 work involved in testing a resource. For additional information about testing
@@ -398,7 +400,7 @@ resource "aws_example_thing" "test" {
 
 These test configurations are typical implementations we have found or allow testing to implement best practices easier, since the Terraform AWS Provider testing is expected to run against various AWS Regions and Partitions.
 
-- `testAccAvailableEc2InstanceTypeForRegion("type1", "type2", ...)`: Typically used to replace hardcoded EC2 Instance Types. Uses `aws_ec2_instance_type_offering` data source to return an available EC2 Instance Type in preferred ordering. Reference the instance type via: `data.aws_ec2_instance_type_offering.available.instance_type`
+- `testAccAvailableEc2InstanceTypeForRegion("type1", "type2", ...)`: Typically used to replace hardcoded EC2 Instance Types. Uses `aws_ec2_instance_type_offering` data source to return an available EC2 Instance Type in preferred ordering. Reference the instance type via: `data.aws_ec2_instance_type_offering.available.instance_type`. Use `testAccAvailableEc2InstanceTypeForRegionNamed("name", "type1", "type2", ...)` to specify a name for the data source
 - `testAccLatestAmazonLinuxHvmEbsAmiConfig()`: Typically used to replace hardcoded EC2 Image IDs (`ami-12345678`). Uses `aws_ami` data source to find the latest Amazon Linux image. Reference the AMI ID via: `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`
 
 #### Randomized Naming
@@ -1133,6 +1135,13 @@ To run a specific resource sweeper:
 $ SWEEPARGS=-sweep-run=aws_example_thing make sweep
 ```
 
+To run sweepers with an assumed role, use the following additional environment variables:
+
+* `TF_AWS_ASSUME_ROLE_ARN` - Required.
+* `TF_AWS_ASSUME_ROLE_DURATION` - Optional, defaults to 1 hour (3600).
+* `TF_AWS_ASSUME_ROLE_EXTERNAL_ID` - Optional.
+* `TF_AWS_ASSUME_ROLE_SESSION_NAME` - Optional.
+
 ### Writing Test Sweepers
 
 The first step is to initialize the resource into the test sweeper framework:
@@ -1161,44 +1170,58 @@ func testSweepExampleThings(region string) error {
   }
 
   conn := client.(*AWSClient).exampleconn
-  input := &example.ListThingsInput{}
-  var sweeperErrs *multierror.Error
+  sweepResources := make([]*testSweepResource, 0)
+  var errs *multierror.Error
 
-  err = conn.ListThingsPages(input, func(page *example.ListThingsOutput, isLast bool) bool {
+  input := &example.ListThingsInput{}
+
+  err = conn.ListThingsPages(input, func(page *example.ListThingsOutput, lastPage bool) bool {
     if page == nil {
-      return !isLast
+      return !lastPage
     }
 
     for _, thing := range page.Things {
+      r := resourceAwsThing()
+      d := r.Data(nil)
+
       id := aws.StringValue(thing.Id)
-      input := &example.DeleteThingInput{
-        Id: thing.Id,
-      }
+      d.SetId(id)
 
-      log.Printf("[INFO] Deleting Example Thing: %s", id)
-      _, err := conn.DeleteThing(input)
+      // Perform resource specific pre-sweep setup.
+      // For example, you may need to perform one or more of these types of pre-sweep tasks, specific to the resource:
+      //
+      // err := r.Read(d, client)             // fill in data
+      // d.Set("skip_final_snapshot", true)   // set an argument in order to delete
 
+      // This "if" is only needed if the pre-sweep setup can produce errors.
+      // Otherwise, do not include it.
       if err != nil {
-        sweeperErr := fmt.Errorf("error deleting Example Thing (%s): %w", id, err)
-        log.Printf("[ERROR] %s", sweeperErr)
-        sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+        err := fmt.Errorf("error reading Example Thing (%s): %w", id, err)
+        log.Printf("[ERROR] %s", err)
+        errs = multierror.Append(errs, err)
         continue
       }
+
+      sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
     }
 
-    return !isLast
+    return !lastPage
   })
 
-  if testSweepSkipSweepError(err) {
-    log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, err)
-    return sweeperErrs.ErrorOrNil()
-  }
-
   if err != nil {
-    sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Example Things: %w", err))
+    errs = multierror.Append(errs, fmt.Errorf("error listing Example Thing for %s: %w", region, err))
   }
 
-  return sweeperErrs.ErrorOrNil()
+  if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+    errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
+  }
+
+  if testSweepSkipSweepError(errs.ErrorOrNil()) {
+    log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
+    return nil
+  }
+
+  return errs.ErrorOrNil()
 }
 ```
 
@@ -1213,37 +1236,37 @@ func testSweepExampleThings(region string) error {
   }
 
   conn := client.(*AWSClient).exampleconn
+  sweepResources := make([]*testSweepResource, 0)
+  var errs *multierror.Error
+
   input := &example.ListThingsInput{}
-  var sweeperErrs *multierror.Error
 
   for {
     output, err := conn.ListThings(input)
 
-    if testSweepSkipSweepError(err) {
-      log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, err)
-      return sweeperErrs.ErrorOrNil()
-    }
-
-    if err != nil {
-      sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Example Thing: %w", err))
-      return sweeperErrs
-    }
-
     for _, thing := range output.Things {
+      r := resourceAwsThing()
+      d := r.Data(nil)
+
       id := aws.StringValue(thing.Id)
-      input := &example.DeleteThingInput{
-        Id: thing.Id,
-      }
+      d.SetId(id)
 
-      log.Printf("[INFO] Deleting Example Thing: %s", id)
-      _, err := conn.DeleteThing(input)
+      // Perform resource specific pre-sweep setup.
+      // For example, you may need to perform one or more of these types of pre-sweep tasks, specific to the resource:
+      //
+      // err := r.Read(d, client)             // fill in data
+      // d.Set("skip_final_snapshot", true)   // set an argument in order to delete
 
+      // This "if" is only needed if the pre-sweep setup can produce errors.
+      // Otherwise, do not include it.
       if err != nil {
-        sweeperErr := fmt.Errorf("error deleting Example Thing (%s): %w", id, err)
-        log.Printf("[ERROR] %s", sweeperErr)
-        sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+        err := fmt.Errorf("error reading Example Thing (%s): %w", id, err)
+        log.Printf("[ERROR] %s", err)
+        errs = multierror.Append(errs, err)
         continue
       }
+
+      sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
     }
 
     if aws.StringValue(output.NextToken) == "" {
@@ -1253,7 +1276,16 @@ func testSweepExampleThings(region string) error {
     input.NextToken = output.NextToken
   }
 
-  return sweeperErrs.ErrorOrNil()
+  if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+    errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
+  }
+
+  if testSweepSkipSweepError(errs.ErrorOrNil()) {
+    log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
+    return nil
+  }
+
+  return errs.ErrorOrNil()
 }
 ```
 
@@ -1518,5 +1550,103 @@ data "aws_ec2_spot_price" "current" {
 resource "aws_spot_fleet_request" "test" {
   spot_price      = data.aws_ec2_spot_price.current.spot_price
   target_capacity = 2
+}
+```
+
+#### Hardcoded SSH Keys
+
+- [ ] __Uses acctest.RandSSHKeyPair() or RandSSHKeyPairSize() Functions__: Any hardcoded SSH keys should be replaced with random SSH keys generated by either the acceptance testing framework's function [`RandSSHKeyPair()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/helper/acctest#RandSSHKeyPair) or the provider function `RandSSHKeyPairSize()`. `RandSSHKeyPair()` generates 1024-bit keys.
+
+Here's an example using `aws_key_pair`
+
+```go
+func TestAccAWSKeyPair_basic(t *testing.T) {
+  ...
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	publicKey, _, err := acctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
+  resource.ParallelTest(t, resource.TestCase{
+		...
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSKeyPairConfig(rName, publicKey),
+        ...
+      },
+    },
+  })
+}
+
+func testAccAWSKeyPairConfig(rName, publicKey string) string {
+	return fmt.Sprintf(`
+resource "aws_key_pair" "test" {
+  key_name   = %[1]q
+  public_key = %[2]q
+}
+`, rName, publicKey)
+}
+```
+
+#### Hardcoded Email Addresses
+
+- [ ] __Uses either testAccDefaultEmailAddress Constant or testAccRandomEmailAddress() Function__: Any hardcoded email addresses should replaced with either the constant `testAccDefaultEmailAddress` or the function `testAccRandomEmailAddress()`.
+
+Using `testAccDefaultEmailAddress` is preferred when using a single email address in an acceptance test.
+
+Here's an example using `testAccDefaultEmailAddress`
+
+```go
+func TestAccAWSSNSTopicSubscription_email(t *testing.T) {
+	...
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		...
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSNSTopicSubscriptionEmailConfig(rName, testAccDefaultEmailAddress),
+				Check: resource.ComposeTestCheckFunc(
+					...
+					resource.TestCheckResourceAttr(resourceName, "endpoint", testAccDefaultEmailAddress),
+				),
+			},
+		},
+	})
+}
+```
+
+Here's an example using `testAccRandomEmailAddress()`
+
+```go
+func TestAccAWSPinpointEmailChannel_basic(t *testing.T) {
+	...
+
+	domain := testAccRandomDomainName()
+	address1 := testAccRandomEmailAddress(domain)
+	address2 := testAccRandomEmailAddress(domain)
+
+	resource.ParallelTest(t, resource.TestCase{
+		...
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSPinpointEmailChannelConfig_FromAddress(domain, address1),
+				Check: resource.ComposeTestCheckFunc(
+					...
+					resource.TestCheckResourceAttr(resourceName, "from_address", address1),
+				),
+			},
+			{
+				Config: testAccAWSPinpointEmailChannelConfig_FromAddress(domain, address2),
+				Check: resource.ComposeTestCheckFunc(
+					...
+					resource.TestCheckResourceAttr(resourceName, "from_address", address2),
+				),
+			},
+		},
+	})
 }
 ```

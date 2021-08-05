@@ -6,15 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSSESIdentityPolicy_basic(t *testing.T) {
-	domain := fmt.Sprintf(
-		"%s.terraformtesting.com",
-		acctest.RandString(10))
+	domain := testAccRandomDomainName()
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -39,9 +36,7 @@ func TestAccAWSSESIdentityPolicy_basic(t *testing.T) {
 }
 
 func TestAccAWSSESIdentityPolicy_Identity_Email(t *testing.T) {
-	email := fmt.Sprintf(
-		"%s@terraformtesting.com",
-		acctest.RandString(10))
+	email := testAccRandomDomainName()
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -66,9 +61,7 @@ func TestAccAWSSESIdentityPolicy_Identity_Email(t *testing.T) {
 }
 
 func TestAccAWSSESIdentityPolicy_Policy(t *testing.T) {
-	domain := fmt.Sprintf(
-		"%s.terraformtesting.com",
-		acctest.RandString(10))
+	domain := testAccRandomDomainName()
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{

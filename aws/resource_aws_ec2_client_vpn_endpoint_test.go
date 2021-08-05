@@ -29,7 +29,6 @@ func init() {
 		Name: "aws_ec2_client_vpn_endpoint",
 		F:    testSweepEc2ClientVpnEndpoints,
 		Dependencies: []string{
-			"aws_directory_service_directory",
 			"aws_ec2_client_vpn_network_association",
 		},
 	})
@@ -47,9 +46,9 @@ func testSweepEc2ClientVpnEndpoints(region string) error {
 	var sweeperErrs *multierror.Error
 
 	input := &ec2.DescribeClientVpnEndpointsInput{}
-	err = conn.DescribeClientVpnEndpointsPages(input, func(page *ec2.DescribeClientVpnEndpointsOutput, isLast bool) bool {
+	err = conn.DescribeClientVpnEndpointsPages(input, func(page *ec2.DescribeClientVpnEndpointsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, clientVpnEndpoint := range page.ClientVpnEndpoints {
@@ -64,7 +63,7 @@ func testSweepEc2ClientVpnEndpoints(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Client VPN endpoint sweep for %s: %s", region, err)

@@ -16,11 +16,10 @@ func TestAccAWSRoute53HealthCheck_basic(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		ErrorCheck:    testAccErrorCheck(t, route53.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckRoute53HealthCheckDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53HealthCheckConfig,
@@ -53,11 +52,10 @@ func TestAccAWSRoute53HealthCheck_tags(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		ErrorCheck:    testAccErrorCheck(t, route53.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckRoute53HealthCheckDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53HealthCheckConfigTags1("key1", "value1"),
@@ -97,11 +95,10 @@ func TestAccAWSRoute53HealthCheck_withSearchString(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		ErrorCheck:    testAccErrorCheck(t, route53.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckRoute53HealthCheckDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53HealthCheckConfigWithSearchString,
@@ -260,11 +257,10 @@ func TestAccAWSRoute53HealthCheck_withSNI(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		ErrorCheck:    testAccErrorCheck(t, route53.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckRoute53HealthCheckDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53HealthCheckConfigWithoutSNI,
@@ -433,7 +429,7 @@ func testAccCheckRoute53HealthCheckDisappears(hCheck *route53.HealthCheck) resou
 
 const testAccRoute53HealthCheckConfig = `
 resource "aws_route53_health_check" "test" {
-  fqdn               = "dev.notexample.com"
+  fqdn               = "dev.example.com"
   port               = 80
   type               = "HTTP"
   resource_path      = "/"
@@ -447,7 +443,7 @@ resource "aws_route53_health_check" "test" {
 func testAccRoute53HealthCheckConfigTags1(tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_health_check" "test" {
-  fqdn               = "dev.notexample.com"
+  fqdn               = "dev.example.com"
   port               = 80
   type               = "HTTP"
   resource_path      = "/"
@@ -466,7 +462,7 @@ resource "aws_route53_health_check" "test" {
 func testAccRoute53HealthCheckConfigTags2(tag1Key, tag1Value, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_health_check" "test" {
-  fqdn               = "dev.notexample.com"
+  fqdn               = "dev.example.com"
   port               = 80
   type               = "HTTP"
   resource_path      = "/"
@@ -485,7 +481,7 @@ resource "aws_route53_health_check" "test" {
 
 const testAccRoute53HealthCheckConfigUpdate = `
 resource "aws_route53_health_check" "test" {
-  fqdn               = "dev.notexample.com"
+  fqdn               = "dev.example.com"
   port               = 80
   type               = "HTTP"
   resource_path      = "/"
@@ -543,7 +539,7 @@ resource "aws_route53_health_check" "test" {
 
 const testAccRoute53HealthCheckConfig_withChildHealthChecks = `
 resource "aws_route53_health_check" "child1" {
-  fqdn              = "child1.notexample.com"
+  fqdn              = "child1.example.com"
   port              = 80
   type              = "HTTP"
   resource_path     = "/"
@@ -606,7 +602,7 @@ resource "aws_route53_health_check" "test" {
 
 const testAccRoute53HealthCheckConfigWithSearchString = `
 resource "aws_route53_health_check" "test" {
-  fqdn               = "dev.notexample.com"
+  fqdn               = "dev.example.com"
   port               = 80
   type               = "HTTP_STR_MATCH"
   resource_path      = "/"
@@ -624,7 +620,7 @@ resource "aws_route53_health_check" "test" {
 
 const testAccRoute53HealthCheckConfigWithSearchStringUpdate = `
 resource "aws_route53_health_check" "test" {
-  fqdn               = "dev.notexample.com"
+  fqdn               = "dev.example.com"
   port               = 80
   type               = "HTTP_STR_MATCH"
   resource_path      = "/"
@@ -642,7 +638,7 @@ resource "aws_route53_health_check" "test" {
 
 const testAccRoute53HealthCheckConfigWithoutSNI = `
 resource "aws_route53_health_check" "test" {
-  fqdn               = "dev.notexample.com"
+  fqdn               = "dev.example.com"
   port               = 443
   type               = "HTTPS"
   resource_path      = "/"
@@ -659,7 +655,7 @@ resource "aws_route53_health_check" "test" {
 
 const testAccRoute53HealthCheckConfigWithSNI = `
 resource "aws_route53_health_check" "test" {
-  fqdn               = "dev.notexample.com"
+  fqdn               = "dev.example.com"
   port               = 443
   type               = "HTTPS"
   resource_path      = "/"
@@ -677,7 +673,7 @@ resource "aws_route53_health_check" "test" {
 
 const testAccRoute53HealthCheckConfigWithSNIDisabled = `
 resource "aws_route53_health_check" "test" {
-  fqdn               = "dev.notexample.com"
+  fqdn               = "dev.example.com"
   port               = 443
   type               = "HTTPS"
   resource_path      = "/"
@@ -698,7 +694,7 @@ func testAccRoute53HealthCheckConfigDisabled(disabled bool) string {
 resource "aws_route53_health_check" "test" {
   disabled          = %[1]t
   failure_threshold = "2"
-  fqdn              = "dev.notexample.com"
+  fqdn              = "dev.example.com"
   port              = 80
   request_interval  = "30"
   resource_path     = "/"

@@ -12,7 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
@@ -102,10 +104,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go/service/schemas"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/aws/aws-sdk-go/service/signer"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -114,6 +118,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/synthetics"
+	"github.com/aws/aws-sdk-go/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
@@ -142,8 +147,12 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(apigateway.New)
 	case "apigatewayv2":
 		funcType = reflect.TypeOf(apigatewayv2.New)
+	case "appconfig":
+		funcType = reflect.TypeOf(appconfig.New)
 	case "appmesh":
 		funcType = reflect.TypeOf(appmesh.New)
+	case "apprunner":
+		funcType = reflect.TypeOf(apprunner.New)
 	case "appstream":
 		funcType = reflect.TypeOf(appstream.New)
 	case "appsync":
@@ -328,8 +337,12 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(securityhub.New)
 	case "servicediscovery":
 		funcType = reflect.TypeOf(servicediscovery.New)
+	case "schemas":
+		funcType = reflect.TypeOf(schemas.New)
 	case "sfn":
 		funcType = reflect.TypeOf(sfn.New)
+	case "shield":
+		funcType = reflect.TypeOf(shield.New)
 	case "signer":
 		funcType = reflect.TypeOf(signer.New)
 	case "sns":
@@ -346,6 +359,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(swf.New)
 	case "synthetics":
 		funcType = reflect.TypeOf(synthetics.New)
+	case "timestreamwrite":
+		funcType = reflect.TypeOf(timestreamwrite.New)
 	case "transfer":
 		funcType = reflect.TypeOf(transfer.New)
 	case "waf":
@@ -623,6 +638,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "ChangeTagsForResource"
 	case "sagemaker":
 		return "AddTags"
+	case "shield":
+		return "TagResource"
 	case "sqs":
 		return "TagQueue"
 	case "ssm":
@@ -739,11 +756,15 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "SecretId"
 	case "servicediscovery":
 		return "ResourceARN"
+	case "shield":
+		return "ResourceARN"
 	case "sqs":
 		return "QueueUrl"
 	case "ssm":
 		return "ResourceId"
 	case "storagegateway":
+		return "ResourceARN"
+	case "timestreamwrite":
 		return "ResourceARN"
 	case "transfer":
 		return "Arn"

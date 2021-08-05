@@ -41,6 +41,12 @@ func resourceAwsQLDBLedger() *schema.Resource {
 				),
 			},
 
+			"permissions_mode": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(qldb.PermissionsMode_Values(), false),
+			},
+
 			"deletion_protection": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -48,12 +54,18 @@ func resourceAwsQLDBLedger() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
+
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsQLDBLedgerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).qldbconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -67,12 +79,11 @@ func resourceAwsQLDBLedgerCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	// Create the QLDB Ledger
-	// The qldb.PermissionsModeAllowAll is currently hardcoded because AWS doesn't support changing the mode.
 	createOpts := &qldb.CreateLedgerInput{
 		Name:               aws.String(d.Get("name").(string)),
-		PermissionsMode:    aws.String(qldb.PermissionsModeAllowAll),
+		PermissionsMode:    aws.String(d.Get("permissions_mode").(string)),
 		DeletionProtection: aws.Bool(d.Get("deletion_protection").(bool)),
-		Tags:               keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().QldbTags(),
+		Tags:               tags.IgnoreAws().QldbTags(),
 	}
 
 	log.Printf("[DEBUG] QLDB Ledger create config: %#v", *createOpts)
@@ -105,6 +116,7 @@ func resourceAwsQLDBLedgerCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).qldbconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	// Refresh the QLDB state
@@ -129,6 +141,10 @@ func resourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting name: %s", err)
 	}
 
+	if err := d.Set("permissions_mode", qldbLedger.PermissionsMode); err != nil {
+		return fmt.Errorf("error setting permissions mode: %s", err)
+	}
+
 	if err := d.Set("deletion_protection", qldbLedger.DeletionProtection); err != nil {
 		return fmt.Errorf("error setting deletion protection: %s", err)
 	}
@@ -145,8 +161,15 @@ func resourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error listing tags for QLDB Ledger: %s", err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -154,6 +177,16 @@ func resourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsQLDBLedgerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).qldbconn
+
+	if d.HasChange("permissions_mode") {
+		updateOpts := &qldb.UpdateLedgerPermissionsModeInput{
+			Name:            aws.String(d.Id()),
+			PermissionsMode: aws.String(d.Get("permissions_mode").(string)),
+		}
+		if _, err := conn.UpdateLedgerPermissionsMode(updateOpts); err != nil {
+			return fmt.Errorf("error updating permissions mode: %s", err)
+		}
+	}
 
 	if d.HasChange("deletion_protection") {
 		val := d.Get("deletion_protection").(bool)
@@ -170,8 +203,8 @@ func resourceAwsQLDBLedgerUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.QldbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}

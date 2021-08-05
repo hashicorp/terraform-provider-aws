@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -105,8 +106,12 @@ func dmsReplicationTaskDestroy(s *terraform.State) error {
 			},
 		})
 
+		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+			continue
+		}
+
 		if err != nil {
-			return nil
+			return fmt.Errorf("error reading DMS Replication Task (%s): %w", rs.Primary.ID, err)
 		}
 
 		if resp != nil && len(resp.ReplicationTasks) > 0 {

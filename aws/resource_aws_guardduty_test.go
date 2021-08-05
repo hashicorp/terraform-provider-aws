@@ -8,10 +8,11 @@ import (
 func TestAccAWSGuardDuty_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Detector": {
-			"basic":            testAccAwsGuardDutyDetector_basic,
-			"tags":             testAccAwsGuardDutyDetector_tags,
-			"datasource_basic": testAccAWSGuarddutyDetectorDataSource_basic,
-			"datasource_id":    testAccAWSGuarddutyDetectorDataSource_Id,
+			"basic":              testAccAwsGuardDutyDetector_basic,
+			"datasources_s3logs": testAccAwsGuardDutyDetector_datasources_s3logs,
+			"tags":               testAccAwsGuardDutyDetector_tags,
+			"datasource_basic":   testAccAWSGuarddutyDetectorDataSource_basic,
+			"datasource_id":      testAccAWSGuarddutyDetectorDataSource_Id,
 		},
 		"Filter": {
 			"basic":      testAccAwsGuardDutyFilter_basic,
@@ -30,7 +31,8 @@ func TestAccAWSGuardDuty_serial(t *testing.T) {
 			"basic": testAccAwsGuardDutyOrganizationAdminAccount_basic,
 		},
 		"OrganizationConfiguration": {
-			"basic": testAccAwsGuardDutyOrganizationConfiguration_basic,
+			"basic":  testAccAwsGuardDutyOrganizationConfiguration_basic,
+			"s3Logs": testAccAwsGuardDutyOrganizationConfiguration_s3logs,
 		},
 		"ThreatIntelSet": {
 			"basic": testAccAwsGuardDutyThreatintelset_basic,

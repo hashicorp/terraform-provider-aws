@@ -19,9 +19,6 @@ func init() {
 	resource.AddTestSweepers("aws_ec2_client_vpn_network_association", &resource.Sweeper{
 		Name: "aws_ec2_client_vpn_network_association",
 		F:    testSweepEc2ClientVpnNetworkAssociations,
-		Dependencies: []string{
-			"aws_directory_service_directory",
-		},
 	})
 }
 
@@ -37,9 +34,9 @@ func testSweepEc2ClientVpnNetworkAssociations(region string) error {
 	var sweeperErrs *multierror.Error
 
 	input := &ec2.DescribeClientVpnEndpointsInput{}
-	err = conn.DescribeClientVpnEndpointsPages(input, func(page *ec2.DescribeClientVpnEndpointsOutput, isLast bool) bool {
+	err = conn.DescribeClientVpnEndpointsPages(input, func(page *ec2.DescribeClientVpnEndpointsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, clientVpnEndpoint := range page.ClientVpnEndpoints {
@@ -47,9 +44,9 @@ func testSweepEc2ClientVpnNetworkAssociations(region string) error {
 			input := &ec2.DescribeClientVpnTargetNetworksInput{
 				ClientVpnEndpointId: clientVpnEndpoint.ClientVpnEndpointId,
 			}
-			err := conn.DescribeClientVpnTargetNetworksPages(input, func(page *ec2.DescribeClientVpnTargetNetworksOutput, isLast bool) bool {
+			err := conn.DescribeClientVpnTargetNetworksPages(input, func(page *ec2.DescribeClientVpnTargetNetworksOutput, lastPage bool) bool {
 				if page == nil {
-					return !isLast
+					return !lastPage
 				}
 
 				for _, networkAssociation := range page.ClientVpnTargetNetworks {
@@ -66,7 +63,7 @@ func testSweepEc2ClientVpnNetworkAssociations(region string) error {
 					}
 				}
 
-				return !isLast
+				return !lastPage
 			})
 
 			if testSweepSkipSweepError(err) {
@@ -79,7 +76,7 @@ func testSweepEc2ClientVpnNetworkAssociations(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Client VPN network association sweep for %s: %s", region, err)

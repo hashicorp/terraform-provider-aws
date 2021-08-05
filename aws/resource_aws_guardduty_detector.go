@@ -25,19 +25,47 @@ func resourceAwsGuardDutyDetector() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"datasources": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"s3_logs": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enable": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
 			"enable": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+
 			// finding_publishing_frequency is marked as Computed:true since
 			// GuardDuty member accounts inherit setting from master account
 			"finding_publishing_frequency": {
@@ -45,13 +73,19 @@ func resourceAwsGuardDutyDetector() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsGuardDutyDetectorCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).guarddutyconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := guardduty.CreateDetectorInput{
 		Enable: aws.Bool(d.Get("enable").(bool)),
@@ -61,8 +95,12 @@ func resourceAwsGuardDutyDetectorCreate(d *schema.ResourceData, meta interface{}
 		input.FindingPublishingFrequency = aws.String(v.(string))
 	}
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		input.Tags = keyvaluetags.New(v).IgnoreAws().GuarddutyTags()
+	if v, ok := d.GetOk("datasources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.DataSources = expandGuardDutyDataSourceConfigurations(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().GuarddutyTags()
 	}
 
 	log.Printf("[DEBUG] Creating GuardDuty Detector: %s", input)
@@ -77,6 +115,7 @@ func resourceAwsGuardDutyDetectorCreate(d *schema.ResourceData, meta interface{}
 
 func resourceAwsGuardDutyDetectorRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).guarddutyconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := guardduty.GetDetectorInput{
@@ -104,11 +143,27 @@ func resourceAwsGuardDutyDetectorRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("arn", arn)
 
 	d.Set("account_id", meta.(*AWSClient).accountid)
-	d.Set("enable", *gdo.Status == guardduty.DetectorStatusEnabled)
+
+	if gdo.DataSources != nil {
+		if err := d.Set("datasources", []interface{}{flattenGuardDutyDataSourceConfigurationsResult(gdo.DataSources)}); err != nil {
+			return fmt.Errorf("error setting datasources: %w", err)
+		}
+	} else {
+		d.Set("datasources", nil)
+	}
+
+	d.Set("enable", aws.StringValue(gdo.Status) == guardduty.DetectorStatusEnabled)
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 
-	if err := d.Set("tags", keyvaluetags.GuarddutyKeyValueTags(gdo.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags := keyvaluetags.GuarddutyKeyValueTags(gdo.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -117,11 +172,15 @@ func resourceAwsGuardDutyDetectorRead(d *schema.ResourceData, meta interface{}) 
 func resourceAwsGuardDutyDetectorUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).guarddutyconn
 
-	if d.HasChanges("enable", "finding_publishing_frequency") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := guardduty.UpdateDetectorInput{
 			DetectorId:                 aws.String(d.Id()),
 			Enable:                     aws.Bool(d.Get("enable").(bool)),
 			FindingPublishingFrequency: aws.String(d.Get("finding_publishing_frequency").(string)),
+		}
+
+		if d.HasChange("datasources") {
+			input.DataSources = expandGuardDutyDataSourceConfigurations(d.Get("datasources").([]interface{})[0].(map[string]interface{}))
 		}
 
 		log.Printf("[DEBUG] Update GuardDuty Detector: %s", input)
@@ -131,8 +190,8 @@ func resourceAwsGuardDutyDetectorUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.GuarddutyUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating GuardDuty Detector (%s) tags: %s", d.Get("arn").(string), err)
@@ -172,4 +231,60 @@ func resourceAwsGuardDutyDetectorDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	return nil
+}
+
+func expandGuardDutyDataSourceConfigurations(tfMap map[string]interface{}) *guardduty.DataSourceConfigurations {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &guardduty.DataSourceConfigurations{}
+
+	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 {
+		apiObject.S3Logs = expandGuardDutyS3LogsConfiguration(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandGuardDutyS3LogsConfiguration(tfMap map[string]interface{}) *guardduty.S3LogsConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &guardduty.S3LogsConfiguration{}
+
+	if v, ok := tfMap["enable"].(bool); ok {
+		apiObject.Enable = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func flattenGuardDutyDataSourceConfigurationsResult(apiObject *guardduty.DataSourceConfigurationsResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.S3Logs; v != nil {
+		tfMap["s3_logs"] = []interface{}{flattenGuardDutyS3LogsConfigurationResult(v)}
+	}
+
+	return tfMap
+}
+
+func flattenGuardDutyS3LogsConfigurationResult(apiObject *guardduty.S3LogsConfigurationResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Status; v != nil {
+		tfMap["enable"] = aws.StringValue(v) == guardduty.DataSourceStatusEnabled
+	}
+
+	return tfMap
 }

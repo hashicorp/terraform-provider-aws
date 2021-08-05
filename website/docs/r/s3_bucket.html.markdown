@@ -222,23 +222,25 @@ resource "aws_iam_policy" "replication" {
       ],
       "Effect": "Allow",
       "Resource": [
-        "${aws_s3_bucket.bucket.arn}"
+        "${aws_s3_bucket.source.arn}"
       ]
     },
     {
       "Action": [
-        "s3:GetObjectVersion",
-        "s3:GetObjectVersionAcl"
+        "s3:GetObjectVersionForReplication",
+        "s3:GetObjectVersionAcl",
+         "s3:GetObjectVersionTagging"
       ],
       "Effect": "Allow",
       "Resource": [
-        "${aws_s3_bucket.bucket.arn}/*"
+        "${aws_s3_bucket.source.arn}/*"
       ]
     },
     {
       "Action": [
         "s3:ReplicateObject",
-        "s3:ReplicateDelete"
+        "s3:ReplicateDelete",
+        "s3:ReplicateTags"
       ],
       "Effect": "Allow",
       "Resource": "${aws_s3_bucket.destination.arn}/*"
@@ -261,9 +263,9 @@ resource "aws_s3_bucket" "destination" {
   }
 }
 
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "source" {
   provider = aws.central
-  bucket   = "tf-test-bucket-12345"
+  bucket   = "tf-test-bucket-source-12345"
   acl      = "private"
 
   versioning {
@@ -325,7 +327,7 @@ resource "aws_s3_bucket" "bucket" {
 
   grant {
     type        = "Group"
-    permissions = ["READ", "WRITE"]
+    permissions = ["READ_ACP", "WRITE"]
     uri         = "http://acs.amazonaws.com/groups/s3/LogDelivery"
   }
 }
@@ -341,7 +343,7 @@ The following arguments are supported:
 * `grant` - (Optional) An [ACL policy grant](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#sample-acl) (documented below). Conflicts with `acl`.
 * `policy` - (Optional) A valid [bucket policy](https://docs.aws.amazon.com/AmazonS3/latest/dev/example-bucket-policies.html) JSON document. Note that if the policy document is not specific enough (but still valid), Terraform may view the policy as constantly changing in a `terraform plan`. In this case, please make sure you use the verbose/specific version of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 
-* `tags` - (Optional) A map of tags to assign to the bucket.
+* `tags` - (Optional) A map of tags to assign to the bucket. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `force_destroy` - (Optional, Default:`false`) A boolean that indicates all objects (including any [locked objects](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html)) should be deleted from the bucket so that the bucket can be destroyed without error. These objects are *not* recoverable.
 * `website` - (Optional) A website object (documented below).
 * `cors_rule` - (Optional) A rule of [Cross-Origin Resource Sharing](https://docs.aws.amazon.com/AmazonS3/latest/dev/cors.html) (documented below).
@@ -427,21 +429,18 @@ The `replication_configuration` object supports the following:
 
 The `rules` object supports the following:
 
-* `id` - (Optional) Unique identifier for the rule. Must be less than or equal to 255 characters in length.
-* `priority` - (Optional) The priority associated with the rule.
-* `destination` - (Required) Specifies the destination for the rule (documented below).
-* `source_selection_criteria` - (Optional) Specifies special object selection criteria (documented below).
-* `prefix` - (Optional) Object keyname prefix identifying one or more objects to which the rule applies. Must be less than or equal to 1024 characters in length.
-* `status` - (Required) The status of the rule. Either `Enabled` or `Disabled`. The rule is ignored if status is not Enabled.
-* `filter` - (Optional) Filter that identifies subset of objects to which the replication rule applies (documented below).
-
-~> **NOTE on `prefix` and `filter`:** Amazon S3's latest version of the replication configuration is V2, which includes the `filter` attribute for replication rules.
+~> **NOTE:** Amazon S3's latest version of the replication configuration is V2, which includes the `filter` attribute for replication rules.
 With the `filter` attribute, you can specify object filters based on the object key prefix, tags, or both to scope the objects that the rule applies to.
 Replication configuration V1 supports filtering based on only the `prefix` attribute. For backwards compatibility, Amazon S3 continues to support the V1 configuration.
 
-* For a specific rule, `prefix` conflicts with `filter`
-* If any rule has `filter` specified then they all must
-* `priority` is optional (with a default value of `0`) but must be unique between multiple rules
+* `delete_marker_replication_status` - (Optional) Whether delete markers are replicated. The only valid value is `Enabled`. To disable, omit this argument. This argument is only valid with V2 replication configurations (i.e., when `filter` is used).
+* `destination` - (Required) Specifies the destination for the rule (documented below).
+* `filter` - (Optional, Conflicts with `prefix`) Filter that identifies subset of objects to which the replication rule applies (documented below).
+* `id` - (Optional) Unique identifier for the rule. Must be less than or equal to 255 characters in length.
+* `prefix` - (Optional, Conflicts with `filter`) Object keyname prefix identifying one or more objects to which the rule applies. Must be less than or equal to 1024 characters in length.
+* `priority` - (Optional) The priority associated with the rule. Priority should only be set if `filter` is configured. If not provided, defaults to `0`. Priority must be unique between multiple rules.
+* `source_selection_criteria` - (Optional) Specifies special object selection criteria (documented below).
+* `status` - (Required) The status of the rule. Either `Enabled` or `Disabled`. The rule is ignored if status is not Enabled.
 
 ~> **NOTE:** Replication to multiple destination buckets requires that `priority` is specified in the `rules` object. If the corresponding rule requires no filter, an empty configuration block `filter {}` must be specified.
 
@@ -525,6 +524,7 @@ In addition to all arguments above, the following attributes are exported:
 * `bucket_regional_domain_name` - The bucket region-specific domain name. The bucket domain name including the region name, please refer [here](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) for format. Note: The AWS CloudFront allows specifying S3 region-specific endpoint when creating S3 origin, it will prevent [redirect issues](https://forums.aws.amazon.com/thread.jspa?threadID=216814) from CloudFront to S3 Origin URL.
 * `hosted_zone_id` - The [Route 53 Hosted Zone ID](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) for this bucket's region.
 * `region` - The AWS region this bucket resides in.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `website_endpoint` - The website endpoint, if the bucket is configured with a website. If not, this will be an empty string.
 * `website_domain` - The domain of the website endpoint, if the bucket is configured with a website. If not, this will be an empty string. This is used to create Route 53 alias records.
 

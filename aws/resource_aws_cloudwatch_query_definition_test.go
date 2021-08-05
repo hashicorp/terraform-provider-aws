@@ -3,17 +3,78 @@ package aws
 import (
 	"context"
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchlogs/finder"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_cloudwatch_query_definition", &resource.Sweeper{
+		Name: "aws_cloudwatch_query_definition",
+		F:    testSweepCloudwatchlogQueryDefinitions,
+	})
+}
+
+func testSweepCloudwatchlogQueryDefinitions(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*AWSClient).cloudwatchlogsconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
+
+	input := &cloudwatchlogs.DescribeQueryDefinitionsInput{}
+
+	// AWS SDK Go does not currently provide paginator
+	for {
+		output, err := conn.DescribeQueryDefinitions(input)
+
+		if err != nil {
+			err := fmt.Errorf("error reading CloudWatch Log Query Definition: %w", err)
+			log.Printf("[ERROR] %s", err)
+			errs = multierror.Append(errs, err)
+			break
+		}
+
+		for _, queryDefinition := range output.QueryDefinitions {
+			r := resourceAwsCloudWatchQueryDefinition()
+			d := r.Data(nil)
+
+			d.SetId(aws.StringValue(queryDefinition.QueryDefinitionId))
+
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping CloudWatch Log Query Definition for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping CloudWatch Log Query Definition sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
 
 func TestAccAWSCloudWatchQueryDefinition_basic(t *testing.T) {
 	var v cloudwatchlogs.QueryDefinition

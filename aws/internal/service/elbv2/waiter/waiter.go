@@ -29,6 +29,8 @@ const (
 	LoadBalancerListenerCreateTimeout = 5 * time.Minute
 	LoadBalancerListenerReadTimeout   = 2 * time.Minute
 	LoadBalancerListenerUpdateTimeout = 5 * time.Minute
+
+	PropagationTimeout = 2 * time.Minute
 )
 
 // LoadBalancerActive waits for a Load Balancer to return active

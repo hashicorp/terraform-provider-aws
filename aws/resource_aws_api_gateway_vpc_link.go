@@ -11,13 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apigateway/waiter"
 )
 
 const (
 	// Maximum amount of time for VpcLink to become available
 	apigatewayVpcLinkAvailableTimeout = 20 * time.Minute
-	// Maximum amount of time for VpcLink to delete
-	apigatewayVpcLinkDeleteTimeout = 20 * time.Minute
 )
 
 func resourceAwsApiGatewayVpcLink() *schema.Resource {
@@ -51,19 +50,23 @@ func resourceAwsApiGatewayVpcLink() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsApiGatewayVpcLinkCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayconn
-	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ApigatewayTags()
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &apigateway.CreateVpcLinkInput{
 		Name:       aws.String(d.Get("name").(string)),
 		TargetArns: expandStringList(d.Get("target_arns").([]interface{})),
-		Tags:       tags,
+		Tags:       tags.IgnoreAws().ApigatewayTags(),
 	}
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
@@ -94,6 +97,7 @@ func resourceAwsApiGatewayVpcLinkCreate(d *schema.ResourceData, meta interface{}
 
 func resourceAwsApiGatewayVpcLinkRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &apigateway.GetVpcLinkInput{
@@ -110,8 +114,15 @@ func resourceAwsApiGatewayVpcLinkRead(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	if err := d.Set("tags", keyvaluetags.ApigatewayKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags := keyvaluetags.ApigatewayKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	arn := arn.ARN{
@@ -149,8 +160,8 @@ func resourceAwsApiGatewayVpcLinkUpdate(d *schema.ResourceData, meta interface{}
 		})
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.ApigatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
@@ -201,11 +212,11 @@ func resourceAwsApiGatewayVpcLinkDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway VPC Link (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting API Gateway VPC Link (%s): %w", d.Id(), err)
 	}
 
-	if err := waitForApiGatewayVpcLinkDeletion(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for API Gateway VPC Link (%s) deletion: %s", d.Id(), err)
+	if err := waiter.ApiGatewayVpcLinkDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for API Gateway VPC Link (%s) deletion: %w", d.Id(), err)
 	}
 
 	return nil
@@ -222,34 +233,4 @@ func apigatewayVpcLinkRefreshStatusFunc(conn *apigateway.APIGateway, vl string) 
 		}
 		return resp, *resp.Status, nil
 	}
-}
-
-func waitForApiGatewayVpcLinkDeletion(conn *apigateway.APIGateway, vpcLinkID string) error {
-	stateConf := resource.StateChangeConf{
-		Pending: []string{apigateway.VpcLinkStatusPending,
-			apigateway.VpcLinkStatusAvailable,
-			apigateway.VpcLinkStatusDeleting},
-		Target:     []string{""},
-		Timeout:    apigatewayVpcLinkDeleteTimeout,
-		MinTimeout: 1 * time.Second,
-		Refresh: func() (interface{}, string, error) {
-			resp, err := conn.GetVpcLink(&apigateway.GetVpcLinkInput{
-				VpcLinkId: aws.String(vpcLinkID),
-			})
-
-			if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
-				return 1, "", nil
-			}
-
-			if err != nil {
-				return nil, apigateway.VpcLinkStatusFailed, err
-			}
-
-			return resp, aws.StringValue(resp.Status), nil
-		},
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
 }

@@ -29,11 +29,35 @@ resource "aws_ecr_replication_configuration" "example" {
 }
 ```
 
+## Multiple Region Usage
+
+```terraform
+data "aws_caller_identity" "current" {}
+
+data "aws_regions" "example" {}
+
+resource "aws_ecr_replication_configuration" "example" {
+  replication_configuration {
+    rule {
+      destination {
+        region      = data.aws_regions.example.names[0]
+        registry_id = data.aws_caller_identity.current.account_id
+      }
+
+      destination {
+        region      = data.aws_regions.example.names[1]
+        registry_id = data.aws_caller_identity.current.account_id
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
-* `replication_configuration` - (Required) Replication configuration for a registry. See [Replication Configuration](#encryption-configuration).
+* `replication_configuration` - (Required) Replication configuration for a registry. See [Replication Configuration](#replication-configuration).
 
 ### Replication Configuration
 

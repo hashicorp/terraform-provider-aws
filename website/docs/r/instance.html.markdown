@@ -90,9 +90,10 @@ resource "aws_instance" "foo" {
 
 The following arguments are supported:
 
-* `ami` - (Required) AMI to use for the instance.
+* `ami` - (Optional) AMI to use for the instance. Required unless `launch_template` is specified and the Launch Template specifes an AMI. If an AMI is specified in the Launch Template, setting `ami` will override the AMI specified in the Launch Template.
 * `associate_public_ip_address` - (Optional) Whether to associate a public IP address with an instance in a VPC.
 * `availability_zone` - (Optional) AZ to start the instance in.
+* `capacity_reservation_specification` - (Optional) Describes an instance's Capacity Reservation targeting option. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
 
 -> **NOTE:** Changing `cpu_core_count` and/or `cpu_threads_per_core` will cause the resource to be destroyed and re-created.
 
@@ -109,10 +110,12 @@ The following arguments are supported:
 * `host_id` - (Optional) ID of a dedicated host that the instance will be assigned to. Use when an instance is to be launched on a specific dedicated host.
 * `iam_instance_profile` - (Optional) IAM Instance Profile to launch the instance with. Specified as the name of the Instance Profile. Ensure your credentials have the correct permission to assign the instance profile according to the [EC2 documentation](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html#roles-usingrole-ec2instance-permissions), notably `iam:PassRole`.
 * `instance_initiated_shutdown_behavior` - (Optional) Shutdown behavior for the instance. Amazon defaults this to `stop` for EBS-backed instances and `terminate` for instance-store instances. Cannot be set on instance-store instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingInstanceInitiatedShutdownBehavior) for more information.
-* `instance_type` - (Required) Type of instance to start. Updates to this field will trigger a stop/start of the EC2 instance.
+* `instance_type` - (Optional) The instance type to use for the instance. Updates to this field will trigger a stop/start of the EC2 instance.
 * `ipv6_address_count`- (Optional) A number of IPv6 addresses to associate with the primary network interface. Amazon EC2 chooses the IPv6 addresses from the range of your subnet.
 * `ipv6_addresses` - (Optional) Specify one or more IPv6 addresses from the range of the subnet to associate with the primary network interface
 * `key_name` - (Optional) Key name of the Key Pair to use for the instance; which can be managed using [the `aws_key_pair` resource](key_pair.html).
+* `launch_template` - (Optional) Specifies a Launch Template to configure the instance. Parameters configured on this resource will override the corresponding parameters in the Launch Template.
+  See [Launch Template Specification](#launch-template-specification) below for more details.
 * `metadata_options` - (Optional) Customize the metadata options of the instance. See [Metadata Options](#metadata-options) below for more details.
 * `monitoring` - (Optional) If true, the launched EC2 instance will have detailed monitoring enabled. (Available since v0.6.0)
 * `network_interface` - (Optional) Customize network interfaces to be attached at instance boot time. See [Network Interfaces](#network-interfaces) below for more details.
@@ -126,7 +129,7 @@ The following arguments are supported:
 
 * `source_dest_check` - (Optional) Controls if traffic is routed to the instance when the destination address does not match the instance. Used for NAT or VPNs. Defaults true.
 * `subnet_id` - (Optional) VPC Subnet ID to launch in.
-* `tags` - (Optional) A map of tags to assign to the resource. Note that these tags apply to the instance and not block storage devices.
+* `tags` - (Optional) A map of tags to assign to the resource. Note that these tags apply to the instance and not block storage devices. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tenancy` - (Optional) Tenancy of the instance (if the instance is running in a VPC). An instance with a tenancy of dedicated runs on single-tenant hardware. The host tenancy is not supported for the import-instance command.
 * `user_data` - (Optional) User data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `user_data_base64` instead.
 * `user_data_base64` - (Optional) Can be used instead of `user_data` to pass base64-encoded binary data directly. Use this instead of `user_data` whenever the value is not a valid UTF-8 string. For example, gzip-encoded user data must be base64-encoded and passed via this argument to avoid corruption.
@@ -143,6 +146,29 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 * `create` - (Defaults to 10 mins) Used when launching the instance (until it reaches the initial `running` state)
 * `update` - (Defaults to 10 mins) Used when stopping and starting the instance when necessary during update - e.g. when changing instance type
 * `delete` - (Defaults to 20 mins) Used when terminating the instance
+
+### Capacity Reservation Specification
+
+~> **NOTE:** You can specify only one argument at a time. If you specify both `capacity_reservation_preference` and `capacity_reservation_target`, the request fails. Modifying `capacity_reservation_preference` or `capacity_reservation_target` in this block requires the instance to be in `stopped` state.
+
+Capacity reservation specification can be applied/modified to the EC2 Instance at creation time or when the instance is `stopped`.
+
+The `capacity_reservation_specification` block supports the following:
+
+* `capacity_reservation_preference` - (Optional) Indicates the instance's Capacity Reservation preferences. Can be `"open"` or `"none"`. (Default: `"open"`).
+* `capacity_reservation_target` - (Optional) Information about the target Capacity Reservation. See [Capacity Reservation Target](#capacity-reservation-target) below for more details.
+
+For more information, see the documentation on [Capacity Reservations](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/capacity-reservations-using.html).
+
+### Capacity Reservation Target
+
+~> **NOTE:** Modifying `capacity_reservation_id` in this block requires the instance to be in `stopped` state.
+
+Describes a target Capacity Reservation.
+
+This `capacity_reservation_target` block supports the following:
+
+* `capacity_reservation_id` - (Optional) The ID of the Capacity Reservation in which to run the instance.
 
 ### Credit Specification
 
@@ -226,11 +252,25 @@ Each `network_interface` block supports the following:
 * `device_index` - (Required) Integer index of the network interface attachment. Limited by instance type.
 * `network_interface_id` - (Required) ID of the network interface to attach.
 
+### Launch Template Specification
+
+-> **Note:** Launch Template parameters will be used only once during instance creation. If you want to update existing instance you need to change parameters
+directly. Updating Launch Template specification will force a new instance.
+
+Any other instance parameters that you specify will override the same parameters in the launch template.
+
+The `launch_template` block supports the following:
+
+* `id` - The ID of the launch template. Conflicts with `name`.
+* `name` - The name of the launch template. Conflicts with `id`.
+* `version` - Template version. Can be a specific version number, `$Latest` or `$Default`. The default value is `$Default`.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the instance.
+* `capacity_reservation_specification` - Capacity reservation specification of the instance.
 * `instance_state` - The state of the instance. One of: `pending`, `running`, `shutting-down`, `terminated`, `stopping`, `stopped`. See [Instance Lifecycle](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html) for more information.
 * `outpost_arn` - The ARN of the Outpost the instance is assigned to.
 * `password_data` - Base-64 encoded encrypted password data for the instance. Useful for getting the administrator password for instances running Microsoft Windows. This attribute is only exported if `get_password_data` is true. Note that this encrypted value will be stored in the state file, as with all exported attributes. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
@@ -238,6 +278,7 @@ In addition to all arguments above, the following attributes are exported:
 * `private_dns` - The private DNS name assigned to the instance. Can only be used inside the Amazon EC2, and only available if you've enabled DNS hostnames for your VPC.
 * `public_dns` - The public DNS name assigned to the instance. For EC2-VPC, this is only available if you've enabled DNS hostnames for your VPC.
 * `public_ip` - The public IP address assigned to the instance, if applicable. **NOTE**: If you are using an [`aws_eip`](/docs/providers/aws/r/eip.html) with your instance, you should refer to the EIP's address directly and not use `public_ip` as this field will change after the EIP is attached.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 For `ebs_block_device`, in addition to the arguments above, the following attribute is exported:
 
