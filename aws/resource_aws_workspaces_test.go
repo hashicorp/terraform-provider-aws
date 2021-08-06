@@ -23,7 +23,16 @@ func TestAccAWSWorkspaces_serial(t *testing.T) {
 			"multipleDirectories": testAccAwsWorkspacesIpGroup_MultipleDirectories,
 			"tags":                testAccAwsWorkspacesIpGroup_tags,
 		},
-		"Workspace": {},
+		"Workspace": {
+			"basic":                  testAccAwsWorkspacesWorkspace_basic,
+			"recreate":               testAccAwsWorkspacesWorkspace_recreate,
+			"tags":                   testAccAwsWorkspacesWorkspace_tags,
+			"timeout":                testAccAwsWorkspacesWorkspace_timeout,
+			"validateRootVolumeSize": testAccAwsWorkspacesWorkspace_validateRootVolumeSize,
+			"validateUserVolumeSize": testAccAwsWorkspacesWorkspace_validateUserVolumeSize,
+			"workspaceProperties":    testAccAwsWorkspacesWorkspace_workspaceProperties,
+			"workspaceProperties_runningModeAlwaysOn": testAccAwsWorkspacesWorkspace_workspaceProperties_runningModeAlwaysOn,
+		},
 	}
 
 	for group, m := range testCases {
