@@ -15,13 +15,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appstream/waiter"
 )
 
 func resourceAwsAppStreamImageBuilder() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAwsAppStreamImageBuilderCreate,
 		ReadWithoutTimeout:   resourceAwsAppStreamImageBuilderRead,
-		UpdateWithoutTimeout: resourceAwsAppStreamImageBuilderUpdate,
 		DeleteWithoutTimeout: resourceAwsAppStreamImageBuilderDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -132,10 +132,8 @@ func resourceAwsAppStreamImageBuilder() *schema.Resource {
 				ConflictsWith: []string{"name"},
 			},
 			"state": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice([]string{appstream.ImageBuilderStateRunning, appstream.ImageBuilderStateStopped}, false),
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -245,35 +243,16 @@ func resourceAwsAppStreamImageBuilderCreate(ctx context.Context, d *schema.Resou
 		return diag.FromErr(fmt.Errorf("error creating Appstream ImageBuilder (%s): %w", d.Id(), err))
 	}
 
-	if v, ok := d.GetOk("state"); ok {
-		if v == "RUNNING" {
-			desiredState := v
-			_, err := conn.StartImageBuilderWithContext(ctx, &appstream.StartImageBuilderInput{
-				Name: output.ImageBuilder.Name,
-			})
+	// Start Imagebuilder workflow
+	_, err = conn.StartImageBuilderWithContext(ctx, &appstream.StartImageBuilderInput{
+		Name: output.ImageBuilder.Name,
+	})
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error starting Appstream ImageBuilder (%s): %w", d.Id(), err))
+	}
 
-			if err != nil {
-				return diag.FromErr(fmt.Errorf("error starting Appstream ImageBuilder (%s): %w", d.Id(), err))
-			}
-			for {
-				resp, err := conn.DescribeImageBuildersWithContext(ctx, &appstream.DescribeImageBuildersInput{
-					Names: aws.StringSlice([]string{*input.Name}),
-				})
-				if err != nil {
-					return diag.FromErr(fmt.Errorf("error describing Appstream ImageBuilder (%s): %w", d.Id(), err))
-				}
-
-				currentState := resp.ImageBuilders[0].State
-				if aws.StringValue(currentState) == desiredState {
-					break
-				}
-				if aws.StringValue(currentState) != desiredState {
-					time.Sleep(20 * time.Second)
-					continue
-				}
-
-			}
-		}
+	if _, err = waiter.ImageBuilderStateRunning(ctx, conn, d.Id()); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for Appstream Fleet (%s) to be running: %w", d.Id(), err))
 	}
 
 	d.SetId(aws.StringValue(output.ImageBuilder.Name))
@@ -343,73 +322,22 @@ func resourceAwsAppStreamImageBuilderRead(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func resourceAwsAppStreamImageBuilderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).appstreamconn
-
-	desiredState := d.Get("state")
-	if d.HasChange("state") {
-		if desiredState == "STOPPED" {
-			_, err := conn.StopImageBuilderWithContext(ctx, &appstream.StopImageBuilderInput{
-				Name: aws.String(d.Id()),
-			})
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			for {
-
-				resp, err := conn.DescribeImageBuildersWithContext(ctx, &appstream.DescribeImageBuildersInput{
-					Names: aws.StringSlice([]string{d.Id()}),
-				})
-				if err != nil {
-					return diag.FromErr(fmt.Errorf("error describing Appstream ImageBuilder (%s): %w", d.Id(), err))
-				}
-
-				currentState := resp.ImageBuilders[0].State
-				if aws.StringValue(currentState) == desiredState {
-					break
-				}
-				if aws.StringValue(currentState) != desiredState {
-					time.Sleep(20 * time.Second)
-					continue
-				}
-			}
-		} else if desiredState == "RUNNING" {
-			_, err := conn.StartImageBuilderWithContext(ctx, &appstream.StartImageBuilderInput{
-				Name: aws.String(d.Id()),
-			})
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			for {
-
-				resp, err := conn.DescribeImageBuildersWithContext(ctx, &appstream.DescribeImageBuildersInput{
-					Names: aws.StringSlice([]string{d.Id()}),
-				})
-				if err != nil {
-					return diag.FromErr(fmt.Errorf("error describing Appstream ImageBuilder (%s): %w", d.Id(), err))
-				}
-
-				currentState := resp.ImageBuilders[0].State
-				if aws.StringValue(currentState) == desiredState {
-					break
-				}
-				if aws.StringValue(currentState) != desiredState {
-					time.Sleep(20 * time.Second)
-					continue
-				}
-
-			}
-		}
-	}
-
-	return resourceAwsAppStreamImageBuilderRead(ctx, d, meta)
-
-}
-
 func resourceAwsAppStreamImageBuilderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).appstreamconn
 
-	_, err := conn.DeleteImageBuilderWithContext(ctx, &appstream.DeleteImageBuilderInput{
+	// Stop Imagebuilder workflow
+	_, err := conn.StopImageBuilderWithContext(ctx, &appstream.StopImageBuilderInput{
+		Name: aws.String(d.Id()),
+	})
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error stopping Appstream ImageBuilder (%s): %w", d.Id(), err))
+	}
+
+	if _, err = waiter.ImageBuilderStateStopped(ctx, conn, d.Id()); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for Appstream Fleet (%s) to be stopped: %w", d.Id(), err))
+	}
+
+	_, err = conn.DeleteImageBuilderWithContext(ctx, &appstream.DeleteImageBuilderInput{
 		Name: aws.String(d.Id()),
 	})
 	if err != nil {

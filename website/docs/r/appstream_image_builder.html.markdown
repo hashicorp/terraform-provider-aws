@@ -52,7 +52,6 @@ The following arguments are supported:
 * `image_name` - (Optional) The name of the image used to create the image builder.
 * `image_arn` - (Optional) The ARN of the public, private, or shared image to use.
 * `instance_type` - (Required) The instance type to use when launching the image builder.
-* `state` - (Optional) The state of the image builder. Valid values are `RUNNING`, `STOPPED`.
 * `vpc_config` - (Optional) The VPC configuration for the image builder.
   * `security_group_ids` - The identifiers of the security groups for the image builder or image builder.
   * `subnet_ids` - The identifiers of the subnets to which a network interface is attached from the image builder instance or image builder instance.
@@ -62,3 +61,4 @@ The following arguments are supported:
 
 * `id` - The unique identifier (ID) of the appstream image builder.
 * `arn` - The Amazon Resource Name (ARN) of the appstream image builder.
+* `state` - The state of the image builder.

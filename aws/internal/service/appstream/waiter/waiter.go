@@ -16,6 +16,10 @@ const (
 	FleetStateTimeout = 180 * time.Minute
 	// FleetOperationTimeout Maximum amount of time to wait for Fleet operation eventual consistency
 	FleetOperationTimeout = 15 * time.Minute
+	// ImageBuilderStateTimeout Maximum amount of time to wait for the ImageBuilderState to be RUNNING or STOPPED
+	ImageBuilderStateTimeout = 60 * time.Minute
+	// ImageBuilderOperationTimeout Maximum amount of time to wait for ImageBuilder operation eventual consistency
+	ImageBuilderOperationTimeout = 4 * time.Minute
 )
 
 // StackStateDeleted waits for a deleted stack
@@ -65,6 +69,60 @@ func FleetStateStopped(ctx context.Context, conn *appstream.AppStream, name stri
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*appstream.Fleet); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// ImageBuilderStateRunning waits for a ImageBuilder running
+func ImageBuilderStateRunning(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{appstream.ImageBuilderStatePending},
+		Target:  []string{appstream.ImageBuilderStateRunning},
+		Refresh: ImageBuilderState(conn, name),
+		Timeout: ImageBuilderStateTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*appstream.ImageBuilder); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// ImageBuilderStateStopped waits for a ImageBuilder stopped
+func ImageBuilderStateStopped(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{appstream.ImageBuilderStatePending, appstream.ImageBuilderStateStopping},
+		Target:  []string{appstream.ImageBuilderStateStopped},
+		Refresh: ImageBuilderState(conn, name),
+		Timeout: ImageBuilderStateTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*appstream.ImageBuilder); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// ImageBuilderStateDeleted waits for a ImageBuilder deleted
+func ImageBuilderStateDeleted(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{appstream.ImageBuilderStatePending, appstream.ImageBuilderStateDeleting},
+		Target:  []string{"NotFound"},
+		Refresh: ImageBuilderState(conn, name),
+		Timeout: ImageBuilderStateTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*appstream.ImageBuilder); ok {
 		return output, err
 	}
 

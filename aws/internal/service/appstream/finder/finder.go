@@ -55,3 +55,22 @@ func FleetByName(ctx context.Context, conn *appstream.AppStream, name string) (*
 
 	return fleet, nil
 }
+
+// ImageBuilderByName Retrieve a appstream ImageBuilder by name
+func ImageBuilderByName(conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
+	input := &appstream.DescribeImageBuildersInput{
+		Names: []*string{aws.String(name)},
+	}
+
+	var imageBuilder *appstream.ImageBuilder
+	resp, err := conn.DescribeImageBuilders(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resp.ImageBuilders) > 0 {
+		imageBuilder = resp.ImageBuilders[0]
+	}
+
+	return imageBuilder, nil
+}
