@@ -151,11 +151,11 @@ func testAccCheckAwsAppStreamFleetDestroy(s *terraform.State) error {
 func testAccAwsAppStreamFleetConfigBasic(fleetName, instaceType string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_fleet" "test_fleet" {
-  name       = %[1]q
+  name = %[1]q
   compute_capacity {
     desired_instances = 1
   }
-  instance_type                       = %[2]q
+  instance_type = %[2]q
 }
 `, fleetName, instaceType)
 }
@@ -163,7 +163,7 @@ resource "aws_appstream_fleet" "test_fleet" {
 func testAccAwsAppStreamFleetConfigWithTags(fleetName, description, fleetType, instaceType string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-  state            = "available"
+  state = "available"
 }
 
 resource "aws_vpc" "example" {
@@ -177,19 +177,19 @@ resource "aws_subnet" "example" {
 }
 
 resource "aws_appstream_fleet" "test_fleet" {
-  name       = %[1]q
+  name = %[1]q
   compute_capacity {
     desired_instances = 1
   }
-  description                         = %[2]q
-  idle_disconnect_timeout_in_seconds  = 70
-  display_name                        = %[1]q
-  enable_default_internet_access      = false
-  fleet_type                          = %[3]q
-  instance_type                       = %[4]q
-  max_user_duration_in_seconds        = 600
+  description                        = %[2]q
+  idle_disconnect_timeout_in_seconds = 70
+  display_name                       = %[1]q
+  enable_default_internet_access     = false
+  fleet_type                         = %[3]q
+  instance_type                      = %[4]q
+  max_user_duration_in_seconds       = 600
   vpc_config {
-    subnet_ids                          = [aws_subnet.example.id]
+    subnet_ids = [aws_subnet.example.id]
   }
   tags = {
     Key = "value"
