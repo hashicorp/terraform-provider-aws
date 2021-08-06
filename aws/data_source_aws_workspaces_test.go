@@ -18,7 +18,11 @@ func TestAccDataSourceAwsWorkspaces_serial(t *testing.T) {
 		"Image": {
 			"basic": testAccDataSourceAwsWorkspacesImage_basic,
 		},
-		"Workspace": {},
+		"Workspace": {
+			"byWorkspaceID":                     testAccDataSourceAwsWorkspacesWorkspace_byWorkspaceID,
+			"byDirectoryID_userName":            testAccDataSourceAwsWorkspacesWorkspace_byDirectoryID_userName,
+			"workspaceIDAndDirectoryIDConflict": testAccDataSourceAwsWorkspacesWorkspace_workspaceIDAndDirectoryIDConflict,
+		},
 	}
 
 	for group, m := range testCases {
