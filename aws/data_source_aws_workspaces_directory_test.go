@@ -9,14 +9,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAwsWorkspacesDirectory_basic(t *testing.T) {
+func testAccDataSourceAwsWorkspacesDirectory_basic(t *testing.T) {
 	rName := acctest.RandString(8)
 	domain := testAccRandomDomainName()
 
 	resourceName := "aws_workspaces_directory.test"
 	dataSourceName := "data.aws_workspaces_directory.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)

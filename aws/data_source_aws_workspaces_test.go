@@ -12,7 +12,9 @@ func TestAccDataSourceAwsWorkspaces_serial(t *testing.T) {
 			"byOwnerName":             testAccDataSourceAwsWorkspaceBundle_byOwnerName,
 			"privateOwner":            testAccDataSourceAwsWorkspaceBundle_privateOwner,
 		},
-		"Directory": {},
+		"Directory": {
+			"basic": testAccDataSourceAwsWorkspacesDirectory_basic,
+		},
 		"Image":     {},
 		"Workspace": {},
 	}
