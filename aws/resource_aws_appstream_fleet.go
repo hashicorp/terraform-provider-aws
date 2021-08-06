@@ -8,7 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -237,7 +239,24 @@ func resourceAwsAppstreamFleetCreate(ctx context.Context, d *schema.ResourceData
 		input.Tags = tags.IgnoreAws().AppstreamTags()
 	}
 
-	resp, err := conn.CreateFleetWithContext(ctx, input)
+	var err error
+	var output *appstream.CreateFleetOutput
+	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+		output, err = conn.CreateFleetWithContext(ctx, input)
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		output, err = conn.CreateFleetWithContext(ctx, input)
+	}
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error creating Appstream Fleet (%s): %w", d.Id(), err))
 	}
@@ -246,7 +265,7 @@ func resourceAwsAppstreamFleetCreate(ctx context.Context, d *schema.ResourceData
 		if v == "RUNNING" {
 			desiredState := v
 			_, err := conn.StartFleetWithContext(ctx, &appstream.StartFleetInput{
-				Name: resp.Fleet.Name,
+				Name: output.Fleet.Name,
 			})
 
 			if err != nil {
@@ -273,7 +292,7 @@ func resourceAwsAppstreamFleetCreate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	d.SetId(aws.StringValue(resp.Fleet.Name))
+	d.SetId(aws.StringValue(output.Fleet.Name))
 
 	return resourceAwsAppstreamFleetRead(ctx, d, meta)
 }
@@ -285,10 +304,16 @@ func resourceAwsAppstreamFleetRead(ctx context.Context, d *schema.ResourceData, 
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeFleetsWithContext(ctx, &appstream.DescribeFleetsInput{Names: []*string{aws.String(d.Id())}})
+	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] Appstream Fleet (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error reading Appstream Fleet (%s): %w", d.Id(), err))
 	}
+
 	for _, v := range resp.Fleets {
 		d.Set("name", v.Name)
 		d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(v.Name)))
@@ -517,7 +542,11 @@ func resourceAwsAppstreamFleetDelete(ctx context.Context, d *schema.ResourceData
 	_, err = conn.DeleteFleetWithContext(ctx, &appstream.DeleteFleetInput{
 		Name: aws.String(d.Id()),
 	})
+
 	if err != nil {
+		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+			return nil
+		}
 		return diag.FromErr(fmt.Errorf("error deleting Appstream Fleet (%s): %w", d.Id(), err))
 	}
 	return nil

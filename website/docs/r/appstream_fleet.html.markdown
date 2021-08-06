@@ -70,3 +70,11 @@ The following arguments are supported:
 
 * `id` - The unique identifier (ID) of the appstream fleet.
 * `arn` - The Amazon Resource Name (ARN) of the appstream fleet.
+
+## Import
+
+`aws_appstream_fleet` can be imported using the id, e.g.
+
+```
+$ terraform import aws_appstream_fleet.example abcd1
+```
