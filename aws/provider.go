@@ -537,7 +537,7 @@ func Provider() *schema.Provider {
 			"aws_apprunner_custom_domain_association":              resourceAwsAppRunnerCustomDomainAssociation(),
 			"aws_apprunner_service":                                resourceAwsAppRunnerService(),
 			"aws_appstream_stack":                                  resourceAwsAppStreamStack(),
-			"aws_appstream_fleet":                                  resourceAwsAppstreamFleet(),
+			"aws_appstream_fleet":                                  resourceAwsAppStreamFleet(),
 			"aws_appsync_api_key":                                  resourceAwsAppsyncApiKey(),
 			"aws_appsync_datasource":                               resourceAwsAppsyncDatasource(),
 			"aws_appsync_function":                                 resourceAwsAppsyncFunction(),

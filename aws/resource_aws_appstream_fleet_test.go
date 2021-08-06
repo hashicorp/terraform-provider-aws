@@ -56,7 +56,7 @@ func testAccAwsAppStreamFleet_disappears(t *testing.T) {
 				Config: testAccAwsAppStreamFleetConfigBasic(fleetName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamFleetExists(resourceName, &fleetOutput),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppstreamFleet(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppStreamFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
