@@ -3,23 +3,26 @@ package aws
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
-func resourceAwsAppstreamImageBuilder() *schema.Resource {
+func resourceAwsAppStreamImageBuilder() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsAppstreamImageBuilderCreate,
-		ReadWithoutTimeout:   resourceAwsAppstreamImageBuilderRead,
-		UpdateWithoutTimeout: resourceAwsAppstreamImageBuilderUpdate,
-		DeleteWithoutTimeout: resourceAwsAppstreamImageBuilderDelete,
+		CreateWithoutTimeout: resourceAwsAppStreamImageBuilderCreate,
+		ReadWithoutTimeout:   resourceAwsAppStreamImageBuilderRead,
+		UpdateWithoutTimeout: resourceAwsAppStreamImageBuilderUpdate,
+		DeleteWithoutTimeout: resourceAwsAppStreamImageBuilderDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -167,7 +170,7 @@ func resourceAwsAppstreamImageBuilder() *schema.Resource {
 	}
 }
 
-func resourceAwsAppstreamImageBuilderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAwsAppStreamImageBuilderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).appstreamconn
 	input := &appstream.CreateImageBuilderInput{
 		Name: aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))),
@@ -220,7 +223,24 @@ func resourceAwsAppstreamImageBuilderCreate(ctx context.Context, d *schema.Resou
 		input.Tags = tags.IgnoreAws().AppstreamTags()
 	}
 
-	resp, err := conn.CreateImageBuilderWithContext(ctx, input)
+	var err error
+	var output *appstream.CreateImageBuilderOutput
+	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+		output, err = conn.CreateImageBuilderWithContext(ctx, input)
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		output, err = conn.CreateImageBuilderWithContext(ctx, input)
+	}
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error creating Appstream ImageBuilder (%s): %w", d.Id(), err))
 	}
@@ -229,7 +249,7 @@ func resourceAwsAppstreamImageBuilderCreate(ctx context.Context, d *schema.Resou
 		if v == "RUNNING" {
 			desiredState := v
 			_, err := conn.StartImageBuilderWithContext(ctx, &appstream.StartImageBuilderInput{
-				Name: resp.ImageBuilder.Name,
+				Name: output.ImageBuilder.Name,
 			})
 
 			if err != nil {
@@ -256,18 +276,24 @@ func resourceAwsAppstreamImageBuilderCreate(ctx context.Context, d *schema.Resou
 		}
 	}
 
-	d.SetId(aws.StringValue(resp.ImageBuilder.Name))
+	d.SetId(aws.StringValue(output.ImageBuilder.Name))
 
-	return resourceAwsAppstreamImageBuilderRead(ctx, d, meta)
+	return resourceAwsAppStreamImageBuilderRead(ctx, d, meta)
 }
 
-func resourceAwsAppstreamImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAwsAppStreamImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).appstreamconn
 
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeImageBuildersWithContext(ctx, &appstream.DescribeImageBuildersInput{Names: []*string{aws.String(d.Id())}})
+
+	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] Appstream ImageBuilder (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error reading Appstream ImageBuilder (%s): %w", d.Id(), err))
@@ -313,13 +339,11 @@ func resourceAwsAppstreamImageBuilderRead(ctx context.Context, d *schema.Resourc
 		if err = d.Set("tags_all", tags.Map()); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream ImageBuilder (%s): %w", "tags_all", d.Id(), err))
 		}
-
-		return nil
 	}
 	return nil
 }
 
-func resourceAwsAppstreamImageBuilderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAwsAppStreamImageBuilderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).appstreamconn
 
 	desiredState := d.Get("state")
@@ -378,17 +402,20 @@ func resourceAwsAppstreamImageBuilderUpdate(ctx context.Context, d *schema.Resou
 		}
 	}
 
-	return resourceAwsAppstreamImageBuilderRead(ctx, d, meta)
+	return resourceAwsAppStreamImageBuilderRead(ctx, d, meta)
 
 }
 
-func resourceAwsAppstreamImageBuilderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAwsAppStreamImageBuilderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).appstreamconn
 
 	_, err := conn.DeleteImageBuilderWithContext(ctx, &appstream.DeleteImageBuilderInput{
 		Name: aws.String(d.Id()),
 	})
 	if err != nil {
+		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+			return nil
+		}
 		return diag.FromErr(fmt.Errorf("error deleting Appstream ImageBuilder (%s): %w", d.Id(), err))
 	}
 	return nil
