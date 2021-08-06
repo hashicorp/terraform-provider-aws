@@ -12,10 +12,10 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudhsmv2/finder"
 )
 
-func TestAccAWSCloudHsmV2Hsm_basic(t *testing.T) {
+func testAccAWSCloudHsmV2Hsm_basic(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_hsm.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, cloudhsmv2.EndpointsID),
 		Providers:    testAccProviders,
@@ -43,10 +43,10 @@ func TestAccAWSCloudHsmV2Hsm_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudHsmV2Hsm_disappears(t *testing.T) {
+func testAccAWSCloudHsmV2Hsm_disappears(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_hsm.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, cloudhsmv2.EndpointsID),
 		Providers:    testAccProviders,
@@ -66,11 +66,11 @@ func TestAccAWSCloudHsmV2Hsm_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudHsmV2Hsm_disappears_Cluster(t *testing.T) {
+func testAccAWSCloudHsmV2Hsm_disappears_Cluster(t *testing.T) {
 	clusterResourceName := "aws_cloudhsm_v2_cluster.test"
 	resourceName := "aws_cloudhsm_v2_hsm.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, cloudhsmv2.EndpointsID),
 		Providers:    testAccProviders,
@@ -89,10 +89,10 @@ func TestAccAWSCloudHsmV2Hsm_disappears_Cluster(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudHsmV2Hsm_AvailabilityZone(t *testing.T) {
+func testAccAWSCloudHsmV2Hsm_AvailabilityZone(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_hsm.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, cloudhsmv2.EndpointsID),
 		Providers:    testAccProviders,
@@ -114,10 +114,10 @@ func TestAccAWSCloudHsmV2Hsm_AvailabilityZone(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudHsmV2Hsm_IpAddress(t *testing.T) {
+func testAccAWSCloudHsmV2Hsm_IpAddress(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_hsm.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, cloudhsmv2.EndpointsID),
 		Providers:    testAccProviders,
