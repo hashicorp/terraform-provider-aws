@@ -293,7 +293,7 @@ func resourceAwsAppstreamStackUpdate(ctx context.Context, d *schema.ResourceData
 	svc := meta.(*AWSClient).appstreamconn
 
 	UpdateStackInputOpts := &appstream.UpdateStackInput{
-		Name: aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))),
+		Name: aws.String(d.Id()),
 	}
 
 	if d.HasChange("description") {
