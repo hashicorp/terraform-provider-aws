@@ -173,7 +173,7 @@ resource "aws_subnet" "example" {
 }
 
 resource "aws_appstream_image_builder" "test" {
-  name                           = %[1]q
+  name = %[1]q
   access_endpoints {
     endpoint_type = "STREAMING"
   }

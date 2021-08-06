@@ -14,7 +14,7 @@ Provides an AppStream image builder.
 
 ```hcl
 resource "aws_appstream_image_builder" "test_fleet" {
-  name       = "test-image builder"
+  name = "test-image builder"
   access_endpoints {
     endpoint_type = "STREAMING"
   }
@@ -24,7 +24,7 @@ resource "aws_appstream_image_builder" "test_fleet" {
   image_name                     = "Amazon-AppStream2-Sample-Image-02-04-2019"
   instance_type                  = "stream.standard.large"
   vpc_config {
-    subnet_ids                     = ["subnet-06e9b13400c225127"]
+    subnet_ids = ["subnet-06e9b13400c225127"]
   }
   tags = {
     TagName = "tag-value"
