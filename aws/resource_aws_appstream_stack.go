@@ -3,22 +3,26 @@ package aws
 import (
 	"context"
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
-func resourceAwsAppstreamStack() *schema.Resource {
+func resourceAwsAppStreamStack() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsAppstreamStackCreate,
-		ReadWithoutTimeout:   resourceAwsAppstreamStackRead,
-		UpdateWithoutTimeout: resourceAwsAppstreamStackUpdate,
-		DeleteWithoutTimeout: resourceAwsAppstreamStackDelete,
+		CreateWithoutTimeout: resourceAwsAppStreamStackCreate,
+		ReadWithoutTimeout:   resourceAwsAppStreamStackRead,
+		UpdateWithoutTimeout: resourceAwsAppStreamStackUpdate,
+		DeleteWithoutTimeout: resourceAwsAppStreamStackDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -172,7 +176,7 @@ func resourceAwsAppstreamStack() *schema.Resource {
 	}
 }
 
-func resourceAwsAppstreamStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAwsAppStreamStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).appstreamconn
 	input := &appstream.CreateStackInput{
 		Name: aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))),
@@ -221,23 +225,46 @@ func resourceAwsAppstreamStackCreate(ctx context.Context, d *schema.ResourceData
 		input.Tags = tags.IgnoreAws().AppstreamTags()
 	}
 
-	resp, err := conn.CreateStackWithContext(ctx, input)
+	var err error
+	var output *appstream.CreateStackOutput
+	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+		output, err = conn.CreateStackWithContext(ctx, input)
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		output, err = conn.CreateStackWithContext(ctx, input)
+	}
+
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error creating Appstream Stack (%s): %w", d.Id(), err))
 	}
 
-	d.SetId(aws.StringValue(resp.Stack.Name))
+	d.SetId(aws.StringValue(output.Stack.Name))
 
-	return resourceAwsAppstreamStackRead(ctx, d, meta)
+	return resourceAwsAppStreamStackRead(ctx, d, meta)
 }
 
-func resourceAwsAppstreamStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAwsAppStreamStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).appstreamconn
 
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeStacksWithContext(ctx, &appstream.DescribeStacksInput{Names: []*string{aws.String(d.Id())}})
+	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] Appstream Stack (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error reading Appstream Stack (%s): %w", d.Id(), err))
@@ -287,7 +314,7 @@ func resourceAwsAppstreamStackRead(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAwsAppstreamStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAwsAppStreamStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).appstreamconn
 
 	input := &appstream.UpdateStackInput{
@@ -328,7 +355,6 @@ func resourceAwsAppstreamStackUpdate(ctx context.Context, d *schema.ResourceData
 		diag.FromErr(fmt.Errorf("error updating Appstream Stack (%s): %w", d.Id(), err))
 	}
 
-
 	if d.HasChange("tags") {
 		arn := aws.StringValue(resp.Stack.Arn)
 
@@ -338,16 +364,19 @@ func resourceAwsAppstreamStackUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	return resourceAwsAppstreamStackRead(ctx, d, meta)
+	return resourceAwsAppStreamStackRead(ctx, d, meta)
 }
 
-func resourceAwsAppstreamStackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAwsAppStreamStackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).appstreamconn
 
 	_, err := conn.DeleteStackWithContext(ctx, &appstream.DeleteStackInput{
 		Name: aws.String(d.Id()),
 	})
 	if err != nil {
+		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+			return nil
+		}
 		return diag.FromErr(fmt.Errorf("error deleting Appstream Stack (%s): %w", d.Id(), err))
 	}
 	return nil
