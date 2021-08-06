@@ -11,6 +11,8 @@ import (
 
 func TestAccDataSourceAwsWorkspacesWorkspace_byWorkspaceID(t *testing.T) {
 	rName := acctest.RandString(8)
+	domain := testAccRandomDomainName()
+
 	dataSourceName := "data.aws_workspaces_workspace.test"
 	resourceName := "aws_workspaces_workspace.test"
 
@@ -20,7 +22,7 @@ func TestAccDataSourceAwsWorkspacesWorkspace_byWorkspaceID(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceWorkspacesWorkspaceConfig_byWorkspaceID(rName),
+				Config: testAccDataSourceWorkspacesWorkspaceConfig_byWorkspaceID(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_id", resourceName, "directory_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bundle_id", resourceName, "bundle_id"),
@@ -44,6 +46,8 @@ func TestAccDataSourceAwsWorkspacesWorkspace_byWorkspaceID(t *testing.T) {
 
 func TestAccDataSourceAwsWorkspacesWorkspace_byDirectoryID_userName(t *testing.T) {
 	rName := acctest.RandString(8)
+	domain := testAccRandomDomainName()
+
 	dataSourceName := "data.aws_workspaces_workspace.test"
 	resourceName := "aws_workspaces_workspace.test"
 
@@ -53,7 +57,7 @@ func TestAccDataSourceAwsWorkspacesWorkspace_byDirectoryID_userName(t *testing.T
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceWorkspacesWorkspaceConfig_byDirectoryID_userName(rName),
+				Config: testAccDataSourceWorkspacesWorkspaceConfig_byDirectoryID_userName(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_id", resourceName, "directory_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bundle_id", resourceName, "bundle_id"),
@@ -89,9 +93,9 @@ func TestAccDataSourceAwsWorkspacesWorkspace_workspaceIDAndDirectoryIDConflict(t
 	})
 }
 
-func testAccDataSourceWorkspacesWorkspaceConfig_byWorkspaceID(rName string) string {
+func testAccDataSourceWorkspacesWorkspaceConfig_byWorkspaceID(rName, domain string) string {
 	return composeConfig(
-		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
+		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName, domain),
 		`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = data.aws_workspaces_bundle.test.id
@@ -117,9 +121,9 @@ data "aws_workspaces_workspace" "test" {
 `)
 }
 
-func testAccDataSourceWorkspacesWorkspaceConfig_byDirectoryID_userName(rName string) string {
+func testAccDataSourceWorkspacesWorkspaceConfig_byDirectoryID_userName(rName, domain string) string {
 	return composeConfig(
-		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
+		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName, domain),
 		`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = data.aws_workspaces_bundle.test.id

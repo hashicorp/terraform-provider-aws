@@ -11,6 +11,7 @@ import (
 
 func TestAccDataSourceAwsWorkspacesDirectory_basic(t *testing.T) {
 	rName := acctest.RandString(8)
+	domain := testAccRandomDomainName()
 
 	resourceName := "aws_workspaces_directory.test"
 	dataSourceName := "data.aws_workspaces_directory.test"
@@ -26,7 +27,7 @@ func TestAccDataSourceAwsWorkspacesDirectory_basic(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsWorkspacesDirectoryConfig(rName),
+				Config: testAccDataSourceAwsWorkspacesDirectoryConfig(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "alias", resourceName, "alias"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_id", resourceName, "directory_id"),
@@ -65,9 +66,9 @@ func TestAccDataSourceAwsWorkspacesDirectory_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsWorkspacesDirectoryConfig(rName string) string {
+func testAccDataSourceAwsWorkspacesDirectoryConfig(rName, domain string) string {
 	return composeConfig(
-		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = "tf-testacc-workspaces-directory-%[1]s"

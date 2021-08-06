@@ -438,6 +438,60 @@ rules:
               return ...
     severity: WARNING
 
+  - id: helper-schema-TimeoutError-check-doesnt-return-output
+    languages: [go]
+    message: If the resource.Retry() or resource.RetryContext() function returns a value, ensure the isResourceTimeoutError() check does as well
+    paths:
+      exclude:
+        - "*_test.go"
+      include:
+        - aws/
+    patterns:
+      - pattern-either:
+        - patterns:
+          - pattern: |
+              if isResourceTimeoutError($ERR) {
+                _, $ERR = $CONN.$FUNC(...)
+              }
+          - pattern-not-inside: |
+              $ERR = resource.Retry(..., func() *resource.RetryError {
+                ...
+                _, $ERR2 = $CONN.$FUNC(...)
+                ...
+              })
+              ...
+              if isResourceTimeoutError($ERR) { ... }
+          - pattern-not-inside: |
+              $ERR = resource.RetryContext(..., func() *resource.RetryError {
+                ...
+                _, $ERR2 = $CONN.$FUNC(...)
+                ...
+              })
+              ...
+              if isResourceTimeoutError($ERR) { ... }
+        - patterns:
+          - pattern: |
+              if tfresource.TimedOut($ERR) {
+                _, $ERR = $CONN.$FUNC(...)
+              }
+          - pattern-not-inside: |
+              $ERR = resource.Retry(..., func() *resource.RetryError {
+                ...
+                _, $ERR2 = $CONN.$FUNC(...)
+                ...
+              })
+              ...
+              if tfresource.TimedOut($ERR) { ... }
+          - pattern-not-inside: |
+              $ERR = resource.RetryContext(..., func() *resource.RetryError {
+                ...
+                _, $ERR2 = $CONN.$FUNC(...)
+                ...
+              })
+              ...
+              if tfresource.TimedOut($ERR) { ... }
+    severity: WARNING
+
   - id: is-not-found-error
     languages: [go]
     message: Check for resource.NotFoundError errors with tfresource.NotFound()
@@ -528,6 +582,21 @@ rules:
             fmt.Printf(...)
         - pattern: |
             fmt.Println(...)
+    severity: WARNING
+
+  - id: domain-names
+    languages: [go]
+    message: Domain names should be in the namespaces defined in RFC 6761 (https://datatracker.ietf.org/doc/html/rfc6761) as reserved for testing
+    paths:
+      include:
+        - aws/data_source*.go
+        - aws/resource_aws_workspaces_*.go
+    patterns:
+      - patterns:
+        - pattern-regex: '[\"`].*(?<!(example))\.(com|net|org)\b'
+        - pattern-regex: '[\"`].*(?<!(amazonaws))\.com\b'
+        - pattern-regex: '[\"`].*(?<!(awsapps))\.com'
+      - pattern-inside: '($X : string)'
     severity: WARNING
 
   - id: email-address

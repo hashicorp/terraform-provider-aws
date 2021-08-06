@@ -1243,6 +1243,7 @@ func resourceAwsIotTopicRuleUpdate(d *schema.ResourceData, meta interface{}) err
 		"dynamodbv2",
 		"elasticsearch",
 		"enabled",
+		"error_action",
 		"firehose",
 		"iot_analytics",
 		"iot_events",
