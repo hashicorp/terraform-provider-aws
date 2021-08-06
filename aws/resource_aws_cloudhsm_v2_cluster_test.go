@@ -70,10 +70,10 @@ func testSweepCloudhsmv2Clusters(region string) error {
 	return errors.ErrorOrNil()
 }
 
-func TestAccAWSCloudHsmV2Cluster_basic(t *testing.T) {
+func testAccAWSCloudHsmV2Cluster_basic(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, cloudhsmv2.EndpointsID),
 		Providers:    testAccProviders,
@@ -105,10 +105,10 @@ func TestAccAWSCloudHsmV2Cluster_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudHsmV2Cluster_disappears(t *testing.T) {
+func testAccAWSCloudHsmV2Cluster_disappears(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, cloudhsmv2.EndpointsID),
 		Providers:    testAccProviders,
@@ -128,10 +128,10 @@ func TestAccAWSCloudHsmV2Cluster_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudHsmV2Cluster_Tags(t *testing.T) {
+func testAccAWSCloudHsmV2Cluster_Tags(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, cloudhsmv2.EndpointsID),
 		Providers:    testAccProviders,

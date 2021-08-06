@@ -6,7 +6,11 @@ import (
 
 func TestAccAWSCloudHsmV2_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
-		"Cluster": {},
+		"Cluster": {
+			"basic":      testAccAWSCloudHsmV2Cluster_basic,
+			"disappears": testAccAWSCloudHsmV2Cluster_disappears,
+			"tags":       testAccAWSCloudHsmV2Cluster_Tags,
+		},
 		"Hsm": {
 			"availabilityZone":   testAccAWSCloudHsmV2Hsm_AvailabilityZone,
 			"basic":              testAccAWSCloudHsmV2Hsm_basic,
