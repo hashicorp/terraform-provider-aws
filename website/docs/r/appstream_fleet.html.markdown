@@ -60,7 +60,6 @@ The following arguments are supported:
 * `instance_type` - (Required) The instance type to use when launching fleet instances.
 * `stream_view` - (Optional) The AppStream 2.0 view that is displayed to your users when they stream from the fleet. When `APP` is specified, only the windows of applications opened by users display. When `DESKTOP` is specified, the standard desktop that is provided by the operating system displays.
 * `max_user_duration_in_seconds` - (Optional) The maximum amount of time that a streaming session can remain active, in seconds.
-* `state` - (Optional) The state of the fleet. Valid values are `RUNNING`, `STOPPED`.
 * `vpc_config` - (Optional) The VPC configuration for the image builder.
   * `security_group_ids` - The identifiers of the security groups for the fleet or image builder.
   * `subnet_ids` - The identifiers of the subnets to which a network interface is attached from the fleet instance or image builder instance.
@@ -70,6 +69,7 @@ The following arguments are supported:
 
 * `id` - The unique identifier (ID) of the appstream fleet.
 * `arn` - The Amazon Resource Name (ARN) of the appstream fleet.
+* `state` - The state of the fleet.
 
 ## Import
 

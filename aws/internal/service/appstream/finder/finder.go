@@ -21,7 +21,7 @@ func StackByName(ctx context.Context, conn *appstream.AppStream, name string) (*
 	}
 
 	if len(resp.Stacks) > 1 {
-		return nil, fmt.Errorf("[ERROR] got more than one stack with the name %s", name)
+		return nil, fmt.Errorf("got more than one stack with the name %s", name)
 	}
 
 	if len(resp.Stacks) == 1 {
@@ -29,4 +29,27 @@ func StackByName(ctx context.Context, conn *appstream.AppStream, name string) (*
 	}
 
 	return stack, nil
+}
+
+// FleetByName Retrieve a appstream fleet by name
+func FleetByName(conn *appstream.AppStream, name string) (*appstream.Fleet, error) {
+	input := &appstream.DescribeFleetsInput{
+		Names: []*string{aws.String(name)},
+	}
+
+	var fleet *appstream.Fleet
+	resp, err := conn.DescribeFleets(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resp.Fleets) > 1 {
+		return nil, fmt.Errorf("got more than one fleet with the name %s", name)
+	}
+
+	if len(resp.Fleets) == 1 {
+		fleet = resp.Fleets[0]
+	}
+
+	return fleet, nil
 }

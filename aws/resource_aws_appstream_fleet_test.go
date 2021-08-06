@@ -19,7 +19,10 @@ func testAccAwsAppStreamFleet_basic(t *testing.T) {
 	instanceType := "stream.standard.small"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
+		},
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsAppStreamFleetDestroy,
 		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),
@@ -47,7 +50,10 @@ func testAccAwsAppStreamFleet_disappears(t *testing.T) {
 	instanceType := "stream.standard.small"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
+		},
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsAppStreamFleetDestroy,
 		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),
@@ -73,7 +79,10 @@ func testAccAwsAppStreamFleet_withTags(t *testing.T) {
 	instanceType := "stream.standard.small"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
+		},
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsAppStreamFleetDestroy,
 		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),

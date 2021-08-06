@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appstream/waiter"
 )
 
 func resourceAwsAppStreamFleet() *schema.Resource {
@@ -141,10 +142,8 @@ func resourceAwsAppStreamFleet() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(appstream.StreamView_Values(), false),
 			},
 			"state": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice([]string{appstream.FleetStateRunning, appstream.FleetStateStopped}, false),
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"vpc_config": {
 				Type:     schema.TypeList,
@@ -261,35 +260,16 @@ func resourceAwsAppStreamFleetCreate(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(fmt.Errorf("error creating Appstream Fleet (%s): %w", d.Id(), err))
 	}
 
-	if v, ok := d.GetOk("state"); ok {
-		if v == "RUNNING" {
-			desiredState := v
-			_, err := conn.StartFleetWithContext(ctx, &appstream.StartFleetInput{
-				Name: output.Fleet.Name,
-			})
+	// Start fleet workflow
+	_, err = conn.StartFleetWithContext(ctx, &appstream.StartFleetInput{
+		Name: output.Fleet.Name,
+	})
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error starting Appstream Fleet (%s): %w", d.Id(), err))
+	}
 
-			if err != nil {
-				return diag.FromErr(fmt.Errorf("error starting Appstream Fleet (%s): %w", d.Id(), err))
-			}
-			for {
-				resp, err := conn.DescribeFleetsWithContext(ctx, &appstream.DescribeFleetsInput{
-					Names: aws.StringSlice([]string{*input.Name}),
-				})
-				if err != nil {
-					return diag.FromErr(fmt.Errorf("error describing Appstream Fleet (%s): %w", d.Id(), err))
-				}
-
-				currentState := resp.Fleets[0].State
-				if aws.StringValue(currentState) == desiredState {
-					break
-				}
-				if aws.StringValue(currentState) != desiredState {
-					time.Sleep(20 * time.Second)
-					continue
-				}
-
-			}
-		}
+	if _, err = waiter.FleetStateRunning(ctx, conn, d.Id()); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for Appstream Fleet (%s) to be running: %w", d.Id(), err))
 	}
 
 	d.SetId(aws.StringValue(output.Fleet.Name))
@@ -441,58 +421,6 @@ func resourceAwsAppStreamFleetUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	desiredState := d.Get("state")
-	if d.HasChange("state") {
-		if desiredState == "STOPPED" {
-			_, err := conn.StopFleetWithContext(ctx, &appstream.StopFleetInput{
-				Name: aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))),
-			})
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			for {
-				resp, err := conn.DescribeFleetsWithContext(ctx, &appstream.DescribeFleetsInput{
-					Names: aws.StringSlice([]string{*input.Name}),
-				})
-				if err != nil {
-					return diag.FromErr(fmt.Errorf("error describing Appstream Fleet (%s): %w", d.Id(), err))
-				}
-
-				currentState := resp.Fleets[0].State
-				if aws.StringValue(currentState) == desiredState {
-					break
-				}
-				if aws.StringValue(currentState) != desiredState {
-					time.Sleep(20 * time.Second)
-					continue
-				}
-			}
-		} else if desiredState == "RUNNING" {
-			_, err = conn.StartFleetWithContext(ctx, &appstream.StartFleetInput{
-				Name: aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))),
-			})
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			for {
-				resp, err := conn.DescribeFleetsWithContext(ctx, &appstream.DescribeFleetsInput{
-					Names: aws.StringSlice([]string{*input.Name}),
-				})
-				if err != nil {
-					return diag.FromErr(fmt.Errorf("error describing Appstream Fleet (%s): %w", d.Id(), err))
-				}
-
-				currentState := resp.Fleets[0].State
-				if aws.StringValue(currentState) == desiredState {
-					break
-				}
-				if aws.StringValue(currentState) != desiredState {
-					time.Sleep(20 * time.Second)
-					continue
-				}
-			}
-		}
-	}
 	return resourceAwsAppStreamFleetRead(ctx, d, meta)
 
 }
@@ -500,41 +428,16 @@ func resourceAwsAppStreamFleetUpdate(ctx context.Context, d *schema.ResourceData
 func resourceAwsAppStreamFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).appstreamconn
 
-	resp, err := conn.DescribeFleetsWithContext(ctx, &appstream.DescribeFleetsInput{
-		Names: aws.StringSlice([]string{*aws.String(d.Id())}),
+	// Stop fleet workflow
+	_, err := conn.StopFleetWithContext(ctx, &appstream.StopFleetInput{
+		Name: aws.String(d.Id()),
 	})
-
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Appstream Fleet (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error stopping Appstream Fleet (%s): %w", d.Id(), err))
 	}
 
-	currentState := aws.StringValue(resp.Fleets[0].State)
-
-	if currentState == "RUNNING" {
-		desiredState := "STOPPED"
-		_, err = conn.StopFleet(&appstream.StopFleetInput{
-			Name: aws.String(d.Id()),
-		})
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error stopping Appstream Fleet (%s): %w", d.Id(), err))
-		}
-		for {
-			resp, err = conn.DescribeFleetsWithContext(ctx, &appstream.DescribeFleetsInput{
-				Names: aws.StringSlice([]string{*aws.String(d.Id())}),
-			})
-			if err != nil {
-				return diag.FromErr(fmt.Errorf("error describing Appstream Fleet (%s): %w", d.Id(), err))
-			}
-
-			cState := resp.Fleets[0].State
-			if aws.StringValue(cState) == desiredState {
-				break
-			}
-			if aws.StringValue(cState) != desiredState {
-				time.Sleep(20 * time.Second)
-				continue
-			}
-		}
+	if _, err = waiter.FleetStateStopped(ctx, conn, d.Id()); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for Appstream Fleet (%s) to be stopped: %w", d.Id(), err))
 	}
 
 	_, err = conn.DeleteFleetWithContext(ctx, &appstream.DeleteFleetInput{
