@@ -5,9 +5,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsIotTopicRule() *schema.Resource {
@@ -1094,7 +1098,24 @@ func resourceAwsIotTopicRuleCreate(d *schema.ResourceData, meta interface{}) err
 		TopicRulePayload: expandIotTopicRulePayload(d),
 	}
 
-	_, err := conn.CreateTopicRule(input)
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+		var err error
+		_, err = conn.CreateTopicRule(input)
+
+		if tfawserr.ErrMessageContains(err, iot.ErrCodeInvalidRequestException, "unable to perform: sts:AssumeRole on resource") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.CreateTopicRule(input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error creating IoT Topic Rule (%s): %w", ruleName, err)
