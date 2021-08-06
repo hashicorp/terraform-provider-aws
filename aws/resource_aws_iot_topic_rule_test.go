@@ -639,7 +639,8 @@ func testAccCheckAWSIoTTopicRuleExists(name string) resource.TestCheckFunc {
 	}
 }
 
-const testAccAWSIoTTopicRuleRole = `
+func testAccAWSIoTTopicRuleRole(rName string) string {
+	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "iot_role" {
@@ -687,10 +688,11 @@ resource "aws_iam_policy_attachment" "attach_policy" {
   roles      = [aws_iam_role.iot_role.name]
   policy_arn = aws_iam_policy.policy.arn
 }
-`
+`, rName)
+}
 
 func testAccAWSIoTTopicRule_basic(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -702,7 +704,9 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_cloudwatchalarm(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return composeConfig(
+		testAccAWSIoTTopicRuleRole(rName),
+		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -717,11 +721,13 @@ resource "aws_iot_topic_rule" "rule" {
     state_value  = "OK"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSIoTTopicRule_cloudwatchmetric(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return composeConfig(
+		testAccAWSIoTTopicRuleRole(rName),
+		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -737,11 +743,13 @@ resource "aws_iot_topic_rule" "rule" {
     role_arn         = aws_iam_role.iot_role.arn
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSIoTTopicRule_dynamoDbv2(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return composeConfig(
+		testAccAWSIoTTopicRuleRole(rName),
+		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -757,11 +765,13 @@ resource "aws_iot_topic_rule" "rule" {
     role_arn = aws_iam_role.iot_role.arn
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSIoTTopicRule_dynamodb(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return composeConfig(
+		testAccAWSIoTTopicRuleRole(rName),
+		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -777,11 +787,13 @@ resource "aws_iot_topic_rule" "rule" {
     table_name     = "table_name"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSIoTTopicRule_dynamodb_rangekeys(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return composeConfig(
+		testAccAWSIoTTopicRuleRole(rName),
+		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -801,11 +813,13 @@ resource "aws_iot_topic_rule" "rule" {
     operation       = "INSERT"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSIoTTopicRule_elasticsearch(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return composeConfig(
+		testAccAWSIoTTopicRuleRole(rName),
+		fmt.Sprintf(`
 data "aws_region" "current" {}
 
 resource "aws_iot_topic_rule" "rule" {
@@ -823,11 +837,13 @@ resource "aws_iot_topic_rule" "rule" {
     role_arn = aws_iam_role.iot_role.arn
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSIoTTopicRule_firehose(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return composeConfig(
+		testAccAWSIoTTopicRuleRole(rName),
+		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -840,11 +856,13 @@ resource "aws_iot_topic_rule" "rule" {
     role_arn             = aws_iam_role.iot_role.arn
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSIoTTopicRule_firehose_separator(rName, separator string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return composeConfig(
+		testAccAWSIoTTopicRuleRole(rName),
+		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -858,11 +876,13 @@ resource "aws_iot_topic_rule" "rule" {
     separator            = %q
   }
 }
-`, rName, separator)
+`, rName, separator))
 }
 
 func testAccAWSIoTTopicRule_kinesis(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return composeConfig(
+		testAccAWSIoTTopicRuleRole(rName),
+		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -875,12 +895,14 @@ resource "aws_iot_topic_rule" "rule" {
     role_arn    = aws_iam_role.iot_role.arn
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSIoTTopicRule_lambda(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return fmt.Sprintf(`
 data "aws_region" "current" {}
+
+data "aws_partition" "current" {}
 
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
@@ -897,7 +919,9 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccAWSIoTTopicRule_republish(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return composeConfig(
+		testAccAWSIoTTopicRuleRole(rName),
+		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -910,11 +934,13 @@ resource "aws_iot_topic_rule" "rule" {
     topic    = "mytopic"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSIoTTopicRule_republish_with_qos(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return composeConfig(
+		testAccAWSIoTTopicRuleRole(rName),
+		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -928,11 +954,13 @@ resource "aws_iot_topic_rule" "rule" {
     qos      = 1
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSIoTTopicRule_s3(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return composeConfig(
+		testAccAWSIoTTopicRuleRole(rName),
+		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -946,11 +974,13 @@ resource "aws_iot_topic_rule" "rule" {
     role_arn    = aws_iam_role.iot_role.arn
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSIoTTopicRule_sns(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return composeConfig(
+		testAccAWSIoTTopicRuleRole(rName),
+		fmt.Sprintf(`
 data "aws_region" "current" {}
 
 resource "aws_iot_topic_rule" "rule" {
@@ -965,11 +995,13 @@ resource "aws_iot_topic_rule" "rule" {
     target_arn = "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}:123456789012:my_corporate_topic"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSIoTTopicRule_sqs(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return composeConfig(
+		testAccAWSIoTTopicRuleRole(rName),
+		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -983,11 +1015,13 @@ resource "aws_iot_topic_rule" "rule" {
     use_base64 = false
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSIoTTopicRule_step_functions(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return composeConfig(
+		testAccAWSIoTTopicRuleRole(rName),
+		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -1001,11 +1035,13 @@ resource "aws_iot_topic_rule" "rule" {
     role_arn              = aws_iam_role.iot_role.arn
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSIoTTopicRule_iot_analytics(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return composeConfig(
+		testAccAWSIoTTopicRuleRole(rName),
+		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -1018,11 +1054,13 @@ resource "aws_iot_topic_rule" "rule" {
     role_arn     = aws_iam_role.iot_role.arn
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSIoTTopicRule_iot_events(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return composeConfig(
+		testAccAWSIoTTopicRuleRole(rName),
+		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -1036,11 +1074,11 @@ resource "aws_iot_topic_rule" "rule" {
     message_id = "fake_message_id"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSIoTTopicRuleTags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return fmt.Sprintf(`
 resource "aws_iot_topic_rule" "test" {
   name        = "test_rule_%[1]s"
   enabled     = true
@@ -1055,7 +1093,7 @@ resource "aws_iot_topic_rule" "test" {
 }
 
 func testAccAWSIoTTopicRuleTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return fmt.Sprintf(`
 resource "aws_iot_topic_rule" "test" {
   name        = "test_rule_%[1]s"
   enabled     = true
@@ -1071,7 +1109,9 @@ resource "aws_iot_topic_rule" "test" {
 }
 
 func testAccAWSIoTTopicRule_errorAction(rName string) string {
-	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+	return composeConfig(
+		testAccAWSIoTTopicRuleRole(rName),
+		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -1091,5 +1131,5 @@ resource "aws_iot_topic_rule" "rule" {
     }
   }
 }
-`, rName)
+`, rName))
 }
