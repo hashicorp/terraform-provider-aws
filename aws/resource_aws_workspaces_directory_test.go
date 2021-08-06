@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -52,7 +51,7 @@ func testSweepWorkspacesDirectories(region string) error {
 	return errors
 }
 
-func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
+func testAccAwsWorkspacesDirectory_basic(t *testing.T) {
 	var v workspaces.WorkspaceDirectory
 	rName := acctest.RandString(8)
 
@@ -62,7 +61,7 @@ func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
 
 	domain := testAccRandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
@@ -120,7 +119,7 @@ func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesDirectory_disappears(t *testing.T) {
+func testAccAwsWorkspacesDirectory_disappears(t *testing.T) {
 	var v workspaces.WorkspaceDirectory
 	rName := acctest.RandString(8)
 
@@ -128,7 +127,7 @@ func TestAccAwsWorkspacesDirectory_disappears(t *testing.T) {
 
 	domain := testAccRandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
@@ -151,7 +150,7 @@ func TestAccAwsWorkspacesDirectory_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesDirectory_subnetIds(t *testing.T) {
+func testAccAwsWorkspacesDirectory_subnetIds(t *testing.T) {
 	var v workspaces.WorkspaceDirectory
 	rName := acctest.RandString(8)
 
@@ -159,7 +158,7 @@ func TestAccAwsWorkspacesDirectory_subnetIds(t *testing.T) {
 
 	domain := testAccRandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
@@ -186,7 +185,7 @@ func TestAccAwsWorkspacesDirectory_subnetIds(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesDirectory_tags(t *testing.T) {
+func testAccAwsWorkspacesDirectory_tags(t *testing.T) {
 	var v workspaces.WorkspaceDirectory
 	rName := acctest.RandString(8)
 
@@ -194,7 +193,7 @@ func TestAccAwsWorkspacesDirectory_tags(t *testing.T) {
 
 	domain := testAccRandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
@@ -239,7 +238,7 @@ func TestAccAwsWorkspacesDirectory_tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesDirectory_selfServicePermissions(t *testing.T) {
+func testAccAwsWorkspacesDirectory_selfServicePermissions(t *testing.T) {
 	var v workspaces.WorkspaceDirectory
 	rName := acctest.RandString(8)
 
@@ -247,7 +246,7 @@ func TestAccAwsWorkspacesDirectory_selfServicePermissions(t *testing.T) {
 
 	domain := testAccRandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
@@ -274,7 +273,7 @@ func TestAccAwsWorkspacesDirectory_selfServicePermissions(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesDirectory_workspaceAccessProperties(t *testing.T) {
+func testAccAwsWorkspacesDirectory_workspaceAccessProperties(t *testing.T) {
 	var v workspaces.WorkspaceDirectory
 	rName := acctest.RandString(8)
 
@@ -282,7 +281,7 @@ func TestAccAwsWorkspacesDirectory_workspaceAccessProperties(t *testing.T) {
 
 	domain := testAccRandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
@@ -311,7 +310,7 @@ func TestAccAwsWorkspacesDirectory_workspaceAccessProperties(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesDirectory_workspaceCreationProperties(t *testing.T) {
+func testAccAwsWorkspacesDirectory_workspaceCreationProperties(t *testing.T) {
 	var v workspaces.WorkspaceDirectory
 	rName := acctest.RandString(8)
 
@@ -320,7 +319,7 @@ func TestAccAwsWorkspacesDirectory_workspaceCreationProperties(t *testing.T) {
 
 	domain := testAccRandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
@@ -347,7 +346,7 @@ func TestAccAwsWorkspacesDirectory_workspaceCreationProperties(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesDirectory_workspaceCreationProperties_customSecurityGroupId_defaultOu(t *testing.T) {
+func testAccAwsWorkspacesDirectory_workspaceCreationProperties_customSecurityGroupId_defaultOu(t *testing.T) {
 	var v workspaces.WorkspaceDirectory
 	rName := acctest.RandString(8)
 
@@ -356,7 +355,7 @@ func TestAccAwsWorkspacesDirectory_workspaceCreationProperties_customSecurityGro
 
 	domain := testAccRandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
@@ -399,7 +398,7 @@ func TestAccAwsWorkspacesDirectory_workspaceCreationProperties_customSecurityGro
 	})
 }
 
-func TestAccAwsWorkspacesDirectory_ipGroupIds(t *testing.T) {
+func testAccAwsWorkspacesDirectory_ipGroupIds(t *testing.T) {
 	var v workspaces.WorkspaceDirectory
 	rName := acctest.RandString(8)
 
@@ -407,7 +406,7 @@ func TestAccAwsWorkspacesDirectory_ipGroupIds(t *testing.T) {
 
 	domain := testAccRandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
 		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
 		Providers:    testAccProviders,
@@ -702,25 +701,6 @@ func TestFlattenWorkspaceCreationProperties(t *testing.T) {
 		if !reflect.DeepEqual(actual, c.expected) {
 			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
 		}
-	}
-}
-
-func testAccPreCheckHasIAMRole(t *testing.T, roleName string) {
-	conn := testAccProvider.Meta().(*AWSClient).iamconn
-
-	input := &iam.GetRoleInput{
-		RoleName: aws.String(roleName),
-	}
-	_, err := conn.GetRole(input)
-
-	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
-		t.Skipf("skipping acceptance test: required IAM role \"%s\" is not present", roleName)
-	}
-	if testAccPreCheckSkipError(err) {
-		t.Skipf("skipping acceptance test: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
