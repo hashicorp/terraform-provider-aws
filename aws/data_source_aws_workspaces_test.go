@@ -15,7 +15,9 @@ func TestAccDataSourceAwsWorkspaces_serial(t *testing.T) {
 		"Directory": {
 			"basic": testAccDataSourceAwsWorkspacesDirectory_basic,
 		},
-		"Image":     {},
+		"Image": {
+			"basic": testAccDataSourceAwsWorkspacesImage_basic,
+		},
 		"Workspace": {},
 	}
 
