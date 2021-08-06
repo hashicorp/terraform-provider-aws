@@ -81,7 +81,6 @@ func testAccAwsAppStreamFleet_withTags(t *testing.T) {
 				Config: testAccAwsAppStreamFleetConfigWithTags(fleetName, description, fleetType, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamFleetExists(resourceName, &fleetOutput),
-					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
