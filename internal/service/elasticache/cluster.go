@@ -120,7 +120,7 @@ func ResourceCluster() *schema.Resource {
 			},
 			"engine": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
