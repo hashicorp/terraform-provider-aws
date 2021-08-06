@@ -41,7 +41,9 @@ func TestAccAWSTransfer_serial(t *testing.T) {
 			"UserNameValidation":    testAccAWSTransferUser_UserName_Validation,
 		},
 		"Access": {
-			"basic": testAccAWSTransferAccess_basic,
+			"s3Basic":  testAccAWSTransferAccess_s3_basic,
+			"efsBasic": testAccAWSTransferAccess_efs_basic,
+			"s3Policy": testAccAWSTransferAccess_s3_policy,
 		},
 	}
 
