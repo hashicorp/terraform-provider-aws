@@ -2,16 +2,83 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_appconfig_deployment_strategy", &resource.Sweeper{
+		Name: "aws_appconfig_deployment_strategy",
+		F:    testSweepAppConfigDeploymentStrategies,
+	})
+}
+
+func testSweepAppConfigDeploymentStrategies(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*AWSClient).appconfigconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
+
+	input := &appconfig.ListDeploymentStrategiesInput{}
+
+	err = conn.ListDeploymentStrategiesPages(input, func(page *appconfig.ListDeploymentStrategiesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, item := range page.Items {
+			if item == nil {
+				continue
+			}
+
+			id := aws.StringValue(item.Id)
+
+			// Deleting AppConfig Predefined Strategies is not supported; returns BadRequestException
+			if regexp.MustCompile(`^AppConfig\.[A-Za-z0-9]{9,40}$`).MatchString(id) {
+				log.Printf("[DEBUG] Skipping AppConfig Deployment Strategy (%s): predefined strategy cannot be deleted", id)
+				continue
+			}
+
+			log.Printf("[INFO] Deleting AppConfig Deployment Strategy (%s)", id)
+			r := resourceAwsAppconfigDeploymentStrategy()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Deployment Strategies: %w", err))
+	}
+
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Deployment Strategies for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping AppConfig Deployment Strategies sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
 
 func TestAccAWSAppConfigDeploymentStrategy_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")

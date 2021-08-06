@@ -173,6 +173,8 @@ provider "aws" {
 }
 ```
 
+> **Hands-on:** Try the [Use AssumeRole to Provision AWS Resources Across Accounts](https://learn.hashicorp.com/tutorials/terraform/aws-assumerole) tutorial on HashiCorp Learn.
+
 ## Argument Reference
 
 In addition to [generic `provider` arguments](https://www.terraform.io/docs/configuration/providers.html)
@@ -389,7 +391,7 @@ The `assume_role` configuration block supports the following optional arguments:
 
 ### default_tags Configuration Block
 
-+> **Hands-on:** Try the [Configure Default Tags for AWS Resources](https://learn.hashicorp.com/tutorials/terraform/aws-default-tags?in=terraform/aws) tutorial on HashiCorp Learn.
+> **Hands-on:** Try the [Configure Default Tags for AWS Resources](https://learn.hashicorp.com/tutorials/terraform/aws-default-tags?in=terraform/aws) tutorial on HashiCorp Learn.
 
 Example: Resource with provider default tags
 

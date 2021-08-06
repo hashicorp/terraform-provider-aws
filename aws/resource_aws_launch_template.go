@@ -595,14 +595,9 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"resource_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								ec2.ResourceTypeInstance,
-								ec2.ResourceTypeVolume,
-								ec2.ResourceTypeSpotInstancesRequest,
-								ec2.ResourceTypeElasticGpu,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(ec2.ResourceType_Values(), false),
 						},
 						"tags": tagsSchema(),
 					},
