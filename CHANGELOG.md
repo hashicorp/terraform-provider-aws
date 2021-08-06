@@ -1,4 +1,9 @@
 ## 3.54.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_synthetics_canary: Correctly report any resource creation errors ([#20463](https://github.com/hashicorp/terraform-provider-aws/issues/20463))
+
 ## 3.53.0 (August 05, 2021)
 
 ENHANCEMENTS:
