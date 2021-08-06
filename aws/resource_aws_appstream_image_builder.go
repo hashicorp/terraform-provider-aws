@@ -264,6 +264,9 @@ func resourceAwsAppstreamImageBuilderCreate(ctx context.Context, d *schema.Resou
 func resourceAwsAppstreamImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).appstreamconn
 
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	resp, err := conn.DescribeImageBuildersWithContext(ctx, &appstream.DescribeImageBuildersInput{Names: []*string{aws.String(d.Id())}})
 
 	if err != nil {
@@ -294,6 +297,22 @@ func resourceAwsAppstreamImageBuilderRead(ctx context.Context, d *schema.Resourc
 		}
 
 		d.Set("state", v.State)
+
+		tg, err := conn.ListTagsForResource(&appstream.ListTagsForResourceInput{
+			ResourceArn: v.Arn,
+		})
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error listing stack tags for AppStream ImageBuilder (%s): %w", d.Id(), err))
+		}
+		tags := keyvaluetags.AppstreamKeyValueTags(tg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+		if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream ImageBuilder (%s): %w", "tags", d.Id(), err))
+		}
+
+		if err = d.Set("tags_all", tags.Map()); err != nil {
+			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream ImageBuilder (%s): %w", "tags_all", d.Id(), err))
+		}
 
 		return nil
 	}
@@ -358,6 +377,7 @@ func resourceAwsAppstreamImageBuilderUpdate(ctx context.Context, d *schema.Resou
 			}
 		}
 	}
+
 	return resourceAwsAppstreamImageBuilderRead(ctx, d, meta)
 
 }
