@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudhsmv2/finder"
@@ -16,8 +15,9 @@ import (
 
 func init() {
 	resource.AddTestSweepers("aws_cloudhsm_v2_cluster", &resource.Sweeper{
-		Name: "aws_cloudhsm_v2_cluster",
-		F:    testSweepCloudhsmv2Clusters,
+		Name:         "aws_cloudhsm_v2_cluster",
+		F:            testSweepCloudhsmv2Clusters,
+		Dependencies: []string{"aws_cloudhsm_v2_hsm"},
 	})
 }
 
@@ -27,10 +27,8 @@ func testSweepCloudhsmv2Clusters(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).cloudhsmv2conn
-	sweepResources := make([]*testSweepResource, 0)
-	var errors *multierror.Error
-
 	input := &cloudhsmv2.DescribeClustersInput{}
+	sweepResources := make([]*testSweepResource, 0)
 
 	err = conn.DescribeClustersPages(input, func(page *cloudhsmv2.DescribeClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -51,23 +49,22 @@ func testSweepCloudhsmv2Clusters(region string) error {
 		return !lastPage
 	})
 
-	if err != nil {
-		errors = multierror.Append(errors, fmt.Errorf("error describing CloudHSMv2 Clusters: %w", err))
-	}
-
-	if len(sweepResources) > 0 {
-		// any errors didn't prevent gathering of some work, so do it
-		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-			errors = multierror.Append(errors, fmt.Errorf("error sweeping CloudHSMv2 Clusters for %s: %w", region, err))
-		}
-	}
-
-	if testSweepSkipSweepError(errors.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping CloudHSMv2 Cluster sweep for %s: %s", region, errors)
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudHSMv2 Cluster sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errors.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing CloudHSMv2 Clusters (%s): %w", region, err)
+	}
+
+	err = testSweepResourceOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping CloudHSMv2 Clusters (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func testAccAWSCloudHsmV2Cluster_basic(t *testing.T) {

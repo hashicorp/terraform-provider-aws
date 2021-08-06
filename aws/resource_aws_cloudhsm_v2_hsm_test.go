@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
@@ -11,6 +12,62 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudhsmv2/finder"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_cloudhsm_v2_hsm", &resource.Sweeper{
+		Name: "aws_cloudhsm_v2_hsm",
+		F:    testSweepCloudhsmv2Hsms,
+	})
+}
+
+func testSweepCloudhsmv2Hsms(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).cloudhsmv2conn
+	input := &cloudhsmv2.DescribeClustersInput{}
+	sweepResources := make([]*testSweepResource, 0)
+
+	err = conn.DescribeClustersPages(input, func(page *cloudhsmv2.DescribeClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, cluster := range page.Clusters {
+			if cluster == nil {
+				continue
+			}
+
+			for _, hsm := range cluster.Hsms {
+				r := resourceAwsCloudHsmV2Hsm()
+				d := r.Data(nil)
+				d.SetId(aws.StringValue(hsm.HsmId))
+				d.Set("cluster_id", cluster.ClusterId)
+				sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudHSMv2 HSM sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudHSMv2 HSMs (%s): %w", region, err)
+	}
+
+	err = testSweepResourceOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping CloudHSMv2 HSMs (%s): %w", region, err)
+	}
+
+	return nil
+}
 
 func testAccAWSCloudHsmV2Hsm_basic(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_hsm.test"
