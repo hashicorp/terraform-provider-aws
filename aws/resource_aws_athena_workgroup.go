@@ -89,6 +89,11 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 								},
 							},
 						},
+						"requester_pays_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -323,6 +328,10 @@ func expandAthenaWorkGroupConfiguration(l []interface{}) *athena.WorkGroupConfig
 		configuration.ResultConfiguration = expandAthenaWorkGroupResultConfiguration(v.([]interface{}))
 	}
 
+	if v, ok := m["requester_pays_enabled"]; ok {
+		configuration.RequesterPaysEnabled = aws.Bool(v.(bool))
+	}
+
 	return configuration
 }
 
@@ -351,6 +360,10 @@ func expandAthenaWorkGroupConfigurationUpdates(l []interface{}) *athena.WorkGrou
 
 	if v, ok := m["result_configuration"]; ok {
 		configurationUpdates.ResultConfigurationUpdates = expandAthenaWorkGroupResultConfigurationUpdates(v.([]interface{}))
+	}
+
+	if v, ok := m["requester_pays_enabled"]; ok {
+		configurationUpdates.RequesterPaysEnabled = aws.Bool(v.(bool))
 	}
 
 	return configurationUpdates
@@ -430,6 +443,7 @@ func flattenAthenaWorkGroupConfiguration(configuration *athena.WorkGroupConfigur
 		"enforce_workgroup_configuration":    aws.BoolValue(configuration.EnforceWorkGroupConfiguration),
 		"publish_cloudwatch_metrics_enabled": aws.BoolValue(configuration.PublishCloudWatchMetricsEnabled),
 		"result_configuration":               flattenAthenaWorkGroupResultConfiguration(configuration.ResultConfiguration),
+		"requester_pays_enabled":             aws.BoolValue(configuration.RequesterPaysEnabled),
 	}
 
 	return []interface{}{m}
