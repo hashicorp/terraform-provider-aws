@@ -21,7 +21,7 @@ func resourceAwsTransferAccess() *schema.Resource {
 		Update: resourceAwsTransferAccessUpdate,
 		Delete: resourceAwsTransferAccessDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -181,12 +181,28 @@ func resourceAwsTransferAccessRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	access := output.Access
-	d.Set("external_id", access.ExternalId)
-	d.Set("server_id", serverId)
-	d.Set("policy", access.Policy)
-	d.Set("home_directory_type", access.HomeDirectoryType)
-	d.Set("home_directory", access.HomeDirectory)
-	d.Set("role", access.Role)
+
+	if err := d.Set("external_id", access.ExternalId); err != nil {
+		return fmt.Errorf("Error setting external_id: %w", err)
+	}
+	if err := d.Set("server_id", serverId); err != nil {
+		return fmt.Errorf("Error setting server_id: %w", err)
+	}
+	if err := d.Set("policy", access.Policy); err != nil {
+		return fmt.Errorf("Error setting policy: %w", err)
+	}
+	if err := d.Set("posix_profile", flattenTransferUserPosixUser(access.PosixProfile)); err != nil {
+		return fmt.Errorf("Error setting posix_profile: %w", err)
+	}
+	if err := d.Set("home_directory_type", access.HomeDirectoryType); err != nil {
+		return fmt.Errorf("Error setting home_directory_type: %w", err)
+	}
+	if err := d.Set("home_directory", access.HomeDirectory); err != nil {
+		return fmt.Errorf("Error setting home_directory: %w", err)
+	}
+	if err := d.Set("role", access.Role); err != nil {
+		return fmt.Errorf("Error setting role: %w", err)
+	}
 
 	if err := d.Set("home_directory_mappings", flattenAwsTransferHomeDirectoryMappings(access.HomeDirectoryMappings)); err != nil {
 		return fmt.Errorf("Error setting home_directory_mappings: %w", err)
@@ -212,32 +228,39 @@ func resourceAwsTransferAccessUpdate(d *schema.ResourceData, meta interface{}) e
 		ExternalId: aws.String(externalId),
 	}
 
-	if d.HasChangesExcept() {
+	hasChanges := false
 
-		if d.HasChange("home_directory") {
-			input.HomeDirectory = aws.String(d.Get("home_directory").(string))
-		}
+	if d.HasChange("home_directory") {
+		input.HomeDirectory = aws.String(d.Get("home_directory").(string))
+		hasChanges = true
+	}
 
-		if d.HasChange("home_directory_mappings") {
-			input.HomeDirectoryMappings = expandAwsTransferHomeDirectoryMappings(d.Get("home_directory_mappings").([]interface{}))
-		}
+	if d.HasChange("home_directory_mappings") {
+		input.HomeDirectoryMappings = expandAwsTransferHomeDirectoryMappings(d.Get("home_directory_mappings").([]interface{}))
+		hasChanges = true
+	}
 
-		if d.HasChange("home_directory_type") {
-			input.HomeDirectoryType = aws.String(d.Get("home_directory_type").(string))
-		}
+	if d.HasChange("home_directory_type") {
+		input.HomeDirectoryType = aws.String(d.Get("home_directory_type").(string))
+		hasChanges = true
+	}
 
-		if d.HasChange("policy") {
-			input.Policy = aws.String(d.Get("policy").(string))
-		}
+	if d.HasChange("policy") {
+		input.Policy = aws.String(d.Get("policy").(string))
+		hasChanges = true
+	}
 
-		if d.HasChange("posix_profile") {
-			input.PosixProfile = expandTransferUserPosixUser(d.Get("posix_profile").([]interface{}))
-		}
+	if d.HasChange("posix_profile") {
+		input.PosixProfile = expandTransferUserPosixUser(d.Get("posix_profile").([]interface{}))
+		hasChanges = true
+	}
 
-		if d.HasChange("role") {
-			input.Role = aws.String(d.Get("role").(string))
-		}
+	if d.HasChange("role") {
+		input.Role = aws.String(d.Get("role").(string))
+		hasChanges = true
+	}
 
+	if hasChanges {
 		log.Printf("[DEBUG] Updating Transfer Access: %s", input)
 		_, err := conn.UpdateAccess(input)
 		if err != nil {
