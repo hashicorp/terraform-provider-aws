@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/synthetics/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -529,14 +530,17 @@ func testAccCheckAwsSyntheticsCanaryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		name := rs.Primary.ID
-		_, err := finder.CanaryByName(conn, name)
+		_, err := finder.CanaryByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
 		if err != nil {
-			if isAWSErr(err, synthetics.ErrCodeResourceNotFoundException, "") {
-				return nil
-			}
 			return err
 		}
+
+		return fmt.Errorf("Synthetics Canary %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -546,22 +550,22 @@ func testAccCheckAwsSyntheticsCanaryExists(n string, canary *synthetics.Canary) 
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("synthetics Canary not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("synthetics Canary name not set")
+			return fmt.Errorf("No Synthetics Canary ID is set")
 		}
 
-		name := rs.Primary.ID
 		conn := testAccProvider.Meta().(*AWSClient).syntheticsconn
 
-		out, err := finder.CanaryByName(conn, name)
+		output, err := finder.CanaryByName(conn, rs.Primary.ID)
+
 		if err != nil {
-			return fmt.Errorf("syntherics Canary %s not found in AWS", name)
+			return err
 		}
 
-		*canary = *out.Canary
+		*canary = *output
 
 		return nil
 	}
