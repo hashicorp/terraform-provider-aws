@@ -92,7 +92,7 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf1),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-1.0"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
@@ -123,7 +123,7 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf2),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-1.0"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
@@ -160,10 +160,10 @@ func TestAccAWSSyntheticsCanary_runtimeVersion(t *testing.T) {
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSyntheticsCanaryRuntimeVersionConfig(rName, "syn-nodejs-2.1"),
+				Config: testAccAWSSyntheticsCanaryRuntimeVersionConfig(rName, "syn-nodejs-puppeteer-3.1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf1),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-2.1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.1"),
 				),
 			},
 			{
@@ -173,10 +173,10 @@ func TestAccAWSSyntheticsCanary_runtimeVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
 			},
 			{
-				Config: testAccAWSSyntheticsCanaryRuntimeVersionConfig(rName, "syn-nodejs-2.2"),
+				Config: testAccAWSSyntheticsCanaryRuntimeVersionConfig(rName, "syn-nodejs-puppeteer-3.2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf1),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-2.2"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.2"),
 				),
 			},
 		},
@@ -289,7 +289,7 @@ func TestAccAWSSyntheticsCanary_s3(t *testing.T) {
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-1.0"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
@@ -746,7 +746,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-1.0"
+  runtime_version      = "syn-nodejs-puppeteer-3.2"
 
   schedule {
     expression = "rate(0 minute)"
@@ -767,7 +767,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-1.0"
+  runtime_version      = "syn-nodejs-puppeteer-3.2"
 
   schedule {
     expression = "rate(0 minute)"
@@ -789,7 +789,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-2.0"
+  runtime_version      = "syn-nodejs-puppeteer-3.2"
 
   schedule {
     expression = "rate(0 minute)"
@@ -811,7 +811,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-1.0"
+  runtime_version      = "syn-nodejs-puppeteer-3.2"
 
   schedule {
     expression = "rate(0 minute)"
@@ -845,7 +845,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest_modified.zip"
-  runtime_version      = "syn-1.0"
+  runtime_version      = "syn-nodejs-puppeteer-3.2"
 
   schedule {
     expression = "rate(0 minute)"
@@ -863,7 +863,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   start_canary         = %[2]t
-  runtime_version      = "syn-1.0"
+  runtime_version      = "syn-nodejs-puppeteer-3.2"
 
   schedule {
     expression = "rate(0 minute)"
@@ -881,7 +881,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest_modified.zip"
   start_canary         = %[2]t
-  runtime_version      = "syn-1.0"
+  runtime_version      = "syn-nodejs-puppeteer-3.2"
 
   schedule {
     expression = "rate(0 minute)"
@@ -900,7 +900,7 @@ resource "aws_synthetics_canary" "test" {
   s3_bucket            = aws_s3_bucket_object.test.bucket
   s3_key               = aws_s3_bucket_object.test.key
   s3_version           = aws_s3_bucket_object.test.version_id
-  runtime_version      = "syn-1.0"
+  runtime_version      = "syn-nodejs-puppeteer-3.2"
 
   schedule {
     expression = "rate(0 minute)"
@@ -981,7 +981,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-1.0"
+  runtime_version      = "syn-nodejs-puppeteer-3.2"
 
   schedule {
     expression = "rate(0 minute)"
@@ -1008,7 +1008,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-1.0"
+  runtime_version      = "syn-nodejs-puppeteer-3.2"
 
   schedule {
     expression = "rate(0 minute)"
@@ -1035,7 +1035,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-1.0"
+  runtime_version      = "syn-nodejs-puppeteer-3.2"
 
   schedule {
     expression = "rate(0 minute)"
@@ -1059,7 +1059,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-1.0"
+  runtime_version      = "syn-nodejs-puppeteer-3.2"
 
   schedule {
     expression = "rate(0 minute)"
@@ -1080,7 +1080,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-1.0"
+  runtime_version      = "syn-nodejs-puppeteer-3.2"
 
   schedule {
     expression = "rate(0 minute)"
