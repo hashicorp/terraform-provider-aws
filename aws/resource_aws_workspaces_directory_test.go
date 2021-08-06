@@ -8,10 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/workspaces/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -25,30 +26,44 @@ func init() {
 func testSweepWorkspacesDirectories(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).workspacesconn
-
-	var errors error
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
-	err = conn.DescribeWorkspaceDirectoriesPages(input, func(resp *workspaces.DescribeWorkspaceDirectoriesOutput, _ bool) bool {
-		for _, directory := range resp.Directories {
-			err := workspacesDirectoryDelete(aws.StringValue(directory.DirectoryId), conn)
-			if err != nil {
-				errors = multierror.Append(errors, err)
-			}
+	sweepResources := make([]*testSweepResource, 0)
+
+	err = conn.DescribeWorkspaceDirectoriesPages(input, func(page *workspaces.DescribeWorkspaceDirectoriesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		return true
+
+		for _, directory := range page.Directories {
+			r := resourceAwsWorkspacesDirectory()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(directory.DirectoryId))
+
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+		}
+
+		return !lastPage
 	})
+
 	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping Workspace Directory sweep for %s: %s", region, err)
-		return errors // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		errors = multierror.Append(errors, fmt.Errorf("error listing WorkSpaces Directories: %w", err))
+		log.Printf("[WARN] Skipping WorkSpaces Directory sweep for %s: %s", region, err)
+		return nil
 	}
 
-	return errors
+	if err != nil {
+		return fmt.Errorf("error listing WorkSpaces Directories (%s): %w", region, err)
+	}
+
+	err = testSweepResourceOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WorkSpaces Directories (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func testAccAwsWorkspacesDirectory_basic(t *testing.T) {
@@ -142,7 +157,7 @@ func testAccAwsWorkspacesDirectory_disappears(t *testing.T) {
 				Config: testAccWorkspacesDirectoryConfig(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
-					testAccCheckAwsWorkspacesDirectoryDisappears(&v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsWorkspacesDirectory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -712,57 +727,44 @@ func testAccCheckAwsWorkspacesDirectoryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := conn.DescribeWorkspaceDirectories(&workspaces.DescribeWorkspaceDirectoriesInput{
-			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
-		})
+		_, err := finder.DirectoryByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
 		if err != nil {
 			return err
 		}
 
-		if len(resp.Directories) == 0 {
-			return nil
-		}
-
-		dir := resp.Directories[0]
-		if *dir.State != workspaces.WorkspaceDirectoryStateDeregistering && *dir.State != workspaces.WorkspaceDirectoryStateDeregistered {
-			return fmt.Errorf("directory %q was not deregistered", rs.Primary.ID)
-		}
+		return fmt.Errorf("WorkSpaces Directory %s still exists", rs.Primary.ID)
 	}
 
 	return nil
-}
-
-func testAccCheckAwsWorkspacesDirectoryDisappears(v *workspaces.WorkspaceDirectory) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		return workspacesDirectoryDelete(aws.StringValue(v.DirectoryId), testAccProvider.Meta().(*AWSClient).workspacesconn)
-	}
 }
 
 func testAccCheckAwsWorkspacesDirectoryExists(n string, v *workspaces.WorkspaceDirectory) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("workspaces directory resource is not found: %q", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("workspaces directory resource ID is not set")
+			return fmt.Errorf("No WorkSpaces Directory ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).workspacesconn
-		resp, err := conn.DescribeWorkspaceDirectories(&workspaces.DescribeWorkspaceDirectoriesInput{
-			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
-		})
+
+		output, err := finder.DirectoryByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if *resp.Directories[0].DirectoryId == rs.Primary.ID {
-			*v = *resp.Directories[0]
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("workspaces directory %q is not found", rs.Primary.ID)
+		return nil
 	}
 }
 
