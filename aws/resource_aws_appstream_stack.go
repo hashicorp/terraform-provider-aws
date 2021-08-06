@@ -3,7 +3,6 @@ package aws
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
@@ -256,6 +255,9 @@ func resourceAwsAppstreamStackRead(ctx context.Context, d *schema.ResourceData, 
 		if err = d.Set("user_settings", flattenUserSettings(v.UserSettings)); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "user_settings", d.Id(), err))
 		}
+		if err = d.Set("application_settings", flattenApplicationSettings(v.ApplicationSettings)); err != nil {
+			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "user_settings", d.Id(), err))
+		}
 
 		d.Set("name", v.Name)
 		d.Set("description", v.Description)
@@ -270,10 +272,7 @@ func resourceAwsAppstreamStackRead(ctx context.Context, d *schema.ResourceData, 
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error listing stack tags for AppStream Stack (%s): %w", d.Id(), err))
 		}
-		if tg.Tags == nil {
-			log.Printf("[DEBUG] Apsstream Stack tags (%s) not found", d.Id())
-			return nil
-		}
+
 		tags := keyvaluetags.AppstreamKeyValueTags(tg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 		if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -289,41 +288,54 @@ func resourceAwsAppstreamStackRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceAwsAppstreamStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*AWSClient).appstreamconn
 
-	svc := meta.(*AWSClient).appstreamconn
-
-	UpdateStackInputOpts := &appstream.UpdateStackInput{
+	input := &appstream.UpdateStackInput{
 		Name: aws.String(d.Id()),
 	}
 
 	if d.HasChange("description") {
-		UpdateStackInputOpts.Description = aws.String(d.Get("description").(string))
+		input.Description = aws.String(d.Get("description").(string))
 	}
 
 	if d.HasChange("display_name") {
-		UpdateStackInputOpts.DisplayName = aws.String(d.Get("display_name").(string))
+		input.DisplayName = aws.String(d.Get("display_name").(string))
 	}
 
 	if d.HasChange("feedback_url") {
-		UpdateStackInputOpts.FeedbackURL = aws.String(d.Get("feedback_url").(string))
+		input.FeedbackURL = aws.String(d.Get("feedback_url").(string))
 	}
 
 	if d.HasChange("redirect_url") {
-		UpdateStackInputOpts.RedirectURL = aws.String(d.Get("redirect_url").(string))
+		input.RedirectURL = aws.String(d.Get("redirect_url").(string))
 	}
 
 	if d.HasChange("user_settings") {
-		UpdateStackInputOpts.UserSettings = expandUserSettings(d.Get("user_settings").(*schema.Set).List())
+		input.UserSettings = expandUserSettings(d.Get("user_settings").(*schema.Set).List())
 	}
 
 	if d.HasChange("application_settings") {
-		UpdateStackInputOpts.ApplicationSettings = expandApplicationSettings(d.Get("application_settings").(*schema.Set).List())
+		input.ApplicationSettings = expandApplicationSettings(d.Get("application_settings").(*schema.Set).List())
 	}
 
-	_, err := svc.UpdateStack(UpdateStackInputOpts)
+	if d.HasChange("access_endpoints") {
+		input.AccessEndpoints = expandAccessEndpoints(d.Get("access_endpoints").(*schema.Set).List())
+	}
+
+	resp, err := conn.UpdateStack(input)
 
 	if err != nil {
 		diag.FromErr(fmt.Errorf("error updating Appstream Stack (%s): %w", d.Id(), err))
+	}
+
+
+	if d.HasChange("tags") {
+		arn := aws.StringValue(resp.Stack.Arn)
+
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.AppstreamUpdateTags(conn, arn, o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("error updating Appstream Stack tags (%s): %w", d.Id(), err))
+		}
 	}
 
 	return resourceAwsAppstreamStackRead(ctx, d, meta)
@@ -399,7 +411,7 @@ func expandApplicationSettings(applicationSettings []interface{}) *appstream.App
 	return applicationSetting
 }
 
-func flattenApplicationSettings(applicationSettings *appstream.ApplicationSettings) []interface{} {
+func flattenApplicationSettings(applicationSettings *appstream.ApplicationSettingsResponse) []interface{} {
 	if applicationSettings == nil {
 		return nil
 	}
