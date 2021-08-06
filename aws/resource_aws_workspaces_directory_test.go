@@ -112,6 +112,7 @@ func testAccAwsWorkspacesDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_android", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_chromeos", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_ios", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_linux", "DENY"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_osx", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_web", "DENY"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_windows", "ALLOW"),
@@ -315,6 +316,7 @@ func testAccAwsWorkspacesDirectory_workspaceAccessProperties(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_android", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_chromeos", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_ios", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_linux", "DENY"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_osx", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_web", "DENY"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_windows", "DENY"),
@@ -553,6 +555,7 @@ func TestExpandWorkspaceAccessProperties(t *testing.T) {
 					"device_type_android":    "ALLOW",
 					"device_type_chromeos":   "ALLOW",
 					"device_type_ios":        "ALLOW",
+					"device_type_linux":      "DENY",
 					"device_type_osx":        "ALLOW",
 					"device_type_web":        "DENY",
 					"device_type_windows":    "DENY",
@@ -563,6 +566,7 @@ func TestExpandWorkspaceAccessProperties(t *testing.T) {
 				DeviceTypeAndroid:    aws.String("ALLOW"),
 				DeviceTypeChromeOs:   aws.String("ALLOW"),
 				DeviceTypeIos:        aws.String("ALLOW"),
+				DeviceTypeLinux:      aws.String("DENY"),
 				DeviceTypeOsx:        aws.String("ALLOW"),
 				DeviceTypeWeb:        aws.String("DENY"),
 				DeviceTypeWindows:    aws.String("DENY"),
@@ -595,6 +599,7 @@ func TestFlattenWorkspaceAccessProperties(t *testing.T) {
 				DeviceTypeAndroid:    aws.String("ALLOW"),
 				DeviceTypeChromeOs:   aws.String("ALLOW"),
 				DeviceTypeIos:        aws.String("ALLOW"),
+				DeviceTypeLinux:      aws.String("DENY"),
 				DeviceTypeOsx:        aws.String("ALLOW"),
 				DeviceTypeWeb:        aws.String("DENY"),
 				DeviceTypeWindows:    aws.String("DENY"),
@@ -605,6 +610,7 @@ func TestFlattenWorkspaceAccessProperties(t *testing.T) {
 					"device_type_android":    "ALLOW",
 					"device_type_chromeos":   "ALLOW",
 					"device_type_ios":        "ALLOW",
+					"device_type_linux":      "DENY",
 					"device_type_osx":        "ALLOW",
 					"device_type_web":        "DENY",
 					"device_type_windows":    "DENY",
@@ -939,6 +945,7 @@ resource "aws_workspaces_directory" "main" {
     device_type_android    = "ALLOW"
     device_type_chromeos   = "ALLOW"
     device_type_ios        = "ALLOW"
+    device_type_linux      = "DENY"
     device_type_osx        = "ALLOW"
     device_type_web        = "DENY"
     device_type_windows    = "DENY"

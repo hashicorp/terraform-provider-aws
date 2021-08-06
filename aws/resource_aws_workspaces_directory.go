@@ -131,6 +131,11 @@ func resourceAwsWorkspacesDirectory() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(workspaces.AccessPropertyValue_Values(), false),
 						},
+						"device_type_linux": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(workspaces.AccessPropertyValue_Values(), false),
+						},
 						"device_type_osx": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -485,6 +490,10 @@ func expandWorkspaceAccessProperties(properties []interface{}) *workspaces.Works
 		result.DeviceTypeIos = aws.String(p["device_type_ios"].(string))
 	}
 
+	if p["device_type_linux"].(string) != "" {
+		result.DeviceTypeLinux = aws.String(p["device_type_linux"].(string))
+	}
+
 	if p["device_type_osx"].(string) != "" {
 		result.DeviceTypeOsx = aws.String(p["device_type_osx"].(string))
 	}
@@ -580,6 +589,7 @@ func flattenWorkspaceAccessProperties(properties *workspaces.WorkspaceAccessProp
 			"device_type_android":    aws.StringValue(properties.DeviceTypeAndroid),
 			"device_type_chromeos":   aws.StringValue(properties.DeviceTypeChromeOs),
 			"device_type_ios":        aws.StringValue(properties.DeviceTypeIos),
+			"device_type_linux":      aws.StringValue(properties.DeviceTypeLinux),
 			"device_type_osx":        aws.StringValue(properties.DeviceTypeOsx),
 			"device_type_web":        aws.StringValue(properties.DeviceTypeWeb),
 			"device_type_windows":    aws.StringValue(properties.DeviceTypeWindows),

@@ -47,6 +47,7 @@ func testAccDataSourceAwsWorkspacesDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_access_properties.0.device_type_android", resourceName, "workspace_access_properties.0.device_type_android"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_access_properties.0.device_type_chromeos", resourceName, "workspace_access_properties.0.device_type_chromeos"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_access_properties.0.device_type_ios", resourceName, "workspace_access_properties.0.device_type_ios"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_access_properties.0.device_type_linux", resourceName, "workspace_access_properties.0.device_type_linux"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_access_properties.0.device_type_osx", resourceName, "workspace_access_properties.0.device_type_osx"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_access_properties.0.device_type_web", resourceName, "workspace_access_properties.0.device_type_web"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_access_properties.0.device_type_windows", resourceName, "workspace_access_properties.0.device_type_windows"),
@@ -94,6 +95,7 @@ resource "aws_workspaces_directory" "test" {
     device_type_android    = "ALLOW"
     device_type_chromeos   = "ALLOW"
     device_type_ios        = "ALLOW"
+    device_type_linux      = "DENY"
     device_type_osx        = "ALLOW"
     device_type_web        = "DENY"
     device_type_windows    = "DENY"
