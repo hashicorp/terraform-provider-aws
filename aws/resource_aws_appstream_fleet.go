@@ -404,9 +404,18 @@ func resourceAwsAppstreamFleetUpdate(ctx context.Context, d *schema.ResourceData
 		input.VpcConfig = expandVpcConfig(d.Get("vpc_config").([]interface{}))
 	}
 
-	_, err := conn.UpdateFleetWithContext(ctx, input)
+	resp, err := conn.UpdateFleetWithContext(ctx, input)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error updating Appstream Fleet (%s): %w", d.Id(), err))
+	}
+
+	if d.HasChange("tags") {
+		arn := aws.StringValue(resp.Fleet.Arn)
+
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.AppstreamUpdateTags(conn, arn, o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("error updating Appstream Fleet tags (%s): %w", d.Id(), err))
+		}
 	}
 
 	desiredState := d.Get("state")
@@ -419,7 +428,6 @@ func resourceAwsAppstreamFleetUpdate(ctx context.Context, d *schema.ResourceData
 				return diag.FromErr(err)
 			}
 			for {
-
 				resp, err := conn.DescribeFleetsWithContext(ctx, &appstream.DescribeFleetsInput{
 					Names: aws.StringSlice([]string{*input.Name}),
 				})
@@ -437,14 +445,13 @@ func resourceAwsAppstreamFleetUpdate(ctx context.Context, d *schema.ResourceData
 				}
 			}
 		} else if desiredState == "RUNNING" {
-			_, err := conn.StartFleetWithContext(ctx, &appstream.StartFleetInput{
+			_, err = conn.StartFleetWithContext(ctx, &appstream.StartFleetInput{
 				Name: aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))),
 			})
 			if err != nil {
 				return diag.FromErr(err)
 			}
 			for {
-
 				resp, err := conn.DescribeFleetsWithContext(ctx, &appstream.DescribeFleetsInput{
 					Names: aws.StringSlice([]string{*input.Name}),
 				})
@@ -460,7 +467,6 @@ func resourceAwsAppstreamFleetUpdate(ctx context.Context, d *schema.ResourceData
 					time.Sleep(20 * time.Second)
 					continue
 				}
-
 			}
 		}
 	}
@@ -490,7 +496,6 @@ func resourceAwsAppstreamFleetDelete(ctx context.Context, d *schema.ResourceData
 			return diag.FromErr(fmt.Errorf("error stopping Appstream Fleet (%s): %w", d.Id(), err))
 		}
 		for {
-
 			resp, err = conn.DescribeFleetsWithContext(ctx, &appstream.DescribeFleetsInput{
 				Names: aws.StringSlice([]string{*aws.String(d.Id())}),
 			})
@@ -498,17 +503,15 @@ func resourceAwsAppstreamFleetDelete(ctx context.Context, d *schema.ResourceData
 				return diag.FromErr(fmt.Errorf("error describing Appstream Fleet (%s): %w", d.Id(), err))
 			}
 
-			currentState := resp.Fleets[0].State
-			if aws.StringValue(currentState) == desiredState {
+			cState := resp.Fleets[0].State
+			if aws.StringValue(cState) == desiredState {
 				break
 			}
-			if aws.StringValue(currentState) != desiredState {
+			if aws.StringValue(cState) != desiredState {
 				time.Sleep(20 * time.Second)
 				continue
 			}
-
 		}
-
 	}
 
 	_, err = conn.DeleteFleetWithContext(ctx, &appstream.DeleteFleetInput{
