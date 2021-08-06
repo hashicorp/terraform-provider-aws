@@ -2,6 +2,7 @@
 
 BUG FIXES:
 
+* aws/resource_aws_imagebuilder_infrastructure_configuration: Always set `terminate_instance_on_failure` on create and update ([#20464](https://github.com/hashicorp/terraform-provider-aws/issues/20464))
 * resource/aws_synthetics_canary: Correctly report any resource creation errors ([#20463](https://github.com/hashicorp/terraform-provider-aws/issues/20463))
 
 ## 3.53.0 (August 05, 2021)
