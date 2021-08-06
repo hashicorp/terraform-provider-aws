@@ -17,7 +17,12 @@ func TestAccAWSWorkspaces_serial(t *testing.T) {
 			"workspaceCreationProperties": testAccAwsWorkspacesDirectory_workspaceCreationProperties,
 			"workspaceCreationProperties_customSecurityGroupId_defaultOu": testAccAwsWorkspacesDirectory_workspaceCreationProperties_customSecurityGroupId_defaultOu,
 		},
-		"IpGroup":   {},
+		"IpGroup": {
+			"basic":               testAccAwsWorkspacesIpGroup_basic,
+			"disappears":          testAccAwsWorkspacesIpGroup_disappears,
+			"multipleDirectories": testAccAwsWorkspacesIpGroup_MultipleDirectories,
+			"tags":                testAccAwsWorkspacesIpGroup_tags,
+		},
 		"Workspace": {},
 	}
 

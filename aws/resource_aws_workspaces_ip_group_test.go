@@ -12,14 +12,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAwsWorkspacesIpGroup_basic(t *testing.T) {
+func testAccAwsWorkspacesIpGroup_basic(t *testing.T) {
 	var v workspaces.IpGroup
 	ipGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	ipGroupNewName := acctest.RandomWithPrefix("tf-acc-test-upd")
 	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", strings.Title(acctest.RandString(20)))
 	resourceName := "aws_workspaces_ip_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
 		Providers:    testAccProviders,
@@ -58,12 +58,12 @@ func TestAccAwsWorkspacesIpGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesIpGroup_tags(t *testing.T) {
+func testAccAwsWorkspacesIpGroup_tags(t *testing.T) {
 	var v workspaces.IpGroup
 	resourceName := "aws_workspaces_ip_group.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
 		Providers:    testAccProviders,
@@ -103,13 +103,13 @@ func TestAccAwsWorkspacesIpGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesIpGroup_disappears(t *testing.T) {
+func testAccAwsWorkspacesIpGroup_disappears(t *testing.T) {
 	var v workspaces.IpGroup
 	ipGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", strings.Title(acctest.RandString(20)))
 	resourceName := "aws_workspaces_ip_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
 		Providers:    testAccProviders,
@@ -127,7 +127,7 @@ func TestAccAwsWorkspacesIpGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesIpGroup_MultipleDirectories(t *testing.T) {
+func testAccAwsWorkspacesIpGroup_MultipleDirectories(t *testing.T) {
 	var v workspaces.IpGroup
 	var d1, d2 workspaces.WorkspaceDirectory
 
@@ -138,7 +138,7 @@ func TestAccAwsWorkspacesIpGroup_MultipleDirectories(t *testing.T) {
 	directoryResourceName1 := "aws_workspaces_directory.test1"
 	directoryResourceName2 := "aws_workspaces_directory.test2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
 		Providers:    testAccProviders,
