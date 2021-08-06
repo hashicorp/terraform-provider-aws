@@ -21,7 +21,7 @@ and will overwrite the association.
 
 ### Network Load Balancers
 
-```hcl
+```terraform
 resource "aws_vpc_endpoint_service" "example" {
   acceptance_required        = false
   network_load_balancer_arns = [aws_lb.example.arn]
@@ -30,7 +30,7 @@ resource "aws_vpc_endpoint_service" "example" {
 
 ### Gateway Load Balancers
 
-```hcl
+```terraform
 resource "aws_vpc_endpoint_service" "example" {
   acceptance_required        = false
   gateway_load_balancer_arns = [aws_lb.example.arn]
@@ -45,7 +45,8 @@ The following arguments are supported:
 * `allowed_principals` - (Optional) The ARNs of one or more principals allowed to discover the endpoint service.
 * `gateway_load_balancer_arns` - (Optional) Amazon Resource Names (ARNs) of one or more Gateway Load Balancers for the endpoint service.
 * `network_load_balancer_arns` - (Optional) Amazon Resource Names (ARNs) of one or more Network Load Balancers for the endpoint service.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `private_dns_name` - (Optional) The private DNS name for the service.
 
 ## Attributes Reference
 
@@ -56,10 +57,15 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Amazon Resource Name (ARN) of the VPC endpoint service.
 * `base_endpoint_dns_names` - The DNS names for the service.
 * `manages_vpc_endpoints` - Whether or not the service manages its VPC endpoints - `true` or `false`.
-* `private_dns_name` - The private DNS name for the service.
 * `service_name` - The service name.
 * `service_type` - The service type, `Gateway` or `Interface`.
 * `state` - The state of the VPC endpoint service.
+* `private_dns_name_configuration` - List of objects containing information about the endpoint service private DNS name configuration.
+    * `name` - Name of the record subdomain the service provider needs to create.
+    * `state` - Verification state of the VPC endpoint service. Consumers of the endpoint service can use the private name only when the state is `verified`.
+    * `type` - Endpoint service verification type, for example `TXT`.
+    * `value` - Value the service provider adds to the private DNS name domain record before verification.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 

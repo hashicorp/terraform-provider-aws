@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfimagebuilder "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/imagebuilder"
 )
 
 func resourceAwsImageBuilderImageRecipe() *schema.Resource {
@@ -94,10 +95,11 @@ func resourceAwsImageBuilderImageRecipe() *schema.Resource {
 										ValidateFunc: validation.IntBetween(1, 16000),
 									},
 									"volume_type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringInSlice(imagebuilder.EbsVolumeType_Values(), false),
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+										// https://github.com/hashicorp/terraform-provider-aws/issues/17274.
+										ValidateFunc: validation.StringInSlice(append(imagebuilder.EbsVolumeType_Values(), tfimagebuilder.EbsVolumeTypeGp3), false),
 									},
 								},
 							},
@@ -120,7 +122,7 @@ func resourceAwsImageBuilderImageRecipe() *schema.Resource {
 				},
 			},
 			"component": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
 				MinItems: 1,
@@ -163,19 +165,30 @@ func resourceAwsImageBuilderImageRecipe() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"version": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
+			"working_directory": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 1024),
+			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsImageBuilderImageRecipeCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateImageRecipeInput{
 		ClientToken: aws.String(resource.UniqueId()),
@@ -185,8 +198,8 @@ func resourceAwsImageBuilderImageRecipeCreate(d *schema.ResourceData, meta inter
 		input.BlockDeviceMappings = expandImageBuilderInstanceBlockDeviceMappings(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("component"); ok && v.(*schema.Set).Len() > 0 {
-		input.Components = expandImageBuilderComponentConfigurations(v.(*schema.Set).List())
+	if v, ok := d.GetOk("component"); ok && len(v.([]interface{})) > 0 {
+		input.Components = expandImageBuilderComponentConfigurations(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -201,12 +214,15 @@ func resourceAwsImageBuilderImageRecipeCreate(d *schema.ResourceData, meta inter
 		input.ParentImage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().ImagebuilderTags()
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().ImagebuilderTags()
 	}
 
 	if v, ok := d.GetOk("version"); ok {
 		input.SemanticVersion = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("working_directory"); ok {
+		input.WorkingDirectory = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateImageRecipe(input)
@@ -226,6 +242,7 @@ func resourceAwsImageBuilderImageRecipeCreate(d *schema.ResourceData, meta inter
 
 func resourceAwsImageBuilderImageRecipeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetImageRecipeInput{
@@ -259,8 +276,18 @@ func resourceAwsImageBuilderImageRecipeRead(d *schema.ResourceData, meta interfa
 	d.Set("owner", imageRecipe.Owner)
 	d.Set("parent_image", imageRecipe.ParentImage)
 	d.Set("platform", imageRecipe.Platform)
-	d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(imageRecipe.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
+	tags := keyvaluetags.ImagebuilderKeyValueTags(imageRecipe.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
 	d.Set("version", imageRecipe.Version)
+	d.Set("working_directory", imageRecipe.WorkingDirectory)
 
 	return nil
 }
@@ -268,8 +295,8 @@ func resourceAwsImageBuilderImageRecipeRead(d *schema.ResourceData, meta interfa
 func resourceAwsImageBuilderImageRecipeUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.ImagebuilderUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags for Image Builder Image Recipe (%s): %w", d.Id(), err)

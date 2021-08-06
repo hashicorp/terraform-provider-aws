@@ -4,25 +4,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
-// KeyState fetches the Key and its State
-func KeyState(conn *kms.KMS, keyID string) resource.StateRefreshFunc {
+func KeyState(conn *kms.KMS, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &kms.DescribeKeyInput{
-			KeyId: aws.String(keyID),
-		}
+		output, err := finder.KeyByID(conn, id)
 
-		output, err := conn.DescribeKey(input)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
-			return nil, kms.KeyStateUnavailable, err
+			return nil, "", err
 		}
 
-		if output == nil || output.KeyMetadata == nil {
-			return output, kms.KeyStateUnavailable, nil
-		}
-
-		return output, aws.StringValue(output.KeyMetadata.KeyState), nil
+		return output, aws.StringValue(output.KeyState), nil
 	}
 }

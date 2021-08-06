@@ -131,20 +131,23 @@ func resourceAwsWorkspacesWorkspace() *schema.Resource {
 					},
 				},
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(waiter.WorkspaceAvailableTimeout),
 			Update: schema.DefaultTimeout(waiter.WorkspaceUpdatingTimeout),
 			Delete: schema.DefaultTimeout(waiter.WorkspaceTerminatedTimeout),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsWorkspacesWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).workspacesconn
-
-	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().WorkspacesTags()
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &workspaces.WorkspaceRequest{
 		BundleId:                    aws.String(d.Get("bundle_id").(string)),
@@ -152,7 +155,7 @@ func resourceAwsWorkspacesWorkspaceCreate(d *schema.ResourceData, meta interface
 		UserName:                    aws.String(d.Get("user_name").(string)),
 		RootVolumeEncryptionEnabled: aws.Bool(d.Get("root_volume_encryption_enabled").(bool)),
 		UserVolumeEncryptionEnabled: aws.Bool(d.Get("user_volume_encryption_enabled").(bool)),
-		Tags:                        tags,
+		Tags:                        tags.IgnoreAws().WorkspacesTags(),
 	}
 
 	if v, ok := d.GetOk("volume_encryption_key"); ok {
@@ -171,7 +174,7 @@ func resourceAwsWorkspacesWorkspaceCreate(d *schema.ResourceData, meta interface
 
 	wsFail := resp.FailedRequests
 	if len(wsFail) > 0 {
-		return fmt.Errorf("workspace creation failed: %s", *wsFail[0].ErrorMessage)
+		return fmt.Errorf("workspace creation failed: %s: %s", aws.StringValue(wsFail[0].ErrorCode), aws.StringValue(wsFail[0].ErrorMessage))
 	}
 
 	workspaceID := aws.StringValue(resp.PendingRequests[0].WorkspaceId)
@@ -190,6 +193,7 @@ func resourceAwsWorkspacesWorkspaceCreate(d *schema.ResourceData, meta interface
 
 func resourceAwsWorkspacesWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).workspacesconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	rawOutput, state, err := waiter.WorkspaceState(conn, d.Id())()
@@ -221,8 +225,15 @@ func resourceAwsWorkspacesWorkspaceRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error listing tags: %s", err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -265,8 +276,8 @@ func resourceAwsWorkspacesWorkspaceUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.WorkspacesUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
@@ -288,7 +299,7 @@ func resourceAwsWorkspacesWorkspaceDelete(d *schema.ResourceData, meta interface
 
 func workspaceDelete(conn *workspaces.WorkSpaces, id string, timeout time.Duration) error {
 	log.Printf("[DEBUG] Terminating workspace %q", id)
-	_, err := conn.TerminateWorkspaces(&workspaces.TerminateWorkspacesInput{
+	resp, err := conn.TerminateWorkspaces(&workspaces.TerminateWorkspacesInput{
 		TerminateWorkspaceRequests: []*workspaces.TerminateRequest{
 			{
 				WorkspaceId: aws.String(id),
@@ -297,6 +308,11 @@ func workspaceDelete(conn *workspaces.WorkSpaces, id string, timeout time.Durati
 	})
 	if err != nil {
 		return err
+	}
+
+	wsFail := resp.FailedRequests
+	if len(wsFail) > 0 {
+		return fmt.Errorf("workspace termination failed: %s: %s", aws.StringValue(wsFail[0].ErrorCode), aws.StringValue(wsFail[0].ErrorMessage))
 	}
 
 	log.Printf("[DEBUG] Waiting for workspace %q to be terminated", id)

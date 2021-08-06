@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/globalaccelerator/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAwsGlobalAcceleratorListener_basic(t *testing.T) {
@@ -16,6 +18,7 @@ func TestAccAwsGlobalAcceleratorListener_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorListenerDestroy,
 		Steps: []resource.TestStep{
@@ -26,7 +29,7 @@ func TestAccAwsGlobalAcceleratorListener_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "client_affinity", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "TCP"),
 					resource.TestCheckResourceAttr(resourceName, "port_range.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_range.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_range.*", map[string]string{
 						"from_port": "80",
 						"to_port":   "81",
 					}),
@@ -41,12 +44,35 @@ func TestAccAwsGlobalAcceleratorListener_basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsGlobalAcceleratorListener_disappears(t *testing.T) {
+	resourceName := "aws_globalaccelerator_listener.example"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlobalAcceleratorListenerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalAcceleratorListener_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalAcceleratorListenerExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlobalAcceleratorListener(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAwsGlobalAcceleratorListener_update(t *testing.T) {
 	resourceName := "aws_globalaccelerator_listener.example"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   testAccErrorCheck(t, globalaccelerator.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorListenerDestroy,
 		Steps: []resource.TestStep{
@@ -60,7 +86,7 @@ func TestAccAwsGlobalAcceleratorListener_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "client_affinity", "SOURCE_IP"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "UDP"),
 					resource.TestCheckResourceAttr(resourceName, "port_range.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_range.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_range.*", map[string]string{
 						"from_port": "443",
 						"to_port":   "444",
 					}),
@@ -88,13 +114,10 @@ func testAccCheckGlobalAcceleratorListenerExists(name string) resource.TestCheck
 			return fmt.Errorf("No ID is set")
 		}
 
-		accelerator, err := resourceAwsGlobalAcceleratorListenerRetrieve(conn, rs.Primary.ID)
+		_, err := finder.ListenerByARN(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
-		}
-
-		if accelerator == nil {
-			return fmt.Errorf("Global Accelerator listener not found")
 		}
 
 		return nil
@@ -109,14 +132,17 @@ func testAccCheckGlobalAcceleratorListenerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		accelerator, err := resourceAwsGlobalAcceleratorListenerRetrieve(conn, rs.Primary.ID)
+		_, err := finder.ListenerByARN(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
 		if err != nil {
 			return err
 		}
 
-		if accelerator != nil {
-			return fmt.Errorf("Global Accelerator listener still exists")
-		}
+		return fmt.Errorf("Global Accelerator Accelerator %s still exists", rs.Primary.ID)
 	}
 	return nil
 }

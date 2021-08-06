@@ -13,16 +13,14 @@ import (
 )
 
 func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
-	rString := acctest.RandString(8)
-	refName := fmt.Sprintf("tf_acc_%s", rString)
+	refName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_delegation_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   resourceName,
-		IDRefreshIgnore: []string{"reference_name"},
-		Providers:       testAccProviders,
-		CheckDestroy:    testAccCheckRoute53DelegationSetDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53DelegationSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53DelegationSetConfig(refName),
@@ -43,27 +41,29 @@ func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
 func TestAccAWSRoute53DelegationSet_withZones(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 
-	rString := acctest.RandString(8)
-	refName := fmt.Sprintf("tf_acc_%s", rString)
+	refName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_delegation_set.test"
-	zoneName1 := fmt.Sprintf("%s-primary.terraformtest.com", rString)
-	zoneName2 := fmt.Sprintf("%s-secondary.terraformtest.com", rString)
+	primaryZoneResourceName := "aws_route53_zone.primary"
+	secondaryZoneResourceName := "aws_route53_zone.secondary"
+
+	domain := testAccRandomDomainName()
+	zoneName1 := fmt.Sprintf("primary.%s", domain)
+	zoneName2 := fmt.Sprintf("secondary.%s", domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   resourceName,
-		IDRefreshIgnore: []string{"reference_name"},
-		Providers:       testAccProviders,
-		CheckDestroy:    testAccCheckRoute53DelegationSetDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53DelegationSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53DelegationSetWithZonesConfig(refName, zoneName1, zoneName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53DelegationSetExists(resourceName),
-					testAccCheckRoute53ZoneExists("aws_route53_zone.primary", &zone),
-					testAccCheckRoute53ZoneExists("aws_route53_zone.secondary", &zone),
-					testAccCheckRoute53NameServersMatch(resourceName, "aws_route53_zone.primary"),
-					testAccCheckRoute53NameServersMatch(resourceName, "aws_route53_zone.secondary"),
+					testAccCheckRoute53ZoneExists(primaryZoneResourceName, &zone),
+					testAccCheckRoute53ZoneExists(secondaryZoneResourceName, &zone),
+					testAccCheckRoute53NameServersMatch(resourceName, primaryZoneResourceName),
+					testAccCheckRoute53NameServersMatch(resourceName, secondaryZoneResourceName),
 				),
 			},
 			{
@@ -158,7 +158,7 @@ func testAccCheckRoute53NameServersMatch(delegationSetName, zoneName string) res
 func testAccRoute53DelegationSetConfig(refName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_delegation_set" "test" {
-  reference_name = "%s"
+  reference_name = %[1]q
 }
 `, refName)
 }
@@ -166,16 +166,16 @@ resource "aws_route53_delegation_set" "test" {
 func testAccRoute53DelegationSetWithZonesConfig(refName, zoneName1, zoneName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_delegation_set" "test" {
-  reference_name = "%s"
+  reference_name = %[1]q
 }
 
 resource "aws_route53_zone" "primary" {
-  name              = "%s"
+  name              = %[2]q
   delegation_set_id = aws_route53_delegation_set.test.id
 }
 
 resource "aws_route53_zone" "secondary" {
-  name              = "%s"
+  name              = %[3]q
   delegation_set_id = aws_route53_delegation_set.test.id
 }
 `, refName, zoneName1, zoneName2)

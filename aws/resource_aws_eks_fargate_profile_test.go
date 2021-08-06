@@ -5,14 +5,17 @@ import (
 	"log"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/eks"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfeks "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/eks"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/eks/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -25,56 +28,63 @@ func init() {
 func testSweepEksFargateProfiles(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).eksconn
-
-	var errors error
 	input := &eks.ListClustersInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]*testSweepResource, 0)
+
 	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
 		for _, cluster := range page.Clusters {
-			clusterName := aws.StringValue(cluster)
 			input := &eks.ListFargateProfilesInput{
 				ClusterName: cluster,
 			}
+
 			err := conn.ListFargateProfilesPages(input, func(page *eks.ListFargateProfilesOutput, lastPage bool) bool {
-				for _, profile := range page.FargateProfileNames {
-					profileName := aws.StringValue(profile)
-					log.Printf("[INFO] Deleting Fargate Profile %q", profileName)
-					input := &eks.DeleteFargateProfileInput{
-						ClusterName:        cluster,
-						FargateProfileName: profile,
-					}
-					_, err := conn.DeleteFargateProfile(input)
-
-					if err != nil && !isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
-						errors = multierror.Append(errors, fmt.Errorf("error deleting EKS Fargate Profile %q: %w", profileName, err))
-						continue
-					}
-
-					if err := waitForEksFargateProfileDeletion(conn, clusterName, profileName, 10*time.Minute); err != nil {
-						errors = multierror.Append(errors, fmt.Errorf("error waiting for EKS Fargate Profile %q deletion: %w", profileName, err))
-						continue
-					}
+				if page == nil {
+					return !lastPage
 				}
-				return true
+
+				for _, profile := range page.FargateProfileNames {
+					r := resourceAwsEksFargateProfile()
+					d := r.Data(nil)
+					d.SetId(tfeks.FargateProfileCreateResourceID(aws.StringValue(cluster), aws.StringValue(profile)))
+
+					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+				}
+
+				return !lastPage
 			})
+
 			if err != nil {
-				errors = multierror.Append(errors, fmt.Errorf("error listing Fargate Profiles for EKS Cluster %s: %w", clusterName, err))
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Fargate Profiles (%s): %w", region, err))
 			}
 		}
 
-		return true
+		return !lastPage
 	})
+
 	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
-		return errors // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		errors = multierror.Append(errors, fmt.Errorf("error retrieving EKS Clusters: %w", err))
+		log.Printf("[WARN] Skipping EKS Fargate Profiles sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
-	return errors
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
+	}
+
+	err = testSweepResourceOrchestrator(sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EKS Fargate Profiles (%s): %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSEksFargateProfile_basic(t *testing.T) {
@@ -86,6 +96,7 @@ func TestAccAWSEksFargateProfile_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksFargateProfile(t) },
+		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksFargateProfileDestroy,
 		Steps: []resource.TestStep{
@@ -119,6 +130,7 @@ func TestAccAWSEksFargateProfile_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksFargateProfile(t) },
+		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksFargateProfileDestroy,
 		Steps: []resource.TestStep{
@@ -126,7 +138,7 @@ func TestAccAWSEksFargateProfile_disappears(t *testing.T) {
 				Config: testAccAWSEksFargateProfileConfigFargateProfileName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksFargateProfileExists(resourceName, &fargateProfile),
-					testAccCheckAWSEksFargateProfileDisappears(&fargateProfile),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEksFargateProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -142,6 +154,7 @@ func TestAccAWSEksFargateProfile_Multi_Profile(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksFargateProfile(t) },
+		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksFargateProfileDestroy,
 		Steps: []resource.TestStep{
@@ -163,6 +176,7 @@ func TestAccAWSEksFargateProfile_Selector_Labels(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksFargateProfile(t) },
+		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksFargateProfileDestroy,
 		Steps: []resource.TestStep{
@@ -188,6 +202,7 @@ func TestAccAWSEksFargateProfile_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksFargateProfile(t) },
+		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksFargateProfileDestroy,
 		Steps: []resource.TestStep{
@@ -236,37 +251,21 @@ func testAccCheckAWSEksFargateProfileExists(resourceName string, fargateProfile 
 			return fmt.Errorf("No EKS Fargate Profile ID is set")
 		}
 
-		clusterName, fargateProfileName, err := resourceAwsEksFargateProfileParseId(rs.Primary.ID)
+		clusterName, fargateProfileName, err := tfeks.FargateProfileParseResourceID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).eksconn
 
-		input := &eks.DescribeFargateProfileInput{
-			ClusterName:        aws.String(clusterName),
-			FargateProfileName: aws.String(fargateProfileName),
-		}
-
-		output, err := conn.DescribeFargateProfile(input)
+		output, err := finder.FargateProfileByClusterNameAndFargateProfileName(conn, clusterName, fargateProfileName)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil || output.FargateProfile == nil {
-			return fmt.Errorf("EKS Fargate Profile (%s) not found", rs.Primary.ID)
-		}
-
-		if aws.StringValue(output.FargateProfile.FargateProfileName) != fargateProfileName {
-			return fmt.Errorf("EKS Fargate Profile (%s) not found", rs.Primary.ID)
-		}
-
-		if got, want := aws.StringValue(output.FargateProfile.Status), eks.FargateProfileStatusActive; got != want {
-			return fmt.Errorf("EKS Fargate Profile (%s) not in %s status, got: %s", rs.Primary.ID, want, got)
-		}
-
-		*fargateProfile = *output.FargateProfile
+		*fargateProfile = *output
 
 		return nil
 	}
@@ -280,51 +279,26 @@ func testAccCheckAWSEksFargateProfileDestroy(s *terraform.State) error {
 			continue
 		}
 
-		clusterName, fargateProfileName, err := resourceAwsEksFargateProfileParseId(rs.Primary.ID)
+		clusterName, fargateProfileName, err := tfeks.FargateProfileParseResourceID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		input := &eks.DescribeFargateProfileInput{
-			ClusterName:        aws.String(clusterName),
-			FargateProfileName: aws.String(fargateProfileName),
-		}
+		_, err = finder.FargateProfileByClusterNameAndFargateProfileName(conn, clusterName, fargateProfileName)
 
-		output, err := conn.DescribeFargateProfile(input)
-
-		if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
-		if output != nil && output.FargateProfile != nil && aws.StringValue(output.FargateProfile.FargateProfileName) == fargateProfileName {
-			return fmt.Errorf("EKS Fargate Profile (%s) still exists", rs.Primary.ID)
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckAWSEksFargateProfileDisappears(fargateProfile *eks.FargateProfile) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).eksconn
-
-		input := &eks.DeleteFargateProfileInput{
-			ClusterName:        fargateProfile.ClusterName,
-			FargateProfileName: fargateProfile.FargateProfileName,
-		}
-
-		_, err := conn.DeleteFargateProfile(input)
-
-		if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
-
 		if err != nil {
 			return err
 		}
 
-		return waitForEksFargateProfileDeletion(conn, aws.StringValue(fargateProfile.ClusterName), aws.StringValue(fargateProfile.FargateProfileName), 10*time.Minute)
+		return fmt.Errorf("EKS Fargate Profile %s still exists", rs.Primary.ID)
 	}
+
+	return nil
 }
 
 func testAccPreCheckAWSEksFargateProfile(t *testing.T) {
@@ -338,14 +312,24 @@ func testAccPreCheckAWSEksFargateProfile(t *testing.T) {
 	// create and destroy an EKS Cluster just to find the real error, instead
 	// we take the least desirable approach of hardcoding allowed regions.
 	allowedRegions := []string{
-		"ap-northeast-1",
-		"ap-southeast-1",
-		"ap-southeast-2",
-		"eu-central-1",
-		"eu-west-1",
-		"us-east-1",
-		"us-east-2",
-		"us-west-2",
+		endpoints.ApEast1RegionID,
+		endpoints.ApNortheast1RegionID,
+		endpoints.ApNortheast2RegionID,
+		endpoints.ApSouth1RegionID,
+		endpoints.ApSoutheast1RegionID,
+		endpoints.ApSoutheast2RegionID,
+		endpoints.CaCentral1RegionID,
+		endpoints.EuCentral1RegionID,
+		endpoints.EuNorth1RegionID,
+		endpoints.EuWest1RegionID,
+		endpoints.EuWest2RegionID,
+		endpoints.EuWest3RegionID,
+		endpoints.MeSouth1RegionID,
+		endpoints.SaEast1RegionID,
+		endpoints.UsEast1RegionID,
+		endpoints.UsEast2RegionID,
+		endpoints.UsWest1RegionID,
+		endpoints.UsWest2RegionID,
 	}
 	region := testAccProvider.Meta().(*AWSClient).region
 
@@ -429,13 +413,17 @@ resource "aws_vpc" "test" {
   enable_dns_support   = true
 
   tags = {
-    Name                          = "tf-acc-test-eks-fargate-profile"
+    Name                          = %[1]q
     "kubernetes.io/cluster/%[1]s" = "shared"
   }
 }
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "public" {
@@ -444,6 +432,10 @@ resource "aws_route_table" "public" {
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -460,7 +452,7 @@ resource "aws_subnet" "private" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name                          = "tf-acc-test-eks-fargate-profile-private"
+    Name                          = %[1]q
     "kubernetes.io/cluster/%[1]s" = "shared"
   }
 }
@@ -470,6 +462,10 @@ resource "aws_eip" "private" {
   depends_on = [aws_internet_gateway.test]
 
   vpc = true
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_nat_gateway" "private" {
@@ -477,6 +473,10 @@ resource "aws_nat_gateway" "private" {
 
   allocation_id = aws_eip.private[count.index].id
   subnet_id     = aws_subnet.private[count.index].id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "private" {
@@ -487,6 +487,10 @@ resource "aws_route_table" "private" {
   route {
     cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.private[count.index].id
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -505,7 +509,7 @@ resource "aws_subnet" "public" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name                          = "tf-acc-test-eks-fargate-profile-public"
+    Name                          = %[1]q
     "kubernetes.io/cluster/%[1]s" = "shared"
   }
 }

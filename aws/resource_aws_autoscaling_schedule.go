@@ -51,6 +51,11 @@ func resourceAwsAutoscalingSchedule() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validateASGScheduleTimestamp,
 			},
+			"time_zone": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"recurrence": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -117,6 +122,10 @@ func resourceAwsAutoscalingScheduleCreate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("Error Parsing AWS Autoscaling Group Schedule End Time: %s", err.Error())
 		}
 		params.EndTime = aws.Time(t)
+	}
+
+	if attr, ok := d.GetOk("time_zone"); ok {
+		params.TimeZone = aws.String(attr.(string))
 	}
 
 	if attr, ok := d.GetOk("recurrence"); ok {
@@ -194,6 +203,10 @@ func resourceAwsAutoscalingScheduleRead(d *schema.ResourceData, meta interface{}
 		d.Set("end_time", sa.EndTime.Format(awsAutoscalingScheduleTimeLayout))
 	}
 
+	if sa.TimeZone != nil {
+		d.Set("time_zone", sa.TimeZone)
+	}
+
 	return nil
 }
 
@@ -236,7 +249,7 @@ func resourceAwsASGScheduledActionRetrieve(d *schema.ResourceData, meta interfac
 	}
 
 	if len(actions.ScheduledUpdateGroupActions) != 1 ||
-		*actions.ScheduledUpdateGroupActions[0].ScheduledActionName != d.Id() {
+		aws.StringValue(actions.ScheduledUpdateGroupActions[0].ScheduledActionName) != d.Id() {
 		return nil, false, nil
 	}
 

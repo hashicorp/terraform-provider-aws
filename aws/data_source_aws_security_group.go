@@ -1,14 +1,17 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
-	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 )
 
 func dataSourceAwsSecurityGroup() *schema.Resource {
@@ -76,32 +79,32 @@ func dataSourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) er
 		req.Filters = nil
 	}
 
-	log.Printf("[DEBUG] Reading Security Group: %s", req)
-	resp, err := conn.DescribeSecurityGroups(req)
+	sg, err := finder.SecurityGroup(conn, req)
+	var nfe *resource.NotFoundError
+	if errors.As(err, &nfe) {
+		if nfe.Message == "empty result" {
+			return fmt.Errorf("no matching SecurityGroup found")
+		}
+		if strings.HasPrefix(nfe.Message, "too many results:") {
+			return fmt.Errorf("multiple Security Groups matched; use additional constraints to reduce matches to a single Security Group")
+		}
+	}
 	if err != nil {
 		return err
 	}
-	if resp == nil || len(resp.SecurityGroups) == 0 {
-		return fmt.Errorf("no matching SecurityGroup found")
-	}
-	if len(resp.SecurityGroups) > 1 {
-		return fmt.Errorf("multiple Security Groups matched; use additional constraints to reduce matches to a single Security Group")
-	}
 
-	sg := resp.SecurityGroups[0]
-
-	d.SetId(*sg.GroupId)
+	d.SetId(aws.StringValue(sg.GroupId))
 	d.Set("name", sg.GroupName)
 	d.Set("description", sg.Description)
 	d.Set("vpc_id", sg.VpcId)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(sg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 		Region:    meta.(*AWSClient).region,
 		AccountID: *sg.OwnerId,
 		Resource:  fmt.Sprintf("security-group/%s", *sg.GroupId),

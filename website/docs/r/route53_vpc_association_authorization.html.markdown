@@ -3,16 +3,16 @@ subcategory: "Route53"
 layout: "aws"
 page_title: "AWS: aws_route53_vpc_association_authorization"
 description: |-
-  Authorizes a VPC in a peer account to be associated with a local Route53 Hosted Zone
+  Authorizes a VPC in a different account to be associated with a local Route53 Hosted Zone
 ---
 
 # Resource: aws_route53_vpc_association_authorization
 
-Authorizes a VPC in a peer account to be associated with a local Route53 Hosted Zone.
+Authorizes a VPC in a different account to be associated with a local Route53 Hosted Zone.
 
 ## Example Usage
 
-```hcl
+```terraform
 provider "aws" {
 }
 

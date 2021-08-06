@@ -10,6 +10,9 @@ import (
 	"github.com/bflad/tfproviderlint/passes/AT007"
 	"github.com/bflad/tfproviderlint/passes/AT008"
 	"github.com/bflad/tfproviderlint/passes/AT009"
+	"github.com/bflad/tfproviderlint/passes/AT010"
+	"github.com/bflad/tfproviderlint/passes/AT011"
+	"github.com/bflad/tfproviderlint/passes/AT012"
 	"github.com/bflad/tfproviderlint/passes/R001"
 	"github.com/bflad/tfproviderlint/passes/R002"
 	"github.com/bflad/tfproviderlint/passes/R003"
@@ -28,6 +31,7 @@ import (
 	"github.com/bflad/tfproviderlint/passes/R016"
 	"github.com/bflad/tfproviderlint/passes/R017"
 	"github.com/bflad/tfproviderlint/passes/R018"
+	"github.com/bflad/tfproviderlint/passes/R019"
 	"github.com/bflad/tfproviderlint/passes/S001"
 	"github.com/bflad/tfproviderlint/passes/S002"
 	"github.com/bflad/tfproviderlint/passes/S003"
@@ -73,6 +77,12 @@ import (
 	"github.com/bflad/tfproviderlint/passes/V006"
 	"github.com/bflad/tfproviderlint/passes/V007"
 	"github.com/bflad/tfproviderlint/passes/V008"
+	"github.com/bflad/tfproviderlint/passes/V009"
+	"github.com/bflad/tfproviderlint/passes/V010"
+	"github.com/bflad/tfproviderlint/passes/V011"
+	"github.com/bflad/tfproviderlint/passes/V012"
+	"github.com/bflad/tfproviderlint/passes/V013"
+	"github.com/bflad/tfproviderlint/passes/V014"
 	"golang.org/x/tools/go/analysis"
 )
 
@@ -89,6 +99,9 @@ var AllChecks = []*analysis.Analyzer{
 	AT007.Analyzer,
 	AT008.Analyzer,
 	AT009.Analyzer,
+	AT010.Analyzer,
+	AT011.Analyzer,
+	AT012.Analyzer,
 	R001.Analyzer,
 	R002.Analyzer,
 	R003.Analyzer,
@@ -107,6 +120,7 @@ var AllChecks = []*analysis.Analyzer{
 	R016.Analyzer,
 	R017.Analyzer,
 	R018.Analyzer,
+	R019.Analyzer,
 	S001.Analyzer,
 	S002.Analyzer,
 	S003.Analyzer,
@@ -152,4 +166,10 @@ var AllChecks = []*analysis.Analyzer{
 	V006.Analyzer,
 	V007.Analyzer,
 	V008.Analyzer,
+	V009.Analyzer,
+	V010.Analyzer,
+	V011.Analyzer,
+	V012.Analyzer,
+	V013.Analyzer,
+	V014.Analyzer,
 }

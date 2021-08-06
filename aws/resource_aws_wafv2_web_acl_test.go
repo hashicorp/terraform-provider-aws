@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -24,12 +25,14 @@ func init() {
 
 func testSweepWafv2WebAcls(region string) error {
 	client, err := sharedClientForRegion(region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).wafv2conn
 
-	var sweeperErrs *multierror.Error
+	conn := client.(*AWSClient).wafv2conn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
 
 	input := &wafv2.ListWebACLsInput{
 		Scope: aws.String(wafv2.ScopeRegional),
@@ -41,37 +44,49 @@ func testSweepWafv2WebAcls(region string) error {
 		}
 
 		for _, webAcl := range page.WebACLs {
+			if webAcl == nil {
+				continue
+			}
+
+			name := aws.StringValue(webAcl.Name)
+
+			// Exclude WebACLs managed by Firewall Manager as deletion returns AccessDeniedException.
+			// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19149
+			// Prefix Reference: https://docs.aws.amazon.com/waf/latest/developerguide/get-started-fms-create-security-policy.html
+			if strings.HasPrefix(name, "FMManagedWebACLV2") {
+				log.Printf("[WARN] Skipping WAFv2 Web ACL: %s", name)
+				continue
+			}
+
 			id := aws.StringValue(webAcl.Id)
 
 			r := resourceAwsWafv2WebACL()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("lock_token", webAcl.LockToken)
-			d.Set("name", webAcl.Name)
+			d.Set("name", name)
 			d.Set("scope", input.Scope)
-			err := r.Delete(d, client)
 
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting WAFv2 Web ACL (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping WAFv2 Web ACL sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing WAFv2 Web ACLs: %w", err))
+		errs = multierror.Append(errs, fmt.Errorf("error describing WAFv2 Web ACLs for %s: %w", region, err))
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAFv2 Web ACLs for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping WAFv2 Web ACLs sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func TestAccAwsWafv2WebACL_basic(t *testing.T) {
@@ -81,6 +96,7 @@ func TestAccAwsWafv2WebACL_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -113,7 +129,7 @@ func TestAccAwsWafv2WebACL_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_updateRule(t *testing.T) {
+func TestAccAwsWafv2WebACL_Update_rule(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -122,6 +138,7 @@ func TestAccAwsWafv2WebACL_updateRule(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -243,7 +260,7 @@ func TestAccAwsWafv2WebACL_updateRule(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_UpdateRuleProperties(t *testing.T) {
+func TestAccAwsWafv2WebACL_Update_ruleProperties(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -252,6 +269,7 @@ func TestAccAwsWafv2WebACL_UpdateRuleProperties(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -448,7 +466,7 @@ func TestAccAwsWafv2WebACL_UpdateRuleProperties(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_ChangeNameForceNew(t *testing.T) {
+func TestAccAwsWafv2WebACL_Update_nameForceNew(t *testing.T) {
 	var before, after wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	ruleGroupNewName := acctest.RandomWithPrefix("tf-acc-test")
@@ -456,6 +474,7 @@ func TestAccAwsWafv2WebACL_ChangeNameForceNew(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -499,13 +518,14 @@ func TestAccAwsWafv2WebACL_ChangeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_Disappears(t *testing.T) {
+func TestAccAwsWafv2WebACL_disappears(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -521,13 +541,14 @@ func TestAccAwsWafv2WebACL_Disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_ManagedRuleGroupStatement(t *testing.T) {
+func TestAccAwsWafv2WebACL_ManagedRuleGroup_basic(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -545,15 +566,16 @@ func TestAccAwsWafv2WebACL_ManagedRuleGroupStatement(t *testing.T) {
 						"override_action.0.count.#": "0",
 						"override_action.0.none.#":  "1",
 						"statement.#":               "1",
-						"statement.0.managed_rule_group_statement.#":                 "1",
-						"statement.0.managed_rule_group_statement.0.name":            "AWSManagedRulesCommonRuleSet",
-						"statement.0.managed_rule_group_statement.0.vendor_name":     "AWS",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.#": "0",
+						"statement.0.managed_rule_group_statement.#":                        "1",
+						"statement.0.managed_rule_group_statement.0.name":                   "AWSManagedRulesCommonRuleSet",
+						"statement.0.managed_rule_group_statement.0.vendor_name":            "AWS",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.#":        "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#": "0",
 					}),
 				),
 			},
 			{
-				Config: testAccAwsWafv2WebACLConfig_ManagedRuleGroupStatement_Update(webACLName),
+				Config: testAccAwsWafv2WebACLConfig_ManagedRuleGroupStatement_update(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -566,12 +588,17 @@ func TestAccAwsWafv2WebACL_ManagedRuleGroupStatement(t *testing.T) {
 						"override_action.0.count.#": "1",
 						"override_action.0.none.#":  "0",
 						"statement.#":               "1",
-						"statement.0.managed_rule_group_statement.#":                      "1",
-						"statement.0.managed_rule_group_statement.0.name":                 "AWSManagedRulesCommonRuleSet",
-						"statement.0.managed_rule_group_statement.0.vendor_name":          "AWS",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.#":      "2",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.0.name": "SizeRestrictions_QUERYSTRING",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.1.name": "NoUserAgent_HEADER",
+						"statement.0.managed_rule_group_statement.#":                                                              "1",
+						"statement.0.managed_rule_group_statement.0.name":                                                         "AWSManagedRulesCommonRuleSet",
+						"statement.0.managed_rule_group_statement.0.vendor_name":                                                  "AWS",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.#":                                              "2",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.0.name":                                         "SizeRestrictions_QUERYSTRING",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.1.name":                                         "NoUserAgent_HEADER",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                       "1",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.0.geo_match_statement.#":                 "1",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.#": "2",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.0": "US",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.1": "NL",
 					}),
 				),
 			},
@@ -585,13 +612,14 @@ func TestAccAwsWafv2WebACL_ManagedRuleGroupStatement(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_Minimal(t *testing.T) {
+func TestAccAwsWafv2WebACL_minimal(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -617,13 +645,14 @@ func TestAccAwsWafv2WebACL_Minimal(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_RateBasedStatement(t *testing.T) {
+func TestAccAwsWafv2WebACL_RateBased_basic(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -650,7 +679,7 @@ func TestAccAwsWafv2WebACL_RateBasedStatement(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2WebACLConfig_RateBasedStatement_Update(webACLName),
+				Config: testAccAwsWafv2WebACLConfig_RateBasedStatement_update(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -685,7 +714,7 @@ func TestAccAwsWafv2WebACL_RateBasedStatement(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_GeoMatchStatement(t *testing.T) {
+func TestAccAwsWafv2WebACL_GeoMatch_basic(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -694,6 +723,7 @@ func TestAccAwsWafv2WebACL_GeoMatchStatement(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -776,18 +806,19 @@ func TestAccAwsWafv2WebACL_GeoMatchStatement(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_GeoMatchStatement_ForwardedIPConfig(t *testing.T) {
+func TestAccAwsWafv2WebACL_GeoMatch_forwardedIPConfig(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2WebACLConfig_GeoMatchStatement_ForwardedIPConfig(webACLName, "MATCH", "X-Forwarded-For"),
+				Config: testAccAwsWafv2WebACLConfig_GeoMatchStatement_forwardedIPConfig(webACLName, "MATCH", "X-Forwarded-For"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -809,7 +840,7 @@ func TestAccAwsWafv2WebACL_GeoMatchStatement_ForwardedIPConfig(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2WebACLConfig_GeoMatchStatement_ForwardedIPConfig(webACLName, "NO_MATCH", "Updated"),
+				Config: testAccAwsWafv2WebACLConfig_GeoMatchStatement_forwardedIPConfig(webACLName, "NO_MATCH", "Updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -840,18 +871,19 @@ func TestAccAwsWafv2WebACL_GeoMatchStatement_ForwardedIPConfig(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_IPSetReferenceStatement(t *testing.T) {
+func TestAccAwsWafv2WebACL_IPSetReference_basic(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2WebACLConfig_IPSetReferenceStatement(webACLName),
+				Config: testAccAwsWafv2WebACLConfig_IPSetReference(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -885,18 +917,19 @@ func TestAccAwsWafv2WebACL_IPSetReferenceStatement(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_IPSetReferenceStatement_IPSetForwardedIPConfig(t *testing.T) {
+func TestAccAwsWafv2WebACL_IPSetReference_forwardedIPConfig(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2WebACLConfig_IPSetReferenceStatement_IPSetForwardedIPConfig(webACLName, "MATCH", "X-Forwarded-For", "FIRST"),
+				Config: testAccAwsWafv2WebACLConfig_IPSetReference_forwardedIPConfig(webACLName, "MATCH", "X-Forwarded-For", "FIRST"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -918,7 +951,7 @@ func TestAccAwsWafv2WebACL_IPSetReferenceStatement_IPSetForwardedIPConfig(t *tes
 				),
 			},
 			{
-				Config: testAccAwsWafv2WebACLConfig_IPSetReferenceStatement_IPSetForwardedIPConfig(webACLName, "NO_MATCH", "X-Forwarded-For", "LAST"),
+				Config: testAccAwsWafv2WebACLConfig_IPSetReference_forwardedIPConfig(webACLName, "NO_MATCH", "X-Forwarded-For", "LAST"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -940,7 +973,7 @@ func TestAccAwsWafv2WebACL_IPSetReferenceStatement_IPSetForwardedIPConfig(t *tes
 				),
 			},
 			{
-				Config: testAccAwsWafv2WebACLConfig_IPSetReferenceStatement_IPSetForwardedIPConfig(webACLName, "MATCH", "Updated", "ANY"),
+				Config: testAccAwsWafv2WebACLConfig_IPSetReference_forwardedIPConfig(webACLName, "MATCH", "Updated", "ANY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -962,7 +995,7 @@ func TestAccAwsWafv2WebACL_IPSetReferenceStatement_IPSetForwardedIPConfig(t *tes
 				),
 			},
 			{
-				Config: testAccAwsWafv2WebACLConfig_IPSetReferenceStatement(webACLName),
+				Config: testAccAwsWafv2WebACLConfig_IPSetReference(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -988,18 +1021,19 @@ func TestAccAwsWafv2WebACL_IPSetReferenceStatement_IPSetForwardedIPConfig(t *tes
 	})
 }
 
-func TestAccAwsWafv2WebACL_RateBasedStatement_ForwardedIPConfig(t *testing.T) {
+func TestAccAwsWafv2WebACL_RateBased_forwardedIPConfig(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2WebACLConfig_RateBasedStatement_ForwardedIPConfig(webACLName, "MATCH", "X-Forwarded-For"),
+				Config: testAccAwsWafv2WebACLConfig_RateBasedStatement_forwardedIPConfig(webACLName, "MATCH", "X-Forwarded-For"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1023,7 +1057,7 @@ func TestAccAwsWafv2WebACL_RateBasedStatement_ForwardedIPConfig(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2WebACLConfig_RateBasedStatement_ForwardedIPConfig(webACLName, "NO_MATCH", "Updated"),
+				Config: testAccAwsWafv2WebACLConfig_RateBasedStatement_forwardedIPConfig(webACLName, "NO_MATCH", "Updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1056,13 +1090,14 @@ func TestAccAwsWafv2WebACL_RateBasedStatement_ForwardedIPConfig(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_RuleGroupReferenceStatement(t *testing.T) {
+func TestAccAwsWafv2WebACL_RuleGroupReference_basic(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -1088,7 +1123,7 @@ func TestAccAwsWafv2WebACL_RuleGroupReferenceStatement(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2WebACLConfig_RuleGroupReferenceStatement_Update(webACLName),
+				Config: testAccAwsWafv2WebACLConfig_RuleGroupReferenceStatement_update(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1120,13 +1155,182 @@ func TestAccAwsWafv2WebACL_RuleGroupReferenceStatement(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_Tags(t *testing.T) {
+func TestAccAwsWafv2WebACL_Custom_requestHandling(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2WebACLConfig_CustomRequestHandling_allow(webACLName, "x-hdr1", "x-hdr2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope", "REGIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":             "rule-1",
+						"action.#":         "1",
+						"action.0.allow.#": "1",
+						"action.0.allow.0.custom_request_handling.#":                       "1",
+						"action.0.allow.0.custom_request_handling.0.insert_header.#":       "2",
+						"action.0.allow.0.custom_request_handling.0.insert_header.0.name":  "x-hdr1",
+						"action.0.allow.0.custom_request_handling.0.insert_header.0.value": "test-value-1",
+						"action.0.allow.0.custom_request_handling.0.insert_header.1.name":  "x-hdr2",
+						"action.0.allow.0.custom_request_handling.0.insert_header.1.value": "test-value-2",
+						"action.0.block.#": "0",
+						"action.0.count.#": "0",
+						"priority":         "1",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+				),
+			},
+			{
+				Config: testAccAwsWafv2WebACLConfig_CustomRequestHandling_count(webACLName, "x-hdr1", "x-hdr2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope", "REGIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":             "rule-1",
+						"action.#":         "1",
+						"action.0.allow.#": "0",
+						"action.0.block.#": "0",
+						"action.0.count.#": "1",
+						"action.0.count.0.custom_request_handling.#":                       "1",
+						"action.0.count.0.custom_request_handling.0.insert_header.#":       "2",
+						"action.0.count.0.custom_request_handling.0.insert_header.0.name":  "x-hdr1",
+						"action.0.count.0.custom_request_handling.0.insert_header.0.value": "test-value-1",
+						"action.0.count.0.custom_request_handling.0.insert_header.1.name":  "x-hdr2",
+						"action.0.count.0.custom_request_handling.0.insert_header.1.value": "test-value-2",
+						"priority": "1",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2WebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2WebACL_Custom_response(t *testing.T) {
+	var v wafv2.WebACL
+	webACLName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2WebACLConfig_CustomResponse(webACLName, 401, 403, "x-hdr1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.0.custom_response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.0.custom_response.0.response_code", "401"),
+					resource.TestCheckResourceAttr(resourceName, "scope", "REGIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                               "rule-1",
+						"action.#":                           "1",
+						"action.0.allow.#":                   "0",
+						"action.0.block.#":                   "1",
+						"action.0.block.0.custom_response.#": "1",
+						"action.0.block.0.custom_response.0.response_code":           "403",
+						"action.0.block.0.custom_response.0.response_header.#":       "1",
+						"action.0.block.0.custom_response.0.response_header.0.name":  "x-hdr1",
+						"action.0.block.0.custom_response.0.response_header.0.value": "custom-response-header-value",
+						"action.0.count.#": "0",
+						"priority":         "1",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+				),
+			},
+			{
+				Config: testAccAwsWafv2WebACLConfig_CustomResponse(webACLName, 404, 429, "x-hdr2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.0.custom_response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.0.custom_response.0.response_code", "404"),
+					resource.TestCheckResourceAttr(resourceName, "scope", "REGIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                               "rule-1",
+						"action.#":                           "1",
+						"action.0.allow.#":                   "0",
+						"action.0.block.#":                   "1",
+						"action.0.block.0.custom_response.#": "1",
+						"action.0.block.0.custom_response.0.response_code":           "429",
+						"action.0.block.0.custom_response.0.response_header.#":       "1",
+						"action.0.block.0.custom_response.0.response_header.0.name":  "x-hdr2",
+						"action.0.block.0.custom_response.0.response_header.0.value": "custom-response-header-value",
+						"action.0.count.#": "0",
+						"priority":         "1",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2WebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2WebACL_tags(t *testing.T) {
+	var v wafv2.WebACL
+	webACLName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -1169,13 +1373,14 @@ func TestAccAwsWafv2WebACL_Tags(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13862
-func TestAccAwsWafv2WebACL_MaxNestedRateBasedStatements(t *testing.T) {
+func TestAccAwsWafv2WebACL_RateBased_maxNested(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -1211,13 +1416,14 @@ func TestAccAwsWafv2WebACL_MaxNestedRateBasedStatements(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_MaxNestedOperatorStatements(t *testing.T) {
+func TestAccAwsWafv2WebACL_Operators_maxNested(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -1325,8 +1531,8 @@ func testAccCheckAwsWafv2WebACLExists(n string, v *wafv2.WebACL) resource.TestCh
 func testAccAwsWafv2WebACLConfig_Basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%[1]s"
-  description = "%[1]s"
+  name        = %[1]q
+  description = %[1]q
   scope       = "REGIONAL"
 
   default_action {
@@ -1345,7 +1551,7 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_BasicRule(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%[1]s"
+  name        = %[1]q
   description = "Updated"
   scope       = "REGIONAL"
 
@@ -1401,7 +1607,7 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_UpdateRuleNamePriorityMetric(name, ruleName1, ruleName2 string, priority1, priority2 int) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%[1]s"
+  name        = %[1]q
   description = "Updated"
   scope       = "REGIONAL"
 
@@ -1410,7 +1616,7 @@ resource "aws_wafv2_web_acl" "test" {
   }
 
   rule {
-    name     = "%[2]s"
+    name     = %[2]q
     priority = %[3]d
 
     action {
@@ -1440,13 +1646,13 @@ resource "aws_wafv2_web_acl" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name                = "%[2]s"
+      metric_name                = %[2]q
       sampled_requests_enabled   = false
     }
   }
 
   rule {
-    name     = "%[4]s"
+    name     = %[4]q
     priority = %[5]d
 
     action {
@@ -1461,7 +1667,7 @@ resource "aws_wafv2_web_acl" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name                = "%[4]s"
+      metric_name                = %[4]q
       sampled_requests_enabled   = false
     }
   }
@@ -1478,8 +1684,8 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_GeoMatchStatement(name, countryCodes string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%[1]s"
-  description = "%[1]s"
+  name        = %[1]q
+  description = %[1]q
   scope       = "REGIONAL"
 
   default_action {
@@ -1521,11 +1727,171 @@ resource "aws_wafv2_web_acl" "test" {
 `, name, countryCodes)
 }
 
-func testAccAwsWafv2WebACLConfig_GeoMatchStatement_ForwardedIPConfig(name, fallbackBehavior, headerName string) string {
+func testAccAwsWafv2WebACLConfig_CustomRequestHandling_count(name, firstHeader string, secondHeader string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%[1]s"
-  description = "%[1]s"
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {
+        custom_request_handling {
+          insert_header {
+            name  = %[2]q
+            value = "test-value-1"
+          }
+
+          insert_header {
+            name  = %[3]q
+            value = "test-value-2"
+          }
+        }
+      }
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US", "CA"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name, firstHeader, secondHeader)
+}
+
+func testAccAwsWafv2WebACLConfig_CustomRequestHandling_allow(name, firstHeader string, secondHeader string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      allow {
+        custom_request_handling {
+          insert_header {
+            name  = %[2]q
+            value = "test-value-1"
+          }
+
+          insert_header {
+            name  = %[3]q
+            value = "test-value-2"
+          }
+        }
+      }
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US", "CA"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name, firstHeader, secondHeader)
+}
+
+func testAccAwsWafv2WebACLConfig_CustomResponse(name string, defaultStatusCode int, countryBlockStatusCode int, countryHeaderName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    block {
+      custom_response {
+        response_code = %[2]d
+      }
+    }
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      block {
+        custom_response {
+          response_code = %[3]d
+
+          response_header {
+            name  = %[4]q
+            value = "custom-response-header-value"
+          }
+        }
+      }
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US", "CA"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name, defaultStatusCode, countryBlockStatusCode, countryHeaderName)
+}
+
+func testAccAwsWafv2WebACLConfig_GeoMatchStatement_forwardedIPConfig(name, fallbackBehavior, headerName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
   scope       = "REGIONAL"
 
   default_action {
@@ -1552,8 +1918,8 @@ resource "aws_wafv2_web_acl" "test" {
           geo_match_statement {
             country_codes = ["CA"]
             forwarded_ip_config {
-              fallback_behavior = "%s"
-              header_name       = "%s"
+              fallback_behavior = %[2]q
+              header_name       = %[3]q
             }
           }
         }
@@ -1576,7 +1942,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name, fallbackBehavior, headerName)
 }
 
-func testAccAwsWafv2WebACLConfig_IPSetReferenceStatement(name string) string {
+func testAccAwsWafv2WebACLConfig_IPSetReference(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "test" {
   name               = "ip-set-%[1]s"
@@ -1586,8 +1952,8 @@ resource "aws_wafv2_ip_set" "test" {
 }
 
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%[1]s"
-  description = "%[1]s"
+  name        = %[1]q
+  description = %[1]q
   scope       = "REGIONAL"
 
   default_action {
@@ -1624,7 +1990,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccAwsWafv2WebACLConfig_IPSetReferenceStatement_IPSetForwardedIPConfig(name, fallbackBehavior, headerName, position string) string {
+func testAccAwsWafv2WebACLConfig_IPSetReference_forwardedIPConfig(name, fallbackBehavior, headerName, position string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "test" {
   name               = "ip-set-%[1]s"
@@ -1634,8 +2000,8 @@ resource "aws_wafv2_ip_set" "test" {
 }
 
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%[1]s"
-  description = "%[1]s"
+  name        = %[1]q
+  description = %[1]q
   scope       = "REGIONAL"
 
   default_action {
@@ -1654,9 +2020,9 @@ resource "aws_wafv2_web_acl" "test" {
       ip_set_reference_statement {
         arn = aws_wafv2_ip_set.test.arn
         ip_set_forwarded_ip_config {
-          fallback_behavior = "%[2]s"
-          header_name       = "%[3]s"
-          position          = "%[4]s"
+          fallback_behavior = %[2]q
+          header_name       = %[3]q
+          position          = %[4]q
         }
       }
     }
@@ -1680,8 +2046,8 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_ManagedRuleGroupStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%[1]s"
-  description = "%[1]s"
+  name        = %[1]q
+  description = %[1]q
   scope       = "REGIONAL"
 
   default_action {
@@ -1724,11 +2090,11 @@ resource "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccAwsWafv2WebACLConfig_ManagedRuleGroupStatement_Update(name string) string {
+func testAccAwsWafv2WebACLConfig_ManagedRuleGroupStatement_update(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%[1]s"
-  description = "%[1]s"
+  name        = %[1]q
+  description = %[1]q
   scope       = "REGIONAL"
 
   default_action {
@@ -1754,6 +2120,12 @@ resource "aws_wafv2_web_acl" "test" {
 
         excluded_rule {
           name = "NoUserAgent_HEADER"
+        }
+
+        scope_down_statement {
+          geo_match_statement {
+            country_codes = ["US", "NL"]
+          }
         }
       }
     }
@@ -1782,8 +2154,8 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_RateBasedStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%[1]s"
-  description = "%[1]s"
+  name        = %[1]q
+  description = %[1]q
   scope       = "REGIONAL"
 
   default_action {
@@ -1825,11 +2197,11 @@ resource "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccAwsWafv2WebACLConfig_RateBasedStatement_ForwardedIPConfig(name, fallbackBehavior, headerName string) string {
+func testAccAwsWafv2WebACLConfig_RateBasedStatement_forwardedIPConfig(name, fallbackBehavior, headerName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%[1]s"
-  description = "%[1]s"
+  name        = %[1]q
+  description = %[1]q
   scope       = "REGIONAL"
 
   default_action {
@@ -1848,8 +2220,8 @@ resource "aws_wafv2_web_acl" "test" {
       rate_based_statement {
         aggregate_key_type = "FORWARDED_IP"
         forwarded_ip_config {
-          fallback_behavior = "%s"
-          header_name       = "%s"
+          fallback_behavior = %[2]q
+          header_name       = %[3]q
         }
         limit = 50000
       }
@@ -1876,11 +2248,11 @@ resource "aws_wafv2_web_acl" "test" {
 `, name, fallbackBehavior, headerName)
 }
 
-func testAccAwsWafv2WebACLConfig_RateBasedStatement_Update(name string) string {
+func testAccAwsWafv2WebACLConfig_RateBasedStatement_update(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%[1]s"
-  description = "%[1]s"
+  name        = %[1]q
+  description = %[1]q
   scope       = "REGIONAL"
 
   default_action {
@@ -1944,7 +2316,7 @@ resource "aws_wafv2_rule_group" "test" {
 }
 
 resource "aws_wafv2_web_acl" "test" {
-  name  = "%[1]s"
+  name  = %[1]q
   scope = "REGIONAL"
 
   default_action {
@@ -1986,7 +2358,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccAwsWafv2WebACLConfig_RuleGroupReferenceStatement_Update(name string) string {
+func testAccAwsWafv2WebACLConfig_RuleGroupReferenceStatement_update(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 10
@@ -2064,7 +2436,7 @@ resource "aws_wafv2_rule_group" "test" {
 }
 
 resource "aws_wafv2_web_acl" "test" {
-  name  = "%[1]s"
+  name  = %[1]q
   scope = "REGIONAL"
 
   default_action {
@@ -2117,7 +2489,7 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_Minimal(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name  = "%s"
+  name  = %[1]q
   scope = "REGIONAL"
 
   default_action {
@@ -2136,8 +2508,8 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_OneTag(name, tagKey, tagValue string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%[1]s"
-  description = "%[1]s"
+  name        = %[1]q
+  description = %[1]q
   scope       = "REGIONAL"
 
   default_action {
@@ -2151,7 +2523,7 @@ resource "aws_wafv2_web_acl" "test" {
   }
 
   tags = {
-    "%s" = "%s"
+    %[2]q = %[3]q
   }
 }
 `, name, tagKey, tagValue)
@@ -2160,8 +2532,8 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_TwoTags(name, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%[1]s"
-  description = "%[1]s"
+  name        = %[1]q
+  description = %[1]q
   scope       = "REGIONAL"
 
   default_action {
@@ -2175,8 +2547,8 @@ resource "aws_wafv2_web_acl" "test" {
   }
 
   tags = {
-    "%s" = "%s"
-    "%s" = "%s"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, name, tag1Key, tag1Value, tag2Key, tag2Value)
@@ -2185,7 +2557,7 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_multipleNestedRateBasedStatements(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_regex_pattern_set" "test" {
-  name  = "%[1]s"
+  name  = %[1]q
   scope = "REGIONAL"
 
   regular_expression {
@@ -2194,15 +2566,15 @@ resource "aws_wafv2_regex_pattern_set" "test" {
 }
 
 resource "aws_wafv2_ip_set" "test" {
-  name               = "%[1]s"
+  name               = %[1]q
   scope              = "REGIONAL"
   ip_address_version = "IPV4"
   addresses          = ["1.2.3.4/32", "5.6.7.8/32"]
 }
 
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%[1]s"
-  description = "%[1]s"
+  name        = %[1]q
+  description = %[1]q
   scope       = "REGIONAL"
 
   default_action {
@@ -2272,7 +2644,7 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_multipleNestedOperatorStatements(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_regex_pattern_set" "test" {
-  name  = "%[1]s"
+  name  = %[1]q
   scope = "REGIONAL"
 
   regular_expression {
@@ -2281,15 +2653,15 @@ resource "aws_wafv2_regex_pattern_set" "test" {
 }
 
 resource "aws_wafv2_ip_set" "test" {
-  name               = "%[1]s"
+  name               = %[1]q
   scope              = "REGIONAL"
   ip_address_version = "IPV4"
   addresses          = ["1.2.3.4/32", "5.6.7.8/32"]
 }
 
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%[1]s"
-  description = "%[1]s"
+  name        = %[1]q
+  description = %[1]q
   scope       = "REGIONAL"
 
   default_action {

@@ -7,78 +7,85 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
 	resource.AddTestSweepers("aws_vpc_endpoint", &resource.Sweeper{
 		Name: "aws_vpc_endpoint",
 		F:    testSweepEc2VpcEndpoints,
+		Dependencies: []string{
+			"aws_route_table",
+		},
 	})
 }
 
 func testSweepEc2VpcEndpoints(region string) error {
 	client, err := sharedClientForRegion(region)
+
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
+
 	conn := client.(*AWSClient).ec2conn
+
+	var sweeperErrs *multierror.Error
+
 	input := &ec2.DescribeVpcEndpointsInput{}
 
-	for {
-		output, err := conn.DescribeVpcEndpoints(input)
-
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 VPC Endpoint sweep for %s: %s", region, err)
-			return nil
+	err = conn.DescribeVpcEndpointsPages(input, func(page *ec2.DescribeVpcEndpointsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			return fmt.Errorf("error retrieving EC2 VPC Endpoints: %s", err)
-		}
+		for _, vpcEndpoint := range page.VpcEndpoints {
+			if vpcEndpoint == nil {
+				continue
+			}
 
-		for _, vpcEndpoint := range output.VpcEndpoints {
 			if aws.StringValue(vpcEndpoint.State) != "available" {
 				continue
 			}
 
 			id := aws.StringValue(vpcEndpoint.VpcEndpointId)
 
-			input := &ec2.DeleteVpcEndpointsInput{
-				VpcEndpointIds: []*string{aws.String(id)},
-			}
-
 			log.Printf("[INFO] Deleting EC2 VPC Endpoint: %s", id)
-			_, err := conn.DeleteVpcEndpoints(input)
 
-			if isAWSErr(err, "InvalidVpcEndpointId.NotFound", "") {
-				continue
-			}
+			r := resourceAwsVpcEndpoint()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			err := r.Delete(d, client)
 
 			if err != nil {
-				return fmt.Errorf("error deleting EC2 VPC Endpoint (%s): %s", id, err)
-			}
-
-			if err := vpcEndpointWaitUntilDeleted(conn, id, 10*time.Minute); err != nil {
-				return fmt.Errorf("error waiting for VPC Endpoint (%s) to delete: %s", id, err)
+				sweeperErr := fmt.Errorf("error deleting EC2 VPC Endpoint (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
 			}
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = output.NextToken
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 VPC Endpoint sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
 	}
 
-	return nil
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EC2 VPC Endpoints: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSVpcEndpoint_gatewayBasic(t *testing.T) {
@@ -88,6 +95,7 @@ func TestAccAWSVpcEndpoint_gatewayBasic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -126,6 +134,7 @@ func TestAccAWSVpcEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -219,6 +228,7 @@ func TestAccAWSVpcEndpoint_gatewayPolicy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -250,6 +260,7 @@ func TestAccAWSVpcEndpoint_interfaceBasic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -287,6 +298,7 @@ func TestAccAWSVpcEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -344,6 +356,7 @@ func TestAccAWSVpcEndpoint_interfaceNonAWSServiceAcceptOnCreate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -384,6 +397,7 @@ func TestAccAWSVpcEndpoint_interfaceNonAWSServiceAcceptOnUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -444,6 +458,7 @@ func TestAccAWSVpcEndpoint_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -465,10 +480,10 @@ func TestAccAWSVpcEndpoint_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckVpcEndpointDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcEndpointConfigTags1(rName, "key1", "value1"),
@@ -512,6 +527,7 @@ func TestAccAWSVpcEndpoint_VpcEndpointType_GatewayLoadBalancer(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -539,23 +555,15 @@ func testAccCheckVpcEndpointDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the VPC
-		input := &ec2.DescribeVpcEndpointsInput{
-			VpcEndpointIds: []*string{aws.String(rs.Primary.ID)},
-		}
-		resp, err := conn.DescribeVpcEndpoints(input)
-		if err != nil {
-			// Verify the error is what we want
-			if ae, ok := err.(awserr.Error); ok && ae.Code() == "InvalidVpcEndpointId.NotFound" {
-				continue
-			}
-			return err
-		}
-		if len(resp.VpcEndpoints) > 0 && aws.StringValue(resp.VpcEndpoints[0].State) != "deleted" {
-			return fmt.Errorf("VPC Endpoints still exist.")
+		_, err := finder.VpcEndpointByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		return err
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -573,18 +581,14 @@ func testAccCheckVpcEndpointExists(n string, endpoint *ec2.VpcEndpoint) resource
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		input := &ec2.DescribeVpcEndpointsInput{
-			VpcEndpointIds: []*string{aws.String(rs.Primary.ID)},
-		}
-		resp, err := conn.DescribeVpcEndpoints(input)
+
+		out, err := finder.VpcEndpointByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if len(resp.VpcEndpoints) == 0 {
-			return fmt.Errorf("VPC Endpoint not found")
-		}
 
-		*endpoint = *resp.VpcEndpoints[0]
+		*endpoint = *out
 
 		return nil
 	}
@@ -825,8 +829,8 @@ POLICY
 `, rName, policy)
 }
 
-func testAccVpcEndpointConfig_interfaceWithSubnet(rName string) string {
-	return fmt.Sprintf(`
+func testAccVpcEndpointConfig_vpcBase(rName string) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -839,61 +843,34 @@ resource "aws_vpc" "test" {
 
 data "aws_region" "current" {}
 
-data "aws_availability_zones" "available" {
-  state = "available"
+resource "aws_subnet" "test" {
+  count = 3
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_subnet" "test1" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 0)
-  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, count.index)
+  availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 1)
-  availability_zone = data.aws_availability_zones.available.names[1]
+resource "aws_security_group" "test" {
+  count = 2
 
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test3" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 2)
-  availability_zone = data.aws_availability_zones.available.names[2]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test1" {
   vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
   }
 }
-
-resource "aws_security_group" "test2" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
+`, rName))
 }
 
+func testAccVpcEndpointConfig_interfaceWithSubnet(rName string) string {
+	return composeConfig(
+		testAccVpcEndpointConfig_vpcBase(rName),
+		fmt.Sprintf(`
 resource "aws_vpc_endpoint" "test" {
   vpc_id              = aws_vpc.test.id
   service_name        = "com.amazonaws.${data.aws_region.current.name}.ec2"
@@ -901,90 +878,25 @@ resource "aws_vpc_endpoint" "test" {
   private_dns_enabled = false
 
   subnet_ids = [
-    aws_subnet.test1.id,
+    aws_subnet.test[0].id,
   ]
 
   security_group_ids = [
-    aws_security_group.test1.id,
-    aws_security_group.test2.id,
+    aws_security_group.test[0].id,
+    aws_security_group.test[1].id,
   ]
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccVpcEndpointConfig_interfaceWithSubnetModified(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_support   = true
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-data "aws_region" "current" {}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 0)
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 1)
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test3" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 2)
-  availability_zone = data.aws_availability_zones.available.names[2]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test1" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test2" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return composeConfig(
+		testAccVpcEndpointConfig_vpcBase(rName),
+		fmt.Sprintf(`
 resource "aws_vpc_endpoint" "test" {
   vpc_id              = aws_vpc.test.id
   service_name        = "com.amazonaws.${data.aws_region.current.name}.ec2"
@@ -992,38 +904,32 @@ resource "aws_vpc_endpoint" "test" {
   private_dns_enabled = true
 
   subnet_ids = [
-    aws_subnet.test1.id,
-    aws_subnet.test2.id,
-    aws_subnet.test3.id,
+    aws_subnet.test[2].id,
+    aws_subnet.test[1].id,
+    aws_subnet.test[0].id,
   ]
 
   security_group_ids = [
-    aws_security_group.test1.id,
+    aws_security_group.test[1].id,
   ]
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccVpcEndpointConfig_interfaceNonAWSService(rName string, autoAccept bool) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return composeConfig(
+		testAccVpcEndpointConfig_vpcBase(rName),
+		fmt.Sprintf(`
 resource "aws_lb" "test" {
   name = %[1]q
 
   subnets = [
-    aws_subnet.test1.id,
-    aws_subnet.test2.id,
+    aws_subnet.test[0].id,
+    aws_subnet.test[1].id,
   ]
 
   load_balancer_type         = "network"
@@ -1036,47 +942,12 @@ resource "aws_lb" "test" {
   }
 }
 
-data "aws_region" "current" {}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = true
 
   network_load_balancer_arns = [
     aws_lb.test.id,
   ]
-}
-
-resource "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -1091,14 +962,14 @@ resource "aws_vpc_endpoint" "test" {
   auto_accept         = %[2]t
 
   security_group_ids = [
-    aws_security_group.test.id,
+    aws_security_group.test[0].id,
   ]
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName, autoAccept)
+`, rName, autoAccept))
 }
 
 func testAccVpcEndpointConfigTags1(rName, tagKey1, tagValue1 string) string {
@@ -1158,7 +1029,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.10.10.0/25"
 
   tags = {
-    Name = "tf-acc-test-load-balancer"
+    Name = %[1]q
   }
 }
 
@@ -1168,7 +1039,7 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-load-balancer"
+    Name = %[1]q
   }
 }
 
@@ -1179,12 +1050,20 @@ resource "aws_lb" "test" {
   subnet_mapping {
     subnet_id = aws_subnet.test.id
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
   allowed_principals         = [data.aws_caller_identity.current.arn]
   gateway_load_balancer_arns = [aws_lb.test.arn]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_endpoint" "test" {
@@ -1192,6 +1071,10 @@ resource "aws_vpc_endpoint" "test" {
   subnet_ids        = [aws_subnet.test.id]
   vpc_endpoint_type = aws_vpc_endpoint_service.test.service_type
   vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }

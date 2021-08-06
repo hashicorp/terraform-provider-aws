@@ -32,7 +32,7 @@ func testSweepCognitoUserPoolDomains(region string) error {
 		MaxResults: aws.Int64(int64(50)),
 	}
 
-	err = conn.ListUserPoolsPages(input, func(resp *cognitoidentityprovider.ListUserPoolsOutput, isLast bool) bool {
+	err = conn.ListUserPoolsPages(input, func(resp *cognitoidentityprovider.ListUserPoolsOutput, lastPage bool) bool {
 		if len(resp.UserPools) == 0 {
 			log.Print("[DEBUG] No Cognito user pools (i.e. domains) to sweep")
 			return false
@@ -59,7 +59,7 @@ func testSweepCognitoUserPoolDomains(region string) error {
 				}
 			}
 		}
-		return !isLast
+		return !lastPage
 	})
 
 	if err != nil {
@@ -75,10 +75,11 @@ func testSweepCognitoUserPoolDomains(region string) error {
 
 func TestAccAWSCognitoUserPoolDomain_basic(t *testing.T) {
 	domainName := fmt.Sprintf("tf-acc-test-domain-%d", acctest.RandInt())
-	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDomainDestroy,
 		Steps: []resource.TestStep{
@@ -106,7 +107,7 @@ func TestAccAWSCognitoUserPoolDomain_basic(t *testing.T) {
 func TestAccAWSCognitoUserPoolDomain_custom(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 	domain := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
-	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandString(10))
 
 	acmCertificateResourceName := "aws_acm_certificate.test"
 	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
@@ -114,6 +115,7 @@ func TestAccAWSCognitoUserPoolDomain_custom(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCognitoUserPoolCustomDomain(t) },
+		ErrorCheck:        testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSCognitoUserPoolDomainDestroy,
 		Steps: []resource.TestStep{
@@ -142,11 +144,12 @@ func TestAccAWSCognitoUserPoolDomain_custom(t *testing.T) {
 
 func TestAccAWSCognitoUserPoolDomain_disappears(t *testing.T) {
 	domainName := fmt.Sprintf("tf-acc-test-domain-%d", acctest.RandInt())
-	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandString(10))
 	resourceName := "aws_cognito_user_pool_domain.main"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDomainDestroy,
 		Steps: []resource.TestStep{

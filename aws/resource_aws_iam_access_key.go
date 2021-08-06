@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -21,20 +22,54 @@ func resourceAwsIamAccessKey() *schema.Resource {
 		Update: resourceAwsIamAccessKeyUpdate,
 		Delete: resourceAwsIamAccessKeyDelete,
 
-		Schema: map[string]*schema.Schema{
-			"user": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+		Importer: &schema.ResourceImporter{
+			// ListAccessKeys requires UserName field in certain scenarios:
+			//   ValidationError: Must specify userName when calling with non-User credentials
+			// To prevent import from requiring this extra information, use GetAccessKeyLastUsed.
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				conn := meta.(*AWSClient).iamconn
+
+				input := &iam.GetAccessKeyLastUsedInput{
+					AccessKeyId: aws.String(d.Id()),
+				}
+
+				output, err := conn.GetAccessKeyLastUsed(input)
+
+				if err != nil {
+					return nil, fmt.Errorf("error fetching IAM Access Key (%s) username via GetAccessKeyLastUsed: %w", d.Id(), err)
+				}
+
+				if output == nil || output.UserName == nil {
+					return nil, fmt.Errorf("error fetching IAM Access Key (%s) username via GetAccessKeyLastUsed: empty response", d.Id())
+				}
+
+				d.Set("user", output.UserName)
+
+				return []*schema.ResourceData{d}, nil
 			},
-			"status": {
+		},
+
+		Schema: map[string]*schema.Schema{
+			"create_date": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					iam.StatusTypeActive,
-					iam.StatusTypeInactive,
-				}, false),
+			},
+			"encrypted_secret": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"encrypted_ses_smtp_password_v4": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"key_fingerprint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"pgp_key": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
 			},
 			"secret": {
 				Type:      schema.TypeString,
@@ -46,18 +81,16 @@ func resourceAwsIamAccessKey() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
-			"pgp_key": {
+			"status": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      iam.StatusTypeActive,
+				ValidateFunc: validation.StringInSlice(iam.StatusType_Values(), false),
+			},
+			"user": {
 				Type:     schema.TypeString,
+				Required: true,
 				ForceNew: true,
-				Optional: true,
-			},
-			"key_fingerprint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"encrypted_secret": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
@@ -79,10 +112,15 @@ func resourceAwsIamAccessKeyCreate(d *schema.ResourceData, meta interface{}) err
 		)
 	}
 
-	d.SetId(*createResp.AccessKey.AccessKeyId)
+	d.SetId(aws.StringValue(createResp.AccessKey.AccessKeyId))
 
 	if createResp.AccessKey == nil || createResp.AccessKey.SecretAccessKey == nil {
 		return fmt.Errorf("CreateAccessKey response did not contain a Secret Access Key as expected")
+	}
+
+	sesSMTPPasswordV4, err := sesSmtpPasswordFromSecretKeySigV4(createResp.AccessKey.SecretAccessKey, meta.(*AWSClient).region)
+	if err != nil {
+		return fmt.Errorf("error getting SES SigV4 SMTP Password from Secret Access Key: %s", err)
 	}
 
 	if v, ok := d.GetOk("pgp_key"); ok {
@@ -98,17 +136,38 @@ func resourceAwsIamAccessKeyCreate(d *schema.ResourceData, meta interface{}) err
 
 		d.Set("key_fingerprint", fingerprint)
 		d.Set("encrypted_secret", encrypted)
+
+		_, encrypted, err = encryption.EncryptValue(encryptionKey, sesSMTPPasswordV4, "SES SMTP password")
+		if err != nil {
+			return err
+		}
+
+		d.Set("encrypted_ses_smtp_password_v4", encrypted)
 	} else {
 		if err := d.Set("secret", createResp.AccessKey.SecretAccessKey); err != nil {
 			return err
 		}
+
+		if err := d.Set("ses_smtp_password_v4", sesSMTPPasswordV4); err != nil {
+			return err
+		}
 	}
 
-	sesSMTPPasswordV4, err := sesSmtpPasswordFromSecretKeySigV4(createResp.AccessKey.SecretAccessKey, meta.(*AWSClient).region)
-	if err != nil {
-		return fmt.Errorf("error getting SES SigV4 SMTP Password from Secret Access Key: %s", err)
+	if v, ok := d.GetOk("status"); ok && v.(string) == iam.StatusTypeInactive {
+		input := &iam.UpdateAccessKeyInput{
+			AccessKeyId: aws.String(d.Id()),
+			Status:      aws.String(iam.StatusTypeInactive),
+			UserName:    aws.String(d.Get("user").(string)),
+		}
+
+		_, err := iamconn.UpdateAccessKey(input)
+
+		if err != nil {
+			return fmt.Errorf("error deactivating IAM Access Key (%s): %w", d.Id(), err)
+		}
+
+		createResp.AccessKey.Status = aws.String(iam.StatusTypeInactive)
 	}
-	d.Set("ses_smtp_password_v4", sesSMTPPasswordV4)
 
 	return resourceAwsIamAccessKeyReadResult(d, &iam.AccessKeyMetadata{
 		AccessKeyId: createResp.AccessKey.AccessKeyId,
@@ -147,13 +206,17 @@ func resourceAwsIamAccessKeyRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsIamAccessKeyReadResult(d *schema.ResourceData, key *iam.AccessKeyMetadata) error {
-	d.SetId(*key.AccessKeyId)
-	if err := d.Set("user", key.UserName); err != nil {
-		return err
+	d.SetId(aws.StringValue(key.AccessKeyId))
+
+	if key.CreateDate != nil {
+		d.Set("create_date", aws.TimeValue(key.CreateDate).Format(time.RFC3339))
+	} else {
+		d.Set("create_date", nil)
 	}
-	if err := d.Set("status", key.Status); err != nil {
-		return err
-	}
+
+	d.Set("status", key.Status)
+	d.Set("user", key.UserName)
+
 	return nil
 }
 

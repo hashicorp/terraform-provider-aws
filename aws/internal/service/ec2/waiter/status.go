@@ -3,6 +3,7 @@ package waiter
 import (
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -10,7 +11,39 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	tfiam "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
+
+const (
+	carrierGatewayStateNotFound = "NotFound"
+	carrierGatewayStateUnknown  = "Unknown"
+)
+
+// CarrierGatewayState fetches the CarrierGateway and its State
+func CarrierGatewayState(conn *ec2.EC2, carrierGatewayID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		carrierGateway, err := finder.CarrierGatewayByID(conn, carrierGatewayID)
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidCarrierGatewayIDNotFound) {
+			return nil, carrierGatewayStateNotFound, nil
+		}
+		if err != nil {
+			return nil, carrierGatewayStateUnknown, err
+		}
+
+		if carrierGateway == nil {
+			return nil, carrierGatewayStateNotFound, nil
+		}
+
+		state := aws.StringValue(carrierGateway.State)
+
+		if state == ec2.CarrierGatewayStateDeleted {
+			return nil, carrierGatewayStateNotFound, nil
+		}
+
+		return carrierGateway, state, nil
+	}
+}
 
 // LocalGatewayRouteTableVpcAssociationState fetches the LocalGatewayRouteTableVpcAssociation and its State
 func LocalGatewayRouteTableVpcAssociationState(conn *ec2.EC2, localGatewayRouteTableVpcAssociationID string) resource.StateRefreshFunc {
@@ -179,6 +212,96 @@ func ClientVpnRouteStatus(conn *ec2.EC2, routeID string) resource.StateRefreshFu
 	}
 }
 
+// InstanceIamInstanceProfile fetches the Instance and its IamInstanceProfile
+//
+// The EC2 API accepts a name and always returns an ARN, so it is converted
+// back to the name to prevent unexpected differences.
+func InstanceIamInstanceProfile(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		instance, err := finder.InstanceByID(conn, id)
+
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidInstanceIDNotFound) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if instance == nil {
+			return nil, "", nil
+		}
+
+		if instance.IamInstanceProfile == nil || instance.IamInstanceProfile.Arn == nil {
+			return instance, "", nil
+		}
+
+		name, err := tfiam.InstanceProfileARNToName(aws.StringValue(instance.IamInstanceProfile.Arn))
+
+		if err != nil {
+			return instance, "", err
+		}
+
+		return instance, name, nil
+	}
+}
+
+const (
+	RouteStatusReady = "ready"
+)
+
+func RouteStatus(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, destination string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := routeFinder(conn, routeTableID, destination)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, RouteStatusReady, nil
+	}
+}
+
+const (
+	RouteTableStatusReady = "ready"
+)
+
+func RouteTableStatus(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.RouteTableByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, RouteTableStatusReady, nil
+	}
+}
+
+func RouteTableAssociationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.RouteTableAssociationByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output.AssociationState, aws.StringValue(output.AssociationState.State), nil
+	}
+}
+
 const (
 	SecurityGroupStatusCreated = "Created"
 
@@ -191,19 +314,109 @@ const (
 func SecurityGroupStatus(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		group, err := finder.SecurityGroupByID(conn, id)
-		if tfawserr.ErrCodeEquals(err, tfec2.InvalidSecurityGroupIDNotFound) ||
-			tfawserr.ErrCodeEquals(err, tfec2.InvalidGroupNotFound) {
+		if tfresource.NotFound(err) {
 			return nil, SecurityGroupStatusNotFound, nil
 		}
 		if err != nil {
 			return nil, SecurityGroupStatusUnknown, err
 		}
 
-		if group == nil {
-			return nil, SecurityGroupStatusNotFound, nil
+		return group, SecurityGroupStatusCreated, nil
+	}
+}
+
+// SubnetMapCustomerOwnedIpOnLaunch fetches the Subnet and its MapCustomerOwnedIpOnLaunch
+func SubnetMapCustomerOwnedIpOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		subnet, err := finder.SubnetByID(conn, id)
+
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidSubnetIDNotFound) {
+			return nil, "false", nil
 		}
 
-		return group, SecurityGroupStatusCreated, nil
+		if err != nil {
+			return nil, "false", err
+		}
+
+		if subnet == nil {
+			return nil, "false", nil
+		}
+
+		return subnet, strconv.FormatBool(aws.BoolValue(subnet.MapCustomerOwnedIpOnLaunch)), nil
+	}
+}
+
+// SubnetMapPublicIpOnLaunch fetches the Subnet and its MapPublicIpOnLaunch
+func SubnetMapPublicIpOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		subnet, err := finder.SubnetByID(conn, id)
+
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidSubnetIDNotFound) {
+			return nil, "false", nil
+		}
+
+		if err != nil {
+			return nil, "false", err
+		}
+
+		if subnet == nil {
+			return nil, "false", nil
+		}
+
+		return subnet, strconv.FormatBool(aws.BoolValue(subnet.MapPublicIpOnLaunch)), nil
+	}
+}
+
+func TransitGatewayPrefixListReferenceState(conn *ec2.EC2, transitGatewayRouteTableID string, prefixListID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		transitGatewayPrefixListReference, err := finder.TransitGatewayPrefixListReference(conn, transitGatewayRouteTableID, prefixListID)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if transitGatewayPrefixListReference == nil {
+			return nil, "", nil
+		}
+
+		return transitGatewayPrefixListReference, aws.StringValue(transitGatewayPrefixListReference.State), nil
+	}
+}
+
+func TransitGatewayRouteTablePropagationState(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		transitGatewayRouteTablePropagation, err := finder.TransitGatewayRouteTablePropagation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if transitGatewayRouteTablePropagation == nil {
+			return nil, "", nil
+		}
+
+		return transitGatewayRouteTablePropagation, aws.StringValue(transitGatewayRouteTablePropagation.State), nil
+	}
+}
+
+// VpcAttribute fetches the Vpc and its attribute value
+func VpcAttribute(conn *ec2.EC2, id string, attribute string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		attributeValue, err := finder.VpcAttribute(conn, id, attribute)
+
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVpcIDNotFound) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if attributeValue == nil {
+			return nil, "", nil
+		}
+
+		return attributeValue, strconv.FormatBool(aws.BoolValue(attributeValue)), nil
 	}
 }
 
@@ -265,5 +478,60 @@ func VpnGatewayVpcAttachmentState(conn *ec2.EC2, vpnGatewayID, vpcID string) res
 		}
 
 		return vpcAttachment, aws.StringValue(vpcAttachment.State), nil
+	}
+}
+
+const (
+	managedPrefixListStateNotFound = "NotFound"
+	managedPrefixListStateUnknown  = "Unknown"
+)
+
+func ManagedPrefixListState(conn *ec2.EC2, prefixListId string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		managedPrefixList, err := finder.ManagedPrefixListByID(conn, prefixListId)
+		if err != nil {
+			return nil, managedPrefixListStateUnknown, err
+		}
+		if managedPrefixList == nil {
+			return nil, managedPrefixListStateNotFound, nil
+		}
+
+		return managedPrefixList, aws.StringValue(managedPrefixList.State), nil
+	}
+}
+
+func VpcEndpointState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		vpcEndpoint, err := finder.VpcEndpointByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return vpcEndpoint, aws.StringValue(vpcEndpoint.State), nil
+	}
+}
+
+const (
+	VpcEndpointRouteTableAssociationStatusReady = "ready"
+)
+
+func VpcEndpointRouteTableAssociationStatus(conn *ec2.EC2, vpcEndpointID, routeTableID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		err := finder.VpcEndpointRouteTableAssociationExists(conn, vpcEndpointID, routeTableID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return "", VpcEndpointRouteTableAssociationStatusReady, nil
 	}
 }

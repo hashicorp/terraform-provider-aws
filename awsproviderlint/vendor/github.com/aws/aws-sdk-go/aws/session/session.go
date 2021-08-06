@@ -25,11 +25,18 @@ const (
 	// ErrCodeSharedConfig represents an error that occurs in the shared
 	// configuration logic
 	ErrCodeSharedConfig = "SharedConfigErr"
+
+	// ErrCodeLoadCustomCABundle error code for unable to load custom CA bundle.
+	ErrCodeLoadCustomCABundle = "LoadCustomCABundleError"
+
+	// ErrCodeLoadClientTLSCert error code for unable to load client TLS
+	// certificate or key
+	ErrCodeLoadClientTLSCert = "LoadClientTLSCertError"
 )
 
 // ErrSharedConfigSourceCollision will be returned if a section contains both
 // source_profile and credential_source
-var ErrSharedConfigSourceCollision = awserr.New(ErrCodeSharedConfig, "only source profile or credential source can be specified, not both", nil)
+var ErrSharedConfigSourceCollision = awserr.New(ErrCodeSharedConfig, "only one credential type may be specified per profile: source profile, credential source, credential process, web identity token, or sso", nil)
 
 // ErrSharedConfigECSContainerEnvVarEmpty will be returned if the environment
 // variables are empty and Environment was set as the credential source
@@ -229,16 +236,45 @@ type Options struct {
 	// the SDK will use instead of the default system's root CA bundle. Use this
 	// only if you want to replace the CA bundle the SDK uses for TLS requests.
 	//
-	// Enabling this option will attempt to merge the Transport into the SDK's HTTP
-	// client. If the client's Transport is not a http.Transport an error will be
-	// returned. If the Transport's TLS config is set this option will cause the SDK
+	// HTTP Client's Transport concrete implementation must be a http.Transport
+	// or creating the session will fail.
+	//
+	// If the Transport's TLS config is set this option will cause the SDK
 	// to overwrite the Transport's TLS config's  RootCAs value. If the CA
 	// bundle reader contains multiple certificates all of them will be loaded.
 	//
-	// The Session option CustomCABundle is also available when creating sessions
-	// to also enable this feature. CustomCABundle session option field has priority
-	// over the AWS_CA_BUNDLE environment variable, and will be used if both are set.
+	// Can also be specified via the environment variable:
+	//
+	//  AWS_CA_BUNDLE=$HOME/ca_bundle
+	//
+	// Can also be specified via the shared config field:
+	//
+	//  ca_bundle = $HOME/ca_bundle
 	CustomCABundle io.Reader
+
+	// Reader for the TLC client certificate that should be used by the SDK's
+	// HTTP transport when making requests. The certificate must be paired with
+	// a TLS client key file. Will be ignored if both are not provided.
+	//
+	// HTTP Client's Transport concrete implementation must be a http.Transport
+	// or creating the session will fail.
+	//
+	// Can also be specified via the environment variable:
+	//
+	//  AWS_SDK_GO_CLIENT_TLS_CERT=$HOME/my_client_cert
+	ClientTLSCert io.Reader
+
+	// Reader for the TLC client key that should be used by the SDK's HTTP
+	// transport when making requests. The key must be paired with a TLS client
+	// certificate file. Will be ignored if both are not provided.
+	//
+	// HTTP Client's Transport concrete implementation must be a http.Transport
+	// or creating the session will fail.
+	//
+	// Can also be specified via the environment variable:
+	//
+	//  AWS_SDK_GO_CLIENT_TLS_KEY=$HOME/my_client_key
+	ClientTLSKey io.Reader
 
 	// The handlers that the session and all API clients will be created with.
 	// This must be a complete set of handlers. Use the defaults.Handlers()
@@ -247,8 +283,8 @@ type Options struct {
 	Handlers request.Handlers
 
 	// Allows specifying a custom endpoint to be used by the EC2 IMDS client
-	// when making requests to the EC2 IMDS API. The must endpoint value must
-	// include protocol prefix.
+	// when making requests to the EC2 IMDS API. The endpoint value should
+	// include the URI scheme. If the scheme is not present it will be defaulted to http.
 	//
 	// If unset, will the EC2 IMDS client will use its default endpoint.
 	//
@@ -262,6 +298,11 @@ type Options struct {
 	//
 	//   AWS_EC2_METADATA_SERVICE_ENDPOINT=http://[::1]
 	EC2IMDSEndpoint string
+
+	// Specifies the EC2 Instance Metadata Service default endpoint selection mode (IPv4 or IPv6)
+	//
+	// AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE=IPv6
+	EC2IMDSEndpointMode endpoints.EC2IMDSEndpointModeState
 }
 
 // NewSessionWithOptions returns a new Session created from SDK defaults, config files,
@@ -319,17 +360,6 @@ func NewSessionWithOptions(opts Options) (*Session, error) {
 		envCfg.EnableSharedConfig = true
 	}
 
-	// Only use AWS_CA_BUNDLE if session option is not provided.
-	if len(envCfg.CustomCABundle) != 0 && opts.CustomCABundle == nil {
-		f, err := os.Open(envCfg.CustomCABundle)
-		if err != nil {
-			return nil, awserr.New("LoadCustomCABundleError",
-				"failed to open custom CA bundle PEM file", err)
-		}
-		defer f.Close()
-		opts.CustomCABundle = f
-	}
-
 	return newSession(opts, envCfg, &opts.Config)
 }
 
@@ -350,19 +380,23 @@ func Must(sess *Session, err error) *Session {
 
 // Wraps the endpoint resolver with a resolver that will return a custom
 // endpoint for EC2 IMDS.
-func wrapEC2IMDSEndpoint(resolver endpoints.Resolver, endpoint string) endpoints.Resolver {
+func wrapEC2IMDSEndpoint(resolver endpoints.Resolver, endpoint string, mode endpoints.EC2IMDSEndpointModeState) endpoints.Resolver {
 	return endpoints.ResolverFunc(
 		func(service, region string, opts ...func(*endpoints.Options)) (
 			endpoints.ResolvedEndpoint, error,
 		) {
-			if service == ec2MetadataServiceID {
+			if service == ec2MetadataServiceID && len(endpoint) > 0 {
 				return endpoints.ResolvedEndpoint{
 					URL:           endpoint,
 					SigningName:   ec2MetadataServiceID,
 					SigningRegion: region,
 				}, nil
+			} else if service == ec2MetadataServiceID {
+				opts = append(opts, func(o *endpoints.Options) {
+					o.EC2MetadataEndpointMode = mode
+				})
 			}
-			return resolver.EndpointFor(service, region)
+			return resolver.EndpointFor(service, region, opts...)
 		})
 }
 
@@ -379,8 +413,8 @@ func deprecatedNewSession(envCfg envConfig, cfgs ...*aws.Config) *Session {
 		cfg.EndpointResolver = endpoints.DefaultResolver()
 	}
 
-	if len(envCfg.EC2IMDSEndpoint) != 0 {
-		cfg.EndpointResolver = wrapEC2IMDSEndpoint(cfg.EndpointResolver, envCfg.EC2IMDSEndpoint)
+	if !(len(envCfg.EC2IMDSEndpoint) == 0 && envCfg.EC2IMDSEndpointMode == endpoints.EC2IMDSEndpointModeStateUnset) {
+		cfg.EndpointResolver = wrapEC2IMDSEndpoint(cfg.EndpointResolver, envCfg.EC2IMDSEndpoint, envCfg.EC2IMDSEndpointMode)
 	}
 
 	cfg.Credentials = defaults.CredChain(cfg, handlers)
@@ -460,6 +494,10 @@ func newSession(opts Options, envCfg envConfig, cfgs ...*aws.Config) (*Session, 
 		return nil, err
 	}
 
+	if err := setTLSOptions(&opts, cfg, envCfg, sharedCfg); err != nil {
+		return nil, err
+	}
+
 	s := &Session{
 		Config:   cfg,
 		Handlers: handlers,
@@ -475,13 +513,6 @@ func newSession(opts Options, envCfg envConfig, cfgs ...*aws.Config) (*Session, 
 	} else if csmCfg.Enabled {
 		err = enableCSM(&s.Handlers, csmCfg, s.Config.Logger)
 		if err != nil {
-			return nil, err
-		}
-	}
-
-	// Setup HTTP client with custom cert bundle if enabled
-	if opts.CustomCABundle != nil {
-		if err := loadCustomCABundle(s, opts.CustomCABundle); err != nil {
 			return nil, err
 		}
 	}
@@ -529,22 +560,83 @@ func loadCSMConfig(envCfg envConfig, cfgFiles []string) (csmConfig, error) {
 	return csmConfig{}, nil
 }
 
-func loadCustomCABundle(s *Session, bundle io.Reader) error {
+func setTLSOptions(opts *Options, cfg *aws.Config, envCfg envConfig, sharedCfg sharedConfig) error {
+	// CA Bundle can be specified in both environment variable shared config file.
+	var caBundleFilename = envCfg.CustomCABundle
+	if len(caBundleFilename) == 0 {
+		caBundleFilename = sharedCfg.CustomCABundle
+	}
+
+	// Only use environment value if session option is not provided.
+	customTLSOptions := map[string]struct {
+		filename string
+		field    *io.Reader
+		errCode  string
+	}{
+		"custom CA bundle PEM":   {filename: caBundleFilename, field: &opts.CustomCABundle, errCode: ErrCodeLoadCustomCABundle},
+		"custom client TLS cert": {filename: envCfg.ClientTLSCert, field: &opts.ClientTLSCert, errCode: ErrCodeLoadClientTLSCert},
+		"custom client TLS key":  {filename: envCfg.ClientTLSKey, field: &opts.ClientTLSKey, errCode: ErrCodeLoadClientTLSCert},
+	}
+	for name, v := range customTLSOptions {
+		if len(v.filename) != 0 && *v.field == nil {
+			f, err := os.Open(v.filename)
+			if err != nil {
+				return awserr.New(v.errCode, fmt.Sprintf("failed to open %s file", name), err)
+			}
+			defer f.Close()
+			*v.field = f
+		}
+	}
+
+	// Setup HTTP client with custom cert bundle if enabled
+	if opts.CustomCABundle != nil {
+		if err := loadCustomCABundle(cfg.HTTPClient, opts.CustomCABundle); err != nil {
+			return err
+		}
+	}
+
+	// Setup HTTP client TLS certificate and key for client TLS authentication.
+	if opts.ClientTLSCert != nil && opts.ClientTLSKey != nil {
+		if err := loadClientTLSCert(cfg.HTTPClient, opts.ClientTLSCert, opts.ClientTLSKey); err != nil {
+			return err
+		}
+	} else if opts.ClientTLSCert == nil && opts.ClientTLSKey == nil {
+		// Do nothing if neither values are available.
+
+	} else {
+		return awserr.New(ErrCodeLoadClientTLSCert,
+			fmt.Sprintf("client TLS cert(%t) and key(%t) must both be provided",
+				opts.ClientTLSCert != nil, opts.ClientTLSKey != nil), nil)
+	}
+
+	return nil
+}
+
+func getHTTPTransport(client *http.Client) (*http.Transport, error) {
 	var t *http.Transport
-	switch v := s.Config.HTTPClient.Transport.(type) {
+	switch v := client.Transport.(type) {
 	case *http.Transport:
 		t = v
 	default:
-		if s.Config.HTTPClient.Transport != nil {
-			return awserr.New("LoadCustomCABundleError",
-				"unable to load custom CA bundle, HTTPClient's transport unsupported type", nil)
+		if client.Transport != nil {
+			return nil, fmt.Errorf("unsupported transport, %T", client.Transport)
 		}
 	}
 	if t == nil {
 		// Nil transport implies `http.DefaultTransport` should be used. Since
 		// the SDK cannot modify, nor copy the `DefaultTransport` specifying
 		// the values the next closest behavior.
-		t = getCABundleTransport()
+		t = getCustomTransport()
+	}
+
+	return t, nil
+}
+
+func loadCustomCABundle(client *http.Client, bundle io.Reader) error {
+	t, err := getHTTPTransport(client)
+	if err != nil {
+		return awserr.New(ErrCodeLoadCustomCABundle,
+			"unable to load custom CA bundle, HTTPClient's transport unsupported type", err)
 	}
 
 	p, err := loadCertPool(bundle)
@@ -556,7 +648,7 @@ func loadCustomCABundle(s *Session, bundle io.Reader) error {
 	}
 	t.TLSClientConfig.RootCAs = p
 
-	s.Config.HTTPClient.Transport = t
+	client.Transport = t
 
 	return nil
 }
@@ -564,17 +656,55 @@ func loadCustomCABundle(s *Session, bundle io.Reader) error {
 func loadCertPool(r io.Reader) (*x509.CertPool, error) {
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
-		return nil, awserr.New("LoadCustomCABundleError",
+		return nil, awserr.New(ErrCodeLoadCustomCABundle,
 			"failed to read custom CA bundle PEM file", err)
 	}
 
 	p := x509.NewCertPool()
 	if !p.AppendCertsFromPEM(b) {
-		return nil, awserr.New("LoadCustomCABundleError",
+		return nil, awserr.New(ErrCodeLoadCustomCABundle,
 			"failed to load custom CA bundle PEM file", err)
 	}
 
 	return p, nil
+}
+
+func loadClientTLSCert(client *http.Client, certFile, keyFile io.Reader) error {
+	t, err := getHTTPTransport(client)
+	if err != nil {
+		return awserr.New(ErrCodeLoadClientTLSCert,
+			"unable to get usable HTTP transport from client", err)
+	}
+
+	cert, err := ioutil.ReadAll(certFile)
+	if err != nil {
+		return awserr.New(ErrCodeLoadClientTLSCert,
+			"unable to get read client TLS cert file", err)
+	}
+
+	key, err := ioutil.ReadAll(keyFile)
+	if err != nil {
+		return awserr.New(ErrCodeLoadClientTLSCert,
+			"unable to get read client TLS key file", err)
+	}
+
+	clientCert, err := tls.X509KeyPair(cert, key)
+	if err != nil {
+		return awserr.New(ErrCodeLoadClientTLSCert,
+			"unable to load x509 key pair from client cert", err)
+	}
+
+	tlsCfg := t.TLSClientConfig
+	if tlsCfg == nil {
+		tlsCfg = &tls.Config{}
+	}
+
+	tlsCfg.Certificates = append(tlsCfg.Certificates, clientCert)
+
+	t.TLSClientConfig = tlsCfg
+	client.Transport = t
+
+	return nil
 }
 
 func mergeConfigSrcs(cfg, userCfg *aws.Config,
@@ -616,12 +746,32 @@ func mergeConfigSrcs(cfg, userCfg *aws.Config,
 		endpoints.LegacyS3UsEast1Endpoint,
 	})
 
-	ec2IMDSEndpoint := sessOpts.EC2IMDSEndpoint
-	if len(ec2IMDSEndpoint) == 0 {
-		ec2IMDSEndpoint = envCfg.EC2IMDSEndpoint
+	var ec2IMDSEndpoint string
+	for _, v := range []string{
+		sessOpts.EC2IMDSEndpoint,
+		envCfg.EC2IMDSEndpoint,
+		sharedCfg.EC2IMDSEndpoint,
+	} {
+		if len(v) != 0 {
+			ec2IMDSEndpoint = v
+			break
+		}
 	}
-	if len(ec2IMDSEndpoint) != 0 {
-		cfg.EndpointResolver = wrapEC2IMDSEndpoint(cfg.EndpointResolver, ec2IMDSEndpoint)
+
+	var endpointMode endpoints.EC2IMDSEndpointModeState
+	for _, v := range []endpoints.EC2IMDSEndpointModeState{
+		sessOpts.EC2IMDSEndpointMode,
+		envCfg.EC2IMDSEndpointMode,
+		sharedCfg.EC2IMDSEndpointMode,
+	} {
+		if v != endpoints.EC2IMDSEndpointModeStateUnset {
+			endpointMode = v
+			break
+		}
+	}
+
+	if len(ec2IMDSEndpoint) != 0 || endpointMode != endpoints.EC2IMDSEndpointModeStateUnset {
+		cfg.EndpointResolver = wrapEC2IMDSEndpoint(cfg.EndpointResolver, ec2IMDSEndpoint, endpointMode)
 	}
 
 	// Configure credentials if not already set by the user when creating the

@@ -170,55 +170,52 @@ func resourceAwsNetworkFirewallRuleGroup() *schema.Resource {
 									"stateful_rule": {
 										Type:     schema.TypeSet,
 										Optional: true,
-										ForceNew: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"action": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ForceNew:     true,
 													ValidateFunc: validation.StringInSlice(networkfirewall.StatefulAction_Values(), false),
 												},
 												"header": {
 													Type:     schema.TypeList,
 													Required: true,
 													MaxItems: 1,
-													ForceNew: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"destination": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ForceNew:     true,
-																ValidateFunc: validateIpv4CIDRNetworkAddress,
+																Type:     schema.TypeString,
+																Required: true,
+																ValidateFunc: validation.Any(
+																	validateIpv4CIDRNetworkAddress,
+																	validation.StringInSlice([]string{networkfirewall.StatefulRuleDirectionAny}, false),
+																),
 															},
 															"destination_port": {
 																Type:     schema.TypeString,
-																Optional: true,
-																ForceNew: true,
+																Required: true,
 															},
 															"direction": {
 																Type:         schema.TypeString,
 																Required:     true,
-																ForceNew:     true,
 																ValidateFunc: validation.StringInSlice(networkfirewall.StatefulRuleDirection_Values(), false),
 															},
 															"protocol": {
 																Type:         schema.TypeString,
-																Optional:     true,
-																ForceNew:     true,
+																Required:     true,
 																ValidateFunc: validation.StringInSlice(networkfirewall.StatefulRuleProtocol_Values(), false),
 															},
 															"source": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ForceNew:     true,
-																ValidateFunc: validateIpv4CIDRNetworkAddress,
+																Type:     schema.TypeString,
+																Required: true,
+																ValidateFunc: validation.Any(
+																	validateIpv4CIDRNetworkAddress,
+																	validation.StringInSlice([]string{networkfirewall.StatefulRuleDirectionAny}, false),
+																),
 															},
 															"source_port": {
 																Type:     schema.TypeString,
-																Optional: true,
-																ForceNew: true,
+																Required: true,
 															},
 														},
 													},
@@ -283,7 +280,7 @@ func resourceAwsNetworkFirewallRuleGroup() *schema.Resource {
 																							Schema: map[string]*schema.Schema{
 																								"address_definition": {
 																									Type:         schema.TypeString,
-																									Optional:     true,
+																									Required:     true,
 																									ValidateFunc: validateIpv4CIDRNetworkAddress,
 																								},
 																							},
@@ -317,7 +314,7 @@ func resourceAwsNetworkFirewallRuleGroup() *schema.Resource {
 																							Schema: map[string]*schema.Schema{
 																								"address_definition": {
 																									Type:         schema.TypeString,
-																									Optional:     true,
+																									Required:     true,
 																									ValidateFunc: validateIpv4CIDRNetworkAddress,
 																								},
 																							},
@@ -385,7 +382,8 @@ func resourceAwsNetworkFirewallRuleGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -396,11 +394,15 @@ func resourceAwsNetworkFirewallRuleGroup() *schema.Resource {
 				Computed: true,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsNetworkFirewallRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).networkfirewallconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 
 	input := &networkfirewall.CreateRuleGroupInput{
@@ -419,8 +421,8 @@ func resourceAwsNetworkFirewallRuleGroupCreate(ctx context.Context, d *schema.Re
 	if v, ok := d.GetOk("rules"); ok {
 		input.Rules = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().NetworkfirewallTags()
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().NetworkfirewallTags()
 	}
 
 	log.Printf("[DEBUG] Creating NetworkFirewall Rule Group %s", name)
@@ -440,6 +442,7 @@ func resourceAwsNetworkFirewallRuleGroupCreate(ctx context.Context, d *schema.Re
 
 func resourceAwsNetworkFirewallRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).networkfirewallconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading NetworkFirewall Rule Group %s", d.Id())
@@ -478,8 +481,15 @@ func resourceAwsNetworkFirewallRuleGroupRead(ctx context.Context, d *schema.Reso
 		return diag.FromErr(fmt.Errorf("error setting rule_group: %w", err))
 	}
 
-	if err := d.Set("tags", keyvaluetags.NetworkfirewallKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	tags := keyvaluetags.NetworkfirewallKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
 	}
 
 	return nil
@@ -492,19 +502,24 @@ func resourceAwsNetworkFirewallRuleGroupUpdate(ctx context.Context, d *schema.Re
 	log.Printf("[DEBUG] Updating NetworkFirewall Rule Group %s", arn)
 
 	if d.HasChanges("description", "rule_group", "rules", "type") {
+		// Provide updated object with the currently configured fields
 		input := &networkfirewall.UpdateRuleGroupInput{
 			RuleGroupArn: aws.String(arn),
 			Type:         aws.String(d.Get("type").(string)),
 			UpdateToken:  aws.String(d.Get("update_token").(string)),
 		}
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if v, ok := d.GetOk("description"); ok {
+			input.Description = aws.String(v.(string))
 		}
-		if d.HasChange("rule_group") {
-			input.RuleGroup = expandNetworkFirewallRuleGroup(d.Get("rule_group").([]interface{}))
-		}
+
+		// Network Firewall UpdateRuleGroup API method only allows one of Rules or RuleGroup
+		// else, request returns "InvalidRequestException: Exactly one of Rules or RuleGroup must be set";
+		// Here, "rules" takes precedence as "rule_group" is Computed from "rules" when configured
+		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19414
 		if d.HasChange("rules") {
 			input.Rules = aws.String(d.Get("rules").(string))
+		} else if d.HasChange("rule_group") {
+			input.RuleGroup = expandNetworkFirewallRuleGroup(d.Get("rule_group").([]interface{}))
 		}
 
 		_, err := conn.UpdateRuleGroupWithContext(ctx, input)
@@ -513,8 +528,8 @@ func resourceAwsNetworkFirewallRuleGroupUpdate(ctx context.Context, d *schema.Re
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.NetworkfirewallUpdateTags(conn, arn, o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating NetworkFirewall Rule Group (%s) tags: %w", arn, err))
 		}
@@ -531,7 +546,7 @@ func resourceAwsNetworkFirewallRuleGroupDelete(ctx context.Context, d *schema.Re
 	input := &networkfirewall.DeleteRuleGroupInput{
 		RuleGroupArn: aws.String(d.Id()),
 	}
-	err := resource.Retry(waiter.RuleGroupDeleteTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, waiter.RuleGroupDeleteTimeout, func() *resource.RetryError {
 		var err error
 		_, err = conn.DeleteRuleGroupWithContext(ctx, input)
 		if err != nil {

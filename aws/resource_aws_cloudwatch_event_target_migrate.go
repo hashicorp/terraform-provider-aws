@@ -171,7 +171,13 @@ func resourceAwsCloudWatchEventTargetV0() *schema.Resource {
 }
 
 func resourceAwsCloudWatchEventTargetStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
-	rawState["event_bus_name"] = tfevents.DefaultEventBusName
+	if rawState == nil {
+		rawState = map[string]interface{}{}
+	}
+
+	if _, ok := rawState["event_bus_name"]; !ok {
+		rawState["event_bus_name"] = tfevents.DefaultEventBusName
+	}
 
 	return rawState, nil
 }

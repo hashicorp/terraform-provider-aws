@@ -12,9 +12,9 @@ Provides an AWS Network Firewall Rule Group Resource
 
 ## Example Usage
 
-### Stateful Inspection
+### Stateful Inspection for denying access to a domain
 
-```hcl
+```terraform
 resource "aws_networkfirewall_rule_group" "example" {
   capacity = 100
   name     = "example"
@@ -36,9 +36,49 @@ resource "aws_networkfirewall_rule_group" "example" {
 }
 ```
 
-### Stateful Inspection compatible with intrusion detection systems like Snort or Suricata
+### Stateful Inspection for permitting packets from a source IP address
 
-```hcl
+```terraform
+resource "aws_networkfirewall_rule_group" "example" {
+  capacity    = 50
+  description = "Permits http traffic from source"
+  name        = "example"
+  type        = "STATEFUL"
+  rule_group {
+    rules_source {
+      dynamic "stateful_rule" {
+        for_each = local.ips
+        content {
+          action = "PASS"
+          header {
+            destination      = "ANY"
+            destination_port = "ANY"
+            protocol         = "HTTP"
+            direction        = "ANY"
+            source_port      = "ANY"
+            source           = stateful_rule.value
+          }
+          rule_option {
+            keyword = "sid:1"
+          }
+        }
+      }
+    }
+  }
+
+  tags = {
+    Name = "permit HTTP from source"
+  }
+}
+
+locals {
+  ips = ["1.1.1.1/32", "1.0.0.1/32"]
+}
+```
+
+### Stateful Inspection for blocking packets from going to an intended destination
+
+```terraform
 resource "aws_networkfirewall_rule_group" "example" {
   capacity = 100
   name     = "example"
@@ -71,7 +111,7 @@ resource "aws_networkfirewall_rule_group" "example" {
 
 ### Stateful Inspection from rules specifications defined in Suricata flat format
 
-```hcl
+```terraform
 resource "aws_networkfirewall_rule_group" "example" {
   capacity = 100
   name     = "example"
@@ -87,7 +127,7 @@ resource "aws_networkfirewall_rule_group" "example" {
 
 ### Stateless Inspection with a Custom Action
 
-```hcl
+```terraform
 resource "aws_networkfirewall_rule_group" "example" {
   description = "Stateless Rate Limiting Rule"
   capacity    = 100
@@ -158,7 +198,7 @@ The following arguments are supported:
 
 * `rules` - (Optional) The stateful rule group rules specifications in Suricata file format, with one rule per line. Use this to import your existing Suricata compatible rule groups. Required unless `rule_group` is specified.
 
-* `tags` - (Optional) A map of key:value pairs to associate with the resource.
+* `tags` - (Optional) A map of key:value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 * `type` - (Required) Whether the rule group is stateless (containing stateless rules) or stateful (containing stateful rules). Valid values include: `STATEFUL` or `STATELESS`.
 
@@ -166,7 +206,7 @@ The following arguments are supported:
 
 The `rule_group` block supports the following argument:
 
-* `rule_variables` - (Optional) A configuration block that defines additional settings available to use in the rules defined in the rule group. See [Rule Variables](#rule-variables) below for details.
+* `rule_variables` - (Optional) A configuration block that defines additional settings available to use in the rules defined in the rule group. Can only be specified for **stateful** rule groups. See [Rule Variables](#rule-variables) below for details.
 
 * `rules_source` - (Required) A configuration block that defines the stateful or stateless rules for the rule group. See [Rules Source](#rules-source) below for details.
 
@@ -252,18 +292,17 @@ The `stateless_rules_and_custom_actions` block supports the following arguments:
 
 The `header` block supports the following arguments:
 
-* `destination` - (Optional) The destination IP address or address range to inspect for, in CIDR notation. If left empty, this matches with any destination address.
+* `destination` - (Required) The destination IP address or address range to inspect for, in CIDR notation. To match with any address, specify `ANY`.
 
-* `destination_port` - (Optional) The destination port to inspect for. If left empty, this matches with any port.
+* `destination_port` - (Required) The destination port to inspect for. To match with any address, specify `ANY`.
 
 * `direction` - (Required) The direction of traffic flow to inspect. Valid values: `ANY` or `FORWARD`.
 
-* `protocol` - (Optional) The protocol to inspect. If not specified, this matches with any protocol.
-Valid values: `IP`, `TCP`, `UDP`, `ICMP`, `HTTP`, `FTP`, `TLS`, `SMB`, `DNS`, `DCERPC`, `SSH`, `SMTP`, `IMAP`, `MSN`, `KRB5`, `IKEV2`, `TFTP`, `NTP`, `DHCP`.
+* `protocol` - (Required) The protocol to inspect. Valid values: `IP`, `TCP`, `UDP`, `ICMP`, `HTTP`, `FTP`, `TLS`, `SMB`, `DNS`, `DCERPC`, `SSH`, `SMTP`, `IMAP`, `MSN`, `KRB5`, `IKEV2`, `TFTP`, `NTP`, `DHCP`.
 
-* `source` - (Optional) The source IP address or address range for, in CIDR notation. If left empty, this matches with any source address.
+* `source` - (Required) The source IP address or address range for, in CIDR notation. To match with any address, specify `ANY`.
 
-* `source_port` - (Optional) The source port to inspect for. If left empty, this matches with any port.
+* `source_port` - (Required) The source port to inspect for. To match with any address, specify `ANY`.
 
 ### Rule Option
 
@@ -306,7 +345,7 @@ The `match_attributes` block supports the following arguments:
 
 * `destination_port` - (Optional) Set of configuration blocks describing the destination ports to inspect for. If not specified, this matches with any destination port. See [Destination Port](#destination-port) below for details.
 
-* `protocols` - (Optional) Set of protocols to inspect for, specified using the protocol's assigned internet protocol number (IANA).
+* `protocols` - (Optional) Set of protocols to inspect for, specified using the protocol's assigned internet protocol number (IANA). If not specified, this matches with any protocol.
 
 * `source` - (Optional) Set of configuration blocks describing the source IP address and address ranges to inspect for, in CIDR notation. If not specified, this matches with any source address. See [Source](#source) below for details.
 
@@ -336,7 +375,7 @@ The `dimension` block supports the following argument:
 
 The `destination` block supports the following argument:
 
-* `address_definition` - (Optional)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
+* `address_definition` - (Required)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
 
 ### Destination Port
 
@@ -350,7 +389,7 @@ The `destination_port` block supports the following arguments:
 
 The `source` block supports the following argument:
 
-* `address_definition` - (Optional)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
+* `address_definition` - (Required)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
 
 ### Source Port
 
@@ -364,10 +403,10 @@ The `source_port` block supports the following arguments:
 
 The `tcp_flag` block supports the following arguments:
 
-* `flags` - (Required) Set of flags to look for in a packet. AWS Network Firewall checks only the part of the packet specified in `masks`.
+* `flags` - (Required) Set of flags to look for in a packet. This setting can only specify values that are also specified in `masks`.
 Valid values: `FIN`, `SYN`, `RST`, `PSH`, `ACK`, `URG`, `ECE`, `CWR`.
 
-* `masks` - (Optional) Set of values describing the part of the packet that you want to check for the flags. To inspect the entire packet, leave this empty.
+* `masks` - (Optional) Set of flags to consider in the inspection. To inspect all flags, leave this empty.
 Valid values: `FIN`, `SYN`, `RST`, `PSH`, `ACK`, `URG`, `ECE`, `CWR`.
 
 ## Attributes Reference
@@ -377,6 +416,8 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The Amazon Resource Name (ARN) that identifies the rule group.
 
 * `arn` - The Amazon Resource Name (ARN) that identifies the rule group.
+
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 * `update_token` - A string token used when updating the rule group.
 

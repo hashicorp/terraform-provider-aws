@@ -29,6 +29,8 @@ func resourceAwsKinesisStream() *schema.Resource {
 			State: resourceAwsKinesisStreamImport,
 		},
 
+		CustomizeDiff: SetTagsDiff,
+
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
@@ -60,7 +62,7 @@ func resourceAwsKinesisStream() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      24,
-				ValidateFunc: validation.IntBetween(24, 168),
+				ValidateFunc: validation.IntBetween(24, 8760),
 			},
 
 			"shard_level_metrics": {
@@ -99,7 +101,8 @@ func resourceAwsKinesisStream() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
@@ -152,8 +155,8 @@ func resourceAwsKinesisStreamUpdate(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*AWSClient).kinesisconn
 
 	sn := d.Get("name").(string)
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.KinesisUpdateTags(conn, sn, o, n); err != nil {
 			return fmt.Errorf("error updating Kinesis Stream (%s) tags: %s", sn, err)
@@ -179,6 +182,7 @@ func resourceAwsKinesisStreamUpdate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsKinesisStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kinesisconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	sn := d.Get("name").(string)
@@ -213,8 +217,15 @@ func resourceAwsKinesisStreamRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error listing tags for Kinesis Stream (%s): %s", sn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -399,12 +410,9 @@ func updateKinesisShardLevelMetrics(conn *kinesis.Kinesis, d *schema.ResourceDat
 
 	disableMetrics := os.Difference(ns)
 	if disableMetrics.Len() != 0 {
-		metrics := disableMetrics.List()
-		log.Printf("[DEBUG] Disabling shard level metrics %v for stream %s", metrics, sn)
-
 		props := &kinesis.DisableEnhancedMonitoringInput{
 			StreamName:        aws.String(sn),
-			ShardLevelMetrics: expandStringList(metrics),
+			ShardLevelMetrics: expandStringSet(disableMetrics),
 		}
 
 		_, err := conn.DisableEnhancedMonitoring(props)
@@ -418,12 +426,9 @@ func updateKinesisShardLevelMetrics(conn *kinesis.Kinesis, d *schema.ResourceDat
 
 	enabledMetrics := ns.Difference(os)
 	if enabledMetrics.Len() != 0 {
-		metrics := enabledMetrics.List()
-		log.Printf("[DEBUG] Enabling shard level metrics %v for stream %s", metrics, sn)
-
 		props := &kinesis.EnableEnhancedMonitoringInput{
 			StreamName:        aws.String(sn),
-			ShardLevelMetrics: expandStringList(metrics),
+			ShardLevelMetrics: expandStringSet(enabledMetrics),
 		}
 
 		_, err := conn.EnableEnhancedMonitoring(props)
@@ -456,7 +461,7 @@ func readKinesisStreamState(conn *kinesis.Kinesis, sn string) (*kinesisStreamSta
 	}
 
 	state := &kinesisStreamState{}
-	err := conn.DescribeStreamPages(describeOpts, func(page *kinesis.DescribeStreamOutput, last bool) (shouldContinue bool) {
+	err := conn.DescribeStreamPages(describeOpts, func(page *kinesis.DescribeStreamOutput, lastPage bool) (shouldContinue bool) {
 		state.arn = aws.StringValue(page.StreamDescription.StreamARN)
 		state.creationTimestamp = aws.TimeValue(page.StreamDescription.StreamCreationTimestamp).Unix()
 		state.status = aws.StringValue(page.StreamDescription.StreamStatus)
@@ -471,7 +476,7 @@ func readKinesisStreamState(conn *kinesis.Kinesis, sn string) (*kinesisStreamSta
 			state.encryptionType = kinesis.EncryptionTypeNone
 		}
 		state.keyId = aws.StringValue(page.StreamDescription.KeyId)
-		return !last
+		return !lastPage
 	})
 	return state, err
 }

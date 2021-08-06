@@ -1,11 +1,11 @@
 GOTOOLS = \
-	gotest.tools/gotestsum
+	gotest.tools/gotestsum@latest
 
 test: tools
 	gotestsum --format=short-verbose $(TEST) $(TESTARGS)
 
 generate:
-	cd test-fixtures && make generate
+	cd testdata && make generate
 
 modules:
 	go mod download && go mod verify
@@ -15,6 +15,7 @@ test-circle:
 	gotestsum --format=short-verbose --junitfile test-results/terraform-json/results.xml
 
 tools:
-	go install $(GOTOOLS)
+	@echo $(GOTOOLS) | xargs -t -n1 go install
+	go mod tidy
 
 .PHONY: test generate modules test-circle tools

@@ -108,17 +108,22 @@ func resourceAwsCloudFormationStack() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"iam_role_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cfconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	requestToken := resource.UniqueId()
 	input := cloudformation.CreateStackInput{
@@ -136,13 +141,13 @@ func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface
 		input.TemplateURL = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("capabilities"); ok {
-		input.Capabilities = expandStringList(v.(*schema.Set).List())
+		input.Capabilities = expandStringSet(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("disable_rollback"); ok {
 		input.DisableRollback = aws.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("notification_arns"); ok {
-		input.NotificationARNs = expandStringList(v.(*schema.Set).List())
+		input.NotificationARNs = expandStringSet(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("on_failure"); ok {
 		input.OnFailure = aws.String(v.(string))
@@ -160,8 +165,8 @@ func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface
 	if v, ok := d.GetOk("policy_url"); ok {
 		input.StackPolicyURL = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CloudformationTags()
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().CloudformationTags()
 	}
 	if v, ok := d.GetOk("timeout_in_minutes"); ok {
 		m := int64(v.(int))
@@ -198,6 +203,7 @@ func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface
 
 func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cfconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &cloudformation.DescribeStacksInput{
@@ -255,9 +261,15 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 	}
 	if stack.DisableRollback != nil {
 		d.Set("disable_rollback", stack.DisableRollback)
+
+		// takes into account that disable_rollback conflicts with on_failure and
+		// prevents forced new creation if disable_rollback is reset during refresh
+		if d.Get("on_failure") != nil {
+			d.Set("disable_rollback", false)
+		}
 	}
 	if len(stack.NotificationARNs) > 0 {
-		err = d.Set("notification_arns", schema.NewSet(schema.HashString, flattenStringList(stack.NotificationARNs)))
+		err = d.Set("notification_arns", flattenStringSet(stack.NotificationARNs))
 		if err != nil {
 			return err
 		}
@@ -269,8 +281,15 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	if err := d.Set("tags", keyvaluetags.CloudformationKeyValueTags(stack.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags := keyvaluetags.CloudformationKeyValueTags(stack.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	err = d.Set("outputs", flattenCloudFormationOutputs(stack.Outputs))
@@ -279,7 +298,7 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if len(stack.Capabilities) > 0 {
-		err = d.Set("capabilities", schema.NewSet(schema.HashString, flattenStringList(stack.Capabilities)))
+		err = d.Set("capabilities", flattenStringSet(stack.Capabilities))
 		if err != nil {
 			return err
 		}
@@ -290,6 +309,8 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 
 func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cfconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	requestToken := resource.UniqueId()
 	input := &cloudformation.UpdateStackInput{
@@ -311,11 +332,11 @@ func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface
 
 	// Capabilities must be present whether they are changed or not
 	if v, ok := d.GetOk("capabilities"); ok {
-		input.Capabilities = expandStringList(v.(*schema.Set).List())
+		input.Capabilities = expandStringSet(v.(*schema.Set))
 	}
 
 	if d.HasChange("notification_arns") {
-		input.NotificationARNs = expandStringList(d.Get("notification_arns").(*schema.Set).List())
+		input.NotificationARNs = expandStringSet(d.Get("notification_arns").(*schema.Set))
 	}
 
 	// Parameters must be present whether they are changed or not
@@ -323,8 +344,8 @@ func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface
 		input.Parameters = expandCloudFormationParameters(v.(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CloudformationTags()
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().CloudformationTags()
 	}
 
 	if d.HasChange("policy_body") {

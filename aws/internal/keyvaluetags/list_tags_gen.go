@@ -9,7 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
@@ -27,6 +29,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
+	"github.com/aws/aws-sdk-go/service/codestarconnections"
 	"github.com/aws/aws-sdk-go/service/codestarnotifications"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -91,15 +94,19 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go/service/schemas"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/aws/aws-sdk-go/service/signer"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
+	"github.com/aws/aws-sdk-go/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
@@ -194,6 +201,23 @@ func Apigatewayv2ListTags(conn *apigatewayv2.ApiGatewayV2, identifier string) (K
 	return Apigatewayv2KeyValueTags(output.Tags), nil
 }
 
+// AppconfigListTags lists appconfig service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func AppconfigListTags(conn *appconfig.AppConfig, identifier string) (KeyValueTags, error) {
+	input := &appconfig.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return AppconfigKeyValueTags(output.Tags), nil
+}
+
 // AppmeshListTags lists appmesh service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -209,6 +233,23 @@ func AppmeshListTags(conn *appmesh.AppMesh, identifier string) (KeyValueTags, er
 	}
 
 	return AppmeshKeyValueTags(output.Tags), nil
+}
+
+// ApprunnerListTags lists apprunner service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ApprunnerListTags(conn *apprunner.AppRunner, identifier string) (KeyValueTags, error) {
+	input := &apprunner.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return ApprunnerKeyValueTags(output.Tags), nil
 }
 
 // AppstreamListTags lists appstream service tags.
@@ -503,6 +544,23 @@ func CodepipelineListTags(conn *codepipeline.CodePipeline, identifier string) (K
 	}
 
 	return CodepipelineKeyValueTags(output.Tags), nil
+}
+
+// CodestarconnectionsListTags lists codestarconnections service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CodestarconnectionsListTags(conn *codestarconnections.CodeStarConnections, identifier string) (KeyValueTags, error) {
+	input := &codestarconnections.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return CodestarconnectionsKeyValueTags(output.Tags), nil
 }
 
 // CodestarnotificationsListTags lists codestarnotifications service tags.
@@ -1599,6 +1657,23 @@ func SagemakerListTags(conn *sagemaker.SageMaker, identifier string) (KeyValueTa
 	return SagemakerKeyValueTags(output.Tags), nil
 }
 
+// SchemasListTags lists schemas service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func SchemasListTags(conn *schemas.Schemas, identifier string) (KeyValueTags, error) {
+	input := &schemas.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return SchemasKeyValueTags(output.Tags), nil
+}
+
 // SecurityhubListTags lists securityhub service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -1648,6 +1723,23 @@ func SfnListTags(conn *sfn.SFN, identifier string) (KeyValueTags, error) {
 	}
 
 	return SfnKeyValueTags(output.Tags), nil
+}
+
+// ShieldListTags lists shield service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ShieldListTags(conn *shield.Shield, identifier string) (KeyValueTags, error) {
+	input := &shield.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return ShieldKeyValueTags(output.Tags), nil
 }
 
 // SignerListTags lists signer service tags.
@@ -1719,6 +1811,24 @@ func SsmListTags(conn *ssm.SSM, identifier string, resourceType string) (KeyValu
 	return SsmKeyValueTags(output.TagList), nil
 }
 
+// SsoadminListTags lists ssoadmin service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func SsoadminListTags(conn *ssoadmin.SSOAdmin, identifier string, resourceType string) (KeyValueTags, error) {
+	input := &ssoadmin.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+		InstanceArn: aws.String(resourceType),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return SsoadminKeyValueTags(output.Tags), nil
+}
+
 // StoragegatewayListTags lists storagegateway service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -1751,6 +1861,23 @@ func SwfListTags(conn *swf.SWF, identifier string) (KeyValueTags, error) {
 	}
 
 	return SwfKeyValueTags(output.Tags), nil
+}
+
+// TimestreamwriteListTags lists timestreamwrite service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func TimestreamwriteListTags(conn *timestreamwrite.TimestreamWrite, identifier string) (KeyValueTags, error) {
+	input := &timestreamwrite.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return TimestreamwriteKeyValueTags(output.Tags), nil
 }
 
 // TransferListTags lists transfer service tags.

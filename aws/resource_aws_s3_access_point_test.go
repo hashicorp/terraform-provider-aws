@@ -86,6 +86,7 @@ func TestAccAWSS3AccessPoint_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3AccessPointDestroy,
 		Steps: []resource.TestStep{
@@ -126,6 +127,7 @@ func TestAccAWSS3AccessPoint_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3AccessPointDestroy,
 		Steps: []resource.TestStep{
@@ -141,7 +143,7 @@ func TestAccAWSS3AccessPoint_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3AccessPoint_bucketDisappears(t *testing.T) {
+func TestAccAWSS3AccessPoint_disappears_Bucket(t *testing.T) {
 	var v s3control.GetAccessPointOutput
 	bucketName := acctest.RandomWithPrefix("tf-acc-test")
 	accessPointName := acctest.RandomWithPrefix("tf-acc-test")
@@ -150,6 +152,7 @@ func TestAccAWSS3AccessPoint_bucketDisappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3AccessPointDestroy,
 		Steps: []resource.TestStep{
@@ -172,6 +175,7 @@ func TestAccAWSS3AccessPoint_Bucket_Arn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3AccessPointDestroy,
 		Steps: []resource.TestStep{
@@ -252,6 +256,7 @@ func TestAccAWSS3AccessPoint_Policy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3AccessPointDestroy,
 		Steps: []resource.TestStep{
@@ -305,6 +310,7 @@ func TestAccAWSS3AccessPoint_PublicAccessBlockConfiguration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3AccessPointDestroy,
 		Steps: []resource.TestStep{
@@ -344,6 +350,7 @@ func TestAccAWSS3AccessPoint_VpcConfiguration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3control.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3AccessPointDestroy,
 		Steps: []resource.TestStep{

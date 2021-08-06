@@ -14,7 +14,7 @@ Provides a resource to manage AWS Secrets Manager secret metadata. To manage sec
 
 ### Basic
 
-```hcl
+```terraform
 resource "aws_secretsmanager_secret" "example" {
   name = "example"
 }
@@ -28,7 +28,7 @@ To enable automatic secret rotation, the Secrets Manager service requires usage 
 
 ~> **NOTE:** If you cancel a rotation that is in progress (by removing the `rotation` configuration), it can leave the VersionStage labels in an unexpected state. Depending on what step of the rotation was in progress, you might need to remove the staging label AWSPENDING from the partially created version, specified by the SecretVersionId response value. You should also evaluate the partially rotated new version to see if it should be deleted, which you can do by removing all staging labels from the new version's VersionStage field.
 
-```hcl
+```terraform
 resource "aws_secretsmanager_secret" "rotation-example" {
   name                = "rotation-example"
   rotation_lambda_arn = aws_lambda_function.example.arn
@@ -43,15 +43,21 @@ resource "aws_secretsmanager_secret" "rotation-example" {
 
 The following arguments are supported:
 
-* `name` - (Optional) Specifies the friendly name of the new secret. The secret name can consist of uppercase letters, lowercase letters, digits, and any of the following characters: `/_+=.@-` Conflicts with `name_prefix`.
+* `description` - (Optional) Description of the secret.
+* `kms_key_id` - (Optional) ARN or Id of the AWS KMS customer master key (CMK) to be used to encrypt the secret values in the versions stored in this secret. If you don't specify this value, then Secrets Manager defaults to using the AWS account's default CMK (the one named `aws/secretsmanager`). If the default KMS CMK with that name doesn't yet exist, then AWS Secrets Manager creates it for you automatically the first time.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
-* `description` - (Optional) A description of the secret.
-* `kms_key_id` - (Optional) Specifies the ARN or Id of the AWS KMS customer master key (CMK) to be used to encrypt the secret values in the versions stored in this secret. If you don't specify this value, then Secrets Manager defaults to using the AWS account's default CMK (the one named `aws/secretsmanager`). If the default KMS CMK with that name doesn't yet exist, then AWS Secrets Manager creates it for you automatically the first time.
-* `policy` - (Optional) A valid JSON document representing a [resource policy](https://docs.aws.amazon.com/secretsmanager/latest/userguide/auth-and-access_resource-based-policies.html). For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
-* `recovery_window_in_days` - (Optional) Specifies the number of days that AWS Secrets Manager waits before it can delete the secret. This value can be `0` to force deletion without recovery or range from `7` to `30` days. The default value is `30`.
-* `rotation_lambda_arn` - (Optional, **DEPRECATED**) Specifies the ARN of the Lambda function that can rotate the secret. Use the `aws_secretsmanager_secret_rotation` resource to manage this configuration instead. As of version 2.67.0, removal of this configuration will no longer remove rotation due to supporting the new resource. Either import the new resource and remove the configuration or manually remove rotation.
-* `rotation_rules` - (Optional, **DEPRECATED**) A structure that defines the rotation configuration for this secret. Defined below. Use the `aws_secretsmanager_secret_rotation` resource to manage this configuration instead. As of version 2.67.0, removal of this configuration will no longer remove rotation due to supporting the new resource. Either import the new resource and remove the configuration or manually remove rotation.
-* `tags` - (Optional) Specifies a key-value map of user-defined tags that are attached to the secret.
+* `name` - (Optional) Friendly name of the new secret. The secret name can consist of uppercase letters, lowercase letters, digits, and any of the following characters: `/_+=.@-` Conflicts with `name_prefix`.
+* `policy` - (Optional) Valid JSON document representing a [resource policy](https://docs.aws.amazon.com/secretsmanager/latest/userguide/auth-and-access_resource-based-policies.html). For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
+* `recovery_window_in_days` - (Optional) Number of days that AWS Secrets Manager waits before it can delete the secret. This value can be `0` to force deletion without recovery or range from `7` to `30` days. The default value is `30`.
+* `replica` - (Optional) Configuration block to support secret replication. See details below.
+* `rotation_lambda_arn` - (Optional, **DEPRECATED**) ARN of the Lambda function that can rotate the secret. Use the `aws_secretsmanager_secret_rotation` resource to manage this configuration instead. As of version 2.67.0, removal of this configuration will no longer remove rotation due to supporting the new resource. Either import the new resource and remove the configuration or manually remove rotation.
+* `rotation_rules` - (Optional, **DEPRECATED**) Configuration block for the rotation configuration of this secret. Defined below. Use the `aws_secretsmanager_secret_rotation` resource to manage this configuration instead. As of version 2.67.0, removal of this configuration will no longer remove rotation due to supporting the new resource. Either import the new resource and remove the configuration or manually remove rotation.
+* `tags` - (Optional) Key-value map of user-defined tags that are attached to the secret. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### replica
+
+* `kms_key_id` - (Optional) ARN, Key ID, or Alias.
+* `region` - (Required) Region for replicating the secret.
 
 ### rotation_rules
 
@@ -61,9 +67,17 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Amazon Resource Name (ARN) of the secret.
-* `arn` - Amazon Resource Name (ARN) of the secret.
-* `rotation_enabled` - Specifies whether automatic rotation is enabled for this secret.
+* `id` - ARN of the secret.
+* `arn` - ARN of the secret.
+* `rotation_enabled` - Whether automatic rotation is enabled for this secret.
+* `replica` - Attributes of a replica are described below.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+
+### replica
+
+* `last_accessed_date` - Date that you last accessed the secret in the Region.
+* `status` - Status can be `InProgress`, `Failed`, or `InSync`.
+* `status_message` - Message such as `Replication succeeded` or `Secret with this name already exists in this region`.
 
 ## Import
 

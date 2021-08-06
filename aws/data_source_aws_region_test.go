@@ -23,11 +23,11 @@ func TestFindRegionByEc2Endpoint(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    "us-east-1",
+			Value:    "us-east-1", // lintignore:AWSAT003
 			ErrCount: 1,
 		},
 		{
-			Value:    "ec2.us-east-1.amazonaws.com",
+			Value:    "ec2.us-east-1.amazonaws.com", // lintignore:AWSAT003
 			ErrCount: 0,
 		},
 	}
@@ -53,11 +53,11 @@ func TestFindRegionByName(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    "ec2.us-east-1.amazonaws.com",
+			Value:    "ec2.us-east-1.amazonaws.com", // lintignore:AWSAT003
 			ErrCount: 1,
 		},
 		{
-			Value:    "us-east-1",
+			Value:    "us-east-1", // lintignore:AWSAT003
 			ErrCount: 0,
 		},
 	}
@@ -77,8 +77,9 @@ func TestAccDataSourceAwsRegion_basic(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsRegionConfig_empty,
@@ -96,8 +97,9 @@ func TestAccDataSourceAwsRegion_endpoint(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsRegionConfig_endpoint(),
@@ -115,8 +117,9 @@ func TestAccDataSourceAwsRegion_endpointAndName(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsRegionConfig_endpointAndName(),
@@ -134,8 +137,9 @@ func TestAccDataSourceAwsRegion_name(t *testing.T) {
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsRegionConfig_name(),

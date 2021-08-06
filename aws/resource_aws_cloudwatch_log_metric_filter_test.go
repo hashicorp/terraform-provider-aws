@@ -14,10 +14,11 @@ import (
 func TestAccAWSCloudWatchLogMetricFilter_basic(t *testing.T) {
 	var mf cloudwatchlogs.MetricFilter
 	rInt := acctest.RandInt()
-	resourceName := "aws_cloudwatch_log_metric_filter.foobar"
+	resourceName := "aws_cloudwatch_log_metric_filter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogMetricFilterDestroy,
 		Steps: []resource.TestStep{
@@ -33,6 +34,7 @@ func TestAccAWSCloudWatchLogMetricFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.name", "EventCount"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.namespace", "YourNamespace"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.value", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.dimensions.%", "0"),
 					testAccCheckCloudWatchLogMetricFilterTransformation(&mf, &cloudwatchlogs.MetricTransformation{
 						MetricName:      aws.String("EventCount"),
 						MetricNamespace: aws.String("YourNamespace"),
@@ -59,6 +61,7 @@ func TestAccAWSCloudWatchLogMetricFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.namespace", "MyNamespace"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.value", "2"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.default_value", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.dimensions.%", "0"),
 					testAccCheckCloudWatchLogMetricFilterTransformation(&mf, &cloudwatchlogs.MetricTransformation{
 						MetricName:      aws.String("AccessDeniedCount"),
 						MetricNamespace: aws.String("MyNamespace"),
@@ -68,8 +71,80 @@ func TestAccAWSCloudWatchLogMetricFilter_basic(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccAWSCloudWatchLogMetricFilterConfigModifiedWithDimensions(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchLogMetricFilterExists(resourceName, &mf),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("MyAppAccessCount-%d", rInt)),
+					testAccCheckCloudWatchLogMetricFilterName(&mf, fmt.Sprintf("MyAppAccessCount-%d", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "pattern", "{ $.errorCode = \"AccessDenied\" }"),
+					testAccCheckCloudWatchLogMetricFilterPattern(&mf, "{ $.errorCode = \"AccessDenied\" }"),
+					resource.TestCheckResourceAttr(resourceName, "log_group_name", fmt.Sprintf("MyApp/access-%d.log", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.name", "AccessDeniedCount"),
+					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.namespace", "MyNamespace"),
+					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.value", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.dimensions.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.dimensions.ErrorCode", "$.errorCode"),
+					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.dimensions.Dummy", "$.dummy"),
+					testAccCheckCloudWatchLogMetricFilterTransformation(&mf, &cloudwatchlogs.MetricTransformation{
+						MetricName:      aws.String("AccessDeniedCount"),
+						MetricNamespace: aws.String("MyNamespace"),
+						MetricValue:     aws.String("2"),
+						Dimensions: aws.StringMap(map[string]string{
+							"ErrorCode": "$.errorCode",
+							"Dummy":     "$.dummy",
+						}),
+					}),
+				),
+			},
+			{
 				Config: testAccAWSCloudwatchLogMetricFilterConfigMany(rInt),
-				Check:  testAccCheckCloudwatchLogMetricFilterManyExist("aws_cloudwatch_log_metric_filter.count_dracula", &mf),
+				Check:  testAccCheckCloudwatchLogMetricFilterManyExist("aws_cloudwatch_log_metric_filter.test", &mf),
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudWatchLogMetricFilter_disappears(t *testing.T) {
+	var mf cloudwatchlogs.MetricFilter
+	rInt := acctest.RandInt()
+	resourceName := "aws_cloudwatch_log_metric_filter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchLogMetricFilterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchLogMetricFilterConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchLogMetricFilterExists(resourceName, &mf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchLogMetricFilter(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudWatchLogMetricFilter_disappears_logGroup(t *testing.T) {
+	var mf cloudwatchlogs.MetricFilter
+	rInt := acctest.RandInt()
+	resourceName := "aws_cloudwatch_log_metric_filter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchLogMetricFilterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchLogMetricFilterConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchLogMetricFilterExists(resourceName, &mf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchLogGroup(), "aws_cloudwatch_log_group.test"),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -129,6 +204,24 @@ func testAccCheckCloudWatchLogMetricFilterTransformation(mf *cloudwatchlogs.Metr
 				*expected.DefaultValue, *given.DefaultValue)
 		}
 
+		if len(expected.Dimensions) > 0 || len(given.Dimensions) > 0 {
+			e, g := aws.StringValueMap(expected.Dimensions), aws.StringValueMap(given.Dimensions)
+
+			if len(e) != len(g) {
+				return fmt.Errorf("Expected %d dimensions, received %d", len(e), len(g))
+			}
+
+			for ek, ev := range e {
+				gv, ok := g[ek]
+				if !ok {
+					return fmt.Errorf("Expected dimension %s, received nothing", ek)
+				}
+				if gv != ev {
+					return fmt.Errorf("Expected dimension %s to be %s, received %s", ek, ev, gv)
+				}
+			}
+		}
+
 		return nil
 	}
 }
@@ -186,10 +279,10 @@ func testAccCheckCloudwatchLogMetricFilterManyExist(basename string, mf *cloudwa
 
 func testAccAWSCloudWatchLogMetricFilterConfig(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_metric_filter" "foobar" {
+resource "aws_cloudwatch_log_metric_filter" "test" {
   name           = "MyAppAccessCount-%d"
   pattern        = ""
-  log_group_name = aws_cloudwatch_log_group.dada.name
+  log_group_name = aws_cloudwatch_log_group.test.name
 
   metric_transformation {
     name      = "EventCount"
@@ -198,7 +291,7 @@ resource "aws_cloudwatch_log_metric_filter" "foobar" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "dada" {
+resource "aws_cloudwatch_log_group" "test" {
   name = "MyApp/access-%d.log"
 }
 `, rInt, rInt)
@@ -206,7 +299,7 @@ resource "aws_cloudwatch_log_group" "dada" {
 
 func testAccAWSCloudWatchLogMetricFilterConfigModified(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_metric_filter" "foobar" {
+resource "aws_cloudwatch_log_metric_filter" "test" {
   name = "MyAppAccessCount-%d"
 
   pattern = <<PATTERN
@@ -214,7 +307,7 @@ resource "aws_cloudwatch_log_metric_filter" "foobar" {
 PATTERN
 
 
-  log_group_name = aws_cloudwatch_log_group.dada.name
+  log_group_name = aws_cloudwatch_log_group.test.name
 
   metric_transformation {
     name          = "AccessDeniedCount"
@@ -224,7 +317,36 @@ PATTERN
   }
 }
 
-resource "aws_cloudwatch_log_group" "dada" {
+resource "aws_cloudwatch_log_group" "test" {
+  name = "MyApp/access-%d.log"
+}
+`, rInt, rInt)
+}
+
+func testAccAWSCloudWatchLogMetricFilterConfigModifiedWithDimensions(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_metric_filter" "test" {
+  name = "MyAppAccessCount-%d"
+
+  pattern = <<PATTERN
+{ $.errorCode = "AccessDenied" }
+PATTERN
+
+
+  log_group_name = aws_cloudwatch_log_group.test.name
+
+  metric_transformation {
+    name      = "AccessDeniedCount"
+    namespace = "MyNamespace"
+    value     = "2"
+    dimensions = {
+      ErrorCode = "$.errorCode"
+      Dummy     = "$.dummy"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_group" "test" {
   name = "MyApp/access-%d.log"
 }
 `, rInt, rInt)
@@ -232,11 +354,11 @@ resource "aws_cloudwatch_log_group" "dada" {
 
 func testAccAWSCloudwatchLogMetricFilterConfigMany(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_metric_filter" "count_dracula" {
+resource "aws_cloudwatch_log_metric_filter" "test" {
   count          = 15
   name           = "MyAppCountLog-${count.index}-%d"
   pattern        = "count ${count.index}"
-  log_group_name = aws_cloudwatch_log_group.mama.name
+  log_group_name = aws_cloudwatch_log_group.test.name
 
   metric_transformation {
     name      = "CountDracula-${count.index}"
@@ -245,7 +367,7 @@ resource "aws_cloudwatch_log_metric_filter" "count_dracula" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "mama" {
+resource "aws_cloudwatch_log_group" "test" {
   name = "MyApp/count-log-%d.log"
 }
 `, rInt, rInt)

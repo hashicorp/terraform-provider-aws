@@ -34,6 +34,15 @@ func BackendConfig(backendConfig string) *BackendConfigOption {
 	return &BackendConfigOption{backendConfig}
 }
 
+type BackupOutOption struct {
+	path string
+}
+
+// BackupOutOption represents the -backup-out flag.
+func BackupOut(path string) *BackupOutOption {
+	return &BackupOutOption{path}
+}
+
 // BackupOption represents the -backup flag.
 type BackupOption struct {
 	path string
@@ -97,6 +106,23 @@ type DestroyFlagOption struct {
 // Destroy represents the -destroy flag.
 func Destroy(destroy bool) *DestroyFlagOption {
 	return &DestroyFlagOption{destroy}
+}
+
+type DryRunOption struct {
+	dryRun bool
+}
+
+// DryRun represents the -dry-run flag.
+func DryRun(dryRun bool) *DryRunOption {
+	return &DryRunOption{dryRun}
+}
+
+type ForceOption struct {
+	force bool
+}
+
+func Force(force bool) *ForceOption {
+	return &ForceOption{force}
 }
 
 type ForceCopyOption struct {
@@ -181,10 +207,11 @@ type ReattachInfo map[string]ReattachConfig
 // ReattachConfig holds the information Terraform needs to be able to attach
 // itself to a provider process, so it can drive the process.
 type ReattachConfig struct {
-	Protocol string
-	Pid      int
-	Test     bool
-	Addr     ReattachConfigAddr
+	Protocol        string
+	ProtocolVersion int
+	Pid             int
+	Test            bool
+	Addr            ReattachConfigAddr
 }
 
 // ReattachConfigAddr is a JSON-encoding friendly version of net.Addr.
@@ -215,6 +242,14 @@ type ReconfigureOption struct {
 
 func Reconfigure(reconfigure bool) *ReconfigureOption {
 	return &ReconfigureOption{reconfigure}
+}
+
+type RecursiveOption struct {
+	recursive bool
+}
+
+func Recursive(r bool) *RecursiveOption {
+	return &RecursiveOption{r}
 }
 
 type RefreshOption struct {
@@ -253,6 +288,14 @@ type TargetOption struct {
 
 func Target(resource string) *TargetOption {
 	return &TargetOption{resource}
+}
+
+type UpdateOption struct {
+	update bool
+}
+
+func Update(update bool) *UpdateOption {
+	return &UpdateOption{update}
 }
 
 type UpgradeOption struct {

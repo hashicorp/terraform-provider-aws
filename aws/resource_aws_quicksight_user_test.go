@@ -22,6 +22,7 @@ func TestAccAWSQuickSightUser_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, quicksight.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckQuickSightUserDestroy,
 		Steps: []resource.TestStep{
@@ -52,6 +53,7 @@ func TestAccAWSQuickSightUser_withInvalidFormattedEmailStillWorks(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, quicksight.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckQuickSightUserDestroy,
 		Steps: []resource.TestStep{
@@ -80,6 +82,7 @@ func TestAccAWSQuickSightUser_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, quicksight.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckQuickSightUserDestroy,
 		Steps: []resource.TestStep{
@@ -202,5 +205,5 @@ resource "aws_quicksight_user" %[1]q {
 }
 
 func testAccAWSQuickSightUserConfig(rName string) string {
-	return testAccAWSQuickSightUserConfigWithEmail(rName, "fakeemail@example.com")
+	return testAccAWSQuickSightUserConfigWithEmail(rName, testAccDefaultEmailAddress)
 }

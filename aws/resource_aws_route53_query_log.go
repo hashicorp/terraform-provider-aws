@@ -50,7 +50,7 @@ func resourceAwsRoute53QueryLogCreate(d *schema.ResourceData, meta interface{}) 
 	}
 	log.Printf("[DEBUG] Route53 query logging configuration created: %#v", out)
 
-	d.SetId(*out.QueryLoggingConfig.Id)
+	d.SetId(aws.StringValue(out.QueryLoggingConfig.Id))
 
 	return resourceAwsRoute53QueryLogRead(d, meta)
 }
