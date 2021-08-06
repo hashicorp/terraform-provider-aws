@@ -138,10 +138,6 @@ func resourceAwsAppstreamFleet() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(appstream.StreamView_Values(), false),
 			},
-			"stack_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"state": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -244,18 +240,6 @@ func resourceAwsAppstreamFleetCreate(ctx context.Context, d *schema.ResourceData
 	resp, err := conn.CreateFleetWithContext(ctx, input)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error creating Appstream Fleet (%s): %w", d.Id(), err))
-	}
-
-	if v, ok := d.GetOk("stack_name"); ok {
-		associateInput := &appstream.AssociateFleetInput{}
-		associateInput.FleetName = input.Name
-		associateInput.StackName = aws.String(v.(string))
-		resp, err := conn.AssociateFleet(associateInput)
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error associating Appstream Fleet (%s): %w", d.Id(), err))
-		}
-
-		log.Printf("[DEBUG] %s", resp)
 	}
 
 	if v, ok := d.GetOk("state"); ok {
@@ -365,7 +349,7 @@ func resourceAwsAppstreamFleetUpdate(ctx context.Context, d *schema.ResourceData
 
 	conn := meta.(*AWSClient).appstreamconn
 	input := &appstream.UpdateFleetInput{
-		Name: aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))),
+		Name: aws.String(d.Id()),
 	}
 
 	if d.HasChange("description") {
@@ -525,14 +509,6 @@ func resourceAwsAppstreamFleetDelete(ctx context.Context, d *schema.ResourceData
 
 		}
 
-	}
-
-	_, err = conn.DisassociateFleet(&appstream.DisassociateFleetInput{
-		FleetName: aws.String(d.Id()),
-		StackName: aws.String(d.Get("stack_name").(string)),
-	})
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Appstream Fleet (%s): %w", d.Id(), err))
 	}
 
 	_, err = conn.DeleteFleetWithContext(ctx, &appstream.DeleteFleetInput{
