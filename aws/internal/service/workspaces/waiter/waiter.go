@@ -9,6 +9,7 @@ import (
 
 const (
 	DirectoryDeregisterInvalidResourceStateTimeout = 2 * time.Minute
+	DirectoryRegisterInvalidResourceStateTimeout   = 2 * time.Minute
 
 	// Maximum amount of time to wait for a Directory to return Registered
 	DirectoryRegisteredTimeout = 10 * time.Minute

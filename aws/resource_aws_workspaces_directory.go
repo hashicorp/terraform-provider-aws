@@ -221,7 +221,14 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 	}
 
 	log.Printf("[DEBUG] Registering WorkSpaces Directory: %s", input)
-	_, err := conn.RegisterWorkspaceDirectory(input)
+	_, err := tfresource.RetryWhenAwsErrCodeEquals(
+		waiter.DirectoryRegisterInvalidResourceStateTimeout,
+		func() (interface{}, error) {
+			return conn.RegisterWorkspaceDirectory(input)
+		},
+		// "error registering WorkSpaces Directory (d-000000000000): InvalidResourceStateException: The specified directory is not in a valid state. Confirm that the directory has a status of Active, and try again."
+		workspaces.ErrCodeInvalidResourceStateException,
+	)
 
 	if err != nil {
 		return fmt.Errorf("error registering WorkSpaces Directory (%s): %w", directoryID, err)
