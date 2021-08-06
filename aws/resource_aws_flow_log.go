@@ -40,13 +40,10 @@ func resourceAwsFlowLog() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"file_format": {
-							Type: schema.TypeString,
-							ValidateFunc: validation.StringInSlice([]string{
-								ec2.DestinationFileFormatPlainText,
-								ec2.DestinationFileFormatParquet,
-							}, false),
-							Default:  ec2.DestinationFileFormatPlainText,
-							Optional: true,
+							Type:         schema.TypeString,
+							ValidateFunc: validation.StringInSlice(ec2.DestinationFileFormat_Values(), false),
+							Default:      ec2.DestinationFileFormatPlainText,
+							Optional:     true,
 						},
 						"hive_compatible_partitions": {
 							Type:     schema.TypeBool,
