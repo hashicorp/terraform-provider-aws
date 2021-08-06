@@ -309,7 +309,6 @@ func resourceAwsAppStreamStackRead(ctx context.Context, d *schema.ResourceData, 
 		if err = d.Set("tags_all", tags.Map()); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "tags_all", d.Id(), err))
 		}
-		return nil
 	}
 	return nil
 }
