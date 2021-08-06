@@ -147,7 +147,7 @@ func testAccCheckAwsAppStreamStackDestroy(s *terraform.State) error {
 func testAccAwsAppStreamStackConfigBasic(stackName string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_stack" "test_fleet" {
-  name       = %[1]q
+  name = %[1]q
 }
 `, stackName)
 }
@@ -155,12 +155,12 @@ resource "aws_appstream_stack" "test_fleet" {
 func testAccAwsAppStreamStackConfigWithTags(stackName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_stack" "test" {
-  name       = %[1]q
+  name = %[1]q
   compute_capacity {
     desired_instances = 1
   }
-  description                         = %[2]q
-  display_name                        = %[1]q
+  description  = %[2]q
+  display_name = %[1]q
   storage_connectors {
     connector_type = "HOMEFOLDERS"
   }
