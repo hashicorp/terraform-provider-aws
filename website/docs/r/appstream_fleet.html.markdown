@@ -33,7 +33,6 @@ resource "aws_appstream_fleet" "test_fleet" {
   tags = {
     TagName = "tag-value"
   }
-  state = "RUNNING"
 }
 ```
 
