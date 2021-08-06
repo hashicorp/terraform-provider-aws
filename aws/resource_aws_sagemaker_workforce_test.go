@@ -63,7 +63,7 @@ func testSweepSagemakerWorkforces(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSagemakerWorkforce_cognitoConfig(t *testing.T) {
+func testAccAWSSagemakerWorkforce_cognitoConfig(t *testing.T) {
 	var workforce sagemaker.Workforce
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_workforce.test"
@@ -98,7 +98,7 @@ func TestAccAWSSagemakerWorkforce_cognitoConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerWorkforce_oidcConfig(t *testing.T) {
+func testAccAWSSagemakerWorkforce_oidcConfig(t *testing.T) {
 	var workforce sagemaker.Workforce
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_workforce.test"
@@ -162,7 +162,7 @@ func TestAccAWSSagemakerWorkforce_oidcConfig(t *testing.T) {
 		},
 	})
 }
-func TestAccAWSSagemakerWorkforce_sourceIpConfig(t *testing.T) {
+func testAccAWSSagemakerWorkforce_sourceIpConfig(t *testing.T) {
 	var workforce sagemaker.Workforce
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_workforce.test"
@@ -209,7 +209,7 @@ func TestAccAWSSagemakerWorkforce_sourceIpConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerWorkforce_disappears(t *testing.T) {
+func testAccAWSSagemakerWorkforce_disappears(t *testing.T) {
 	var workforce sagemaker.Workforce
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_workforce.test"
