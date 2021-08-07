@@ -128,6 +128,41 @@ func TestAccAWSCodeBuildWebhook_GitHubEnterprise(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodeBuildWebhook_BuildType(t *testing.T) {
+	var webhook codebuild.Webhook
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_webhook.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildWebhookConfig_BuildType(rName, "BUILD"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					resource.TestCheckResourceAttr(resourceName, "build_type", "BUILD"),
+				),
+			},
+			{
+				Config: testAccAWSCodeBuildWebhookConfig_BuildType(rName, "BUILD_BATCH"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					resource.TestCheckResourceAttr(resourceName, "build_type", "BUILD_BATCH"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"secret"},
+			},
+		},
+	})
+}
+
 func TestAccAWSCodeBuildWebhook_BranchFilter(t *testing.T) {
 	var webhook codebuild.Webhook
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -333,6 +368,15 @@ resource "aws_codebuild_webhook" "test" {
   branch_filter = "%s"
 }
 `, rName, branchFilter)
+}
+
+func testAccAWSCodeBuildWebhookConfig_BuildType(rName, branchFilter string) string {
+	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName)+`
+resource "aws_codebuild_webhook" "test" {
+  build_type = "%s"
+  project_name  = aws_codebuild_project.test.name
+}
+`, branchFilter)
 }
 
 func testAccAWSCodeBuildWebhookConfig_BranchFilter(rName, branchFilter string) string {
