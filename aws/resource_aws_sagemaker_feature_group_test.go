@@ -59,12 +59,33 @@ func testSweepSagemakerFeatureGroups(region string) error {
 	return nil
 }
 
-func TestAccAWSSagemakerFeatureGroup_basic(t *testing.T) {
+func TestAccAWSSagemakerFeatureGroup_serial(t *testing.T) {
+	testCases := map[string]func(t *testing.T){
+		"basic":                         testAccAWSSagemakerFeatureGroup_basic,
+		"description":                   testAccAWSSagemakerFeatureGroup_description,
+		"disappears":                    TestAccAWSSagemakerFeatureGroup_disappears,
+		"multipleFeatures":              testAccAWSSagemakerFeatureGroup_multipleFeatures,
+		"offlineConfig_basic":           testAccAWSSagemakerFeatureGroup_offlineConfig_basic,
+		"offlineConfig_createCatalog":   testAccAWSSagemakerFeatureGroup_offlineConfig_createCatalog,
+		"offlineConfig_providedCatalog": TestAccAWSSagemakerFeatureGroup_offlineConfig_providedCatalog,
+		"onlineConfigSecurityConfig":    testAccAWSSagemakerFeatureGroup_onlineConfigSecurityConfig,
+		"tags":                          testAccAWSSagemakerFeatureGroup_tags,
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			tc(t)
+		})
+	}
+}
+
+func testAccAWSSagemakerFeatureGroup_basic(t *testing.T) {
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_feature_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
@@ -95,12 +116,12 @@ func TestAccAWSSagemakerFeatureGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerFeatureGroup_description(t *testing.T) {
+func testAccAWSSagemakerFeatureGroup_description(t *testing.T) {
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_feature_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
@@ -123,12 +144,12 @@ func TestAccAWSSagemakerFeatureGroup_description(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerFeatureGroup_tags(t *testing.T) {
+func testAccAWSSagemakerFeatureGroup_tags(t *testing.T) {
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_feature_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
@@ -171,12 +192,12 @@ func TestAccAWSSagemakerFeatureGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerFeatureGroup_multipleFeatures(t *testing.T) {
+func testAccAWSSagemakerFeatureGroup_multipleFeatures(t *testing.T) {
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_feature_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
@@ -203,12 +224,12 @@ func TestAccAWSSagemakerFeatureGroup_multipleFeatures(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerFeatureGroup_onlineConfigSecurityConfig(t *testing.T) {
+func testAccAWSSagemakerFeatureGroup_onlineConfigSecurityConfig(t *testing.T) {
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_feature_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
@@ -234,12 +255,12 @@ func TestAccAWSSagemakerFeatureGroup_onlineConfigSecurityConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerFeatureGroup_offlineConfig_basic(t *testing.T) {
+func testAccAWSSagemakerFeatureGroup_offlineConfig_basic(t *testing.T) {
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_feature_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
@@ -266,12 +287,12 @@ func TestAccAWSSagemakerFeatureGroup_offlineConfig_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerFeatureGroup_offlineConfig_createCatalog(t *testing.T) {
+func testAccAWSSagemakerFeatureGroup_offlineConfig_createCatalog(t *testing.T) {
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_feature_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
@@ -307,7 +328,7 @@ func TestAccAWSSagemakerFeatureGroup_offlineConfig_providedCatalog(t *testing.T)
 	resourceName := "aws_sagemaker_feature_group.test"
 	glueTableResourceName := "aws_glue_catalog_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
@@ -342,7 +363,7 @@ func TestAccAWSSagemakerFeatureGroup_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_feature_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
