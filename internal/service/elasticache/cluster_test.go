@@ -1325,6 +1325,7 @@ resource "aws_elasticache_cluster" "test" {
   availability_zone    = data.aws_availability_zones.available.names[0]
   cluster_id           = "%[1]s1"
   replication_group_id = aws_elasticache_replication_group.test.id
+  engine               = "memcached"
 }
 `, rName)
 }
@@ -1347,6 +1348,7 @@ resource "aws_elasticache_cluster" "test" {
   count                = %[2]d
   cluster_id           = "%[1]s${count.index}"
   replication_group_id = aws_elasticache_replication_group.test.id
+  engine               = "memcached"
 }
 `, rName, count)
 }
