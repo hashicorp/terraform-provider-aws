@@ -120,7 +120,8 @@ func ResourceCluster() *schema.Resource {
 			},
 			"engine": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
+				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
@@ -264,7 +265,6 @@ func ResourceCluster() *schema.Resource {
 		},
 		CustomizeDiff: customdiff.Sequence(
 			CustomizeDiffValidateClusterAZMode,
-			CustomizeDiffValidateClusterEngine,
 			CustomizeDiffValidateClusterEngineVersion,
 			CustomizeDiffElastiCacheEngineVersion,
 			CustomizeDiffValidateClusterNumCacheNodes,
@@ -304,6 +304,8 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("engine"); ok {
 		req.Engine = aws.String(v.(string))
+	} else if _, ok := d.GetOk("replication_group_id"); !ok {
+		return fmt.Errorf(`"engine" is required unless a "replication_group_id" is provided`)
 	}
 
 	if v, ok := d.GetOk("engine_version"); ok {

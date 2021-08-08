@@ -96,6 +96,23 @@ func TestAccElastiCacheCluster_Engine_redis(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticacheCluster_Engine_None(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSElasticacheClusterConfig_Engine_None(rName),
+				ExpectError: regexp.MustCompile(`"engine" is required unless a "replication_group_id" is provided`),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheCluster_PortRedis_default(t *testing.T) {
 	var ec elasticache.CacheCluster
 	resource.ParallelTest(t, resource.TestCase{
@@ -875,11 +892,21 @@ func testAccCheckClusterEC2ClassicExists(n string, v *elasticache.CacheCluster) 
 	}
 }
 
-func testAccClusterConfig_Engine_Memcached(rName string) string {
+func testAccAWSElasticacheClusterConfig_Engine_Memcached(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
   cluster_id      = "%s"
   engine          = "memcached"
+  node_type       = "cache.t3.small"
+  num_cache_nodes = 1
+}
+`, rName)
+}
+
+func testAccAWSElasticacheClusterConfig_Engine_None(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "test" {
+  cluster_id      = "%s"
   node_type       = "cache.t3.small"
   num_cache_nodes = 1
 }
@@ -1325,7 +1352,6 @@ resource "aws_elasticache_cluster" "test" {
   availability_zone    = data.aws_availability_zones.available.names[0]
   cluster_id           = "%[1]s1"
   replication_group_id = aws_elasticache_replication_group.test.id
-  engine               = "redis"
 }
 `, rName)
 }
@@ -1348,7 +1374,6 @@ resource "aws_elasticache_cluster" "test" {
   count                = %[2]d
   cluster_id           = "%[1]s${count.index}"
   replication_group_id = aws_elasticache_replication_group.test.id
-  engine               = "redis"
 }
 `, rName, count)
 }
