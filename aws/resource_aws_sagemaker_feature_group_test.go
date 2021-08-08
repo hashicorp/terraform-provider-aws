@@ -485,7 +485,7 @@ resource "aws_iam_policy" "test" {
 }
 
 func testAccAWSSagemakerFeatureGroupBasicConfig(rName string) string {
-	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSagemakerFeatureGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
   record_identifier_feature_name = %[1]q
@@ -501,11 +501,11 @@ resource "aws_sagemaker_feature_group" "test" {
     enable_online_store = true
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSagemakerFeatureGroupDescriptionConfig(rName string) string {
-	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSagemakerFeatureGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
   record_identifier_feature_name = %[1]q
@@ -522,11 +522,11 @@ resource "aws_sagemaker_feature_group" "test" {
     enable_online_store = true
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSagemakerFeatureGroupConfigMultiFeature(rName string) string {
-	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSagemakerFeatureGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
   record_identifier_feature_name = %[1]q
@@ -547,11 +547,11 @@ resource "aws_sagemaker_feature_group" "test" {
     enable_online_store = true
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSagemakerFeatureGroupOnlineSecurityConfig(rName string) string {
-	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSagemakerFeatureGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -576,12 +576,14 @@ resource "aws_sagemaker_feature_group" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSagemakerFeatureGroupOfflineBasicConfig(rName string) string {
-	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) +
-		testAccAWSSagemakerFeatureGroupOfflineBaseConfig(rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAWSSagemakerFeatureGroupBaseConfig(rName),
+		testAccAWSSagemakerFeatureGroupOfflineBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
   record_identifier_feature_name = %[1]q
@@ -603,12 +605,14 @@ resource "aws_sagemaker_feature_group" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSagemakerFeatureGroupOfflineCreateGlueCatalogConfig(rName string) string {
-	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) +
-		testAccAWSSagemakerFeatureGroupOfflineBaseConfig(rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAWSSagemakerFeatureGroupBaseConfig(rName),
+		testAccAWSSagemakerFeatureGroupOfflineBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
   record_identifier_feature_name = %[1]q
@@ -630,12 +634,14 @@ resource "aws_sagemaker_feature_group" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSagemakerFeatureGroupOfflineCreateGlueCatalogConfigProvidedCatalog(rName string) string {
-	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) +
-		testAccAWSSagemakerFeatureGroupOfflineBaseConfig(rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAWSSagemakerFeatureGroupBaseConfig(rName),
+		testAccAWSSagemakerFeatureGroupOfflineBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -672,11 +678,11 @@ resource "aws_sagemaker_feature_group" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSagemakerFeatureGroupTags1(rName, tag1Key, tag1Value string) string {
-	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSagemakerFeatureGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
   record_identifier_feature_name = %[1]q
@@ -696,11 +702,11 @@ resource "aws_sagemaker_feature_group" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tag1Key, tag1Value)
+`, rName, tag1Key, tag1Value))
 }
 
 func testAccAWSSagemakerFeatureGroupTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSagemakerFeatureGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
   record_identifier_feature_name = %[1]q
@@ -721,5 +727,5 @@ resource "aws_sagemaker_feature_group" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tag1Key, tag1Value, tag2Key, tag2Value)
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value))
 }
