@@ -8,11 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -389,25 +389,23 @@ func testAccCheckAWSSagemakerFeatureGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		codeRepository, err := finder.FeatureGroupByName(conn, rs.Primary.ID)
+		_, err := finder.FeatureGroupByName(conn, rs.Primary.ID)
 
-		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Sagemaker Feature Group (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if aws.StringValue(codeRepository.FeatureGroupName) == rs.Primary.ID {
-			return fmt.Errorf("Sagemaker Feature Group %q still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("SageMaker Feature Group %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckAWSSagemakerFeatureGroupExists(n string, codeRepo *sagemaker.DescribeFeatureGroupOutput) resource.TestCheckFunc {
+func testAccCheckAWSSagemakerFeatureGroupExists(n string, v *sagemaker.DescribeFeatureGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -415,16 +413,18 @@ func testAccCheckAWSSagemakerFeatureGroupExists(n string, codeRepo *sagemaker.De
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No sagmaker Feature Group ID is set")
+			return fmt.Errorf("No SageMaker Feature Group ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
-		resp, err := finder.FeatureGroupByName(conn, rs.Primary.ID)
+
+		output, err := finder.FeatureGroupByName(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*codeRepo = *resp
+		*v = *output
 
 		return nil
 	}
