@@ -189,7 +189,6 @@ func ResourceCluster() *schema.Resource {
 				ConflictsWith: []string{
 					"az_mode",
 					"engine_version",
-					"engine",
 					"maintenance_window",
 					"node_type",
 					"notification_topic_arn",
@@ -263,9 +262,9 @@ func ResourceCluster() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
-
 		CustomizeDiff: customdiff.Sequence(
 			CustomizeDiffValidateClusterAZMode,
+			CustomizeDiffValidateClusterEngine,
 			CustomizeDiffValidateClusterEngineVersion,
 			CustomizeDiffElastiCacheEngineVersion,
 			CustomizeDiffValidateClusterNumCacheNodes,

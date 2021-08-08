@@ -84,6 +84,18 @@ func CustomizeDiffValidateClusterAZMode(_ context.Context, diff *schema.Resource
 	return errors.New(`az_mode "cross-az" is not supported with num_cache_nodes = 1`)
 }
 
+// CustomizeDiffValidateClusterEngine validates that `engine` is set to `redis` when `replication_group_id` provided
+func CustomizeDiffValidateClusterEngine(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if _, exists := diff.GetOkExists("replication_group_id"); !exists {
+		return nil
+	}
+	if v := diff.Get("engine"); v == tfelasticache.EngineRedis {
+		return nil
+	}
+
+	return errors.New(`"replication_group_id" is only valid if the "engine" parameter is "redis"`)
+}
+
 // CustomizeDiffValidateClusterEngineVersion validates the correct format for `engine_version`, based on `engine`
 func CustomizeDiffValidateClusterEngineVersion(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	// Memcached: Versions in format <major>.<minor>.<bug fix>
