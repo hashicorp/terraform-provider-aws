@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -27,13 +28,13 @@ func isAWSErrRequestFailureStatusCode(err error, statusCode int) bool {
 	return tfawserr.ErrStatusCodeEquals(err, statusCode)
 }
 
-func retryOnAwsCode(code string, f func() (interface{}, error)) (interface{}, error) {
+func retryOnAwsPredicate(ctx context.Context, predicate func(error) bool, f func() (interface{}, error)) (interface{}, error) {
 	var resp interface{}
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = f()
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, code) {
+			if predicate(err) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -46,6 +47,14 @@ func retryOnAwsCode(code string, f func() (interface{}, error)) (interface{}, er
 	}
 
 	return resp, err
+}
+
+func retryOnAwsCode(code string, f func() (interface{}, error)) (interface{}, error) {
+	cond := func(err error) bool {
+		return tfawserr.ErrCodeEquals(err, code)
+	}
+
+	return retryOnAwsPredicate(context.TODO(), cond, f)
 }
 
 // RetryOnAwsCodes retries AWS error codes for one minute

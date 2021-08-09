@@ -742,12 +742,21 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 		d.Set("protocol_version", targetGroup.ProtocolVersion)
 	}
 
-	attrResp, err := conn.DescribeTargetGroupAttributes(&elbv2.DescribeTargetGroupAttributesInput{
-		TargetGroupArn: aws.String(d.Id()),
+	maybeEventuallyConsistentError := func(err error) bool {
+		return d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "")
+	}
+
+	attrRespIface, err := retryOnAwsPredicate(context.TODO(), maybeEventuallyConsistentError, func() (interface{}, error) {
+		return conn.DescribeTargetGroupAttributes(&elbv2.DescribeTargetGroupAttributesInput{
+			TargetGroupArn: aws.String(d.Id()),
+		})
 	})
+
 	if err != nil {
 		return fmt.Errorf("error retrieving Target Group Attributes: %w", err)
 	}
+
+	attrResp := attrRespIface.(*elbv2.DescribeTargetGroupAttributesOutput)
 
 	for _, attr := range attrResp.Attributes {
 		switch aws.StringValue(attr.Key) {
@@ -796,12 +805,15 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 		return fmt.Errorf("error setting stickiness: %w", err)
 	}
 
-	tags, err := keyvaluetags.Elbv2ListTags(conn, d.Id())
+	tagsIface, err := retryOnAwsPredicate(context.TODO(), maybeEventuallyConsistentError, func() (interface{}, error) {
+		return keyvaluetags.Elbv2ListTags(conn, d.Id())
+	})
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for LB Target Group (%s): %w", d.Id(), err)
 	}
 
+	tags := tagsIface.(keyvaluetags.KeyValueTags)
 	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
