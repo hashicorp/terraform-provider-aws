@@ -287,14 +287,14 @@ func resourceAwsSyntheticsCanaryCreate(d *schema.ResourceData, meta interface{})
 		func() (interface{}, error) {
 			return waiter.CanaryReady(conn, d.Id())
 		},
-		func(err error) bool {
+		func(err error) (bool, error) {
 			// Only retry IAM eventual consistency errors up to that timeout.
 			if err != nil && time.Now().Before(iamwaiterStopTime) {
 				// This error synthesized from the Status object and not an AWS SDK Go error type.
-				return strings.Contains(err.Error(), "The role defined for the function cannot be assumed by Lambda")
+				return strings.Contains(err.Error(), "The role defined for the function cannot be assumed by Lambda"), err
 			}
 
-			return false
+			return false, err
 		},
 	)
 

@@ -53,7 +53,7 @@ func testSweepWorkspacesWorkspace(region string) error {
 	return errors
 }
 
-func TestAccAwsWorkspacesWorkspace_basic(t *testing.T) {
+func testAccAwsWorkspacesWorkspace_basic(t *testing.T) {
 	var v workspaces.Workspace
 	rName := acctest.RandString(8)
 	domain := testAccRandomDomainName()
@@ -62,7 +62,7 @@ func TestAccAwsWorkspacesWorkspace_basic(t *testing.T) {
 	directoryResourceName := "aws_workspaces_directory.test"
 	bundleDataSourceName := "data.aws_workspaces_bundle.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
@@ -104,14 +104,14 @@ func TestAccAwsWorkspacesWorkspace_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesWorkspace_tags(t *testing.T) {
+func testAccAwsWorkspacesWorkspace_tags(t *testing.T) {
 	var v1, v2, v3 workspaces.Workspace
 	rName := acctest.RandString(8)
 	domain := testAccRandomDomainName()
 
 	resourceName := "aws_workspaces_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
@@ -157,14 +157,14 @@ func TestAccAwsWorkspacesWorkspace_tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesWorkspace_workspaceProperties(t *testing.T) {
+func testAccAwsWorkspacesWorkspace_workspaceProperties(t *testing.T) {
 	var v1, v2, v3 workspaces.Workspace
 	rName := acctest.RandString(8)
 	domain := testAccRandomDomainName()
 
 	resourceName := "aws_workspaces_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
@@ -221,16 +221,16 @@ func TestAccAwsWorkspacesWorkspace_workspaceProperties(t *testing.T) {
 	})
 }
 
-// TestAccAwsWorkspacesWorkspace_workspaceProperties_runningModeAlwaysOn
+// testAccAwsWorkspacesWorkspace_workspaceProperties_runningModeAlwaysOn
 // validates workspace resource creation/import when workspace_properties.running_mode is set to ALWAYS_ON
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13558
-func TestAccAwsWorkspacesWorkspace_workspaceProperties_runningModeAlwaysOn(t *testing.T) {
+func testAccAwsWorkspacesWorkspace_workspaceProperties_runningModeAlwaysOn(t *testing.T) {
 	var v1 workspaces.Workspace
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_workspaces_workspace.test"
 	domain := testAccRandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
@@ -262,11 +262,11 @@ func TestAccAwsWorkspacesWorkspace_workspaceProperties_runningModeAlwaysOn(t *te
 	})
 }
 
-func TestAccAwsWorkspacesWorkspace_validateRootVolumeSize(t *testing.T) {
+func testAccAwsWorkspacesWorkspace_validateRootVolumeSize(t *testing.T) {
 	rName := acctest.RandString(8)
 	domain := testAccRandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
 		Providers:    testAccProviders,
@@ -280,11 +280,11 @@ func TestAccAwsWorkspacesWorkspace_validateRootVolumeSize(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesWorkspace_validateUserVolumeSize(t *testing.T) {
+func testAccAwsWorkspacesWorkspace_validateUserVolumeSize(t *testing.T) {
 	rName := acctest.RandString(8)
 	domain := testAccRandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
 		Providers:    testAccProviders,
@@ -298,14 +298,14 @@ func TestAccAwsWorkspacesWorkspace_validateUserVolumeSize(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesWorkspace_recreate(t *testing.T) {
+func testAccAwsWorkspacesWorkspace_recreate(t *testing.T) {
 	var v workspaces.Workspace
 	rName := acctest.RandString(8)
 	domain := testAccRandomDomainName()
 
 	resourceName := "aws_workspaces_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
@@ -333,14 +333,14 @@ func TestAccAwsWorkspacesWorkspace_recreate(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesWorkspace_timeout(t *testing.T) {
+func testAccAwsWorkspacesWorkspace_timeout(t *testing.T) {
 	var v workspaces.Workspace
 	rName := acctest.RandString(8)
 	domain := testAccRandomDomainName()
 
 	resourceName := "aws_workspaces_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
