@@ -80,15 +80,16 @@ func testAccAWSTransferAccess_efs_basic(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
-			/*{
-				Config: testAccAWSTransferAccessS3UpdatedConfig(rName),
+			{
+				Config: testAccAWSTransferAccessEFSUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferAccessExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
-					resource.TestCheckResourceAttr(resourceName, "home_directory", "/"+rName+"/test"),
+					resource.TestCheckResourceAttrSet(resourceName, "home_directory"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
+					resource.TestCheckResourceAttrSet(resourceName, "role"),
 				),
-			},*/
+			},
 		},
 	})
 }
@@ -419,6 +420,25 @@ func testAccAWSTransferAccessEFSBasicConfig(rName string) string {
 		  server_id = aws_transfer_server.test.id
 		  role = aws_iam_role.test.arn
 		  home_directory = "/${aws_efs_file_system.test.id}/"
+		  home_directory_type = "PATH"	
+  		  posix_profile {
+			gid = 1000
+			uid = 1000
+		  }
+		}
+		`)
+}
+
+func testAccAWSTransferAccessEFSUpdatedConfig(rName string) string {
+	return composeConfig(
+		testAccAWSTransferAccessConfigBase(rName),
+		testAccAWSTransferAccessConfigBase_efs(rName),
+		`
+		resource "aws_transfer_access" "test" {
+		  external_id = "S-1-1-12-1234567890-123456789-1234567890-1234"
+		  server_id = aws_transfer_server.test.id
+		  role = aws_iam_role.test.arn
+		  home_directory = "/${aws_efs_file_system.test.id}/test"
 		  home_directory_type = "PATH"	
   		  posix_profile {
 			gid = 1000
