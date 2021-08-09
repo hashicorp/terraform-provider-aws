@@ -766,6 +766,7 @@ func Provider() *schema.Provider {
 			"aws_emr_managed_scaling_policy":                          resourceAwsEMRManagedScalingPolicy(),
 			"aws_emr_security_configuration":                          resourceAwsEMRSecurityConfiguration(),
 			"aws_flow_log":                                            resourceAwsFlowLog(),
+			"aws_fsx_backup":                                          resourceAwsFsxBackup(),
 			"aws_fsx_lustre_file_system":                              resourceAwsFsxLustreFileSystem(),
 			"aws_fsx_windows_file_system":                             resourceAwsFsxWindowsFileSystem(),
 			"aws_fms_admin_account":                                   resourceAwsFmsAdminAccount(),
