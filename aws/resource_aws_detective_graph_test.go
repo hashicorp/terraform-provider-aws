@@ -172,7 +172,7 @@ func testAccAwsDetectiveGraphConfigWithTagsUpdate() string {
 	return `
 resource "aws_detective_graph" "test" {
   tags = {
-    Key = "value"
+    Key  = "value"
     Key2 = "value2"
   }
 }
