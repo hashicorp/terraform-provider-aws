@@ -3,7 +3,7 @@ subcategory: "Shield"
 layout: "aws"
 page_title: "AWS: aws_shield_protection_group"
 description: |-
-Creates a grouping of protected resources so they can be handled as a collective.
+  Creates a grouping of protected resources so they can be handled as a collective.
 ---
 
 # Resource: aws_shield_protection_group
@@ -24,7 +24,7 @@ resource "aws_shield_protection_group" "example" {
 }
 ```
 
-### Create protection group for abritrary number of resources
+### Create protection group for arbitrary number of resources
 
 ```terraform
 data "aws_region" "current" {}
@@ -80,7 +80,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Shield protection group resources can be imported by specifying their name.
+Shield protection group resources can be imported by specifying their protection group id.
 
 ```
 $ terraform import aws_shield_protection_group.example example
