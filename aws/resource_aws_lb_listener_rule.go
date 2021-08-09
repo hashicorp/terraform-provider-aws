@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -552,26 +553,18 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	var resp *elbv2.DescribeRulesOutput
 	var req = &elbv2.DescribeRulesInput{
 		RuleArns: []*string{aws.String(d.Id())},
 	}
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
-		resp, err = elbconn.DescribeRules(req)
-		if err != nil {
-			if d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeRuleNotFoundException, "") {
-				return resource.RetryableError(err)
-			} else {
-				return resource.NonRetryableError(err)
-			}
-		}
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		resp, err = elbconn.DescribeRules(req)
+	maybeEventuallyConsistentError := func(err error) bool {
+		return d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeRuleNotFoundException, "")
 	}
+
+	respIface, err := retryOnAwsPredicate(context.TODO(), maybeEventuallyConsistentError, func() (interface{}, error) {
+		return elbconn.DescribeRules(req)
+	})
+
 	if err != nil {
 		if isAWSErr(err, elbv2.ErrCodeRuleNotFoundException, "") {
 			log.Printf("[WARN] DescribeRules - removing %s from state", d.Id())
@@ -581,6 +574,8 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Error retrieving Rules for listener %q: %w", d.Id(), err)
 	}
 
+	resp := respIface.(*elbv2.DescribeRulesOutput)
+
 	if len(resp.Rules) != 1 {
 		return fmt.Errorf("Error retrieving Rule %q", d.Id())
 	}
@@ -589,24 +584,10 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("arn", rule.RuleArn)
 
-	var tags keyvaluetags.KeyValueTags
-
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
-		tags, err = keyvaluetags.Elbv2ListTags(elbconn, d.Id())
-		if err != nil {
-			if d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeRuleNotFoundException, "") {
-				return resource.RetryableError(err)
-			} else {
-				return resource.NonRetryableError(err)
-			}
-		}
-		return nil
+	tagsIface, err := retryOnAwsPredicate(context.TODO(), maybeEventuallyConsistentError, func() (interface{}, error) {
+		return keyvaluetags.Elbv2ListTags(elbconn, d.Id())
 	})
 
-	if isResourceTimeoutError(err) {
-		tags, err = keyvaluetags.Elbv2ListTags(elbconn, d.Id())
-	}
 	if err != nil {
 		if isAWSErr(err, elbv2.ErrCodeRuleNotFoundException, "") {
 			log.Printf("[WARN] Elbv2ListTags - removing %s from state", d.Id())
@@ -620,7 +601,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tagsIface.(keyvaluetags.KeyValueTags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
