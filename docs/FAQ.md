@@ -12,6 +12,7 @@ The HashiCorp Terraform AWS provider team is :
 * Angie Pinilla, Engineer - GitHub [@angie44](https://github.com/angie44)
 * Dirk Avery (Federal), Engineer - GitHub [@YakDriver](https://github.com/yakdriver)
 * Bill Rich, Engineer - GitHub [@bill-rich](https://github.com/bill-rich)
+* Zoe Helding, Engineer - GitHub [@zhelding](https://github.com/zhelding)
 * Simon Davis, Engineering Manager - GitHub [@breathingdust](https://github.com/breathingdust)
 * Kerim Satirli,  Developer Advocate - GitHub [@ksatirli](https://github.com/ksatirli)
 
