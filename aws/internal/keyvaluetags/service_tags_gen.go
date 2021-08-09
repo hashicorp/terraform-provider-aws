@@ -257,6 +257,16 @@ func DataexchangeKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// DetectiveTags returns detective service tags.
+func (tags KeyValueTags) DetectiveTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// DetectiveKeyValueTags creates KeyValueTags from detective service tags.
+func DetectiveKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // DlmTags returns dlm service tags.
 func (tags KeyValueTags) DlmTags() map[string]*string {
 	return aws.StringMap(tags.Map())

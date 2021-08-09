@@ -125,6 +125,7 @@ var mapServiceNames = []string{
 	"cognitoidentityprovider",
 	"connect",
 	"dataexchange",
+	"detective",
 	"dlm",
 	"eks",
 	"glacier",

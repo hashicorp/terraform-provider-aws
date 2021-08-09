@@ -685,6 +685,7 @@ func Provider() *schema.Provider {
 			"aws_db_snapshot":                                         resourceAwsDbSnapshot(),
 			"aws_db_subnet_group":                                     resourceAwsDbSubnetGroup(),
 			"aws_devicefarm_project":                                  resourceAwsDevicefarmProject(),
+			"aws_detective_graph":                                     resourceAwsDetectiveGraph(),
 			"aws_directory_service_directory":                         resourceAwsDirectoryServiceDirectory(),
 			"aws_directory_service_conditional_forwarder":             resourceAwsDirectoryServiceConditionalForwarder(),
 			"aws_directory_service_log_subscription":                  resourceAwsDirectoryServiceLogSubscription(),
