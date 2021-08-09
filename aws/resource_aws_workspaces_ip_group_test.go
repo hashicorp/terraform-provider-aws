@@ -132,6 +132,7 @@ func TestAccAwsWorkspacesIpGroup_MultipleDirectories(t *testing.T) {
 	var d1, d2 workspaces.WorkspaceDirectory
 
 	ipGroupName := acctest.RandomWithPrefix("tf-acc-test")
+	domain := testAccRandomDomainName()
 
 	resourceName := "aws_workspaces_ip_group.test"
 	directoryResourceName1 := "aws_workspaces_directory.test1"
@@ -144,7 +145,7 @@ func TestAccAwsWorkspacesIpGroup_MultipleDirectories(t *testing.T) {
 		CheckDestroy: testAccCheckAwsWorkspacesIpGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWorkspacesIpGroupConfigMultipleDirectories(ipGroupName),
+				Config: testAccAwsWorkspacesIpGroupConfigMultipleDirectories(ipGroupName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsWorkspacesIpGroupExists(resourceName, &v),
 					testAccCheckAwsWorkspacesDirectoryExists(directoryResourceName1, &d1),
@@ -288,12 +289,12 @@ resource "aws_workspaces_ip_group" "test" {
 `, name, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAwsWorkspacesIpGroupConfigMultipleDirectories(name string) string {
+func testAccAwsWorkspacesIpGroupConfigMultipleDirectories(name, domain string) string {
 	return composeConfig(
-		testAccAwsWorkspacesDirectoryConfig_Prerequisites(name),
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(name, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_ip_group" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_workspaces_directory" "test1" {
