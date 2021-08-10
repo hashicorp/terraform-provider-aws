@@ -102,20 +102,29 @@ func DomainByName(conn *sagemaker.SageMaker, domainID string) (*sagemaker.Descri
 	return output, nil
 }
 
-// FeatureGroupByName returns the feature group corresponding to the specified name.
-// Returns nil if no feature group is found.
 func FeatureGroupByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFeatureGroupOutput, error) {
 	input := &sagemaker.DescribeFeatureGroupInput{
 		FeatureGroupName: aws.String(name),
 	}
 
 	output, err := conn.DescribeFeatureGroup(input)
+
+	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	if output == nil {
-		return nil, nil
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
 	}
 
 	return output, nil

@@ -37,6 +37,12 @@ func TestAccAWSSagemaker_serial(t *testing.T) {
 			"kernelGatewayAppSettings":        testAccAWSSagemakerUserProfile_kernelGatewayAppSettings,
 			"jupyterServerAppSettings":        testAccAWSSagemakerUserProfile_jupyterServerAppSettings,
 		},
+		"Workforce": {
+			"disappears":     testAccAWSSagemakerWorkforce_disappears,
+			"CognitoConfig":  testAccAWSSagemakerWorkforce_cognitoConfig,
+			"OidcConfig":     testAccAWSSagemakerWorkforce_oidcConfig,
+			"SourceIpConfig": testAccAWSSagemakerWorkforce_sourceIpConfig,
+		},
 		"Workteam": {
 			"disappears":         testAccAWSSagemakerWorkteam_disappears,
 			"CognitoConfig":      testAccAWSSagemakerWorkteam_cognitoConfig,
