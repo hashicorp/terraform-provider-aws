@@ -38,6 +38,18 @@ func resourceAwsAppStreamFleet() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
+						"available": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"in_use": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"running": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -198,6 +210,10 @@ func resourceAwsAppStreamFleetCreate(ctx context.Context, d *schema.ResourceData
 		input.DisconnectTimeoutInSeconds = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("idle_disconnect_timeout_in_seconds"); ok {
+		input.IdleDisconnectTimeoutInSeconds = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("display_name"); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
@@ -268,7 +284,7 @@ func resourceAwsAppStreamFleetCreate(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(fmt.Errorf("error starting Appstream Fleet (%s): %w", d.Id(), err))
 	}
 
-	if _, err = waiter.FleetStateRunning(ctx, conn, d.Id()); err != nil {
+	if _, err = waiter.FleetStateRunning(ctx, conn, aws.StringValue(output.Fleet.Name)); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for Appstream Fleet (%s) to be running: %w", d.Id(), err))
 	}
 
@@ -349,10 +365,21 @@ func resourceAwsAppStreamFleetRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceAwsAppStreamFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*AWSClient).appstreamconn
 	input := &appstream.UpdateFleetInput{
 		Name: aws.String(d.Id()),
+	}
+
+	// Stop fleet workflow
+	_, err := conn.StopFleetWithContext(ctx, &appstream.StopFleetInput{
+		Name: aws.String(d.Id()),
+	})
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error stopping Appstream Fleet (%s): %w", d.Id(), err))
+	}
+
+	if _, err = waiter.FleetStateStopped(ctx, conn, d.Id()); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for Appstream Fleet (%s) to be stopped: %w", d.Id(), err))
 	}
 
 	if d.HasChange("description") {
@@ -421,6 +448,18 @@ func resourceAwsAppStreamFleetUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
+	// Start fleet workflow
+	_, err = conn.StartFleetWithContext(ctx, &appstream.StartFleetInput{
+		Name: aws.String(d.Id()),
+	})
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error starting Appstream Fleet (%s): %w", d.Id(), err))
+	}
+
+	if _, err = waiter.FleetStateRunning(ctx, conn, d.Id()); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for Appstream Fleet (%s) to be running: %w", d.Id(), err))
+	}
+
 	return resourceAwsAppStreamFleetRead(ctx, d, meta)
 
 }
@@ -476,6 +515,9 @@ func flattenComputeCapacity(computeCapacity *appstream.ComputeCapacityStatus) []
 
 	compAttr := map[string]interface{}{}
 	compAttr["desired_instances"] = aws.Int64Value(computeCapacity.Desired)
+	compAttr["available"] = aws.Int64Value(computeCapacity.Available)
+	compAttr["in_use"] = aws.Int64Value(computeCapacity.InUse)
+	compAttr["running"] = aws.Int64Value(computeCapacity.Running)
 
 	return []interface{}{compAttr}
 }

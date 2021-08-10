@@ -28,7 +28,6 @@ resource "aws_appstream_fleet" "test_fleet" {
   max_user_duration_in_seconds       = 600
   vpc_config {
     subnet_ids         = ["subnet-06e9b13400c225127"]
-    security_group_ids = ["sg-0397cdfe509785903", "sg-0bd2dddff01dee52d"]
   }
   tags = {
     TagName = "tag-value"
@@ -68,7 +67,11 @@ The following arguments are supported:
 
 * `id` - The unique identifier (ID) of the appstream fleet.
 * `arn` - The Amazon Resource Name (ARN) of the appstream fleet.
-* `state` - The state of the fleet.
+* `state` - The state of the fleet.* 
+* `compute_capacity` - The capacity for the fleet.
+  * `available` - The number of currently available instances that can be used to stream sessions.
+  * `in_use` - The number of instances in use for streaming.
+  * `running` - The total number of simultaneous streaming instances that are running.
 
 ## Import
 
