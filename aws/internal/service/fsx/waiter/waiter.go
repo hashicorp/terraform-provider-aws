@@ -14,7 +14,7 @@ const (
 
 func BackupAvailable(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{fsx.BackupLifecycleCreating, fsx.BackupLifecyclePending},
+		Pending: []string{fsx.BackupLifecycleCreating, fsx.BackupLifecyclePending, fsx.BackupLifecycleTransferring},
 		Target:  []string{fsx.BackupLifecycleAvailable},
 		Refresh: BackupStatus(conn, id),
 		Timeout: BackupAvailableTimeout,

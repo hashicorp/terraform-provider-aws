@@ -123,28 +123,12 @@ func resourceAwsFsxBackupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", backup.ResourceARN)
 	d.Set("type", backup.Type)
 
-	// d.Set("dns_name", filesystem.DNSName)
-	// d.Set("export_path", lustreConfig.DataRepositoryConfiguration.ExportPath)
-	// d.Set("import_path", lustreConfig.DataRepositoryConfiguration.ImportPath)
-	// d.Set("auto_import_policy", lustreConfig.DataRepositoryConfiguration.AutoImportPolicy)
-	// d.Set("imported_file_chunk_size", lustreConfig.DataRepositoryConfiguration.ImportedFileChunkSize)
-	// d.Set("deployment_type", lustreConfig.DeploymentType)
-	// if lustreConfig.PerUnitStorageThroughput != nil {
-	// 	d.Set("per_unit_storage_throughput", lustreConfig.PerUnitStorageThroughput)
-	// }
-	// d.Set("mount_name", lustreConfig.MountName)
-	// d.Set("storage_type", filesystem.StorageType)
-	// if lustreConfig.DriveCacheType != nil {
-	// 	d.Set("drive_cache_type", lustreConfig.DriveCacheType)
-	// }
+	fs := backup.FileSystem
+	d.Set("file_system_id", fs.FileSystemId)
 
 	if backup.KmsKeyId != nil {
 		d.Set("kms_key_id", backup.KmsKeyId)
 	}
-
-	// if err := d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds)); err != nil {
-	// 	return fmt.Errorf("error setting network_interface_ids: %w", err)
-	// }
 
 	d.Set("owner_id", backup.OwnerId)
 
@@ -169,9 +153,7 @@ func resourceAwsFsxBackupDelete(d *schema.ResourceData, meta interface{}) error 
 		BackupId: aws.String(d.Id()),
 	}
 
-	_, err := retryOnAwsCode(fsx.ErrCodeBackupInProgress, func() (interface{}, error) {
-		return conn.DeleteBackup(request)
-	})
+	_, err := conn.DeleteBackup(request)
 	if isAWSErr(err, fsx.ErrCodeBackupNotFound, "") {
 		return nil
 	}
