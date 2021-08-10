@@ -157,6 +157,10 @@ func resourceAwsAppStreamFleet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"created_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"vpc_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -332,6 +336,7 @@ func resourceAwsAppStreamFleetRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("iam_role_arn", v.IamRoleArn)
 		d.Set("stream_view", v.StreamView)
 		d.Set("arn", v.Arn)
+		d.Set("created_time", aws.TimeValue(v.CreatedTime).Format(time.RFC3339))
 
 		d.Set("instance_type", v.InstanceType)
 		d.Set("max_user_duration_in_seconds", v.MaxUserDurationInSeconds)

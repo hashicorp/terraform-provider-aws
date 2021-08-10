@@ -33,6 +33,7 @@ func testAccAwsAppStreamFleet_basic(t *testing.T) {
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
 				),
 			},
 			{
@@ -161,6 +162,7 @@ func testAccAwsAppStreamFleet_Complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
 				),
 			},
 			{
@@ -170,6 +172,7 @@ func testAccAwsAppStreamFleet_Complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceTypeUpdate),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
 				),
 			},
 			{
@@ -210,6 +213,7 @@ func testAccAwsAppStreamFleet_withTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
 				),
 			},
 			{
@@ -223,6 +227,7 @@ func testAccAwsAppStreamFleet_withTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
 				),
 			},
 			{

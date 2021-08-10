@@ -67,7 +67,8 @@ The following arguments are supported:
 
 * `id` - The unique identifier (ID) of the appstream fleet.
 * `arn` - The Amazon Resource Name (ARN) of the appstream fleet.
-* `state` - The state of the fleet.* 
+* `state` - The state of the fleet.
+* `created_time` -  The date and time, in UTC and extended RFC 3339 format, when the fleet was created.
 * `compute_capacity` - The capacity for the fleet.
   * `available` - The number of currently available instances that can be used to stream sessions.
   * `in_use` - The number of instances in use for streaming.
