@@ -743,9 +743,9 @@ func testAccCheckAWSRedshiftClusterNotRecreated(i, j *redshift.Cluster) resource
 }
 
 func testAccAWSRedshiftClusterConfig_updateNodeCount(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
@@ -760,9 +760,9 @@ resource "aws_redshift_cluster" "default" {
 }
 
 func testAccAWSRedshiftClusterConfig_updateNodeType(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
@@ -777,9 +777,10 @@ resource "aws_redshift_cluster" "default" {
 }
 
 func testAccAWSRedshiftClusterConfig_basic(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	// "InvalidVPCNetworkStateFault: The requested AZ us-west-2a is not a valid AZ."
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
@@ -793,9 +794,9 @@ resource "aws_redshift_cluster" "default" {
 }
 
 func testAccAWSRedshiftClusterConfig_encrypted(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
-  description = "Terraform acc test %d"
+  description = "Terraform acc test %[1]d"
 
   policy = <<POLICY
 {
@@ -818,7 +819,7 @@ resource "aws_kms_key" "foo" {
 }
 
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
@@ -830,15 +831,15 @@ resource "aws_redshift_cluster" "default" {
   encrypted                           = true
   kms_key_id                          = aws_kms_key.foo.arn
 }
-`, rInt, rInt))
+`, rInt))
 }
 
 func testAccAWSRedshiftClusterConfig_unencrypted(rInt int) string {
 	// This is used along with the terraform config created testAccAWSRedshiftClusterConfig_encrypted, to test removal of encryption.
 	//Removing the kms key here causes the key to be deleted before the redshift cluster is unencrypted, resulting in an unstable cluster. This is to be kept for the time-being unti we find a better way to handle this.
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
-  description = "Terraform acc test %d"
+  description = "Terraform acc test %[1]d"
 
   policy = <<POLICY
 {
@@ -861,7 +862,7 @@ resource "aws_kms_key" "foo" {
 }
 
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
@@ -871,13 +872,13 @@ resource "aws_redshift_cluster" "default" {
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
 }
-`, rInt, rInt))
+`, rInt))
 }
 
 func testAccAWSRedshiftClusterConfigWithFinalSnapshot(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
@@ -886,15 +887,15 @@ resource "aws_redshift_cluster" "default" {
   automated_snapshot_retention_period = 0
   allow_version_upgrade               = false
   skip_final_snapshot                 = false
-  final_snapshot_identifier           = "tf-acctest-snapshot-%d"
+  final_snapshot_identifier           = "tf-acctest-snapshot-%[1]d"
 }
-`, rInt, rInt))
+`, rInt))
 }
 
 func testAccAWSRedshiftClusterConfig_kmsKey(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
-  description = "Terraform acc test %d"
+  description = "Terraform acc test %[1]d"
 
   policy = <<POLICY
 {
@@ -916,7 +917,7 @@ POLICY
 }
 
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
@@ -928,13 +929,13 @@ resource "aws_redshift_cluster" "default" {
   encrypted                           = true
   skip_final_snapshot                 = true
 }
-`, rInt, rInt))
+`, rInt))
 }
 
 func testAccAWSRedshiftClusterConfig_enhancedVpcRoutingEnabled(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
@@ -949,9 +950,9 @@ resource "aws_redshift_cluster" "default" {
 }
 
 func testAccAWSRedshiftClusterConfig_enhancedVpcRoutingDisabled(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
@@ -966,9 +967,9 @@ resource "aws_redshift_cluster" "default" {
 }
 
 func testAccAWSRedshiftClusterConfig_loggingDisabled(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
@@ -987,13 +988,13 @@ resource "aws_redshift_cluster" "default" {
 }
 
 func testAccAWSRedshiftClusterConfig_loggingEnabled(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_redshift_service_account" "main" {}
 
 resource "aws_s3_bucket" "bucket" {
-  bucket        = "tf-test-redshift-logging-%d"
+  bucket        = "tf-test-redshift-logging-%[1]d"
   force_destroy = true
 
   policy = <<EOF
@@ -1007,7 +1008,7 @@ resource "aws_s3_bucket" "bucket" {
         "AWS": "${data.aws_redshift_service_account.main.arn}"
       },
       "Action": "s3:PutObject",
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::tf-test-redshift-logging-%d/*"
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::tf-test-redshift-logging-%[1]d/*"
     },
     {
       "Sid": "Stmt137652664067",
@@ -1016,7 +1017,7 @@ resource "aws_s3_bucket" "bucket" {
         "AWS": "${data.aws_redshift_service_account.main.arn}"
       },
       "Action": "s3:GetBucketAcl",
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::tf-test-redshift-logging-%d"
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::tf-test-redshift-logging-%[1]d"
     }
   ]
 }
@@ -1024,7 +1025,7 @@ EOF
 }
 
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
@@ -1040,16 +1041,16 @@ resource "aws_redshift_cluster" "default" {
 
   skip_final_snapshot = true
 }
-`, rInt, rInt, rInt, rInt))
+`, rInt))
 }
 
 func testAccAWSRedshiftClusterConfig_snapshotCopyDisabled(rInt int) string {
 	return composeConfig(
 		testAccMultipleRegionProviderConfig(2),
-		testAccAvailableAZsNoOptInConfig(),
+		testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"),
 		fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
@@ -1065,14 +1066,14 @@ resource "aws_redshift_cluster" "default" {
 func testAccAWSRedshiftClusterConfig_snapshotCopyEnabled(rInt int) string {
 	return composeConfig(
 		testAccMultipleRegionProviderConfig(2),
-		testAccAvailableAZsNoOptInConfig(),
+		testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"),
 		fmt.Sprintf(`
 data "aws_region" "alternate" {
   provider = "awsalternate"
 }
 
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
@@ -1092,9 +1093,9 @@ resource "aws_redshift_cluster" "default" {
 }
 
 func testAccAWSRedshiftClusterConfig_tags(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo"
@@ -1114,9 +1115,9 @@ resource "aws_redshift_cluster" "default" {
 }
 
 func testAccAWSRedshiftClusterConfig_updatedTags(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo"
@@ -1134,7 +1135,7 @@ resource "aws_redshift_cluster" "default" {
 }
 
 func testAccAWSRedshiftClusterConfig_notPubliclyAccessible(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
@@ -1182,13 +1183,13 @@ resource "aws_subnet" "foobar" {
 }
 
 resource "aws_redshift_subnet_group" "foo" {
-  name        = "foo-%d"
+  name        = "foo-%[1]d"
   description = "foo description"
   subnet_ids  = [aws_subnet.foo.id, aws_subnet.bar.id, aws_subnet.foobar.id]
 }
 
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo"
@@ -1202,11 +1203,11 @@ resource "aws_redshift_cluster" "default" {
 
   depends_on = [aws_internet_gateway.foo]
 }
-`, rInt, rInt))
+`, rInt))
 }
 
 func testAccAWSRedshiftClusterConfig_updatePubliclyAccessible(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
@@ -1254,13 +1255,13 @@ resource "aws_subnet" "foobar" {
 }
 
 resource "aws_redshift_subnet_group" "foo" {
-  name        = "foo-%d"
+  name        = "foo-%[1]d"
   description = "foo description"
   subnet_ids  = [aws_subnet.foo.id, aws_subnet.bar.id, aws_subnet.foobar.id]
 }
 
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo"
@@ -1274,13 +1275,13 @@ resource "aws_redshift_cluster" "default" {
 
   depends_on = [aws_internet_gateway.foo]
 }
-`, rInt, rInt))
+`, rInt))
 }
 
 func testAccAWSRedshiftClusterConfig_iamRoles(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
 resource "aws_iam_role" "ec2-role" {
-  name = "test-role-ec2-%d"
+  name = "test-role-ec2-%[1]d"
   path = "/"
 
   assume_role_policy = <<EOF
@@ -1304,7 +1305,7 @@ EOF
 }
 
 resource "aws_iam_role" "lambda-role" {
-  name = "test-role-lambda-%d"
+  name = "test-role-lambda-%[1]d"
   path = "/"
 
   assume_role_policy = <<EOF
@@ -1328,7 +1329,7 @@ EOF
 }
 
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
@@ -1339,13 +1340,13 @@ resource "aws_redshift_cluster" "default" {
   iam_roles                           = [aws_iam_role.ec2-role.arn, aws_iam_role.lambda-role.arn]
   skip_final_snapshot                 = true
 }
-`, rInt, rInt, rInt))
+`, rInt))
 }
 
 func testAccAWSRedshiftClusterConfig_updateIamRoles(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
 resource "aws_iam_role" "ec2-role" {
-  name = "test-role-ec2-%d"
+  name = "test-role-ec2-%[1]d"
   path = "/"
 
   assume_role_policy = <<EOF
@@ -1369,7 +1370,7 @@ EOF
 }
 
 resource "aws_iam_role" "lambda-role" {
-  name = "test-role-lambda-%d"
+  name = "test-role-lambda-%[1]d"
   path = "/"
 
   assume_role_policy = <<EOF
@@ -1393,7 +1394,7 @@ EOF
 }
 
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
@@ -1404,13 +1405,13 @@ resource "aws_redshift_cluster" "default" {
   iam_roles                           = [aws_iam_role.ec2-role.arn]
   skip_final_snapshot                 = true
 }
-`, rInt, rInt, rInt))
+`, rInt))
 }
 
 func testAccAWSRedshiftClusterConfig_updatedUsername(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "new_username"
@@ -1424,9 +1425,9 @@ resource "aws_redshift_cluster" "default" {
 }
 
 func testAccAWSRedshiftClusterConfig_updatedAvailabilityZone(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
   availability_zone                   = data.aws_availability_zones.available.names[1]
   database_name                       = "mydb"
   master_username                     = "foo_test"
