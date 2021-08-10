@@ -7,15 +7,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
 func testAccAwsAppStreamImageBuilder_basic(t *testing.T) {
 	var imageBuilderOutput appstream.ImageBuilder
 	resourceName := "aws_appstream_image_builder.test"
-	imageBuilderName := acctest.RandomWithPrefix("tf-acc-test")
 	instanceType := "stream.standard.small"
 
 	resource.Test(t, resource.TestCase{
@@ -25,16 +24,77 @@ func testAccAwsAppStreamImageBuilder_basic(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAppStreamImageBuilderConfigBasic(imageBuilderName, instanceType),
+				Config: testAccAwsAppStreamImageBuilderConfigNameGenerated(instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamImageBuilderExists(resourceName, &imageBuilderOutput),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "state", appstream.ImageBuilderStateRunning),
 				),
 			},
 			{
-				Config:            testAccAwsAppStreamImageBuilderConfigBasic(imageBuilderName, instanceType),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"image_name"},
+			},
+		},
+	})
+}
+
+func testAccAwsAppStreamImageBuilder_Name_Generated(t *testing.T) {
+	var imageBuilderOutput appstream.ImageBuilder
+	resourceName := "aws_appstream_image_builder.test"
+	instanceType := "stream.standard.small"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsAppStreamImageBuilderDestroy,
+		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsAppStreamImageBuilderConfigNameGenerated(instanceType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppStreamImageBuilderExists(resourceName, &imageBuilderOutput),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"image_name"},
+			},
+		},
+	})
+}
+
+func testAccAwsAppStreamImageBuilder_NamePrefix(t *testing.T) {
+	var imageBuilderOutput appstream.ImageBuilder
+	resourceName := "aws_appstream_image_builder.test"
+	instanceType := "stream.standard.small"
+	namePrefix := "tf-acc-test-prefix-"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsAppStreamImageBuilderDestroy,
+		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsAppStreamImageBuilderConfigNamePrefix(instanceType, namePrefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppStreamImageBuilderExists(resourceName, &imageBuilderOutput),
+					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", namePrefix),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"image_name"},
 			},
 		},
 	})
@@ -43,7 +103,6 @@ func testAccAwsAppStreamImageBuilder_basic(t *testing.T) {
 func testAccAwsAppStreamImageBuilder_disappears(t *testing.T) {
 	var imageBuilderOutput appstream.ImageBuilder
 	resourceName := "aws_appstream_image_builder.test"
-	imageBuilderName := acctest.RandomWithPrefix("tf-acc-test")
 	instanceType := "stream.standard.small"
 
 	resource.Test(t, resource.TestCase{
@@ -53,7 +112,7 @@ func testAccAwsAppStreamImageBuilder_disappears(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAppStreamImageBuilderConfigBasic(imageBuilderName, instanceType),
+				Config: testAccAwsAppStreamImageBuilderConfigNameGenerated(instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamImageBuilderExists(resourceName, &imageBuilderOutput),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppStreamImageBuilder(), resourceName),
@@ -64,12 +123,13 @@ func testAccAwsAppStreamImageBuilder_disappears(t *testing.T) {
 	})
 }
 
-func testAccAwsAppStreamImageBuilder_withTags(t *testing.T) {
+func testAccAwsAppStreamImageBuilder_Complete(t *testing.T) {
 	var imageBuilderOutput appstream.ImageBuilder
 	resourceName := "aws_appstream_image_builder.test"
-	imageBuilderName := acctest.RandomWithPrefix("tf-acc-test")
-	description := "Description of a imageBuilder"
+	description := "Description of a test"
+	descriptionUpdated := "Updated Description of a test"
 	instanceType := "stream.standard.small"
+	instanceTypeUpdate := "stream.standard.medium"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -78,19 +138,86 @@ func testAccAwsAppStreamImageBuilder_withTags(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAppStreamImageBuilderConfigWithTags(imageBuilderName, description, instanceType),
+				Config: testAccAwsAppStreamImageBuilderConfigComplete(description, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamImageBuilderExists(resourceName, &imageBuilderOutput),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "state", appstream.ImageBuilderStateRunning),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
+				),
+			},
+			{
+				Config: testAccAwsAppStreamImageBuilderConfigComplete(descriptionUpdated, instanceTypeUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppStreamImageBuilderExists(resourceName, &imageBuilderOutput),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "state", appstream.ImageBuilderStateRunning),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceTypeUpdate),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"image_name"},
+			},
+		},
+	})
+}
+
+func testAccAwsAppStreamImageBuilder_withTags(t *testing.T) {
+	var imageBuilderOutput appstream.ImageBuilder
+	resourceName := "aws_appstream_image_builder.test"
+	description := "Description of a test"
+	descriptionUpdated := "Updated Description of a test"
+	instanceType := "stream.standard.small"
+	instanceTypeUpdate := "stream.standard.medium"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsAppStreamImageBuilderDestroy,
+		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsAppStreamImageBuilderConfigWithTags(description, instanceType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppStreamImageBuilderExists(resourceName, &imageBuilderOutput),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, "state", appstream.ImageBuilderStateRunning),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config: testAccAwsAppStreamImageBuilderConfigWithTags(descriptionUpdated, instanceTypeUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppStreamImageBuilderExists(resourceName, &imageBuilderOutput),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, "state", appstream.ImageBuilderStateRunning),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceTypeUpdate),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"image_name"},
 			},
 		},
 	})
@@ -147,16 +274,55 @@ func testAccCheckAwsAppStreamImageBuilderDestroy(s *terraform.State) error {
 
 }
 
-func testAccAwsAppStreamImageBuilderConfigBasic(imageBuilderName, instanceType string) string {
+func testAccAwsAppStreamImageBuilderConfigNameGenerated(instanceType string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
-  name          = %[1]q
-  instance_type = %[2]q
+  image_name    = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  instance_type = %[1]q
 }
-`, imageBuilderName, instanceType)
+`, instanceType)
 }
 
-func testAccAwsAppStreamImageBuilderConfigWithTags(imageBuilderName, description, instanceType string) string {
+func testAccAwsAppStreamImageBuilderConfigNamePrefix(instanceType, namePrefix string) string {
+	return fmt.Sprintf(`
+resource "aws_appstream_image_builder" "test" {
+  image_name    = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  instance_type = %[1]q
+  name_prefix   = %[2]q
+}
+`, instanceType, namePrefix)
+}
+
+func testAccAwsAppStreamImageBuilderConfigComplete(description, instanceType string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_vpc" "example" {
+  cidr_block = "192.168.0.0/16"
+}
+
+
+resource "aws_subnet" "example" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "192.168.0.0/24"
+  vpc_id            = aws_vpc.example.id
+}
+
+resource "aws_appstream_image_builder" "test" {
+  image_name                     = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  description                    = %[1]q
+  enable_default_internet_access = false
+  instance_type                  = %[2]q
+  vpc_config {
+    subnet_ids = [aws_subnet.example.id]
+  }
+}
+`, description, instanceType)
+}
+
+func testAccAwsAppStreamImageBuilderConfigWithTags(description, instanceType string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -173,14 +339,10 @@ resource "aws_subnet" "example" {
 }
 
 resource "aws_appstream_image_builder" "test" {
-  name = %[1]q
-  access_endpoints {
-    endpoint_type = "STREAMING"
-  }
-  description                    = %[2]q
-  display_name                   = %[1]q
+  image_name                     = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  description                    = %[1]q
   enable_default_internet_access = false
-  instance_type                  = %[3]q
+  instance_type                  = %[2]q
   vpc_config {
     subnet_ids = [aws_subnet.example.id]
   }
@@ -188,5 +350,5 @@ resource "aws_appstream_image_builder" "test" {
     Key = "value"
   }
 }
-`, imageBuilderName, description, instanceType)
+`, description, instanceType)
 }

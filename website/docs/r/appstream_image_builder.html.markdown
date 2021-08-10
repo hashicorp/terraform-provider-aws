@@ -15,9 +15,6 @@ Provides an AppStream image builder.
 ```hcl
 resource "aws_appstream_image_builder" "test_fleet" {
   name = "test-image builder"
-  access_endpoints {
-    endpoint_type = "STREAMING"
-  }
   description                    = "test image builder"
   display_name                   = "test-image builder"
   enable_default_internet_access = false
@@ -62,3 +59,4 @@ The following arguments are supported:
 * `id` - The unique identifier (ID) of the appstream image builder.
 * `arn` - The Amazon Resource Name (ARN) of the appstream image builder.
 * `state` - The state of the image builder.
+* `created_time` -  The date and time, in UTC and extended RFC 3339 format, when the image builder was created.

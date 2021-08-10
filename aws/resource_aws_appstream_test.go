@@ -7,9 +7,12 @@ import (
 func TestAccAWSAppStreamResource_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"ImageBuilder": {
-			"basic":      testAccAwsAppStreamImageBuilder_basic,
-			"tags":       testAccAwsAppStreamImageBuilder_withTags,
-			"disappears": testAccAwsAppStreamImageBuilder_disappears,
+			"basic":          testAccAwsAppStreamImageBuilder_basic,
+			"name_generated": testAccAwsAppStreamImageBuilder_Name_Generated,
+			"name_prefix":    testAccAwsAppStreamImageBuilder_NamePrefix,
+			"complete":       testAccAwsAppStreamImageBuilder_Complete,
+			"tags":           testAccAwsAppStreamImageBuilder_withTags,
+			"disappears":     testAccAwsAppStreamImageBuilder_disappears,
 		},
 	}
 

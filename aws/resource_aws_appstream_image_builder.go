@@ -110,6 +110,7 @@ func resourceAwsAppStreamImageBuilder() *schema.Resource {
 			"image_name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"instance_type": {
@@ -136,6 +137,10 @@ func resourceAwsAppStreamImageBuilder() *schema.Resource {
 				Computed: true,
 			},
 			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"created_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -251,8 +256,8 @@ func resourceAwsAppStreamImageBuilderCreate(ctx context.Context, d *schema.Resou
 		return diag.FromErr(fmt.Errorf("error starting Appstream ImageBuilder (%s): %w", d.Id(), err))
 	}
 
-	if _, err = waiter.ImageBuilderStateRunning(ctx, conn, d.Id()); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for Appstream Fleet (%s) to be running: %w", d.Id(), err))
+	if _, err = waiter.ImageBuilderStateRunning(ctx, conn, aws.StringValue(output.ImageBuilder.Name)); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for Appstream ImageBuilder (%s) to be running: %w", d.Id(), err))
 	}
 
 	d.SetId(aws.StringValue(output.ImageBuilder.Name))
@@ -295,6 +300,7 @@ func resourceAwsAppStreamImageBuilderRead(ctx context.Context, d *schema.Resourc
 		d.Set("image_arn", v.ImageArn)
 		d.Set("iam_role_arn", v.IamRoleArn)
 		d.Set("arn", v.Arn)
+		d.Set("created_time", aws.TimeValue(v.CreatedTime).Format(time.RFC3339))
 
 		d.Set("instance_type", v.InstanceType)
 		if err = d.Set("vpc_config", flattenVpcConfig(v.VpcConfig)); err != nil {
@@ -334,7 +340,7 @@ func resourceAwsAppStreamImageBuilderDelete(ctx context.Context, d *schema.Resou
 	}
 
 	if _, err = waiter.ImageBuilderStateStopped(ctx, conn, d.Id()); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for Appstream Fleet (%s) to be stopped: %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error waiting for Appstream ImageBuilder (%s) to be stopped: %w", d.Id(), err))
 	}
 
 	_, err = conn.DeleteImageBuilderWithContext(ctx, &appstream.DeleteImageBuilderInput{
@@ -346,6 +352,14 @@ func resourceAwsAppStreamImageBuilderDelete(ctx context.Context, d *schema.Resou
 		}
 		return diag.FromErr(fmt.Errorf("error deleting Appstream ImageBuilder (%s): %w", d.Id(), err))
 	}
+
+	if _, err = waiter.ImageBuilderStateDeleted(ctx, conn, d.Id()); err != nil {
+		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+			return nil
+		}
+		return diag.FromErr(fmt.Errorf("error waiting for Appstream ImageBuilder (%s) to be deleted: %w", d.Id(), err))
+	}
+
 	return nil
 
 }
@@ -363,7 +377,7 @@ func expandAccessEndpoints(accessEndpoints []interface{}) []*appstream.AccessEnd
 		endpoint := &appstream.AccessEndpoint{
 			EndpointType: aws.String(v1["endpoint_type"].(string)),
 		}
-		if v2, ok := v1["vpce_id"]; ok {
+		if v2, ok := v1["vpce_id"]; ok && v1["vpce_id"].(string) != "" {
 			endpoint.VpceId = aws.String(v2.(string))
 		}
 
