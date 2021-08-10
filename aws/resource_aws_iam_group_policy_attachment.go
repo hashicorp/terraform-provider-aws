@@ -30,8 +30,8 @@ func resourceAwsIamGroupPolicyAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"policy_arn": {
-				Type:     schema.TypeString,
+			"policy_arns": {
+				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
 			},
@@ -43,11 +43,13 @@ func resourceAwsIamGroupPolicyAttachmentCreate(d *schema.ResourceData, meta inte
 	conn := meta.(*AWSClient).iamconn
 
 	group := d.Get("group").(string)
-	arn := d.Get("policy_arn").(string)
+	arns := d.Get("policy_arns").([]string)
 
-	err := attachPolicyToGroup(conn, group, arn)
-	if err != nil {
-		return fmt.Errorf("Error attaching policy %s to IAM group %s: %v", arn, group, err)
+	for _, arn := range arns {
+		err := attachPolicyToGroup(conn, group, arn)
+		if err != nil {
+			return fmt.Errorf("Error attaching policy %s to IAM group %s: %v", arn, group, err)
+		}
 	}
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
@@ -59,56 +61,59 @@ func resourceAwsIamGroupPolicyAttachmentCreate(d *schema.ResourceData, meta inte
 func resourceAwsIamGroupPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iamconn
 	group := d.Get("group").(string)
-	arn := d.Get("policy_arn").(string)
-	// Human friendly ID for error messages since d.Id() is non-descriptive
-	id := fmt.Sprintf("%s:%s", group, arn)
+	arns := d.Get("policy_arns").([]string)
 
-	var attachedPolicy *iam.AttachedPolicy
+	for _, arn := range arns {
+		// Human friendly ID for error messages since d.Id() is non-descriptive
+		id := fmt.Sprintf("%s:%s", group, arn)
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
-		var err error
+		var attachedPolicy *iam.AttachedPolicy
 
-		attachedPolicy, err = finder.GroupAttachedPolicy(conn, group, arn)
+		err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+			var err error
 
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return resource.RetryableError(err)
+			attachedPolicy, err = finder.GroupAttachedPolicy(conn, group, arn)
+
+			if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			if d.IsNewResource() && attachedPolicy == nil {
+				return resource.RetryableError(&resource.NotFoundError{
+					LastError: fmt.Errorf("IAM Group Managed Policy Attachment (%s) not found", id),
+				})
+			}
+
+			return nil
+		})
+
+		if tfresource.TimedOut(err) {
+			attachedPolicy, err = finder.GroupAttachedPolicy(conn, group, arn)
+		}
+
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+			log.Printf("[WARN] IAM User Managed Policy Attachment (%s) not found, removing from state", id)
+			d.SetId("")
+			return nil
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return fmt.Errorf("error reading IAM Group Managed Policy Attachment (%s): %w", id, err)
 		}
 
-		if d.IsNewResource() && attachedPolicy == nil {
-			return resource.RetryableError(&resource.NotFoundError{
-				LastError: fmt.Errorf("IAM Group Managed Policy Attachment (%s) not found", id),
-			})
+		if attachedPolicy == nil {
+			if d.IsNewResource() {
+				return fmt.Errorf("error reading IAM User Managed Policy Attachment (%s): not found after creation", id)
+			}
+
+			log.Printf("[WARN] IAM Group Managed Policy Attachment (%s) not found, removing from state", id)
+			d.SetId("")
+			return nil
 		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		attachedPolicy, err = finder.GroupAttachedPolicy(conn, group, arn)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		log.Printf("[WARN] IAM User Managed Policy Attachment (%s) not found, removing from state", id)
-		d.SetId("")
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error reading IAM Group Managed Policy Attachment (%s): %w", id, err)
-	}
-
-	if attachedPolicy == nil {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading IAM User Managed Policy Attachment (%s): not found after creation", id)
-		}
-
-		log.Printf("[WARN] IAM Group Managed Policy Attachment (%s) not found, removing from state", id)
-		d.SetId("")
-		return nil
 	}
 
 	return nil
@@ -117,12 +122,15 @@ func resourceAwsIamGroupPolicyAttachmentRead(d *schema.ResourceData, meta interf
 func resourceAwsIamGroupPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iamconn
 	group := d.Get("group").(string)
-	arn := d.Get("policy_arn").(string)
+	arns := d.Get("policy_arns").([]string)
 
-	err := detachPolicyFromGroup(conn, group, arn)
-	if err != nil {
-		return fmt.Errorf("Error removing policy %s from IAM Group %s: %v", arn, group, err)
+	for _, arn := range arns {
+		err := detachPolicyFromGroup(conn, group, arn)
+		if err != nil {
+			return fmt.Errorf("Error removing policy %s from IAM Group %s: %v", arn, group, err)
+		}
 	}
+
 	return nil
 }
 
@@ -134,7 +142,7 @@ func resourceAwsIamGroupPolicyAttachmentImport(d *schema.ResourceData, meta inte
 	groupName := idParts[0]
 	policyARN := idParts[1]
 	d.Set("group", groupName)
-	d.Set("policy_arn", policyARN)
+	d.Set("policy_arns", []string { policyARN })
 	d.SetId(fmt.Sprintf("%s-%s", groupName, policyARN))
 	return []*schema.ResourceData{d}, nil
 }
