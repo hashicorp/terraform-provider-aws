@@ -27,7 +27,7 @@ resource "aws_iam_policy" "policy" {
 
 resource "aws_iam_group_policy_attachment" "test-attach" {
   group      = aws_iam_group.group.name
-  policy_arn = aws_iam_policy.policy.arn
+  policy_arns = [aws_iam_policy.policy.arn]
 }
 ```
 
@@ -36,7 +36,7 @@ resource "aws_iam_group_policy_attachment" "test-attach" {
 The following arguments are supported:
 
 * `group`  (Required) - The group the policy should be applied to
-* `policy_arn`  (Required) - The ARN of the policy you want to apply
+* `policy_arns`  (Required) - The ARNs of the policies you want to apply
 
 ## Attributes Reference
 
