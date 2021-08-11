@@ -102,6 +102,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/schemas"
@@ -327,6 +328,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(resourcegroupstaggingapi.New)
 	case "route53":
 		funcType = reflect.TypeOf(route53.New)
+	case "route53recoveryreadiness":
+		funcType = reflect.TypeOf(route53recoveryreadiness.New)
 	case "route53resolver":
 		funcType = reflect.TypeOf(route53resolver.New)
 	case "sagemaker":
@@ -441,6 +444,8 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "DescribeTags"
 	case "resourcegroups":
 		return "GetTags"
+	case "route53recoveryreadiness":
+		return "ListTagsForResources"
 	case "sagemaker":
 		return "ListTags"
 	case "sqs":
