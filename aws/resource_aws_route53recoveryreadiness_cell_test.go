@@ -133,6 +133,34 @@ func TestAccAwsRoute53RecoveryReadinessCell_tags(t *testing.T) {
 	})
 }
 
+func TestAccAwsRoute53RecoveryReadinessCell_timeout(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_route53recoveryreadiness_cell.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		ErrorCheck:        testAccErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessCellDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsRoute53RecoveryReadinessCellConfig_Timeout(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRoute53RecoveryReadinessCellExists(resourceName),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexp.MustCompile(`cell/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cells.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parent_readiness_scopes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAwsRoute53RecoveryReadinessCellDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).route53recoveryreadinessconn
 
@@ -235,4 +263,16 @@ resource "aws_route53recoveryreadiness_cell" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAwsRoute53RecoveryReadinessCellConfig_Timeout(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_route53recoveryreadiness_cell" "test" {
+  cell_name = %q
+
+  timeouts {
+    delete = "10m"
+  }
+}
+`, rName)
 }

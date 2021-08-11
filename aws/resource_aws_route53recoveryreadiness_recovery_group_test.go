@@ -109,6 +109,33 @@ func TestAccAwsRoute53RecoveryReadinessRecoveryGroup_tags(t *testing.T) {
 	})
 }
 
+func TestAccAwsRoute53RecoveryReadinessRecoveryGroup_timeout(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_route53recoveryreadiness_recovery_group.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		ErrorCheck:        testAccErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessRecoveryGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsRoute53RecoveryReadinessRecoveryGroupConfig_Timeout(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRoute53RecoveryReadinessRecoveryGroupExists(resourceName),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexp.MustCompile(`recovery-group/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cells.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAwsRoute53RecoveryReadinessRecoveryGroupDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).route53recoveryreadinessconn
 
@@ -191,4 +218,16 @@ resource "aws_route53recoveryreadiness_recovery_group" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAwsRoute53RecoveryReadinessRecoveryGroupConfig_Timeout(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_route53recoveryreadiness_recovery_group" "test" {
+  recovery_group_name = %q
+
+  timeouts {
+    delete = "10m"
+  }
+}
+`, rName)
 }

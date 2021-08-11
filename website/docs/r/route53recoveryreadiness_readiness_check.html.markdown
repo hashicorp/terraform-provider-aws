@@ -41,3 +41,10 @@ Route53 Recovery Readiness readiness checks can be imported via the readiness ch
 ```
 $ terraform import aws_route53recoveryreadiness_readiness_check.my-cw-alarm-check
 ```
+
+## Timeouts
+
+`aws_route53recoveryreadiness_readiness_check` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
+configuration options:
+
+- `delete` - (Default `5m`) Used when deleting the Readiness Check

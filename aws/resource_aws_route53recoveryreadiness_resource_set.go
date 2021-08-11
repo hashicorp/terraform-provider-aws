@@ -21,6 +21,10 @@ func resourceAwsRoute53RecoveryReadinessResourceSet() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Delete: schema.DefaultTimeout(5 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -241,7 +245,7 @@ func resourceAwsRoute53RecoveryReadinessResourceSetDelete(d *schema.ResourceData
 	gcinput := &route53recoveryreadiness.GetResourceSetInput{
 		ResourceSetName: aws.String(d.Id()),
 	}
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.GetResourceSet(gcinput)
 		if err != nil {
 			if isAWSErr(err, route53recoveryreadiness.ErrCodeResourceNotFoundException, "") {

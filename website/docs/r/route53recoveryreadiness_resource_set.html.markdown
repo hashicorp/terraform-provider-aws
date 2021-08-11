@@ -75,3 +75,10 @@ Route53 Recovery Readiness resource set name can be imported via the resource se
 ```
 $ terraform import aws_route53recoveryreadiness_resource_set.my-cw-alarm-set
 ```
+
+## Timeouts
+
+`aws_route53recoveryreadiness_resource_set` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
+configuration options:
+
+- `delete` - (Default `5m`) Used when deleting the Resource Set

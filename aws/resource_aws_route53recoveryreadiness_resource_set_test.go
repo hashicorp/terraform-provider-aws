@@ -248,6 +248,40 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_DnsTargetResourceR53Target(t 
 	})
 }
 
+func TestAccAwsRoute53RecoveryReadinessResourceSet_timeout(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	cwArn := arn.ARN{
+		AccountID: "123456789012",
+		Partition: endpoints.AwsPartitionID,
+		Region:    endpoints.EuWest1RegionID,
+		Resource:  "alarm:zzzzzzzzz",
+		Service:   "cloudwatch",
+	}.String()
+	resourceName := "aws_route53recoveryreadiness_resource_set.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		ErrorCheck:        testAccErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessResourceSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsRoute53RecoveryReadinessResourceSetConfig_Timeout(rName, cwArn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRoute53RecoveryReadinessResourceSetExists(resourceName),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexp.MustCompile(`resource-set.+`)),
+					resource.TestCheckResourceAttr(resourceName, "resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAwsRoute53RecoveryReadinessResourceSetDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).route53recoveryreadinessconn
 
@@ -478,4 +512,21 @@ resource "aws_route53recoveryreadiness_resource_set" "test" {
   }
 }
 `, rName, hzArn, domainName, recordSetId)
+}
+
+func testAccAwsRoute53RecoveryReadinessResourceSetConfig_Timeout(rName, cwArn string) string {
+	return fmt.Sprintf(`
+resource "aws_route53recoveryreadiness_resource_set" "test" {
+  resource_set_name = %[1]q
+  resource_set_type = "AWS::CloudWatch::Alarm"
+
+  resources {
+    resource_arn = %[2]q
+  }
+
+  timeouts {
+    delete = "10m"
+  }
+}
+`, rName, cwArn)
 }

@@ -41,3 +41,10 @@ Route53 Recovery Readiness cells can be imported via the cell name, e.g.
 ```
 $ terraform import aws_route53recoveryreadiness_cell.us-west-2-failover-cell us-west-2-failover-cell
 ```
+
+## Timeouts
+
+`aws_route53recoveryreadiness_cell` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
+configuration options:
+
+- `delete` - (Default `5m`) Used when deleting the Cell

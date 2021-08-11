@@ -98,6 +98,40 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_tags(t *testing.T) {
 	})
 }
 
+func TestAccAwsRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rSetName := acctest.RandomWithPrefix("tf-acc-test-set")
+	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
+	cwArn := arn.ARN{
+		AccountID: "123456789012",
+		Partition: endpoints.AwsPartitionID,
+		Region:    endpoints.EuWest1RegionID,
+		Resource:  "alarm:zzzzzzzzz",
+		Service:   "cloudwatch",
+	}.String()
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		ErrorCheck:        testAccErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessReadinessCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsRoute53RecoveryReadinessReadinessCheckConfig_Timeout(rName, rSetName, cwArn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRoute53RecoveryReadinessReadinessCheckExists(resourceName),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexp.MustCompile(`readiness-check/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "resource_set_name", rSetName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAwsRoute53RecoveryReadinessReadinessCheckDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).route53recoveryreadinessconn
 
@@ -183,4 +217,17 @@ resource "aws_route53recoveryreadiness_readiness_check" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccAwsRoute53RecoveryReadinessReadinessCheckConfig_Timeout(rName, rSetName, cwArn string) string {
+	return composeConfig(testAccAwsRoute53RecoveryReadinessReadinessCheckConfig_ResourceSet(rSetName, cwArn), fmt.Sprintf(`
+resource "aws_route53recoveryreadiness_readiness_check" "test" {
+  readiness_check_name = %q
+  resource_set_name    = aws_route53recoveryreadiness_resource_set.test.resource_set_name
+
+  timeouts {
+    delete = "10m"
+  }
+}
+`, rName))
 }
