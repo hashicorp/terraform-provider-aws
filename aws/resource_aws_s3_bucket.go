@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
@@ -819,7 +820,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(s3BucketCreationTimeout, func() *resource.RetryError {
 		_, err := s3conn.HeadBucket(input)
 
-		if d.IsNewResource() && isAWSErrRequestFailureStatusCode(err, 404) {
+		if d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
 			return resource.RetryableError(err)
 		}
 
@@ -838,7 +839,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		_, err = s3conn.HeadBucket(input)
 	}
 
-	if !d.IsNewResource() && isAWSErrRequestFailureStatusCode(err, 404) {
+	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
 		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
