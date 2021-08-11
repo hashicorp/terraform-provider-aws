@@ -7,9 +7,12 @@ import (
 func TestAccAWSAppStreamResource_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Stack": {
-			"basic":      testAccAwsAppStreamStack_basic,
-			"tags":       testAccAwsAppStreamStack_withTags,
-			"disappears": testAccAwsAppStreamStack_disappears,
+			"basic":          testAccAwsAppStreamStack_basic,
+			"name_generated": testAccAwsAppStreamStack_Name_Generated,
+			"name_prefix":    testAccAwsAppStreamStack_NamePrefix,
+			"complete":       testAccAwsAppStreamStack_complete,
+			"tags":           testAccAwsAppStreamStack_withTags,
+			"disappears":     testAccAwsAppStreamStack_disappears,
 		},
 	}
 

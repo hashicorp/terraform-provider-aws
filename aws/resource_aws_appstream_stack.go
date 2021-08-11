@@ -17,6 +17,10 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
+var (
+	flagDiffUserSettings = false
+)
+
 func resourceAwsAppStreamStack() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAwsAppStreamStackCreate,
@@ -140,17 +144,19 @@ func resourceAwsAppStreamStack() *schema.Resource {
 						},
 						"resource_identifier": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
 					},
 				},
 			},
 			"user_settings": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				MinItems: 1,
+				Type:             schema.TypeSet,
+				Optional:         true,
+				Computed:         true,
+				MinItems:         1,
+				DiffSuppressFunc: suppressAppsStreamStackUserSettings,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"action": {
@@ -167,6 +173,10 @@ func resourceAwsAppStreamStack() *schema.Resource {
 				},
 			},
 			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"created_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -285,13 +295,16 @@ func resourceAwsAppStreamStackRead(ctx context.Context, d *schema.ResourceData, 
 		if err = d.Set("application_settings", flattenApplicationSettings(v.ApplicationSettings)); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "user_settings", d.Id(), err))
 		}
+		if err = d.Set("embed_host_domains", flattenStringList(v.EmbedHostDomains)); err != nil {
+			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "user_settings", d.Id(), err))
+		}
 
-		d.Set("name", v.Name)
 		d.Set("description", v.Description)
 		d.Set("display_name", v.DisplayName)
 		d.Set("feedback_url", v.FeedbackURL)
 		d.Set("redirect_url", v.RedirectURL)
 		d.Set("arn", v.Arn)
+		d.Set("created_time", aws.TimeValue(v.CreatedTime).Format(time.RFC3339))
 
 		tg, err := conn.ListTagsForResource(&appstream.ListTagsForResourceInput{
 			ResourceArn: v.Arn,
@@ -337,7 +350,7 @@ func resourceAwsAppStreamStackUpdate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if d.HasChange("user_settings") {
-		input.UserSettings = expandUserSettings(d.Get("user_settings").(*schema.Set).List())
+		input.UserSettings = expandUserSettings(d.Get("user_settings").([]interface{}))
 	}
 
 	if d.HasChange("application_settings") {
@@ -378,6 +391,14 @@ func resourceAwsAppStreamStackDelete(ctx context.Context, d *schema.ResourceData
 		}
 		return diag.FromErr(fmt.Errorf("error deleting Appstream Stack (%s): %w", d.Id(), err))
 	}
+
+	// Will wait to finish to delete because after delete it makes a stack inactive then it deletes
+	time.Sleep(15 * time.Second)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error reading Appstream Stack (%s): %w", d.Id(), err))
+	}
+
 	return nil
 }
 
@@ -446,7 +467,7 @@ func flattenApplicationSettings(applicationSettings *appstream.ApplicationSettin
 
 	applicationSetting := map[string]interface{}{}
 	applicationSetting["enabled"] = aws.BoolValue(applicationSettings.Enabled)
-	applicationSetting["SettingsGroup"] = aws.StringValue(applicationSettings.SettingsGroup)
+	applicationSetting["settings_group"] = aws.StringValue(applicationSettings.SettingsGroup)
 
 	return []interface{}{applicationSetting}
 }
@@ -464,10 +485,10 @@ func expandStorageConnectors(storageConnectors []interface{}) []*appstream.Stora
 		connector := &appstream.StorageConnector{
 			ConnectorType: aws.String(v1["connector_type"].(string)),
 		}
-		if v2, ok := v1["domains"]; ok {
+		if v2, ok := v1["domains"]; ok && len(v2.([]interface{})) > 0 {
 			connector.Domains = expandStringList(v2.([]interface{}))
 		}
-		if v2, ok := v1["resource_identifier"]; ok {
+		if v2, ok := v1["resource_identifier"]; ok && v2.(string) != "" {
 			connector.ResourceIdentifier = aws.String(v2.(string))
 		}
 
@@ -531,4 +552,19 @@ func flattenUserSettings(userSettings []*appstream.UserSetting) []map[string]int
 	}
 
 	return users
+}
+
+func suppressAppsStreamStackUserSettings(k, old, new string, d *schema.ResourceData) bool {
+	count := len(d.Get("user_settings").(*schema.Set).List())
+	defaultCount := len(appstream.Action_Values())
+
+	if count == defaultCount {
+		flagDiffUserSettings = false
+	}
+
+	if count != defaultCount && (fmt.Sprintf("%d", count) == new && fmt.Sprintf("%d", defaultCount) == old) {
+		flagDiffUserSettings = true
+	}
+
+	return flagDiffUserSettings
 }

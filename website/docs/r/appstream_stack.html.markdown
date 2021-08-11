@@ -23,20 +23,20 @@ resource "aws_appstream_stack" "appstream_stack" {
     connector_type = "HOMEFOLDERS"
   }
   user_settings {
-    action  = "CLIPBOARD_COPY_FROM_LOCAL_DEVICE"
-    enabled = true
+    action     = "CLIPBOARD_COPY_FROM_LOCAL_DEVICE"
+    permission = "ENABLED"
   }
   user_settings {
-    action  = "CLIPBOARD_COPY_TO_LOCAL_DEVICE"
-    enabled = true
+    action     = "CLIPBOARD_COPY_TO_LOCAL_DEVICE"
+    permission = "ENABLED"
   }
   user_settings {
-    action  = "FILE_UPLOAD"
-    enabled = true
+    action     = "FILE_UPLOAD"
+    permission = "ENABLED"
   }
   user_settings {
-    action  = "FILE_DOWNLOAD"
-    enabled = true
+    action     = "FILE_DOWNLOAD"
+    permission = "ENABLED"
   }
   application_settings {
     enabled        = true
