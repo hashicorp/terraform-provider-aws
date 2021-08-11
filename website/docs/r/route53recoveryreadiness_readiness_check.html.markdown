@@ -15,7 +15,7 @@ Provides an AWS Route 53 Recovery Readiness Readiness Check
 ```terraform
 resource "aws_route53recoveryreadiness_readiness_check" "my-cw-alarm-check" {
   readiness_check_name = my-cw-alarm-check
-  resource_set_name = my-cw-alarm-set
+  resource_set_name    = my-cw-alarm-set
 }
 ```
 

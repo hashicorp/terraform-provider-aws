@@ -16,9 +16,9 @@ Provides an AWS Route 53 Recovery Readiness Resource Set
 resource "aws_route53recoveryreadiness_resource_set" "my-cw-alarm-set" {
   resource_set_name = my-cw-alarm-set
   resource_set_type = "AWS::CloudWatch::Alarm"
-  
+
   resources {
-	  resource_arn = aws_cloudwatch_metric_alarm.test.arn
+    resource_arn = aws_cloudwatch_metric_alarm.test.arn
   }
 }
 ```

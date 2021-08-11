@@ -14,7 +14,7 @@ Provides an AWS Route 53 Recovery Readiness Cell
 
 ```terraform
 resource "aws_route53recoveryreadiness_cell" "us-west-2-failover-cell" {
-  cell_name  = "us-west-2-failover-cell"
+  cell_name = "us-west-2-failover-cell"
 }
 ```
 

@@ -14,7 +14,7 @@ Provides an AWS Route 53 Recovery Readiness Recovery Group
 
 ```terraform
 resource "aws_route53recoveryreadiness_recovery_group" "my-high-availability-app" {
-  recovery_group_name  = "my-high-availability-app"
+  recovery_group_name = "my-high-availability-app"
 }
 ```
 
