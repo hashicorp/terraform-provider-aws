@@ -540,11 +540,7 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsS3BucketObjectImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	id := d.Id()
-
-	if strings.HasPrefix(id, "s3://") {
-		id = strings.TrimPrefix(id, "s3://")
-	}
-
+	id = strings.TrimPrefix(id, "s3://")
 	parts := strings.Split(id, "/")
 
 	if len(parts) < 2 {
