@@ -6,7 +6,7 @@ description: |-
   Provides an AWS Route 53 Recovery Readiness Resource Set
 ---
 
-# Resource: aws_route_53recoveryreadiness_resource_set
+# Resource: aws_route53recoveryreadiness_resource_set
 
 Provides an AWS Route 53 Recovery Readiness Resource Set
 
