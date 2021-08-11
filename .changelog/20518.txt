@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_serverlessapplicationrepository_cloudformation_stack: Make apply failed when any parameters are set to default values
+```
