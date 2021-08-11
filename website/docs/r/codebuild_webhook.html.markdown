@@ -23,7 +23,7 @@ When working with [Bitbucket](https://bitbucket.org) and [GitHub](https://github
 ```terraform
 resource "aws_codebuild_webhook" "example" {
   project_name = aws_codebuild_project.example.name
-  build_type = "BUILD"
+  build_type   = "BUILD"
   filter_group {
     filter {
       type    = "EVENT"
