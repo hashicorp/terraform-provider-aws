@@ -14,9 +14,9 @@ Provides an AppStream image builder.
 
 ```hcl
 resource "aws_appstream_image_builder" "test_fleet" {
-  name = "test-image builder"
-  description                    = "test image builder"
-  display_name                   = "test-image builder"
+  name                           = "Image Builder Name"
+  description                    = "Description of a ImageBuilder"
+  display_name                   = "Display name of a ImageBuilder"
   enable_default_internet_access = false
   image_name                     = "Amazon-AppStream2-Sample-Image-02-04-2019"
   instance_type                  = "stream.standard.large"
