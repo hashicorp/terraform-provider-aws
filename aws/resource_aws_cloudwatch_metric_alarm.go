@@ -111,6 +111,11 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringInSlice(cloudwatch.StandardUnit_Values(), false),
 									},
+									"account_id": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 255),
+									},
 								},
 							},
 						},
@@ -530,6 +535,7 @@ func flattenAwsCloudWatchMetricAlarmMetricsMetricStat(ms *cloudwatch.MetricStat)
 		"stat":        aws.StringValue(ms.Stat),
 		"unit":        aws.StringValue(ms.Unit),
 		"dimensions":  flattenAwsCloudWatchMetricAlarmDimensions(msm.Dimensions),
+		"account_id":  aws.StringValue(msm.AccountId),
 	}
 
 	return metric
@@ -584,6 +590,9 @@ func expandCloudWatchMetricAlarmMetricsMetric(v []interface{}) *cloudwatch.Metri
 	}
 	if v, ok := metricResource["dimensions"]; ok {
 		metric.Dimensions = expandAwsCloudWatchMetricAlarmDimensions(v.(map[string]interface{}))
+	}
+	if v, ok := metricResource["account_id"]; ok && v.(string) != "" {
+		metricStat.AccountId = aws.String(v.(string))
 	}
 
 	return &metricStat
