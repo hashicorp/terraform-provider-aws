@@ -30,12 +30,9 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 				ForceNew: true,
 			},
 			"build_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					codebuild.WebhookBuildTypeBuild,
-					codebuild.WebhookBuildTypeBuildBatch,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(codebuild.WebhookBuildType_Values(), false),
 			},
 			"branch_filter": {
 				Type:          schema.TypeString,
@@ -53,16 +50,9 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"type": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											codebuild.WebhookFilterTypeEvent,
-											codebuild.WebhookFilterTypeActorAccountId,
-											codebuild.WebhookFilterTypeBaseRef,
-											codebuild.WebhookFilterTypeFilePath,
-											codebuild.WebhookFilterTypeHeadRef,
-											codebuild.WebhookFilterTypeCommitMessage,
-										}, false),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(codebuild.WebhookFilterType_Values(), false),
 									},
 									"exclude_matched_pattern": {
 										Type:     schema.TypeBool,
