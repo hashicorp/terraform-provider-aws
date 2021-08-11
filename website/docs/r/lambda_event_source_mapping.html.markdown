@@ -86,6 +86,43 @@ resource "aws_lambda_event_source_mapping" "example" {
 }
 ```
 
+### Amazon MQ (ActiveMQ)
+```terraform
+resource "aws_lambda_event_source_mapping" "example" {
+  batch_size       = 10
+  event_source_arn = aws_mq_broker.example.arn
+  enabled          = true
+  function_name    = aws_lambda_function.example.arn
+  queues           = ["example"]
+
+  source_access_configuration {
+    type = "BASIC_AUTH"
+    uri  = aws_secretsmanager_secret_version.example.arn
+  }
+}
+```
+
+### Amazon MQ (RabbitMQ)
+```terraform
+resource "aws_lambda_event_source_mapping" "example" {
+  batch_size       = 1
+  event_source_arn = aws_mq_broker.example.arn
+  enabled          = true
+  function_name    = aws_lambda_function.example.arn
+  queues           = ["example"]
+
+  source_access_configuration {
+    type = "VIRTUAL_HOST" 
+    uri = "/example"
+  }
+
+  source_access_configuration {
+    type = "BASIC_AUTH"
+    uri  = aws_secretsmanager_secret_version.example.arn
+  }
+}
+```
+
 ## Argument Reference
 
 * `batch_size` - (Optional) The largest number of records that Lambda will retrieve from your event source at the time of invocation. Defaults to `100` for DynamoDB, Kinesis, MQ and MSK, `10` for SQS.
