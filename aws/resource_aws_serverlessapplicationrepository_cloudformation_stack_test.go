@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -259,6 +260,40 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_update(t *test
 	})
 }
 
+func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_default_params(t *testing.T) {
+	var stack cloudformation.Stack
+	stackName := acctest.RandomWithPrefix("tf-acc-test")
+	appARN := testAccAwsServerlessApplicationRepositoryCloudFormationApplicationID_withDefaultParameters()
+	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.s3-get-object-python3"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, serverlessrepository.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
+		Steps: []resource.TestStep{
+			{
+				// set the same value with
+				// https://github.com/amazon-archives/serverless-app-examples/blob/9485c6ca6adc65994e5c5b0002039e4547d6c3d2/python/s3-get-object-python3/template.yaml#L9
+				Config:      testAccAwsServerlessApplicationRepositoryCloudFormationStackConfigWithDefaultParameters(stackName, appARN, "sam-example"),
+				ExpectError: regexp.MustCompile(`detect parameters with its default value, do not write such parameters in a resource: BucketNamePrefix`),
+			},
+			{
+				Config: testAccAwsServerlessApplicationRepositoryCloudFormationStackConfigWithDefaultParameters(stackName, appARN, "bucket"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerlessApplicationRepositoryCloudFormationStackExists(resourceName, &stack),
+					resource.TestCheckResourceAttr(resourceName, "name", stackName),
+					testAccCheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "application_id", "serverlessrepo", "applications/s3-get-object-python3"),
+					resource.TestCheckResourceAttrSet(resourceName, "semantic_version"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.BucketNamePrefix", "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckServerlessApplicationRepositoryCloudFormationStackExists(n string, stack *cloudformation.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -320,6 +355,19 @@ func testAccAwsServerlessApplicationRepositoryCloudFormationApplicationID() stri
 		Region:    arnRegion,
 		AccountID: arnAccountID,
 		Resource:  "applications/SecretsManagerRDSPostgreSQLRotationSingleUser",
+	}.String()
+}
+
+func testAccAwsServerlessApplicationRepositoryCloudFormationApplicationID_withDefaultParameters() string {
+	arnRegion := endpoints.UsEast1RegionID
+	arnAccountID := "077246666028"
+
+	return arn.ARN{
+		Partition: testAccGetPartition(),
+		Service:   serverlessrepository.ServiceName,
+		Region:    arnRegion,
+		AccountID: arnAccountID,
+		Resource:  "applications/s3-get-object-python3",
 	}.String()
 }
 
@@ -526,4 +574,25 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
   }
 }
 `, rName, appARN, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAwsServerlessApplicationRepositoryCloudFormationStackConfigWithDefaultParameters(rName, appARN, param1 string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+resource "aws_serverlessapplicationrepository_cloudformation_stack" "s3-get-object-python3" {
+  name           = %[1]q
+  application_id = %[2]q
+
+  capabilities = [
+    "CAPABILITY_IAM",
+  ]
+
+  parameters = {
+    BucketNamePrefix = "%[3]s"
+  }
+}
+`, rName, appARN, param1)
 }

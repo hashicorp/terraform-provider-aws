@@ -301,18 +301,38 @@ func createServerlessApplicationRepositoryCloudFormationChangeSet(d *schema.Reso
 	defaultTagsConfig := client.DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
+	applicationID := d.Get("application_id").(string)
 	stackName := d.Get("name").(string)
+	semanticVersion := ""
+	if v, ok := d.GetOk("semantic_version"); ok {
+		semanticVersion = v.(string)
+	}
+
+	getApplicationOutput, err := finder.Application(serverlessConn, applicationID, semanticVersion)
+	if err != nil {
+		return nil, fmt.Errorf("error getting Serverless Application Repository application (%s, v%s): %w", applicationID, semanticVersion, err)
+	}
+	if getApplicationOutput == nil || getApplicationOutput.Version == nil {
+		return nil, fmt.Errorf("error getting Serverless Application Repository application (%s, v%s): empty response", applicationID, semanticVersion)
+	}
+	version := getApplicationOutput.Version
+
 	changeSetRequest := serverlessrepository.CreateCloudFormationChangeSetRequest{
 		StackName:     aws.String(stackName),
-		ApplicationId: aws.String(d.Get("application_id").(string)),
+		ApplicationId: aws.String(applicationID),
 		Capabilities:  expandStringSet(d.Get("capabilities").(*schema.Set)),
 		Tags:          tags.IgnoreServerlessApplicationRepository().ServerlessapplicationrepositoryTags(),
 	}
-	if v, ok := d.GetOk("semantic_version"); ok {
-		changeSetRequest.SemanticVersion = aws.String(v.(string))
+
+	if semanticVersion != "" {
+		changeSetRequest.SemanticVersion = aws.String(semanticVersion)
 	}
 	if v, ok := d.GetOk("parameters"); ok {
-		changeSetRequest.ParameterOverrides = expandServerlessRepositoryCloudFormationChangeSetParameters(v.(map[string]interface{}))
+		parameterOverrides, err := expandServerlessRepositoryCloudFormationChangeSetNonDefaultParameters(v.(map[string]interface{}), version.ParameterDefinitions)
+		if err != nil {
+			return nil, fmt.Errorf("error setting parametesrs of Serverless Application Repository application (%s, v%s): %w", applicationID, semanticVersion, err)
+		}
+		changeSetRequest.ParameterOverrides = parameterOverrides
 	}
 
 	log.Printf("[DEBUG] Creating Serverless Application Repository CloudFormation change set: %s", changeSetRequest)
@@ -324,15 +344,28 @@ func createServerlessApplicationRepositoryCloudFormationChangeSet(d *schema.Reso
 	return cfwaiter.ChangeSetCreated(cfConn, aws.StringValue(changeSetResponse.StackId), aws.StringValue(changeSetResponse.ChangeSetId))
 }
 
-func expandServerlessRepositoryCloudFormationChangeSetParameters(params map[string]interface{}) []*serverlessrepository.ParameterValue {
+func expandServerlessRepositoryCloudFormationChangeSetNonDefaultParameters(
+	params map[string]interface{}, rawParameterDefinitions []*serverlessrepository.ParameterDefinition,
+) ([]*serverlessrepository.ParameterValue, error) {
 	var appParams []*serverlessrepository.ParameterValue
+	parameterDefinitions := flattenServerlessRepositoryParameterDefinitions(rawParameterDefinitions)
+	var keysWithDefaultValue []string
 	for k, v := range params {
-		appParams = append(appParams, &serverlessrepository.ParameterValue{
-			Name:  aws.String(k),
-			Value: aws.String(v.(string)),
-		})
+		value := v.(string)
+		// ad hoc validation for parameters with default value because the provider only handles non default parameters
+		if value == aws.StringValue(parameterDefinitions[k].DefaultValue) {
+			keysWithDefaultValue = append(keysWithDefaultValue, k)
+		} else {
+			appParams = append(appParams, &serverlessrepository.ParameterValue{
+				Name:  aws.String(k),
+				Value: aws.String(value),
+			})
+		}
 	}
-	return appParams
+	if len(keysWithDefaultValue) != 0 {
+		return nil, fmt.Errorf("detect parameters with its default value, do not write such parameters in a resource: %s", strings.Join(keysWithDefaultValue, ", "))
+	}
+	return appParams, nil
 }
 
 func flattenServerlessRepositoryStackCapabilities(stackCapabilities []*string, applicationRequiredCapabilities []*string) *schema.Set {
