@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -27,6 +28,9 @@ func resourceAwsElasticacheUser() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		CustomizeDiff: SetTagsDiff,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"access_string": {
@@ -173,8 +177,8 @@ func resourceAwsElasticacheUserUpdate(d *schema.ResourceData, meta interface{}) 
 			hasChange = true
 		}
 
-		if d.HasChange("password") {
-			req.Passwords = expandStringSet(d.Get("password").(*schema.Set))
+		if d.HasChange("passwords") {
+			req.Passwords = expandStringSet(d.Get("passwords").(*schema.Set))
 			hasChange = true
 		}
 
@@ -190,7 +194,6 @@ func resourceAwsElasticacheUserUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 
 	}
-
 	// Tags are currently only supported in AWS Commercial.
 	if d.HasChange("tags_all") && meta.(*AWSClient).partition == endpoints.AwsPartitionID {
 		o, n := d.GetChange("tags_all")
