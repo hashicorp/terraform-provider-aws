@@ -27,7 +27,7 @@ resource "aws_appstream_fleet" "test_fleet" {
   instance_type                      = "stream.standard.large"
   max_user_duration_in_seconds       = 600
   vpc_config {
-    subnet_ids         = ["subnet-06e9b13400c225127"]
+    subnet_ids = ["subnet-06e9b13400c225127"]
   }
   tags = {
     TagName = "tag-value"
