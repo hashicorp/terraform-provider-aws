@@ -40,6 +40,7 @@ Route53 Recovery Readiness recovery groups can be imported via the recovery grou
 ```
 $ terraform import aws_route53recoveryreadiness_recovery_group.my-high-availability-app my-high-availability-app
 ```
+
 ## Timeouts
 
 `aws_route53recoveryreadiness_recovery_group` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
