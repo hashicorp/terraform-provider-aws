@@ -954,6 +954,7 @@ var awsPartition = partition{
 				"ap-east-1":      endpoint{},
 				"ap-northeast-1": endpoint{},
 				"ap-northeast-2": endpoint{},
+				"ap-northeast-3": endpoint{},
 				"ap-south-1":     endpoint{},
 				"ap-southeast-1": endpoint{},
 				"ap-southeast-2": endpoint{},
@@ -3660,6 +3661,18 @@ var awsPartition = partition{
 				},
 			},
 		},
+		"identity-chime": service{
+
+			Endpoints: endpoints{
+				"us-east-1": endpoint{},
+				"us-east-1-fips": endpoint{
+					Hostname: "identity-chime-fips.us-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-1",
+					},
+				},
+			},
+		},
 		"identitystore": service{
 
 			Endpoints: endpoints{
@@ -4542,6 +4555,18 @@ var awsPartition = partition{
 				"eu-west-2":      endpoint{},
 				"us-east-1":      endpoint{},
 				"us-west-2":      endpoint{},
+			},
+		},
+		"messaging-chime": service{
+
+			Endpoints: endpoints{
+				"us-east-1": endpoint{},
+				"us-east-1-fips": endpoint{
+					Hostname: "messaging-chime-fips.us-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-1",
+					},
+				},
 			},
 		},
 		"metering.marketplace": service{
