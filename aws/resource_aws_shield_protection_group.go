@@ -71,17 +71,14 @@ func resourceAwsShieldProtectionGroup() *schema.Resource {
 
 func resourceAwsShieldProtectionGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).shieldconn
-
-	protectionGroupId := d.Get("protection_group_id").(string)
-	pattern := d.Get("pattern").(string)
-
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
+	protectionGroupID := d.Get("protection_group_id").(string)
 	input := &shield.CreateProtectionGroupInput{
 		Aggregation:       aws.String(d.Get("aggregation").(string)),
-		Pattern:           aws.String(pattern),
-		ProtectionGroupId: aws.String(protectionGroupId),
+		Pattern:           aws.String(d.Get("pattern").(string)),
+		ProtectionGroupId: aws.String(protectionGroupID),
 		Tags:              tags.IgnoreAws().ShieldTags(),
 	}
 
@@ -93,12 +90,14 @@ func resourceAwsShieldProtectionGroupCreate(d *schema.ResourceData, meta interfa
 		input.ResourceType = aws.String(v.(string))
 	}
 
+	log.Printf("[DEBUG] Creating Shield Protection Group: %s", input)
 	_, err := conn.CreateProtectionGroup(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating Shield Protection Group: %s", err)
+		return fmt.Errorf("error creating Shield Protection Group (%s): %w", protectionGroupID, err)
 	}
 
-	d.SetId(protectionGroupId)
+	d.SetId(protectionGroupID)
 
 	return resourceAwsShieldProtectionGroupRead(d, meta)
 }
@@ -114,13 +113,14 @@ func resourceAwsShieldProtectionGroupRead(d *schema.ResourceData, meta interface
 
 	resp, err := conn.DescribeProtectionGroup(input)
 
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] Shield Protection Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] Shield Protection Group (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading Shield Protection Group (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading Shield Protection Group (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(resp.ProtectionGroup.ProtectionGroupArn)
@@ -140,7 +140,7 @@ func resourceAwsShieldProtectionGroupRead(d *schema.ResourceData, meta interface
 	tags, err := keyvaluetags.ShieldListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Shield Protection Group (%s): %s", arn, err)
+		return fmt.Errorf("error listing tags for Shield Protection Group (%s): %w", arn, err)
 	}
 
 	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
@@ -174,15 +174,17 @@ func resourceAwsShieldProtectionGroupUpdate(d *schema.ResourceData, meta interfa
 		input.ResourceType = aws.String(v.(string))
 	}
 
+	log.Printf("[DEBUG] Updating Shield Protection Group: %s", input)
 	_, err := conn.UpdateProtectionGroup(input)
+
 	if err != nil {
-		return fmt.Errorf("error updating Shield Protection Group: %s", err)
+		return fmt.Errorf("error updating Shield Protection Group (%s): %w", d.Id(), err)
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.ShieldUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
 
@@ -192,17 +194,17 @@ func resourceAwsShieldProtectionGroupUpdate(d *schema.ResourceData, meta interfa
 func resourceAwsShieldProtectionGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).shieldconn
 
-	input := &shield.DeleteProtectionGroupInput{
+	log.Printf("[DEBUG] Deletinh Shield Protection Group: %s", d.Id())
+	_, err := conn.DeleteProtectionGroup(&shield.DeleteProtectionGroupInput{
 		ProtectionGroupId: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
+		return nil
 	}
 
-	_, err := conn.DeleteProtectionGroup(input)
-
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return fmt.Errorf("error deleting Shield Protection Group (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Shield Protection Group (%s): %w", d.Id(), err)
 	}
 
 	return nil
