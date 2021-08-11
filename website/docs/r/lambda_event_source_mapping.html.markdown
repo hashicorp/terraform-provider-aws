@@ -3,12 +3,12 @@ subcategory: "Lambda"
 layout: "aws"
 page_title: "AWS: aws_lambda_event_source_mapping"
 description: |-
-  Provides a Lambda event source mapping. This allows Lambda functions to get events from Kinesis, DynamoDB, SQS and Managed Streaming for Apache Kafka (MSK).
+  Provides a Lambda event source mapping. This allows Lambda functions to get events from Kinesis, DynamoDB, SQS, Amazon MQ and Managed Streaming for Apache Kafka (MSK).
 ---
 
 # Resource: aws_lambda_event_source_mapping
 
-Provides a Lambda event source mapping. This allows Lambda functions to get events from Kinesis, DynamoDB, SQS and Managed Streaming for Apache Kafka (MSK).
+Provides a Lambda event source mapping. This allows Lambda functions to get events from Kinesis, DynamoDB, SQS, Amazon MQ and Managed Streaming for Apache Kafka (MSK).
 
 For information about Lambda and how to use it, see [What is AWS Lambda?][1].
 For information about event source mappings, see [CreateEventSourceMapping][2] in the API docs.
