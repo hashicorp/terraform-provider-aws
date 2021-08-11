@@ -326,7 +326,8 @@ func testAccCheckAWSCodeBuildWebhookExists(name string, webhook *codebuild.Webho
 
 func testAccAWSCodeBuildWebhookConfig_Bitbucket(rName, sourceLocation string) string {
 	return composeConfig(
-		testAccAWSCodeBuildProjectConfig_Source_Type_Bitbucket(rName, sourceLocation), `
+		testAccAWSCodeBuildProjectConfig_Source_Type_Bitbucket(rName, sourceLocation),
+		`
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
 }
@@ -334,7 +335,9 @@ resource "aws_codebuild_webhook" "test" {
 }
 
 func testAccAWSCodeBuildWebhookConfig_GitHub(rName string) string {
-	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName) + `
+	return composeConfig(
+		testAccAWSCodeBuildProjectConfig_basic(rName),
+		`
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
 }
@@ -342,9 +345,9 @@ resource "aws_codebuild_webhook" "test" {
 }
 
 func testAccAWSCodeBuildWebhookConfig_GitHubEnterprise(rName string, branchFilter string) string {
-	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
-  name         = "%s"
+  name         = %[1]q
   service_role = aws_iam_role.test.arn
 
   artifacts {
@@ -365,31 +368,33 @@ resource "aws_codebuild_project" "test" {
 
 resource "aws_codebuild_webhook" "test" {
   project_name  = aws_codebuild_project.test.name
-  branch_filter = "%s"
+  branch_filter = %[2]q
 }
-`, rName, branchFilter)
+`, rName, branchFilter))
 }
 
 func testAccAWSCodeBuildWebhookConfig_BuildType(rName, branchFilter string) string {
-	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName)+`
+	return composeConfig(testAccAWSCodeBuildProjectConfig_basic(rName), fmt.Sprintf(`
 resource "aws_codebuild_webhook" "test" {
-  build_type = "%s"
-  project_name  = aws_codebuild_project.test.name
+  build_type   = %[1]q
+  project_name = aws_codebuild_project.test.name
 }
-`, branchFilter)
+`, branchFilter))
 }
 
 func testAccAWSCodeBuildWebhookConfig_BranchFilter(rName, branchFilter string) string {
-	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName)+`
+	return composeConfig(testAccAWSCodeBuildProjectConfig_basic(rName), fmt.Sprintf(`
 resource "aws_codebuild_webhook" "test" {
-  branch_filter = "%s"
+  branch_filter = %[1]q
   project_name  = aws_codebuild_project.test.name
 }
-`, branchFilter)
+`, branchFilter))
 }
 
 func testAccAWSCodeBuildWebhookConfig_FilterGroup(rName string) string {
-	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName) + `
+	return composeConfig(
+		testAccAWSCodeBuildProjectConfig_basic(rName),
+		`
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
 
