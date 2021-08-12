@@ -87,6 +87,7 @@ resource "aws_lambda_event_source_mapping" "example" {
 ```
 
 ### Amazon MQ (ActiveMQ)
+
 ```terraform
 resource "aws_lambda_event_source_mapping" "example" {
   batch_size       = 10
@@ -103,6 +104,7 @@ resource "aws_lambda_event_source_mapping" "example" {
 ```
 
 ### Amazon MQ (RabbitMQ)
+
 ```terraform
 resource "aws_lambda_event_source_mapping" "example" {
   batch_size       = 1
@@ -113,7 +115,7 @@ resource "aws_lambda_event_source_mapping" "example" {
 
   source_access_configuration {
     type = "VIRTUAL_HOST" 
-    uri = "/example"
+    uri  = "/example"
   }
 
   source_access_configuration {
