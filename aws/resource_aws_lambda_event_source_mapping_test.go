@@ -1776,6 +1776,6 @@ resource "aws_lambda_event_source_mapping" "test" {
     type = "BASIC_AUTH"
     uri  = aws_secretsmanager_secret_version.test.arn
   }
-} 
+}
 `, batchSize))
 }
