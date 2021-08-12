@@ -50,13 +50,13 @@ The following arguments are supported:
 * `image_arn` - (Optional) The ARN of the public, private, or shared image to use.
 * `instance_type` - (Required) The instance type to use when launching the image builder.
 * `vpc_config` - (Optional) The VPC configuration for the image builder.
-  * `security_group_ids` - The identifiers of the security groups for the image builder or image builder.
-  * `subnet_ids` - The identifiers of the subnets to which a network interface is attached from the image builder instance or image builder instance.
-* `tags` - Map of tags to attach to AppStream instances.
+  * `security_group_ids` - (Optional) The identifiers of the security groups for the image builder or image builder.
+  * `subnet_ids` - (Optional) The identifiers of the subnets to which a network interface is attached from the image builder instance or image builder instance.
+* `tags` - (Optional) Map of tags to attach to AppStream instances.
 
 ## Attributes Reference
 
-* `id` - The unique identifier (ID) of the appstream image builder.
-* `arn` - The Amazon Resource Name (ARN) of the appstream image builder.
-* `state` - The state of the image builder.
+* `id` - Unique identifier (ID) of the appstream image builder.
+* `arn` - Amazon Resource Name (ARN) of the appstream image builder.
+* `state` - The state of the image builder. Can be: `PENDING`, `UPDATING_AGENT`, `RUNNING`, `STOPPING`, `STOPPED`, `REBOOTING`, `SNAPSHOTTING`, `DELETING`, `FAILED`, `UPDATING`, `PENDING_QUALIFICATION`
 * `created_time` -  The date and time, in UTC and extended RFC 3339 format, when the image builder was created.
