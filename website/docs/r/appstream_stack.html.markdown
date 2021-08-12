@@ -81,6 +81,6 @@ The `user_settings` object supports the following:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Unique identifier (ID) of the appstream fleet.
-* `arn` - Amazon Resource Name (ARN) of the appstream fleet.
+* `id` - Unique identifier (ID) of the appstream stack.
+* `arn` - Amazon Resource Name (ARN) of the appstream stack.
 * `created_time` - The date and time, in UTC and extended RFC 3339 format, when the stack was created.
