@@ -394,7 +394,7 @@ func resourceAwsAppStreamStackDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	// Will wait to finish to delete because after delete it makes a stack inactive then it deletes
-	time.Sleep(15 * time.Second)
+	time.Sleep(waiter.StackSleep)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error reading Appstream Stack (%s): %w", d.Id(), err))
