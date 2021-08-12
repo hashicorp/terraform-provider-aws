@@ -304,7 +304,7 @@ func resourceAwsAppStreamFleetRead(ctx context.Context, d *schema.ResourceData, 
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeFleetsWithContext(ctx, &appstream.DescribeFleetsInput{Names: []*string{aws.String(d.Id())}})
-	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Appstream Fleet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
