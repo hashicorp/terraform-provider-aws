@@ -658,8 +658,9 @@ func TestFlattenParameters(t *testing.T) {
 			},
 			Output: []map[string]interface{}{
 				{
-					"name":  "character_set_client",
-					"value": "utf8",
+					"name":         "character_set_client",
+					"value":        "utf8",
+					"apply_method": "",
 				},
 			},
 		},
