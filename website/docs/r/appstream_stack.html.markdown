@@ -53,18 +53,23 @@ resource "aws_appstream_stack" "appstream_stack" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the AppStream stack, used as the stack's identifier.  Only allows alphanumeric, hypen, underscore and period.
+* `name` - (Required) The name of the AppStream stack, used as the stack's identifier.
 * `description` - (Optional) Description for the AppStream stack.
-* `display_name` - (Optional) Human-readable friendly name for the AppStream stack.
-* `redirect_url` - (Optional) URL to redirect at end of session.
-* `feedback_url` - (Optional) URL for users to submit feedback.
-* `storage_connectors` - (Optional) Nested block of storage connectors.
-  * `storage_connectors` - (Optional) Nested block of storage connectors.
-  * `storage_connectors` - (Optional) Nested block of storage connectors.
-* `user_settings` - (Optional) Nested block of AppStream user settings.
+* `display_name` - (Optional) The stack name to display.
+* `embed_host_domains` - (Optional) The domains where AppStream 2.0 streaming sessions can be embedded in an iframe. You must approve the domains that you want to host embedded AppStream 2.0 streaming sessions.
+* `redirect_url` - (Optional) The URL that users are redirected to after their streaming session ends.
+* `feedback_url` - (Optional) The URL that users are redirected to after they click the Send Feedback link. If no URL is specified, no Send Feedback link is displayed. .
+* `storage_connectors` - (Optional) The storage connectors to enable.
+  * `connector_type` - (Required) The type of storage connector. Valid values are: `HOMEFOLDERS`, `GOOGLE_DRIVE`, `ONE_DRIVE`
+  * `domains` - (Optional) The names of the domains for the account.
+  * `resource_identifier` - (Optional) The ARN of the storage connector.
+* `user_settings` - (Optional) The actions that are enabled or disabled for users during their streaming sessions. By default, these actions are enabled.
+  * `action` - (Required) The action that is enabled or disabled. Valid values are: `CLIPBOARD_COPY_FROM_LOCAL_DEVICE`, `CLIPBOARD_COPY_TO_LOCAL_DEVICE`, `FILE_UPLOAD`,`FILE_DOWNLOAD`,`PRINTING_TO_LOCAL_DEVICE`,`DOMAIN_PASSWORD_SIGNIN`,`DOMAIN_SMART_CARD_SIGNIN`,
+  * `permission` - (Required) Indicates whether the action is enabled or disabled. Valid values are: `ENABLED` , `DISABLED`
 * `application_settings` - (Optional) settings for application settings persistence.
 
 ## Attributes Reference
 
-* `id` - The unique identifier (ID) of the appstream fleet.
-* `arn` - The Amazon Resource Name (ARN) of the appstream fleet.
+* `id` - unique identifier (ID) of the appstream fleet.
+* `arn` - Amazon Resource Name (ARN) of the appstream fleet.
+* `created_time` - The date and time, in UTC and extended RFC 3339 format, when the stack was created.
