@@ -114,7 +114,7 @@ resource "aws_lambda_event_source_mapping" "example" {
   queues           = ["example"]
 
   source_access_configuration {
-    type = "VIRTUAL_HOST" 
+    type = "VIRTUAL_HOST"
     uri  = "/example"
   }
 
