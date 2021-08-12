@@ -65,6 +65,11 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
+						"account_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 255),
+						},
 						"expression": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -110,11 +115,6 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringInSlice(cloudwatch.StandardUnit_Values(), false),
-									},
-									"account_id": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 255),
 									},
 								},
 							},
@@ -511,6 +511,7 @@ func flattenAwsCloudWatchMetricAlarmMetrics(metrics []*cloudwatch.MetricDataQuer
 	metricQueries := make([]map[string]interface{}, 0)
 	for _, mq := range metrics {
 		metricQuery := map[string]interface{}{
+			"account_id":  aws.StringValue(mq.AccountId),
 			"expression":  aws.StringValue(mq.Expression),
 			"id":          aws.StringValue(mq.Id),
 			"label":       aws.StringValue(mq.Label),
@@ -535,7 +536,6 @@ func flattenAwsCloudWatchMetricAlarmMetricsMetricStat(ms *cloudwatch.MetricStat)
 		"stat":        aws.StringValue(ms.Stat),
 		"unit":        aws.StringValue(ms.Unit),
 		"dimensions":  flattenAwsCloudWatchMetricAlarmDimensions(msm.Dimensions),
-		"account_id":  aws.StringValue(msm.AccountId),
 	}
 
 	return metric
@@ -565,6 +565,9 @@ func expandCloudWatchMetricAlarmMetrics(v *schema.Set) []*cloudwatch.MetricDataQ
 		if v := metricQueryResource["metric"]; v != nil && len(v.([]interface{})) > 0 {
 			metricQuery.MetricStat = expandCloudWatchMetricAlarmMetricsMetric(v.([]interface{}))
 		}
+		if v, ok := metricQueryResource["account_id"]; ok {
+			metricQuery.AccountId = aws.String(v.(string))
+		}
 		metrics = append(metrics, &metricQuery)
 	}
 	return metrics
@@ -590,9 +593,6 @@ func expandCloudWatchMetricAlarmMetricsMetric(v []interface{}) *cloudwatch.Metri
 	}
 	if v, ok := metricResource["dimensions"]; ok {
 		metric.Dimensions = expandAwsCloudWatchMetricAlarmDimensions(v.(map[string]interface{}))
-	}
-	if v, ok := metricResource["account_id"]; ok && v.(string) != "" {
-		metricStat.AccountId = aws.String(v.(string))
 	}
 
 	return &metricStat
