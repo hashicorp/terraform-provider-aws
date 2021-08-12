@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_chime_voice_connector` ([#19504](https://github.com/hashicorp/terraform-provider-aws/issues/19504))
 * **New Resource:** `aws_shield_protection_group` ([#20491](https://github.com/hashicorp/terraform-provider-aws/issues/20491))
 
 ENHANCEMENTS:
