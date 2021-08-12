@@ -70,6 +70,6 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-* `id` - unique identifier (ID) of the appstream fleet.
+* `id` - Unique identifier (ID) of the appstream fleet.
 * `arn` - Amazon Resource Name (ARN) of the appstream fleet.
 * `created_time` - The date and time, in UTC and extended RFC 3339 format, when the stack was created.
