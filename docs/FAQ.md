@@ -32,6 +32,10 @@ We publish a [roadmap](../ROADMAP.md) every quarter which describes major themes
 
 We also are investing time to improve the contributing experience by improving documentation, adding more linter coverage to ensure that incoming PR's can be in as good shape as possible. This will allow us to get through them quicker.
 
+### My PR hasn't been merged and it now has merge conflicts/failed checks, should I keep it up to date?
+
+We realize that sometimes pull requests sit for a considerable amount of time without being addressed. During this time period they may accumulate merge conflicts and failed linter checks as the provider codebase moves forward. As maintainers we have no expectation that you keep your PR up to date, these issues will be addressed at review time most often by the maintainers themselves. Obviously we would hope that your PR is mergeable when first raised! The mergeability of the PR does not affect its prioritization for review.
+
 ### How often do you release?
 
 We release weekly on Thursday. We release often to ensure we can bring value to the community at a frequent cadence and to ensure we are in a good place to react to AWS region launches and service announcements.
