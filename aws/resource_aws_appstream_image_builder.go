@@ -228,7 +228,7 @@ func resourceAwsAppStreamImageBuilderCreate(ctx context.Context, d *schema.Resou
 
 	var err error
 	var output *appstream.CreateImageBuilderOutput
-	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+	err = resource.RetryContext(ctx, waiter.ImageBuilderOperationTimeout, func() *resource.RetryError {
 		output, err = conn.CreateImageBuilderWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
@@ -273,7 +273,7 @@ func resourceAwsAppStreamImageBuilderRead(ctx context.Context, d *schema.Resourc
 
 	resp, err := conn.DescribeImageBuildersWithContext(ctx, &appstream.DescribeImageBuildersInput{Names: []*string{aws.String(d.Id())}})
 
-	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Appstream ImageBuilder (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

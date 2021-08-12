@@ -3,7 +3,7 @@ subcategory: "AppStream"
 layout: "aws"
 page_title: "AWS: aws_appstream_image_builder"
 description: |-
-Provides an AppStream image builder
+  Provides an AppStream image builder
 ---
 
 # Resource: aws_appstream_image_builder
@@ -12,7 +12,7 @@ Provides an AppStream image builder.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_appstream_image_builder" "test_fleet" {
   name                           = "Image Builder Name"
   description                    = "Description of a ImageBuilder"
@@ -35,26 +35,39 @@ The following arguments are supported:
 
 * `name` - (Required) A unique name for the image builder.
 * `name_prefix` -  (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
-* `access_endpoints` - (Optional) The list of interface VPC endpoint (interface endpoint) objects.
-  * `endpoint_type` - (Required) The type of interface endpoint.
-  * `vpce_id` - (Optional) The identifier (ID) of the VPC in which the interface endpoint is used.
+* `access_endpoints` - (Optional) The list of interface VPC endpoint (interface endpoint) objects. (documented below)
 * `appstream_agent_version` - (Optional) The version of the AppStream 2.0 agent to use for this image builder.
 * `description` - (Optional) The description to display.
 * `display_name` - (Optional) Human-readable friendly name for the AppStream image builder.
-* `domain_join_info` - (Optional) The name of the directory and organizational unit (OU) to use to join the image builder to a Microsoft Active Directory domain.
-  * `directory_name` - (Optional) The fully qualified name of the directory (for example, corp.example.com).
-  * `organizational_unit_distinguished_name` - (Optional) The distinguished name of the organizational unit for computer accounts.
+* `domain_join_info` - (Optional) The name of the directory and organizational unit (OU) to use to join the image builder to a Microsoft Active Directory domain. (documented below)
 * `enable_default_internet_access` - (Optional) Enables or disables default internet access for the image builder.
 * `iam_role_arn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to apply to the image builder.
 * `image_name` - (Optional) The name of the image used to create the image builder.
 * `image_arn` - (Optional) The ARN of the public, private, or shared image to use.
 * `instance_type` - (Required) The instance type to use when launching the image builder.
-* `vpc_config` - (Optional) The VPC configuration for the image builder.
-  * `security_group_ids` - (Optional) The identifiers of the security groups for the image builder or image builder.
-  * `subnet_ids` - (Optional) The identifiers of the subnets to which a network interface is attached from the image builder instance or image builder instance.
+* `vpc_config` - (Optional) The VPC configuration for the image builder. (documented below)
 * `tags` - (Optional) Map of tags to attach to AppStream instances.
 
+
+The `access_endpoints` object supports the following:
+
+* `endpoint_type` - (Required) The type of interface endpoint.
+* `vpce_id` - (Optional) The identifier (ID) of the VPC in which the interface endpoint is used.
+
+The `domain_join_info` object supports the following:
+
+* `directory_name` - (Optional) The fully qualified name of the directory (for example, corp.example.com).
+* `organizational_unit_distinguished_name` - (Optional) The distinguished name of the organizational unit for computer accounts.
+
+The `vpc_config` object supports the following:
+
+* `security_group_ids` - (Optional) The identifiers of the security groups for the image builder or image builder.
+* `subnet_ids` - (Optional) The identifiers of the subnets to which a network interface is attached from the image builder instance or image builder instance.
+
+
 ## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - Unique identifier (ID) of the appstream image builder.
 * `arn` - Amazon Resource Name (ARN) of the appstream image builder.
