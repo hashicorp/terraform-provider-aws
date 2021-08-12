@@ -260,7 +260,7 @@ func resourceAwsAppStreamFleetCreate(ctx context.Context, d *schema.ResourceData
 
 	var err error
 	var output *appstream.CreateFleetOutput
-	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+	err = resource.RetryContext(ctx, waiter.FleetOperationTimeout, func() *resource.RetryError {
 		output, err = conn.CreateFleetWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
