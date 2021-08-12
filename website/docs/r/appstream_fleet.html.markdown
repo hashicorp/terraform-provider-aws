@@ -65,11 +65,11 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-* `id` - The unique identifier (ID) of the appstream fleet.
-* `arn` - The Amazon Resource Name (ARN) of the appstream fleet.
-* `state` - The state of the fleet.
+* `id` - A unique identifier (ID) of the appstream fleet.
+* `arn` - Amazon Resource Name (ARN) of the appstream fleet.
+* `state` - The state of the fleet. Can be `STARTING`, `RUNNING`, `STOPPING` or `STOPPED`
 * `created_time` -  The date and time, in UTC and extended RFC 3339 format, when the fleet was created.
-* `compute_capacity` - The capacity for the fleet.
+* `compute_capacity` - Describes the capacity status for a fleet.
   * `available` - The number of currently available instances that can be used to stream sessions.
   * `in_use` - The number of instances in use for streaming.
   * `running` - The total number of simultaneous streaming instances that are running.
@@ -79,5 +79,5 @@ The following arguments are supported:
 `aws_appstream_fleet` can be imported using the id, e.g.
 
 ```
-$ terraform import aws_appstream_fleet.example abcd1
+$ terraform import aws_appstream_fleet.example fleetNameExample
 ```
