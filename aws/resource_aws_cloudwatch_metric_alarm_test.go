@@ -281,6 +281,13 @@ func TestAccAWSCloudWatchMetricAlarm_expression(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccAWSCloudWatchMetricAlarmConfigWithCrossAccountMetric(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "metric_query.0.account_id", "123456789"),
+				),
+			},
+			{
 				Config: testAccAWSCloudWatchMetricAlarmConfigWithExpressionUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
@@ -632,6 +639,37 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 
   metric_query {
     id = "m1"
+
+    metric {
+      metric_name = "CPUUtilization"
+      namespace   = "AWS/EC2"
+      period      = "120"
+      stat        = "Average"
+      unit        = "Count"
+
+      dimensions = {
+        InstanceId = "i-abc123"
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAWSCloudWatchMetricAlarmConfigWithCrossAccountMetric(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name                = "%s"
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = "2"
+  threshold                 = "80"
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+
+  metric_query {
+    id          = "m1"
+    account_id  = "123456789"
+    return_data = "true"
 
     metric {
       metric_name = "CPUUtilization"
