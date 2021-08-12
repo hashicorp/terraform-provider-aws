@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appstream/waiter"
 )
 
 var (
@@ -237,7 +238,7 @@ func resourceAwsAppStreamStackCreate(ctx context.Context, d *schema.ResourceData
 
 	var err error
 	var output *appstream.CreateStackOutput
-	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+	err = resource.RetryContext(ctx, waiter.StackOperationTimeout, func() *resource.RetryError {
 		output, err = conn.CreateStackWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
@@ -270,7 +271,7 @@ func resourceAwsAppStreamStackRead(ctx context.Context, d *schema.ResourceData, 
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeStacksWithContext(ctx, &appstream.DescribeStacksInput{Names: []*string{aws.String(d.Id())}})
-	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Appstream Stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

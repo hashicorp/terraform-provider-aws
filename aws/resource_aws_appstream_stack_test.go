@@ -255,9 +255,9 @@ func testAccCheckAwsAppStreamStackDestroy(s *terraform.State) error {
 }
 
 func testAccAwsAppStreamStackConfigNameGenerated() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_appstream_stack" "test" {}
-`)
+`
 }
 
 func testAccAwsAppStreamStackConfigNamePrefix(stackName string) string {

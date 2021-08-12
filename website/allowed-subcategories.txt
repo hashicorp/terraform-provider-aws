@@ -9,6 +9,7 @@ AppConfig
 AppMesh
 App Runner
 AppSync
+AppStream
 Application Autoscaling
 Athena
 Audit Manager
