@@ -284,7 +284,7 @@ func TestAccAWSCloudWatchMetricAlarm_expression(t *testing.T) {
 				Config: testAccAWSCloudWatchMetricAlarmConfigWithCrossAccountMetric(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "metric_query.0.account_id", "123456789"),
+					resource.TestCheckResourceAttrPair(resourceName, "metric_query.0.account_id", "data.aws_caller_identity.current", "account_id"),
 				),
 			},
 			{
