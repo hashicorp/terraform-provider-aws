@@ -658,6 +658,8 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 
 func testAccAWSCloudWatchMetricAlarmConfigWithCrossAccountMetric(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
@@ -668,7 +670,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 
   metric_query {
     id          = "m1"
-    account_id  = "123456789"
+    account_id  = data.aws_caller_identity.current.account_id
     return_data = "true"
 
     metric {
