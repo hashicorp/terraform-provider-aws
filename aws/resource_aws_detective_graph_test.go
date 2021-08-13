@@ -63,11 +63,12 @@ func testAccAwsDetectiveGraph_WithTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDetectiveGraphExists(resourceName, &graphOutput),
 					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "value2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", "value2"),
 				),
 			},
 			{
@@ -111,7 +112,7 @@ func testAccCheckAwsDetectiveGraphDestroy(s *terraform.State) error {
 
 		resp, err := getDetectiveGraphArn(conn, context.Background(), rs.Primary.ID)
 
-		if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
+		if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) || resp == nil {
 			continue
 		}
 

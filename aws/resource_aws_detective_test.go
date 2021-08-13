@@ -7,8 +7,9 @@ import (
 func TestAccAWSDetective_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Graph": {
-			"basic": testAccAwsDetectiveGraph_basic,
-			"tags":  testAccAwsDetectiveGraph_WithTags,
+			"basic":      testAccAwsDetectiveGraph_basic,
+			"disappears": testAccAwsDetectiveGraph_disappears,
+			"tags":       testAccAwsDetectiveGraph_WithTags,
 		},
 	}
 

@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_detective_graph
 
-Provides a resource to manage an [AWS Detective Graph](https://docs.aws.amazon.com/detective/latest/APIReference/Welcome.html).
+Provides a resource to manage an [AWS Detective Graph](https://docs.aws.amazon.com/detective/latest/APIReference/API_CreateGraph.html).
 
 ## Example Usage
 
@@ -26,7 +26,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The unique identifier (ID) of the Detective Graph.
+* `id` - Unique identifier (ID) of the Detective Graph.
 * `created_time` - The date and time, in UTC and extended RFC 3339 format, when the Amazon Detective Graph was created.
 
 ## Import
@@ -34,5 +34,5 @@ In addition to all arguments above, the following attributes are exported:
 `aws_detective_graph` can be imported using the id, e.g.
 
 ```
-$ terraform import aws_detective_graph.example abcd1
+$ terraform import aws_detective_graph.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d
 ```
