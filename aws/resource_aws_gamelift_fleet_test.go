@@ -405,6 +405,12 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 	roleArn := *loc.RoleArn
 	key := *loc.Key
 
+	locations := []string{
+		region,
+		testAccGetAlternateRegion(),
+		testAccGetThirdRegion(),
+	}
+
 	launchPath := g.LaunchPath
 	params := []string{
 		g.Parameters(33435),
@@ -423,7 +429,7 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGameliftFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGameliftFleetAllFieldsConfig(fleetName, desc, launchPath, params[0], buildName, bucketName, key, roleArn),
+				Config: testAccAWSGameliftFleetAllFieldsConfig(fleetName, desc, launchPath, params[0], buildName, bucketName, key, roleArn, locations[0]),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "build_id"),
@@ -444,6 +450,8 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.2.ip_range", "8.8.8.8/32"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.2.protocol", "UDP"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.2.to_port", "60000"),
+					resource.TestCheckResourceAttr(resourceName, "location_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "location_configuration.0.location", locations[0]),
 					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "metric_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_groups.0", "TerraformAccTest"),
@@ -462,7 +470,7 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSGameliftFleetAllFieldsUpdatedConfig(fleetName, desc, launchPath, params[1], buildName, bucketName, key, roleArn),
+				Config: testAccAWSGameliftFleetAllFieldsUpdatedConfig(fleetName, desc, launchPath, params[1], buildName, bucketName, key, roleArn, locations[0], locations[1]),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "build_id"),
@@ -483,6 +491,9 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.2.ip_range", "8.8.8.8/32"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.2.protocol", "UDP"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.2.to_port", "60000"),
+					resource.TestCheckResourceAttr(resourceName, "location_configuration.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "location_configuration.0.location", locations[0]),
+					resource.TestCheckResourceAttr(resourceName, "location_configuration.1.location", locations[1]),
 					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "metric_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_groups.0", "TerraformAccTest"),
@@ -734,7 +745,7 @@ resource "aws_gamelift_fleet" "test" {
 `, desc, fleetName, launchPath, params)
 }
 
-func testAccAWSGameliftFleetAllFieldsConfig(fleetName, desc, launchPath string, params string, buildName, bucketName, key, roleArn string) string {
+func testAccAWSGameliftFleetAllFieldsConfig(fleetName, desc, launchPath string, params string, buildName, bucketName, key, roleArn string, location string) string {
 	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) +
 		testAccAWSGameLiftFleetIAMRole(buildName) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
@@ -766,6 +777,10 @@ resource "aws_gamelift_fleet" "test" {
     to_port   = 60000
   }
 
+	location_configuration {
+		location = "%s"
+	}
+
   metric_groups                      = ["TerraformAccTest"]
   new_game_session_protection_policy = "FullProtection"
 
@@ -785,10 +800,10 @@ resource "aws_gamelift_fleet" "test" {
     }
   }
 }
-`, fleetName, desc, launchPath, params)
+`, fleetName, desc, location, launchPath, params)
 }
 
-func testAccAWSGameliftFleetAllFieldsUpdatedConfig(fleetName, desc, launchPath string, params string, buildName, bucketName, key, roleArn string) string {
+func testAccAWSGameliftFleetAllFieldsUpdatedConfig(fleetName, desc, launchPath string, params string, buildName, bucketName, key, roleArn string, location1 string, location2 string) string {
 	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) +
 		testAccAWSGameLiftFleetIAMRole(buildName) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
@@ -821,6 +836,14 @@ resource "aws_gamelift_fleet" "test" {
     to_port   = 60000
   }
 
+	location_configuration {
+		location = "%s"
+	}
+
+	location_configuration {
+		location = "%s"
+	}
+
   metric_groups                      = ["TerraformAccTest"]
   new_game_session_protection_policy = "FullProtection"
 
@@ -840,7 +863,7 @@ resource "aws_gamelift_fleet" "test" {
     }
   }
 }
-`, fleetName, desc, launchPath, params)
+`, fleetName, desc, location1, location2, launchPath, params)
 }
 
 func testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn string) string {
