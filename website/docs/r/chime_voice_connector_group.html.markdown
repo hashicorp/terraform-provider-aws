@@ -3,7 +3,7 @@ subcategory: "Chime"
 layout: "aws"
 page_title: "AWS: aws_chime_voice_connector_group"
 description: |-
-Creates an Amazon Chime Voice Connector group under the administrator's AWS account.
+  Creates an Amazon Chime Voice Connector group under the administrator's AWS account.
 ---
 
 # Resource: aws_chime_voice_connector_group
@@ -29,13 +29,13 @@ resource "aws_chime_voice_connector_group" "group" {
   name = "test-group"
 
   connector {
-    connector_id = aws_chime_voice_connector.vc1.id
-    priority     = 1
+    voice_connector_id = aws_chime_voice_connector.vc1.id
+    priority           = 1
   }
 
   connector {
-    connector_id = aws_chime_voice_connector.vc2.id
-    priority     = 3
+    voice_connector_id = aws_chime_voice_connector.vc2.id
+    priority           = 3
   }
 }
 ```
@@ -51,7 +51,7 @@ The following arguments are supported:
 
 For Amazon Chime Voice Connector groups, the Amazon Chime Voice Connectors to which to route inbound calls. Includes priority configuration settings. Limit: 3 VoiceConnectorItems per Amazon Chime Voice Connector group.
 
-* `connector_id` - (Required) The Amazon Chime Voice Connector ID.
+* `voice_connector_id` - (Required) The Amazon Chime Voice Connector ID.
 * `priority` - (Required) The priority associated with the Amazon Chime Voice Connector, with 1 being the highest priority. Higher priority Amazon Chime Voice Connectors are attempted first.
 
 ## Attributes Reference
