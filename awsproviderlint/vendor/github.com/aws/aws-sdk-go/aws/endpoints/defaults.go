@@ -11294,5 +11294,11 @@ var awsisobPartition = partition{
 				"us-isob-east-1": endpoint{},
 			},
 		},
+		"tagging": service{
+
+			Endpoints: endpoints{
+				"us-isob-east-1": endpoint{},
+			},
+		},
 	},
 }
