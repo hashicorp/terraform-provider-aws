@@ -12,6 +12,8 @@ Creates an Amazon Chime Voice Connector group under the administrator's AWS acco
 
 You can include Amazon Chime Voice Connectors from different AWS Regions in your group. This creates a fault tolerant mechanism for fallback in case of availability events.
 
+## Example Usage
+
 ```terraform
 resource "aws_chime_voice_connector" "vc1" {
   name               = "connector-test-1"
