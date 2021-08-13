@@ -10,14 +10,14 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
-const (
-	ApplicationDeletedTimeout = 5 * time.Minute
-	ApplicationStartedTimeout = 5 * time.Minute
-	ApplicationStoppedTimeout = 5 * time.Minute
-	ApplicationUpdatedTimeout = 5 * time.Minute
+const ( // TODO: make timers varaible form within KAv2 schema
+	ApplicationDeletedTimeout = 15 * time.Minute
+	ApplicationStartedTimeout = 15 * time.Minute
+	ApplicationStoppedTimeout = 15 * time.Minute
+	ApplicationUpdatedTimeout = 15 * time.Minute
 
-	SnapshotCreatedTimeout = 5 * time.Minute
-	SnapshotDeletedTimeout = 5 * time.Minute
+	SnapshotCreatedTimeout = 15 * time.Minute
+	SnapshotDeletedTimeout = 15 * time.Minute
 )
 
 // ApplicationDeleted waits for an Application to return Deleted

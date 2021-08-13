@@ -2,6 +2,7 @@ package aws
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -865,6 +867,37 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 
+			"eni_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auto_assign": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+
+						"eip_ids": { // TODO: May be obsolete if we only acces eni_ids from an eip association resource
+							Type:     schema.TypeSet,
+							Optional: true,
+							MinItems: 1,
+							MaxItems: 16,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+
+						"eni_ids": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+
+						"filter": ec2CustomFiltersSchema(),
+					},
+				},
+				ConflictsWith: []string{"application_configuration.0.sql_application_configuration"},
+			},
+
 			"force_stop": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -957,6 +990,14 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 
 	if _, ok := d.GetOk("start_application"); ok {
 		if err := kinesisAnalyticsV2StartApplication(conn, expandKinesisAnalyticsV2StartApplicationInput(d)); err != nil {
+			return err
+		}
+	}
+
+	// Gathers ENIs created by Flink and sets them in the schema
+	connEC2 := meta.(*AWSClient).ec2conn
+	if _, ok := d.GetOk("eni_configuration"); ok {
+		if err := kinesisAnalyticsV2SetNetworkInterfaces(connEC2, d); err != nil {
 			return err
 		}
 	}
@@ -1553,6 +1594,54 @@ func resourceAwsKinesisAnalyticsV2ApplicationImport(d *schema.ResourceData, meta
 	d.Set("name", parts[1])
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func kinesisAnalyticsV2SetNetworkInterfaces(conn *ec2.EC2, d *schema.ResourceData) error {
+
+	log.Printf("[DEBUG] Start of kinesisAnalyticsV2SetNetworkInterfaces\n")
+	req := &ec2.DescribeNetworkInterfacesInput{}
+
+	eniConfiguration, _ := d.GetOk("eni_configuration")
+	filters := eniConfiguration.([]interface{})[0].(map[string]interface{})["filter"]
+	tags, tagsOk := d.GetOk("tags")
+
+	if tagsOk { // TODO: May want to remove tag filter because auto generated ENIs are (to my knowledge) not tagged
+		req.Filters = buildEC2TagFilterList(
+			keyvaluetags.New(tags.(map[string]interface{})).Ec2Tags(),
+		)
+	}
+
+	if true {
+		req.Filters = append(req.Filters, buildEC2CustomFilterList(
+			filters.(*schema.Set),
+		)...)
+	}
+
+	if len(req.Filters) == 0 {
+		req.Filters = nil
+	}
+
+	log.Printf("[DEBUG] DescribeNetworkInterfaces %s\n", req)
+	resp, err := conn.DescribeNetworkInterfaces(req)
+	if err != nil {
+		return err
+	}
+
+	if resp == nil || len(resp.NetworkInterfaces) == 0 {
+		return errors.New("no matching network interfaces found")
+	}
+
+	networkInterfaces := make([]string, 0)
+
+	for _, networkInterface := range resp.NetworkInterfaces {
+		networkInterfaces = append(networkInterfaces, aws.StringValue(networkInterface.NetworkInterfaceId))
+	}
+
+	log.Printf("[DEBUG] Found %d interfaces: %v", len(networkInterfaces), networkInterfaces)
+	eniConfiguration.([]interface{})[0].(map[string]interface{})["eni_ids"] = networkInterfaces
+	d.Set("eni_configuration", eniConfiguration)
+
+	return nil
 }
 
 func kinesisAnalyticsV2StartApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.StartApplicationInput) error {
@@ -2776,6 +2865,29 @@ func flattenKinesisAnalyticsV2CloudWatchLoggingOptionDescriptions(cloudWatchLogg
 
 	return []interface{}{mCloudWatchLoggingOption}
 }
+
+/*
+func flattenKinesisAnalyticsV2ENIConfiguration(enis []string, d *schema.ResourceData) []interface{} {
+	if applicationConfigurationDescription == nil {
+		return []interface{}{}
+	}
+
+
+		mENIConfiguration := map[string]interface{}{
+			"auto_assign":
+		}
+
+	return []interface{}{mENIConfiguration}
+
+	cloudWatchLoggingOptionDescription := cloudWatchLoggingOptionDescriptions[0]
+
+	mCloudWatchLoggingOption := map[string]interface{}{
+		"cloudwatch_logging_option_id": aws.StringValue(cloudWatchLoggingOptionDescription.CloudWatchLoggingOptionId),
+		"log_stream_arn":               aws.StringValue(cloudWatchLoggingOptionDescription.LogStreamARN),
+	}
+
+	return []interface{}{mCloudWatchLoggingOption}
+} */
 
 func flattenKinesisAnalyticsV2SourceSchema(sourceSchema *kinesisanalyticsv2.SourceSchema) []interface{} {
 	if sourceSchema == nil {
