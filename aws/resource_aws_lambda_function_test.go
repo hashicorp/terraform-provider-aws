@@ -196,6 +196,11 @@ func TestAccAWSLambdaFunction_codeSigningConfig(t *testing.T) {
 		t.Skip("Lambda code signing config is not supported in GovCloud partition")
 	}
 
+	//lintignore:AWSAT003
+	if testAccGetRegion() != "ap-northeast-3" {
+		t.Skip("Lambda code signing config is not supported in Osaka ap-northeast-3 region", testAccGetRegion())
+	}
+
 	var conf lambda.GetFunctionOutput
 	rString := acctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_csc_%s", rString)
