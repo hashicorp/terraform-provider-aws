@@ -116,8 +116,8 @@ For information on the difference between the available Aurora MySQL engines
 see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html)
 in the Amazon RDS User Guide.
 * `engine_version` - (Optional) The engine version to use. If `auto_minor_version_upgrade`
-is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`) and
-this attribute will ignore differences in the patch version automatically (e.g. `5.7.17`).
+is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`).
+The actual engine version used is returned in the attribute `engine_version_actual`, [defined below](#engine_version_actual).
 For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'.
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
@@ -282,7 +282,7 @@ DB instance.
 * `domain_iam_role_name` - The name of the IAM role to be used when making API calls to the Directory Service.
 * `endpoint` - The connection endpoint in `address:port` format.
 * `engine` - The database engine.
-* `engine_version` - The database engine version.
+* `engine_version_actual` - The running version of the database.
 * `hosted_zone_id` - The canonical hosted zone ID of the DB instance (to be used
 in a Route 53 Alias record).
 * `id` - The RDS instance ID.

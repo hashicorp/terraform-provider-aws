@@ -116,6 +116,39 @@ func TestAccAWSDBInstance_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_OnlyMajorVersion(t *testing.T) {
+	var dbInstance1 rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	engine := "mysql"
+	engineVersion1 := "5.6"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_MajorVersionOnly(engine, engineVersion1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance1),
+					resource.TestCheckResourceAttr(resourceName, "engine", engine),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"engine_version",
+					"password",
+				},
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_namePrefix(t *testing.T) {
 	var v rds.DBInstance
 
@@ -3573,6 +3606,32 @@ resource "aws_db_instance" "bar" {
   maintenance_window = "Fri:09:00-Fri:09:30"
 }
 `)
+}
+
+func testAccAWSDBInstanceConfig_MajorVersionOnly(engine, engineVersion string) string {
+	return composeConfig(testAccAWSDBInstanceConfig_orderableClassMysql(), fmt.Sprintf(`
+locals {
+  engine = %[1]q
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage       = 10
+  backup_retention_period = 0
+  engine                  = local.engine
+  engine_version          = %[2]q
+  instance_class          = "db.r4.large"
+  name                    = "baz"
+  parameter_group_name    = "default.mysql5.6"
+  password                = "barbarbarbar"
+  skip_final_snapshot     = true
+  username                = "foo"
+
+  # Maintenance Window is stored in lower case in the API, though not strictly
+  # documented. Terraform will downcase this to match (as opposed to throw a
+  # validation error).
+  maintenance_window = "Fri:09:00-Fri:09:30"
+}
+`, engine, engineVersion))
 }
 
 func testAccAWSDBInstanceConfig_namePrefix() string {
