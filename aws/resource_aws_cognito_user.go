@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsCognitoUser() *schema.Resource {
@@ -24,9 +25,23 @@ func resourceAwsCognitoUser() *schema.Resource {
 
 		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminCreateUser.html
 		Schema: map[string]*schema.Schema{
-			"user_attribute": {
-				Type:     schema.TypeSet,
+			"username": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"user_pool_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"enabled": {
+				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  true,
+			},
+			"user_attribute": {
+				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -40,16 +55,18 @@ func resourceAwsCognitoUser() *schema.Resource {
 						},
 					},
 				},
+				Optional: true,
 			},
-			"username": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"user_pool_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+			"desired_delivery_mediums": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						cognitoidentityprovider.DeliveryMediumTypeSms,
+						cognitoidentityprovider.DeliveryMediumTypeEmail,
+					}, false),
+				},
+				Optional: true,
 			},
 		},
 	}
@@ -68,6 +85,11 @@ func resourceAwsCognitoUserCreate(d *schema.ResourceData, meta interface{}) erro
 		params.UserAttributes = expandCognitoUserAttributes(attributes)
 	}
 
+	if v, ok := d.GetOk("desired_delivery_mediums"); ok {
+		mediums := v.(*schema.Set)
+		params.DesiredDeliveryMediums = expandDesiredDeliveryMediums(mediums)
+	}
+
 	log.Print("[DEBUG] Creating Cognito User")
 
 	resp, err := conn.AdminCreateUser(params)
@@ -76,6 +98,19 @@ func resourceAwsCognitoUserCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", *params.UserPoolId, *resp.User.Username))
+
+	if v := d.Get("enabled"); !v.(bool) {
+		log.Println("[DEBUG] the user enabled value is ", v)
+		disableParams := &cognitoidentityprovider.AdminDisableUserInput{
+			Username:   aws.String(d.Get("username").(string)),
+			UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+		}
+
+		_, err := conn.AdminDisableUser(disableParams)
+		if err != nil {
+			return fmt.Errorf("Error disabling Cognito User: %s", err)
+		}
+	}
 
 	return resourceAwsCognitoUserRead(d, meta)
 }
@@ -115,9 +150,9 @@ func resourceAwsCognitoUserUpdate(d *schema.ResourceData, meta interface{}) erro
 	log.Println("[DEBUG] Updating Cognito User")
 
 	if d.HasChange("user_attribute") {
-		o, n := d.GetChange("user_attribute")
+		old, new := d.GetChange("user_attribute")
 
-		upd, del := computeCognitoUserAttributesUpdate(o, n)
+		upd, del := computeCognitoUserAttributesUpdate(old, new)
 
 		if upd.Len() > 0 {
 			params := &cognitoidentityprovider.AdminUpdateUserAttributesInput{
@@ -149,6 +184,30 @@ func resourceAwsCognitoUserUpdate(d *schema.ResourceData, meta interface{}) erro
 					return nil
 				}
 				return fmt.Errorf("Error updating Cognito User Attributes: %s", err)
+			}
+		}
+	}
+
+	if d.HasChange("enabled") {
+		enabled := d.Get("enabled").(bool)
+
+		if enabled {
+			enableParams := &cognitoidentityprovider.AdminEnableUserInput{
+				Username:   aws.String(d.Get("username").(string)),
+				UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+			}
+			_, err := conn.AdminEnableUser(enableParams)
+			if err != nil {
+				return fmt.Errorf("Error enabling Cognito User: %s", err)
+			}
+		} else {
+			disableParams := &cognitoidentityprovider.AdminDisableUserInput{
+				Username:   aws.String(d.Get("username").(string)),
+				UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+			}
+			_, err := conn.AdminDisableUser(disableParams)
+			if err != nil {
+				return fmt.Errorf("Error disabling Cognito User: %s", err)
 			}
 		}
 	}
@@ -212,7 +271,6 @@ func flattenCognitoUserAttributes(apiList []*cognitoidentityprovider.AttributeTy
 	tfList := []interface{}{}
 
 	for _, apiAttribute := range apiList {
-		// not sure if this is the best way to deal with this system attrubute
 		if *apiAttribute.Name == "sub" {
 			continue
 		}
@@ -235,9 +293,19 @@ func flattenCognitoUserAttributes(apiList []*cognitoidentityprovider.AttributeTy
 	return tfSet
 }
 
-// computeCognitoUserAttributesUpdate computes which userattributes should be updated and which ones should be deleted.
-// We should do it like this because we cannot explicitly set a list of user attributes in cognito. We can either perform
-// an update or delete operation.
+func expandDesiredDeliveryMediums(tfSet *schema.Set) []*string {
+	apiList := []*string{}
+
+	for _, elem := range tfSet.List() {
+		apiList = append(apiList, aws.String(elem.(string)))
+	}
+
+	return apiList
+}
+
+// computeCognitoUserAttributesUpdate computes which user attributes should be updated and which ones should be deleted.
+// We should do it like this because we cannot set a list of user attributes in cognito. We can either perfor man update
+// or delete operation.
 func computeCognitoUserAttributesUpdate(old interface{}, new interface{}) (*schema.Set, []*string) {
 	oldMap := map[string]interface{}{}
 
