@@ -164,7 +164,7 @@ func resourceAwsSagemakerHumanTaskUiDelete(d *schema.ResourceData, meta interfac
 		HumanTaskUiName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, "ValidationException", "No human_task_ui") {
+	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 		return nil
 	}
 
