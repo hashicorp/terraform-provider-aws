@@ -1009,6 +1009,7 @@ func Provider() *schema.Provider {
 			"aws_sagemaker_feature_group":                             resourceAwsSagemakerFeatureGroup(),
 			"aws_sagemaker_image":                                     resourceAwsSagemakerImage(),
 			"aws_sagemaker_image_version":                             resourceAwsSagemakerImageVersion(),
+			"aws_sagemaker_human_task_ui":                             resourceAwsSagemakerHumanTaskUi(),
 			"aws_sagemaker_model":                                     resourceAwsSagemakerModel(),
 			"aws_sagemaker_model_package_group":                       resourceAwsSagemakerModelPackageGroup(),
 			"aws_sagemaker_notebook_instance_lifecycle_configuration": resourceAwsSagemakerNotebookInstanceLifeCycleConfiguration(),

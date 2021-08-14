@@ -246,3 +246,31 @@ func WorkteamByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Workteam
 
 	return output.Workteam, nil
 }
+
+func HumanTaskUiByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeHumanTaskUiOutput, error) {
+	input := &sagemaker.DescribeHumanTaskUiInput{
+		HumanTaskUiName: aws.String(name),
+	}
+
+	output, err := conn.DescribeHumanTaskUi(input)
+
+	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
