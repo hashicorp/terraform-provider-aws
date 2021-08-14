@@ -7,12 +7,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/fsx/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/fsx/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsFsxBackup() *schema.Resource {
@@ -38,6 +40,7 @@ func resourceAwsFsxBackup() *schema.Resource {
 			"file_system_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"kms_key_id": {
 				Type:     schema.TypeString,
@@ -47,7 +50,7 @@ func resourceAwsFsxBackup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
+			"tags":     tagsSchemaComputed(),
 			"tags_all": tagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
@@ -110,14 +113,14 @@ func resourceAwsFsxBackupRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	backup, err := finder.BackupByID(conn, d.Id())
-	if err != nil {
-		return err
-	}
-
-	if !d.IsNewResource() && backup == nil {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx Backup (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading FSx Backup (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", backup.ResourceARN)
@@ -154,12 +157,12 @@ func resourceAwsFsxBackupDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	_, err := conn.DeleteBackup(request)
-	if isAWSErr(err, fsx.ErrCodeBackupNotFound, "") {
-		return nil
-	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting FSx Backup: %w", err)
+		if tfawserr.ErrCodeEquals(err, fsx.ErrCodeBackupNotFound) {
+			return nil
+		}
+		return fmt.Errorf("Error deleting FSx Backup (%s): %w", d.Id(), err)
 	}
 
 	log.Println("[DEBUG] Waiting for filesystem to delete")

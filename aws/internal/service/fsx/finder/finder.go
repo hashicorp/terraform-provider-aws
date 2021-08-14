@@ -25,7 +25,7 @@ func BackupByID(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 		return nil, err
 	}
 
-	if output == nil || output.Backups == nil || len(output.Backups) == 0 {
+	if output == nil || len(output.Backups) == 0 || output.Backups[0] == nil {
 		return nil, &resource.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,

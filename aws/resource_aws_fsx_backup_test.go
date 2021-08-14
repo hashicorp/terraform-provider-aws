@@ -117,7 +117,29 @@ func TestAccAWSFsxBackup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxBackup_Tags(t *testing.T) {
+func TestAccAWSFsxBackup_disappears_filesystem(t *testing.T) {
+	var backup fsx.Backup
+	resourceName := "aws_fsx_backup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxBackupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxBackupConfigBasic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxBackupExists(resourceName, &backup),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsFsxLustreFileSystem(), "aws_fsx_lustre_file_system.test"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSFsxBackup_tags(t *testing.T) {
 	var backup fsx.Backup
 	resourceName := "aws_fsx_backup.test"
 
@@ -156,6 +178,33 @@ func TestAccAWSFsxBackup_Tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSFsxBackup_implictTags(t *testing.T) {
+	var backup fsx.Backup
+	resourceName := "aws_fsx_backup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxBackupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxBackupConfigImplictTags("key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxBackupExists(resourceName, &backup),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -259,4 +308,34 @@ resource "aws_fsx_backup" "test" {
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccAwsFsxBackupConfigImplictTags(tagKey1, tagValue1 string) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test1" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+}
+
+resource "aws_fsx_lustre_file_system" "test" {
+  storage_capacity            = 1200
+  subnet_ids                  = [aws_subnet.test1.id]
+  deployment_type             = "PERSISTENT_1"
+  per_unit_storage_throughput = 50
+  copy_tags_to_backups        = true
+
+  tags = {
+    %[1]q = %[2]q
+  }  
+}
+
+resource "aws_fsx_backup" "test" {
+  file_system_id = aws_fsx_lustre_file_system.test.id
+}
+`, tagKey1, tagValue1))
 }
