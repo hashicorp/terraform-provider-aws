@@ -331,7 +331,7 @@ resource "aws_fsx_lustre_file_system" "test" {
 
   tags = {
     %[1]q = %[2]q
-  }  
+  }
 }
 
 resource "aws_fsx_backup" "test" {
