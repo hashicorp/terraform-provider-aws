@@ -2,70 +2,69 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/fsx/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
-// func init() {
-// 	resource.AddTestSweepers("aws_fsx_lustre_file_system", &resource.Sweeper{
-// 		Name: "aws_fsx_lustre_file_system",
-// 		F:    testSweepFSXBackups,
-// 	})
-// }
+func init() {
+	resource.AddTestSweepers("aws_fsx_backup", &resource.Sweeper{
+		Name: "aws_fsx_backup",
+		F:    testSweepFSXBackups,
+	})
+}
 
-// func testSweepFSXBackups(region string) error {
-// 	client, err := sharedClientForRegion(region)
+func testSweepFSXBackups(region string) error {
+	client, err := sharedClientForRegion(region)
 
-// 	if err != nil {
-// 		return fmt.Errorf("error getting client: %s", err)
-// 	}
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
 
-// 	conn := client.(*AWSClient).fsxconn
-// 	sweepResources := make([]*testSweepResource, 0)
-// 	var errs *multierror.Error
-// 	input := &fsx.DescribeBackupsInput{}
+	conn := client.(*AWSClient).fsxconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
+	input := &fsx.DescribeBackupsInput{}
 
-// 	err = conn.DescribeBackupsPages(input, func(page *fsx.DescribeBackupsOutput, lastPage bool) bool {
-// 		if page == nil {
-// 			return !lastPage
-// 		}
+	err = conn.DescribeBackupsPages(input, func(page *fsx.DescribeBackupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
 
-// 		for _, fs := range page.Backups {
-// 			if aws.StringValue(fs.BackupType) != fsx.BackupTypeLustre {
-// 				continue
-// 			}
+		for _, fs := range page.Backups {
+			r := resourceAwsFsxBackup()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(fs.BackupId))
 
-// 			r := resourceAwsFsxBackup()
-// 			d := r.Data(nil)
-// 			d.SetId(aws.StringValue(fs.BackupId))
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+		}
 
-// 			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
-// 		}
+		return !lastPage
+	})
 
-// 		return !lastPage
-// 	})
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing FSx Backups for %s: %w", region, err))
+	}
 
-// 	if err != nil {
-// 		errs = multierror.Append(errs, fmt.Errorf("error listing FSx Lustre Filesystems for %s: %w", region, err))
-// 	}
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Backups for %s: %w", region, err))
+	}
 
-// 	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
-// 		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Lustre Filesystems for %s: %w", region, err))
-// 	}
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping FSx Backups sweep for %s: %s", region, errs)
+		return nil
+	}
 
-// 	if testSweepSkipSweepError(errs.ErrorOrNil()) {
-// 		log.Printf("[WARN] Skipping FSx Lustre Filesystems sweep for %s: %s", region, errs)
-// 		return nil
-// 	}
-
-// 	return errs.ErrorOrNil()
-// }
+	return errs.ErrorOrNil()
+}
 
 func TestAccAWSFsxBackup_basic(t *testing.T) {
 	var backup fsx.Backup
