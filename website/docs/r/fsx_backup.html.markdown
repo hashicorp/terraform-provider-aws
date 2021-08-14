@@ -48,8 +48,8 @@ In addition to all arguments above, the following attributes are exported:
 `aws_fsx_backup` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
 configuration options:
 
-* `create` - (Default `30m`) How long to wait for the backup to be created.
-* `delete` - (Default `30m`) How long to wait for the backup to be deleted.
+* `create` - (Default `10m`) How long to wait for the backup to be created.
+* `delete` - (Default `10m`) How ålong to wait for the backup to be deleted.
 
 ## Import
 
