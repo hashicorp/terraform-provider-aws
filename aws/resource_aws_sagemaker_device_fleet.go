@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsSagemakerDeviceFleet() *schema.Resource {
@@ -123,14 +124,14 @@ func resourceAwsSagemakerDeviceFleetRead(d *schema.ResourceData, meta interface{
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	deviceFleet, err := finder.DeviceFleetByName(conn, d.Id())
-	if err != nil {
-		if isAWSErr(err, "ValidationException", "No devicefleet with name") {
-			d.SetId("")
-			log.Printf("[WARN] Unable to find SageMaker Device Fleet (%s); removing from state", d.Id())
-			return nil
-		}
-		return fmt.Errorf("error reading SageMaker Device Fleet (%s): %w", d.Id(), err)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Unable to find SageMaker Device Fleet (%s); removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
+	if err != nil {
+		return fmt.Errorf("error reading SageMaker Device Fleet (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(deviceFleet.DeviceFleetArn)

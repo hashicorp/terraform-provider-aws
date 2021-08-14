@@ -91,12 +91,22 @@ func DeviceFleetByName(conn *sagemaker.SageMaker, id string) (*sagemaker.Describ
 	}
 
 	output, err := conn.DescribeDeviceFleet(input)
+	if tfawserr.ErrMessageContains(err, "ValidationException", "No devicefleet with name") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	if output == nil {
-		return nil, nil
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
 	}
 
 	return output, nil
