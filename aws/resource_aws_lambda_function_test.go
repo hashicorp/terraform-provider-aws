@@ -196,6 +196,8 @@ func TestAccAWSLambdaFunction_codeSigningConfig(t *testing.T) {
 		t.Skip("Lambda code signing config is not supported in GovCloud partition")
 	}
 
+	// We are hardcoding the region here, because go aws sdk endpoints
+	// package does not support Signer service
 	//lintignore:AWSAT003
 	if testAccGetRegion() != "ap-northeast-3" {
 		t.Skip("Lambda code signing config is not supported in Osaka ap-northeast-3 region", testAccGetRegion())
