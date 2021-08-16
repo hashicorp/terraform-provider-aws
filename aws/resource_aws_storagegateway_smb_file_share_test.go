@@ -1118,6 +1118,7 @@ resource "aws_storagegateway_smb_file_share" "test" {
 `, guessMimeTypeEnabled))
 }
 
+/*
 func testAccAWSStorageGatewaySmbFileShareConfig_OpLocksEnabled(rName string, opLocksEnabled bool) string {
 	return composeConfig(testAccAWSStorageGateway_SmbFileShare_GuestAccessBase(rName), fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
@@ -1130,6 +1131,7 @@ resource "aws_storagegateway_smb_file_share" "test" {
 }
 `, opLocksEnabled))
 }
+*/
 
 func testAccAWSStorageGatewaySmbFileShareConfig_InvalidUserList_Single(rName, domainName, invalidUser1 string) string {
 	return composeConfig(testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName, domainName), fmt.Sprintf(`
