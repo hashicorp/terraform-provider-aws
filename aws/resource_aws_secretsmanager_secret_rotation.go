@@ -51,7 +51,6 @@ func resourceAwsSecretsManagerSecretRotation() *schema.Resource {
 					},
 				},
 			},
-			"tags": tagsSchema(),
 		},
 	}
 }
