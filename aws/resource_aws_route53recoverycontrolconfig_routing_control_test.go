@@ -79,7 +79,7 @@ func testAccCheckAwsRoute53RecoveryControlConfigRoutingControlDestroy(s *terrafo
 func testAccAwsRoute53RecoveryControlConfigRoutingControlConfig(rName string) string {
 	return fmt.Sprintf(`
 	resource "aws_route53recoverycontrolconfig_routing_control" "test" {
-	  name = %q
+	  name = %[1]q
 	}
 	`, rName)
 }

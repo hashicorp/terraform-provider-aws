@@ -80,7 +80,7 @@ func testAccCheckAwsRoute53RecoveryControlConfigClusterDestroy(s *terraform.Stat
 func testAccAwsRoute53RecoveryControlConfigClusterConfig(rName string) string {
 	return fmt.Sprintf(`
 	resource "aws_route53recoverycontrolconfig_cluster" "test" {
-	  name = %q
+	  name = %[1]q
 	}
 	`, rName)
 }

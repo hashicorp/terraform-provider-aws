@@ -10,15 +10,6 @@ description: |-
 
 Provides an AWS Route 53 Recovery Control Config Control Panel
 
-## Example Usage
-
-```terraform
-resource "aws_route53recoverycontrolconfig_control_panel" "mypanel" {
-  name = "mypanel"
-  cluster_arn = "i_belong_to_this_cluster"
-}
-```
-
 ## Argument Reference
 
 The following arguments are supported:

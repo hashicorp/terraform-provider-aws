@@ -19,7 +19,7 @@ func resourceAwsRoute53RecoveryControlConfigCluster() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		
+
 		Schema: map[string]*schema.Schema{
 			"cluster_arn": {
 				Type:     schema.TypeString,
@@ -36,13 +36,11 @@ func resourceAwsRoute53RecoveryControlConfigCluster() *schema.Resource {
 			"cluster_endpoints": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cluster_endpoint": {
 							Type:     schema.TypeList,
 							Computed: true,
-							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"endpoint": {
