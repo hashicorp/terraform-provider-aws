@@ -146,7 +146,7 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 			"oplocks_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Computed: true,
 			},
 			"notification_policy": {
 				Type:     schema.TypeString,
@@ -212,7 +212,6 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 		GuessMIMETypeEnabled:   aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
 		KMSEncrypted:           aws.Bool(d.Get("kms_encrypted").(bool)),
 		LocationARN:            aws.String(d.Get("location_arn").(string)),
-		OplocksEnabled:         aws.Bool(d.Get("oplocks_enabled").(bool)),
 		ReadOnly:               aws.Bool(d.Get("read_only").(bool)),
 		RequesterPays:          aws.Bool(d.Get("requester_pays").(bool)),
 		Role:                   aws.String(d.Get("role_arn").(string)),
@@ -265,6 +264,10 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("object_acl"); ok {
 		input.ObjectACL = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("oplocks_enabled"); ok {
+		input.OplocksEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("valid_user_list"); ok && v.(*schema.Set).Len() > 0 {
@@ -371,7 +374,6 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 			FileShareARN:           aws.String(d.Id()),
 			GuessMIMETypeEnabled:   aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
 			KMSEncrypted:           aws.Bool(d.Get("kms_encrypted").(bool)),
-			OplocksEnabled:         aws.Bool(d.Get("oplocks_enabled").(bool)),
 			ReadOnly:               aws.Bool(d.Get("read_only").(bool)),
 			RequesterPays:          aws.Bool(d.Get("requester_pays").(bool)),
 			SMBACLEnabled:          aws.Bool(d.Get("smb_acl_enabled").(bool)),
@@ -401,13 +403,13 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 			input.FileShareName = aws.String(d.Get("file_share_name").(string))
 		}
 
+		if d.HasChange("invalid_user_list") {
+			input.InvalidUserList = expandStringSet(d.Get("invalid_user_list").(*schema.Set))
+		}
+
 		// This value can only be set when KMSEncrypted is true.
 		if d.HasChange("kms_key_arn") && d.Get("kms_encrypted").(bool) {
 			input.KMSKey = aws.String(d.Get("kms_key_arn").(string))
-		}
-
-		if d.HasChange("invalid_user_list") {
-			input.InvalidUserList = expandStringSet(d.Get("invalid_user_list").(*schema.Set))
 		}
 
 		if d.HasChange("notification_policy") {
@@ -416,6 +418,10 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 
 		if d.HasChange("object_acl") {
 			input.ObjectACL = aws.String(d.Get("object_acl").(string))
+		}
+
+		if d.HasChange("oplocks_enabled") {
+			input.OplocksEnabled = aws.Bool(d.Get("oplocks_enabled").(bool))
 		}
 
 		if d.HasChange("valid_user_list") {
