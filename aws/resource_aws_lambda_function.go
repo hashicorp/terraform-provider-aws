@@ -332,7 +332,7 @@ func checkHandlerRuntimeForZipFunction(_ context.Context, d *schema.ResourceDiff
 	_, handlerOk := d.GetOk("handler")
 	_, runtimeOk := d.GetOk("runtime")
 
-	if packageType == lambda.PackageTypeZip && !handlerOk && !runtimeOk {
+	if packageType == lambda.PackageTypeZip && (!handlerOk || !runtimeOk) {
 		return fmt.Errorf("handler and runtime must be set when PackageType is Zip")
 	}
 	return nil
