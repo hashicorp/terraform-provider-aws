@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig"
 )
 
 func resourceAwsRoute53RecoveryControlConfigCluster() *schema.Resource {
@@ -19,6 +19,7 @@ func resourceAwsRoute53RecoveryControlConfigCluster() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+		
 		Schema: map[string]*schema.Schema{
 			"cluster_arn": {
 				Type:     schema.TypeString,
