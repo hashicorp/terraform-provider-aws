@@ -30,7 +30,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `cluster_arn` - The ARN of the cluster
 * `cluster_endpoints` - A list of 5 endpoints in 5 regions that can be used to talk to cluster
-* `status` - Represents status of cluster. PENDING when its being created, PENDING_DELETION when its being deleted and DEPLOYED otherwise 
+* `status` - Represents status of cluster. PENDING when its being created, PENDING_DELETION when its being  deleted and DEPLOYED otherwise
 
 ## Import
 

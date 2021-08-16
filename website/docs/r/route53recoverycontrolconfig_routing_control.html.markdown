@@ -40,7 +40,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `routing_control_arn` - The ARN of the routing control.
-* `status` - Represents status of routing control. PENDING when its being created/updated, PENDING_DELETION when its being deleted and DEPLOYED otherwise 
+* `status` - Represents status of routing control. PENDING when its being created/updated, PENDING_DELETION when its being deleted and DEPLOYED otherwise
 
 ## Import
 
