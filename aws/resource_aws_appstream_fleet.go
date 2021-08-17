@@ -366,9 +366,7 @@ func resourceAwsAppStreamFleetUpdate(ctx context.Context, d *schema.ResourceData
 	}
 	shouldStop := false
 
-	if d.HasChange("description") || d.HasChange("domain_join_info") || d.HasChange("enable_default_internet_access") ||
-		d.HasChange("iam_role_arn") || d.HasChange("instance_type") || d.HasChange("max_user_duration_in_seconds") ||
-		d.HasChange("stream_view") || d.HasChange("vpc_config") {
+	if d.HasChanges("description", "domain_join_info", "enable_default_internet_access", "iam_role_arn", "instance_type", "max_user_duration_in_seconds", "stream_view", "vpc_config") {
 		shouldStop = true
 	}
 
