@@ -45,6 +45,7 @@ The following arguments are required:
 
 * `compute_capacity` - (Required) Configuration block for the desired capacity of the fleet. See below.
 * `instance_type` - (Required) Instance type to use when launching fleet instances.
+* `name` - (Required) Unique name for the fleet.
 
 The following arguments are optional:
 
@@ -58,8 +59,6 @@ The following arguments are optional:
 * `idle_disconnect_timeout_in_seconds` - (Optional) Amount of time that users can be idle (inactive) before they are disconnected from their streaming session and the `disconnect_timeout_in_seconds` time interval begins.
 * `image_name` - (Optional) Name of the image used to create the fleet.
 * `image_arn` - (Optional) ARN of the public, private, or shared image to use.
-* `name` - (Optional) Unique name for the fleet.
-* `name_prefix` -  (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `stream_view` - (Optional) AppStream 2.0 view that is displayed to your users when they stream from the fleet. When `APP` is specified, only the windows of applications opened by users display. When `DESKTOP` is specified, the standard desktop that is provided by the operating system displays.
 * `max_user_duration_in_seconds` - (Optional) Maximum amount of time that a streaming session can remain active, in seconds.
 * `vpc_config` - (Optional) Configuration block for the VPC configuration for the image builder. See below.

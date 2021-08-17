@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appstream/waiter"
 )
 
@@ -142,18 +141,9 @@ func resourceAwsAppStreamFleet() *schema.Resource {
 				ValidateFunc: validation.IntBetween(600, 360000),
 			},
 			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-			},
-			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"stream_view": {
 				Type:         schema.TypeString,
@@ -196,7 +186,7 @@ func resourceAwsAppStreamFleet() *schema.Resource {
 func resourceAwsAppStreamFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).appstreamconn
 	input := &appstream.CreateFleetInput{
-		Name:            aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))),
+		Name:            aws.String(d.Get("name").(string)),
 		InstanceType:    aws.String(d.Get("instance_type").(string)),
 		ComputeCapacity: expandComputeCapacity(d.Get("compute_capacity").([]interface{})),
 	}
@@ -329,7 +319,6 @@ func resourceAwsAppStreamFleetRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("instance_type", v.InstanceType)
 		d.Set("max_user_duration_in_seconds", v.MaxUserDurationInSeconds)
 		d.Set("name", v.Name)
-		d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(v.Name)))
 		d.Set("state", v.State)
 		d.Set("stream_view", v.StreamView)
 		if err = d.Set("vpc_config", flattenVpcConfig(v.VpcConfig)); err != nil {
@@ -498,33 +487,33 @@ func resourceAwsAppStreamFleetDelete(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func expandComputeCapacity(computeCapacity []interface{}) *appstream.ComputeCapacity {
-	if len(computeCapacity) == 0 {
+func expandComputeCapacity(tfList []interface{}) *appstream.ComputeCapacity {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	computeConf := &appstream.ComputeCapacity{}
+	apiObject := &appstream.ComputeCapacity{}
 
-	attr := computeCapacity[0].(map[string]interface{})
+	attr := tfList[0].(map[string]interface{})
 	if v, ok := attr["desired_instances"]; ok {
-		computeConf.DesiredInstances = aws.Int64(int64(v.(int)))
+		apiObject.DesiredInstances = aws.Int64(int64(v.(int)))
 	}
 
-	return computeConf
+	return apiObject
 }
 
-func flattenComputeCapacity(computeCapacity *appstream.ComputeCapacityStatus) []interface{} {
-	if computeCapacity == nil {
+func flattenComputeCapacity(apiObject *appstream.ComputeCapacityStatus) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	compAttr := map[string]interface{}{}
-	compAttr["desired_instances"] = aws.Int64Value(computeCapacity.Desired)
-	compAttr["available"] = aws.Int64Value(computeCapacity.Available)
-	compAttr["in_use"] = aws.Int64Value(computeCapacity.InUse)
-	compAttr["running"] = aws.Int64Value(computeCapacity.Running)
+	tfList := map[string]interface{}{}
+	tfList["desired_instances"] = aws.Int64Value(apiObject.Desired)
+	tfList["available"] = aws.Int64Value(apiObject.Available)
+	tfList["in_use"] = aws.Int64Value(apiObject.InUse)
+	tfList["running"] = aws.Int64Value(apiObject.Running)
 
-	return []interface{}{compAttr}
+	return []interface{}{tfList}
 }
 
 func expandDomainJoinInfo(tfList []interface{}) *appstream.DomainJoinInfo {
@@ -534,11 +523,11 @@ func expandDomainJoinInfo(tfList []interface{}) *appstream.DomainJoinInfo {
 
 	apiObject := &appstream.DomainJoinInfo{}
 
-	attr := tfList[0].(map[string]interface{})
-	if v, ok := attr["directory_name"]; ok {
+	tfMap := tfList[0].(map[string]interface{})
+	if v, ok := tfMap["directory_name"]; ok {
 		apiObject.DirectoryName = aws.String(v.(string))
 	}
-	if v, ok := attr["organizational_unit_distinguished_name"]; ok {
+	if v, ok := tfMap["organizational_unit_distinguished_name"]; ok {
 		apiObject.OrganizationalUnitDistinguishedName = aws.String(v.(string))
 	}
 
@@ -564,11 +553,11 @@ func expandVpcConfig(tfList []interface{}) *appstream.VpcConfig {
 
 	apiObject := &appstream.VpcConfig{}
 
-	attr := tfList[0].(map[string]interface{})
-	if v, ok := attr["security_group_ids"]; ok {
+	tfMap := tfList[0].(map[string]interface{})
+	if v, ok := tfMap["security_group_ids"]; ok {
 		apiObject.SecurityGroupIds = expandStringList(v.([]interface{}))
 	}
-	if v, ok := attr["subnet_ids"]; ok {
+	if v, ok := tfMap["subnet_ids"]; ok {
 		apiObject.SubnetIds = expandStringList(v.([]interface{}))
 	}
 
