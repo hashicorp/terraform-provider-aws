@@ -590,12 +590,14 @@ rules:
     paths:
       include:
         - aws/data_source*.go
+        - aws/resource_aws_a*.go
+        - aws/resource_aws_b*.go
         - aws/resource_aws_workspaces_*.go
     patterns:
       - patterns:
         - pattern-regex: '[\"`].*(?<!(example))\.(com|net|org)\b'
         - pattern-regex: '[\"`].*(?<!(amazonaws))\.com\b'
-        - pattern-regex: '[\"`].*(?<!(awsapps))\.com'
+        - pattern-regex: '[\"`].*(?<!(awsapps))\.com\b'
       - pattern-inside: '($X : string)'
     severity: WARNING
 

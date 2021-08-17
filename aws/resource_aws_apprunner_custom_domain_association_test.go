@@ -38,7 +38,7 @@ func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 					testAccCheckAwsAppRunnerCustomDomainAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "certificate_validation_records.#", "3"),
 					resource.TestCheckResourceAttrSet(resourceName, "dns_target"),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "hashicorp.com"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
 					resource.TestCheckResourceAttr(resourceName, "enable_www_subdomain", "true"),
 					resource.TestCheckResourceAttr(resourceName, "status", waiter.CustomDomainAssociationStatusPendingCertificateDnsValidation),
 					resource.TestCheckResourceAttrPair(resourceName, "service_arn", serviceResourceName, "arn"),
