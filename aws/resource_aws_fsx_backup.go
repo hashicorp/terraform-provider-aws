@@ -156,18 +156,19 @@ func resourceAwsFsxBackupDelete(d *schema.ResourceData, meta interface{}) error 
 		BackupId: aws.String(d.Id()),
 	}
 
+	log.Printf("[INFO] Deleting FSx Backup: %s", d.Id())
 	_, err := conn.DeleteBackup(request)
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, fsx.ErrCodeBackupNotFound) {
 			return nil
 		}
-		return fmt.Errorf("Error deleting FSx Backup (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting FSx Backup (%s): %w", d.Id(), err)
 	}
 
 	log.Println("[DEBUG] Waiting for filesystem to delete")
 	if _, err := waiter.BackupDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for FSx backup (%s) to deleted: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for FSx Backup (%s) to deleted: %w", d.Id(), err)
 	}
 
 	return nil

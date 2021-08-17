@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_fsx_backup
 
-Provides a FSx backup resource.
+Provides a FSx Backup resource.
 
 ## Example Usage
 
