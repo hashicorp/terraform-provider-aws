@@ -296,6 +296,10 @@ service/route53:
   - '((\*|-) ?`?|(data|resource) "?)aws_route53_(?!resolver_)'
 service/route53domains:
   - '((\*|-) ?`?|(data|resource) "?)aws_route53domains_'
+service/route53recoverycontrolconfig:
+  - '((\*|-) ?`?|(data|resource) "?)aws_route53recoverycontrolconfig_'  
+service/route53recoveryreadiness:
+  - '((\*|-) ?`?|(data|resource) "?)aws_route53recoveryreadiness_'
 service/route53resolver:
   - '((\*|-) ?`?|(data|resource) "?)aws_route53_resolver_'
 service/s3:

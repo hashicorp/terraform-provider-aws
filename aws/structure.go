@@ -698,15 +698,9 @@ func flattenParameters(list []*rds.Parameter) []map[string]interface{} {
 	for _, i := range list {
 		if i.ParameterName != nil {
 			r := make(map[string]interface{})
-			r["name"] = strings.ToLower(*i.ParameterName)
-			// Default empty string, guard against nil parameter values
-			r["value"] = ""
-			if i.ParameterValue != nil {
-				r["value"] = strings.ToLower(*i.ParameterValue)
-			}
-			if i.ApplyMethod != nil {
-				r["apply_method"] = strings.ToLower(*i.ApplyMethod)
-			}
+			r["name"] = aws.StringValue(i.ParameterName)
+			r["value"] = aws.StringValue(i.ParameterValue)
+			r["apply_method"] = aws.StringValue(i.ApplyMethod)
 
 			result = append(result, r)
 		}
@@ -719,8 +713,8 @@ func flattenRedshiftParameters(list []*redshift.Parameter) []map[string]interfac
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, i := range list {
 		result = append(result, map[string]interface{}{
-			"name":  strings.ToLower(*i.ParameterName),
-			"value": strings.ToLower(*i.ParameterValue),
+			"name":  aws.StringValue(i.ParameterName),
+			"value": aws.StringValue(i.ParameterValue),
 		})
 	}
 	return result

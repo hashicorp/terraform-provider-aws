@@ -41,7 +41,37 @@ func TestAccAWSAppConfigDeployment_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "deployment_strategy_id", depStrategyResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "environment_id", envResourceName, "environment_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAppConfigDeployment_PredefinedStrategy(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_appconfig_deployment.test"
+	strategy := "AppConfig.Linear50PercentEvery30Seconds"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, appconfig.EndpointsID),
+		Providers:  testAccProviders,
+		// AppConfig Deployments cannot be destroyed, but we want to ensure
+		// the Application and its dependents are removed.
+		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAppConfigDeploymentConfig_PredefinedStrategy(rName, strategy),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppConfigDeploymentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_strategy_id", strategy),
 				),
 			},
 			{
@@ -187,6 +217,21 @@ resource "aws_appconfig_deployment" "test"{
   environment_id           = aws_appconfig_environment.test.environment_id
 }
 `, rName))
+}
+
+func testAccAWSAppConfigDeploymentConfig_PredefinedStrategy(rName, strategy string) string {
+	return composeConfig(
+		testAccAWSAppConfigDeploymentConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_appconfig_deployment" "test"{
+  application_id           = aws_appconfig_application.test.id
+  configuration_profile_id = aws_appconfig_configuration_profile.test.configuration_profile_id
+  configuration_version    = aws_appconfig_hosted_configuration_version.test.version_number
+  description              = %[1]q
+  deployment_strategy_id   = %[2]q
+  environment_id           = aws_appconfig_environment.test.environment_id
+}
+`, rName, strategy))
 }
 
 func testAccAWSAppConfigDeploymentTags1(rName, tagKey1, tagValue1 string) string {

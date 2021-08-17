@@ -824,6 +824,25 @@ func testAccOrganizationManagementAccountPreCheck(t *testing.T) {
 	}
 }
 
+func testAccPreCheckHasIAMRole(t *testing.T, roleName string) {
+	conn := testAccProvider.Meta().(*AWSClient).iamconn
+
+	input := &iam.GetRoleInput{
+		RoleName: aws.String(roleName),
+	}
+	_, err := conn.GetRole(input)
+
+	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		t.Skipf("skipping acceptance test: required IAM role \"%s\" is not present", roleName)
+	}
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance test: %s", err)
+	}
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccPreCheckIamServiceLinkedRole(t *testing.T, pathPrefix string) {
 	conn := testAccProvider.Meta().(*AWSClient).iamconn
 

@@ -75,7 +75,7 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 				Optional: true,
 			},
 			"instance_types": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
@@ -285,8 +285,8 @@ func resourceAwsEksNodeGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		input.DiskSize = aws.Int64(int64(v.(int)))
 	}
 
-	if v := d.Get("instance_types").([]interface{}); len(v) > 0 {
-		input.InstanceTypes = expandStringList(v)
+	if v := d.Get("instance_types").(*schema.Set); v.Len() > 0 {
+		input.InstanceTypes = expandStringSet(v)
 	}
 
 	if v := d.Get("labels").(map[string]interface{}); len(v) > 0 {
