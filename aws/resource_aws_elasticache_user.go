@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -28,9 +27,6 @@ func resourceAwsElasticacheUser() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		CustomizeDiff: SetTagsDiff,
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(20 * time.Minute),
-		},
 
 		Schema: map[string]*schema.Schema{
 			"access_string": {
