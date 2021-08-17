@@ -232,32 +232,6 @@ func expandIPPerms(
 	return perms, nil
 }
 
-// Takes the result of flatmap.Expand for an array of parameters and
-// returns Parameter API compatible objects
-func expandParameters(configured []interface{}) []*rds.Parameter {
-	var parameters []*rds.Parameter
-
-	// Loop over our configured parameters and create
-	// an array of aws-sdk-go compatible objects
-	for _, pRaw := range configured {
-		data := pRaw.(map[string]interface{})
-
-		if data["name"].(string) == "" {
-			continue
-		}
-
-		p := &rds.Parameter{
-			ApplyMethod:    aws.String(data["apply_method"].(string)),
-			ParameterName:  aws.String(data["name"].(string)),
-			ParameterValue: aws.String(data["value"].(string)),
-		}
-
-		parameters = append(parameters, p)
-	}
-
-	return parameters
-}
-
 func expandRedshiftParameters(configured []interface{}) []*redshift.Parameter {
 	var parameters []*redshift.Parameter
 
@@ -692,12 +666,45 @@ func flattenOptions(apiOptions []*rds.Option, optionConfigurations []*rds.Option
 	return result
 }
 
+// Takes the result of flatmap.Expand for an array of parameters and
+// returns Parameter API compatible objects
+func expandParameters(configured []interface{}) []*rds.Parameter {
+	var parameters []*rds.Parameter
+
+	// Loop over our configured parameters and create
+	// an array of aws-sdk-go compatible objects
+	for _, pRaw := range configured {
+		data := pRaw.(map[string]interface{})
+
+		if data["name"].(string) == "" {
+			continue
+		}
+
+		p := &rds.Parameter{
+			ParameterName:  aws.String(strings.ToLower(data["name"].(string))),
+			ParameterValue: aws.String(data["value"].(string)),
+		}
+
+		if data["apply_method"].(string) != "" {
+			p.ApplyMethod = aws.String(strings.ToLower(data["apply_method"].(string)))
+		}
+
+		parameters = append(parameters, p)
+	}
+
+	return parameters
+}
+
 // Flattens an array of Parameters into a []map[string]interface{}
 func flattenParameters(list []*rds.Parameter) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, i := range list {
 		if i.ParameterName != nil {
 			r := make(map[string]interface{})
+			if i.ApplyMethod != nil {
+				r["apply_method"] = strings.ToLower(aws.StringValue(i.ApplyMethod))
+			}
+
 			r["name"] = strings.ToLower(aws.StringValue(i.ParameterName))
 
 			// Default empty string, guard against nil parameter values
@@ -706,13 +713,10 @@ func flattenParameters(list []*rds.Parameter) []map[string]interface{} {
 				r["value"] = aws.StringValue(i.ParameterValue)
 			}
 
-			if i.ApplyMethod != nil {
-				r["apply_method"] = strings.ToLower(aws.StringValue(i.ApplyMethod))
-			}
-
 			result = append(result, r)
 		}
 	}
+
 	return result
 }
 
