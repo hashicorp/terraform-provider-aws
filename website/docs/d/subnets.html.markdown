@@ -3,18 +3,16 @@ subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_subnets"
 description: |-
-    Provides a set of subnet Ids
+    Get information about a set of subnets.
 ---
 
 # Data Source: aws_subnets
 
-`aws_subnets` provides a set of ids
-
-This resource can be useful for getting back a set of subnet ids.
+This resource can be useful for getting back a set of subnet IDs.
 
 ## Example Usage
 
-The following shows outputing all cidr blocks for every subnet id in a vpc.
+The following shows outputing all CIDR blocks for every subnet ID in a VPC.
 
 ```terraform
 data "aws_subnets" "example" {
@@ -61,7 +59,6 @@ resource "aws_instance" "app" {
 ## Argument Reference
 
 * `filter` - (Optional) Custom filter block as described below.
-
 * `tags` - (Optional) A map of tags, each pair of which must exactly match
   a pair on the desired subnets.
 
@@ -86,4 +83,4 @@ data "aws_subnets" "selected" {
 
 ## Attributes Reference
 
-* `ids` - A set of all the subnet ids found. This data source will fail if none are found.
+* `ids` - A list of all the subnet ids found.
