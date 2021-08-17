@@ -837,6 +837,15 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 		return nil
 	}
 
+	// Currently, this functionality is not enabled in ap-northeast-3 (Osaka) region
+	// and returns ambiguous error codes (e.g. AccessDeniedException)
+	// so we cannot just ignore the error as would typically.
+	// We are hardcoding the region here, because go aws sdk endpoints
+	// package does not support Signer service
+	if meta.(*AWSClient).region == endpoints.ApNortheast3RegionID {
+		return nil
+	}
+
 	// Code Signing is only supported on zip packaged lambda functions.
 	var codeSigningConfigArn string
 
