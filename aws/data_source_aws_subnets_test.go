@@ -138,7 +138,7 @@ data "aws_subnets" "none" {
   filter {
     name   = "cidr-block"
     values = ["172.16.127.0/24"]
- }
+  }
 }
 `)
 }
