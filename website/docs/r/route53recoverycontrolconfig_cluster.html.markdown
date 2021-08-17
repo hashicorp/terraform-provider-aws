@@ -10,6 +10,14 @@ description: |-
 
 Provides an AWS Route 53 Recovery Control Config Cluster
 
+## Example Usage
+
+```terraform
+resource "aws_route53recoverycontrolconfig_cluster" "example" {
+  name = aws_route53recoverycontrolconfig_cluster
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

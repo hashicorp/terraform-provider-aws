@@ -10,6 +10,15 @@ description: |-
 
 Provides an AWS Route 53 Recovery Control Config Control Panel
 
+## Example Usage
+
+```terraform
+resource "aws_route53recoverycontrolconfig_control_panel" "mypanel" {
+  name        = aws_route53recoverycontrolconfig_control_panel
+  cluster_arn = i_belong_to_this_cluster
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -25,7 +34,7 @@ In addition to all arguments above, the following attributes are exported:
 * `cluster_arn` - ARN of the cluster that the control panel belongs to
 * `default_control_panel` - This is true if a control panel is default, false otherwise
 * `routing_contol_count` - The number routing controls in a control panel
-* `status` - Represents status of control panel. PENDING when its being created/updated, PENDING_DELETION when its being deleted and DEPLOYED otherwise
+* `status` - Represents status of control panel. PENDING when its being created/updated, PENDING_DELETION when its being deleted and DEPLOYED otherwise 
 
 ## Import
 

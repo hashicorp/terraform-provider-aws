@@ -10,6 +10,23 @@ description: |-
 
 Provides an AWS Route 53 Recovery Control Config Routing Control
 
+## Example Usage
+
+```terraform
+resource "aws_route53recoverycontrolconfig_routing_control" "mycontrol" {
+  name        = aws_route53recoverycontrolconfig_routing_control
+  cluster_arn = i_belong_to_this_cluster
+}
+```
+
+```terraform
+resource "aws_route53recoverycontrolconfig_routing_control" "mycontrol" {
+  name              = aws_route53recoverycontrolconfig_routing_control
+  cluster_arn       = i_belong_to_this_cluster
+  control_panel_arn = i_have_to_belong_this_control_panel_in_cluster
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
