@@ -705,6 +705,7 @@ func flattenParameters(list []*rds.Parameter) []map[string]interface{} {
 			if i.ParameterValue != nil {
 				r["value"] = aws.StringValue(i.ParameterValue)
 			}
+
 			if i.ApplyMethod != nil {
 				r["apply_method"] = strings.ToLower(aws.StringValue(i.ApplyMethod))
 			}
