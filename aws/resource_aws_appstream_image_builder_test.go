@@ -12,12 +12,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
-func testAccAwsAppStreamImageBuilder_basic(t *testing.T) {
+func TestAccAwsAppStreamImageBuilder_basic(t *testing.T) {
 	var imageBuilderOutput appstream.ImageBuilder
 	resourceName := "aws_appstream_image_builder.test"
 	instanceType := "stream.standard.small"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsAppStreamImageBuilderDestroy,
@@ -41,12 +41,12 @@ func testAccAwsAppStreamImageBuilder_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsAppStreamImageBuilder_Name_Generated(t *testing.T) {
+func TestAccAwsAppStreamImageBuilder_nameGenerated(t *testing.T) {
 	var imageBuilderOutput appstream.ImageBuilder
 	resourceName := "aws_appstream_image_builder.test"
 	instanceType := "stream.standard.small"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsAppStreamImageBuilderDestroy,
@@ -70,13 +70,13 @@ func testAccAwsAppStreamImageBuilder_Name_Generated(t *testing.T) {
 	})
 }
 
-func testAccAwsAppStreamImageBuilder_NamePrefix(t *testing.T) {
+func TestAccAwsAppStreamImageBuilder_namePrefix(t *testing.T) {
 	var imageBuilderOutput appstream.ImageBuilder
 	resourceName := "aws_appstream_image_builder.test"
-	instanceType := "stream.standard.small"
+	instanceType := "stream.standard.medium"
 	namePrefix := "tf-acc-test-prefix-"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsAppStreamImageBuilderDestroy,
@@ -100,12 +100,12 @@ func testAccAwsAppStreamImageBuilder_NamePrefix(t *testing.T) {
 	})
 }
 
-func testAccAwsAppStreamImageBuilder_disappears(t *testing.T) {
+func TestAccAwsAppStreamImageBuilder_disappears(t *testing.T) {
 	var imageBuilderOutput appstream.ImageBuilder
 	resourceName := "aws_appstream_image_builder.test"
-	instanceType := "stream.standard.small"
+	instanceType := "stream.standard.medium"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsAppStreamImageBuilderDestroy,
@@ -123,7 +123,7 @@ func testAccAwsAppStreamImageBuilder_disappears(t *testing.T) {
 	})
 }
 
-func testAccAwsAppStreamImageBuilder_Complete(t *testing.T) {
+func TestAccAwsAppStreamImageBuilder_complete(t *testing.T) {
 	var imageBuilderOutput appstream.ImageBuilder
 	resourceName := "aws_appstream_image_builder.test"
 	description := "Description of a test"
@@ -131,7 +131,7 @@ func testAccAwsAppStreamImageBuilder_Complete(t *testing.T) {
 	instanceType := "stream.standard.small"
 	instanceTypeUpdate := "stream.standard.medium"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsAppStreamImageBuilderDestroy,
@@ -169,7 +169,7 @@ func testAccAwsAppStreamImageBuilder_Complete(t *testing.T) {
 	})
 }
 
-func testAccAwsAppStreamImageBuilder_withTags(t *testing.T) {
+func TestAccAwsAppStreamImageBuilder_withTags(t *testing.T) {
 	var imageBuilderOutput appstream.ImageBuilder
 	resourceName := "aws_appstream_image_builder.test"
 	description := "Description of a test"
@@ -177,7 +177,7 @@ func testAccAwsAppStreamImageBuilder_withTags(t *testing.T) {
 	instanceType := "stream.standard.small"
 	instanceTypeUpdate := "stream.standard.medium"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsAppStreamImageBuilderDestroy,

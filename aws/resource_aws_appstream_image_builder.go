@@ -55,6 +55,14 @@ func resourceAwsAppStreamImageBuilder() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"created_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -136,14 +144,6 @@ func resourceAwsAppStreamImageBuilder() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"vpc_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -176,7 +176,8 @@ func resourceAwsAppStreamImageBuilder() *schema.Resource {
 func resourceAwsAppStreamImageBuilderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).appstreamconn
 	input := &appstream.CreateImageBuilderInput{
-		Name: aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))),
+		Name:         aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))),
+		InstanceType: aws.String(d.Get("instance_type").(string)),
 	}
 
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
@@ -208,10 +209,6 @@ func resourceAwsAppStreamImageBuilderCreate(ctx context.Context, d *schema.Resou
 
 	if v, ok := d.GetOk("image_name"); ok {
 		input.ImageName = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("instance_type"); ok {
-		input.InstanceType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("iam_role_arn"); ok {
@@ -283,8 +280,6 @@ func resourceAwsAppStreamImageBuilderRead(ctx context.Context, d *schema.Resourc
 		return diag.FromErr(fmt.Errorf("error reading Appstream ImageBuilder (%s): %w", d.Id(), err))
 	}
 	for _, v := range resp.ImageBuilders {
-		d.Set("name", v.Name)
-		d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(v.Name)))
 
 		if err = d.Set("access_endpoints", flattenAccessEndpoints(v.AccessEndpoints)); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream ImageBuilder (%s): %w", "access_endpoints", d.Id(), err))
@@ -294,19 +289,21 @@ func resourceAwsAppStreamImageBuilderRead(ctx context.Context, d *schema.Resourc
 		}
 
 		d.Set("appstream_agent_version", v.AppstreamAgentVersion)
+		d.Set("arn", v.Arn)
+		d.Set("created_time", aws.TimeValue(v.CreatedTime).Format(time.RFC3339))
 		d.Set("description", v.Description)
 		d.Set("display_name", v.DisplayName)
 		d.Set("enable_default_internet_access", v.EnableDefaultInternetAccess)
 		d.Set("image_arn", v.ImageArn)
 		d.Set("iam_role_arn", v.IamRoleArn)
-		d.Set("arn", v.Arn)
-		d.Set("created_time", aws.TimeValue(v.CreatedTime).Format(time.RFC3339))
 
 		d.Set("instance_type", v.InstanceType)
 		if err = d.Set("vpc_config", flattenVpcConfig(v.VpcConfig)); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream ImageBuilder (%s): %w", "vpc_config", d.Id(), err))
 		}
 
+		d.Set("name", v.Name)
+		d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(v.Name)))
 		d.Set("state", v.State)
 
 		tg, err := conn.ListTagsForResource(&appstream.ListTagsForResourceInput{
@@ -364,14 +361,14 @@ func resourceAwsAppStreamImageBuilderDelete(ctx context.Context, d *schema.Resou
 
 }
 
-func expandAccessEndpoints(accessEndpoints []interface{}) []*appstream.AccessEndpoint {
-	if len(accessEndpoints) == 0 {
+func expandAccessEndpoints(tfList []interface{}) []*appstream.AccessEndpoint {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	var endpoints []*appstream.AccessEndpoint
+	var apiObjects []*appstream.AccessEndpoint
 
-	for _, v := range accessEndpoints {
+	for _, v := range tfList {
 		v1 := v.(map[string]interface{})
 
 		endpoint := &appstream.AccessEndpoint{
@@ -381,85 +378,85 @@ func expandAccessEndpoints(accessEndpoints []interface{}) []*appstream.AccessEnd
 			endpoint.VpceId = aws.String(v2.(string))
 		}
 
-		endpoints = append(endpoints, endpoint)
+		apiObjects = append(apiObjects, endpoint)
 	}
 
-	return endpoints
+	return apiObjects
 }
 
-func flattenAccessEndpoints(accessEndpoints []*appstream.AccessEndpoint) []map[string]interface{} {
-	if accessEndpoints == nil {
+func flattenAccessEndpoints(apiObjects []*appstream.AccessEndpoint) []map[string]interface{} {
+	if apiObjects == nil {
 		return nil
 	}
 
-	var endpoints []map[string]interface{}
+	var tfList []map[string]interface{}
 
-	for _, endpoint := range accessEndpoints {
-		endpoints = append(endpoints, map[string]interface{}{
+	for _, endpoint := range apiObjects {
+		tfList = append(tfList, map[string]interface{}{
 			"endpoint_type": aws.StringValue(endpoint.EndpointType),
 			"vpce_id":       aws.StringValue(endpoint.VpceId),
 		})
 	}
 
-	return endpoints
+	return tfList
 }
 
-func expandDomainJoinInfo(domainInfo []interface{}) *appstream.DomainJoinInfo {
-	if len(domainInfo) == 0 {
+func expandDomainJoinInfo(tfList []interface{}) *appstream.DomainJoinInfo {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	infoConfig := &appstream.DomainJoinInfo{}
+	apiObject := &appstream.DomainJoinInfo{}
 
-	attr := domainInfo[0].(map[string]interface{})
+	attr := tfList[0].(map[string]interface{})
 	if v, ok := attr["directory_name"]; ok {
-		infoConfig.DirectoryName = aws.String(v.(string))
+		apiObject.DirectoryName = aws.String(v.(string))
 	}
 	if v, ok := attr["organizational_unit_distinguished_name"]; ok {
-		infoConfig.OrganizationalUnitDistinguishedName = aws.String(v.(string))
+		apiObject.OrganizationalUnitDistinguishedName = aws.String(v.(string))
 	}
 
-	return infoConfig
+	return apiObject
 }
 
-func flattenDomainInfo(domainInfo *appstream.DomainJoinInfo) []interface{} {
-	if domainInfo == nil {
+func flattenDomainInfo(apiObject *appstream.DomainJoinInfo) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	compAttr := map[string]interface{}{}
-	compAttr["directory_name"] = aws.StringValue(domainInfo.DirectoryName)
-	compAttr["organizational_unit_distinguished_name"] = aws.StringValue(domainInfo.OrganizationalUnitDistinguishedName)
+	tfList := map[string]interface{}{}
+	tfList["directory_name"] = aws.StringValue(apiObject.DirectoryName)
+	tfList["organizational_unit_distinguished_name"] = aws.StringValue(apiObject.OrganizationalUnitDistinguishedName)
 
-	return []interface{}{compAttr}
+	return []interface{}{tfList}
 }
 
-func expandVpcConfig(vpcConfig []interface{}) *appstream.VpcConfig {
-	if len(vpcConfig) == 0 {
+func expandVpcConfig(tfList []interface{}) *appstream.VpcConfig {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	infoConfig := &appstream.VpcConfig{}
+	apiObject := &appstream.VpcConfig{}
 
-	attr := vpcConfig[0].(map[string]interface{})
+	attr := tfList[0].(map[string]interface{})
 	if v, ok := attr["security_group_ids"]; ok {
-		infoConfig.SecurityGroupIds = expandStringList(v.([]interface{}))
+		apiObject.SecurityGroupIds = expandStringList(v.([]interface{}))
 	}
 	if v, ok := attr["subnet_ids"]; ok {
-		infoConfig.SubnetIds = expandStringList(v.([]interface{}))
+		apiObject.SubnetIds = expandStringList(v.([]interface{}))
 	}
 
-	return infoConfig
+	return apiObject
 }
 
-func flattenVpcConfig(vpcConfig *appstream.VpcConfig) []interface{} {
-	if vpcConfig == nil {
+func flattenVpcConfig(apiObject *appstream.VpcConfig) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	compAttr := map[string]interface{}{}
-	compAttr["security_group_ids"] = aws.StringValueSlice(vpcConfig.SecurityGroupIds)
-	compAttr["subnet_ids"] = aws.StringValueSlice(vpcConfig.SubnetIds)
+	tfList := map[string]interface{}{}
+	tfList["security_group_ids"] = aws.StringValueSlice(apiObject.SecurityGroupIds)
+	tfList["subnet_ids"] = aws.StringValueSlice(apiObject.SubnetIds)
 
-	return []interface{}{compAttr}
+	return []interface{}{tfList}
 }
