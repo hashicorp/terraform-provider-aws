@@ -874,11 +874,11 @@ func testAccCheckAWSDBParameterGroupAttributes(v *rds.DBParameterGroup, name str
 	}
 }
 
-func testAccCheckAWSDBParameterGroupExists(n string, v *rds.DBParameterGroup) resource.TestCheckFunc {
+func testAccCheckAWSDBParameterGroupExists(rName string, v *rds.DBParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("Not found: %s", rName)
 		}
 
 		if rs.Primary.ID == "" {
@@ -908,11 +908,11 @@ func testAccCheckAWSDBParameterGroupExists(n string, v *rds.DBParameterGroup) re
 	}
 }
 
-func testAccCheckAWSDBParameterNotUserDefined(n, paramName string) resource.TestCheckFunc {
+func testAccCheckAWSDBParameterNotUserDefined(rName, paramName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("Not found: %s", rName)
 		}
 
 		if rs.Primary.ID == "" {
@@ -945,10 +945,10 @@ func testAccCheckAWSDBParameterNotUserDefined(n, paramName string) resource.Test
 	}
 }
 
-func testAccAWSDBParameterGroupConfig(n string) string {
+func testAccAWSDBParameterGroupConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name   = "%s"
+  name   = %[1]q
   family = "mysql5.6"
 
   parameter {
@@ -966,10 +966,10 @@ resource "aws_db_parameter_group" "test" {
     value = "utf8"
   }
 }
-`, n)
+`, rName)
 }
 
-func testAccAWSDBParameterGroupConfigCaseWithMixedParameters(n string) string {
+func testAccAWSDBParameterGroupConfigCaseWithMixedParameters(rName string) string {
 	return composeConfig(testAccAWSDBInstanceConfig_orderableClassMysql(), fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name   = %[1]q
@@ -1011,13 +1011,13 @@ resource "aws_db_parameter_group" "test" {
     apply_method = "pending-reboot"
   }
 }
-`, n))
+`, rName))
 }
 
-func testAccAWSDBParameterGroupConfigWithApplyMethod(n string) string {
+func testAccAWSDBParameterGroupConfigWithApplyMethod(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name   = "%s"
+  name   = %[1]q
   family = "mysql5.6"
 
   parameter {
@@ -1035,13 +1035,13 @@ resource "aws_db_parameter_group" "test" {
     foo = "test"
   }
 }
-`, n)
+`, rName)
 }
 
-func testAccAWSDBParameterGroupAddParametersConfig(n string) string {
+func testAccAWSDBParameterGroupAddParametersConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name   = "%s"
+  name   = %[1]q
   family = "mysql5.6"
 
   parameter {
@@ -1069,23 +1069,23 @@ resource "aws_db_parameter_group" "test" {
     value = "utf8_unicode_ci"
   }
 }
-`, n)
+`, rName)
 }
 
-func testAccAWSDBParameterGroupOnlyConfig(n string) string {
+func testAccAWSDBParameterGroupOnlyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name        = "%s"
+  name        = %[1]q
   family      = "mysql5.6"
   description = "Test parameter group for terraform"
 }
-`, n)
+`, rName)
 }
 
-func createAwsDbParameterGroupsExceedDefaultAwsLimit(n string) string {
+func createAwsDbParameterGroupsExceedDefaultAwsLimit(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name        = "%s"
+  name        = %[1]q
   family      = "mysql5.6"
   description = "RDS default parameter group: Exceed default AWS parameter group limit of twenty"
 
@@ -1299,13 +1299,13 @@ resource "aws_db_parameter_group" "test" {
     value = "repeatable-read"
   }
 }
-`, n)
+`, rName)
 }
 
-func updateAwsDbParameterGroupsExceedDefaultAwsLimit(n string) string {
+func updateAwsDbParameterGroupsExceedDefaultAwsLimit(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name        = "%s"
+  name        = %[1]q
   family      = "mysql5.6"
   description = "Updated RDS default parameter group: Exceed default AWS parameter group limit of twenty"
 
@@ -1519,13 +1519,13 @@ resource "aws_db_parameter_group" "test" {
     value = "repeatable-read"
   }
 }
-`, n)
+`, rName)
 }
 
-func testAccAWSDBParameterGroupIncludeDefaultConfig(n string) string {
+func testAccAWSDBParameterGroupIncludeDefaultConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name   = "%s"
+  name   = %[1]q
   family = "postgres9.4"
 
   parameter {
@@ -1534,13 +1534,13 @@ resource "aws_db_parameter_group" "test" {
     apply_method = "pending-reboot"
   }
 }
-`, n)
+`, rName)
 }
 
-func testAccAWSDBParameterGroupUpdateParametersInitialConfig(n string) string {
+func testAccAWSDBParameterGroupUpdateParametersInitialConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name   = "%s"
+  name   = %[1]q
   family = "mysql5.6"
 
   parameter {
@@ -1558,13 +1558,13 @@ resource "aws_db_parameter_group" "test" {
     value = "utf8"
   }
 }
-`, n)
+`, rName)
 }
 
-func testAccAWSDBParameterGroupUpdateParametersUpdatedConfig(n string) string {
+func testAccAWSDBParameterGroupUpdateParametersUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name   = "%s"
+  name   = %[1]q
   family = "mysql5.6"
 
   parameter {
@@ -1582,17 +1582,17 @@ resource "aws_db_parameter_group" "test" {
     value = "ascii"
   }
 }
-`, n)
+`, rName)
 }
 
 func testAccAWSDBParameterGroupUpperCaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name   = "%s"
+  name   = %[1]q
   family = "mysql5.6"
 
   parameter {
-    name  = "max_connections"
+    name  = "MaX_CoNnEcTiOnS"
     value = "LEAST({DBInstanceClassMemory/6000000},10)"
   }
 }
