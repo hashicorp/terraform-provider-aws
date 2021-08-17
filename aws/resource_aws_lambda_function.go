@@ -426,14 +426,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	packageType := d.Get("package_type")
-	handler, handlerOk := d.GetOk("handler")
-	runtime, runtimeOk := d.GetOk("runtime")
-
-	if packageType == lambda.PackageTypeZip && !handlerOk && !runtimeOk {
-		return errors.New("handler and runtime must be set when PackageType is Zip")
-	}
-
+	packageType := d.Get("package_type").(string)
 	params := &lambda.CreateFunctionInput{
 		Code:         functionCode,
 		Description:  aws.String(d.Get("description").(string)),
@@ -442,12 +435,12 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		Role:         aws.String(iamRole),
 		Timeout:      aws.Int64(int64(d.Get("timeout").(int))),
 		Publish:      aws.Bool(d.Get("publish").(bool)),
-		PackageType:  aws.String(d.Get("package_type").(string)),
+		PackageType:  aws.String(packageType),
 	}
 
 	if packageType == lambda.PackageTypeZip {
-		params.Handler = aws.String(handler.(string))
-		params.Runtime = aws.String(runtime.(string))
+		params.Handler = aws.String(d.Get("handler").(string))
+		params.Runtime = aws.String(d.Get("runtime").(string))
 	}
 
 	if v, ok := d.GetOk("code_signing_config_arn"); ok {
