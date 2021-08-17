@@ -34,21 +34,29 @@ func resourceAwsRoute53RecoveryControlConfigCluster() *schema.Resource {
 				Computed: true,
 			},
 			"cluster_endpoints": {
-                Type:     schema.TypeList,
-                Computed: true,
-                Elem: &schema.Resource{
-                    Schema: map[string]*schema.Schema{
-                        "endpoint": {
-                            Type:     schema.TypeString,
-                            Computed: true,
-                        },
-                        "region": {
-                            Type:     schema.TypeString,
-                            Computed: true,
-                        },
-                    },
-                },
-            },
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cluster_endpoint": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"endpoint": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"region": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -102,12 +110,13 @@ func resourceAwsRoute53RecoveryControlConfigClusterRead(d *schema.ResourceData, 
 	}
 
 	d.Set("cluster_arn", result.ClusterArn)
+	d.Set("cluster_enpoints", result.ClusterEndpoints)
 	d.Set("name", result.Name)
 	d.Set("status", result.Status)
 
 	if err := d.Set("cluster_enpoints", flattenRoute53RecoveryControlConfigClusterEndpoints(result.ClusterEndpoints)); err != nil {
-        return fmt.Errorf("Error setting cluster_endpoints: %s", err)
-    }
+		return fmt.Errorf("Error setting cluster_endpoints: %w", err)
+	}
 
 	return nil
 }
@@ -138,15 +147,38 @@ func resourceAwsRoute53RecoveryControlConfigClusterDelete(d *schema.ResourceData
 	return nil
 }
 
-func flattenRoute53RecoveryControlConfigClusterEndpoints(endpoints *route53recoverycontrolconfig.ClusterEndpoints) []interface{} {
-    if endpoints == nil {
-        return []interface{}{}
+func flattenRoute53RecoveryControlConfigClusterEndpoints(endpoints []*route53recoverycontrolconfig.ClusterEndpoint) []interface{} {
+	if len(endpoints) == 0 {
+        return nil
     }
 
-    m := map[string]interface{}{
-        "endpoint": aws.StringValue(endpoints.Endpoint),
-        "region":   aws.StringValue(endpoints.Region),
+    var tfList []interface{}
+
+    for _, endpoint := range endpoints {
+        if endpoint == nil {
+            continue
+        }
+
+        tfList = append(tfList, flattenRoute53RecoveryControlConfigClusterEndpoint(endpoint))
     }
 
-    return []interface{}{m}
+    return tfList
+}
+
+func flattenRoute53RecoveryControlConfigClusterEndpoint(ce *route53recoverycontrolconfig.ClusterEndpoint) map[string]interface{} {
+	if ce == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := ce.Endpoint; v != nil {
+		tfMap["endpoint"] = aws.StringValue(v)
+	}
+
+	if v := ce.Region; v != nil {
+		tfMap["region"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
