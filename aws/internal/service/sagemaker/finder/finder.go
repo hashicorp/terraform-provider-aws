@@ -83,6 +83,35 @@ func ImageVersionByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Desc
 	return output, nil
 }
 
+// DeviceFleetByName returns the Device Fleet corresponding to the specified Device Fleet name.
+// Returns nil if no Device Fleet is found.
+func DeviceFleetByName(conn *sagemaker.SageMaker, id string) (*sagemaker.DescribeDeviceFleetOutput, error) {
+	input := &sagemaker.DescribeDeviceFleetInput{
+		DeviceFleetName: aws.String(id),
+	}
+
+	output, err := conn.DescribeDeviceFleet(input)
+	if tfawserr.ErrMessageContains(err, "ValidationException", "No devicefleet with name") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 // DomainByName returns the domain corresponding to the specified domain id.
 // Returns nil if no domain is found.
 func DomainByName(conn *sagemaker.SageMaker, domainID string) (*sagemaker.DescribeDomainOutput, error) {
