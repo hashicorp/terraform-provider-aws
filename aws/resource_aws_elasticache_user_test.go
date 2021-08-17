@@ -235,7 +235,7 @@ resource "aws_elasticache_user" "test" {
   user_name     = "username1"
   access_string = "on ~* +@all"
   engine        = "REDIS"
-  passwords     = ["password123456789"]
+  passwords     = ["password234567891", "password345678912"]
 }
 `, rName))
 }
