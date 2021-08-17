@@ -842,8 +842,7 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	// so we cannot just ignore the error as would typically.
 	// We are hardcoding the region here, because go aws sdk endpoints
 	// package does not support Signer service
-	//lintignore:AWSAT003
-	if meta.(*AWSClient).region == "ap-northeast-3" {
+	if meta.(*AWSClient).region == endpoints.ApNortheast3RegionID {
 		return nil
 	}
 

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -192,15 +193,14 @@ func TestAccAWSLambdaFunction_disappears(t *testing.T) {
 }
 
 func TestAccAWSLambdaFunction_codeSigningConfig(t *testing.T) {
-	if testAccGetPartition() == "aws-us-gov" {
-		t.Skip("Lambda code signing config is not supported in GovCloud partition")
+	if got, want := testAccGetPartition(), endpoints.AwsUsGovPartitionID; got == want {
+		t.Skipf("Lambda code signing config is not supported in %s partition", got)
 	}
 
 	// We are hardcoding the region here, because go aws sdk endpoints
 	// package does not support Signer service
-	//lintignore:AWSAT003
-	if testAccGetRegion() != "ap-northeast-3" {
-		t.Skip("Lambda code signing config is not supported in Osaka ap-northeast-3 region", testAccGetRegion())
+	if got, want := testAccGetRegion(), endpoints.ApNortheast3RegionID; got == want {
+		t.Skipf("Lambda code signing config is not supported in %s region", got)
 	}
 
 	var conf lambda.GetFunctionOutput
@@ -1000,8 +1000,8 @@ func TestAccAWSLambdaFunction_imageConfig(t *testing.T) {
 }
 
 func TestAccAWSLambdaFunction_tracingConfig(t *testing.T) {
-	if testAccGetPartition() == "aws-us-gov" {
-		t.Skip("Lambda tracing config is not supported in GovCloud partition")
+	if got, want := testAccGetPartition(), endpoints.AwsUsGovPartitionID; got == want {
+		t.Skipf("Lambda tracing config is not supported in %s partition", got)
 	}
 
 	var conf lambda.GetFunctionOutput
