@@ -36,6 +36,9 @@ func ResourceUserProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				StateFunc: func(val interface{}) string {
+					return strings.ToLower(val.(string))
+				},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
