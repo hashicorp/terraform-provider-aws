@@ -1872,6 +1872,31 @@ func TestAccAWSLambdaFunction_runtimes(t *testing.T) {
 	})
 }
 
+func TestAccAWSLambdaFunction_zip_validation(t *testing.T) {
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_expect_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_expect_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_expect_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_expect_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSLambdaZipConfigWithoutHandler(funcName, policyName, roleName, sgName),
+				ExpectError: regexp.MustCompile("handler and runtime must be set when PackageType is Zip"),
+			},
+			{
+				Config:      testAccAWSLambdaZipConfigWithoutRuntime(funcName, policyName, roleName, sgName),
+				ExpectError: regexp.MustCompile("handler and runtime must be set when PackageType is Zip"),
+			},
+		},
+	})
+}
+
 func testAccCheckLambdaFunctionDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).lambdaconn
 
@@ -3310,6 +3335,26 @@ resource "aws_lambda_function" "test" {
   runtime       = %[2]q
 }
 `, rName, runtime))
+}
+
+func testAccAWSLambdaZipConfigWithoutHandler(funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "test" {
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  runtime       = "nodejs12.x"
+}
+`, funcName)
+}
+
+func testAccAWSLambdaZipConfigWithoutRuntime(funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "test" {
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+}
+`, funcName)
 }
 
 func TestFlattenLambdaImageConfigShouldNotFailWithEmptyImageConfig(t *testing.T) {
