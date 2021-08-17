@@ -21,7 +21,7 @@ func StackByName(ctx context.Context, conn *appstream.AppStream, name string) (*
 	}
 
 	if len(resp.Stacks) > 1 {
-		fmt.Errorf("[ERROR] got more than one stack with the name %s", name)
+		return nil, fmt.Errorf("[ERROR] got more than one stack with the name %s", name)
 	}
 
 	if len(resp.Stacks) == 1 {

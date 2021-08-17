@@ -7,14 +7,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
 func TestAccAwsAppStreamStack_basic(t *testing.T) {
 	var stackOutput appstream.Stack
 	resourceName := "aws_appstream_stack.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -23,67 +24,11 @@ func TestAccAwsAppStreamStack_basic(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAppStreamStackConfigNameGenerated(),
+				Config: testAccAwsAppStreamStackConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamStackExists(resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAwsAppStreamStack_nameGenerated(t *testing.T) {
-	var stackOutput appstream.Stack
-	resourceName := "aws_appstream_stack.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsAppStreamStackDestroy,
-		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsAppStreamStackConfigNameGenerated(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppStreamStackExists(resourceName, &stackOutput),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAwsAppStreamStack_namePrefix(t *testing.T) {
-	var stackOutput appstream.Stack
-	resourceName := "aws_appstream_stack.test"
-	namePrefix := "tf-acc-test-prefix-"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsAppStreamStackDestroy,
-		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsAppStreamStackConfigNamePrefix(namePrefix),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppStreamStackExists(resourceName, &stackOutput),
-					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", namePrefix),
 				),
 			},
 			{
@@ -98,6 +43,7 @@ func TestAccAwsAppStreamStack_namePrefix(t *testing.T) {
 func TestAccAwsAppStreamStack_disappears(t *testing.T) {
 	var stackOutput appstream.Stack
 	resourceName := "aws_appstream_stack.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -106,7 +52,7 @@ func TestAccAwsAppStreamStack_disappears(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAppStreamStackConfigNameGenerated(),
+				Config: testAccAwsAppStreamStackConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamStackExists(resourceName, &stackOutput),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppStreamStack(), resourceName),
@@ -120,6 +66,7 @@ func TestAccAwsAppStreamStack_disappears(t *testing.T) {
 func TestAccAwsAppStreamStack_complete(t *testing.T) {
 	var stackOutput appstream.Stack
 	resourceName := "aws_appstream_stack.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	description := "Description of a test"
 	descriptionUpdated := "Updated Description of a test"
 
@@ -130,22 +77,20 @@ func TestAccAwsAppStreamStack_complete(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAppStreamStackConfigComplete(description),
+				Config: testAccAwsAppStreamStackConfigComplete(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamStackExists(resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 				),
 			},
 			{
-				Config: testAccAwsAppStreamStackConfigComplete(descriptionUpdated),
+				Config: testAccAwsAppStreamStackConfigComplete(rName, descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamStackExists(resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
 				),
 			},
@@ -161,6 +106,7 @@ func TestAccAwsAppStreamStack_complete(t *testing.T) {
 func TestAccAwsAppStreamStack_withTags(t *testing.T) {
 	var stackOutput appstream.Stack
 	resourceName := "aws_appstream_stack.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	description := "Description of a test"
 	descriptionUpdated := "Updated Description of a test"
 
@@ -171,22 +117,20 @@ func TestAccAwsAppStreamStack_withTags(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAppStreamStackConfigComplete(description),
+				Config: testAccAwsAppStreamStackConfigComplete(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamStackExists(resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 				),
 			},
 			{
-				Config: testAccAwsAppStreamStackConfigWithTags(descriptionUpdated),
+				Config: testAccAwsAppStreamStackConfigWithTags(rName, descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamStackExists(resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
@@ -254,24 +198,19 @@ func testAccCheckAwsAppStreamStackDestroy(s *terraform.State) error {
 
 }
 
-func testAccAwsAppStreamStackConfigNameGenerated() string {
-	return `
-resource "aws_appstream_stack" "test" {}
-`
-}
-
-func testAccAwsAppStreamStackConfigNamePrefix(stackName string) string {
+func testAccAwsAppStreamStackConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_stack" "test" {
-  name_prefix = %[1]q
+  name = %[1]q
 }
-`, stackName)
+`, name)
 }
 
-func testAccAwsAppStreamStackConfigComplete(description string) string {
+func testAccAwsAppStreamStackConfigComplete(name, description string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_stack" "test" {
-  description = %[1]q
+  name        = %[1]q
+  description = %[2]q
   storage_connectors {
     connector_type = "HOMEFOLDERS"
   }
@@ -296,13 +235,14 @@ resource "aws_appstream_stack" "test" {
     settings_group = "SettingsGroup"
   }
 }
-`, description)
+`, name, description)
 }
 
-func testAccAwsAppStreamStackConfigWithTags(description string) string {
+func testAccAwsAppStreamStackConfigWithTags(name, description string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_stack" "test" {
-  description = %[1]q
+  name        = %[1]q
+  description = %[2]q
   storage_connectors {
     connector_type = "HOMEFOLDERS"
   }
@@ -330,10 +270,6 @@ resource "aws_appstream_stack" "test" {
     action     = "DOMAIN_PASSWORD_SIGNIN"
     permission = "ENABLED"
   }
-  user_settings {
-    action     = "DOMAIN_SMART_CARD_SIGNIN"
-    permission = "ENABLED"
-  }
   application_settings {
     enabled        = true
     settings_group = "SettingsGroup"
@@ -342,5 +278,5 @@ resource "aws_appstream_stack" "test" {
     Key = "value"
   }
 }
-`, description)
+`, name, description)
 }

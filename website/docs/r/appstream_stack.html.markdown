@@ -13,7 +13,7 @@ Provides an AppStream stack.
 ## Example Usage
 
 ```terraform
-resource "aws_appstream_stack" "appstream_stack" {
+resource "aws_appstream_stack" "example" {
   name         = "stack name"
   description  = "stack description"
   display_name = "stack display name"
@@ -54,10 +54,12 @@ resource "aws_appstream_stack" "appstream_stack" {
 
 ## Argument Reference
 
+The following arguments are required:
+
+* `name` - (Required) Unique name for the AppStream stack.
+
 The following arguments are optional:
 
-* `name` - (Optional) Unique name for the AppStream stack.
-* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) Description for the AppStream stack.
 * `display_name` - (Optional) Stack name to display.
 * `embed_host_domains` - (Optional) Domains where AppStream 2.0 streaming sessions can be embedded in an iframe. You must approve the domains that you want to host embedded AppStream 2.0 streaming sessions.

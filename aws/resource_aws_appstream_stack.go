@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -13,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appstream/waiter"
 )
 
@@ -52,6 +53,7 @@ func resourceAwsAppStreamStack() *schema.Resource {
 						},
 					},
 				},
+				Set: accessEndpointsHash,
 			},
 			"application_settings": {
 				Type:     schema.TypeList,
@@ -94,7 +96,7 @@ func resourceAwsAppStreamStack() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
 			"embed_host_domains": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				MinItems: 1,
@@ -103,6 +105,7 @@ func resourceAwsAppStreamStack() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringLenBetween(0, 128),
 				},
+				Set: schema.HashString,
 			},
 			"feedback_url": {
 				Type:         schema.TypeString,
@@ -111,18 +114,9 @@ func resourceAwsAppStreamStack() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
 			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-			},
-			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"redirect_url": {
 				Type:         schema.TypeString,
@@ -159,6 +153,7 @@ func resourceAwsAppStreamStack() *schema.Resource {
 						},
 					},
 				},
+				Set: storageConnectorsHash,
 			},
 			"user_settings": {
 				Type:             schema.TypeSet,
@@ -190,7 +185,7 @@ func resourceAwsAppStreamStack() *schema.Resource {
 func resourceAwsAppStreamStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).appstreamconn
 	input := &appstream.CreateStackInput{
-		Name: aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))),
+		Name: aws.String(d.Get("name").(string)),
 	}
 
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
@@ -297,7 +292,6 @@ func resourceAwsAppStreamStackRead(ctx context.Context, d *schema.ResourceData, 
 		}
 		d.Set("feedback_url", v.FeedbackURL)
 		d.Set("name", v.Name)
-		d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(v.Name)))
 		d.Set("redirect_url", v.RedirectURL)
 		if err = d.Set("storage_connectors", flattenStorageConnectors(v.StorageConnectors)); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "storage_connectors", d.Id(), err))
@@ -392,14 +386,34 @@ func resourceAwsAppStreamStackDelete(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(fmt.Errorf("error deleting Appstream Stack (%s): %w", d.Id(), err))
 	}
 
-	// Will wait to finish to delete because after delete it makes a stack inactive then it deletes
-	time.Sleep(waiter.StackSleep)
+	if _, err = waiter.StackStateDeleted(ctx, conn, d.Id()); err != nil {
+		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+			return nil
+		}
+
+		return diag.FromErr(fmt.Errorf("error waiting for Appstream Stack (%s) to be deleted: %w", d.Id(), err))
+	}
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error reading Appstream Stack (%s): %w", d.Id(), err))
 	}
 
 	return nil
+}
+
+func expandAccessEndpoint(tfMap map[string]interface{}) *appstream.AccessEndpoint {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &appstream.AccessEndpoint{
+		EndpointType: aws.String(tfMap["endpoint_type"].(string)),
+	}
+	if v, ok := tfMap["vpce_id"]; ok {
+		apiObject.VpceId = aws.String(v.(string))
+	}
+
+	return apiObject
 }
 
 func expandAccessEndpoints(tfList []interface{}) []*appstream.AccessEndpoint {
@@ -409,37 +423,66 @@ func expandAccessEndpoints(tfList []interface{}) []*appstream.AccessEndpoint {
 
 	var apiObjects []*appstream.AccessEndpoint
 
-	for _, v := range tfList {
-		v1 := v.(map[string]interface{})
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
 
-		endpoint := &appstream.AccessEndpoint{
-			EndpointType: aws.String(v1["endpoint_type"].(string)),
-		}
-		if v2, ok := v1["vpce_id"]; ok {
-			endpoint.VpceId = aws.String(v2.(string))
+		if !ok {
+			continue
 		}
 
-		apiObjects = append(apiObjects, endpoint)
+		apiObject := expandAccessEndpoint(tfMap)
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
 	return apiObjects
 }
 
+func flattenAccessEndpoint(apiObject *appstream.AccessEndpoint) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	tfMap["endpoint_type"] = aws.StringValue(apiObject.EndpointType)
+	tfMap["vpce_id"] = aws.StringValue(apiObject.VpceId)
+
+	return tfMap
+}
+
 func flattenAccessEndpoints(apiObjects []*appstream.AccessEndpoint) []map[string]interface{} {
-	if apiObjects == nil {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
 	var tfList []map[string]interface{}
 
-	for _, endpoint := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
-			"endpoint_type": aws.StringValue(endpoint.EndpointType),
-			"vpce_id":       aws.StringValue(endpoint.VpceId),
-		})
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenAccessEndpoint(apiObject))
 	}
 
 	return tfList
+}
+
+func expandApplicationSetting(tfMap map[string]interface{}) *appstream.ApplicationSettings {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &appstream.ApplicationSettings{}
+
+	if v, ok := tfMap["enabled"]; ok {
+		apiObject.Enabled = aws.Bool(v.(bool))
+	}
+	if v, ok := tfMap["settings_group"]; ok {
+		apiObject.SettingsGroup = aws.String(v.(string))
+	}
+
+	return apiObject
 }
 
 func expandApplicationSettings(tfList []interface{}) *appstream.ApplicationSettings {
@@ -447,17 +490,31 @@ func expandApplicationSettings(tfList []interface{}) *appstream.ApplicationSetti
 		return nil
 	}
 
-	apiObject := &appstream.ApplicationSettings{}
+	var apiObject *appstream.ApplicationSettings
 
-	attr := tfList[0].(map[string]interface{})
-	if v, ok := attr["enabled"]; ok {
-		apiObject.Enabled = aws.Bool(v.(bool))
-	}
-	if v, ok := attr["settings_group"]; ok {
-		apiObject.SettingsGroup = aws.String(v.(string))
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject = expandApplicationSetting(tfMap)
 	}
 
 	return apiObject
+}
+
+func flattenApplicationSetting(apiObject *appstream.ApplicationSettingsResponse) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	tfMap["enabled"] = aws.BoolValue(apiObject.Enabled)
+	tfMap["settings_group"] = aws.StringValue(apiObject.SettingsGroup)
+
+	return tfMap
 }
 
 func flattenApplicationSettings(apiObject *appstream.ApplicationSettingsResponse) []interface{} {
@@ -465,11 +522,29 @@ func flattenApplicationSettings(apiObject *appstream.ApplicationSettingsResponse
 		return nil
 	}
 
-	tfList := map[string]interface{}{}
-	tfList["enabled"] = aws.BoolValue(apiObject.Enabled)
-	tfList["settings_group"] = aws.StringValue(apiObject.SettingsGroup)
+	var tfList []interface{}
 
-	return []interface{}{tfList}
+	tfList = append(tfList, flattenApplicationSetting(apiObject))
+
+	return tfList
+}
+
+func expandStorageConnector(tfMap map[string]interface{}) *appstream.StorageConnector {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &appstream.StorageConnector{
+		ConnectorType: aws.String(tfMap["connector_type"].(string)),
+	}
+	if v, ok := tfMap["domains"]; ok && len(v.([]interface{})) > 0 {
+		apiObject.Domains = expandStringList(v.([]interface{}))
+	}
+	if v, ok := tfMap["resource_identifier"]; ok && v.(string) != "" {
+		apiObject.ResourceIdentifier = aws.String(v.(string))
+	}
+
+	return apiObject
 }
 
 func expandStorageConnectors(tfList []interface{}) []*appstream.StorageConnector {
@@ -479,41 +554,67 @@ func expandStorageConnectors(tfList []interface{}) []*appstream.StorageConnector
 
 	var apiObjects []*appstream.StorageConnector
 
-	for _, v := range tfList {
-		v1 := v.(map[string]interface{})
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
 
-		connector := &appstream.StorageConnector{
-			ConnectorType: aws.String(v1["connector_type"].(string)),
-		}
-		if v2, ok := v1["domains"]; ok && len(v2.([]interface{})) > 0 {
-			connector.Domains = expandStringList(v2.([]interface{}))
-		}
-		if v2, ok := v1["resource_identifier"]; ok && v2.(string) != "" {
-			connector.ResourceIdentifier = aws.String(v2.(string))
+		if !ok {
+			continue
 		}
 
-		apiObjects = append(apiObjects, connector)
+		apiObject := expandStorageConnector(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
 	return apiObjects
 }
 
+func flattenStorageConnector(apiObject *appstream.StorageConnector) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	tfMap["connector_type"] = aws.StringValue(apiObject.ConnectorType)
+	tfMap["domains"] = aws.StringValueSlice(apiObject.Domains)
+	tfMap["resource_identifier"] = aws.StringValue(apiObject.ResourceIdentifier)
+
+	return tfMap
+}
+
 func flattenStorageConnectors(apiObjects []*appstream.StorageConnector) []map[string]interface{} {
-	if apiObjects == nil {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
 	var tfList []map[string]interface{}
 
-	for _, connector := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
-			"connector_type":      aws.StringValue(connector.ConnectorType),
-			"domains":             aws.StringValueSlice(connector.Domains),
-			"resource_identifier": aws.StringValue(connector.ResourceIdentifier),
-		})
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenStorageConnector(apiObject))
 	}
 
 	return tfList
+}
+
+func expandUserSetting(tfMap map[string]interface{}) *appstream.UserSetting {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &appstream.UserSetting{
+		Action:     aws.String(tfMap["action"].(string)),
+		Permission: aws.String(tfMap["permission"].(string)),
+	}
+
+	return apiObject
 }
 
 func expandUserSettings(tfList []interface{}) []*appstream.UserSetting {
@@ -523,32 +624,49 @@ func expandUserSettings(tfList []interface{}) []*appstream.UserSetting {
 
 	var apiObjects []*appstream.UserSetting
 
-	for _, v := range tfList {
-		v1 := v.(map[string]interface{})
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
 
-		user := &appstream.UserSetting{
-			Action:     aws.String(v1["action"].(string)),
-			Permission: aws.String(v1["permission"].(string)),
+		if !ok {
+			continue
 		}
 
-		apiObjects = append(apiObjects, user)
+		apiObject := expandUserSetting(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
 	return apiObjects
 }
 
+func flattenUserSetting(apiObject *appstream.UserSetting) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	tfMap["action"] = aws.StringValue(apiObject.Action)
+	tfMap["permission"] = aws.StringValue(apiObject.Permission)
+
+	return tfMap
+}
+
 func flattenUserSettings(apiObjects []*appstream.UserSetting) []map[string]interface{} {
-	if apiObjects == nil {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
 	var tfList []map[string]interface{}
 
-	for _, user := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
-			"action":     aws.StringValue(user.Action),
-			"permission": aws.StringValue(user.Permission),
-		})
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+		tfList = append(tfList, flattenUserSetting(apiObject))
 	}
 
 	return tfList
@@ -567,4 +685,21 @@ func suppressAppsStreamStackUserSettings(k, old, new string, d *schema.ResourceD
 	}
 
 	return flagDiffUserSettings
+}
+
+func accessEndpointsHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(m["endpoint_type"].(string))
+	buf.WriteString(m["vpce_id"].(string))
+	return hashcode.String(buf.String())
+}
+
+func storageConnectorsHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(m["connector_type"].(string))
+	buf.WriteString(fmt.Sprintf("%+v", m["domains"].([]interface{})))
+	buf.WriteString(m["resource_identifier"].(string))
+	return hashcode.String(buf.String())
 }
