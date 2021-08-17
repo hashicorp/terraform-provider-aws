@@ -1,4 +1,11 @@
 ## 3.55.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_fsx_backup` ([#20569](https://github.com/hashicorp/terraform-provider-aws/issues/20569))
+* **New Resource:** `aws_sagemaker_device_fleet` ([#20058](https://github.com/hashicorp/terraform-provider-aws/issues/20058))
+* **New Resource:** `aws_sagemaker_human_task_ui` ([#20570](https://github.com/hashicorp/terraform-provider-aws/issues/20570))
+
 ## 3.54.0 (August 12, 2021)
 
 FEATURES:
