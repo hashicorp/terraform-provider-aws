@@ -12,12 +12,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
-func testAccAwsAppStreamFleet_basic(t *testing.T) {
+func TestAccAwsAppStreamFleet_basic(t *testing.T) {
 	var fleetOutput appstream.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	instanceType := "stream.standard.small"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
@@ -46,12 +46,12 @@ func testAccAwsAppStreamFleet_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsAppStreamFleet_Name_Generated(t *testing.T) {
+func TestAccAwsAppStreamFleet_nameGenerated(t *testing.T) {
 	var fleetOutput appstream.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	instanceType := "stream.standard.small"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
@@ -78,13 +78,13 @@ func testAccAwsAppStreamFleet_Name_Generated(t *testing.T) {
 	})
 }
 
-func testAccAwsAppStreamFleet_NamePrefix(t *testing.T) {
+func TestAccAwsAppStreamFleet_namePrefix(t *testing.T) {
 	var fleetOutput appstream.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	instanceType := "stream.standard.small"
 	namePrefix := "tf-acc-test-prefix-"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
@@ -111,12 +111,12 @@ func testAccAwsAppStreamFleet_NamePrefix(t *testing.T) {
 	})
 }
 
-func testAccAwsAppStreamFleet_disappears(t *testing.T) {
+func TestAccAwsAppStreamFleet_disappears(t *testing.T) {
 	var fleetOutput appstream.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	instanceType := "stream.standard.small"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
@@ -137,7 +137,7 @@ func testAccAwsAppStreamFleet_disappears(t *testing.T) {
 	})
 }
 
-func testAccAwsAppStreamFleet_Complete(t *testing.T) {
+func TestAccAwsAppStreamFleet_completeWithStop(t *testing.T) {
 	var fleetOutput appstream.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	description := "Description of a test"
@@ -146,7 +146,7 @@ func testAccAwsAppStreamFleet_Complete(t *testing.T) {
 	instanceType := "stream.standard.small"
 	instanceTypeUpdate := "stream.standard.medium"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
@@ -184,16 +184,16 @@ func testAccAwsAppStreamFleet_Complete(t *testing.T) {
 	})
 }
 
-func testAccAwsAppStreamFleet_withTags(t *testing.T) {
+func TestAccAwsAppStreamFleet_completeWithoutStop(t *testing.T) {
 	var fleetOutput appstream.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	description := "Description of a test"
-	descriptionUpdated := "Updated Description of a test"
 	fleetType := "ON_DEMAND"
 	instanceType := "stream.standard.small"
-	instanceTypeUpdate := "stream.standard.medium"
+	displayName := "display name of a test"
+	displayNameUpdated := "display name of a test updated"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
@@ -203,7 +203,57 @@ func testAccAwsAppStreamFleet_withTags(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAppStreamFleetConfigWithTags(description, fleetType, instanceType),
+				Config: testAccAwsAppStreamFleetConfigCompleteWithoutStopping(description, fleetType, instanceType, displayName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppStreamFleetExists(resourceName, &fleetOutput),
+					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "display_name", displayName),
+				),
+			},
+			{
+				Config: testAccAwsAppStreamFleetConfigCompleteWithoutStopping(description, fleetType, instanceType, displayNameUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppStreamFleetExists(resourceName, &fleetOutput),
+					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "display_name", displayNameUpdated),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsAppStreamFleet_withTags(t *testing.T) {
+	var fleetOutput appstream.Fleet
+	resourceName := "aws_appstream_fleet.test"
+	description := "Description of a test"
+	fleetType := "ON_DEMAND"
+	instanceType := "stream.standard.small"
+	displayName := "display name of a test"
+	displayNameUpdated := "display name of a test updated"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
+		},
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsAppStreamFleetDestroy,
+		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsAppStreamFleetConfigWithTags(description, fleetType, instanceType, displayName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamFleetExists(resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
@@ -217,12 +267,12 @@ func testAccAwsAppStreamFleet_withTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsAppStreamFleetConfigWithTags(descriptionUpdated, fleetType, instanceTypeUpdate),
+				Config: testAccAwsAppStreamFleetConfigWithTags(description, fleetType, instanceType, displayNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamFleetExists(resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceTypeUpdate),
-					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -290,7 +340,7 @@ func testAccCheckAwsAppStreamFleetDestroy(s *terraform.State) error {
 
 }
 
-func testAccAwsAppStreamFleetConfigNameGenerated(instaceType string) string {
+func testAccAwsAppStreamFleetConfigNameGenerated(instanceType string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_fleet" "test" {
   image_name = "Amazon-AppStream2-Sample-Image-02-04-2019"
@@ -299,10 +349,10 @@ resource "aws_appstream_fleet" "test" {
   }
   instance_type = %[1]q
 }
-`, instaceType)
+`, instanceType)
 }
 
-func testAccAwsAppStreamFleetConfigNamePrefix(instaceType, namePrefix string) string {
+func testAccAwsAppStreamFleetConfigNamePrefix(instanceType, namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_fleet" "test" {
   image_name = "Amazon-AppStream2-Sample-Image-02-04-2019"
@@ -312,10 +362,10 @@ resource "aws_appstream_fleet" "test" {
   instance_type = %[1]q
   name_prefix   = %[2]q
 }
-`, instaceType, namePrefix)
+`, instanceType, namePrefix)
 }
 
-func testAccAwsAppStreamFleetConfigComplete(description, fleetType, instaceType string) string {
+func testAccAwsAppStreamFleetConfigComplete(description, fleetType, instanceType string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -346,10 +396,10 @@ resource "aws_appstream_fleet" "test" {
     subnet_ids = [aws_subnet.example.id]
   }
 }
-`, description, fleetType, instaceType)
+`, description, fleetType, instanceType)
 }
 
-func testAccAwsAppStreamFleetConfigWithTags(description, fleetType, instaceType string) string {
+func testAccAwsAppStreamFleetConfigCompleteWithoutStopping(description, fleetType, instanceType, displayName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -371,6 +421,42 @@ resource "aws_appstream_fleet" "test" {
     desired_instances = 1
   }
   description                        = %[1]q
+  display_name                       = %[4]q
+  idle_disconnect_timeout_in_seconds = 70
+  enable_default_internet_access     = false
+  fleet_type                         = %[2]q
+  instance_type                      = %[3]q
+  max_user_duration_in_seconds       = 1000
+  vpc_config {
+    subnet_ids = [aws_subnet.example.id]
+  }
+}
+`, description, fleetType, instanceType, displayName)
+}
+
+func testAccAwsAppStreamFleetConfigWithTags(description, fleetType, instanceType, displayName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_vpc" "example" {
+  cidr_block = "192.168.0.0/16"
+}
+
+resource "aws_subnet" "example" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "192.168.0.0/24"
+  vpc_id            = aws_vpc.example.id
+}
+
+resource "aws_appstream_fleet" "test" {
+  image_name = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  compute_capacity {
+    desired_instances = 1
+  }
+  description                        = %[1]q
+  display_name                       = %[4]q
   idle_disconnect_timeout_in_seconds = 70
   enable_default_internet_access     = false
   fleet_type                         = %[2]q
@@ -383,5 +469,5 @@ resource "aws_appstream_fleet" "test" {
     Key = "value"
   }
 }
-`, description, fleetType, instaceType)
+`, description, fleetType, instanceType, displayName)
 }
