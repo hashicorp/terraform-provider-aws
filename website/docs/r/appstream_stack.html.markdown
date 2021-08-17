@@ -19,9 +19,11 @@ resource "aws_appstream_stack" "appstream_stack" {
   display_name = "stack display name"
   feedback_url = "http://your-domain/feedback"
   redirect_url = "http://your-domain/redirect"
+
   storage_connectors {
     connector_type = "HOMEFOLDERS"
   }
+
   user_settings {
     action     = "CLIPBOARD_COPY_FROM_LOCAL_DEVICE"
     permission = "ENABLED"
@@ -38,6 +40,7 @@ resource "aws_appstream_stack" "appstream_stack" {
     action     = "FILE_DOWNLOAD"
     permission = "ENABLED"
   }
+
   application_settings {
     enabled        = true
     settings_group = "SettingsGroup"
@@ -51,29 +54,28 @@ resource "aws_appstream_stack" "appstream_stack" {
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are optional:
 
-* `name` - (Optional) A unique name for the AppStream stack.
+* `name` - (Optional) Unique name for the AppStream stack.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) Description for the AppStream stack.
-* `display_name` - (Optional) The stack name to display.
-* `embed_host_domains` - (Optional) The domains where AppStream 2.0 streaming sessions can be embedded in an iframe. You must approve the domains that you want to host embedded AppStream 2.0 streaming sessions.
-* `redirect_url` - (Optional) The URL that users are redirected to after their streaming session ends.
-* `feedback_url` - (Optional) The URL that users are redirected to after they click the Send Feedback link. If no URL is specified, no Send Feedback link is displayed. .
-* `storage_connectors` - (Optional) The storage connectors to enable. (documented below)
-* `user_settings` - (Optional) The actions that are enabled or disabled for users during their streaming sessions. By default, these actions are enabled. (documented below)
+* `display_name` - (Optional) Stack name to display.
+* `embed_host_domains` - (Optional) Domains where AppStream 2.0 streaming sessions can be embedded in an iframe. You must approve the domains that you want to host embedded AppStream 2.0 streaming sessions.
+* `redirect_url` - (Optional) URL that users are redirected to after their streaming session ends.
+* `feedback_url` - (Optional) URL that users are redirected to after they click the Send Feedback link. If no URL is specified, no Send Feedback link is displayed. .
+* `storage_connectors` - (Optional) Configuration block for the storage connectors to enable. See below.
+* `user_settings` - (Optional) Configuration block for the actions that are enabled or disabled for users during their streaming sessions. By default, these actions are enabled. See below.
 * `application_settings` - (Optional) settings for application settings persistence.
 
+### `storage_connectors`
 
-The `storage_connectors` object supports the following:
-
-* `connector_type` - (Required) The type of storage connector. Valid values are: `HOMEFOLDERS`, `GOOGLE_DRIVE`, `ONE_DRIVE`
-* `domains` - (Optional) The names of the domains for the account.
+* `connector_type` - (Required) Type of storage connector. Valid values are: `HOMEFOLDERS`, `GOOGLE_DRIVE`, `ONE_DRIVE`
+* `domains` - (Optional) Names of the domains for the account.
 * `resource_identifier` - (Optional) The ARN of the storage connector.
 
-The `user_settings` object supports the following:
+### `user_settings`
 
-* `action` - (Required) The action that is enabled or disabled. Valid values are: `CLIPBOARD_COPY_FROM_LOCAL_DEVICE`, `CLIPBOARD_COPY_TO_LOCAL_DEVICE`, `FILE_UPLOAD`,`FILE_DOWNLOAD`,`PRINTING_TO_LOCAL_DEVICE`,`DOMAIN_PASSWORD_SIGNIN`,`DOMAIN_SMART_CARD_SIGNIN`,
+* `action` - (Required) Action that is enabled or disabled. Valid values are: `CLIPBOARD_COPY_FROM_LOCAL_DEVICE`, `CLIPBOARD_COPY_TO_LOCAL_DEVICE`, `FILE_UPLOAD`,`FILE_DOWNLOAD`,`PRINTING_TO_LOCAL_DEVICE`,`DOMAIN_PASSWORD_SIGNIN`,`DOMAIN_SMART_CARD_SIGNIN`,
 * `permission` - (Required) Indicates whether the action is enabled or disabled. Valid values are: `ENABLED` , `DISABLED`
 
 
@@ -82,5 +84,14 @@ The `user_settings` object supports the following:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Unique identifier (ID) of the appstream stack.
-* `arn` - Amazon Resource Name (ARN) of the appstream stack.
-* `created_time` - The date and time, in UTC and extended RFC 3339 format, when the stack was created.
+* `arn` - ARN of the appstream stack.
+* `created_time` - Date and time, in UTC and extended RFC 3339 format, when the stack was created.
+
+
+## Import
+
+`aws_appstream_stack` can be imported using the id, e.g.
+
+```
+$ terraform import aws_appstream_stack.example stackNameExample
+```

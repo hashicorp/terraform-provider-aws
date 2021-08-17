@@ -12,11 +12,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
-func testAccAwsAppStreamStack_basic(t *testing.T) {
+func TestAccAwsAppStreamStack_basic(t *testing.T) {
 	var stackOutput appstream.Stack
 	resourceName := "aws_appstream_stack.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsAppStreamStackDestroy,
@@ -40,11 +40,11 @@ func testAccAwsAppStreamStack_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsAppStreamStack_Name_Generated(t *testing.T) {
+func TestAccAwsAppStreamStack_nameGenerated(t *testing.T) {
 	var stackOutput appstream.Stack
 	resourceName := "aws_appstream_stack.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsAppStreamStackDestroy,
@@ -67,12 +67,12 @@ func testAccAwsAppStreamStack_Name_Generated(t *testing.T) {
 	})
 }
 
-func testAccAwsAppStreamStack_NamePrefix(t *testing.T) {
+func TestAccAwsAppStreamStack_namePrefix(t *testing.T) {
 	var stackOutput appstream.Stack
 	resourceName := "aws_appstream_stack.test"
 	namePrefix := "tf-acc-test-prefix-"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsAppStreamStackDestroy,
@@ -95,11 +95,11 @@ func testAccAwsAppStreamStack_NamePrefix(t *testing.T) {
 	})
 }
 
-func testAccAwsAppStreamStack_disappears(t *testing.T) {
+func TestAccAwsAppStreamStack_disappears(t *testing.T) {
 	var stackOutput appstream.Stack
 	resourceName := "aws_appstream_stack.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsAppStreamStackDestroy,
@@ -117,13 +117,13 @@ func testAccAwsAppStreamStack_disappears(t *testing.T) {
 	})
 }
 
-func testAccAwsAppStreamStack_complete(t *testing.T) {
+func TestAccAwsAppStreamStack_complete(t *testing.T) {
 	var stackOutput appstream.Stack
 	resourceName := "aws_appstream_stack.test"
 	description := "Description of a test"
 	descriptionUpdated := "Updated Description of a test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsAppStreamStackDestroy,
@@ -158,13 +158,13 @@ func testAccAwsAppStreamStack_complete(t *testing.T) {
 	})
 }
 
-func testAccAwsAppStreamStack_withTags(t *testing.T) {
+func TestAccAwsAppStreamStack_withTags(t *testing.T) {
 	var stackOutput appstream.Stack
 	resourceName := "aws_appstream_stack.test"
 	description := "Description of a test"
 	descriptionUpdated := "Updated Description of a test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsAppStreamStackDestroy,
