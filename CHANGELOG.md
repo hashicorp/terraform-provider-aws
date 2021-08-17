@@ -2,9 +2,24 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_subnets` ([#18803](https://github.com/hashicorp/terraform-provider-aws/issues/18803))
 * **New Resource:** `aws_fsx_backup` ([#20569](https://github.com/hashicorp/terraform-provider-aws/issues/20569))
 * **New Resource:** `aws_sagemaker_device_fleet` ([#20058](https://github.com/hashicorp/terraform-provider-aws/issues/20058))
 * **New Resource:** `aws_sagemaker_human_task_ui` ([#20570](https://github.com/hashicorp/terraform-provider-aws/issues/20570))
+
+ENHANCEMENTS:
+
+* aws/resource_aws_appconfig_deployment: Add `state` attribute ([#20288](https://github.com/hashicorp/terraform-provider-aws/issues/20288))
+* resource/aws_lambda_function: Add support for `python3.9` `runtime` value ([#20593](https://github.com/hashicorp/terraform-provider-aws/issues/20593))
+* resource/aws_lambda_layer_version: Add support for `python3.9` `compatible_runtimes` value ([#20593](https://github.com/hashicorp/terraform-provider-aws/issues/20593))
+
+BUG FIXES:
+
+* aws/resource_aws_appconfig_deployment: Remove internal waiter after start of deployment ([#20288](https://github.com/hashicorp/terraform-provider-aws/issues/20288))
+* resource/aws_elasticache_user: Correctly update `passwords` ([#20530](https://github.com/hashicorp/terraform-provider-aws/issues/20530))
+* resource/aws_lambda_function: Fix `handler`, `runtime` attribute validation for `package_type` is `Zip` ([#20575](https://github.com/hashicorp/terraform-provider-aws/issues/20575))
+* resource/aws_lambda_function: fix Osaka ap-northeast-3 lambda function creation, failing due to code signer service not available in the region. ([#20555](https://github.com/hashicorp/terraform-provider-aws/issues/20555))
+* resource/aws_storagegateway_smb_file_share: Only set `oplocks_enabled` if a value is specified in configuration ([#20579](https://github.com/hashicorp/terraform-provider-aws/issues/20579))
 
 ## 3.54.0 (August 12, 2021)
 

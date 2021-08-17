@@ -9,10 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -613,7 +614,7 @@ func TestAccGlueDevEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSGlueDevEndpointExists(resourceName string, endpoint *glue.DevEndpoint) resource.TestCheckFunc {
+func testAccCheckAWSGlueDevEndpointExists(resourceName string, v *glue.DevEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -621,52 +622,42 @@ func testAccCheckAWSGlueDevEndpointExists(resourceName string, endpoint *glue.De
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no ID is set")
+			return fmt.Errorf("no Glue Dev Endpoint ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).glueconn
-		output, err := conn.GetDevEndpoint(&glue.GetDevEndpointInput{
-			EndpointName: aws.String(rs.Primary.ID),
-		})
+
+		output, err := finder.DevEndpointByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil {
-			return fmt.Errorf("no Glue Dev Endpoint")
-		}
-
-		*endpoint = *output.DevEndpoint
+		*v = *output
 
 		return nil
 	}
 }
 
 func testAccCheckAWSGlueDevEndpointDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).glueconn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glue_dev_endpoint" {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
-		output, err := conn.GetDevEndpoint(&glue.GetDevEndpointInput{
-			EndpointName: aws.String(rs.Primary.ID),
-		})
+		_, err := finder.DevEndpointByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-				return nil
-			}
 			return err
 		}
 
-		endpoint := output.DevEndpoint
-		if endpoint != nil && aws.StringValue(endpoint.EndpointName) == rs.Primary.ID {
-			return fmt.Errorf("the Glue Dev Endpoint %s still exists", rs.Primary.ID)
-		}
-
-		return nil
+		return fmt.Errorf("Glue Dev Endpoint %s still exists", rs.Primary.ID)
 	}
 
 	return nil
