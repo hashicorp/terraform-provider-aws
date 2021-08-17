@@ -80,14 +80,14 @@ func resourceAwsFsxBackupCreate(d *schema.ResourceData, meta interface{}) error 
 
 	result, err := conn.CreateBackup(input)
 	if err != nil {
-		return fmt.Errorf("Error creating FSx Backup: %w", err)
+		return fmt.Errorf("error creating FSx Backup: %w", err)
 	}
 
 	d.SetId(aws.StringValue(result.Backup.BackupId))
 
 	log.Println("[DEBUG] Waiting for FSx backup to become available")
 	if _, err := waiter.BackupAvailable(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for FSx backup (%s) to be available: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for FSx Backup (%s) to be available: %w", d.Id(), err)
 	}
 
 	return resourceAwsFsxBackupRead(d, meta)
@@ -100,7 +100,7 @@ func resourceAwsFsxBackupUpdate(d *schema.ResourceData, meta interface{}) error 
 		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.FsxUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating FSx Lustre File System (%s) tags: %w", d.Get("arn").(string), err)
+			return fmt.Errorf("error updating FSx Backup (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
 
@@ -129,9 +129,7 @@ func resourceAwsFsxBackupRead(d *schema.ResourceData, meta interface{}) error {
 	fs := backup.FileSystem
 	d.Set("file_system_id", fs.FileSystemId)
 
-	if backup.KmsKeyId != nil {
-		d.Set("kms_key_id", backup.KmsKeyId)
-	}
+	d.Set("kms_key_id", backup.KmsKeyId)
 
 	d.Set("owner_id", backup.OwnerId)
 
