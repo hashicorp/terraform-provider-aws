@@ -7,6 +7,11 @@ FEATURES:
 * **New Resource:** `aws_sagemaker_device_fleet` ([#20058](https://github.com/hashicorp/terraform-provider-aws/issues/20058))
 * **New Resource:** `aws_sagemaker_human_task_ui` ([#20570](https://github.com/hashicorp/terraform-provider-aws/issues/20570))
 
+ENHANCEMENTS:
+
+* resource/aws_lambda_function: Add support for `python3.9` `runtime` value ([#20593](https://github.com/hashicorp/terraform-provider-aws/issues/20593))
+* resource/aws_lambda_layer_version: Add support for `python3.9` `compatible_runtimes` value ([#20593](https://github.com/hashicorp/terraform-provider-aws/issues/20593))
+
 BUG FIXES:
 
 * resource/aws_elasticache_user: Correctly update `passwords` ([#20530](https://github.com/hashicorp/terraform-provider-aws/issues/20530))
