@@ -180,8 +180,8 @@ func TestAccAWSEksAddon_AddonVersion(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	addonVersion1 := "v1.6.3-eksbuild.1"
-	addonVersion2 := "v1.7.5-eksbuild.1"
+	addonVersion1 := "v1.8.0-eksbuild.1"
+	addonVersion2 := "v1.9.0-eksbuild.1"
 	ctx := context.TODO()
 
 	resource.ParallelTest(t, resource.TestCase{
