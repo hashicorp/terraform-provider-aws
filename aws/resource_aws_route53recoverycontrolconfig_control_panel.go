@@ -28,6 +28,7 @@ func resourceAwsRoute53RecoveryControlConfigControlPanel() *schema.Resource {
 			"cluster_arn": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"default_control_panel": {
 				Type:     schema.TypeBool,
@@ -40,6 +41,7 @@ func resourceAwsRoute53RecoveryControlConfigControlPanel() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"status": {
 				Type:     schema.TypeString,

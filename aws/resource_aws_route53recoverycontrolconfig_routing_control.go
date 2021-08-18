@@ -28,6 +28,7 @@ func resourceAwsRoute53RecoveryControlConfigRoutingControl() *schema.Resource {
 			"cluster_arn": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"control_panel_arn": {
 				Type:     schema.TypeString,
@@ -36,6 +37,7 @@ func resourceAwsRoute53RecoveryControlConfigRoutingControl() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"status": {
 				Type:     schema.TypeString,

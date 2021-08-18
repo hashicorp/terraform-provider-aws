@@ -59,3 +59,27 @@ func Route53RecoveryControlConfigControlPanelStatus(conn *route53recoverycontrol
 		return output, aws.StringValue(output.ControlPanel.Status), nil
 	}
 }
+
+func Route53RecoveryControlConfigSafetyRuleStatus(conn *route53recoverycontrolconfig.Route53RecoveryControlConfig, safetyRuleArn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &route53recoverycontrolconfig.DescribeSafetyRuleInput{
+			SafetyRuleArn: aws.String(safetyRuleArn),
+		}
+
+		output, err := conn.DescribeSafetyRule(input)
+
+		if err != nil {
+			return output, "", err
+		}
+
+		if output.AssertionRule != nil {
+			return output, aws.StringValue(output.AssertionRule.Status), nil
+		}
+
+		if output.GatingRule != nil {
+			return output, aws.StringValue(output.GatingRule.Status), nil
+		}
+
+		return output, "", nil
+	}
+}

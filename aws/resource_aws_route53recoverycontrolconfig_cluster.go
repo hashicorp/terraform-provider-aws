@@ -28,6 +28,7 @@ func resourceAwsRoute53RecoveryControlConfigCluster() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -104,7 +105,7 @@ func resourceAwsRoute53RecoveryControlConfigClusterRead(d *schema.ResourceData, 
 	}
 
 	if !d.IsNewResource() && result == nil {
-		log.Printf("[WARN] SRoute53 Recovery Control Config Cluster (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Route53 Recovery Control Config Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -149,20 +150,20 @@ func resourceAwsRoute53RecoveryControlConfigClusterDelete(d *schema.ResourceData
 
 func flattenRoute53RecoveryControlConfigClusterEndpoints(endpoints []*route53recoverycontrolconfig.ClusterEndpoint) []interface{} {
 	if len(endpoints) == 0 {
-        return nil
-    }
+		return nil
+	}
 
-    var tfList []interface{}
+	var tfList []interface{}
 
-    for _, endpoint := range endpoints {
-        if endpoint == nil {
-            continue
-        }
+	for _, endpoint := range endpoints {
+		if endpoint == nil {
+			continue
+		}
 
-        tfList = append(tfList, flattenRoute53RecoveryControlConfigClusterEndpoint(endpoint))
-    }
+		tfList = append(tfList, flattenRoute53RecoveryControlConfigClusterEndpoint(endpoint))
+	}
 
-    return tfList
+	return tfList
 }
 
 func flattenRoute53RecoveryControlConfigClusterEndpoint(ce *route53recoverycontrolconfig.ClusterEndpoint) map[string]interface{} {
