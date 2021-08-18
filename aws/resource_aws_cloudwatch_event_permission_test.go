@@ -326,7 +326,7 @@ func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFu
 			return fmt.Errorf("No ID is set")
 		}
 
-		eventBusName, statementID, err := tfevents.PermissionParseID(rs.Primary.ID)
+		eventBusName, statementID, err := tfevents.PermissionParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error reading CloudWatch Events permission (%s): %w", pr, err)
 		}
@@ -361,7 +361,7 @@ func testAccCheckCloudWatchEventPermissionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		eventBusName, statementID, err := tfevents.PermissionParseID(rs.Primary.ID)
+		eventBusName, statementID, err := tfevents.PermissionParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error reading CloudWatch Events permission (%s): %w", rs.Primary.ID, err)
 		}

@@ -27,13 +27,13 @@ func TestPermissionParseID(t *testing.T) {
 		},
 		{
 			TestName:      "two parts",
-			InputID:       tfevents.PermissionCreateID("TestEventBus", "TestStatement"),
+			InputID:       tfevents.PermissionCreateResourceID("TestEventBus", "TestStatement"),
 			ExpectedPart0: "TestEventBus",
 			ExpectedPart1: "TestStatement",
 		},
 		{
 			TestName:      "two parts with default event bus",
-			InputID:       tfevents.PermissionCreateID(tfevents.DefaultEventBusName, "TestStatement"),
+			InputID:       tfevents.PermissionCreateResourceID(tfevents.DefaultEventBusName, "TestStatement"),
 			ExpectedPart0: tfevents.DefaultEventBusName,
 			ExpectedPart1: "TestStatement",
 		},
@@ -66,7 +66,7 @@ func TestPermissionParseID(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
-			gotPart0, gotPart1, err := tfevents.PermissionParseID(testCase.InputID)
+			gotPart0, gotPart1, err := tfevents.PermissionParseResourceID(testCase.InputID)
 
 			if err == nil && testCase.ExpectedError {
 				t.Fatalf("expected error, got no error")
@@ -108,13 +108,13 @@ func TestRuleParseID(t *testing.T) {
 		},
 		{
 			TestName:      "two parts",
-			InputID:       tfevents.RuleCreateID("TestEventBus", "TestRule"),
+			InputID:       tfevents.RuleCreateResourceID("TestEventBus", "TestRule"),
 			ExpectedPart0: "TestEventBus",
 			ExpectedPart1: "TestRule",
 		},
 		{
 			TestName:      "two parts with default event bus",
-			InputID:       tfevents.RuleCreateID(tfevents.DefaultEventBusName, "TestRule"),
+			InputID:       tfevents.RuleCreateResourceID(tfevents.DefaultEventBusName, "TestRule"),
 			ExpectedPart0: tfevents.DefaultEventBusName,
 			ExpectedPart1: "TestRule",
 		},
@@ -163,7 +163,7 @@ func TestRuleParseID(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
-			gotPart0, gotPart1, err := tfevents.RuleParseID(testCase.InputID)
+			gotPart0, gotPart1, err := tfevents.RuleParseResourceID(testCase.InputID)
 
 			if err == nil && testCase.ExpectedError {
 				t.Fatalf("expected error, got no error")

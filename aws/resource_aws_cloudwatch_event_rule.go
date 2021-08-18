@@ -142,7 +142,7 @@ func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface
 
 	d.Set("arn", out.RuleArn)
 
-	id := tfevents.RuleCreateID(aws.StringValue(input.EventBusName), aws.StringValue(input.Name))
+	id := tfevents.RuleCreateResourceID(aws.StringValue(input.EventBusName), aws.StringValue(input.Name))
 	d.SetId(id)
 
 	log.Printf("[INFO] CloudWatch Events Rule (%s) created", aws.StringValue(out.RuleArn))
@@ -211,7 +211,7 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 
 func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
-	_, ruleName, err := tfevents.RuleParseID(d.Id())
+	_, ruleName, err := tfevents.RuleParseResourceID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -256,7 +256,7 @@ func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface
 
 func resourceAwsCloudWatchEventRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
-	busName, ruleName, err := tfevents.RuleParseID(d.Id())
+	busName, ruleName, err := tfevents.RuleParseResourceID(d.Id())
 	if err != nil {
 		return err
 	}
