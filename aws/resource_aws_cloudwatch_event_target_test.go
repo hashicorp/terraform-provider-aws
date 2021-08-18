@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -214,6 +215,46 @@ func TestAccAWSCloudWatchEventTarget_EventBusName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID2),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudWatchEventTarget_EventBusArn(t *testing.T) {
+	// "ValidationException: Adding an EventBus as a target within an account is not allowed."
+	if got, want := testAccGetPartition(), endpoints.AwsUsGovPartitionID; got == want {
+		t.Skipf("CloudWatch Events Target EventBus ARNs are not supported in %s partition", got)
+	}
+
+	resourceName := "aws_cloudwatch_event_target.test"
+
+	var target events.Target
+	ruleName := acctest.RandomWithPrefix("tf-acc-test-rule")
+	targetID := acctest.RandomWithPrefix("tf-acc-test-target")
+	originEventBusName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationEventBusName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchEventTargetConfigEventBusArn(ruleName, originEventBusName, targetID, destinationEventBusName, acctest.RandomWithPrefix("tf-acc-test-target"), acctest.RandomWithPrefix("tf-acc-test-target")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventTargetExists(resourceName, &target),
+					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("event-bus/%s", destinationEventBusName))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "event_bus_name", "events", regexp.MustCompile(fmt.Sprintf("event-bus/%s", originEventBusName))),
+					resource.TestCheckResourceAttr(resourceName, "target_id", targetID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -943,6 +984,55 @@ resource "aws_cloudwatch_event_bus" "test" {
   name = %[4]q
 }
 `, targetID, snsTopicName, ruleName, eventBusName)
+}
+
+func testAccAWSCloudWatchEventTargetConfigEventBusArn(ruleName, originEventBusName, targetID, destinationEventBusName, roleName, policyName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_cloudwatch_event_bus" "test_origin_bus" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_event_bus" "test_destination_bus" {
+  name = %[4]q
+}
+
+resource "aws_cloudwatch_event_target" "test" {
+  rule           = aws_cloudwatch_event_rule.test.name
+  event_bus_name = aws_cloudwatch_event_bus.test_origin_bus.arn
+  target_id      = %[3]q
+  arn            = aws_cloudwatch_event_bus.test_destination_bus.arn
+  role_arn       = aws_iam_role.test.arn
+}
+
+resource "aws_cloudwatch_event_rule" "test" {
+  name           = %[2]q
+  event_bus_name = aws_cloudwatch_event_bus.test_origin_bus.name
+  event_pattern  = <<PATTERN
+{
+  "source": ["aws.ec2"]
+}
+PATTERN
+}
+
+resource "aws_iam_role" "test" {
+  name = %[5]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "events.${data.aws_partition.current.dns_suffix}"
+    },
+    "Effect": "Allow"
+  }]
+}
+EOF
+}
+`, originEventBusName, ruleName, targetID, destinationEventBusName, roleName, policyName)
 }
 
 func testAccAWSCloudWatchEventTargetConfigMissingTargetId(ruleName, snsTopicName string) string {

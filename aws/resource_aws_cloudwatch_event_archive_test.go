@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -78,7 +77,7 @@ func TestAccAWSCloudWatchEventArchive_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
+		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventArchiveDestroy,
 		Steps: []resource.TestStep{
@@ -109,7 +108,7 @@ func TestAccAWSCloudWatchEventArchive_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
+		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventArchiveDestroy,
 		Steps: []resource.TestStep{
@@ -139,7 +138,7 @@ func TestAccAWSCloudWatchEventArchive_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
+		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventArchiveDestroy,
 		Steps: []resource.TestStep{
@@ -211,7 +210,7 @@ func TestAccAWSCloudWatchEventArchive_retentionSetOnCreation(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
+		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventArchiveDestroy,
 		Steps: []resource.TestStep{
