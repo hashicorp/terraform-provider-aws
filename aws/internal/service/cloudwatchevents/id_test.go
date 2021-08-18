@@ -6,7 +6,7 @@ import (
 	tfevents "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents"
 )
 
-func TestPermissionParseID(t *testing.T) {
+func TestPermissionParseResourceID(t *testing.T) {
 	testCases := []struct {
 		TestName      string
 		InputID       string
@@ -87,7 +87,7 @@ func TestPermissionParseID(t *testing.T) {
 	}
 }
 
-func TestRuleParseID(t *testing.T) {
+func TestRuleParseResourceID(t *testing.T) {
 	testCases := []struct {
 		TestName      string
 		InputID       string

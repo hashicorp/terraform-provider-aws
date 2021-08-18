@@ -17,6 +17,7 @@ import (
 	tfevents "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -29,6 +30,7 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 		Read:   resourceAwsCloudWatchEventRuleRead,
 		Update: resourceAwsCloudWatchEventRuleUpdate,
 		Delete: resourceAwsCloudWatchEventRuleDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -108,8 +110,9 @@ func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface
 	name := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
 
 	input, err := buildPutRuleInputStruct(d, name)
+
 	if err != nil {
-		return fmt.Errorf("Creating CloudWatch Events Rule failed: %w", err)
+		return err
 	}
 
 	if len(tags) > 0 {
@@ -117,35 +120,30 @@ func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface
 	}
 
 	log.Printf("[DEBUG] Creating CloudWatch Events Rule: %s", input)
-
 	// IAM Roles take some time to propagate
-	var out *events.PutRuleOutput
 	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
-		out, err = conn.PutRule(input)
+		_, err = conn.PutRule(input)
 
-		if isAWSErr(err, "ValidationException", "cannot be assumed by principal") {
-			log.Printf("[DEBUG] Retrying update of CloudWatch Events Rule %q", aws.StringValue(input.Name))
+		if tfawserr.ErrMessageContains(err, "ValidationException", "cannot be assumed by principal") {
 			return resource.RetryableError(err)
 		}
+
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		out, err = conn.PutRule(input)
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.PutRule(input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("Creating CloudWatch Events Rule failed: %w", err)
+		return fmt.Errorf("error creating CloudWatch Events Rule (%s): %w", name, err)
 	}
 
-	d.Set("arn", out.RuleArn)
-
-	id := tfevents.RuleCreateResourceID(aws.StringValue(input.EventBusName), aws.StringValue(input.Name))
-	d.SetId(id)
-
-	log.Printf("[INFO] CloudWatch Events Rule (%s) created", aws.StringValue(out.RuleArn))
+	d.SetId(tfevents.RuleCreateResourceID(aws.StringValue(input.EventBusName), aws.StringValue(input.Name)))
 
 	return resourceAwsCloudWatchEventRuleRead(d, meta)
 }
@@ -155,39 +153,47 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	out, err := finder.RuleByID(conn, d.Id())
-	if tfawserr.ErrCodeEquals(err, events.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Removing CloudWatch Events Rule (%s) because it's gone.", d.Id())
+	eventBusName, ruleName, err := tfevents.RuleParseResourceID(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	output, err := finder.RuleByEventBusAndRuleNames(conn, eventBusName, ruleName)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CloudWatch Events Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
 		return fmt.Errorf("error reading CloudWatch Events Rule (%s): %w", d.Id(), err)
 	}
-	log.Printf("[DEBUG] Found Event Rule: %s", out)
 
-	arn := aws.StringValue(out.Arn)
+	arn := aws.StringValue(output.Arn)
 	d.Set("arn", arn)
-	d.Set("description", out.Description)
-	if out.EventPattern != nil {
-		pattern, err := structure.NormalizeJsonString(aws.StringValue(out.EventPattern))
+	d.Set("description", output.Description)
+	if output.EventPattern != nil {
+		pattern, err := structure.NormalizeJsonString(aws.StringValue(output.EventPattern))
 		if err != nil {
 			return fmt.Errorf("event pattern contains an invalid JSON: %w", err)
 		}
 		d.Set("event_pattern", pattern)
 	}
-	d.Set("name", out.Name)
-	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(out.Name)))
-	d.Set("role_arn", out.RoleArn)
-	d.Set("schedule_expression", out.ScheduleExpression)
-	d.Set("event_bus_name", out.EventBusName)
+	d.Set("name", output.Name)
+	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(output.Name)))
+	d.Set("role_arn", output.RoleArn)
+	d.Set("schedule_expression", output.ScheduleExpression)
+	d.Set("event_bus_name", eventBusName) // Use event bus name from resource ID as API response may collapse any ARN.
 
-	boolState, err := getBooleanStateFromString(*out.State)
+	enabled, err := tfevents.RuleEnabledFromState(aws.StringValue(output.State))
+
 	if err != nil {
 		return err
 	}
-	log.Printf("[DEBUG] Setting boolean state: %t", boolState)
-	d.Set("is_enabled", boolState)
+
+	d.Set("is_enabled", enabled)
 
 	tags, err := keyvaluetags.CloudwatcheventsListTags(conn, arn)
 
@@ -211,35 +217,40 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 
 func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
+
 	_, ruleName, err := tfevents.RuleParseResourceID(d.Id())
+
 	if err != nil {
 		return err
 	}
+
 	input, err := buildPutRuleInputStruct(d, ruleName)
+
 	if err != nil {
-		return fmt.Errorf("Updating CloudWatch Events Rule (%s) failed: %w", ruleName, err)
+		return err
 	}
-	log.Printf("[DEBUG] Updating CloudWatch Events Rule: %s", input)
 
 	// IAM Roles take some time to propagate
 	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutRule(input)
 
-		if isAWSErr(err, "ValidationException", "cannot be assumed by principal") {
-			log.Printf("[DEBUG] Retrying update of CloudWatch Events Rule %q", aws.StringValue(input.Name))
+		if tfawserr.ErrMessageContains(err, "ValidationException", "cannot be assumed by principal") {
 			return resource.RetryableError(err)
 		}
+
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+
+	if tfresource.TimedOut(err) {
 		_, err = conn.PutRule(input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("Updating CloudWatch Events Rule (%s) failed: %w", ruleName, err)
+		return fmt.Errorf("error updating CloudWatch Events Rule (%s): %w", d.Id(), err)
 	}
 
 	arn := d.Get("arn").(string)
@@ -256,19 +267,25 @@ func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface
 
 func resourceAwsCloudWatchEventRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
-	busName, ruleName, err := tfevents.RuleParseResourceID(d.Id())
+
+	eventBusName, ruleName, err := tfevents.RuleParseResourceID(d.Id())
+
 	if err != nil {
 		return err
 	}
+
 	input := &events.DeleteRuleInput{
-		Name:         aws.String(ruleName),
-		EventBusName: aws.String(busName),
+		Name: aws.String(ruleName),
+	}
+	if eventBusName != "" {
+		input.EventBusName = aws.String(eventBusName)
 	}
 
+	log.Printf("[DEBUG] Deleting CloudWatch Events Rule: %s", d.Id())
 	err = resource.Retry(cloudWatchEventRuleDeleteRetryTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteRule(input)
 
-		if isAWSErr(err, "ValidationException", "Rule can't be deleted since it has targets") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "Rule can't be deleted since it has targets") {
 			return resource.RetryableError(err)
 		}
 
@@ -279,8 +296,12 @@ func resourceAwsCloudWatchEventRuleDelete(d *schema.ResourceData, meta interface
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteRule(input)
+	}
+
+	if tfawserr.ErrCodeEquals(err, events.ErrCodeResourceNotFoundException) {
+		return nil
 	}
 
 	if err != nil {
@@ -316,29 +337,9 @@ func buildPutRuleInputStruct(d *schema.ResourceData, name string) (*events.PutRu
 		input.ScheduleExpression = aws.String(v.(string))
 	}
 
-	input.State = aws.String(getStringStateFromBoolean(d.Get("is_enabled").(bool)))
+	input.State = aws.String(tfevents.RuleStateFromEnabled(d.Get("is_enabled").(bool)))
 
 	return &input, nil
-}
-
-// State is represented as (ENABLED|DISABLED) in the API
-func getBooleanStateFromString(state string) (bool, error) {
-	if state == events.RuleStateEnabled {
-		return true, nil
-	} else if state == events.RuleStateDisabled {
-		return false, nil
-	}
-	// We don't just blindly trust AWS as they tend to return
-	// unexpected values in similar cases (different casing etc.)
-	return false, fmt.Errorf("Failed converting state %q into boolean", state)
-}
-
-// State is represented as (ENABLED|DISABLED) in the API
-func getStringStateFromBoolean(isEnabled bool) string {
-	if isEnabled {
-		return events.RuleStateEnabled
-	}
-	return events.RuleStateDisabled
 }
 
 func validateEventPatternValue() schema.SchemaValidateFunc {
