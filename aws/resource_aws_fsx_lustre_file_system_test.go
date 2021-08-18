@@ -600,6 +600,35 @@ func TestAccAWSFsxLustreFileSystem_DeploymentTypePersistent1(t *testing.T) {
 	})
 }
 
+func TestAccAWSFsxLustreFileSystem_fromBackup(t *testing.T) {
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxLustreFileSystemFromBackup(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "per_unit_storage_throughput", "50"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypePersistent1),
+					resource.TestCheckResourceAttrPair(resourceName, "backup_id", "aws_fsx_backup.test", "id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids", "backup_id"},
+			},
+		},
+	})
+}
+
 func TestAccAWSFsxLustreFileSystem_KmsKeyId(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
@@ -1115,6 +1144,29 @@ resource "aws_fsx_lustre_file_system" "test" {
   per_unit_storage_throughput = %[1]d
 }
 `, perUnitStorageThroughput))
+}
+
+func testAccAwsFsxLustreFileSystemFromBackup() string {
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), fmt.Sprintf(`
+resource "aws_fsx_lustre_file_system" "base" {
+  storage_capacity            = 1200
+  subnet_ids                  = [aws_subnet.test1.id]
+  deployment_type             = "PERSISTENT_1"
+  per_unit_storage_throughput = 50
+}
+
+resource "aws_fsx_backup" "test" {
+  file_system_id = aws_fsx_lustre_file_system.base.id
+}
+
+resource "aws_fsx_lustre_file_system" "test" {
+  storage_capacity            = 1200
+  subnet_ids                  = [aws_subnet.test1.id]
+  deployment_type             = "PERSISTENT_1"
+  per_unit_storage_throughput = 50
+  backup_id                   = aws_fsx_backup.test.id
+}
+`))
 }
 
 func testAccAwsFsxLustreFileSystemConfigKmsKeyId1() string {
