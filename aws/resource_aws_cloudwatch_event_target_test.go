@@ -997,13 +997,13 @@ resource "aws_cloudwatch_event_bus" "test_origin_bus" {
 resource "aws_cloudwatch_event_bus" "test_destination_bus" {
   name = %[4]q
 }
-	
+
 resource "aws_cloudwatch_event_target" "test" {
   rule           = aws_cloudwatch_event_rule.test.name
   event_bus_name = aws_cloudwatch_event_bus.test_origin_bus.arn
   target_id      = %[3]q
   arn            = aws_cloudwatch_event_bus.test_destination_bus.arn
-  role_arn		= aws_iam_role.test.arn
+  role_arn		 = aws_iam_role.test.arn
 }
 
 resource "aws_cloudwatch_event_rule" "test" {
@@ -1018,7 +1018,7 @@ PATTERN
 
 resource "aws_iam_role" "test" {
   name = %[5]q
-	
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
