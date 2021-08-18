@@ -69,21 +69,21 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRule() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:     schema.TypeString,
+					Type: schema.TypeString,
 				},
 			},
 			"gating_controls": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:     schema.TypeString,
+					Type: schema.TypeString,
 				},
 			},
 			"target_controls": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:     schema.TypeString,
+					Type: schema.TypeString,
 				},
 			},
 		},
