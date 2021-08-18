@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -13,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appstream/waiter"
 )
 
@@ -47,6 +48,7 @@ func resourceAwsAppStreamImageBuilder() *schema.Resource {
 						},
 					},
 				},
+				Set: accessEndpointsHash,
 			},
 			"appstream_agent_version": {
 				Type:         schema.TypeString,
@@ -127,18 +129,9 @@ func resourceAwsAppStreamImageBuilder() *schema.Resource {
 				ForceNew: true,
 			},
 			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-			},
-			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"state": {
 				Type:     schema.TypeString,
@@ -176,7 +169,7 @@ func resourceAwsAppStreamImageBuilder() *schema.Resource {
 func resourceAwsAppStreamImageBuilderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).appstreamconn
 	input := &appstream.CreateImageBuilderInput{
-		Name:         aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))),
+		Name:         aws.String(d.Get("name").(string)),
 		InstanceType: aws.String(d.Get("instance_type").(string)),
 	}
 
@@ -303,7 +296,6 @@ func resourceAwsAppStreamImageBuilderRead(ctx context.Context, d *schema.Resourc
 		}
 
 		d.Set("name", v.Name)
-		d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(v.Name)))
 		d.Set("state", v.State)
 
 		tg, err := conn.ListTagsForResource(&appstream.ListTagsForResourceInput{
@@ -361,6 +353,21 @@ func resourceAwsAppStreamImageBuilderDelete(ctx context.Context, d *schema.Resou
 
 }
 
+func expandAccessEndpoint(tfMap map[string]interface{}) *appstream.AccessEndpoint {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &appstream.AccessEndpoint{
+		EndpointType: aws.String(tfMap["endpoint_type"].(string)),
+	}
+	if v, ok := tfMap["vpce_id"]; ok {
+		apiObject.VpceId = aws.String(v.(string))
+	}
+
+	return apiObject
+}
+
 func expandAccessEndpoints(tfList []interface{}) []*appstream.AccessEndpoint {
 	if len(tfList) == 0 {
 		return nil
@@ -368,34 +375,46 @@ func expandAccessEndpoints(tfList []interface{}) []*appstream.AccessEndpoint {
 
 	var apiObjects []*appstream.AccessEndpoint
 
-	for _, v := range tfList {
-		v1 := v.(map[string]interface{})
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
 
-		endpoint := &appstream.AccessEndpoint{
-			EndpointType: aws.String(v1["endpoint_type"].(string)),
-		}
-		if v2, ok := v1["vpce_id"]; ok && v1["vpce_id"].(string) != "" {
-			endpoint.VpceId = aws.String(v2.(string))
+		if !ok {
+			continue
 		}
 
-		apiObjects = append(apiObjects, endpoint)
+		apiObject := expandAccessEndpoint(tfMap)
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
 	return apiObjects
 }
 
+func flattenAccessEndpoint(apiObject *appstream.AccessEndpoint) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	tfMap["endpoint_type"] = aws.StringValue(apiObject.EndpointType)
+	tfMap["vpce_id"] = aws.StringValue(apiObject.VpceId)
+
+	return tfMap
+}
+
 func flattenAccessEndpoints(apiObjects []*appstream.AccessEndpoint) []map[string]interface{} {
-	if apiObjects == nil {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
 	var tfList []map[string]interface{}
 
-	for _, endpoint := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
-			"endpoint_type": aws.StringValue(endpoint.EndpointType),
-			"vpce_id":       aws.StringValue(endpoint.VpceId),
-		})
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenAccessEndpoint(apiObject))
 	}
 
 	return tfList
@@ -459,4 +478,12 @@ func flattenVpcConfig(apiObject *appstream.VpcConfig) []interface{} {
 	tfList["subnet_ids"] = aws.StringValueSlice(apiObject.SubnetIds)
 
 	return []interface{}{tfList}
+}
+
+func accessEndpointsHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(m["endpoint_type"].(string))
+	buf.WriteString(m["vpce_id"].(string))
+	return hashcode.String(buf.String())
 }

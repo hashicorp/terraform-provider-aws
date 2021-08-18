@@ -36,6 +36,7 @@ resource "aws_appstream_image_builder" "test_fleet" {
 The following arguments are required:
 
 * `instance_type` - (Required) The instance type to use when launching the image builder.
+* `name` - (Required) Unique name for the image builder.
 
 The following arguments are optional:
 
@@ -48,8 +49,6 @@ The following arguments are optional:
 * `iam_role_arn` - (Optional) ARN of the IAM role to apply to the image builder.
 * `image_name` - (Optional) Name of the image used to create the image builder.
 * `image_arn` - (Optional) ARN of the public, private, or shared image to use.
-* `name` - (Optional) Unique name for the image builder.
-* `name_prefix` -  (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `vpc_config` - (Optional) Configuration block for the VPC configuration for the image builder. See below.
 * `tags` - (Optional) Map of tags to attach to AppStream instances.
 
