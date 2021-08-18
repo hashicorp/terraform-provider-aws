@@ -175,6 +175,7 @@ func resourceAwsAppStreamStack() *schema.Resource {
 						},
 					},
 				},
+				Set: userSettingsHash,
 			},
 			"tags":     tagsSchemaForceNew(),
 			"tags_all": tagsSchemaComputed(),
@@ -701,5 +702,13 @@ func storageConnectorsHash(v interface{}) int {
 	buf.WriteString(m["connector_type"].(string))
 	buf.WriteString(fmt.Sprintf("%+v", m["domains"].([]interface{})))
 	buf.WriteString(m["resource_identifier"].(string))
+	return hashcode.String(buf.String())
+}
+
+func userSettingsHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(m["action"].(string))
+	buf.WriteString(m["permission"].(string))
 	return hashcode.String(buf.String())
 }
