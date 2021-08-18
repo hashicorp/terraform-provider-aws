@@ -14,22 +14,22 @@ Provides an AWS Route 53 Recovery Control Config Safety Rule
 
 ```terraform
 resource "aws_route53recoverycontrolconfig_safety_rule" "myassertionrule" {
-  name        = aws_route53recoverycontrolconfig_assertion_rule
+  name              = aws_route53recoverycontrolconfig_assertion_rule
   control_panel_arn = i_belong_to_this_control_panel
-  wait_period_ms = 50000
-  rule_config = { inverted = false, threshold = 1, type = ATLEAST}
+  wait_period_ms    = 50000
+  rule_config       = { inverted = false, threshold = 1, type = ATLEAST}
   asserted_controls = [arn1, arn2]
 }
 ```
 
 ```terraform
 resource "aws_route53recoverycontrolconfig_safety_rule" "mygatingrule" {
-  name        = aws_route53recoverycontrolconfig_gating_rule
+  name              = aws_route53recoverycontrolconfig_gating_rule
   control_panel_arn = i_belong_to_this_control_panel
-  wait_period_ms = 50000
-  rule_config = { inverted = false, threshold = 1, type = ATLEAST}
-  gating_controls = [arn1, arn2]
-  target_controls = [arn1, arn2]
+  wait_period_ms    = 50000
+  rule_config       = { inverted = false, threshold = 1, type = ATLEAST}
+  gating_controls   = [arn1, arn2]
+  target_controls   = [arn1, arn2]
 }
 ```
 
