@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	eventBusNamePattern    = regexp.MustCompile(`(arn:aws[\w-]*:events:[a-z]{2}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/)?[/\.\-_A-Za-z0-9]+`)
+	eventBusARNPattern     = regexp.MustCompile(`^arn:aws[\w-]*:events:[a-z]{2}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/[\.\-_A-Za-z0-9]+$`)
 	partnerEventBusPattern = regexp.MustCompile(`^aws\.partner(/[\.\-_A-Za-z0-9]+){2,}$`)
 )
 
@@ -61,10 +61,13 @@ func RuleParseResourceID(id string) (string, string, error) {
 	}
 	if len(parts) > 2 {
 		i := strings.LastIndex(id, ruleResourceIDSeparator)
-		busName := id[:i]
-		statementID := id[i+1:]
-		if partnerEventBusPattern.MatchString(busName) && statementID != "" {
-			return busName, statementID, nil
+		eventBusName := id[:i]
+		ruleName := id[i+1:]
+		if eventBusARNPattern.MatchString(eventBusName) && ruleName != "" {
+			return eventBusName, ruleName, nil
+		}
+		if partnerEventBusPattern.MatchString(eventBusName) && ruleName != "" {
+			return eventBusName, ruleName, nil
 		}
 	}
 
@@ -103,10 +106,13 @@ func TargetParseImportID(id string) (string, string, string, error) {
 		iTarget := strings.LastIndex(id, targetImportIDSeparator)
 		targetID := id[iTarget+1:]
 		iRule := strings.LastIndex(id[:iTarget], targetImportIDSeparator)
-		busName := id[:iRule]
+		eventBusName := id[:iRule]
 		ruleName := id[iRule+1 : iTarget]
-		if partnerEventBusPattern.MatchString(busName) && ruleName != "" && targetID != "" {
-			return busName, ruleName, targetID, nil
+		if eventBusARNPattern.MatchString(eventBusName) && ruleName != "" && targetID != "" {
+			return eventBusName, ruleName, targetID, nil
+		}
+		if partnerEventBusPattern.MatchString(eventBusName) && ruleName != "" && targetID != "" {
+			return eventBusName, ruleName, targetID, nil
 		}
 	}
 

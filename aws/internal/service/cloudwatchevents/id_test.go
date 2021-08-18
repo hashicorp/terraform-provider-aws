@@ -119,9 +119,21 @@ func TestRuleParseID(t *testing.T) {
 			ExpectedPart1: "TestRule",
 		},
 		{
-			TestName:      "partner event bus",
+			TestName:      "partner event bus 1",
 			InputID:       "aws.partner/example.com/Test/TestRule",
 			ExpectedPart0: "aws.partner/example.com/Test",
+			ExpectedPart1: "TestRule",
+		},
+		{
+			TestName:      "partner event bus 2",
+			InputID:       "aws.partner/foo.com/foo/18554d09-58ff-aa42-ba9c-c4c33899006f/test",
+			ExpectedPart0: "aws.partner/foo.com/foo/18554d09-58ff-aa42-ba9c-c4c33899006f",
+			ExpectedPart1: "test",
+		},
+		{
+			TestName:      "ARN event bus",
+			InputID:       tfevents.RuleCreateResourceID("arn:aws:events:us-east-2:123456789012:event-bus/default", "TestRule"),
+			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/default",
 			ExpectedPart1: "TestRule",
 		},
 		{
@@ -278,6 +290,13 @@ func TestTargetParseImportID(t *testing.T) {
 			TestName:      "partner event bus",
 			InputID:       "aws.partner/example.com/Test/TestRule/TestTarget",
 			ExpectedPart0: "aws.partner/example.com/Test",
+			ExpectedPart1: "TestRule",
+			ExpectedPart2: "TestTarget",
+		},
+		{
+			TestName:      "ARN event bus",
+			InputID:       "arn:aws:events:us-east-2:123456789012:event-bus/default/TestRule/TestTarget",
+			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/default",
 			ExpectedPart1: "TestRule",
 			ExpectedPart2: "TestTarget",
 		},
