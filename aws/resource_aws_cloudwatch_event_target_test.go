@@ -1003,7 +1003,7 @@ resource "aws_cloudwatch_event_target" "test" {
   event_bus_name = aws_cloudwatch_event_bus.test_origin_bus.arn
   target_id      = %[3]q
   arn            = aws_cloudwatch_event_bus.test_destination_bus.arn
-  role_arn		 = aws_iam_role.test.arn
+  role_arn       = aws_iam_role.test.arn
 }
 
 resource "aws_cloudwatch_event_rule" "test" {
