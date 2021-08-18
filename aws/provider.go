@@ -1005,6 +1005,7 @@ func Provider() *schema.Provider {
 			"aws_route53recoverycontrolconfig_cluster":                resourceAwsRoute53RecoveryControlConfigCluster(),
 			"aws_route53recoverycontrolconfig_control_panel":          resourceAwsRoute53RecoveryControlConfigControlPanel(),
 			"aws_route53recoverycontrolconfig_routing_control":        resourceAwsRoute53RecoveryControlConfigRoutingControl(),
+			"aws_route53recoverycontrolconfig_safety_rule":            resourceAwsRoute53RecoveryControlConfigSafetyRule(),
 			"aws_route53recoveryreadiness_cell":                       resourceAwsRoute53RecoveryReadinessCell(),
 			"aws_route53recoveryreadiness_readiness_check":            resourceAwsRoute53RecoveryReadinessReadinessCheck(),
 			"aws_route53recoveryreadiness_recovery_group":             resourceAwsRoute53RecoveryReadinessRecoveryGroup(),

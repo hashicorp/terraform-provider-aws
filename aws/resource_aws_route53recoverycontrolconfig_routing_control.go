@@ -37,7 +37,6 @@ func resourceAwsRoute53RecoveryControlConfigRoutingControl() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"status": {
 				Type:     schema.TypeString,

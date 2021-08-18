@@ -111,7 +111,6 @@ func resourceAwsRoute53RecoveryControlConfigClusterRead(d *schema.ResourceData, 
 	}
 
 	d.Set("cluster_arn", result.ClusterArn)
-	d.Set("cluster_enpoints", result.ClusterEndpoints)
 	d.Set("name", result.Name)
 	d.Set("status", result.Status)
 
