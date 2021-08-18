@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -220,6 +221,11 @@ func TestAccAWSCloudWatchEventTarget_EventBusName(t *testing.T) {
 }
 
 func TestAccAWSCloudWatchEventTarget_EventBusArn(t *testing.T) {
+	// "ValidationException: Adding an EventBus as a target within an account is not allowed."
+	if got, want := testAccGetPartition(), endpoints.AwsUsGovPartitionID; got == want {
+		t.Skipf("CloudWatch Events Target EventBus ARNs are not supported in %s partition", got)
+	}
+
 	resourceName := "aws_cloudwatch_event_target.test"
 
 	var target events.Target
