@@ -34,4 +34,4 @@ In addition to all arguments above, the following attributes are exported:
 * `broker_id` - Numeric ID of the broker node
 * `attached_eni_id` - The ENI associated with the broker node
 * `client_subnet` - The subnet name the broker resides in
-* `endpoints` - List of hostnames associates with the broker node. This does not include ports.
+* `endpoints` - List of hostnames associated with the broker node. This does not include ports.
