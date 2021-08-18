@@ -658,9 +658,24 @@ func TestFlattenParameters(t *testing.T) {
 			},
 			Output: []map[string]interface{}{
 				{
+					"name":  "character_set_client",
+					"value": "utf8",
+				},
+			},
+		},
+		{
+			Input: []*rds.Parameter{
+				{
+					ParameterName:  aws.String("character_set_client"),
+					ParameterValue: aws.String("utf8"),
+					ApplyMethod:    aws.String("immediate"),
+				},
+			},
+			Output: []map[string]interface{}{
+				{
 					"name":         "character_set_client",
 					"value":        "utf8",
-					"apply_method": "",
+					"apply_method": "immediate",
 				},
 			},
 		},
