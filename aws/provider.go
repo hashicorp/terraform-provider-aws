@@ -346,6 +346,7 @@ func Provider() *schema.Provider {
 			"aws_mq_broker":                                  dataSourceAwsMqBroker(),
 			"aws_msk_cluster":                                dataSourceAwsMskCluster(),
 			"aws_msk_configuration":                          dataSourceAwsMskConfiguration(),
+			"aws_msk_nodes":                                  dataSourceAwsMskNodes(),
 			"aws_nat_gateway":                                dataSourceAwsNatGateway(),
 			"aws_neptune_orderable_db_instance":              dataSourceAwsNeptuneOrderableDbInstance(),
 			"aws_neptune_engine_version":                     dataSourceAwsNeptuneEngineVersion(),
