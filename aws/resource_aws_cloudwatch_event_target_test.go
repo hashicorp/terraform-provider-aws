@@ -991,48 +991,44 @@ func testAccAWSCloudWatchEventTargetConfigEventBusArn(ruleName, originEventBusNa
 data "aws_partition" "current" {}
 
 resource "aws_cloudwatch_event_bus" "test_origin_bus" {
-	name = %[1]q
+  name = %[1]q
 }
 
 resource "aws_cloudwatch_event_bus" "test_destination_bus" {
-	name = %[4]q
+  name = %[4]q
 }
 	
 resource "aws_cloudwatch_event_target" "test" {
-	rule           = aws_cloudwatch_event_rule.test.name
-	event_bus_name = aws_cloudwatch_event_bus.test_origin_bus.arn
-	target_id      = %[3]q
-	arn            = aws_cloudwatch_event_bus.test_destination_bus.arn
-	role_arn		= aws_iam_role.test.arn
+  rule           = aws_cloudwatch_event_rule.test.name
+  event_bus_name = aws_cloudwatch_event_bus.test_origin_bus.arn
+  target_id      = %[3]q
+  arn            = aws_cloudwatch_event_bus.test_destination_bus.arn
+  role_arn		= aws_iam_role.test.arn
 }
 
 resource "aws_cloudwatch_event_rule" "test" {
-	name           = %[2]q
-	event_bus_name = aws_cloudwatch_event_bus.test_origin_bus.name
-	event_pattern  = <<PATTERN
+  name           = %[2]q
+  event_bus_name = aws_cloudwatch_event_bus.test_origin_bus.name
+  event_pattern  = <<PATTERN
 {
-	"source": [
-		"aws.ec2"
-	]
+  "source": ["aws.ec2"]
 }
 PATTERN
 }
 
 resource "aws_iam_role" "test" {
-	name = %[5]q
+  name = %[5]q
 	
-	assume_role_policy = <<EOF
+  assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": "sts:AssumeRole",
-			"Principal": {
-				"Service": "events.${data.aws_partition.current.dns_suffix}"
-			},
-			"Effect": "Allow"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "events.${data.aws_partition.current.dns_suffix}"
+    },
+    "Effect": "Allow"
+  }]
 }
 EOF
 }

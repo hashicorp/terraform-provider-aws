@@ -850,7 +850,7 @@ PATTERN
 func testAccAWSCloudWatchEventRuleEventBusArn(rName, eventBusName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
-	name = %[2]q
+  name = %[2]q
 }
 
 resource "aws_cloudwatch_event_rule" "test" {
