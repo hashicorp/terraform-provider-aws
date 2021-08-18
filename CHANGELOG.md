@@ -21,6 +21,7 @@ BUG FIXES:
 * resource/aws_elasticache_user: Correctly update `passwords` ([#20530](https://github.com/hashicorp/terraform-provider-aws/issues/20530))
 * resource/aws_lambda_function: Fix `handler`, `runtime` attribute validation for `package_type` is `Zip` ([#20575](https://github.com/hashicorp/terraform-provider-aws/issues/20575))
 * resource/aws_lambda_function: fix Osaka ap-northeast-3 lambda function creation, failing due to code signer service not available in the region. ([#20555](https://github.com/hashicorp/terraform-provider-aws/issues/20555))
+* resource/aws_rds_cluster_parameter_group: Handle paginated response when reading parameters from RDS cluster parameter group. ([#16010](https://github.com/hashicorp/terraform-provider-aws/issues/16010))
 * resource/aws_storagegateway_smb_file_share: Only set `oplocks_enabled` if a value is specified in configuration ([#20579](https://github.com/hashicorp/terraform-provider-aws/issues/20579))
 
 ## 3.54.0 (August 12, 2021)
