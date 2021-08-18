@@ -8,30 +8,27 @@ description: |-
 
 # Data Source: aws_iam_roles
 
-Use this data source to get ARNs and Names of IAM Roles that are created outside of the current Terraform state.
+Use this data source to get the ARNs and Names of IAM Roles.
 
 ## Example Usage
 
-### Retrieving all roles in an account
+### All roles in an account
 
 ```terraform
 data "aws_iam_roles" "roles" {}
 ```
 
-### Retrieving roles by filter
+### Roles filtered by name regex
 
-Retrieving all IAM Roles whose role-name contains `project`
+Roles whose role-name contains `project`
 
 ```terraform
 data "aws_iam_roles" "roles" {
-  filters = {
-    name   = "role-name"
-    values = ["*project*"]
-  }
+  name_regex = ".*project.*"
 }
 ```
 
-### Retrieving roles by path prefix
+### Roles filtered by path prefix
 
 ```terraform
 data "aws_iam_roles" "roles" {
@@ -39,9 +36,9 @@ data "aws_iam_roles" "roles" {
 }
 ```
 
-### More examples
+### Roles provisioned by AWS SSO
 
-All IAM roles provisioned by AWS SSO in the account :
+Roles in the account filtered by path prefix
 
 ```terraform
 data "aws_iam_roles" "roles" {
@@ -49,15 +46,29 @@ data "aws_iam_roles" "roles" {
 }
 ```
 
-Specific IAM role provisioned by AWS SSO in the account :
+Specific role in the account filtered by name regex and path prefix
 
 ```terraform
 data "aws_iam_roles" "roles" {
-  filters = {
-    name   = "role-name"
-    values = ["AWSReservedSSO_permission_set_name_*"]
-  }
+  name_regex  = "AWSReservedSSO_permission_set_name_.*"
   path_prefix = "/aws-reserved/sso.amazonaws.com/"
+}
+```
+
+### Role ARNs with paths removed
+
+For services like Amazon EKS that do not permit a path in the role ARN when used in a cluster's configuration map
+
+```terraform
+data "aws_iam_roles" "roles" {
+  path_prefix = "/aws-reserved/sso.amazonaws.com/"
+}
+
+output "arns" {
+  value = [
+    for parts in [for arn in data.aws_iam_roles.roles.arns : split("/", arn)] :
+    format("%s/%s", parts[0], element(parts, length(parts) - 1))
+  ]
 }
 ```
 
@@ -65,18 +76,14 @@ data "aws_iam_roles" "roles" {
 
 The following arguments are supported:
 
-* `filters` - (Optional) One or more name/value pairs to use as filters. Filter names and values are case-sensitive. If using multiple filters for rules, the results include IAM Roles for which any combination of rules - not necessarily a single rule - match all filters.
-
-  NOTICE: This filtering feature is not natively available in the [list-roles command of the AWS CLI][1]. Names of filters are based on the [Role structure][2] returned by the [list-roles command][1]. **Currently only the `role-name` filter is applicable.**
-
-  `filters` are implemented using Glob matching as in EC2 APIs (See [Using Filtering](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Filtering.html#Filtering_Resources_CLI) section).
-
-* `path_prefix` - (Optional) The path prefix for filtering the results. For example, the prefix /application_abc/component_xyz/ gets all roles whose path starts with /application_abc/component_xyz/ . If it is not included, it defaults to a slash (/), listing all roles. For more details, check out [list-roles in the AWS CLI reference][1].
+* `name_regex` - (Optional) A regex string to apply to the IAM roles list returned by AWS. This allows more advanced filtering not supported from the AWS API.
+  This filtering is done locally on what AWS returns, and could have a performance impact if the result is large. It is recommended to combine this with other
+  options to narrow down the list AWS returns.
+* `path_prefix` - (Optional) The path prefix for filtering the results. For example, the prefix `/application_abc/component_xyz/` gets all roles whose path starts with `/application_abc/component_xyz/`. If it is not included, it defaults to a slash (`/`), listing all roles. For more details, check out [list-roles in the AWS CLI reference][1].
 
 ## Attributes Reference
 
-* `arns` - ARNs of the matched IAM roles.
-* `names` - Names of the matched IAM roles.
+* `arns` - Set of ARNs of the matched IAM roles.
+* `names` - Set of Names of the matched IAM roles.
 
-[1]: https://docs.aws.amazon.com/cli/latest/reference/iam/list-roles.html
-[2]: https://docs.aws.amazon.com/cli/latest/reference/iam/list-roles.html#output
+[1]: https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/list-roles.html
