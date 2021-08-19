@@ -155,8 +155,9 @@ func TestAccAwsAcmpcaCertificateAuthority_disappears(t *testing.T) {
 
 func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
-	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority.test"
+
+	commonName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -165,7 +166,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(rName, acmpca.CertificateAuthorityTypeRoot, true),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(commonName, acmpca.CertificateAuthorityTypeRoot, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
@@ -175,7 +176,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(rName, acmpca.CertificateAuthorityTypeRoot, true),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(commonName, acmpca.CertificateAuthorityTypeRoot, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
@@ -184,7 +185,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(rName, acmpca.CertificateAuthorityTypeRoot, false),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(commonName, acmpca.CertificateAuthorityTypeRoot, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
@@ -205,8 +206,9 @@ func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 
 func TestAccAwsAcmpcaCertificateAuthority_DeleteFromActiveState(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
-	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority.test"
+
+	commonName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -215,7 +217,7 @@ func TestAccAwsAcmpcaCertificateAuthority_DeleteFromActiveState(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_WithRootCertificate(rName),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_WithRootCertificate(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
@@ -709,7 +711,7 @@ func listAcmpcaCertificateAuthorities(conn *acmpca.ACMPCA) ([]*acmpca.Certificat
 	return certificateAuthorities, nil
 }
 
-func testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(rName, certificateAuthorityType string, enabled bool) string {
+func testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(commonName, certificateAuthorityType string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   enabled                         = %[1]t
@@ -721,14 +723,14 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "%[3]s.com"
+      common_name = %[3]q
     }
   }
 }
-`, enabled, certificateAuthorityType, rName)
+`, enabled, certificateAuthorityType, commonName)
 }
 
-func testAccAwsAcmpcaCertificateAuthorityConfig_WithRootCertificate(rName string) string {
+func testAccAwsAcmpcaCertificateAuthorityConfig_WithRootCertificate(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
@@ -739,7 +741,7 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "%[1]s.com"
+      common_name = %[1]q
     }
   }
 }
@@ -765,7 +767,7 @@ resource "aws_acmpca_certificate" "test" {
 }
 
 data "aws_partition" "current" {}
-`, rName)
+`, commonName)
 }
 
 func testAccAwsAcmpcaCertificateAuthorityConfig_Required(commonName string) string {

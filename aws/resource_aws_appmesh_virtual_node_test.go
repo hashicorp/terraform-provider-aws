@@ -155,8 +155,10 @@ func testAccAwsAppmeshVirtualNode_backendClientPolicyAcm(t *testing.T) {
 	var ca acmpca.CertificateAuthority
 	resourceName := "aws_appmesh_virtual_node.test"
 	acmCAResourceName := "aws_acmpca_certificate_authority.test"
+
 	meshName := acctest.RandomWithPrefix("tf-acc-test")
 	vnName := acctest.RandomWithPrefix("tf-acc-test")
+	domain := testAccRandomDomainName()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
@@ -166,14 +168,14 @@ func testAccAwsAppmeshVirtualNode_backendClientPolicyAcm(t *testing.T) {
 		Steps: []resource.TestStep{
 			// We need to create and activate the CA before issuing a certificate.
 			{
-				Config: testAccAppmeshVirtualNodeConfigRootCA(vnName),
+				Config: testAccAppmeshVirtualNodeConfigRootCA(domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(acmCAResourceName, &ca),
 					testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(&ca),
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_backendClientPolicyAcm(meshName, vnName),
+				Config: testAccAppmeshVirtualNodeConfig_backendClientPolicyAcm(meshName, vnName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
@@ -224,7 +226,7 @@ func testAccAwsAppmeshVirtualNode_backendClientPolicyAcm(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_backendClientPolicyAcm(meshName, vnName),
+				Config: testAccAppmeshVirtualNodeConfig_backendClientPolicyAcm(meshName, vnName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					// CA must be DISABLED for deletion.
 					testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
@@ -944,8 +946,10 @@ func testAccAwsAppmeshVirtualNode_listenerTls(t *testing.T) {
 	resourceName := "aws_appmesh_virtual_node.test"
 	acmCAResourceName := "aws_acmpca_certificate_authority.test"
 	acmCertificateResourceName := "aws_acm_certificate.test"
+
 	meshName := acctest.RandomWithPrefix("tf-acc-test")
 	vnName := acctest.RandomWithPrefix("tf-acc-test")
+	domain := testAccRandomDomainName()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
@@ -1002,14 +1006,14 @@ func testAccAwsAppmeshVirtualNode_listenerTls(t *testing.T) {
 			},
 			// We need to create and activate the CA before issuing a certificate.
 			{
-				Config: testAccAppmeshVirtualNodeConfigRootCA(vnName),
+				Config: testAccAppmeshVirtualNodeConfigRootCA(domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(acmCAResourceName, &ca),
 					testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(&ca),
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_listenerTlsAcm(meshName, vnName),
+				Config: testAccAppmeshVirtualNodeConfig_listenerTlsAcm(meshName, vnName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
@@ -1055,7 +1059,7 @@ func testAccAwsAppmeshVirtualNode_listenerTls(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_listenerTlsAcm(meshName, vnName),
+				Config: testAccAppmeshVirtualNodeConfig_listenerTlsAcm(meshName, vnName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					// CA must be DISABLED for deletion.
 					testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
@@ -1338,7 +1342,7 @@ resource "aws_appmesh_mesh" "test" {
 `, rName)
 }
 
-func testAccAppmeshVirtualNodeConfigRootCA(rName string) string {
+func testAccAppmeshVirtualNodeConfigRootCA(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
@@ -1349,20 +1353,20 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "%[1]s.com"
+      common_name = %[1]q
     }
   }
 }
-`, rName)
+`, domain)
 }
 
-func testAccAppmeshVirtualNodeConfigPrivateCert(rName string) string {
+func testAccAppmeshVirtualNodeConfigPrivateCert(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
-  domain_name               = "test.%[1]s.com"
+  domain_name               = "test.%[1]s"
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
 }
-`, rName)
+`, domain)
 }
 
 func testAccAppmeshVirtualNodeConfig_basic(meshName, vnName string) string {
@@ -1470,10 +1474,10 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_backendClientPolicyAcm(meshName, vnName string) string {
+func testAccAppmeshVirtualNodeConfig_backendClientPolicyAcm(meshName, vnName, domain string) string {
 	return composeConfig(
-		testAccAppmeshVirtualNodeConfigRootCA(vnName),
-		testAccAppmeshVirtualNodeConfigPrivateCert(vnName),
+		testAccAppmeshVirtualNodeConfigRootCA(domain),
+		testAccAppmeshVirtualNodeConfigPrivateCert(domain),
 		testAccAppmeshVirtualNodeConfig_mesh(meshName),
 		fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
@@ -2022,10 +2026,10 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_listenerTlsAcm(meshName, vnName string) string {
+func testAccAppmeshVirtualNodeConfig_listenerTlsAcm(meshName, vnName, domain string) string {
 	return composeConfig(
-		testAccAppmeshVirtualNodeConfigRootCA(vnName),
-		testAccAppmeshVirtualNodeConfigPrivateCert(vnName),
+		testAccAppmeshVirtualNodeConfigRootCA(domain),
+		testAccAppmeshVirtualNodeConfigPrivateCert(domain),
 		testAccAppmeshVirtualNodeConfig_mesh(meshName),
 		fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {

@@ -10,15 +10,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAwsAcmpcaCertificate_RootCertificate(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate.test"
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
+
+	domain := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -27,7 +27,7 @@ func TestAccAwsAcmpcaCertificate_RootCertificate(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateConfig_RootCertificate(rName),
+				Config: testAccAwsAcmpcaCertificateConfig_RootCertificate(domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateExists(resourceName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
@@ -57,10 +57,11 @@ func TestAccAwsAcmpcaCertificate_RootCertificate(t *testing.T) {
 }
 
 func TestAccAwsAcmpcaCertificate_SubordinateCertificate(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate.test"
 	rootCertificateAuthorityResourceName := "aws_acmpca_certificate_authority.root"
 	subordinateCertificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
+
+	domain := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -69,7 +70,7 @@ func TestAccAwsAcmpcaCertificate_SubordinateCertificate(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateConfig_SubordinateCertificate(rName),
+				Config: testAccAwsAcmpcaCertificateConfig_SubordinateCertificate(domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateExists(resourceName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
@@ -99,9 +100,11 @@ func TestAccAwsAcmpcaCertificate_SubordinateCertificate(t *testing.T) {
 }
 
 func TestAccAwsAcmpcaCertificate_EndEntityCertificate(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate.test"
-	csr, _ := tlsRsaX509CertificateRequestPem(4096, "terraformtest1.com")
+
+	csrDomain := testAccRandomDomainName()
+	csr, _ := tlsRsaX509CertificateRequestPem(4096, csrDomain)
+	domain := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -110,7 +113,7 @@ func TestAccAwsAcmpcaCertificate_EndEntityCertificate(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateConfig_EndEntityCertificate(rName, tlsPemEscapeNewlines(csr)),
+				Config: testAccAwsAcmpcaCertificateConfig_EndEntityCertificate(domain, tlsPemEscapeNewlines(csr)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateExists(resourceName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
@@ -139,9 +142,11 @@ func TestAccAwsAcmpcaCertificate_EndEntityCertificate(t *testing.T) {
 }
 
 func TestAccAwsAcmpcaCertificate_Validity_EndDate(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate.test"
-	csr, _ := tlsRsaX509CertificateRequestPem(4096, "terraformtest1.com")
+
+	csrDomain := testAccRandomDomainName()
+	csr, _ := tlsRsaX509CertificateRequestPem(4096, csrDomain)
+	domain := testAccRandomDomainName()
 	later := time.Now().Add(time.Minute * 10).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -151,7 +156,7 @@ func TestAccAwsAcmpcaCertificate_Validity_EndDate(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateConfig_Validity_EndDate(rName, tlsPemEscapeNewlines(csr), later),
+				Config: testAccAwsAcmpcaCertificateConfig_Validity_EndDate(domain, tlsPemEscapeNewlines(csr), later),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateExists(resourceName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
@@ -180,9 +185,11 @@ func TestAccAwsAcmpcaCertificate_Validity_EndDate(t *testing.T) {
 }
 
 func TestAccAwsAcmpcaCertificate_Validity_Absolute(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate.test"
-	csr, _ := tlsRsaX509CertificateRequestPem(4096, "terraformtest1.com")
+
+	csrDomain := testAccRandomDomainName()
+	csr, _ := tlsRsaX509CertificateRequestPem(4096, csrDomain)
+	domain := testAccRandomDomainName()
 	later := time.Now().Add(time.Minute * 10).Unix()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -192,7 +199,7 @@ func TestAccAwsAcmpcaCertificate_Validity_Absolute(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateConfig_Validity_Absolute(rName, tlsPemEscapeNewlines(csr), later),
+				Config: testAccAwsAcmpcaCertificateConfig_Validity_Absolute(domain, tlsPemEscapeNewlines(csr), later),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateExists(resourceName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
@@ -280,7 +287,7 @@ func testAccCheckAwsAcmpcaCertificateExists(resourceName string) resource.TestCh
 	}
 }
 
-func testAccAwsAcmpcaCertificateConfig_RootCertificate(rName string) string {
+func testAccAwsAcmpcaCertificateConfig_RootCertificate(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate" "test" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
@@ -304,18 +311,18 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "%[1]s.com"
+      common_name = %[1]q
     }
   }
 }
 
 data "aws_partition" "current" {}
-`, rName)
+`, domain)
 }
 
-func testAccAwsAcmpcaCertificateConfig_SubordinateCertificate(rName string) string {
+func testAccAwsAcmpcaCertificateConfig_SubordinateCertificate(domain string) string {
 	return composeConfig(
-		testAccAcmpcaCertificateBaseRootCAConfig(rName),
+		testAccAcmpcaCertificateBaseRootCAConfig(domain),
 		fmt.Sprintf(`
 resource "aws_acmpca_certificate" "test" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.root.arn
@@ -339,20 +346,20 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "sub.%[1]s.com"
+      common_name = "sub.%[1]s"
     }
   }
 }
-`, rName))
+`, domain))
 }
 
-func testAccAwsAcmpcaCertificateConfig_EndEntityCertificate(rName, csr string) string {
+func testAccAwsAcmpcaCertificateConfig_EndEntityCertificate(domain, csr string) string {
 	return composeConfig(
-		testAccAcmpcaCertificateBaseRootCAConfig(rName),
+		testAccAcmpcaCertificateBaseRootCAConfig(domain),
 		fmt.Sprintf(`
 resource "aws_acmpca_certificate" "test" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.root.arn
-  certificate_signing_request = "%[2]s"
+  certificate_signing_request = "%[1]s"
   signing_algorithm           = "SHA256WITHRSA"
 
   template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/EndEntityCertificate/V1"
@@ -362,48 +369,48 @@ resource "aws_acmpca_certificate" "test" {
     value = 1
   }
 }
-`, rName, csr))
+`, csr))
 }
 
-func testAccAwsAcmpcaCertificateConfig_Validity_EndDate(rName, csr, expiry string) string {
+func testAccAwsAcmpcaCertificateConfig_Validity_EndDate(domain, csr, expiry string) string {
 	return composeConfig(
-		testAccAcmpcaCertificateBaseRootCAConfig(rName),
+		testAccAcmpcaCertificateBaseRootCAConfig(domain),
 		fmt.Sprintf(`
 resource "aws_acmpca_certificate" "test" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.root.arn
-  certificate_signing_request = "%[2]s"
+  certificate_signing_request = "%[1]s"
   signing_algorithm           = "SHA256WITHRSA"
 
   template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/EndEntityCertificate/V1"
 
   validity {
     type  = "END_DATE"
-    value = %[3]q
+    value = %[2]q
   }
 }
-`, rName, csr, expiry))
+`, csr, expiry))
 }
 
-func testAccAwsAcmpcaCertificateConfig_Validity_Absolute(rName, csr string, expiry int64) string {
+func testAccAwsAcmpcaCertificateConfig_Validity_Absolute(domain, csr string, expiry int64) string {
 	return composeConfig(
-		testAccAcmpcaCertificateBaseRootCAConfig(rName),
+		testAccAcmpcaCertificateBaseRootCAConfig(domain),
 		fmt.Sprintf(`
 resource "aws_acmpca_certificate" "test" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.root.arn
-  certificate_signing_request = "%[2]s"
+  certificate_signing_request = "%[1]s"
   signing_algorithm           = "SHA256WITHRSA"
 
   template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/EndEntityCertificate/V1"
 
   validity {
     type  = "ABSOLUTE"
-    value = %[3]d
+    value = %[2]d
   }
 }
-`, rName, csr, expiry))
+`, csr, expiry))
 }
 
-func testAccAcmpcaCertificateBaseRootCAConfig(rName string) string {
+func testAccAcmpcaCertificateBaseRootCAConfig(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "root" {
   permanent_deletion_time_in_days = 7
@@ -414,7 +421,7 @@ resource "aws_acmpca_certificate_authority" "root" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "%[1]s.com"
+      common_name = %[1]q
     }
   }
 }
@@ -440,7 +447,7 @@ resource "aws_acmpca_certificate" "root" {
 }
 
 data "aws_partition" "current" {}
-  `, rName)
+  `, domain)
 }
 
 func TestValidateAcmPcaTemplateArn(t *testing.T) {
