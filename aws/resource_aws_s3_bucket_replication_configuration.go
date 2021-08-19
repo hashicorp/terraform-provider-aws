@@ -155,12 +155,7 @@ func resourceAwsS3BucketReplicationConfiguration() *schema.Resource {
 					},
 				},
 			},
-
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
 		},
-
-		CustomizeDiff: SetTagsDiff,
 	}
 }
 
