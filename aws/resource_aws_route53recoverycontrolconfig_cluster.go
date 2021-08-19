@@ -39,21 +39,13 @@ func resourceAwsRoute53RecoveryControlConfigCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cluster_endpoint": {
-							Type:     schema.TypeList,
+						"endpoint": {
+							Type:     schema.TypeString,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"endpoint": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"region": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
+						},
+						"region": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
@@ -114,7 +106,7 @@ func resourceAwsRoute53RecoveryControlConfigClusterRead(d *schema.ResourceData, 
 	d.Set("name", result.Name)
 	d.Set("status", result.Status)
 
-	if err := d.Set("cluster_enpoints", flattenRoute53RecoveryControlConfigClusterEndpoints(result.ClusterEndpoints)); err != nil {
+	if err := d.Set("cluster_endpoints", flattenRoute53RecoveryControlConfigClusterEndpoints(result.ClusterEndpoints)); err != nil {
 		return fmt.Errorf("Error setting cluster_endpoints: %w", err)
 	}
 
@@ -138,7 +130,7 @@ func resourceAwsRoute53RecoveryControlConfigClusterDelete(d *schema.ResourceData
 	}
 
 	if _, err := waiter.Route53RecoveryControlConfigClusterDeleted(conn, d.Id()); err != nil {
-		if isResourceNotFoundError(err) {
+		if isAWSErr(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error waiting for Route53 Recovery Control Config  Cluster (%s) to be deleted: %w", d.Id(), err)

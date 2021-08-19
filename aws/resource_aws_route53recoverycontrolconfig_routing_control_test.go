@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,21 +12,22 @@ import (
 )
 
 func TestAccAWSRoute53RecoveryControlConfigRoutingControl_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_route53recoverycontrolconfig_routing_control.test"
+	rClusterName := acctest.RandomWithPrefix("tf-acc-test-cluster")
+	rRoutingControlName := acctest.RandomWithPrefix("tf-acc-test-routing-control")
+	resourceName := "aws_route53recoverycontrolconfig_routing_control.test_control"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAwsRoute53RecoveryControlConfigRoutingControlConfig(t) },
-		ErrorCheck:        testAccErrorCheck(t, route53recoverycontrolconfig.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAwsRoute53RecoveryControlConfigRoutingControlDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, route53recoverycontrolconfig.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigRoutingControlDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53RecoveryControlConfigRoutingControlConfig(rName),
+				Config: testAccAwsRoute53RecoveryControlConfigRoutingControlConfig_InDefaultControlPanel(rClusterName, rRoutingControlName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRoute53RecoveryControlConfigRoutingControlExists(resourceName),
-					testAccMatchResourceAttrGlobalARN(resourceName, "routing_control_arn", "route53recoverycontrolconfig", regexp.MustCompile(`routingcontrol/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rRoutingControlName),
 					resource.TestCheckResourceAttr(resourceName, "status", "DEPLOYED"),
+					resource.TestCheckResourceAttrPair(resourceName, "cluster_arn", "aws_route53recoverycontrolconfig_cluster.test_cluster2", "cluster_arn"),
 				),
 			},
 			{
@@ -39,20 +39,33 @@ func TestAccAWSRoute53RecoveryControlConfigRoutingControl_basic(t *testing.T) {
 	})
 }
 
-func testAccPreCheckAwsRoute53RecoveryControlConfigRoutingControlConfig(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).route53recoverycontrolconfigconn
-
-	input := &route53recoverycontrolconfig.ListRoutingControlsInput{}
-
-	_, err := conn.ListRoutingControls(input)
-
-	if testAccPreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
+func TestAccAWSRoute53RecoveryControlConfigRoutingControl_NonDefaultControlPanel(t *testing.T) {
+	rClusterName := acctest.RandomWithPrefix("tf-acc-test-cluster")
+	rControlPanelName := acctest.RandomWithPrefix("tf-acc-test-control-panel")
+	rRoutingControlName := acctest.RandomWithPrefix("tf-acc-test-routing-control")
+	resourceName := "aws_route53recoverycontrolconfig_routing_control.test_control2"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, route53recoverycontrolconfig.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigRoutingControlDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsRoute53RecoveryControlConfigRoutingControlConfig_InNonDefaultControlPanel(rClusterName, rControlPanelName, rRoutingControlName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRoute53RecoveryControlConfigRoutingControlExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rRoutingControlName),
+					resource.TestCheckResourceAttr(resourceName, "status", "DEPLOYED"),
+					resource.TestCheckResourceAttrPair(resourceName, "cluster_arn", "aws_route53recoverycontrolconfig_cluster.test_cluster2", "cluster_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
 func testAccCheckAwsRoute53RecoveryControlConfigRoutingControlDestroy(s *terraform.State) error {
@@ -68,6 +81,7 @@ func testAccCheckAwsRoute53RecoveryControlConfigRoutingControlDestroy(s *terrafo
 		}
 
 		_, err := conn.DescribeRoutingControl(input)
+
 		if err == nil {
 			return fmt.Errorf("Route53RecoveryControlConfig Routing Control (%s) not deleted", rs.Primary.ID)
 		}
@@ -76,12 +90,42 @@ func testAccCheckAwsRoute53RecoveryControlConfigRoutingControlDestroy(s *terrafo
 	return nil
 }
 
-func testAccAwsRoute53RecoveryControlConfigRoutingControlConfig(rName string) string {
+func testAccAwsRoute53RecoveryControlConfigClusterBase(rName string) string {
 	return fmt.Sprintf(`
-	resource "aws_route53recoverycontrolconfig_routing_control" "test" {
+	resource "aws_route53recoverycontrolconfig_cluster" "test_cluster2" {
 	  name = %[1]q
 	}
 	`, rName)
+}
+
+func testAccAwsRoute53RecoveryControlConfigRoutingControlConfig_InDefaultControlPanel(rName, rName2 string) string {
+	return composeConfig(testAccAwsRoute53RecoveryControlConfigClusterBase(rName), fmt.Sprintf(`
+	resource "aws_route53recoverycontrolconfig_routing_control" "test_control" {
+	  name            = %q
+	  cluster_arn     = aws_route53recoverycontrolconfig_cluster.test_cluster2.cluster_arn
+	}
+	`, rName2))
+}
+
+func testAccAwsRoute53RecoveryControlConfigControlPanelBase(rName string) string {
+	return fmt.Sprintf(`
+	resource "aws_route53recoverycontrolconfig_control_panel" "test_custom_panel" {
+	  name            = %q
+	  cluster_arn     = aws_route53recoverycontrolconfig_cluster.test_cluster2.cluster_arn
+	}
+	`, rName)
+}
+
+func testAccAwsRoute53RecoveryControlConfigRoutingControlConfig_InNonDefaultControlPanel(rName, rName2, rName3 string) string {
+	return composeConfig(
+		testAccAwsRoute53RecoveryControlConfigClusterBase(rName),
+		testAccAwsRoute53RecoveryControlConfigControlPanelBase(rName2),
+		fmt.Sprintf(`
+	resource "aws_route53recoverycontrolconfig_routing_control" "test_control2" {
+	  name            = %q
+	  cluster_arn     = aws_route53recoverycontrolconfig_cluster.test_cluster2.cluster_arn
+	}
+	`, rName3))
 }
 
 func testAccCheckAwsRoute53RecoveryControlConfigRoutingControlExists(name string) resource.TestCheckFunc {

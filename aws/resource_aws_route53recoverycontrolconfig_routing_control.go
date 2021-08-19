@@ -140,7 +140,7 @@ func resourceAwsRoute53RecoveryControlConfigRoutingControlDelete(d *schema.Resou
 	}
 
 	if _, err := waiter.Route53RecoveryControlConfigRoutingControlDeleted(conn, d.Id()); err != nil {
-		if isResourceNotFoundError(err) {
+		if isAWSErr(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error waiting for Route53 Recovery Control Config  Routing Control (%s) to be deleted: %w", d.Id(), err)

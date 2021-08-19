@@ -53,7 +53,7 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRule() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"rule_type": {
+			"type": {
 				Type:     schema.TypeString,
 				Required: true,
 				StateFunc: func(val interface{}) string {
@@ -224,7 +224,7 @@ func createAssertionRule(d *schema.ResourceData, meta interface{}) error {
 	ruleConfig := &route53recoverycontrolconfig.RuleConfig{
 		Inverted:  aws.Bool(d.Get("inverted").(bool)),
 		Threshold: aws.Int64(int64(d.Get("threshold").(int))),
-		Type:      aws.String(d.Get("rule_type").(string)),
+		Type:      aws.String(d.Get("type").(string)),
 	}
 
 	assertionRule := &route53recoverycontrolconfig.NewAssertionRule{
@@ -267,7 +267,7 @@ func createGatingRule(d *schema.ResourceData, meta interface{}) error {
 	ruleConfig := &route53recoverycontrolconfig.RuleConfig{
 		Inverted:  aws.Bool(d.Get("inverted").(bool)),
 		Threshold: aws.Int64(int64(d.Get("threshold").(int))),
-		Type:      aws.String(d.Get("rule_type").(string)),
+		Type:      aws.String(d.Get("type").(string)),
 	}
 
 	gatingRule := &route53recoverycontrolconfig.NewGatingRule{
