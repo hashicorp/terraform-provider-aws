@@ -675,6 +675,10 @@ func ResourceProject() *schema.Resource {
 				if v, ok := diff.GetOk("cache.0.location"); ok && v.(string) != "" {
 					return nil
 				}
+				if !diff.NewValueKnown("cache.0.location") {
+					// value may be computed - don't assume it isn't set
+					return nil
+				}
 				return fmt.Errorf(`cache location is required when cache type is %q`, cacheType.(string))
 			},
 			verify.SetTagsDiff,
