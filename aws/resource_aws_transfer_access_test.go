@@ -264,7 +264,7 @@ func testAccAWSTransferAccessConfigBase_S3(rName string) string {
 	return fmt.Sprintf(`
 		resource "aws_transfer_server" "test" {
 		  identity_provider_type = "AWS_DIRECTORY_SERVICE"
-		  directory_id			 = "${aws_directory_service_directory.test.id}"
+		  directory_id			 = aws_directory_service_directory.test.id
 		  logging_role           = aws_iam_role.test.arn  
 		}
 
@@ -383,7 +383,7 @@ func testAccAWSTransferAccessConfigBase_efs(rName string) string {
 	return fmt.Sprintf(`
 		resource "aws_transfer_server" "test" {
 		  identity_provider_type = "AWS_DIRECTORY_SERVICE"
-		  directory_id			 = "${aws_directory_service_directory.test.id}"
+		  directory_id			 = aws_directory_service_directory.test.id
 		  logging_role           = aws_iam_role.test.arn  
 		  domain				 = "EFS"
 		}
