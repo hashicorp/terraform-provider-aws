@@ -1147,7 +1147,7 @@ resource "aws_fsx_lustre_file_system" "test" {
 }
 
 func testAccAwsFsxLustreFileSystemFromBackup() string {
-	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), fmt.Sprintf(`
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), `
 resource "aws_fsx_lustre_file_system" "base" {
   storage_capacity            = 1200
   subnet_ids                  = [aws_subnet.test1.id]
@@ -1166,7 +1166,7 @@ resource "aws_fsx_lustre_file_system" "test" {
   per_unit_storage_throughput = 50
   backup_id                   = aws_fsx_backup.test.id
 }
-`))
+`)
 }
 
 func testAccAwsFsxLustreFileSystemConfigKmsKeyId1() string {
