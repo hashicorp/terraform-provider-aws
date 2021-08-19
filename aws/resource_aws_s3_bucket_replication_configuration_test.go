@@ -12,34 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func TestAccAWSS3BucketReplicationConfig_1basic(t *testing.T) {
-	rInt := acctest.RandInt()
-	iamRoleResourceName := "aws_iam_role.role"
-	resourceName := "aws_s3_bucket_replication_configuration.replication"
-
-	// record the initialized providers so that we can use them to check for the instances in each region
-	var providers []*schema.Provider
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 2)
-		},
-		ErrorCheck:        testAccErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSS3BucketReplicationConfig(rInt, "STANDARD"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", "1"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSS3BucketReplicationConfig_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	partition := testAccGetPartition()
@@ -902,6 +874,10 @@ resource "aws_s3_bucket" "destination" {
   versioning {
     enabled = true
   }
+
+  lifecycle {
+	  ignore_changes = [replication_configuration]
+  }
 }
 
 resource "aws_s3_bucket" "source" {
@@ -909,6 +885,10 @@ resource "aws_s3_bucket" "source" {
 
   versioning {
     enabled = true
+  }
+
+  lifecycle {
+	  ignore_changes = [replication_configuration]
   }
 }
 `, randInt)
@@ -945,6 +925,9 @@ resource "aws_s3_bucket" "destination2" {
   versioning {
     enabled = true
   }
+  lifecycle {
+	  ignore_changes = [replication_configuration]
+  }
 }
 
 resource "aws_s3_bucket" "destination3" {
@@ -953,6 +936,9 @@ resource "aws_s3_bucket" "destination3" {
 
   versioning {
     enabled = true
+  }
+  lifecycle {
+	  ignore_changes = [replication_configuration]
   }
 }
 
@@ -1014,6 +1000,9 @@ resource "aws_s3_bucket" "destination2" {
   versioning {
     enabled = true
   }
+  lifecycle {
+	  ignore_changes = [replication_configuration]
+  }
 }
 
 resource "aws_s3_bucket" "destination3" {
@@ -1022,6 +1011,9 @@ resource "aws_s3_bucket" "destination3" {
 
   versioning {
     enabled = true
+  }
+  lifecycle {
+	  ignore_changes = [replication_configuration]
   }
 }
 
@@ -1093,6 +1085,9 @@ resource "aws_s3_bucket" "destination2" {
 
   versioning {
     enabled = true
+  }
+  lifecycle {
+	  ignore_changes = [replication_configuration]
   }
 }
 
@@ -1314,47 +1309,6 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
     }
 }
 `)
-}
-
-func testAccAWSS3BucketReplicationConfigSameRegionReplicationWithV2ConfigurationNoTags(rName, rNameDestination string) string {
-	return composeConfig(testAccAWSS3BucketReplicationConfig_iamPolicy(rName), fmt.Sprintf(`
-resource "aws_s3_bucket_replication_configuration" "replication" {
-  bucket = %[1]q
-  acl    = "private"
-
-  versioning {
-    enabled = true
-  }
-
-  replication_configuration {
-    role = aws_iam_role.test.arn
-
-    rules {
-      id     = "testid"
-      status = "Enabled"
-
-      filter {
-        prefix = "testprefix"
-      }
-
-      delete_marker_replication_status = "Enabled"
-
-      destination {
-        bucket        = aws_s3_bucket.destination.arn
-        storage_class = "STANDARD"
-      }
-    }
-  }
-}
-
-resource "aws_s3_bucket_replication_configuration" "destination" {
-  bucket = %[2]q
-
-  versioning {
-    enabled = true
-  }
-}
-`, rName, rNameDestination))
 }
 
 func testAccAWSS3BucketReplicationConfigWithV2ConfigurationDeleteMarkerReplicationDisabled(randInt int) string {
