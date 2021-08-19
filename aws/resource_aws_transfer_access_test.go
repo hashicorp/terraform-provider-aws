@@ -176,6 +176,8 @@ func testAccCheckAWSTransferAccessDestroy(s *terraform.State) error {
 
 func testAccAWSTransferAccessConfigBase(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
   data "aws_availability_zones" "available" {
 	  state = "available"
 	
@@ -336,7 +338,7 @@ func testAccAWSTransferAccessS3ScopeDownPolicyConfig(rName string) string {
 	return composeConfig(
 		testAccAWSTransferAccessConfigBase(rName),
 		testAccAWSTransferAccessConfigBase_S3(rName),
-		`	
+		`
 		resource "aws_transfer_access" "test" {
 		  external_id = "S-1-1-12-1234567890-123456789-1234567890-1234"
 		  server_id = aws_transfer_server.test.id
@@ -354,7 +356,7 @@ func testAccAWSTransferAccessS3ScopeDownPolicyConfig(rName string) string {
             ],
             "Effect": "Allow",
             "Resource": [
-                "arn:aws:s3:::$${transfer:HomeBucket}"
+                "arn:${data.aws_partition.current.partition}:s3:::$${transfer:HomeBucket}"
             ]
         },
         {
@@ -369,7 +371,7 @@ func testAccAWSTransferAccessS3ScopeDownPolicyConfig(rName string) string {
                 "s3:GetObjectACL",
                 "s3:PutObjectACL"
             ],
-            "Resource": "arn:aws:s3:::$${transfer:HomeDirectory}/*"
+            "Resource": "arn:${data.aws_partition.current.partition}:s3:::$${transfer:HomeDirectory}/*"
         }
     ]
 }
