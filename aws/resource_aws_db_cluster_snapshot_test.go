@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/namevaluesfilters"
 )
 
 func init() {
@@ -30,9 +29,10 @@ func testSweepDbClusterSnapshots(region string) error {
 	conn := client.(*AWSClient).rdsconn
 	input := &rds.DescribeDBClusterSnapshotsInput{
 		// "InvalidDBClusterSnapshotStateFault: Only manual snapshots may be deleted."
-		Filters: namevaluesfilters.New(map[string]string{
-			"snapshot-type": "manual",
-		}).RdsFilters(),
+		Filters: []*rds.Filter{{
+			Name:   aws.String("snapshot-type"),
+			Values: aws.StringSlice([]string{"manual"}),
+		}},
 	}
 	var sweeperErrs *multierror.Error
 

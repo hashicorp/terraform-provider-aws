@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/namevaluesfilters"
 )
 
 func dataSourceAwsAutoscalingGroups() *schema.Resource {
@@ -26,7 +25,24 @@ func dataSourceAwsAutoscalingGroups() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": namevaluesfilters.Schema(),
+			"filter": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"values": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      schema.HashString,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -40,11 +56,11 @@ func dataSourceAwsAutoscalingGroupsRead(d *schema.ResourceData, meta interface{}
 	var rawArn []string
 	var err error
 
-	if v := d.Get("filter").(*schema.Set); v.Len() > 0 {
+	tf := d.Get("filter").(*schema.Set)
+	if tf.Len() > 0 {
 		input := &autoscaling.DescribeTagsInput{
-			Filters: namevaluesfilters.New(v).AutoscalingFilters(),
+			Filters: expandAsgTagFilters(tf.List()),
 		}
-
 		err = conn.DescribeTagsPages(input, func(resp *autoscaling.DescribeTagsOutput, lastPage bool) bool {
 			for _, v := range resp.Tags {
 				rawName = append(rawName, aws.StringValue(v.ResourceId))
@@ -100,4 +116,18 @@ func dataSourceAwsAutoscalingGroupsRead(d *schema.ResourceData, meta interface{}
 
 	return nil
 
+}
+
+func expandAsgTagFilters(in []interface{}) []*autoscaling.Filter {
+	out := make([]*autoscaling.Filter, len(in))
+	for i, filter := range in {
+		m := filter.(map[string]interface{})
+		values := expandStringSet(m["values"].(*schema.Set))
+
+		out[i] = &autoscaling.Filter{
+			Name:   aws.String(m["name"].(string)),
+			Values: values,
+		}
+	}
+	return out
 }

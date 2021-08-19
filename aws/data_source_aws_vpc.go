@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/namevaluesfilters"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 )
 
@@ -72,7 +71,7 @@ func dataSourceAwsVpc() *schema.Resource {
 				Computed: true,
 			},
 
-			"filter": namevaluesfilters.Schema(),
+			"filter": ec2CustomFiltersSchema(),
 
 			"id": {
 				Type:     schema.TypeString,
@@ -100,11 +99,6 @@ func dataSourceAwsVpc() *schema.Resource {
 				Computed: true,
 			},
 
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -112,6 +106,11 @@ func dataSourceAwsVpc() *schema.Resource {
 			},
 
 			"tags": tagsSchemaComputed(),
+
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -141,19 +140,28 @@ func dataSourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 		isDefaultStr = "true"
 	}
 
-	// Filters based on attributes.
-	filters := namevaluesfilters.New(map[string]string{
-		"cidr":            d.Get("cidr_block").(string),
-		"dhcp-options-id": d.Get("dhcp_options_id").(string),
-		"isDefault":       isDefaultStr,
-		"state":           d.Get("state").(string),
-	})
-	// Add filters based on keyvalue tags.
-	filters.Add(namevaluesfilters.Ec2Tags(keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()))
-	// Add filters based on the custom filtering "filter" attribute.
-	filters.Add(d.Get("filter").(*schema.Set))
+	req.Filters = buildEC2AttributeFilterList(
+		map[string]string{
+			"cidr":            d.Get("cidr_block").(string),
+			"dhcp-options-id": d.Get("dhcp_options_id").(string),
+			"isDefault":       isDefaultStr,
+			"state":           d.Get("state").(string),
+		},
+	)
 
-	req.Filters = filters.Ec2Filters()
+	if tags, tagsOk := d.GetOk("tags"); tagsOk {
+		req.Filters = append(req.Filters, buildEC2TagFilterList(
+			keyvaluetags.New(tags.(map[string]interface{})).Ec2Tags(),
+		)...)
+	}
+
+	req.Filters = append(req.Filters, buildEC2CustomFilterList(
+		d.Get("filter").(*schema.Set),
+	)...)
+	if len(req.Filters) == 0 {
+		// Don't send an empty filters list; the EC2 API won't accept it.
+		req.Filters = nil
+	}
 
 	log.Printf("[DEBUG] Reading AWS VPC: %s", req)
 	resp, err := conn.DescribeVpcs(req)
