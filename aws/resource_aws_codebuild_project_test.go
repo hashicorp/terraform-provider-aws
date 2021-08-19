@@ -272,6 +272,14 @@ func TestAccAWSCodeBuildProject_Cache(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "LOCAL"),
 				),
 			},
+			{
+				Config: testAccAWSCodeBuildProjectConfig_S3_ComputedLocation(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.type", codebuild.CacheTypeS3),
+				),
+			},
 		},
 	})
 }
@@ -2600,6 +2608,38 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, queuedTimeout, rName))
+}
+
+func testAccAWSCodeBuildProjectConfig_S3_ComputedLocation(rName string) string {
+	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "codebuild" {
+  bucket_prefix = "cache"
+}
+
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+  cache {
+    type     = "S3"
+    location = aws_s3_bucket.codebuild.bucket
+  }
+}
+`, rName))
 }
 
 func testAccAWSCodeBuildProjectConfig_Cache(rName, cacheLocation, cacheType string) string {

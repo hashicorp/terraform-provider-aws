@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudbuild_project: Fix plan validation to take into account computed values
+```
