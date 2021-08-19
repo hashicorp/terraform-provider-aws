@@ -2,8 +2,8 @@ package aws
 
 import (
 	"fmt"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,11 +12,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsS3BucketReplicationConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3BucketReplicationConfigurationCreate,
+		Create: resourceAwsS3BucketReplicationConfigurationPut,
 		Read:   resourceAwsS3BucketReplicationConfigurationRead,
 		Update: resourceAwsS3BucketReplicationConfigurationUpdate,
 		Delete: resourceAwsS3BucketReplicationConfigurationDelete,
@@ -162,7 +164,16 @@ func resourceAwsS3BucketReplicationConfiguration() *schema.Resource {
 	}
 }
 
-func resourceAwsS3BucketReplicationConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsS3BucketReplicationConfigurationPut(d *schema.ResourceData, meta interface{}) error {
+	// Get the bucket
+	var bucket string
+	if v, ok := d.GetOk("bucket"); ok {
+		bucket = v.(string)
+	} else {
+		// fail, can't do anything without a bucket
+	}
+	d.SetId(bucket)
+
 	return resourceAwsS3BucketReplicationConfigurationUpdate(d, meta)
 }
 
@@ -176,7 +187,7 @@ func resourceAwsS3BucketReplicationConfigurationRead(d *schema.ResourceData, met
 	err := resource.Retry(s3BucketCreationTimeout, func() *resource.RetryError {
 		_, err := s3conn.HeadBucket(input)
 
-		if d.IsNewResource() && isAWSErrRequestFailureStatusCode(err, 404) {
+		if d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
 			return resource.RetryableError(err)
 		}
 
@@ -190,6 +201,29 @@ func resourceAwsS3BucketReplicationConfigurationRead(d *schema.ResourceData, met
 
 		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		_, err = s3conn.HeadBucket(input)
+	}
+
+	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
+		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
+		return nil
+	}
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading S3 Bucket (%s): %w", d.Id(), err)
+	}
+
+	if _, ok := d.GetOk("bucket"); !ok {
+		d.Set("bucket", d.Id())
+	}
+
 	// Read the bucket replication configuration
 	replicationResponse, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return s3conn.GetBucketReplication(&s3.GetBucketReplicationInput{
@@ -203,6 +237,90 @@ func resourceAwsS3BucketReplicationConfigurationRead(d *schema.ResourceData, met
 	if !ok || replication == nil {
 		return fmt.Errorf("error reading replication_configuration")
 	}
+	r := replication.ReplicationConfiguration
+	// set role
+	if r.Role != nil && aws.StringValue(r.Role) != "" {
+		d.Set("role", aws.StringValue(r.Role))
+	}
+
+	// set rules, these need to be flattened
+	rules := make([]interface{}, 0, len(r.Rules))
+	for _, v := range r.Rules {
+		t := make(map[string]interface{})
+		if v.Destination != nil {
+			rd := make(map[string]interface{})
+			if v.Destination.Bucket != nil {
+				rd["bucket"] = aws.StringValue(v.Destination.Bucket)
+			}
+			if v.Destination.StorageClass != nil {
+				rd["storage_class"] = aws.StringValue(v.Destination.StorageClass)
+			}
+			if v.Destination.EncryptionConfiguration != nil {
+				if v.Destination.EncryptionConfiguration.ReplicaKmsKeyID != nil {
+					rd["replica_kms_key_id"] = aws.StringValue(v.Destination.EncryptionConfiguration.ReplicaKmsKeyID)
+				}
+			}
+			if v.Destination.Account != nil {
+				rd["account_id"] = aws.StringValue(v.Destination.Account)
+			}
+			if v.Destination.AccessControlTranslation != nil {
+				rdt := map[string]interface{}{
+					"owner": aws.StringValue(v.Destination.AccessControlTranslation.Owner),
+				}
+				rd["access_control_translation"] = []interface{}{rdt}
+			}
+			t["destination"] = []interface{}{rd}
+		}
+
+		if v.ID != nil {
+			t["id"] = aws.StringValue(v.ID)
+		}
+		if v.Prefix != nil {
+			t["prefix"] = aws.StringValue(v.Prefix)
+		}
+		if v.Status != nil {
+			t["status"] = aws.StringValue(v.Status)
+		}
+		if vssc := v.SourceSelectionCriteria; vssc != nil {
+			tssc := make(map[string]interface{})
+			if vssc.SseKmsEncryptedObjects != nil {
+				tSseKms := make(map[string]interface{})
+				if aws.StringValue(vssc.SseKmsEncryptedObjects.Status) == s3.SseKmsEncryptedObjectsStatusEnabled {
+					tSseKms["enabled"] = true
+				} else if aws.StringValue(vssc.SseKmsEncryptedObjects.Status) == s3.SseKmsEncryptedObjectsStatusDisabled {
+					tSseKms["enabled"] = false
+				}
+				tssc["sse_kms_encrypted_objects"] = []interface{}{tSseKms}
+			}
+			t["source_selection_criteria"] = []interface{}{tssc}
+		}
+
+		if v.Priority != nil {
+			t["priority"] = int(aws.Int64Value(v.Priority))
+		}
+
+		if f := v.Filter; f != nil {
+			m := map[string]interface{}{}
+			if f.Prefix != nil {
+				m["prefix"] = aws.StringValue(f.Prefix)
+			}
+			if t := f.Tag; t != nil {
+				m["tags"] = keyvaluetags.S3KeyValueTags([]*s3.Tag{t}).IgnoreAws().Map()
+			}
+			if a := f.And; a != nil {
+				m["prefix"] = aws.StringValue(a.Prefix)
+				m["tags"] = keyvaluetags.S3KeyValueTags(a.Tags).IgnoreAws().Map()
+			}
+			t["filter"] = []interface{}{m}
+
+			if v.DeleteMarkerReplication != nil && v.DeleteMarkerReplication.Status != nil && aws.StringValue(v.DeleteMarkerReplication.Status) == s3.DeleteMarkerReplicationStatusEnabled {
+				t["delete_marker_replication_status"] = aws.StringValue(v.DeleteMarkerReplication.Status)
+			}
+		}
+
+		rules = append(rules, t)
+	}
+	d.Set("rules", schema.NewSet(rulesHash, rules))
 
 	return nil
 }
@@ -337,7 +455,6 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(d *schema.ResourceData, m
 		return fmt.Errorf("Error putting S3 replication configuration: %s", err)
 	}
 
-	return nil
 	return resourceAwsS3BucketReplicationConfigurationRead(d, meta)
 }
 
