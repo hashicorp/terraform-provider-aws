@@ -2,14 +2,43 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
+	"testing"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"regexp"
-	"testing"
 )
+
+func TestAccAWSS3BucketReplicationConfig_1basic(t *testing.T) {
+	rInt := acctest.RandInt()
+	iamRoleResourceName := "aws_iam_role.role"
+	resourceName := "aws_s3_bucket_replication_configuration.replication"
+
+	// record the initialized providers so that we can use them to check for the instances in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
+		},
+		ErrorCheck:        testAccErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketReplicationConfig(rInt, "STANDARD"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "1"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccAWSS3BucketReplicationConfig_basic(t *testing.T) {
 	rInt := acctest.RandInt()
