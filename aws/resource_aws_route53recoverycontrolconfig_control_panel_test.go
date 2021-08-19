@@ -14,7 +14,7 @@ import (
 func TestAccAWSRoute53RecoveryControlConfigControlPanel_basic(t *testing.T) {
 	rClusterName := acctest.RandomWithPrefix("tf-acc-test-cluster")
 	rControlPanelName := acctest.RandomWithPrefix("tf-acc-test-control-panel")
-	resourceName := "aws_route53recoverycontrolconfig_control_panel.test_panel"
+	resourceName := "aws_route53recoverycontrolconfig_control_panel.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, route53recoverycontrolconfig.EndpointsID),
@@ -64,19 +64,19 @@ func testAccCheckAwsRoute53RecoveryControlConfigControlPanelDestroy(s *terraform
 
 func testAccAwsRoute53RecoveryControlConfigClusterSetUp(rName string) string {
 	return fmt.Sprintf(`
-	resource "aws_route53recoverycontrolconfig_cluster" "test_cluster" {
-	  name = %[1]q
-	}
-	`, rName)
+resource "aws_route53recoverycontrolconfig_cluster" "test" {
+  name = %[1]q
+}
+`, rName)
 }
 
 func testAccAwsRoute53RecoveryControlConfigControlPanelConfig(rName, rName2 string) string {
 	return composeConfig(testAccAwsRoute53RecoveryControlConfigClusterSetUp(rName), fmt.Sprintf(`
-	resource "aws_route53recoverycontrolconfig_control_panel" "test_panel" {
-	  name            = %q
-	  cluster_arn     = aws_route53recoverycontrolconfig_cluster.test_cluster.cluster_arn
-	}
-	`, rName2))
+resource "aws_route53recoverycontrolconfig_control_panel" "test" {
+  name        = %q
+  cluster_arn = aws_route53recoverycontrolconfig_cluster.test.cluster_arn
+}
+`, rName2))
 }
 
 func testAccCheckAwsRoute53RecoveryControlConfigControlPanelExists(name string) resource.TestCheckFunc {
