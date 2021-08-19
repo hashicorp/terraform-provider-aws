@@ -101,7 +101,7 @@ resource "aws_route53recoverycontrolconfig_cluster" "test" {
 
 func testAccAwsRoute53RecoveryControlConfigRoutingControlConfig_InDefaultControlPanel(rName, rName2 string) string {
 	return composeConfig(
-		    testAccAwsRoute53RecoveryControlConfigClusterBase(rName), fmt.Sprintf(`
+		testAccAwsRoute53RecoveryControlConfigClusterBase(rName), fmt.Sprintf(`
 resource "aws_route53recoverycontrolconfig_routing_control" "test" {
   name        = %q
   cluster_arn = aws_route53recoverycontrolconfig_cluster.test.cluster_arn
@@ -120,9 +120,9 @@ resource "aws_route53recoverycontrolconfig_control_panel" "test" {
 
 func testAccAwsRoute53RecoveryControlConfigRoutingControlConfig_InNonDefaultControlPanel(rName, rName2, rName3 string) string {
 	return composeConfig(
-		    testAccAwsRoute53RecoveryControlConfigClusterBase(rName),
-			testAccAwsRoute53RecoveryControlConfigControlPanelBase(rName2),
-			fmt.Sprintf(`
+		testAccAwsRoute53RecoveryControlConfigClusterBase(rName),
+		testAccAwsRoute53RecoveryControlConfigControlPanelBase(rName2),
+		fmt.Sprintf(`
 resource "aws_route53recoverycontrolconfig_routing_control" "test" {
   name              = %q
   cluster_arn       = aws_route53recoverycontrolconfig_cluster.test.cluster_arn
