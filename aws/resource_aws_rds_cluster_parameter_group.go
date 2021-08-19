@@ -163,12 +163,17 @@ func resourceAwsRDSClusterParameterGroupRead(d *schema.ResourceData, meta interf
 		Source:                      aws.String("user"),
 	}
 
-	describeParametersResp, err := rdsconn.DescribeDBClusterParameters(&describeParametersOpts)
+	var parameters []*rds.Parameter
+	err = rdsconn.DescribeDBClusterParametersPages(&describeParametersOpts,
+		func(describeParametersResp *rds.DescribeDBClusterParametersOutput, lastPage bool) bool {
+			parameters = append(parameters, describeParametersResp.Parameters...)
+			return !lastPage
+		})
 	if err != nil {
 		return err
 	}
 
-	if err := d.Set("parameter", flattenParameters(describeParametersResp.Parameters)); err != nil {
+	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
 		return fmt.Errorf("error setting parameters: %s", err)
 	}
 
