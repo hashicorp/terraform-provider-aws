@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_iam_roles` ([#18585](https://github.com/hashicorp/terraform-provider-aws/issues/18585))
 * **New Data Source:** `aws_subnets` ([#18803](https://github.com/hashicorp/terraform-provider-aws/issues/18803))
+* **New Resource:** `aws_chime_voice_connector_group` ([#20565](https://github.com/hashicorp/terraform-provider-aws/issues/20565))
 * **New Resource:** `aws_fsx_backup` ([#20569](https://github.com/hashicorp/terraform-provider-aws/issues/20569))
 * **New Resource:** `aws_sagemaker_device_fleet` ([#20058](https://github.com/hashicorp/terraform-provider-aws/issues/20058))
 * **New Resource:** `aws_sagemaker_human_task_ui` ([#20570](https://github.com/hashicorp/terraform-provider-aws/issues/20570))
@@ -15,6 +16,7 @@ ENHANCEMENTS:
 * resource/aws_dms_endpoint: Add `s3_settings.data_format`, `s3_settings.parquet_timestamp_in_millisecond`, `s3_settings.parquet_version`, `s3_settings.encryption_mode` and `s3_settings.server_side_encryption_kms_key_id` arguments. ([#17591](https://github.com/hashicorp/terraform-provider-aws/issues/17591))
 * resource/aws_lambda_function: Add support for `python3.9` `runtime` value ([#20593](https://github.com/hashicorp/terraform-provider-aws/issues/20593))
 * resource/aws_lambda_layer_version: Add support for `python3.9` `compatible_runtimes` value ([#20593](https://github.com/hashicorp/terraform-provider-aws/issues/20593))
+* resource/aws_wafv2: Add missing values to `text_transformation` argument for `aws_wafv2_web_acl` and `aws_wafv2_rule_group` resources ([#20564](https://github.com/hashicorp/terraform-provider-aws/issues/20564))
 
 BUG FIXES:
 
