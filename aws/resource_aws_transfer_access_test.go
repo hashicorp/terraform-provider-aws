@@ -207,7 +207,7 @@ data "aws_partition" "current" {}
 	  vpc_id                  = aws_vpc.test.id
 	  cidr_block              = "10.0.0.0/24"
 	  map_public_ip_on_launch = true
-	  availability_zone = data.aws_availability_zones.available.names[0]
+	  availability_zone 	  = data.aws_availability_zones.available.names[0]
 	
 	  tags = {
 		Name = %[1]q
@@ -220,7 +220,7 @@ data "aws_partition" "current" {}
 	  vpc_id                  = aws_vpc.test.id
 	  cidr_block              = "10.0.1.0/24"
 	  map_public_ip_on_launch = true
-	  availability_zone = data.aws_availability_zones.available.names[1]
+	  availability_zone 	  = data.aws_availability_zones.available.names[1]
 	
 	  tags = {
 		Name = %[1]q
