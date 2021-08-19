@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestAccAWSConfig(t *testing.T) {
+func TestAccAWSConfig_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Config": {
 			"basic":            testAccConfigConfigRule_basic,
@@ -27,10 +27,36 @@ func TestAccAWSConfig(t *testing.T) {
 			"allParams":   testAccConfigConfigurationRecorder_allParams,
 			"importBasic": testAccConfigConfigurationRecorder_importBasic,
 		},
+		"ConformancePack": {
+			"basic":                     testAccConfigConformancePack_basic,
+			"disappears":                testAccConfigConformancePack_disappears,
+			"forceNew":                  testAccConfigConformancePack_forceNew,
+			"inputParameters":           testAccConfigConformancePack_inputParameters,
+			"S3Delivery":                testAccConfigConformancePack_S3Delivery,
+			"S3Template":                testAccConfigConformancePack_S3Template,
+			"S3TemplateAndTemplateBody": testAccConfigConformancePack_S3TemplateAndTemplateBody,
+			"updateInputParameters":     testAccConfigConformancePack_updateInputParameters,
+			"updateS3Delivery":          testAccConfigConformancePack_updateS3Delivery,
+			"updateS3Template":          testAccConfigConformancePack_updateS3Template,
+			"updateTemplateBody":        testAccConfigConformancePack_updateTemplateBody,
+		},
 		"DeliveryChannel": {
 			"basic":       testAccConfigDeliveryChannel_basic,
 			"allParams":   testAccConfigDeliveryChannel_allParams,
 			"importBasic": testAccConfigDeliveryChannel_importBasic,
+		},
+		"OrganizationConformancePack": {
+			"basic":                 testAccConfigOrganizationConformancePack_basic,
+			"disappears":            testAccConfigOrganizationConformancePack_disappears,
+			"excludedAccounts":      testAccConfigOrganizationConformancePack_excludedAccounts,
+			"forceNew":              testAccConfigOrganizationConformancePack_forceNew,
+			"inputParameters":       testAccConfigOrganizationConformancePack_inputParameters,
+			"S3Delivery":            testAccConfigOrganizationConformancePack_S3Delivery,
+			"S3Template":            testAccConfigOrganizationConformancePack_S3Template,
+			"updateInputParameters": testAccConfigOrganizationConformancePack_updateInputParameters,
+			"updateS3Delivery":      testAccConfigOrganizationConformancePack_updateS3Delivery,
+			"updateS3Template":      testAccConfigOrganizationConformancePack_updateS3Template,
+			"updateTemplateBody":    testAccConfigOrganizationConformancePack_updateTemplateBody,
 		},
 		"OrganizationCustomRule": {
 			"basic":                     testAccConfigOrganizationCustomRule_basic,
@@ -60,6 +86,12 @@ func TestAccAWSConfig(t *testing.T) {
 			"RuleIdentifier":            testAccConfigOrganizationManagedRule_RuleIdentifier,
 			"TagKeyScope":               testAccConfigOrganizationManagedRule_TagKeyScope,
 			"TagValueScope":             testAccConfigOrganizationManagedRule_TagValueScope,
+		},
+		"RemediationConfiguration": {
+			"basic":      testAccConfigRemediationConfiguration_basic,
+			"disappears": testAccConfigRemediationConfiguration_disappears,
+			"recreates":  testAccConfigRemediationConfiguration_recreates,
+			"updates":    testAccConfigRemediationConfiguration_updates,
 		},
 	}
 

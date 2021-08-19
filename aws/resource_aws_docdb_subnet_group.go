@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -59,14 +59,18 @@ func resourceAwsDocDBSubnetGroup() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsDocDBSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).docdbconn
-	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DocdbTags()
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	subnetIds := expandStringSet(d.Get("subnet_ids").(*schema.Set))
 
@@ -83,7 +87,7 @@ func resourceAwsDocDBSubnetGroupCreate(d *schema.ResourceData, meta interface{})
 		DBSubnetGroupName:        aws.String(groupName),
 		DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
 		SubnetIds:                subnetIds,
-		Tags:                     tags,
+		Tags:                     tags.IgnoreAws().DocdbTags(),
 	}
 
 	log.Printf("[DEBUG] Create DocDB Subnet Group: %#v", createOpts)
@@ -99,6 +103,8 @@ func resourceAwsDocDBSubnetGroupCreate(d *schema.ResourceData, meta interface{})
 
 func resourceAwsDocDBSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).docdbconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	describeOpts := docdb.DescribeDBSubnetGroupsInput{
 		DBSubnetGroupName: aws.String(d.Id()),
@@ -141,8 +147,15 @@ func resourceAwsDocDBSubnetGroupRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error listing tags for DocumentDB Subnet Group (%s): %s", d.Get("arn").(string), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -151,7 +164,7 @@ func resourceAwsDocDBSubnetGroupRead(d *schema.ResourceData, meta interface{}) e
 func resourceAwsDocDBSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).docdbconn
 
-	if d.HasChange("subnet_ids") || d.HasChange("description") {
+	if d.HasChanges("subnet_ids", "description") {
 		_, n := d.GetChange("subnet_ids")
 		if n == nil {
 			n = new(schema.Set)
@@ -169,8 +182,8 @@ func resourceAwsDocDBSubnetGroupUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.DocdbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating DocumentDB Subnet Group (%s) tags: %s", d.Get("arn").(string), err)

@@ -3,7 +3,7 @@ package aws
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAWSRoute53RecordMigrateState(t *testing.T) {
@@ -26,17 +26,17 @@ func TestAWSRoute53RecordMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "some_id",
 			Attributes: map[string]string{
-				"name": "www.notdomain.com.",
+				"name": "www.example.com.",
 			},
-			Expected: "www.notdomain.com",
+			Expected: "www.example.com",
 		},
 		"v0_2": {
 			StateVersion: 0,
 			ID:           "some_id",
 			Attributes: map[string]string{
-				"name": "www.notdomain.com",
+				"name": "www.example.com",
 			},
-			Expected: "www.notdomain.com",
+			Expected: "www.example.com",
 		},
 	}
 

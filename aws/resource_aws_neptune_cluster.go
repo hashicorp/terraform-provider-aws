@@ -9,10 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/neptune/waiter"
 )
 
 const (
@@ -21,6 +23,8 @@ const (
 	// is not currently available in the AWS sdk-for-go
 	// https://docs.aws.amazon.com/sdk-for-go/api/service/neptune/#pkg-constants
 	CloudwatchLogsExportsAudit = "audit"
+
+	neptuneDefaultPort = 8182
 )
 
 func resourceAwsNeptuneCluster() *schema.Resource {
@@ -97,6 +101,11 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 			"cluster_resource_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			"copy_tags_to_snapshot": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 
 			"endpoint": {
@@ -194,7 +203,7 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  8182,
+				Default:  neptuneDefaultPort,
 				ForceNew: true,
 			},
 
@@ -244,10 +253,10 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
@@ -261,12 +270,15 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 				Optional: true,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
-	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().NeptuneTags()
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Check if any of the parameters that require a cluster modification after creation are set
 	clusterUpdate := false
@@ -287,24 +299,26 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 
 	createDbClusterInput := &neptune.CreateDBClusterInput{
 		DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
+		CopyTagsToSnapshot:  aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		Engine:              aws.String(d.Get("engine").(string)),
 		Port:                aws.Int64(int64(d.Get("port").(int))),
 		StorageEncrypted:    aws.Bool(d.Get("storage_encrypted").(bool)),
 		DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
-		Tags:                tags,
+		Tags:                tags.IgnoreAws().NeptuneTags(),
 	}
 	restoreDBClusterFromSnapshotInput := &neptune.RestoreDBClusterFromSnapshotInput{
 		DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
+		CopyTagsToSnapshot:  aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		Engine:              aws.String(d.Get("engine").(string)),
 		Port:                aws.Int64(int64(d.Get("port").(int))),
 		SnapshotIdentifier:  aws.String(d.Get("snapshot_identifier").(string)),
 		DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
-		Tags:                tags,
+		Tags:                tags.IgnoreAws().NeptuneTags(),
 	}
 
 	if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
-		createDbClusterInput.AvailabilityZones = expandStringList(attr.List())
-		restoreDBClusterFromSnapshotInput.AvailabilityZones = expandStringList(attr.List())
+		createDbClusterInput.AvailabilityZones = expandStringSet(attr)
+		restoreDBClusterFromSnapshotInput.AvailabilityZones = expandStringSet(attr)
 	}
 
 	if attr, ok := d.GetOk("backup_retention_period"); ok {
@@ -315,8 +329,8 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if attr := d.Get("enable_cloudwatch_logs_exports").(*schema.Set); attr.Len() > 0 {
-		createDbClusterInput.EnableCloudwatchLogsExports = expandStringList(attr.List())
-		restoreDBClusterFromSnapshotInput.EnableCloudwatchLogsExports = expandStringList(attr.List())
+		createDbClusterInput.EnableCloudwatchLogsExports = expandStringSet(attr)
+		restoreDBClusterFromSnapshotInput.EnableCloudwatchLogsExports = expandStringSet(attr)
 	}
 
 	if attr, ok := d.GetOk("engine_version"); ok {
@@ -358,11 +372,11 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-		createDbClusterInput.VpcSecurityGroupIds = expandStringList(attr.List())
+		createDbClusterInput.VpcSecurityGroupIds = expandStringSet(attr)
 		if restoreDBClusterFromSnapshot {
 			clusterUpdate = true
 		}
-		restoreDBClusterFromSnapshotInput.VpcSecurityGroupIds = expandStringList(attr.List())
+		restoreDBClusterFromSnapshotInput.VpcSecurityGroupIds = expandStringSet(attr)
 	}
 
 	if restoreDBClusterFromSnapshot {
@@ -371,7 +385,7 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 		log.Printf("[DEBUG] Neptune Cluster create options: %s", createDbClusterInput)
 	}
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		if restoreDBClusterFromSnapshot {
 			_, err = conn.RestoreDBClusterFromSnapshot(restoreDBClusterFromSnapshotInput)
@@ -394,7 +408,7 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 	if err != nil {
-		return fmt.Errorf("error creating Neptune Cluster: %s", err)
+		return fmt.Errorf("error creating Neptune Cluster: %w", err)
 	}
 
 	d.SetId(d.Get("cluster_identifier").(string))
@@ -402,19 +416,9 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[INFO] Neptune Cluster ID: %s", d.Id())
 	log.Println("[INFO] Waiting for Neptune Cluster to be available")
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    resourceAwsNeptuneClusterCreatePendingStates,
-		Target:     []string{"available"},
-		Refresh:    resourceAwsNeptuneClusterStateRefreshFunc(d, meta),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	// Wait, catching any errors
-	_, err = stateConf.WaitForState()
+	_, err = waiter.DBClusterAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return fmt.Errorf("error waiting for Neptune Cluster state to be \"available\": %s", err)
+		return fmt.Errorf("error waiting for Neptune Cluster (%q) to be Available: %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("iam_roles"); ok {
@@ -469,17 +473,20 @@ func resourceAwsNeptuneClusterRead(d *schema.ResourceData, meta interface{}) err
 
 func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, dbc *neptune.DBCluster) error {
 	conn := meta.(*AWSClient).neptuneconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	if err := d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones)); err != nil {
-		return fmt.Errorf("Error saving AvailabilityZones to state for Neptune Cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error saving AvailabilityZones to state for Neptune Cluster (%s): %w", d.Id(), err)
 	}
 
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
+	d.Set("copy_tags_to_snapshot", dbc.CopyTagsToSnapshot)
 
 	if err := d.Set("enable_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports)); err != nil {
-		return fmt.Errorf("Error saving EnableCloudwatchLogsExports to state for Neptune Cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error saving EnableCloudwatchLogsExports to state for Neptune Cluster (%s): %w", d.Id(), err)
 	}
 
 	d.Set("endpoint", dbc.Endpoint)
@@ -503,7 +510,7 @@ func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, 
 		sg = append(sg, aws.StringValue(g.VpcSecurityGroupId))
 	}
 	if err := d.Set("vpc_security_group_ids", sg); err != nil {
-		return fmt.Errorf("Error saving VPC Security Group IDs to state for Neptune Cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error saving VPC Security Group IDs to state for Neptune Cluster (%s): %w", d.Id(), err)
 	}
 
 	var cm []string
@@ -511,7 +518,7 @@ func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, 
 		cm = append(cm, aws.StringValue(m.DBInstanceIdentifier))
 	}
 	if err := d.Set("cluster_members", cm); err != nil {
-		return fmt.Errorf("Error saving Neptune Cluster Members to state for Neptune Cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error saving Neptune Cluster Members to state for Neptune Cluster (%s): %w", d.Id(), err)
 	}
 
 	var roles []string
@@ -520,7 +527,7 @@ func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, 
 	}
 
 	if err := d.Set("iam_roles", roles); err != nil {
-		return fmt.Errorf("Error saving IAM Roles to state for Neptune Cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error saving IAM Roles to state for Neptune Cluster (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(dbc.DBClusterArn)
@@ -529,11 +536,18 @@ func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, 
 	tags, err := keyvaluetags.NeptuneListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Neptune Cluster (%s): %s", d.Get("arn").(string), err)
+		return fmt.Errorf("error listing tags for Neptune Cluster (%s): %w", d.Get("arn").(string), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -548,9 +562,14 @@ func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) e
 		DBClusterIdentifier: aws.String(d.Id()),
 	}
 
+	if d.HasChange("copy_tags_to_snapshot") {
+		req.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
+		requestUpdate = true
+	}
+
 	if d.HasChange("vpc_security_group_ids") {
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			req.VpcSecurityGroupIds = expandStringList(attr.List())
+			req.VpcSecurityGroupIds = expandStringSet(attr)
 		} else {
 			req.VpcSecurityGroupIds = []*string{}
 		}
@@ -565,13 +584,13 @@ func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) e
 		disableLogTypes := old.(*schema.Set).Difference(new.(*schema.Set))
 
 		if disableLogTypes.Len() > 0 {
-			logs.SetDisableLogTypes(expandStringList(disableLogTypes.List()))
+			logs.SetDisableLogTypes(expandStringSet(disableLogTypes))
 		}
 
 		enableLogTypes := new.(*schema.Set).Difference(old.(*schema.Set))
 
 		if enableLogTypes.Len() > 0 {
-			logs.SetEnableLogTypes(expandStringList(enableLogTypes.List()))
+			logs.SetEnableLogTypes(expandStringSet(enableLogTypes))
 		}
 
 		req.CloudwatchLogsExportConfiguration = logs
@@ -625,22 +644,12 @@ func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) e
 			_, err = conn.ModifyDBCluster(req)
 		}
 		if err != nil {
-			return fmt.Errorf("Failed to modify Neptune Cluster (%s): %s", d.Id(), err)
+			return fmt.Errorf("Failed to modify Neptune Cluster (%s): %w", d.Id(), err)
 		}
 
-		stateConf := &resource.StateChangeConf{
-			Pending:    resourceAwsNeptuneClusterUpdatePendingStates,
-			Target:     []string{"available"},
-			Refresh:    resourceAwsNeptuneClusterStateRefreshFunc(d, meta),
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
-			MinTimeout: 10 * time.Second,
-			Delay:      10 * time.Second,
-		}
-
-		log.Printf("[INFO] Waiting for Neptune Cluster (%s) to modify", d.Id())
-		_, err = stateConf.WaitForState()
+		_, err = waiter.DBClusterAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
-			return fmt.Errorf("error waiting for Neptune Cluster (%s) to modify: %s", d.Id(), err)
+			return fmt.Errorf("error waiting for Neptune Cluster (%q) to be Available: %w", d.Id(), err)
 		}
 	}
 
@@ -673,11 +682,11 @@ func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.NeptuneUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Neptune Cluster (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("error updating Neptune Cluster (%s) tags: %w", d.Get("arn").(string), err)
 		}
 
 	}
@@ -723,63 +732,18 @@ func resourceAwsNeptuneClusterDelete(d *schema.ResourceData, meta interface{}) e
 		_, err = conn.DeleteDBCluster(&deleteOpts)
 	}
 	if err != nil {
-		return fmt.Errorf("Neptune Cluster cannot be deleted: %s", err)
+		return fmt.Errorf("Neptune Cluster cannot be deleted: %w", err)
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    resourceAwsNeptuneClusterDeletePendingStates,
-		Target:     []string{"destroyed"},
-		Refresh:    resourceAwsNeptuneClusterStateRefreshFunc(d, meta),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	// Wait, catching any errors
-	_, err = stateConf.WaitForState()
+	_, err = waiter.DBClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil {
-		return fmt.Errorf("Error deleting Neptune Cluster (%s): %s", d.Id(), err)
+		if isAWSErr(err, neptune.ErrCodeDBClusterNotFoundFault, "") {
+			return nil
+		}
+		return fmt.Errorf("error waiting for Neptune Cluster (%q) to be Deleted: %w", d.Id(), err)
 	}
 
 	return nil
-}
-
-func resourceAwsNeptuneClusterStateRefreshFunc(
-	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		conn := meta.(*AWSClient).neptuneconn
-
-		resp, err := conn.DescribeDBClusters(&neptune.DescribeDBClustersInput{
-			DBClusterIdentifier: aws.String(d.Id()),
-		})
-
-		if err != nil {
-			if isAWSErr(err, neptune.ErrCodeDBClusterNotFoundFault, "") {
-				log.Printf("[DEBUG] Neptune Cluster (%s) not found", d.Id())
-				return 42, "destroyed", nil
-			}
-			log.Printf("[DEBUG] Error on retrieving Neptune Cluster (%s) when waiting: %s", d.Id(), err)
-			return nil, "", err
-		}
-
-		var dbc *neptune.DBCluster
-
-		for _, v := range resp.DBClusters {
-			if aws.StringValue(v.DBClusterIdentifier) == d.Id() {
-				dbc = v
-			}
-		}
-
-		if dbc == nil {
-			return 42, "destroyed", nil
-		}
-
-		if dbc.Status != nil {
-			log.Printf("[DEBUG] Neptune Cluster status (%s): %s", d.Id(), aws.StringValue(dbc.Status))
-		}
-
-		return dbc, aws.StringValue(dbc.Status), nil
-	}
 }
 
 func setIamRoleToNeptuneCluster(clusterIdentifier string, roleArn string, conn *neptune.Neptune) error {
@@ -798,25 +762,4 @@ func removeIamRoleFromNeptuneCluster(clusterIdentifier string, roleArn string, c
 	}
 	_, err := conn.RemoveRoleFromDBCluster(params)
 	return err
-}
-
-var resourceAwsNeptuneClusterCreatePendingStates = []string{
-	"creating",
-	"backing-up",
-	"modifying",
-	"preparing-data-migration",
-	"migrating",
-}
-
-var resourceAwsNeptuneClusterUpdatePendingStates = []string{
-	"backing-up",
-	"modifying",
-	"configuring-iam-database-auth",
-}
-
-var resourceAwsNeptuneClusterDeletePendingStates = []string{
-	"available",
-	"deleting",
-	"backing-up",
-	"modifying",
 }

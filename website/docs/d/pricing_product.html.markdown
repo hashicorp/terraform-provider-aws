@@ -13,7 +13,7 @@ This data source is only available in a us-east-1 or ap-south-1 provider.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_pricing_product" "example" {
   service_code = "AmazonEC2"
 
@@ -54,7 +54,7 @@ data "aws_pricing_product" "example" {
 }
 ```
 
-```hcl
+```terraform
 data "aws_pricing_product" "example" {
   service_code = "AmazonRedshift"
 
@@ -72,15 +72,15 @@ data "aws_pricing_product" "example" {
 
 ## Argument Reference
 
- * `service_code` - (Required) The code of the service. Available service codes can be fetched using the DescribeServices pricing API call.
- * `filters` - (Required) A list of filters. Passed directly to the API (see GetProducts API reference). These filters must describe a single product, this resource will fail if more than one product is returned by the API.
+* `service_code` - (Required) The code of the service. Available service codes can be fetched using the DescribeServices pricing API call.
+* `filters` - (Required) A list of filters. Passed directly to the API (see GetProducts API reference). These filters must describe a single product, this resource will fail if more than one product is returned by the API.
 
 ### filters
 
- * `field` (Required) The product attribute name that you want to filter on.
- * `value` (Required) The product attribute value that you want to filter on.
+* `field` (Required) The product attribute name that you want to filter on.
+* `value` (Required) The product attribute value that you want to filter on.
 
 ## Attributes Reference
 
- * `result` - Set to the product returned from the API.
+* `result` - Set to the product returned from the API.
 

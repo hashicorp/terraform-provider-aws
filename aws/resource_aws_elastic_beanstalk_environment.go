@@ -12,10 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -43,6 +43,7 @@ func resourceAwsElasticBeanstalkOptionSetting() *schema.Resource {
 }
 
 func resourceAwsElasticBeanstalkEnvironment() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsElasticBeanstalkEnvironmentCreate,
 		Read:   resourceAwsElasticBeanstalkEnvironmentRead,
@@ -51,6 +52,8 @@ func resourceAwsElasticBeanstalkEnvironment() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		CustomizeDiff: SetTagsDiff,
 
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsElasticBeanstalkEnvironmentMigrateState,
@@ -204,13 +207,16 @@ func resourceAwsElasticBeanstalkEnvironment() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceAwsElasticBeanstalkEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticbeanstalkconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Get values from config
 	name := d.Get("name").(string)
@@ -228,7 +234,7 @@ func resourceAwsElasticBeanstalkEnvironmentCreate(d *schema.ResourceData, meta i
 		EnvironmentName: aws.String(name),
 		ApplicationName: aws.String(app),
 		OptionSettings:  extractOptionSettings(settings),
-		Tags:            keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreElasticbeanstalk().ElasticbeanstalkTags(),
+		Tags:            tags.IgnoreElasticbeanstalk().ElasticbeanstalkTags(),
 	}
 
 	if desc != "" {
@@ -283,7 +289,7 @@ func resourceAwsElasticBeanstalkEnvironmentCreate(d *schema.ResourceData, meta i
 	}
 
 	// Assign the application name as the resource ID
-	d.SetId(*resp.EnvironmentId)
+	d.SetId(aws.StringValue(resp.EnvironmentId))
 
 	waitForReadyTimeOut, err := time.ParseDuration(d.Get("wait_for_ready_timeout").(string))
 	if err != nil {
@@ -455,8 +461,8 @@ func resourceAwsElasticBeanstalkEnvironmentUpdate(d *schema.ResourceData, meta i
 	}
 
 	arn := d.Get("arn").(string)
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		// Get the current time to filter getBeanstalkEnvironmentErrors messages
 		t := time.Now()
@@ -493,6 +499,8 @@ func resourceAwsElasticBeanstalkEnvironmentUpdate(d *schema.ResourceData, meta i
 
 func resourceAwsElasticBeanstalkEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticbeanstalkconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	envID := d.Id()
 
@@ -613,11 +621,18 @@ func resourceAwsElasticBeanstalkEnvironmentRead(d *schema.ResourceData, meta int
 	tags, err := keyvaluetags.ElasticbeanstalkListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Elastic Beanstalk environment (%s): %s", arn, err)
+		return fmt.Errorf("error listing tags for Elastic Beanstalk environment (%s): %w", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreElasticbeanstalk().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreElasticbeanstalk().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return resourceAwsElasticBeanstalkEnvironmentSettingsRead(d, meta)
@@ -777,8 +792,11 @@ func deleteElasticBeanstalkEnvironment(conn *elasticbeanstalk.ElasticBeanstalk, 
 
 func waitForElasticBeanstalkEnvironmentReady(conn *elasticbeanstalk.ElasticBeanstalk, id string, timeout, pollInterval time.Duration, startTime time.Time) error {
 	stateConf := &resource.StateChangeConf{
-		Pending:      []string{"Launching", "Updating"},
-		Target:       []string{"Ready"},
+		Pending: []string{
+			elasticbeanstalk.EnvironmentStatusLaunching,
+			elasticbeanstalk.EnvironmentStatusUpdating,
+		},
+		Target:       []string{elasticbeanstalk.EnvironmentStatusReady},
 		Refresh:      elasticBeanstalkEnvironmentStateRefreshFunc(conn, id, startTime),
 		Timeout:      timeout,
 		Delay:        10 * time.Second,
@@ -792,8 +810,15 @@ func waitForElasticBeanstalkEnvironmentReady(conn *elasticbeanstalk.ElasticBeans
 
 func waitForElasticBeanstalkEnvironmentReadyIgnoreErrorEvents(conn *elasticbeanstalk.ElasticBeanstalk, id string, timeout, pollInterval time.Duration) error {
 	stateConf := &resource.StateChangeConf{
-		Pending:      []string{"Launching", "Updating"},
-		Target:       []string{"Ready"},
+		Pending: []string{
+			elasticbeanstalk.EnvironmentStatusLaunching,
+			elasticbeanstalk.EnvironmentStatusTerminating,
+			elasticbeanstalk.EnvironmentStatusUpdating,
+		},
+		Target: []string{
+			elasticbeanstalk.EnvironmentStatusReady,
+			elasticbeanstalk.EnvironmentStatusTerminated,
+		},
 		Refresh:      elasticBeanstalkEnvironmentIgnoreErrorEventsStateRefreshFunc(conn, id),
 		Timeout:      timeout,
 		Delay:        10 * time.Second,

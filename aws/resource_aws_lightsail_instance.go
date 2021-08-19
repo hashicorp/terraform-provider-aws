@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -89,12 +88,18 @@ func resourceAwsLightsailInstance() *schema.Resource {
 				Computed: true,
 			},
 			"ram_size": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeFloat,
 				Computed: true,
 			},
 			"ipv6_address": {
-				Type:     schema.TypeString,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "use `ipv6_addresses` attribute instead",
+			},
+			"ipv6_addresses": {
+				Type:     schema.TypeList,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"is_static_ip": {
 				Type:     schema.TypeBool,
@@ -112,13 +117,18 @@ func resourceAwsLightsailInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsLightsailInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lightsailconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	iName := d.Get("name").(string)
 
@@ -136,8 +146,8 @@ func resourceAwsLightsailInstanceCreate(d *schema.ResourceData, meta interface{}
 		req.UserData = aws.String(v.(string))
 	}
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		req.Tags = keyvaluetags.New(v).IgnoreAws().LightsailTags()
+	if len(tags) > 0 {
+		req.Tags = tags.IgnoreAws().LightsailTags()
 	}
 
 	resp, err := conn.CreateInstances(&req)
@@ -172,6 +182,9 @@ func resourceAwsLightsailInstanceCreate(d *schema.ResourceData, meta interface{}
 
 func resourceAwsLightsailInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lightsailconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	resp, err := conn.GetInstance(&lightsail.GetInstanceInput{
 		InstanceName: aws.String(d.Id()),
 	})
@@ -207,14 +220,27 @@ func resourceAwsLightsailInstanceRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("username", i.Username)
 	d.Set("created_at", i.CreatedAt.Format(time.RFC3339))
 	d.Set("cpu_count", i.Hardware.CpuCount)
-	d.Set("ram_size", strconv.FormatFloat(*i.Hardware.RamSizeInGb, 'f', 0, 64))
-	d.Set("ipv6_address", i.Ipv6Address)
+	d.Set("ram_size", i.Hardware.RamSizeInGb)
+
+	// Deprecated: AWS Go SDK v1.36.25 removed Ipv6Address field
+	if len(i.Ipv6Addresses) > 0 {
+		d.Set("ipv6_address", i.Ipv6Addresses[0])
+	}
+
+	d.Set("ipv6_addresses", aws.StringValueSlice(i.Ipv6Addresses))
 	d.Set("is_static_ip", i.IsStaticIp)
 	d.Set("private_ip_address", i.PrivateIpAddress)
 	d.Set("public_ip_address", i.PublicIpAddress)
 
-	if err := d.Set("tags", keyvaluetags.LightsailKeyValueTags(i.Tags).IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags := keyvaluetags.LightsailKeyValueTags(i.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -254,8 +280,8 @@ func resourceAwsLightsailInstanceDelete(d *schema.ResourceData, meta interface{}
 func resourceAwsLightsailInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lightsailconn
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.LightsailUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Lightsail Instance (%s) tags: %s", d.Id(), err)

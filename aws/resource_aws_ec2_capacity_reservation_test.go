@@ -3,13 +3,14 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -70,6 +71,7 @@ func TestAccAWSEc2CapacityReservation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
@@ -77,6 +79,7 @@ func TestAccAWSEc2CapacityReservation_basic(t *testing.T) {
 				Config: testAccEc2CapacityReservationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`capacity-reservation/cr-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", availabilityZonesDataSourceName, "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
 					resource.TestCheckResourceAttr(resourceName, "end_date", ""),
@@ -86,6 +89,8 @@ func TestAccAWSEc2CapacityReservation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_match_criteria", "open"),
 					resource.TestCheckResourceAttr(resourceName, "instance_platform", "Linux/UNIX"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "default"),
 				),
@@ -105,6 +110,7 @@ func TestAccAWSEc2CapacityReservation_ebsOptimized(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
@@ -132,6 +138,7 @@ func TestAccAWSEc2CapacityReservation_endDate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
@@ -167,6 +174,7 @@ func TestAccAWSEc2CapacityReservation_endDateType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
@@ -207,6 +215,7 @@ func TestAccAWSEc2CapacityReservation_ephemeralStorage(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
@@ -232,6 +241,7 @@ func TestAccAWSEc2CapacityReservation_instanceCount(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
@@ -264,6 +274,7 @@ func TestAccAWSEc2CapacityReservation_instanceMatchCriteria(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
@@ -289,6 +300,7 @@ func TestAccAWSEc2CapacityReservation_instanceType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
@@ -321,6 +333,7 @@ func TestAccAWSEc2CapacityReservation_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
@@ -358,14 +371,37 @@ func TestAccAWSEc2CapacityReservation_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2CapacityReservation_tenancy(t *testing.T) {
-	// Error creating EC2 Capacity Reservation: Unsupported: The requested configuration is currently not supported. Please check the documentation for supported configurations.
-	t.Skip("EC2 Capacity Reservations do not currently support dedicated tenancy.")
+func TestAccAWSEc2CapacityReservation_disappears(t *testing.T) {
 	var cr ec2.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2CapacityReservationConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2CapacityReservation(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEc2CapacityReservation_tenancy(t *testing.T) {
+	// Error creating EC2 Capacity Reservation: Unsupported: The requested configuration is currently not supported. Please check the documentation for supported configurations.
+	TestAccSkip(t, "EC2 Capacity Reservations do not currently support dedicated tenancy.")
+	var cr ec2.CapacityReservation
+	resourceName := "aws_ec2_capacity_reservation.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
@@ -476,7 +512,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ec2_capacity_reservation" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   instance_count    = 1
   instance_platform = "Linux/UNIX"
   instance_type     = "t2.micro"
@@ -495,7 +531,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ec2_capacity_reservation" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   ebs_optimized     = %t
   instance_count    = 1
   instance_platform = "Linux/UNIX"
@@ -516,7 +552,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ec2_capacity_reservation" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   end_date          = %q
   end_date_type     = "limited"
   instance_count    = 1
@@ -538,7 +574,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ec2_capacity_reservation" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   end_date_type     = %q
   instance_count    = 1
   instance_platform = "Linux/UNIX"
@@ -559,7 +595,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ec2_capacity_reservation" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   ephemeral_storage = %t
   instance_count    = 1
   instance_platform = "Linux/UNIX"
@@ -580,7 +616,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ec2_capacity_reservation" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   instance_count    = %d
   instance_platform = "Linux/UNIX"
   instance_type     = "t2.micro"
@@ -600,7 +636,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ec2_capacity_reservation" "test" {
-  availability_zone       = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone       = data.aws_availability_zones.available.names[0]
   instance_count          = 1
   instance_platform       = "Linux/UNIX"
   instance_match_criteria = %q
@@ -621,7 +657,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ec2_capacity_reservation" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   instance_count    = 1
   instance_platform = "Linux/UNIX"
   instance_type     = %q
@@ -641,7 +677,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ec2_capacity_reservation" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   instance_count    = 1
   instance_platform = "Linux/UNIX"
   instance_type     = "t2.micro"
@@ -665,7 +701,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ec2_capacity_reservation" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   instance_count    = 1
   instance_platform = "Linux/UNIX"
   instance_type     = "t2.micro"
@@ -690,7 +726,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ec2_capacity_reservation" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   instance_count    = 1
   instance_platform = "Linux/UNIX"
   instance_type     = "t2.micro"

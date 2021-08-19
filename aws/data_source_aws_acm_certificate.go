@@ -3,12 +3,12 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsAcmCertificate() *schema.Resource {
@@ -27,6 +27,10 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"key_types": {
 				Type:     schema.TypeSet,
@@ -53,12 +57,14 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).acmconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	params := &acm.ListCertificatesInput{}
 
@@ -74,14 +80,14 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 		statusStrings := statuses.([]interface{})
 		params.CertificateStatuses = expandStringList(statusStrings)
 	} else {
-		params.CertificateStatuses = []*string{aws.String("ISSUED")}
+		params.CertificateStatuses = []*string{aws.String(acm.CertificateStatusIssued)}
 	}
 
 	var arns []*string
 	log.Printf("[DEBUG] Reading ACM Certificate: %s", params)
 	err := conn.ListCertificatesPages(params, func(page *acm.ListCertificatesOutput, lastPage bool) bool {
 		for _, cert := range page.CertificateSummaryList {
-			if *cert.DomainName == target {
+			if aws.StringValue(cert.DomainName) == target {
 				arns = append(arns, cert.CertificateArn)
 			}
 		}
@@ -89,7 +95,7 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 		return true
 	})
 	if err != nil {
-		return fmt.Errorf("Error listing certificates: %q", err)
+		return fmt.Errorf("Error listing certificates: %w", err)
 	}
 
 	if len(arns) == 0 {
@@ -117,13 +123,13 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 		log.Printf("[DEBUG] Describing ACM Certificate: %s", input)
 		output, err := conn.DescribeCertificate(input)
 		if err != nil {
-			return fmt.Errorf("Error describing ACM certificate: %q", err)
+			return fmt.Errorf("Error describing ACM certificate: %w", err)
 		}
 		certificate := output.Certificate
 
 		if filterTypesOk {
 			for _, certType := range typesStrings {
-				if *certificate.Type == *certType {
+				if aws.StringValue(certificate.Type) == aws.StringValue(certType) {
 					// We do not have a candidate certificate
 					if matchedCertificate == nil {
 						matchedCertificate = certificate
@@ -166,25 +172,36 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("No certificate for domain %q found in this region", target)
 	}
 
-	d.SetId(time.Now().UTC().String())
+	d.SetId(aws.StringValue(matchedCertificate.CertificateArn))
 	d.Set("arn", matchedCertificate.CertificateArn)
+	d.Set("status", matchedCertificate.Status)
+
+	tags, err := keyvaluetags.AcmListTags(conn, aws.StringValue(matchedCertificate.CertificateArn))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for ACM Certificate (%s): %w", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
 
 	return nil
 }
 
 func mostRecentAcmCertificate(i, j *acm.CertificateDetail) (*acm.CertificateDetail, error) {
-	if *i.Status != *j.Status {
+	if aws.StringValue(i.Status) != aws.StringValue(j.Status) {
 		return nil, fmt.Errorf("most_recent filtering on different ACM certificate statues is not supported")
 	}
 	// Cover IMPORTED and ISSUED AMAZON_ISSUED certificates
-	if *i.Status == acm.CertificateStatusIssued {
-		if (*i.NotBefore).After(*j.NotBefore) {
+	if aws.StringValue(i.Status) == acm.CertificateStatusIssued {
+		if aws.TimeValue(i.NotBefore).After(aws.TimeValue(j.NotBefore)) {
 			return i, nil
 		}
 		return j, nil
 	}
 	// Cover non-ISSUED AMAZON_ISSUED certificates
-	if (*i.CreatedAt).After(*j.CreatedAt) {
+	if aws.TimeValue(i.CreatedAt).After(aws.TimeValue(j.CreatedAt)) {
 		return i, nil
 	}
 	return j, nil
