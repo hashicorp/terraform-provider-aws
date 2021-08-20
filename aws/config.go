@@ -115,6 +115,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediapackage"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mediastoredata"
+	"github.com/aws/aws-sdk-go/service/memorydb"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/mwaa"
 	"github.com/aws/aws-sdk-go/service/neptune"
@@ -328,6 +329,7 @@ type AWSClient struct {
 	mediapackageconn                    *mediapackage.MediaPackage
 	mediastoreconn                      *mediastore.MediaStore
 	mediastoredataconn                  *mediastoredata.MediaStoreData
+	memorydbconn                        *memorydb.MemoryDB
 	mqconn                              *mq.MQ
 	mwaaconn                            *mwaa.MWAA
 	neptuneconn                         *neptune.Neptune
@@ -579,6 +581,7 @@ func (c *Config) Client() (interface{}, error) {
 		mediapackageconn:                    mediapackage.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediapackage"])})),
 		mediastoreconn:                      mediastore.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediastore"])})),
 		mediastoredataconn:                  mediastoredata.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediastoredata"])})),
+		memorydbconn:                        memorydb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["memorydb"])})),
 		mqconn:                              mq.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mq"])})),
 		mwaaconn:                            mwaa.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mwaa"])})),
 		neptuneconn:                         neptune.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["neptune"])})),

@@ -1413,6 +1413,7 @@ func init() {
 		"mediapackage",
 		"mediastore",
 		"mediastoredata",
+		"memorydb",
 		"mq",
 		"mwaa",
 		"neptune",
