@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/fsx/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -824,8 +826,7 @@ func testAccCheckFsxLustreFileSystemExists(resourceName string, fs *fsx.FileSyst
 
 		conn := testAccProvider.Meta().(*AWSClient).fsxconn
 
-		filesystem, err := describeFsxFileSystem(conn, rs.Primary.ID)
-
+		filesystem, err := finder.FileSystemByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -848,14 +849,9 @@ func testAccCheckFsxLustreFileSystemDestroy(s *terraform.State) error {
 			continue
 		}
 
-		filesystem, err := describeFsxFileSystem(conn, rs.Primary.ID)
-
-		if isAWSErr(err, fsx.ErrCodeFileSystemNotFound, "") {
+		filesystem, err := finder.FileSystemByID(conn, rs.Primary.ID)
+		if tfresource.NotFound(err) {
 			continue
-		}
-
-		if err != nil {
-			return err
 		}
 
 		if filesystem != nil {
