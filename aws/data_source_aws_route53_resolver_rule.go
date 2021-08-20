@@ -104,21 +104,22 @@ func dataSourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface
 			}),
 		}
 
+		rules := []*route53resolver.ResolverRule{}
 		log.Printf("[DEBUG] Listing Route53 Resolver rules: %s", req)
 		err := conn.ListResolverRulesPages(req, func(page *route53resolver.ListResolverRulesOutput, lastPage bool) bool {
-			if len(page.ResolverRules) > 0 {
-				rule = page.ResolverRules[0]
-				return false
-			}
+			rules = append(rules, page.ResolverRules...)
 			return !lastPage
 		})
 		if err != nil {
 			return fmt.Errorf("error getting Route53 Resolver rule: %w", err)
 		}
-
-		if rule == nil {
+		if n := len(rules); n == 0 {
 			return fmt.Errorf("no Route53 Resolver rules matched")
+		} else if n > 1 {
+			return fmt.Errorf("%d Route53 Resolver rules matched; use additional constraints to reduce matches to a rule", n)
 		}
+
+		rule = rules[0]
 	}
 
 	d.SetId(aws.StringValue(rule.Id))
