@@ -147,6 +147,7 @@ func main() {
 		"ListTagsInputIdentifierField":         keyvaluetags.ServiceListTagsInputIdentifierField,
 		"ListTagsInputIdentifierRequiresSlice": keyvaluetags.ServiceListTagsInputIdentifierRequiresSlice,
 		"ListTagsOutputTagsField":              keyvaluetags.ServiceListTagsOutputTagsField,
+		"ParentResourceNotFoundError":          keyvaluetags.ServiceParentResourceNotFoundError,
 		"TagPackage":                           keyvaluetags.ServiceTagPackage,
 		"TagResourceTypeField":                 keyvaluetags.ServiceTagResourceTypeField,
 		"TagTypeIdentifierField":               keyvaluetags.ServiceTagTypeIdentifierField,
@@ -197,6 +198,8 @@ import (
 {{- range .ServiceNames }}
 	"github.com/aws/aws-sdk-go/service/{{ . }}"
 {{- end }}
+    "github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 {{ range .ServiceNames }}
 
@@ -225,6 +228,8 @@ func {{ . | Title }}ListTags(conn {{ . | ClientType }}, identifier string{{ if .
 	}
 
 	output, err := conn.{{ . | ListTagsFunction }}(input)
+
+	{{ . | ParentResourceNotFoundError }}
 
 	if err != nil {
 		return New(nil), err
