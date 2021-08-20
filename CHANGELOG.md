@@ -1,4 +1,10 @@
 ## 3.56.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_elasticache_user: Mark `passwords` attribute as sensitive. ([#20629](https://github.com/hashicorp/terraform-provider-aws/issues/20629))
+* resource/aws_elasticache_user: Mark `passwords` argument as sensitive. ([#20629](https://github.com/hashicorp/terraform-provider-aws/issues/20629))
+
 ## 3.55.0 (August 19, 2021)
 
 FEATURES:
