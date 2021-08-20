@@ -27,13 +27,12 @@ func TestAccAWSRoute53RecoveryControlConfigRoutingControl_basic(t *testing.T) {
 					testAccCheckAwsRoute53RecoveryControlConfigRoutingControlExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rRoutingControlName),
 					resource.TestCheckResourceAttr(resourceName, "status", "DEPLOYED"),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_arn", "aws_route53recoverycontrolconfig_cluster.test_cluster2", "cluster_arn"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
 			},
 		},
 	})
@@ -56,14 +55,12 @@ func TestAccAWSRoute53RecoveryControlConfigRoutingControl_NonDefaultControlPanel
 					testAccCheckAwsRoute53RecoveryControlConfigRoutingControlExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rRoutingControlName),
 					resource.TestCheckResourceAttr(resourceName, "status", "DEPLOYED"),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_arn", "aws_route53recoverycontrolconfig_cluster.test_cluster2", "cluster_arn"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"cluster_arn"},
 			},
 		},
 	})

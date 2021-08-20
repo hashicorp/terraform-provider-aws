@@ -99,7 +99,7 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRuleCreate(d *schema.ResourceD
 		return createGatingRule(d, meta)
 	}
 
-	return nil
+	return fmt.Errorf("Expecting either asserted_controls or gating_controls,  but none found")
 }
 
 func resourceAwsRoute53RecoveryControlConfigSafetyRuleRead(d *schema.ResourceData, meta interface{}) error {
