@@ -29,6 +29,13 @@ func Ec2CreateTags(conn *ec2.EC2, identifier string, tagsMap interface{}) error 
 		_, err := conn.CreateTags(input)
 
 		if tfawserr.ErrCodeContains(err, ".NotFound") {
+			err = &resource.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if tfresource.NotFound(err) {
 			return resource.RetryableError(err)
 		}
 
