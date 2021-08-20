@@ -13,36 +13,61 @@ func dataSourceAwsMskKafkaVersion() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"preferred_versions": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"version"},
+				Type:         schema.TypeList,
+				Optional:     true,
+				Elem:         &schema.Schema{Type: schema.TypeString},
+				ExactlyOneOf: []string{"version", "preferred_versions"},
 			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"version": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional:      true,
-				ConflictsWith: []string{"preferred_versions"},
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ExactlyOneOf: []string{"version", "preferred_versions"},
 			},
 		},
 	}
 }
 
+func findMskKafkaVersion(prefferedVersions []interface{}, versions []*kafka.KafkaVersion) *kafka.KafkaVersion {
+	var found *kafka.KafkaVersion
+	if l := prefferedVersions; len(l) > 0 {
+		for _, elem := range l {
+			preferredVersion, ok := elem.(string)
+
+			if !ok {
+				continue
+			}
+
+			for _, kafkaVersion := range versions {
+				if preferredVersion == aws.StringValue(kafkaVersion.Version) {
+					found = kafkaVersion
+					break
+				}
+			}
+
+			if found != nil {
+				break
+			}
+		}
+	}
+	return found
+}
+
 func dataSourceAwsMskKafkaVersionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kafkaconn
 
-	listKafkaVersionsInput  := &kafka.ListKafkaVersionsInput{}
+	listKafkaVersionsInput := &kafka.ListKafkaVersionsInput{}
 
 	var kafkaVersions []*kafka.KafkaVersion
 	for {
 		listKafkaVersionsOutput, err := conn.ListKafkaVersions(listKafkaVersionsInput)
 
 		if err != nil {
-			return fmt.Errorf("error listing MSK Clusters: %w", err)
+			return fmt.Errorf("error listing MSK Kafka versions: %w", err)
 		}
 
 		if listKafkaVersionsOutput == nil {
@@ -63,33 +88,16 @@ func dataSourceAwsMskKafkaVersionRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	var found *kafka.KafkaVersion
-	if l := d.Get("preferred_versions").([]interface{}); len(l) > 0 {
-		for _, elem := range l {
-			preferredVersion, ok := elem.(string)
+	if v, ok := d.GetOk("version"); ok {
+		found = findMskKafkaVersion([]interface{}{v}, kafkaVersions)
+	}
 
-			if !ok {
-				continue
-			}
-
-			for _, kafkaVersion := range kafkaVersions {
-				if preferredVersion == aws.StringValue(kafkaVersion.Version) {
-					found = kafkaVersion
-					break
-				}
-			}
-
-			if found != nil {
-				break
-			}
-		}
+	if pv, ok := d.GetOk("preferred_versions"); ok {
+		found = findMskKafkaVersion(pv.([]interface{}), kafkaVersions)
 	}
 
 	if found == nil && len(kafkaVersions) > 1 {
 		return fmt.Errorf("multiple MSK Kafka versions (%v) match the criteria", kafkaVersions)
-	}
-
-	if found == nil && len(kafkaVersions) == 1 {
-		found = kafkaVersions[0]
 	}
 
 	if found == nil {
