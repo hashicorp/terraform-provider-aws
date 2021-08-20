@@ -8,23 +8,26 @@ import (
 
 const (
 	// Separator used in resource identifiers
-	ResourceIdSeparator = `,`
+	resourceIDSeparator = `,`
 )
 
-// GetResourceId parses a given resource identifier for tag identifier and tag key.
-func GetResourceId(resourceId string) (string, string, error) {
-	parts := strings.SplitN(resourceId, ",", 2)
+// GetResourceID parses a given resource identifier for tag identifier and tag key.
+func GetResourceID(resourceID string) (string, string, error) {
+	parts := strings.SplitN(resourceID, resourceIDSeparator, 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("invalid resource identifier (%s), expected ID,KEY", resourceId)
+		return "", "", fmt.Errorf("invalid resource identifier (%[1]s), expected ID%[2]sKEY", resourceID, resourceIDSeparator)
 	}
 
 	return parts[0], parts[1], nil
 }
 
-// SetResourceId creates a resource identifier given a tag identifier and a tag key.
-func SetResourceId(identifier string, key string) string {
-	return identifier + ResourceIdSeparator + key
+// SetResourceID creates a resource identifier given a tag identifier and a tag key.
+func SetResourceID(identifier string, key string) string {
+	parts := []string{identifier, key}
+	resourceID := strings.Join(parts, resourceIDSeparator)
+
+	return resourceID
 }
 
 // toSnakeCase converts a string to snake case.

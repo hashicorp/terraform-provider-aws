@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tagresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func testAccCheckEcsTagDestroy(s *terraform.State) error {
@@ -20,15 +21,19 @@ func testAccCheckEcsTagDestroy(s *terraform.State) error {
 			continue
 		}
 
-		identifier, key, err := tagresource.GetResourceId(rs.Primary.ID)
+		identifier, key, err := tagresource.GetResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		exists, _, err := keyvaluetags.EcsGetTag(conn, identifier, key)
+		_, err = keyvaluetags.EcsGetTag(conn, identifier, key)
 
 		if isAWSErr(err, "InvalidParameterException", "The specified cluster is inactive. Specify an active cluster and try again.") {
+			continue
+		}
+
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -36,9 +41,7 @@ func testAccCheckEcsTagDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if exists {
-			return fmt.Errorf("%s resource (%s) tag (%s) still exists", ecs.ServiceID, identifier, key)
-		}
+		return fmt.Errorf("%s resource (%s) tag (%s) still exists", ecs.ServiceID, identifier, key)
 	}
 
 	return nil
@@ -55,7 +58,7 @@ func testAccCheckEcsTagExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("%s: missing resource ID", resourceName)
 		}
 
-		identifier, key, err := tagresource.GetResourceId(rs.Primary.ID)
+		identifier, key, err := tagresource.GetResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -63,14 +66,10 @@ func testAccCheckEcsTagExists(resourceName string) resource.TestCheckFunc {
 
 		conn := testAccProvider.Meta().(*AWSClient).ecsconn
 
-		exists, _, err := keyvaluetags.EcsGetTag(conn, identifier, key)
+		_, err = keyvaluetags.EcsGetTag(conn, identifier, key)
 
 		if err != nil {
 			return err
-		}
-
-		if !exists {
-			return fmt.Errorf("%s resource (%s) tag (%s) not found", ecs.ServiceID, identifier, key)
 		}
 
 		return nil

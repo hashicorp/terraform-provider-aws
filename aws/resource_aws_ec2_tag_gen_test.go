@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tagresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func testAccCheckEc2TagDestroy(s *terraform.State) error {
@@ -20,21 +21,23 @@ func testAccCheckEc2TagDestroy(s *terraform.State) error {
 			continue
 		}
 
-		identifier, key, err := tagresource.GetResourceId(rs.Primary.ID)
+		identifier, key, err := tagresource.GetResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		exists, _, err := keyvaluetags.Ec2GetTag(conn, identifier, key)
+		_, err = keyvaluetags.Ec2GetTag(conn, identifier, key)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
 			return err
 		}
 
-		if exists {
-			return fmt.Errorf("%s resource (%s) tag (%s) still exists", ec2.ServiceID, identifier, key)
-		}
+		return fmt.Errorf("%s resource (%s) tag (%s) still exists", ec2.ServiceID, identifier, key)
 	}
 
 	return nil
@@ -51,7 +54,7 @@ func testAccCheckEc2TagExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("%s: missing resource ID", resourceName)
 		}
 
-		identifier, key, err := tagresource.GetResourceId(rs.Primary.ID)
+		identifier, key, err := tagresource.GetResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -59,14 +62,10 @@ func testAccCheckEc2TagExists(resourceName string) resource.TestCheckFunc {
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
-		exists, _, err := keyvaluetags.Ec2GetTag(conn, identifier, key)
+		_, err = keyvaluetags.Ec2GetTag(conn, identifier, key)
 
 		if err != nil {
 			return err
-		}
-
-		if !exists {
-			return fmt.Errorf("%s resource (%s) tag (%s) not found", ec2.ServiceID, identifier, key)
 		}
 
 		return nil

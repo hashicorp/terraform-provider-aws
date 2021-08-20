@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tagresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsEcsTag() *schema.Resource {
@@ -52,33 +53,29 @@ func resourceAwsEcsTagCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating %s resource (%s) tag (%s): %w", ecs.ServiceID, identifier, key, err)
 	}
 
-	d.SetId(tagresource.SetResourceId(identifier, key))
+	d.SetId(tagresource.SetResourceID(identifier, key))
 
 	return resourceAwsEcsTagRead(d, meta)
 }
 
 func resourceAwsEcsTagRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
-	identifier, key, err := tagresource.GetResourceId(d.Id())
+	identifier, key, err := tagresource.GetResourceID(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	exists, value, err := keyvaluetags.EcsGetTag(conn, identifier, key)
+	value, err := keyvaluetags.EcsGetTag(conn, identifier, key)
 
-	if err != nil {
-		return fmt.Errorf("error reading %s resource (%s) tag (%s): %w", ecs.ServiceID, identifier, key, err)
-	}
-
-	if !exists {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading %s resource (%s) tag (%s): not found after creation", ecs.ServiceID, identifier, key)
-		}
-
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] %s resource (%s) tag (%s) not found, removing from state", ecs.ServiceID, identifier, key)
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading %s resource (%s) tag (%s): %w", ecs.ServiceID, identifier, key, err)
 	}
 
 	d.Set("resource_arn", identifier)
@@ -90,7 +87,7 @@ func resourceAwsEcsTagRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsEcsTagUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
-	identifier, key, err := tagresource.GetResourceId(d.Id())
+	identifier, key, err := tagresource.GetResourceID(d.Id())
 
 	if err != nil {
 		return err
@@ -105,7 +102,7 @@ func resourceAwsEcsTagUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsEcsTagDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
-	identifier, key, err := tagresource.GetResourceId(d.Id())
+	identifier, key, err := tagresource.GetResourceID(d.Id())
 
 	if err != nil {
 		return err

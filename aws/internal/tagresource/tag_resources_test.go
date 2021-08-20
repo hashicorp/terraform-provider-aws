@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestGetResourceId(t *testing.T) {
+func TestGetResourceID(t *testing.T) {
 	testCases := []struct {
 		Description        string
 		ResourceIdentifier string
@@ -52,7 +52,7 @@ func TestGetResourceId(t *testing.T) {
 		testCase := testCase
 
 		t.Run(testCase.Description, func(t *testing.T) {
-			gotIdentifier, gotKey, err := GetResourceId(testCase.ResourceIdentifier)
+			gotIdentifier, gotKey, err := GetResourceID(testCase.ResourceIdentifier)
 
 			if err != nil && !testCase.ExpectedError(err) {
 				t.Fatalf("unexpected error: %s", err)
@@ -96,7 +96,7 @@ func TestSetResourceId(t *testing.T) {
 		testCase := testCase
 
 		t.Run(testCase.Description, func(t *testing.T) {
-			got := SetResourceId(testCase.Identifier, testCase.Key)
+			got := SetResourceID(testCase.Identifier, testCase.Key)
 
 			if got != testCase.ExpectedResourceIdentifier {
 				t.Errorf("got %s, expected %s", got, testCase.ExpectedResourceIdentifier)
