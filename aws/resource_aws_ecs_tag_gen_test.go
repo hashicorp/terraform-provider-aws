@@ -29,10 +29,6 @@ func testAccCheckEcsTagDestroy(s *terraform.State) error {
 
 		_, err = keyvaluetags.EcsGetTag(conn, identifier, key)
 
-		if isAWSErr(err, "InvalidParameterException", "The specified cluster is inactive. Specify an active cluster and try again.") {
-			continue
-		}
-
 		if tfresource.NotFound(err) {
 			continue
 		}

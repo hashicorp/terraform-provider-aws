@@ -481,7 +481,7 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 	}
 }
 
-// ServiceListTagInputIdentifierRequiresSlice determines if the service list tagging resource field requires a slice.
+// ServiceListTagsInputIdentifierRequiresSlice determines if the service list tagging resource field requires a slice.
 func ServiceListTagsInputIdentifierRequiresSlice(serviceName string) string {
 	switch serviceName {
 	case "cloudtrail":
@@ -549,6 +549,48 @@ func ServiceListTagsOutputTagsField(serviceName string) string {
 	}
 }
 
+// ServiceParentResourceNotFoundError determines additional NotFoundError handling for missing parent resources.
+// Use this to ignore errors returned by the create tags and list tags APIs for missing parent resources.
+//
+// This handling should be in the form of:
+// if CONDITIONAL {
+//     err = &resource.NotFoundError{
+// 	       LastError:   err,
+// 	       LastRequest: input,
+//     }
+// }
+func ServiceParentResourceNotFoundError(serviceName string) string {
+	switch serviceName {
+	case "ec2":
+		return `
+if tfawserr.ErrCodeContains(err, ".NotFound") {
+	err = &resource.NotFoundError{
+		LastError:   err,
+		LastRequest: input,
+	}
+}
+`
+	case "ecs":
+		return `
+if tfawserr.ErrMessageContains(err, "InvalidParameterException", "The specified cluster is inactive. Specify an active cluster and try again.") {
+	err = &resource.NotFoundError{
+		LastError:   err,
+		LastRequest: input,
+	}
+}
+`
+	default:
+		return `
+if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+	err = &resource.NotFoundError{
+		LastError:   err,
+		LastRequest: input,
+	}
+}
+`
+	}
+}
+
 // ServiceResourceNotFoundErrorCode determines the error code of tagable resources when not found
 func ServiceResourceNotFoundErrorCode(serviceName string) string {
 	switch serviceName {
@@ -557,7 +599,7 @@ func ServiceResourceNotFoundErrorCode(serviceName string) string {
 	}
 }
 
-// ServiceResourceNotFoundErrorCode determines the common substring of error codes of tagable resources when not found
+// ServiceResourceNotFoundErrorCodeContains determines the common substring of error codes of tagable resources when not found
 // This value takes precedence over ServiceResourceNotFoundErrorCode when defined for a service.
 func ServiceResourceNotFoundErrorCodeContains(serviceName string) string {
 	switch serviceName {

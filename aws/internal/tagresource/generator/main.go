@@ -39,7 +39,6 @@ func main() {
 		ServiceName: *serviceName,
 	}
 	templateFuncMap := template.FuncMap{
-		"CheckDestroyIgnoreError": tagresource.ServiceCheckDestroyIgnoreError,
 		"IdentifierAttributeName": tagresource.ServiceIdentifierAttributeName,
 		"Title":                   strings.Title,
 	}
@@ -244,8 +243,6 @@ func testAccCheck{{ .ServiceName | Title }}TagDestroy(s *terraform.State) error 
 		}
 
 		_, err = keyvaluetags.{{ .ServiceName | Title }}GetTag(conn, identifier, key)
-
-		{{ .ServiceName | CheckDestroyIgnoreError }}
 
 		if tfresource.NotFound(err) {
 			continue

@@ -29,10 +29,6 @@ func testAccCheckDynamodbTagDestroy(s *terraform.State) error {
 
 		_, err = keyvaluetags.DynamodbGetTag(conn, identifier, key)
 
-		if isAWSErr(err, "ResourceNotFoundException", "") {
-			continue
-		}
-
 		if tfresource.NotFound(err) {
 			continue
 		}
