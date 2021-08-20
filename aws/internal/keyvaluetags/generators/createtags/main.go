@@ -132,25 +132,13 @@ func {{ . | Title }}CreateTags(conn {{ . | ClientType }}, identifier string{{ if
 
 	{{- if . | RetryCreationOnResourceNotFound }}
 
-	err := resource.Retry(EventualConsistencyTimeout, func() *resource.RetryError {
-		_, err := conn.{{ . | TagFunction }}(input)
+	_, err := tfresource.RetryWhenNotFound(EventualConsistencyTimeout, func() (interface{}, error) {
+		output, err := conn.{{ . | TagFunction }}(input)
 
 		{{ . | ParentResourceNotFoundError }}
 
-		if tfresource.NotFound(err) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
+		return output, err
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.{{ . | TagFunction }}(input)
-	}
 	{{- else }}
 	_, err := conn.{{ . | TagFunction }}(input)
 	{{- end }}
