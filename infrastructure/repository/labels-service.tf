@@ -138,6 +138,7 @@ variable "service_labels" {
     "mediapackagevod",
     "mediastore",
     "mediatailor",
+    "memorydb",
     "meteringmarketplace",
     "mobile",
     "mq",
