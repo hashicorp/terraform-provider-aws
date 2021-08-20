@@ -13,11 +13,11 @@ Get information on a Amazon MSK Kafka Version
 ## Example Usage
 
 ```terraform
-data "aws_msk_kafka_version" "test" {
+data "aws_msk_kafka_version" "example" {
   preferred_versions = ["2.4.1.1", "2.4.1", "2.2.1"]
 }
 
-data "aws_msk_kafka_version" "test" {
+data "aws_msk_kafka_version" "example" {
   version = "2.8.0"
 }
 ```
