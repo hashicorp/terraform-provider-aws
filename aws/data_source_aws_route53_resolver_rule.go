@@ -111,7 +111,7 @@ func dataSourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface
 			return !lastPage
 		})
 		if err != nil {
-			return fmt.Errorf("error getting Route53 Resolver rule: %w", err)
+			return fmt.Errorf("error getting Route53 Resolver rules: %w", err)
 		}
 		if n := len(rules); n == 0 {
 			return fmt.Errorf("no Route53 Resolver rules matched")
