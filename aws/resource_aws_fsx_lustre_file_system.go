@@ -497,7 +497,6 @@ func resourceAwsFsxLustreFileSystemDelete(d *schema.ResourceData, meta interface
 	}
 
 	log.Println("[DEBUG] Waiting for filesystem to delete")
-
 	if _, err := waiter.FileSystemDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for FSx lustre filesystem (%s) to deleted: %w", d.Id(), err)
 	}

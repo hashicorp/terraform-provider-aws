@@ -832,7 +832,7 @@ func testAccCheckFsxLustreFileSystemExists(resourceName string, fs *fsx.FileSyst
 		}
 
 		if filesystem == nil {
-			return fmt.Errorf("FSx File System (%s) not found", rs.Primary.ID)
+			return fmt.Errorf("FSx Lustre File System (%s) not found", rs.Primary.ID)
 		}
 
 		*fs = *filesystem
@@ -855,7 +855,7 @@ func testAccCheckFsxLustreFileSystemDestroy(s *terraform.State) error {
 		}
 
 		if filesystem != nil {
-			return fmt.Errorf("FSx File System (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("FSx Lustre File System (%s) still exists", rs.Primary.ID)
 		}
 	}
 	return nil

@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/fsx/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -633,6 +635,37 @@ func TestAccAWSFsxWindowsFileSystem_StorageCapacity(t *testing.T) {
 	})
 }
 
+func TestAccAWSFsxWindowsFileSystem_fromBackup(t *testing.T) {
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_windows_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxWindowsFileSystemFromBackup(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttrPair(resourceName, "backup_id", "aws_fsx_backup.test", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"security_group_ids",
+					"skip_final_backup",
+					"backup_id",
+				},
+			},
+		},
+	})
+}
+
 func TestAccAWSFsxWindowsFileSystem_Tags(t *testing.T) {
 	var filesystem1, filesystem2, filesystem3 fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
@@ -812,14 +845,13 @@ func testAccCheckFsxWindowsFileSystemExists(resourceName string, fs *fsx.FileSys
 
 		conn := testAccProvider.Meta().(*AWSClient).fsxconn
 
-		filesystem, err := describeFsxFileSystem(conn, rs.Primary.ID)
-
+		filesystem, err := finder.FileSystemByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
 		if filesystem == nil {
-			return fmt.Errorf("FSx File System (%s) not found", rs.Primary.ID)
+			return fmt.Errorf("FSx Windows File System (%s) not found", rs.Primary.ID)
 		}
 
 		*fs = *filesystem
@@ -836,18 +868,13 @@ func testAccCheckFsxWindowsFileSystemDestroy(s *terraform.State) error {
 			continue
 		}
 
-		filesystem, err := describeFsxFileSystem(conn, rs.Primary.ID)
-
-		if isAWSErr(err, fsx.ErrCodeFileSystemNotFound, "") {
+		filesystem, err := finder.FileSystemByID(conn, rs.Primary.ID)
+		if tfresource.NotFound(err) {
 			continue
 		}
 
-		if err != nil {
-			return err
-		}
-
 		if filesystem != nil {
-			return fmt.Errorf("FSx File System (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("FSx Windows File System (%s) still exists", rs.Primary.ID)
 		}
 	}
 	return nil
@@ -1199,6 +1226,30 @@ resource "aws_fsx_windows_file_system" "test" {
   throughput_capacity = 8
 }
 `)
+}
+
+func testAccAwsFsxWindowsFileSystemFromBackup() string {
+	return testAccAwsFsxWindowsFileSystemConfigBase() + `
+resource "aws_fsx_windows_file_system" "base" {
+  active_directory_id = aws_directory_service_directory.test.id
+  skip_final_backup   = true
+  storage_capacity    = 32
+  subnet_ids          = [aws_subnet.test1.id]
+  throughput_capacity = 8
+}
+
+resource "aws_fsx_backup" "test" {
+  file_system_id = aws_fsx_windows_file_system.base.id
+}
+
+resource "aws_fsx_windows_file_system" "test" {
+  active_directory_id = aws_directory_service_directory.test.id
+  backup_id           = aws_fsx_backup.test.id
+  skip_final_backup   = true
+  subnet_ids          = [aws_subnet.test1.id]
+  throughput_capacity = 8
+}
+`
 }
 
 func testAccAwsFsxWindowsFileSystemConfigTags1(tagKey1, tagValue1 string) string {
