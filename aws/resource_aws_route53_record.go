@@ -100,7 +100,7 @@ func resourceAwsRoute53Record() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"zone_id": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Required:     false,
 							ValidateFunc: validation.StringLenBetween(1, 32),
 						},
 
