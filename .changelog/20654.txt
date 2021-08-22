@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_iot_greengrass_service_role
+```
+
+```release-note:new-data-source
+aws_iot_greengrass_service_role
+```
