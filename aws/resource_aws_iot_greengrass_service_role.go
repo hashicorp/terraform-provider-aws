@@ -70,6 +70,7 @@ func resourceAwsIotGreengrassServiceRoleDelete(d *schema.ResourceData, meta inte
 	input := &greengrass.DisassociateServiceRoleFromAccountInput{}
 
 	_, err := conn.DisassociateServiceRoleFromAccount(input)
+
 	if err != nil {
 		return fmt.Errorf("error disassociating greengrass service role from account: %v", err)
 	}

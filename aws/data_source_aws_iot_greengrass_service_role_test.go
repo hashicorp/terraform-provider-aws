@@ -36,25 +36,25 @@ func TestAccAWSIotGreengrassServiceRoleDataSource_basic(t *testing.T) {
 func testAccAWSIotGreengrassServiceRoleDataSource_ConfigResources(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "greengrass_service_role" {
-  name = "greengrass_service_role_test_%[1]d"
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-	{
-	"Effect": "Allow",
-	"Principal": {
-		"Service": "greengrass.amazonaws.com"
-	},
-	"Action": "sts:AssumeRole"
-	}
-]
-}
-EOF
+  name               = "greengrass_service_role_test_%[1]d"
+  assume_role_policy = <<-EOT
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Principal": {
+          "Service": "greengrass.amazonaws.com"
+        },
+        "Action": "sts:AssumeRole"
+      }
+    ]
+  }
+  EOT
 }
 
 resource "aws_iot_greengrass_service_role" "test" {
-	role_arn    = aws_iam_role.greengrass_service_role.arn
+  role_arn = aws_iam_role.greengrass_service_role.arn
 }
 `, rInt)
 }
