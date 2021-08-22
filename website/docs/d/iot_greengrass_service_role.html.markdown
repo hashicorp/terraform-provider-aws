@@ -3,16 +3,16 @@ subcategory: "IoT"
 layout: "aws"
 page_title: "AWS: aws_iot_greengrass_service_role"
 description: |-
-  Retrieves the greengrass service role that is attached to your account
+  Retrieves the Greengrass service role that is attached to the current account
 ---
 
 # Data Source: aws_iot_greengrass_service_role
 
-Returns the greengrass service role that is attached to your account. See also https://docs.aws.amazon.com/greengrass/latest/apireference/-greengrass-servicerole.html
+Returns the Greengrass service role that is attached to the current account. See also https://docs.aws.amazon.com/greengrass/latest/apireference/-greengrass-servicerole.html
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_iot_greengrass_service_role" "example" {}
 
 output "greengrass_service_role" {
@@ -22,4 +22,4 @@ output "greengrass_service_role" {
 
 ## Attributes Reference
 
-* `role_arn` - The ARN of the role which is associated with the account.
+* `role_arn` - The ARN of the IAM Greengrass service role which is associated with the account.
