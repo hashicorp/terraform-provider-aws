@@ -116,6 +116,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The Amazon Resource Name (ARN) of the Health Check.
 * `id` - The id of the health check
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
