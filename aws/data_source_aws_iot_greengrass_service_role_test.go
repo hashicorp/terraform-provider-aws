@@ -4,22 +4,24 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccAWSIotGreengrassServiceRoleDataSource(t *testing.T) {
+func TestAccAWSIotGreengrassServiceRoleDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_iot_greengrass_service_role.test"
 	resourceName := "aws_iam_role.greengrass_service_role"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { testAccPreCheck(t) },
+		ErrorCheck:                testAccErrorCheck(t, greengrass.EndpointsID),
 		Providers:                 testAccProviders,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIotGreengrassServiceRoleDataSourceConfigResources(rInt),
+				Config: testAccAWSIotGreengrassServiceRoleDataSource_ConfigResources(rInt),
 			},
 			{
 				Config: testAccAWSIotGreengrassServiceRoleDataSourceConfig(rInt),
@@ -31,7 +33,7 @@ func TestAccAWSIotGreengrassServiceRoleDataSource(t *testing.T) {
 	})
 }
 
-func testAccAWSIotGreengrassServiceRoleDataSourceConfigResources(rInt int) string {
+func testAccAWSIotGreengrassServiceRoleDataSource_ConfigResources(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "greengrass_service_role" {
   name = "greengrass_service_role_test_%[1]d"
@@ -62,5 +64,5 @@ func testAccAWSIotGreengrassServiceRoleDataSourceConfig(rInt int) string {
 %s
 
 data "aws_iot_greengrass_service_role" "test" {}
-`, testAccAWSIotGreengrassServiceRoleDataSourceConfigResources(rInt))
+`, testAccAWSIotGreengrassServiceRoleDataSource_ConfigResources(rInt))
 }

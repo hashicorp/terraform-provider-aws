@@ -20,13 +20,14 @@ func TestAccAwsIotGreengrassServiceRole_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, greengrass.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsIotGreengrassServiceRoleDestroy,
+		CheckDestroy: testAccCheckAwsIotGreengrassServiceRole_Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIotGreengrassServiceRoleConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsIotGreengrassServiceRoleExists(resourceName),
+					testAccCheckAwsIotGreengrassServiceRole_Exists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
 				),
 			},
@@ -34,7 +35,7 @@ func TestAccAwsIotGreengrassServiceRole_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsIotGreengrassServiceRoleDestroy(s *terraform.State) error {
+func testAccCheckAwsIotGreengrassServiceRole_Destroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).greengrassconn
 	input := &greengrass.GetServiceRoleForAccountInput{}
 
@@ -50,7 +51,7 @@ func testAccCheckAwsIotGreengrassServiceRoleDestroy(s *terraform.State) error {
 	return errors.New("greengrass service role was not reset")
 }
 
-func testAccCheckAwsIotGreengrassServiceRoleExists(name string) resource.TestCheckFunc {
+func testAccCheckAwsIotGreengrassServiceRole_Exists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[name]
 		if !ok {
