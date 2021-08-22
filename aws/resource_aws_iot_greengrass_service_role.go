@@ -2,9 +2,11 @@ package aws
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/greengrass"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -48,7 +50,7 @@ func resourceAwsIotGreengrassServiceRoleRead(d *schema.ResourceData, meta interf
 	output, err := conn.GetServiceRoleForAccount(input)
 
 	if err != nil {
-		if isAWSErrRequestFailureStatusCode(err, 404) {
+		if tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
 			return fmt.Errorf("No greengrass service role is set for this account")
 		}
 		return fmt.Errorf("error while getting greengrass service role for account: %s", err)

@@ -3,9 +3,11 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/greengrass"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -39,7 +41,7 @@ func testAccCheckAwsIotGreengrassServiceRoleDestroy(s *terraform.State) error {
 	_, err := conn.GetServiceRoleForAccount(input)
 
 	if err != nil {
-		if isAWSErrRequestFailureStatusCode(err, 404) {
+		if tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
 			//No greengrass service role is set for this account
 			return nil
 		}
