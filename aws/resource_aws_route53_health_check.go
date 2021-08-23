@@ -42,6 +42,7 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 			"failure_threshold": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.IntBetween(1, 10),
 			},
 			"request_interval": {
