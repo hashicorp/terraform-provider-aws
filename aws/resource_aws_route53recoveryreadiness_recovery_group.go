@@ -2,10 +2,12 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -86,9 +88,17 @@ func resourceAwsRoute53RecoveryReadinessRecoveryGroupRead(d *schema.ResourceData
 		RecoveryGroupName: aws.String(d.Id()),
 	}
 	resp, err := conn.GetRecoveryGroup(input)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] Route53RecoveryReadiness Recovery Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error describing Route53 Recovery Readiness RecoveryGroup: %s", err)
 	}
+
 	d.Set("arn", resp.RecoveryGroupArn)
 	d.Set("recovery_group_name", resp.RecoveryGroupName)
 	d.Set("cells", resp.Cells)
@@ -122,6 +132,7 @@ func resourceAwsRoute53RecoveryReadinessRecoveryGroupUpdate(d *schema.ResourceDa
 	}
 
 	_, err := conn.UpdateRecoveryGroup(input)
+
 	if err != nil {
 		return fmt.Errorf("error updating Route53 Recovery Readiness RecoveryGroup: %s", err)
 	}
@@ -143,7 +154,9 @@ func resourceAwsRoute53RecoveryReadinessRecoveryGroupDelete(d *schema.ResourceDa
 	input := &route53recoveryreadiness.DeleteRecoveryGroupInput{
 		RecoveryGroupName: aws.String(d.Id()),
 	}
+
 	_, err := conn.DeleteRecoveryGroup(input)
+
 	if err != nil {
 		if isAWSErr(err, route53recoveryreadiness.ErrCodeResourceNotFoundException, "") {
 			return nil
@@ -154,6 +167,7 @@ func resourceAwsRoute53RecoveryReadinessRecoveryGroupDelete(d *schema.ResourceDa
 	gcinput := &route53recoveryreadiness.GetRecoveryGroupInput{
 		RecoveryGroupName: aws.String(d.Id()),
 	}
+
 	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.GetRecoveryGroup(gcinput)
 		if err != nil {
@@ -164,9 +178,11 @@ func resourceAwsRoute53RecoveryReadinessRecoveryGroupDelete(d *schema.ResourceDa
 		}
 		return resource.RetryableError(fmt.Errorf("Route 53 Recovery Readiness RecoveryGroup (%s) still exists", d.Id()))
 	})
+
 	if isResourceTimeoutError(err) {
 		_, err = conn.GetRecoveryGroup(gcinput)
 	}
+
 	if err != nil {
 		return fmt.Errorf("error waiting for Route 53 Recovery Readiness RecoveryGroup (%s) deletion: %s", d.Id(), err)
 	}
