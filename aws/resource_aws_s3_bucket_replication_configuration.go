@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -165,7 +166,8 @@ func resourceAwsS3BucketReplicationConfigurationPut(d *schema.ResourceData, meta
 	if v, ok := d.GetOk("bucket"); ok {
 		bucket = v.(string)
 	} else {
-		// fail, can't do anything without a bucket
+		log.Printf("[ERROR] S3 Bucket name not set")
+		return errors.New("[ERROR] S3 Bucket name not set")
 	}
 	d.SetId(bucket)
 
@@ -173,11 +175,23 @@ func resourceAwsS3BucketReplicationConfigurationPut(d *schema.ResourceData, meta
 }
 
 func resourceAwsS3BucketReplicationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
 
-	input := &s3.HeadBucketInput{
-		Bucket: aws.String(d.Get("bucket").(string)),
+	if _, ok := d.GetOk("bucket"); !ok {
+		// during import operations, use the supplied ID for the bucket name
+		d.Set("bucket", d.Id())
 	}
+
+	var bucket *string
+	input := &s3.HeadBucketInput{}
+	if rsp, ok := d.GetOk("bucket"); !ok {
+		log.Printf("[ERROR] S3 Bucket name not set")
+		return errors.New("[ERROR] S3 Bucket name not set")
+	} else {
+		bucket = aws.String(rsp.(string))
+		input.Bucket = bucket
+	}
+
+	s3conn := meta.(*AWSClient).s3conn
 
 	err := resource.Retry(s3BucketCreationTimeout, func() *resource.RetryError {
 		_, err := s3conn.HeadBucket(input)
@@ -215,14 +229,10 @@ func resourceAwsS3BucketReplicationConfigurationRead(d *schema.ResourceData, met
 		return fmt.Errorf("error reading S3 Bucket (%s): %w", d.Id(), err)
 	}
 
-	if _, ok := d.GetOk("bucket"); !ok {
-		d.Set("bucket", d.Id())
-	}
-
 	// Read the bucket replication configuration
 	replicationResponse, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return s3conn.GetBucketReplication(&s3.GetBucketReplicationInput{
-			Bucket: aws.String(d.Get("bucket").(string)),
+			Bucket: bucket,
 		})
 	})
 	if err != nil && !isAWSErr(err, "ReplicationConfigurationNotFoundError", "") {
