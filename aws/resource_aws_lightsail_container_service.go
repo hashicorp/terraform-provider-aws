@@ -31,7 +31,7 @@ func resourceAwsLightsailContainerService() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			// required fields
-			"container_service_name": {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -47,11 +47,6 @@ func resourceAwsLightsailContainerService() *schema.Resource {
 			},
 
 			// optional fields
-			"is_disabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 			"deployment": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -140,9 +135,10 @@ func resourceAwsLightsailContainerService() *schema.Resource {
 													Default:  2,
 												},
 												"interval_seconds": {
-													Type:     schema.TypeInt,
-													Optional: true,
-													Default:  5,
+													Type:         schema.TypeInt,
+													Optional:     true,
+													Default:      5,
+													ValidateFunc: validation.IntBetween(5, 300),
 												},
 												"path": {
 													Type:     schema.TypeString,
@@ -155,9 +151,10 @@ func resourceAwsLightsailContainerService() *schema.Resource {
 													Default:  "200-499",
 												},
 												"timeout_seconds": {
-													Type:     schema.TypeInt,
-													Optional: true,
-													Default:  2,
+													Type:         schema.TypeInt,
+													Optional:     true,
+													Default:      2,
+													ValidateFunc: validation.IntBetween(2, 60),
 												},
 												"unhealthy_threshold": {
 													Type:     schema.TypeInt,
@@ -170,10 +167,6 @@ func resourceAwsLightsailContainerService() *schema.Resource {
 								},
 							},
 						},
-						"created_at": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"state": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -184,6 +177,11 @@ func resourceAwsLightsailContainerService() *schema.Resource {
 						},
 					},
 				},
+			},
+			"is_disabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"public_domain_names": {
 				Type:     schema.TypeList,
@@ -220,15 +218,7 @@ func resourceAwsLightsailContainerService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"availability_zone": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"region_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -268,7 +258,7 @@ func resourceAwsLightsailContainerServiceCreate(ctx context.Context, d *schema.R
 	conn := meta.(*AWSClient).lightsailconn
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
-	serviceName := aws.String(d.Get("container_service_name").(string))
+	serviceName := aws.String(d.Get("name").(string))
 
 	containerServiceInput := lightsail.CreateContainerServiceInput{
 		ServiceName: serviceName,
@@ -289,7 +279,7 @@ func resourceAwsLightsailContainerServiceCreate(ctx context.Context, d *schema.R
 		return diag.FromErr(err)
 	}
 
-	d.SetId(d.Get("container_service_name").(string))
+	d.SetId(d.Get("name").(string))
 	log.Printf("[INFO] Lightsail Container Service (%s) CreateContainerService call successful, now waiting for ContainerServiceState change", d.Id())
 
 	// first wait for the completion of creating an empty container service
@@ -395,7 +385,7 @@ func resourceAwsLightsailContainerServiceRead(ctx context.Context, d *schema.Res
 
 	resp, err := conn.GetContainerServices(
 		&lightsail.GetContainerServicesInput{
-			// d.Id() instead of d.Get("container_service_name") used here, because we need to tell Importer how to import
+			// d.Id() instead of d.Get("name") used here, because we need to tell Importer how to import
 			ServiceName: aws.String(d.Id()),
 		},
 	)
@@ -415,7 +405,7 @@ func resourceAwsLightsailContainerServiceRead(ctx context.Context, d *schema.Res
 	// just look at index 0 because we only looked up 1 container service
 	cs := resp.ContainerServices[0]
 
-	d.Set("container_service_name", cs.ContainerServiceName)
+	d.Set("name", cs.ContainerServiceName)
 	d.Set("power", cs.Power)
 	d.Set("scale", cs.Scale)
 	d.Set("is_disabled", cs.IsDisabled)
@@ -426,9 +416,7 @@ func resourceAwsLightsailContainerServiceRead(ctx context.Context, d *schema.Res
 		return diag.Errorf("error setting public_domain_names for Lightsail Container Service (%s): %s", d.Id(), err)
 	}
 	d.Set("arn", cs.Arn)
-	d.Set("created_at", cs.CreatedAt.Format(time.RFC3339))
 	d.Set("availability_zone", cs.Location.AvailabilityZone)
-	d.Set("region_name", cs.Location.RegionName)
 	d.Set("power_id", cs.PowerId)
 	d.Set("principal_arn", cs.PrincipalArn)
 	d.Set("private_domain_name", cs.PrivateDomainName)
@@ -843,7 +831,6 @@ func flattenLightsailContainerServiceDeployment(deployment *lightsail.ContainerS
 		map[string]interface{}{
 			"container":       flattenLightsailContainerServiceDeploymentContainers(deployment.Containers),
 			"public_endpoint": flattenLightsailContainerServiceDeploymentPublicEndpoint(deployment.PublicEndpoint),
-			"created_at":      deployment.CreatedAt.Format(time.RFC3339),
 			"state":           aws.StringValue(deployment.State),
 			"version":         int(aws.Int64Value(deployment.Version)),
 		},

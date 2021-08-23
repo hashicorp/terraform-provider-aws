@@ -20,7 +20,7 @@ see ["Regions and Availability Zones in Amazon Lightsail"](https://lightsail.aws
 ```terraform
 # create a new Lightsail container service
 resource "aws_lightsail_container_service" "my_container_service" {
-  container_service_name = "container-service-1"
+  name = "container-service-1"
   power = "nano"
   scale = 1
   is_disabled = false
@@ -44,7 +44,7 @@ resource "aws_lightsail_container_service" "my_container_service" {
 
 The following arguments are supported:
 
-* `container_service_name` - (Required) The name for the container service. Names must be of length 1 to 63, and be 
+* `name` - (Required) The name for the container service. Names must be of length 1 to 63, and be 
   unique within each AWS Region in your Lightsail account.
 * `power` - (Required) The power specification for the container service. The power specifies the amount of memory, 
   the number of vCPUs, and the monthly price of each node of the container service.
@@ -187,8 +187,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the container service.
 * `availability_zone` - The Availability Zone. Follows the format us-east-2a (case-sensitive).
-* `created_at` - The timestamp when the container service was created.
-* `id` - Same as `container_service_name`.
+* `id` - Same as `name`.
 * `power_id` - The ID of the power of the container service.
 * `principal_arn`- The principal ARN of the container service. The principal ARN can be used to create a trust
   relationship between your standard AWS account and your Lightsail container service. This allows you to give your
@@ -205,7 +204,6 @@ In addition to all arguments above, the following attributes are exported:
 
 Plus, if you have a deployment, the following attributes are exported under `deployment` block:
 
-* `created_at` - The timestamp when the deployment was created.
 * `state` - The state of the deployment.
 * `version` - The version number of the deployment.
 

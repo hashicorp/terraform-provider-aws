@@ -76,14 +76,12 @@ func TestAccAWSLightsailContainerService_basic(t *testing.T) {
 				Config: testAccAWSLightsailContainerServiceConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLightsailContainerServiceExists(resourceName, &cs),
-					resource.TestCheckResourceAttr(resourceName, "container_service_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "power", "nano"),
 					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
 					resource.TestCheckResourceAttr(resourceName, "is_disabled", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
-					resource.TestCheckResourceAttrSet(resourceName, "region_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "power_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "principal_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "private_domain_name"),
@@ -129,7 +127,7 @@ func TestAccAWSLightsailContainerService_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSLightsailContainerService_ContainerServiceName(t *testing.T) {
+func TestAccAWSLightsailContainerService_Name(t *testing.T) {
 	var cs lightsail.ContainerService
 	rName1 := acctest.RandomWithPrefix("tf-acc-test")
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
@@ -149,14 +147,14 @@ func TestAccAWSLightsailContainerService_ContainerServiceName(t *testing.T) {
 				Config: testAccAWSLightsailContainerServiceConfigBasic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLightsailContainerServiceExists(resourceName, &cs),
-					resource.TestCheckResourceAttr(resourceName, "container_service_name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 				),
 			},
 			{
 				Config: testAccAWSLightsailContainerServiceConfigBasic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLightsailContainerServiceExists(resourceName, &cs),
-					resource.TestCheckResourceAttr(resourceName, "container_service_name", rName2),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
 			},
 		},
@@ -182,7 +180,6 @@ func TestAccAWSLightsailContainerService_DeploymentContainerBasic(t *testing.T) 
 				Config: testAccAWSLightsailContainerServiceConfigDeploymentContainer1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLightsailContainerServiceExists(resourceName, &cs),
-					resource.TestCheckResourceAttrSet(resourceName, "deployment.0.created_at"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.state", "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.#", "1"),
@@ -197,7 +194,6 @@ func TestAccAWSLightsailContainerService_DeploymentContainerBasic(t *testing.T) 
 				Config: testAccAWSLightsailContainerServiceConfigDeploymentContainer2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLightsailContainerServiceExists(resourceName, &cs),
-					resource.TestCheckResourceAttrSet(resourceName, "deployment.0.created_at"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.state", "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.version", "2"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.#", "2"),
@@ -217,7 +213,6 @@ func TestAccAWSLightsailContainerService_DeploymentContainerBasic(t *testing.T) 
 				Config: testAccAWSLightsailContainerServiceConfigDeploymentContainer3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLightsailContainerServiceExists(resourceName, &cs),
-					resource.TestCheckResourceAttrSet(resourceName, "deployment.0.created_at"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.state", "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.version", "3"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.#", "1"),
@@ -236,7 +231,7 @@ func TestAccAWSLightsailContainerService_DeploymentContainerBasic(t *testing.T) 
 	})
 }
 
-func TestAccAWSLightsailContainerService_DeploymentContainerOptionalFields(t *testing.T) {
+func TestAccAWSLightsailContainerService_DeploymentContainerEnvironment(t *testing.T) {
 	var cs lightsail.ContainerService
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lightsail_container_service.test"
@@ -252,27 +247,49 @@ func TestAccAWSLightsailContainerService_DeploymentContainerOptionalFields(t *te
 		CheckDestroy:      testAccCheckAWSLightsailContainerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLightsailContainerServiceConfigDeploymentContainerOptionalFields1(rName),
+				Config: testAccAWSLightsailContainerServiceConfigDeploymentContainerEnvironment1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLightsailContainerServiceExists(resourceName, &cs),
-					resource.TestCheckResourceAttrSet(resourceName, "deployment.0.created_at"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.state", "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.container_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.image", "amazon/amazon-lightsail:hello-world"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.command.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.environment.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.environment.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "deployment.0.container.0.environment.*",
+						map[string]string{
+							"key":   "A",
+							"value": "a",
+						}),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.port.#", "0"),
 				),
 			},
 			{
-				Config: testAccAWSLightsailContainerServiceConfigDeploymentContainerOptionalFields2(rName),
+				Config: testAccAWSLightsailContainerServiceConfigDeploymentContainerEnvironment2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLightsailContainerServiceExists(resourceName, &cs),
-					resource.TestCheckResourceAttrSet(resourceName, "deployment.0.created_at"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.state", "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.container_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.image", "amazon/amazon-lightsail:hello-world"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.command.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.environment.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "deployment.0.container.0.environment.*",
+						map[string]string{
+							"key":   "B",
+							"value": "b",
+						}),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.port.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSLightsailContainerServiceConfigDeploymentContainerEnvironment3(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLightsailContainerServiceExists(resourceName, &cs),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.state", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.version", "3"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.container_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.image", "amazon/amazon-lightsail:hello-world"),
@@ -288,6 +305,91 @@ func TestAccAWSLightsailContainerService_DeploymentContainerOptionalFields(t *te
 							"key":   "B",
 							"value": "b",
 						}),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.port.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSLightsailContainerServiceConfigDeploymentContainerEnvironment4(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLightsailContainerServiceExists(resourceName, &cs),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.state", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.version", "4"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.container_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.image", "amazon/amazon-lightsail:hello-world"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.command.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.environment.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.port.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLightsailContainerService_DeploymentContainerPort(t *testing.T) {
+	var cs lightsail.ContainerService
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lightsail_container_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
+			testAccPreCheckAWSLightsail(t)
+		},
+		ErrorCheck:        testAccErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSLightsailContainerServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLightsailContainerServiceConfigDeploymentContainerPort1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLightsailContainerServiceExists(resourceName, &cs),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.state", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.container_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.image", "amazon/amazon-lightsail:hello-world"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.command.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.environment.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.port.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "deployment.0.container.0.port.*",
+						map[string]string{
+							"port_number": "80",
+							"protocol":    "HTTP",
+						}),
+				),
+			},
+			{
+				Config: testAccAWSLightsailContainerServiceConfigDeploymentContainerPort2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLightsailContainerServiceExists(resourceName, &cs),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.state", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.container_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.image", "amazon/amazon-lightsail:hello-world"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.command.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.environment.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.port.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "deployment.0.container.0.port.*",
+						map[string]string{
+							"port_number": "90",
+							"protocol":    "TCP",
+						}),
+				),
+			},
+			{
+				Config: testAccAWSLightsailContainerServiceConfigDeploymentContainerPort3(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLightsailContainerServiceExists(resourceName, &cs),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.state", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.version", "3"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.container_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.image", "amazon/amazon-lightsail:hello-world"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.command.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.environment.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.port.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "deployment.0.container.0.port.*",
 						map[string]string{
@@ -302,45 +404,9 @@ func TestAccAWSLightsailContainerService_DeploymentContainerOptionalFields(t *te
 				),
 			},
 			{
-				Config: testAccAWSLightsailContainerServiceConfigDeploymentContainerOptionalFields3(rName),
+				Config: testAccAWSLightsailContainerServiceConfigDeploymentContainerPort4(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLightsailContainerServiceExists(resourceName, &cs),
-					resource.TestCheckResourceAttrSet(resourceName, "deployment.0.created_at"),
-					resource.TestCheckResourceAttr(resourceName, "deployment.0.state", "ACTIVE"),
-					resource.TestCheckResourceAttr(resourceName, "deployment.0.version", "3"),
-					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.container_name", "test"),
-					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.image", "amazon/amazon-lightsail:hello-world"),
-					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.command.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.environment.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "deployment.0.container.0.environment.*",
-						map[string]string{
-							"key":   "A",
-							"value": "a",
-						}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "deployment.0.container.0.environment.*",
-						map[string]string{
-							"key":   "BB",
-							"value": "bb",
-						}),
-					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.0.port.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "deployment.0.container.0.port.*",
-						map[string]string{
-							"port_number": "80",
-							"protocol":    "HTTP",
-						}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "deployment.0.container.0.port.*",
-						map[string]string{
-							"port_number": "100",
-							"protocol":    "UDP",
-						}),
-				),
-			},
-			{
-				Config: testAccAWSLightsailContainerServiceConfigDeploymentContainerOptionalFields4(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLightsailContainerServiceExists(resourceName, &cs),
-					resource.TestCheckResourceAttrSet(resourceName, "deployment.0.created_at"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.state", "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.version", "4"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.#", "1"),
@@ -374,7 +440,6 @@ func TestAccAWSLightsailContainerService_DeploymentPublicEndpoint(t *testing.T) 
 				Config: testAccAWSLightsailContainerServiceConfigDeploymentPublicEndpoint1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLightsailContainerServiceExists(resourceName, &cs),
-					resource.TestCheckResourceAttrSet(resourceName, "deployment.0.created_at"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.state", "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.#", "1"),
@@ -398,7 +463,6 @@ func TestAccAWSLightsailContainerService_DeploymentPublicEndpoint(t *testing.T) 
 				Config: testAccAWSLightsailContainerServiceConfigDeploymentPublicEndpoint2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLightsailContainerServiceExists(resourceName, &cs),
-					resource.TestCheckResourceAttrSet(resourceName, "deployment.0.created_at"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.state", "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.version", "2"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.#", "1"),
@@ -422,7 +486,6 @@ func TestAccAWSLightsailContainerService_DeploymentPublicEndpoint(t *testing.T) 
 				Config: testAccAWSLightsailContainerServiceConfigDeploymentPublicEndpoint3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLightsailContainerServiceExists(resourceName, &cs),
-					resource.TestCheckResourceAttrSet(resourceName, "deployment.0.created_at"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.state", "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.version", "3"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.#", "1"),
@@ -446,7 +509,6 @@ func TestAccAWSLightsailContainerService_DeploymentPublicEndpoint(t *testing.T) 
 				Config: testAccAWSLightsailContainerServiceConfigDeploymentPublicEndpoint4(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLightsailContainerServiceExists(resourceName, &cs),
-					resource.TestCheckResourceAttrSet(resourceName, "deployment.0.created_at"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.state", "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.version", "4"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.#", "1"),
@@ -470,7 +532,6 @@ func TestAccAWSLightsailContainerService_DeploymentPublicEndpoint(t *testing.T) 
 				Config: testAccAWSLightsailContainerServiceConfigDeploymentPublicEndpoint5(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLightsailContainerServiceExists(resourceName, &cs),
-					resource.TestCheckResourceAttrSet(resourceName, "deployment.0.created_at"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.state", "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.version", "5"),
 					resource.TestCheckResourceAttr(resourceName, "deployment.0.container.#", "1"),
@@ -744,7 +805,7 @@ func testAccCheckAWSLightsailContainerServiceExists(resourceName string, cs *lig
 func testAccAWSLightsailContainerServiceConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "nano"
   scale = 1
 }
@@ -754,7 +815,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccAWSLightsailContainerServiceConfigDeploymentContainer1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "nano"
   scale = 1
 
@@ -771,7 +832,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccAWSLightsailContainerServiceConfigDeploymentContainer2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "nano"
   scale = 1
 
@@ -793,7 +854,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccAWSLightsailContainerServiceConfigDeploymentContainer3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "nano"
   scale = 1
 
@@ -807,10 +868,10 @@ resource "aws_lightsail_container_service" "test" {
 `, rName)
 }
 
-func testAccAWSLightsailContainerServiceConfigDeploymentContainerOptionalFields1(rName string) string {
+func testAccAWSLightsailContainerServiceConfigDeploymentContainerEnvironment1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "nano"
   scale = 1
 
@@ -818,16 +879,41 @@ resource "aws_lightsail_container_service" "test" {
     container {
       container_name = "test"
       image = "amazon/amazon-lightsail:hello-world"
+      environment {
+        key = "A"
+        value = "a"
+      }
     }
   }
 }
 `, rName)
 }
 
-func testAccAWSLightsailContainerServiceConfigDeploymentContainerOptionalFields2(rName string) string {
+func testAccAWSLightsailContainerServiceConfigDeploymentContainerEnvironment2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
+  power = "nano"
+  scale = 1
+
+  deployment {
+    container {
+      container_name = "test"
+      image = "amazon/amazon-lightsail:hello-world"
+      environment {
+        key = "B"
+        value = "b"
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAWSLightsailContainerServiceConfigDeploymentContainerEnvironment3(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lightsail_container_service" "test" {
+  name = %q
   power = "nano"
   scale = 1
 
@@ -843,6 +929,82 @@ resource "aws_lightsail_container_service" "test" {
         key = "B"
         value = "b"
       }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAWSLightsailContainerServiceConfigDeploymentContainerEnvironment4(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lightsail_container_service" "test" {
+  name = %q
+  power = "nano"
+  scale = 1
+
+  deployment {
+    container {
+      container_name = "test"
+      image = "amazon/amazon-lightsail:hello-world"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAWSLightsailContainerServiceConfigDeploymentContainerPort1(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lightsail_container_service" "test" {
+  name = %q
+  power = "nano"
+  scale = 1
+
+  deployment {
+    container {
+      container_name = "test"
+      image = "amazon/amazon-lightsail:hello-world"
+      port {
+        port_number = 80
+        protocol = "HTTP"
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAWSLightsailContainerServiceConfigDeploymentContainerPort2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lightsail_container_service" "test" {
+  name = %q
+  power = "nano"
+  scale = 1
+
+  deployment {
+    container {
+      container_name = "test"
+      image = "amazon/amazon-lightsail:hello-world"
+      port {
+        port_number = 90
+        protocol = "TCP"
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAWSLightsailContainerServiceConfigDeploymentContainerPort3(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lightsail_container_service" "test" {
+  name = %q
+  power = "nano"
+  scale = 1
+
+  deployment {
+    container {
+      container_name = "test"
+      image = "amazon/amazon-lightsail:hello-world"
       port {
         port_number = 80
         protocol = "HTTP"
@@ -857,43 +1019,10 @@ resource "aws_lightsail_container_service" "test" {
 `, rName)
 }
 
-func testAccAWSLightsailContainerServiceConfigDeploymentContainerOptionalFields3(rName string) string {
+func testAccAWSLightsailContainerServiceConfigDeploymentContainerPort4(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
-  power = "nano"
-  scale = 1
-
-  deployment {
-    container {
-      container_name = "test"
-      image = "amazon/amazon-lightsail:hello-world"
-      environment {
-        key = "A"
-        value = "a"
-      }
-      environment {
-        key = "BB"
-        value = "bb"
-      }
-      port {
-        port_number = 80
-        protocol = "HTTP"
-      }
-      port {
-        port_number = 100
-        protocol = "UDP"
-      }
-    }
-  }
-}
-`, rName)
-}
-
-func testAccAWSLightsailContainerServiceConfigDeploymentContainerOptionalFields4(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "nano"
   scale = 1
 
@@ -910,7 +1039,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccAWSLightsailContainerServiceConfigDeploymentPublicEndpoint1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "nano"
   scale = 1
 
@@ -937,7 +1066,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccAWSLightsailContainerServiceConfigDeploymentPublicEndpoint2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "nano"
   scale = 1
 
@@ -971,7 +1100,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccAWSLightsailContainerServiceConfigDeploymentPublicEndpoint3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "nano"
   scale = 1
 
@@ -1000,7 +1129,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccAWSLightsailContainerServiceConfigDeploymentPublicEndpoint4(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "nano"
   scale = 1
 
@@ -1027,7 +1156,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccAWSLightsailContainerServiceConfigDeploymentPublicEndpoint5(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "nano"
   scale = 1
 
@@ -1048,7 +1177,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccAWSLightsailContainerServiceConfigIsDisabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "nano"
   scale = 1
   is_disabled = true
@@ -1059,7 +1188,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccAWSLightsailContainerServiceConfigIsDisabledWithDeployment1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "nano"
   scale = 1
   is_disabled = true
@@ -1077,7 +1206,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccAWSLightsailContainerServiceConfigIsDisabledWithDeployment2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "micro"
   scale = 1
   is_disabled = true
@@ -1095,7 +1224,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccAWSLightsailContainerServiceConfigIsDisabledWithDeployment3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "micro"
   scale = 1
   is_disabled = true
@@ -1113,7 +1242,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccAWSLightsailContainerServiceConfigIsDisabledWithDeployment4(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "nano"
   scale = 1
   is_disabled = true
@@ -1131,7 +1260,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccAWSLightsailContainerServiceConfigIsDisabledWithDeployment5(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "nano"
   scale = 1
 
@@ -1148,7 +1277,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccAWSLightsailContainerServiceConfigPower(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "micro"
   scale = 1
 }
@@ -1158,7 +1287,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccAWSLightsailContainerServiceConfigPublicDomainNames(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "nano"
   scale = 1
 
@@ -1178,7 +1307,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccAWSLightsailContainerServiceConfigScale(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "nano"
   scale = 2
 }
@@ -1188,7 +1317,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccAWSLightsailContainerServiceConfigTag1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "nano"
   scale = 1
   
@@ -1203,7 +1332,7 @@ resource "aws_lightsail_container_service" "test" {
 func testAccAWSLightsailContainerServiceConfigTag2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_container_service" "test" {
-  container_service_name = %q
+  name = %q
   power = "nano"
   scale = 1
 
