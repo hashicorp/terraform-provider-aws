@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/fsx/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -55,15 +57,15 @@ func testSweepFSXLustreFileSystems(region string) error {
 	})
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing FSx Lustre Filesystems for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("error listing FSx Lustre File Systems for %s: %w", region, err))
 	}
 
 	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Lustre Filesystems for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Lustre File Systems for %s: %w", region, err))
 	}
 
 	if testSweepSkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping FSx Lustre Filesystems sweep for %s: %s", region, errs)
+		log.Printf("[WARN] Skipping FSx Lustre File System sweep for %s: %s", region, errs)
 		return nil
 	}
 
@@ -824,14 +826,13 @@ func testAccCheckFsxLustreFileSystemExists(resourceName string, fs *fsx.FileSyst
 
 		conn := testAccProvider.Meta().(*AWSClient).fsxconn
 
-		filesystem, err := describeFsxFileSystem(conn, rs.Primary.ID)
-
+		filesystem, err := finder.FileSystemByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
 		if filesystem == nil {
-			return fmt.Errorf("FSx File System (%s) not found", rs.Primary.ID)
+			return fmt.Errorf("FSx Lustre File System (%s) not found", rs.Primary.ID)
 		}
 
 		*fs = *filesystem
@@ -848,18 +849,13 @@ func testAccCheckFsxLustreFileSystemDestroy(s *terraform.State) error {
 			continue
 		}
 
-		filesystem, err := describeFsxFileSystem(conn, rs.Primary.ID)
-
-		if isAWSErr(err, fsx.ErrCodeFileSystemNotFound, "") {
+		filesystem, err := finder.FileSystemByID(conn, rs.Primary.ID)
+		if tfresource.NotFound(err) {
 			continue
 		}
 
-		if err != nil {
-			return err
-		}
-
 		if filesystem != nil {
-			return fmt.Errorf("FSx File System (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("FSx Lustre File System (%s) still exists", rs.Primary.ID)
 		}
 	}
 	return nil
