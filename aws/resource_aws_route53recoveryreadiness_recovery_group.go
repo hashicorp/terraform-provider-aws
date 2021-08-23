@@ -32,17 +32,17 @@ func resourceAwsRoute53RecoveryReadinessRecoveryGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"recovery_group_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"cells": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+			},
+			"recovery_group_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
