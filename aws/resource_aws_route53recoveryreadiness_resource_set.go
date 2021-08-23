@@ -47,17 +47,6 @@ func resourceAwsRoute53RecoveryReadinessResourceSet() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"resource_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"readiness_scopes": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
 						"component_id": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -125,6 +114,17 @@ func resourceAwsRoute53RecoveryReadinessResourceSet() *schema.Resource {
 									},
 								},
 							},
+						},
+						"readiness_scopes": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"resource_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
