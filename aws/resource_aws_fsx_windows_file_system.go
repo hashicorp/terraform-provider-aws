@@ -585,7 +585,7 @@ func updateFsxAliases(conn *fsx.FSx, identifier string, oldSet *schema.Set, newS
 			}
 
 			if _, err := waiter.FileSystemAdministrativeActionsCompleted(conn, identifier, fsx.AdministrativeActionTypeFileSystemAliasAssociation, timeout); err != nil {
-				return fmt.Errorf("error waiting for FSx Windows filesystem (%s) alias to be associated: %w", identifier, err)
+				return fmt.Errorf("error waiting for FSx Windows File System (%s) alias to be associated: %w", identifier, err)
 			}
 		}
 	}
@@ -604,7 +604,7 @@ func updateFsxAliases(conn *fsx.FSx, identifier string, oldSet *schema.Set, newS
 			}
 
 			if _, err := waiter.FileSystemAdministrativeActionsCompleted(conn, identifier, fsx.AdministrativeActionTypeFileSystemAliasDisassociation, timeout); err != nil {
-				return fmt.Errorf("error waiting for FSx Windows filesystem (%s) alias to be disassociated: %w", identifier, err)
+				return fmt.Errorf("error waiting for FSx Windows File System (%s) alias to be disassociated: %w", identifier, err)
 			}
 		}
 	}
