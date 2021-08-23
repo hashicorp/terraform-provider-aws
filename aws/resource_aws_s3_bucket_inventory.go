@@ -177,6 +177,7 @@ func resourceAwsS3BucketInventory() *schema.Resource {
 						s3.InventoryOptionalFieldObjectLockRetainUntilDate,
 						s3.InventoryOptionalFieldObjectLockLegalHoldStatus,
 						s3.InventoryOptionalFieldIntelligentTieringAccessTier,
+						s3.InventoryOptionalFieldBucketKeyStatus,
 					}, false),
 				},
 				Set: schema.HashString,

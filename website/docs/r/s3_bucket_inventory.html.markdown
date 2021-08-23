@@ -89,7 +89,7 @@ The following arguments are supported:
 * `enabled` - (Optional, Default: `true`) Specifies whether the inventory is enabled or disabled.
 * `filter` - (Optional) Specifies an inventory filter. The inventory only includes objects that meet the filter's criteria (documented below).
 * `optional_fields` - (Optional) List of optional fields that are included in the inventory results.
-Valid values: `Size`, `LastModifiedDate`, `StorageClass`, `ETag`, `IsMultipartUploaded`, `ReplicationStatus`, `EncryptionStatus`, `ObjectLockRetainUntilDate`, `ObjectLockMode`, `ObjectLockLegalHoldStatus`, `IntelligentTieringAccessTier`.
+Valid values: `Size`, `LastModifiedDate`, `StorageClass`, `ETag`, `IsMultipartUploaded`, `ReplicationStatus`, `EncryptionStatus`, `ObjectLockRetainUntilDate`, `ObjectLockMode`, `ObjectLockLegalHoldStatus`, `IntelligentTieringAccessTier`, `BucketKeyStatus`.
 
 The `filter` configuration supports the following:
 
