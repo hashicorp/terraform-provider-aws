@@ -24,6 +24,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_basic(t *testing.T) {
 		Service:   "cloudwatch",
 	}.String()
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        testAccErrorCheck(t, route53recoveryreadiness.EndpointsID),
@@ -48,6 +49,35 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsRoute53RecoveryReadinessResourceSet_disappears(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	cwArn := arn.ARN{
+		AccountID: "123456789012",
+		Partition: endpoints.AwsPartitionID,
+		Region:    endpoints.EuWest1RegionID,
+		Resource:  "alarm:zzzzzzzzz",
+		Service:   "cloudwatch",
+	}.String()
+	resourceName := "aws_route53recoveryreadiness_resource_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		ErrorCheck:        testAccErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessResourceSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsRoute53RecoveryReadinessResourceSetConfig(rName, cwArn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRoute53RecoveryReadinessResourceSetExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53RecoveryReadinessResourceSet(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAwsRoute53RecoveryReadinessResourceSet_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
@@ -58,6 +88,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_tags(t *testing.T) {
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        testAccErrorCheck(t, route53recoveryreadiness.EndpointsID),
@@ -108,6 +139,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_readinessScope(t *testing.T) 
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        testAccErrorCheck(t, route53recoveryreadiness.EndpointsID),
@@ -144,6 +176,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_basicDnsTargetResource(t *tes
 	}.String()
 	recordType := "A"
 	recordSetId := "12345"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -183,6 +216,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_DnsTargetResourceNlbTarget(t 
 		Resource:  "hostedzone/zzzzzzzzz",
 		Service:   "route53",
 	}.String()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -221,6 +255,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_DnsTargetResourceR53Target(t 
 	}.String()
 	domainName := "my.target.domain"
 	recordSetId := "987654321"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -258,6 +293,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_timeout(t *testing.T) {
 		Service:   "cloudwatch",
 	}.String()
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        testAccErrorCheck(t, route53recoveryreadiness.EndpointsID),
@@ -418,9 +454,11 @@ func testAccAwsRoute53RecoveryReadinessResourceSetConfig_Tags2(rName, cwArn, tag
 resource "aws_route53recoveryreadiness_resource_set" "test" {
   resource_set_name = %[1]q
   resource_set_type = "AWS::CloudWatch::Alarm"
+
   resources {
     resource_arn = %[2]q
   }
+
   tags = {
     %[3]q = %[4]q
     %[5]q = %[6]q
