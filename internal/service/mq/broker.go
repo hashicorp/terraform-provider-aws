@@ -56,7 +56,6 @@ func ResourceBroker() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-				ForceNew: true,
 			},
 			"broker_name": {
 				Type:     schema.TypeString,
