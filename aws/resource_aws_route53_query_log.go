@@ -99,8 +99,12 @@ func resourceAwsRoute53QueryLogDelete(d *schema.ResourceData, meta interface{}) 
 	}
 	log.Printf("[DEBUG] Deleting Route53 query logging configuration: %#v", input)
 	_, err := r53.DeleteQueryLoggingConfig(input)
+	if isAWSErr(err, route53.ErrCodeNoSuchQueryLoggingConfig, "") {
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("Error deleting Route53 query logging configuration: %s", err)
+		return fmt.Errorf("error deleting Route53 query logging configuration (%s): %w", d.Id(), err)
 	}
 
 	return nil
