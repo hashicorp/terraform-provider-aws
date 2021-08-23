@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -354,24 +355,28 @@ func resourceAwsFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interfac
 
 	if v, ok := d.GetOk("backup_id"); ok {
 		backupInput.BackupId = aws.String(v.(string))
+
+		log.Printf("[DEBUG] Creating FSx Windows File System: %s", backupInput)
 		result, err := conn.CreateFileSystemFromBackup(backupInput)
+
 		if err != nil {
-			return fmt.Errorf("Error creating FSx Windows filesystem from backup: %w", err)
+			return fmt.Errorf("error creating FSx Windows File System from backup: %w", err)
 		}
 
 		d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
 	} else {
+		log.Printf("[DEBUG] Creating FSx Windows File System: %s", input)
 		result, err := conn.CreateFileSystem(input)
+
 		if err != nil {
-			return fmt.Errorf("Error creating FSx Windows filesystem: %w", err)
+			return fmt.Errorf("error creating FSx Windows File System: %w", err)
 		}
 
 		d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
 	}
 
-	log.Println("[DEBUG] Waiting for filesystem to become available")
 	if _, err := waiter.FileSystemAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for FSx Windows FileSystem (%s) to be available: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for FSx Windows File System (%s) to be available: %w", d.Id(), err)
 	}
 
 	return resourceAwsFsxWindowsFileSystemRead(d, meta)
@@ -438,7 +443,7 @@ func resourceAwsFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interfac
 		}
 
 		if _, err := waiter.FileSystemAdministrativeActionsCompleted(conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for FSx Windows filesystem (%s) to updated: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for FSx Windows File System (%s) to update: %w", d.Id(), err)
 		}
 	}
 
@@ -483,7 +488,7 @@ func resourceAwsFsxWindowsFileSystemRead(d *schema.ResourceData, meta interface{
 	d.Set("storage_type", filesystem.StorageType)
 
 	if err := d.Set("aliases", aws.StringValueSlice(expandFsxAliasValues(filesystem.WindowsConfiguration.Aliases))); err != nil {
-		return fmt.Errorf("error setting aliases: %s", err)
+		return fmt.Errorf("error setting aliases: %w", err)
 	}
 
 	if err := d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds)); err != nil {
@@ -535,19 +540,19 @@ func resourceAwsFsxWindowsFileSystemDelete(d *schema.ResourceData, meta interfac
 		},
 	}
 
+	log.Printf("[DEBUG] Deleting FSx Windows File System: %s", d.Id())
 	_, err := conn.DeleteFileSystem(input)
 
-	if isAWSErr(err, fsx.ErrCodeFileSystemNotFound, "") {
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting FSx filesystem: %w", err)
+		return fmt.Errorf("error deleting FSx Windows File System (%s): %w", d.Id(), err)
 	}
 
-	log.Println("[DEBUG] Waiting for filesystem to delete")
 	if _, err := waiter.FileSystemDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for FSx Windows filesystem (%s) to deleted: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for FSx Windows File System (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil

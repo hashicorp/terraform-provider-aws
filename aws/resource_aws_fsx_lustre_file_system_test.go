@@ -57,15 +57,15 @@ func testSweepFSXLustreFileSystems(region string) error {
 	})
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing FSx Lustre Filesystems for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("error listing FSx Lustre File Systems for %s: %w", region, err))
 	}
 
 	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Lustre Filesystems for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Lustre File Systems for %s: %w", region, err))
 	}
 
 	if testSweepSkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping FSx Lustre Filesystems sweep for %s: %s", region, errs)
+		log.Printf("[WARN] Skipping FSx Lustre File System sweep for %s: %s", region, errs)
 		return nil
 	}
 

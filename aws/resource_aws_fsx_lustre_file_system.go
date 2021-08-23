@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -317,24 +318,28 @@ func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface
 
 	if v, ok := d.GetOk("backup_id"); ok {
 		backupInput.BackupId = aws.String(v.(string))
+
+		log.Printf("[DEBUG] Creating FSx Lustre File System: %s", backupInput)
 		result, err := conn.CreateFileSystemFromBackup(backupInput)
+
 		if err != nil {
-			return fmt.Errorf("Error creating FSx Lustre filesystem from backup: %w", err)
+			return fmt.Errorf("error creating FSx Lustre File System from backup: %w", err)
 		}
 
 		d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
 	} else {
+		log.Printf("[DEBUG] Creating FSx Lustre File System: %s", input)
 		result, err := conn.CreateFileSystem(input)
+
 		if err != nil {
-			return fmt.Errorf("Error creating FSx Lustre filesystem: %w", err)
+			return fmt.Errorf("error creating FSx Lustre File System: %w", err)
 		}
 
 		d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
 	}
 
-	log.Println("[DEBUG] Waiting for lustre filesystem to become available")
 	if _, err := waiter.FileSystemAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for FSx Lustre FileSystem (%s) to be available: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for FSx Lustre File System (%s) to be available: %w", d.Id(), err)
 	}
 
 	return resourceAwsFsxLustreFileSystemRead(d, meta)
@@ -387,7 +392,6 @@ func resourceAwsFsxLustreFileSystemUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("error updating FSX Lustre File System (%s): %w", d.Id(), err)
 		}
 
-		log.Println("[DEBUG] Waiting for filesystem to become available")
 		if _, err := waiter.FileSystemAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return fmt.Errorf("error waiting for FSx Lustre File System (%s) to be available: %w", d.Id(), err)
 		}
@@ -462,11 +466,11 @@ func resourceAwsFsxLustreFileSystemRead(d *schema.ResourceData, meta interface{}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %s", err)
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	d.Set("vpc_id", filesystem.VpcId)
@@ -486,19 +490,19 @@ func resourceAwsFsxLustreFileSystemDelete(d *schema.ResourceData, meta interface
 		FileSystemId: aws.String(d.Id()),
 	}
 
+	log.Printf("[DEBUG] Deleting FSx Lustre File System: %s", d.Id())
 	_, err := conn.DeleteFileSystem(request)
 
-	if isAWSErr(err, fsx.ErrCodeFileSystemNotFound, "") {
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting FSx Lustre filesystem: %w", err)
+		return fmt.Errorf("error deleting FSx Lustre File System (%s): %w", d.Id(), err)
 	}
 
-	log.Println("[DEBUG] Waiting for filesystem to delete")
 	if _, err := waiter.FileSystemDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for FSx lustre filesystem (%s) to deleted: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for FSx Lustre File System (%s) to deleted: %w", d.Id(), err)
 	}
 
 	return nil

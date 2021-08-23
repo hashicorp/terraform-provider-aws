@@ -57,15 +57,15 @@ func testSweepFSXWindowsFileSystems(region string) error {
 	})
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing FSx Windows Filesystems for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("error listing FSx Windows File Systems for %s: %w", region, err))
 	}
 
 	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Windows Filesystems for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Windows File Systems for %s: %w", region, err))
 	}
 
 	if testSweepSkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping FSx Windows Filesystems sweep for %s: %s", region, errs)
+		log.Printf("[WARN] Skipping FSx Windows File System sweep for %s: %s", region, errs)
 		return nil
 	}
 
