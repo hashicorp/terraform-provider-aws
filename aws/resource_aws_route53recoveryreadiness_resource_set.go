@@ -2,10 +2,12 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -171,10 +173,19 @@ func resourceAwsRoute53RecoveryReadinessResourceSetRead(d *schema.ResourceData, 
 	input := &route53recoveryreadiness.GetResourceSetInput{
 		ResourceSetName: aws.String(d.Id()),
 	}
+
 	resp, err := conn.GetResourceSet(input)
-	if err != nil {
-		return fmt.Errorf("error describing Route53 Recovery Readiness ResourceSet: %s", err)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] Route53RecoveryReadiness Resource Set (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("error describing Route53 Recovery Readiness Resource Set: %s", err)
+	}
+
 	d.Set("arn", resp.ResourceSetArn)
 	d.Set("resource_set_name", resp.ResourceSetName)
 	d.Set("resource_set_type", resp.ResourceSetType)
