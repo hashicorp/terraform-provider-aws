@@ -92,6 +92,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/schemas"
@@ -2239,6 +2240,30 @@ func Route53ListTags(conn *route53.Route53, identifier string, resourceType stri
 	}
 
 	return Route53KeyValueTags(output.ResourceTagSet.Tags), nil
+}
+
+// Route53recoveryreadinessListTags lists route53recoveryreadiness service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Route53recoveryreadinessListTags(conn *route53recoveryreadiness.Route53RecoveryReadiness, identifier string) (KeyValueTags, error) {
+	input := &route53recoveryreadiness.ListTagsForResourcesInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResources(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return Route53recoveryreadinessKeyValueTags(output.Tags), nil
 }
 
 // Route53resolverListTags lists route53resolver service tags.
