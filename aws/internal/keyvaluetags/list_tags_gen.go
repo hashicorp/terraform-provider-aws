@@ -2252,6 +2252,13 @@ func Route53recoveryreadinessListTags(conn *route53recoveryreadiness.Route53Reco
 
 	output, err := conn.ListTagsForResources(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
