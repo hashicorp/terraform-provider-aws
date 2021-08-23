@@ -2,10 +2,12 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -92,10 +94,19 @@ func resourceAwsRoute53RecoveryReadinessCellRead(d *schema.ResourceData, meta in
 	input := &route53recoveryreadiness.GetCellInput{
 		CellName: aws.String(d.Id()),
 	}
+
 	resp, err := conn.GetCell(input)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] Route53RecoveryReadiness Cell (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error describing Route53 Recovery Readiness Cell: %s", err)
 	}
+
 	d.Set("arn", resp.CellArn)
 	d.Set("cell_name", resp.CellName)
 	d.Set("cells", resp.Cells)
