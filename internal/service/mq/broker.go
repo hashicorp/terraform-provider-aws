@@ -126,7 +126,6 @@ func ResourceBroker() *schema.Resource {
 			"host_instance_type": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"instances": {
 				Type:     schema.TypeList,
