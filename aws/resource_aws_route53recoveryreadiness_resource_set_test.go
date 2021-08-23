@@ -163,7 +163,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_readinessScope(t *testing.T) 
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessResourceSet_basicDnsTargetResource(t *testing.T) {
+func TestAccAwsRoute53RecoveryReadinessResourceSet_basicDNSTargetResource(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	domainName := "myTestDomain.test"
@@ -206,7 +206,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_basicDnsTargetResource(t *tes
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessResourceSet_DnsTargetResourceNlbTarget(t *testing.T) {
+func TestAccAwsRoute53RecoveryReadinessResourceSet_dnsTargetResourceNLBTarget(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	hzArn := arn.ARN{
@@ -243,7 +243,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_DnsTargetResourceNlbTarget(t 
 	})
 }
 
-func TestAccAwsRoute53RecoveryReadinessResourceSet_DnsTargetResourceR53Target(t *testing.T) {
+func TestAccAwsRoute53RecoveryReadinessResourceSet_dnsTargetResourceR53Target(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	hzArn := arn.ARN{
