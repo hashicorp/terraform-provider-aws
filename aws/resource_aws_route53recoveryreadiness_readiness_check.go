@@ -2,10 +2,12 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -82,10 +84,19 @@ func resourceAwsRoute53RecoveryReadinessReadinessCheckRead(d *schema.ResourceDat
 	input := &route53recoveryreadiness.GetReadinessCheckInput{
 		ReadinessCheckName: aws.String(d.Id()),
 	}
+
 	resp, err := conn.GetReadinessCheck(input)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] Route53RecoveryReadiness Readiness Check (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error describing Route53 Recovery Readiness ReadinessCheck: %s", err)
 	}
+
 	d.Set("arn", resp.ReadinessCheckArn)
 	d.Set("readiness_check_name", resp.ReadinessCheckName)
 	d.Set("resource_set_name", resp.ResourceSet)
@@ -161,9 +172,11 @@ func resourceAwsRoute53RecoveryReadinessReadinessCheckDelete(d *schema.ResourceD
 		}
 		return resource.RetryableError(fmt.Errorf("Route 53 Recovery Readiness ReadinessCheck (%s) still exists", d.Id()))
 	})
+
 	if isResourceTimeoutError(err) {
 		_, err = conn.GetReadinessCheck(gcinput)
 	}
+
 	if err != nil {
 		return fmt.Errorf("error waiting for Route 53 Recovery Readiness ReadinessCheck (%s) deletion: %s", d.Id(), err)
 	}
