@@ -25,6 +25,7 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_basic(t *testing.T) {
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        testAccErrorCheck(t, route53recoveryreadiness.EndpointsID),
@@ -48,6 +49,36 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsRoute53RecoveryReadinessReadinessCheck_disappears(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rSetName := acctest.RandomWithPrefix("tf-acc-test-set")
+	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
+	cwArn := arn.ARN{
+		AccountID: "123456789012",
+		Partition: endpoints.AwsPartitionID,
+		Region:    endpoints.EuWest1RegionID,
+		Resource:  "alarm:zzzzzzzzz",
+		Service:   "cloudwatch",
+	}.String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
+		ErrorCheck:        testAccErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessReadinessCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsRoute53RecoveryReadinessReadinessCheckConfig(rName, rSetName, cwArn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRoute53RecoveryReadinessReadinessCheckExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53RecoveryReadinessReadinessCheck(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAwsRoute53RecoveryReadinessReadinessCheck_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
@@ -58,6 +89,7 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_tags(t *testing.T) {
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        testAccErrorCheck(t, route53recoveryreadiness.EndpointsID),
@@ -109,6 +141,7 @@ func TestAccAwsRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        testAccErrorCheck(t, route53recoveryreadiness.EndpointsID),
@@ -199,6 +232,7 @@ func testAccAwsRoute53RecoveryReadinessReadinessCheckConfig_Tags1(rName, cwArn, 
 resource "aws_route53recoveryreadiness_readiness_check" "test" {
   readiness_check_name = %[1]q
   resource_set_name    = aws_route53recoveryreadiness_resource_set.test.resource_set_name
+
   tags = {
     %[2]q = %[3]q
   }
@@ -211,6 +245,7 @@ func testAccAwsRoute53RecoveryReadinessReadinessCheckConfig_Tags2(rName, cwArn, 
 resource "aws_route53recoveryreadiness_readiness_check" "test" {
   readiness_check_name = %[1]q
   resource_set_name    = aws_route53recoveryreadiness_resource_set.test.resource_set_name
+
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
