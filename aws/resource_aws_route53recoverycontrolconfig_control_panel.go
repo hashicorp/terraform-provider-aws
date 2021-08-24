@@ -5,11 +5,11 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
+	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	waiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig/waiter"
 )
 
 func resourceAwsRoute53RecoveryControlConfigControlPanel() *schema.Resource {
@@ -54,7 +54,7 @@ func resourceAwsRoute53RecoveryControlConfigControlPanel() *schema.Resource {
 func resourceAwsRoute53RecoveryControlConfigControlPanelCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
 
-	input := &route53recoverycontrolconfig.CreateControlPanelInput{
+	input := &r53rcc.CreateControlPanelInput{
 		ClientToken:      aws.String(resource.UniqueId()),
 		ClusterArn:       aws.String(d.Get("cluster_arn").(string)),
 		ControlPanelName: aws.String(d.Get("name").(string)),
@@ -83,13 +83,13 @@ func resourceAwsRoute53RecoveryControlConfigControlPanelCreate(d *schema.Resourc
 func resourceAwsRoute53RecoveryControlConfigControlPanelRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
 
-	input := &route53recoverycontrolconfig.DescribeControlPanelInput{
+	input := &r53rcc.DescribeControlPanelInput{
 		ControlPanelArn: aws.String(d.Id()),
 	}
 
 	output, err := conn.DescribeControlPanel(input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Route53 Recovery Control Config Control Panel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -117,7 +117,7 @@ func resourceAwsRoute53RecoveryControlConfigControlPanelRead(d *schema.ResourceD
 func resourceAwsRoute53RecoveryControlConfigControlPanelUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
 
-	input := &route53recoverycontrolconfig.UpdateControlPanelInput{
+	input := &r53rcc.UpdateControlPanelInput{
 		ControlPanelName: aws.String(d.Get("name").(string)),
 		ControlPanelArn:  aws.String(d.Get("arn").(string)),
 	}
@@ -134,13 +134,13 @@ func resourceAwsRoute53RecoveryControlConfigControlPanelUpdate(d *schema.Resourc
 func resourceAwsRoute53RecoveryControlConfigControlPanelDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
 
-	input := &route53recoverycontrolconfig.DeleteControlPanelInput{
+	input := &r53rcc.DeleteControlPanelInput{
 		ControlPanelArn: aws.String(d.Id()),
 	}
 
 	_, err := conn.DeleteControlPanel(input)
 
-	if tfawserr.ErrCodeEquals(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -150,7 +150,7 @@ func resourceAwsRoute53RecoveryControlConfigControlPanelDelete(d *schema.Resourc
 
 	_, err = waiter.Route53RecoveryControlConfigControlPanelDeleted(conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 

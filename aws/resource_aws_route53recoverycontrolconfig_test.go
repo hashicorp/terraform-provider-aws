@@ -5,14 +5,14 @@ import (
 )
 
 func TestAccAWSRoute53RecoveryControlConfig_serial(t *testing.T) {
+	// These tests are only non-parallel because of low quota limits.
+	// ServiceQuotaExceededException: AwsAccountId(X) has 2 Meridian clusters. Limit 2
 	testCases := map[string]map[string]func(t *testing.T){
 		"Cluster": {
-			// if more than 2, increase "Meridian clusters" quota or switch these to non-parallel tests
 			"basic":      testAccAWSRoute53RecoveryControlConfigCluster_basic,
 			"disappears": testAccAWSRoute53RecoveryControlConfigCluster_disappears,
 		},
 		"ControlPanel": {
-			// if more than 2, increase "Meridian clusters" quota or switch these to non-parallel tests
 			"basic":      testAccAWSRoute53RecoveryControlConfigControlPanel_basic,
 			"disappears": testAccAWSRoute53RecoveryControlConfigControlPanel_disappears,
 		},

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
+	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -17,7 +17,7 @@ func testAccAWSRoute53RecoveryControlConfigCluster_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53recoverycontrolconfig.EndpointsID),
+		ErrorCheck:   testAccErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigClusterDestroy,
 		Steps: []resource.TestStep{
@@ -46,7 +46,7 @@ func testAccAWSRoute53RecoveryControlConfigCluster_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53recoverycontrolconfig.EndpointsID),
+		ErrorCheck:   testAccErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigClusterDestroy,
 		Steps: []resource.TestStep{
@@ -70,7 +70,7 @@ func testAccCheckAwsRoute53RecoveryControlConfigClusterDestroy(s *terraform.Stat
 			continue
 		}
 
-		input := &route53recoverycontrolconfig.DescribeClusterInput{
+		input := &r53rcc.DescribeClusterInput{
 			ClusterArn: aws.String(rs.Primary.ID),
 		}
 
@@ -101,7 +101,7 @@ func testAccCheckAwsRoute53RecoveryControlConfigClusterExists(name string) resou
 
 		conn := testAccProvider.Meta().(*AWSClient).route53recoverycontrolconfigconn
 
-		input := &route53recoverycontrolconfig.DescribeClusterInput{
+		input := &r53rcc.DescribeClusterInput{
 			ClusterArn: aws.String(rs.Primary.ID),
 		}
 

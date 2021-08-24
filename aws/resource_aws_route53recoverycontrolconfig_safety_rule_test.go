@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
+	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -17,7 +17,7 @@ func testAccAWSRoute53RecoveryControlConfigSafetyRule_assertionRule(t *testing.T
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53recoverycontrolconfig.EndpointsID),
+		ErrorCheck:   testAccErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigSafetyRuleDestroy,
 		Steps: []resource.TestStep{
@@ -47,7 +47,7 @@ func testAccAWSRoute53RecoveryControlConfigSafetyRule_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53recoverycontrolconfig.EndpointsID),
+		ErrorCheck:   testAccErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigSafetyRuleDestroy,
 		Steps: []resource.TestStep{
@@ -69,7 +69,7 @@ func testAccAWSRoute53RecoveryControlConfigSafetyRule_gatingRule(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53recoverycontrolconfig.EndpointsID),
+		ErrorCheck:   testAccErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigSafetyRuleDestroy,
 		Steps: []resource.TestStep{
@@ -102,7 +102,7 @@ func testAccCheckAwsRoute53RecoveryControlConfigSafetyRuleDestroy(s *terraform.S
 			continue
 		}
 
-		input := &route53recoverycontrolconfig.DescribeSafetyRuleInput{
+		input := &r53rcc.DescribeSafetyRuleInput{
 			SafetyRuleArn: aws.String(rs.Primary.ID),
 		}
 
@@ -125,7 +125,7 @@ func testAccCheckAwsRoute53RecoveryControlConfigSafetyRuleExists(name string) re
 
 		conn := testAccProvider.Meta().(*AWSClient).route53recoverycontrolconfigconn
 
-		input := &route53recoverycontrolconfig.DescribeSafetyRuleInput{
+		input := &r53rcc.DescribeSafetyRuleInput{
 			SafetyRuleArn: aws.String(rs.Primary.ID),
 		}
 

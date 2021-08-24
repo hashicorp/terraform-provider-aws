@@ -5,11 +5,11 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
+	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	waiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig/waiter"
 )
 
 func resourceAwsRoute53RecoveryControlConfigCluster() *schema.Resource {
@@ -58,7 +58,7 @@ func resourceAwsRoute53RecoveryControlConfigCluster() *schema.Resource {
 func resourceAwsRoute53RecoveryControlConfigClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
 
-	input := &route53recoverycontrolconfig.CreateClusterInput{
+	input := &r53rcc.CreateClusterInput{
 		ClientToken: aws.String(resource.UniqueId()),
 		ClusterName: aws.String(d.Get("name").(string)),
 	}
@@ -86,13 +86,13 @@ func resourceAwsRoute53RecoveryControlConfigClusterCreate(d *schema.ResourceData
 func resourceAwsRoute53RecoveryControlConfigClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
 
-	input := &route53recoverycontrolconfig.DescribeClusterInput{
+	input := &r53rcc.DescribeClusterInput{
 		ClusterArn: aws.String(d.Id()),
 	}
 
 	output, err := conn.DescribeCluster(input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Route53 Recovery Control Config Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -121,13 +121,13 @@ func resourceAwsRoute53RecoveryControlConfigClusterRead(d *schema.ResourceData, 
 func resourceAwsRoute53RecoveryControlConfigClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
 
-	input := &route53recoverycontrolconfig.DeleteClusterInput{
+	input := &r53rcc.DeleteClusterInput{
 		ClusterArn: aws.String(d.Id()),
 	}
 
 	_, err := conn.DeleteCluster(input)
 
-	if tfawserr.ErrCodeEquals(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -137,7 +137,7 @@ func resourceAwsRoute53RecoveryControlConfigClusterDelete(d *schema.ResourceData
 
 	_, err = waiter.Route53RecoveryControlConfigClusterDeleted(conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -148,7 +148,7 @@ func resourceAwsRoute53RecoveryControlConfigClusterDelete(d *schema.ResourceData
 	return nil
 }
 
-func flattenRoute53RecoveryControlConfigClusterEndpoints(endpoints []*route53recoverycontrolconfig.ClusterEndpoint) []interface{} {
+func flattenRoute53RecoveryControlConfigClusterEndpoints(endpoints []*r53rcc.ClusterEndpoint) []interface{} {
 	if len(endpoints) == 0 {
 		return nil
 	}
@@ -166,7 +166,7 @@ func flattenRoute53RecoveryControlConfigClusterEndpoints(endpoints []*route53rec
 	return tfList
 }
 
-func flattenRoute53RecoveryControlConfigClusterEndpoint(ce *route53recoverycontrolconfig.ClusterEndpoint) map[string]interface{} {
+func flattenRoute53RecoveryControlConfigClusterEndpoint(ce *r53rcc.ClusterEndpoint) map[string]interface{} {
 	if ce == nil {
 		return nil
 	}

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
+	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -17,7 +17,7 @@ func testAccAWSRoute53RecoveryControlConfigRoutingControl_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53recoverycontrolconfig.EndpointsID),
+		ErrorCheck:   testAccErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigRoutingControlDestroy,
 		Steps: []resource.TestStep{
@@ -47,7 +47,7 @@ func testAccAWSRoute53RecoveryControlConfigRoutingControl_disappears(t *testing.
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53recoverycontrolconfig.EndpointsID),
+		ErrorCheck:   testAccErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigRoutingControlDestroy,
 		Steps: []resource.TestStep{
@@ -69,7 +69,7 @@ func testAccAWSRoute53RecoveryControlConfigRoutingControl_nonDefaultControlPanel
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53recoverycontrolconfig.EndpointsID),
+		ErrorCheck:   testAccErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigRoutingControlDestroy,
 		Steps: []resource.TestStep{
@@ -94,7 +94,7 @@ func testAccCheckAwsRoute53RecoveryControlConfigRoutingControlExists(name string
 
 		conn := testAccProvider.Meta().(*AWSClient).route53recoverycontrolconfigconn
 
-		input := &route53recoverycontrolconfig.DescribeRoutingControlInput{
+		input := &r53rcc.DescribeRoutingControlInput{
 			RoutingControlArn: aws.String(rs.Primary.ID),
 		}
 
@@ -112,7 +112,7 @@ func testAccCheckAwsRoute53RecoveryControlConfigRoutingControlDestroy(s *terrafo
 			continue
 		}
 
-		input := &route53recoverycontrolconfig.DescribeRoutingControlInput{
+		input := &r53rcc.DescribeRoutingControlInput{
 			RoutingControlArn: aws.String(rs.Primary.ID),
 		}
 

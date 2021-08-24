@@ -5,12 +5,12 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
+	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	waiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig/waiter"
 )
 
 func resourceAwsRoute53RecoveryControlConfigSafetyRule() *schema.Resource {
@@ -79,7 +79,7 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRule() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice(route53recoverycontrolconfig.RuleType_Values(), true),
+							ValidateFunc: validation.StringInSlice(r53rcc.RuleType_Values(), true),
 						},
 					},
 				},
@@ -122,13 +122,13 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRuleCreate(d *schema.ResourceD
 func resourceAwsRoute53RecoveryControlConfigSafetyRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
 
-	input := &route53recoverycontrolconfig.DescribeSafetyRuleInput{
+	input := &r53rcc.DescribeSafetyRuleInput{
 		SafetyRuleArn: aws.String(d.Id()),
 	}
 
 	output, err := conn.DescribeSafetyRule(input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Route53 Recovery Control Config Safety Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -204,13 +204,13 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRuleUpdate(d *schema.ResourceD
 func resourceAwsRoute53RecoveryControlConfigSafetyRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
 
-	input := &route53recoverycontrolconfig.DeleteSafetyRuleInput{
+	input := &r53rcc.DeleteSafetyRuleInput{
 		SafetyRuleArn: aws.String(d.Id()),
 	}
 
 	_, err := conn.DeleteSafetyRule(input)
 
-	if tfawserr.ErrCodeEquals(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -220,7 +220,7 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRuleDelete(d *schema.ResourceD
 
 	_, err = waiter.Route53RecoveryControlConfigSafetyRuleDeleted(conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -234,7 +234,7 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRuleDelete(d *schema.ResourceD
 func createAssertionRule(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
 
-	assertionRule := &route53recoverycontrolconfig.NewAssertionRule{
+	assertionRule := &r53rcc.NewAssertionRule{
 		Name:             aws.String(d.Get("name").(string)),
 		ControlPanelArn:  aws.String(d.Get("control_panel_arn").(string)),
 		WaitPeriodMs:     aws.Int64(int64(d.Get("wait_period_ms").(int))),
@@ -242,7 +242,7 @@ func createAssertionRule(d *schema.ResourceData, meta interface{}) error {
 		AssertedControls: expandStringList(d.Get("asserted_controls").([]interface{})),
 	}
 
-	input := &route53recoverycontrolconfig.CreateSafetyRuleInput{
+	input := &r53rcc.CreateSafetyRuleInput{
 		ClientToken:   aws.String(resource.UniqueId()),
 		AssertionRule: assertionRule,
 	}
@@ -270,7 +270,7 @@ func createAssertionRule(d *schema.ResourceData, meta interface{}) error {
 func createGatingRule(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
 
-	gatingRule := &route53recoverycontrolconfig.NewGatingRule{
+	gatingRule := &r53rcc.NewGatingRule{
 		Name:            aws.String(d.Get("name").(string)),
 		ControlPanelArn: aws.String(d.Get("control_panel_arn").(string)),
 		WaitPeriodMs:    aws.Int64(int64(d.Get("wait_period_ms").(int))),
@@ -279,7 +279,7 @@ func createGatingRule(d *schema.ResourceData, meta interface{}) error {
 		TargetControls:  expandStringList(d.Get("target_controls").([]interface{})),
 	}
 
-	input := &route53recoverycontrolconfig.CreateSafetyRuleInput{
+	input := &r53rcc.CreateSafetyRuleInput{
 		ClientToken: aws.String(resource.UniqueId()),
 		GatingRule:  gatingRule,
 	}
@@ -307,7 +307,7 @@ func createGatingRule(d *schema.ResourceData, meta interface{}) error {
 func updateAssertionRule(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
 
-	assertionRuleUpdate := &route53recoverycontrolconfig.AssertionRuleUpdate{
+	assertionRuleUpdate := &r53rcc.AssertionRuleUpdate{
 		SafetyRuleArn: aws.String(d.Get("arn").(string)),
 	}
 
@@ -319,7 +319,7 @@ func updateAssertionRule(d *schema.ResourceData, meta interface{}) error {
 		assertionRuleUpdate.WaitPeriodMs = aws.Int64(int64(d.Get("wait_period_ms").(int)))
 	}
 
-	input := &route53recoverycontrolconfig.UpdateSafetyRuleInput{
+	input := &r53rcc.UpdateSafetyRuleInput{
 		AssertionRuleUpdate: assertionRuleUpdate,
 	}
 
@@ -335,7 +335,7 @@ func updateAssertionRule(d *schema.ResourceData, meta interface{}) error {
 func updateGatingRule(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
 
-	gatingRuleUpdate := &route53recoverycontrolconfig.GatingRuleUpdate{
+	gatingRuleUpdate := &r53rcc.GatingRuleUpdate{
 		SafetyRuleArn: aws.String(d.Get("arn").(string)),
 	}
 
@@ -347,7 +347,7 @@ func updateGatingRule(d *schema.ResourceData, meta interface{}) error {
 		gatingRuleUpdate.WaitPeriodMs = aws.Int64(int64(d.Get("wait_period_ms").(int)))
 	}
 
-	input := &route53recoverycontrolconfig.UpdateSafetyRuleInput{
+	input := &r53rcc.UpdateSafetyRuleInput{
 		GatingRuleUpdate: gatingRuleUpdate,
 	}
 
@@ -360,12 +360,12 @@ func updateGatingRule(d *schema.ResourceData, meta interface{}) error {
 	return resourceAwsRoute53RecoveryControlConfigControlPanelRead(d, meta)
 }
 
-func expandRoute53RecoveryControlConfigRuleConfig(tfMap map[string]interface{}) *route53recoverycontrolconfig.RuleConfig {
+func expandRoute53RecoveryControlConfigRuleConfig(tfMap map[string]interface{}) *r53rcc.RuleConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &route53recoverycontrolconfig.RuleConfig{}
+	apiObject := &r53rcc.RuleConfig{}
 
 	if v, ok := tfMap["inverted"].(bool); ok {
 		apiObject.Inverted = aws.Bool(v)
@@ -381,7 +381,7 @@ func expandRoute53RecoveryControlConfigRuleConfig(tfMap map[string]interface{}) 
 	return apiObject
 }
 
-func flattenRoute53RecoveryControlConfigRuleConfig(apiObject *route53recoverycontrolconfig.RuleConfig) map[string]interface{} {
+func flattenRoute53RecoveryControlConfigRuleConfig(apiObject *r53rcc.RuleConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
