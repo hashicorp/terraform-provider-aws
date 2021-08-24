@@ -158,7 +158,7 @@ func testAccCheckAwsAppStreamStackExists(resourceName string, appStreamStack *ap
 		resp, err := conn.DescribeStacks(&appstream.DescribeStacksInput{Names: []*string{aws.String(rs.Primary.ID)}})
 
 		if err != nil {
-			return err
+			return fmt.Errorf("problem checking for AppStream Stack existence: %w", err)
 		}
 
 		if resp == nil && len(resp.Stacks) == 0 {
@@ -186,7 +186,7 @@ func testAccCheckAwsAppStreamStackDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return err
+			return fmt.Errorf("problem while checking AppStream Stack was destroyed: %w", err)
 		}
 
 		if resp != nil && len(resp.Stacks) > 0 {
@@ -211,25 +211,31 @@ func testAccAwsAppStreamStackConfigComplete(name, description string) string {
 resource "aws_appstream_stack" "test" {
   name        = %[1]q
   description = %[2]q
+
   storage_connectors {
     connector_type = "HOMEFOLDERS"
   }
+
   user_settings {
     action     = "CLIPBOARD_COPY_FROM_LOCAL_DEVICE"
     permission = "ENABLED"
   }
+
   user_settings {
     action     = "CLIPBOARD_COPY_TO_LOCAL_DEVICE"
     permission = "ENABLED"
   }
+
   user_settings {
     action     = "FILE_UPLOAD"
     permission = "ENABLED"
   }
+
   user_settings {
     action     = "FILE_DOWNLOAD"
     permission = "ENABLED"
   }
+
   application_settings {
     enabled        = true
     settings_group = "SettingsGroup"
@@ -243,37 +249,46 @@ func testAccAwsAppStreamStackConfigWithTags(name, description string) string {
 resource "aws_appstream_stack" "test" {
   name        = %[1]q
   description = %[2]q
+
   storage_connectors {
     connector_type = "HOMEFOLDERS"
   }
+
   user_settings {
     action     = "CLIPBOARD_COPY_FROM_LOCAL_DEVICE"
     permission = "ENABLED"
   }
+
   user_settings {
     action     = "CLIPBOARD_COPY_TO_LOCAL_DEVICE"
     permission = "ENABLED"
   }
+
   user_settings {
     action     = "FILE_UPLOAD"
     permission = "DISABLED"
   }
+
   user_settings {
     action     = "FILE_DOWNLOAD"
     permission = "ENABLED"
   }
+
   user_settings {
     action     = "PRINTING_TO_LOCAL_DEVICE"
     permission = "ENABLED"
   }
+
   user_settings {
     action     = "DOMAIN_PASSWORD_SIGNIN"
     permission = "ENABLED"
   }
+
   application_settings {
     enabled        = true
     settings_group = "SettingsGroup"
   }
+
   tags = {
     Key = "value"
   }
