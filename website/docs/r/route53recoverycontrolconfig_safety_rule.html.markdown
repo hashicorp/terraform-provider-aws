@@ -13,23 +13,33 @@ Provides an AWS Route 53 Recovery Control Config Safety Rule
 ## Example Usage
 
 ```terraform
-resource "aws_route53recoverycontrolconfig_safety_rule" "myassertionrule" {
-  name              = aws_route53recoverycontrolconfig_assertion_rule
-  control_panel_arn = i_belong_to_this_control_panel
-  wait_period_ms    = 50000
-  rule_config       = { inverted = false, threshold = 1, type = ATLEAST }
-  asserted_controls = [arn1, arn2]
+resource "aws_route53recoverycontrolconfig_safety_rule" "example" {
+  asserted_controls = [aws_route53recoverycontrolconfig_routing_control.example.arn]
+  control_panel_arn = "arn:aws:route53-recovery-control::313517334327:controlpanel/abd5fbfc052d4844a082dbf400f61da8"
+  name              = "daisyguttridge"
+  wait_period_ms    = 5000
+
+  rule_config {
+    inverted  = false
+    threshold = 1
+    type      = "ATLEAST"
+  }
 }
 ```
 
 ```terraform
-resource "aws_route53recoverycontrolconfig_safety_rule" "mygatingrule" {
-  name              = aws_route53recoverycontrolconfig_gating_rule
-  control_panel_arn = i_belong_to_this_control_panel
-  wait_period_ms    = 50000
-  rule_config       = { inverted = false, threshold = 1, type = ATLEAST }
-  gating_controls   = [arn1, arn2]
-  target_controls   = [arn1, arn2]
+resource "aws_route53recoverycontrolconfig_safety_rule" "example" {
+  name              = "i_o"
+  control_panel_arn = "arn:aws:route53-recovery-control::313517334327:controlpanel/abd5fbfc052d4844a082dbf400f61da8"
+  wait_period_ms    = 5000
+  gating_controls   = [aws_route53recoverycontrolconfig_routing_control.example.arn]
+  target_controls   = [aws_route53recoverycontrolconfig_routing_control.example.arn]
+
+  rule_config {
+    inverted  = false
+    threshold = 1
+    type      = "ATLEAST"
+  }
 }
 ```
 
@@ -37,22 +47,29 @@ resource "aws_route53recoverycontrolconfig_safety_rule" "mygatingrule" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name describing the safety rule
-* `control_panel_arn` - (Required) ARN of the control panel in which this safety rule will reside
-* `wait_period_ms` - (Rquired) An evaluation period, in milliseconds (ms), during which any request against the target routing controls will fail
-* `rule_config` - (Required) The criteria that you set for specific safety rules that designate how many controls must be enabled as the result of a transaction
-* `inverted` - (Required) Logical negation of the rule. If the rule would usually evaluate true, it's evaluated as false, and vice versa.
-* `Threshold` - (Required) The value of N, when you specify an ATLEAST rule type. That is, Threshold is the number of controls that must be set when you specify an ATLEAST type
-* `type` - (Required) A rule can be one of the following: ATLEAST, AND, or OR
-* `asserted_controls` - The routing controls that are part of transactions that are evaluated to determine if a request to change a routing control state is allowed.
-* `gating_controls` - The gating controls for the new gating rule. That is, routing controls that are evaluated by the rule configuration that you specify
-* `target_controls` - Routing controls that can only be set or unset if the specified RuleConfig evaluates to true for the specified GatingControls.
+* `control_panel_arn` - (Required) ARN of the control panel in which this safety rule will reside.
+* `name` - (Required) Name describing the safety rule.
+* `rule_config` - (Required) Configuration block for safety rule criteria. See below.
+* `wait_period_ms` - (Required) Evaluation period, in milliseconds (ms), during which any request against the target routing controls will fail.
+
+The following arguments are optional:
+
+* `asserted_controls` - (Optional) Routing controls that are part of transactions that are evaluated to determine if a request to change a routing control state is allowed.
+* `gating_controls` - (Optional) Gating controls for the new gating rule. That is, routing controls that are evaluated by the rule configuration that you specify.
+* `target_controls` - (Optional) Routing controls that can only be set or unset if the specified `rule_config` evaluates to true for the specified `gating_controls`.
+
+### rule_config
+
+* `inverted` - (Required) Logical negation of the rule.
+* `threshold` - (Required) Number of controls that must be set when you specify an `ATLEAST` type rule.
+* `type` - (Required) Rule type. Valid values are `ATLEAST`, `AND`, and `OR`.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `status` - Represents status of safety rule. PENDING when its being created/updated, PENDING_DELETION when its being deleted and DEPLOYED otherwise
+* `arn` - ARN of the safety rule.
+* `status` - Status of the safety rule. `PENDING` when its being created/updated, `PENDING_DELETION` when its being deleted, and `DEPLOYED` otherwise.
 
 ## Import
 
@@ -61,7 +78,3 @@ Route53 Recovery Control Config Safety Rule can be imported via the safety rule 
 ```
 $ terraform import aws_route53recoverycontrolconfig_safety_rule.myrule myrule
 ```
-
-## Timeouts
-
-`aws_route53recoverycontrolconfig_safety_rule` has a timeout of 1 minute for creation, updation and deletion
