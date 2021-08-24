@@ -765,14 +765,17 @@ func testAccCheckAWSLightsailContainerServiceDestroy(s *terraform.State) error {
 			ServiceName: aws.String(r.Primary.ID),
 		}
 
-		if _, err := conn.GetContainerServices(&input); err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == lightsail.ErrCodeNotFoundException {
-					return nil
-				}
-			}
-			return err
+		_, err := conn.GetContainerServices(&input)
+		if err == nil {
+			return fmt.Errorf("container service still exists: %s", r.Primary.ID)
 		}
+
+		if awsErr, ok := err.(awserr.Error); ok {
+			if awsErr.Code() == lightsail.ErrCodeNotFoundException {
+				return nil
+			}
+		}
+		return err
 	}
 
 	return nil
