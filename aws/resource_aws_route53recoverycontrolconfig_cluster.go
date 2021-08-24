@@ -6,9 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig"
+	waiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig"
 )
 
 func resourceAwsRoute53RecoveryControlConfigCluster() *schema.Resource {
@@ -21,16 +22,7 @@ func resourceAwsRoute53RecoveryControlConfigCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"cluster_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"status": {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,6 +42,15 @@ func resourceAwsRoute53RecoveryControlConfigCluster() *schema.Resource {
 					},
 				},
 			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -63,16 +64,16 @@ func resourceAwsRoute53RecoveryControlConfigClusterCreate(d *schema.ResourceData
 	}
 
 	output, err := conn.CreateCluster(input)
-	result := output.Cluster
 
 	if err != nil {
 		return fmt.Errorf("Error creating Route53 Recovery Control Config Cluster: %w", err)
 	}
 
-	if result == nil {
-		return fmt.Errorf("Error creating Route53 Recovery Control Config Cluster empty response")
+	if output == nil || output.Cluster == nil {
+		return fmt.Errorf("Error creating Route53 Recovery Control Config Cluster: empty response")
 	}
 
+	result := output.Cluster
 	d.SetId(aws.StringValue(result.ClusterArn))
 
 	if _, err := waiter.Route53RecoveryControlConfigClusterCreated(conn, d.Id()); err != nil {
@@ -90,19 +91,23 @@ func resourceAwsRoute53RecoveryControlConfigClusterRead(d *schema.ResourceData, 
 	}
 
 	output, err := conn.DescribeCluster(input)
-	result := output.Cluster
 
-	if err != nil {
-		return fmt.Errorf("Error describing Route53 Recovery Control Config Cluster: %s", err)
-	}
-
-	if !d.IsNewResource() && result == nil {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Route53 Recovery Control Config Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("cluster_arn", result.ClusterArn)
+	if err != nil {
+		return fmt.Errorf("Error describing Route53 Recovery Control Config Cluster: %s", err)
+	}
+
+	if output == nil || output.Cluster == nil {
+		return fmt.Errorf("Error describing Route53 Recovery Control Config Cluster: %s", "empty response")
+	}
+
+	result := output.Cluster
+	d.Set("arn", result.ClusterArn)
 	d.Set("name", result.Name)
 	d.Set("status", result.Status)
 
@@ -122,17 +127,21 @@ func resourceAwsRoute53RecoveryControlConfigClusterDelete(d *schema.ResourceData
 
 	_, err := conn.DeleteCluster(input)
 
+	if tfawserr.ErrCodeEquals(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		if isAWSErr(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
 		return fmt.Errorf("error deleting Route53 Recovery Control Config Cluster: %s", err)
 	}
 
-	if _, err := waiter.Route53RecoveryControlConfigClusterDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
+	_, err = waiter.Route53RecoveryControlConfigClusterDeleted(conn, d.Id())
+
+	if tfawserr.ErrCodeEquals(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
 		return fmt.Errorf("Error waiting for Route53 Recovery Control Config  Cluster (%s) to be deleted: %w", d.Id(), err)
 	}
 
