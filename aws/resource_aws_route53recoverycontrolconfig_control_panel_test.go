@@ -15,7 +15,7 @@ func testAccAWSRoute53RecoveryControlConfigControlPanel_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoverycontrolconfig_control_panel.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, route53recoverycontrolconfig.EndpointsID),
 		Providers:    testAccProviders,
@@ -44,7 +44,7 @@ func testAccAWSRoute53RecoveryControlConfigControlPanel_disappears(t *testing.T)
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoverycontrolconfig_control_panel.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, route53recoverycontrolconfig.EndpointsID),
 		Providers:    testAccProviders,
