@@ -40,5 +40,5 @@ In addition to all arguments above, the following attributes are exported:
 Route53 Recovery Control Config Control Panel can be imported via the control panel arn, e.g.
 
 ```
-$ terraform import aws_route53recoverycontrolconfig_control_panel.mypanel arn:aws:route53-recovery-control::123456789012:cluster/8d47920e-d789-437d-803a-2dcc4b204393
+$ terraform import aws_route53recoverycontrolconfig_control_panel.mypanel arn:aws:route53-recovery-control::313517334327:controlpanel/1bfba17df8684f5dab0467b71424f7e8
 ```
