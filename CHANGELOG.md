@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Resource:** `aws_dynamodb_tag` ([#13783](https://github.com/hashicorp/terraform-provider-aws/issues/13783))
 * **New Resource:** `aws_ecs_tag` ([#13783](https://github.com/hashicorp/terraform-provider-aws/issues/13783))
+* **New Resource:** `aws_route53recoverycontrolconfig_cluster` ([#20568](https://github.com/hashicorp/terraform-provider-aws/issues/20568))
+* **New Resource:** `aws_route53recoverycontrolconfig_control_panel` ([#20568](https://github.com/hashicorp/terraform-provider-aws/issues/20568))
+* **New Resource:** `aws_route53recoverycontrolconfig_routing_control` ([#20568](https://github.com/hashicorp/terraform-provider-aws/issues/20568))
+* **New Resource:** `aws_route53recoverycontrolconfig_safety_rule` ([#20568](https://github.com/hashicorp/terraform-provider-aws/issues/20568))
 * **New Resource:** `aws_route53recoveryreadiness_cell` ([#20526](https://github.com/hashicorp/terraform-provider-aws/issues/20526))
 * **New Resource:** `aws_route53recoveryreadiness_readiness_check` ([#20526](https://github.com/hashicorp/terraform-provider-aws/issues/20526))
 * **New Resource:** `aws_route53recoveryreadiness_recovery_group` ([#20526](https://github.com/hashicorp/terraform-provider-aws/issues/20526))
@@ -12,18 +16,24 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_elasticache_user: Mark `passwords` attribute as sensitive. ([#20629](https://github.com/hashicorp/terraform-provider-aws/issues/20629))
+* data-source/aws_route53_delegation_set: Add `arn` attribute ([#20664](https://github.com/hashicorp/terraform-provider-aws/issues/20664))
 * data-source/aws_route53_zone: Add `arn` attribute ([#20652](https://github.com/hashicorp/terraform-provider-aws/issues/20652))
 * resource/aws_elasticache_user: Mark `passwords` argument as sensitive. ([#20629](https://github.com/hashicorp/terraform-provider-aws/issues/20629))
 * resource/aws_fsx_lustre_filesystem: Allow creating filesystem from backup using `backup_id`. ([#20614](https://github.com/hashicorp/terraform-provider-aws/issues/20614))
 * resource/aws_fsx_windows_filesystem: Allow creating filesystem from backup using `backup_id`. ([#20643](https://github.com/hashicorp/terraform-provider-aws/issues/20643))
+* resource/aws_route53_delegation_set: Add `arn` attribute ([#20664](https://github.com/hashicorp/terraform-provider-aws/issues/20664))
+* resource/aws_route53_delegation_set: Add plan time validation for `reference_name` ([#20664](https://github.com/hashicorp/terraform-provider-aws/issues/20664))
 * resource/aws_route53_health_check: Add `arn` attribute. ([#20653](https://github.com/hashicorp/terraform-provider-aws/issues/20653))
 * resource/aws_route53_health_check: Add plan time validation for `failure_threshold`, `ip_address`, `fqdn`, `port`, `resource_path`, `search_string`, `child_healthchecks`. ([#20653](https://github.com/hashicorp/terraform-provider-aws/issues/20653))
+* resource/aws_route53_query_log: Add `arn` attribute. ([#20666](https://github.com/hashicorp/terraform-provider-aws/issues/20666))
 * resource/aws_route53_zone: Add `arn` attribute ([#20652](https://github.com/hashicorp/terraform-provider-aws/issues/20652))
 * resource/aws_route53_zone: Add plan time validation for `comment` ([#20652](https://github.com/hashicorp/terraform-provider-aws/issues/20652))
 
 BUG FIXES:
 
 * data-source/aws_route53_resolver_rule: Fix lack of pagination when listing rules ([#20642](https://github.com/hashicorp/terraform-provider-aws/issues/20642))
+* resource/aws_route53_delegation_set: Properly remove from state when resource does not exist ([#20664](https://github.com/hashicorp/terraform-provider-aws/issues/20664))
+* resource/aws_route53_query_log: Properly remove from state when resource does not exist ([#20666](https://github.com/hashicorp/terraform-provider-aws/issues/20666))
 
 ## 3.55.0 (August 19, 2021)
 
