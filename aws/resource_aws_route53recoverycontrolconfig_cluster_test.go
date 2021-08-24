@@ -11,9 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSRoute53RecoveryControlConfigCluster_basic(t *testing.T) {
+func testAccAWSRoute53RecoveryControlConfigCluster_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53recoverycontrolconfig_cluster.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, route53recoverycontrolconfig.EndpointsID),
@@ -34,6 +35,28 @@ func TestAccAWSRoute53RecoveryControlConfigCluster_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"cluster_endpoints"},
+			},
+		},
+	})
+}
+
+func testAccAWSRoute53RecoveryControlConfigCluster_disappears(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_route53recoverycontrolconfig_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, route53recoverycontrolconfig.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsRoute53RecoveryControlConfigClusterConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRoute53RecoveryControlConfigClusterExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53RecoveryControlConfigCluster(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
