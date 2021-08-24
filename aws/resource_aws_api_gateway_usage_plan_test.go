@@ -424,6 +424,46 @@ func TestAccAWSAPIGatewayUsagePlan_apiStages(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayUsagePlan_apiStagesThrottle(t *testing.T) {
+	var conf apigateway.UsagePlan
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_api_gateway_usage_plan.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
+		Steps: []resource.TestStep{
+			// Create UsagePlan WITH Stages as the API calls are different
+			// when creating or updating.
+			{
+				Config: testAccAWSApiGatewayUsagePlanApiStagesThrottleConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
+						"stage": "test",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.0.throttle.0", map[string]string{
+						"method": "GET /test",
+					}),
+
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.0.throttle.0.throttle_settings", map[string]string{
+						"rate_limit":  "3",
+						"burst_limit": "6",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSAPIGatewayUsagePlan_apiStages_multiple(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -721,6 +761,26 @@ resource "aws_api_gateway_usage_plan" "test" {
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
     stage  = aws_api_gateway_deployment.test.stage_name
+  }
+}
+`, rName)
+}
+
+func testAccAWSApiGatewayUsagePlanApiStagesThrottleConfig(rName string) string {
+	return testAccAWSAPIGatewayUsagePlanConfig(rName) + fmt.Sprintf(`
+resource "aws_api_gateway_usage_plan" "test" {
+  name = "%s"
+
+  api_stages {
+    api_id = aws_api_gateway_rest_api.test.id
+    stage  = aws_api_gateway_deployment.test.stage_name
+	throttle {
+	  method = "GET /test"
+	  throttle_settings {
+		burst_limit = 3
+		rate_limit  = 6
+	  }
+	}
   }
 }
 `, rName)

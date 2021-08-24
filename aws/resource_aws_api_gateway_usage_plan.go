@@ -49,6 +49,41 @@ func resourceAwsApiGatewayUsagePlan() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+
+						"throttle": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"method": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"throttle_settings": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"burst_limit": {
+													Type:         schema.TypeInt,
+													Default:      0,
+													Optional:     true,
+													AtLeastOneOf: []string{"throttle_settings.0.burst_limit", "throttle_settings.0.rate_limit"},
+												},
+
+												"rate_limit": {
+													Type:         schema.TypeFloat,
+													Default:      0,
+													Optional:     true,
+													AtLeastOneOf: []string{"throttle_settings.0.burst_limit", "throttle_settings.0.rate_limit"},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -305,6 +340,21 @@ func resourceAwsApiGatewayUsagePlanUpdate(d *schema.ResourceData, meta interface
 				Path:  aws.String("/apiStages"),
 				Value: aws.String(fmt.Sprintf("%s:%s", m["api_id"].(string), m["stage"].(string))),
 			})
+			if throttle, ok := m["throttle_settings"].([]map[string]interface{}); ok {
+				for _, methodThrottle := range throttle {
+					operations = append(operations, &apigateway.PatchOperation{
+						Op:    aws.String(apigateway.OpAdd),
+						Path:  aws.String(fmt.Sprintf("/apiStages/%s:%s/throttle/rateLimit", m["api_id"].(string), m["stage"].(string))),
+						Value: aws.String(strconv.FormatFloat(methodThrottle["rate_limit"].(float64), 'f', -1, 64)),
+					})
+
+					operations = append(operations, &apigateway.PatchOperation{
+						Op:    aws.String(apigateway.OpAdd),
+						Path:  aws.String(fmt.Sprintf("/apiStages/%s:%s/throttle/burstLimit", m["api_id"].(string), m["stage"].(string))),
+						Value: aws.String(strconv.FormatFloat(methodThrottle["burst_limit"].(float64), 'f', -1, 64)),
+					})
+				}
+			}
 		}
 
 		// Handle additions
@@ -499,6 +549,13 @@ func expandApiGatewayUsageApiStages(s *schema.Set) []*apigateway.ApiStage {
 
 		if v, ok := mStage["stage"].(string); ok && v != "" {
 			stage.Stage = aws.String(v)
+		}
+
+		if v, ok := mStage["throttle"].([]map[string]interface{}); ok && len(v) != 0 {
+			stage.Throttle = make(map[string]*apigateway.ThrottleSettings, len(v))
+			for _, methodThrottle := range v {
+				stage.Throttle[methodThrottle["method"].(string)] = expandApiGatewayUsageThrottleSettings(methodThrottle["throttle_settings"].([]interface{}))
+			}
 		}
 
 		stages = append(stages, stage)
