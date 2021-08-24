@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func ConnectionByID(conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {
@@ -26,14 +27,12 @@ func ConnectionByID(conn *directconnect.DirectConnect, id string) (*directconnec
 	}
 
 	if output == nil || len(output.Connections) == 0 || output.Connections[0] == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	// TODO Check for multiple results.
-	// TODO https://github.com/hashicorp/terraform-provider-aws/pull/17613.
+	if count := len(output.Connections); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
 
 	connection := output.Connections[0]
 
@@ -59,14 +58,12 @@ func GatewayByID(conn *directconnect.DirectConnect, id string) (*directconnect.G
 	}
 
 	if output == nil || len(output.DirectConnectGateways) == 0 || output.DirectConnectGateways[0] == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	// TODO Check for multiple results.
-	// TODO https://github.com/hashicorp/terraform-provider-aws/pull/17613.
+	if count := len(output.DirectConnectGateways); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
 
 	gateway := output.DirectConnectGateways[0]
 
@@ -114,14 +111,12 @@ func GatewayAssociation(conn *directconnect.DirectConnect, input *directconnect.
 	}
 
 	if output == nil || len(output.DirectConnectGatewayAssociations) == 0 || output.DirectConnectGatewayAssociations[0] == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	// TODO Check for multiple results.
-	// TODO https://github.com/hashicorp/terraform-provider-aws/pull/17613.
+	if count := len(output.DirectConnectGatewayAssociations); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
 
 	association := output.DirectConnectGatewayAssociations[0]
 
@@ -154,14 +149,12 @@ func GatewayAssociationProposalByID(conn *directconnect.DirectConnect, id string
 	}
 
 	if output == nil || len(output.DirectConnectGatewayAssociationProposals) == 0 || output.DirectConnectGatewayAssociationProposals[0] == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	// TODO Check for multiple results.
-	// TODO https://github.com/hashicorp/terraform-provider-aws/pull/17613.
+	if count := len(output.DirectConnectGatewayAssociationProposals); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
 
 	proposal := output.DirectConnectGatewayAssociationProposals[0]
 
@@ -201,14 +194,12 @@ func LagByID(conn *directconnect.DirectConnect, id string) (*directconnect.Lag, 
 	}
 
 	if output == nil || len(output.Lags) == 0 || output.Lags[0] == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	// TODO Check for multiple results.
-	// TODO https://github.com/hashicorp/terraform-provider-aws/pull/17613.
+	if count := len(output.Lags); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
 
 	lag := output.Lags[0]
 
@@ -237,10 +228,7 @@ func LocationByCode(conn *directconnect.DirectConnect, code string) (*directconn
 		}
 	}
 
-	return nil, &resource.NotFoundError{
-		Message:     "Empty result",
-		LastRequest: input,
-	}
+	return nil, tfresource.NewEmptyResultError(input)
 }
 
 func Locations(conn *directconnect.DirectConnect, input *directconnect.DescribeLocationsInput) ([]*directconnect.Location, error) {
@@ -251,10 +239,7 @@ func Locations(conn *directconnect.DirectConnect, input *directconnect.DescribeL
 	}
 
 	if output == nil || len(output.Locations) == 0 {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Locations, nil
