@@ -36,7 +36,7 @@ func ConnectionByID(conn *directconnect.DirectConnect, id string) (*directconnec
 
 	connection := output.Connections[0]
 
-	if state := aws.StringValue(connection.ConnectionState); state == directconnect.ConnectionStateDeleted {
+	if state := aws.StringValue(connection.ConnectionState); state == directconnect.ConnectionStateDeleted || state == directconnect.ConnectionStateRejected {
 		return nil, &resource.NotFoundError{
 			Message:     state,
 			LastRequest: input,

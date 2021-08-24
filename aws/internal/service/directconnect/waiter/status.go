@@ -8,6 +8,22 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
+func ConnectionState(conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.ConnectionByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.ConnectionState), nil
+	}
+}
+
 func GatewayState(conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := finder.GatewayByID(conn, id)

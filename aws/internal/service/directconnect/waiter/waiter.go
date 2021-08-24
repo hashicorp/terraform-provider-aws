@@ -10,6 +10,27 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
+const (
+	ConnectionDeletedTimeout = 10 * time.Minute
+)
+
+func ConnectionDeleted(conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{directconnect.ConnectionStatePending, directconnect.ConnectionStateOrdering, directconnect.ConnectionStateAvailable, directconnect.ConnectionStateRequested, directconnect.ConnectionStateDeleting},
+		Target:  []string{},
+		Refresh: ConnectionState(conn, id),
+		Timeout: ConnectionDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*directconnect.Connection); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func GatewayCreated(conn *directconnect.DirectConnect, id string, timeout time.Duration) (*directconnect.Gateway, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directconnect.GatewayStatePending},

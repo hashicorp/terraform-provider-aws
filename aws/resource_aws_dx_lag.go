@@ -275,3 +275,7 @@ func dxLagRefreshStateFunc(conn *directconnect.DirectConnect, lagId string) reso
 func isNoSuchDxLagErr(err error) bool {
 	return isAWSErr(err, "DirectConnectClientException", "Could not find Lag with ID")
 }
+
+func isNoSuchDxConnectionErr(err error) bool {
+	return isAWSErr(err, "DirectConnectClientException", "Could not find Connection with ID")
+}

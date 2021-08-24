@@ -3,14 +3,16 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsDxConnection() *schema.Resource {
@@ -28,10 +30,9 @@ func resourceAwsDxConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			"aws_device": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"bandwidth": {
 				Type:         schema.TypeString,
@@ -39,25 +40,26 @@ func resourceAwsDxConnection() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateDxConnectionBandWidth(),
 			},
-			"location": {
+			"has_logical_redundancy": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"jumbo_frame_capable": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"location": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
-			"has_logical_redundancy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_device": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 
 		CustomizeDiff: SetTagsDiff,
@@ -69,23 +71,25 @@ func resourceAwsDxConnectionCreate(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	req := &directconnect.CreateConnectionInput{
+	name := d.Get("name").(string)
+	input := &directconnect.CreateConnectionInput{
 		Bandwidth:      aws.String(d.Get("bandwidth").(string)),
-		ConnectionName: aws.String(d.Get("name").(string)),
+		ConnectionName: aws.String(name),
 		Location:       aws.String(d.Get("location").(string)),
 	}
 
 	if len(tags) > 0 {
-		req.Tags = tags.IgnoreAws().DirectconnectTags()
+		input.Tags = tags.IgnoreAws().DirectconnectTags()
 	}
 
-	log.Printf("[DEBUG] Creating Direct Connect connection: %#v", req)
-	resp, err := conn.CreateConnection(req)
+	log.Printf("[DEBUG] Creating Direct Connect connection: %s", input)
+	output, err := conn.CreateConnection(input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating Direct Connect connection (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.ConnectionId))
+	d.SetId(aws.StringValue(output.ConnectionId))
 
 	return resourceAwsDxConnectionRead(d, meta)
 }
@@ -95,55 +99,37 @@ func resourceAwsDxConnectionRead(d *schema.ResourceData, meta interface{}) error
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.DescribeConnections(&directconnect.DescribeConnectionsInput{
-		ConnectionId: aws.String(d.Id()),
-	})
-	if err != nil {
-		if isNoSuchDxConnectionErr(err) {
-			log.Printf("[WARN] Direct Connect connection (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+	connection, err := finder.ConnectionByID(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Direct Connect connection (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	if len(resp.Connections) < 1 {
-		log.Printf("[WARN] Direct Connect connection (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-	if len(resp.Connections) != 1 {
-		return fmt.Errorf("Number of Direct Connect connections (%s) isn't one, got %d", d.Id(), len(resp.Connections))
-	}
-	connection := resp.Connections[0]
-	if d.Id() != aws.StringValue(connection.ConnectionId) {
-		return fmt.Errorf("Direct Connect connection (%s) not found", d.Id())
-	}
-	if aws.StringValue(connection.ConnectionState) == directconnect.ConnectionStateDeleted {
-		log.Printf("[WARN] Direct Connect connection (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	if err != nil {
+		return fmt.Errorf("error reading Direct Connect connection (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Region:    aws.StringValue(connection.Region),
 		Service:   "directconnect",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: aws.StringValue(connection.OwnerAccount),
 		Resource:  fmt.Sprintf("dxcon/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
-	d.Set("name", connection.ConnectionName)
-	d.Set("bandwidth", connection.Bandwidth)
-	d.Set("location", connection.Location)
-	d.Set("jumbo_frame_capable", connection.JumboFrameCapable)
-	d.Set("has_logical_redundancy", connection.HasLogicalRedundancy)
 	d.Set("aws_device", connection.AwsDeviceV2)
+	d.Set("bandwidth", connection.Bandwidth)
+	d.Set("has_logical_redundancy", connection.HasLogicalRedundancy)
+	d.Set("jumbo_frame_capable", connection.JumboFrameCapable)
+	d.Set("location", connection.Location)
+	d.Set("name", connection.ConnectionName)
 
 	tags, err := keyvaluetags.DirectconnectListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Direct Connect connection (%s): %s", arn, err)
+		return fmt.Errorf("error listing tags for Direct Connect connection (%s): %w", arn, err)
 	}
 
 	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
@@ -168,7 +154,7 @@ func resourceAwsDxConnectionUpdate(d *schema.ResourceData, meta interface{}) err
 		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.DirectconnectUpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Direct Connect connection (%s) tags: %s", arn, err)
+			return fmt.Errorf("error updating Direct Connect connection (%s) tags: %w", arn, err)
 		}
 	}
 
@@ -182,45 +168,16 @@ func resourceAwsDxConnectionDelete(d *schema.ResourceData, meta interface{}) err
 	_, err := conn.DeleteConnection(&directconnect.DeleteConnectionInput{
 		ConnectionId: aws.String(d.Id()),
 	})
-	if err != nil {
-		if isNoSuchDxConnectionErr(err) {
-			return nil
-		}
-		return err
+
+	if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "Could not find Connection with ID") {
+		return nil
 	}
 
-	deleteStateConf := &resource.StateChangeConf{
-		Pending:    []string{directconnect.ConnectionStatePending, directconnect.ConnectionStateOrdering, directconnect.ConnectionStateAvailable, directconnect.ConnectionStateRequested, directconnect.ConnectionStateDeleting},
-		Target:     []string{directconnect.ConnectionStateDeleted},
-		Refresh:    dxConnectionRefreshStateFunc(conn, d.Id()),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-	_, err = deleteStateConf.WaitForState()
+	_, err = waiter.ConnectionDeleted(conn, d.Id())
+
 	if err != nil {
-		return fmt.Errorf("Error waiting for Direct Connect connection (%s) to be deleted: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for Direct Connect connection (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
-}
-
-func dxConnectionRefreshStateFunc(conn *directconnect.DirectConnect, connId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &directconnect.DescribeConnectionsInput{
-			ConnectionId: aws.String(connId),
-		}
-		resp, err := conn.DescribeConnections(input)
-		if err != nil {
-			return nil, "failed", err
-		}
-		if len(resp.Connections) < 1 {
-			return resp, directconnect.ConnectionStateDeleted, nil
-		}
-		return resp, *resp.Connections[0].ConnectionState, nil
-	}
-}
-
-func isNoSuchDxConnectionErr(err error) bool {
-	return isAWSErr(err, "DirectConnectClientException", "Could not find Connection with ID")
 }
