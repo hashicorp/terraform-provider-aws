@@ -199,17 +199,22 @@ func resourceAwsCodeBuildWebhookUpdate(d *schema.ResourceData, meta interface{})
 	var err error
 	filterGroups := expandWebhookFilterGroups(d)
 
+	var buildType *string = nil
+	if v, ok := d.GetOk("build_type"); ok {
+		buildType = aws.String(v.(string))
+	}
+
 	if len(filterGroups) >= 1 {
 		_, err = conn.UpdateWebhook(&codebuild.UpdateWebhookInput{
 			ProjectName:  aws.String(d.Id()),
-			BuildType:    aws.String(d.Get("build_type").(string)),
+			BuildType:    buildType,
 			FilterGroups: filterGroups,
 			RotateSecret: aws.Bool(false),
 		})
 	} else {
 		_, err = conn.UpdateWebhook(&codebuild.UpdateWebhookInput{
 			ProjectName:  aws.String(d.Id()),
-			BuildType:    aws.String(d.Get("build_type").(string)),
+			BuildType:    buildType,
 			BranchFilter: aws.String(d.Get("branch_filter").(string)),
 			RotateSecret: aws.Bool(false),
 		})
