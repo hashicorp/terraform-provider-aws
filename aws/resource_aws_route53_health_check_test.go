@@ -2,7 +2,7 @@ package aws
 
 import (
 	"fmt"
-	"log"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -25,6 +25,7 @@ func TestAccAWSRoute53HealthCheck_basic(t *testing.T) {
 				Config: testAccRoute53HealthCheckConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					testAccMatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexp.MustCompile("healthcheck/.+")),
 					resource.TestCheckResourceAttr(resourceName, "measure_latency", "true"),
 					resource.TestCheckResourceAttr(resourceName, "port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", "true"),
@@ -345,7 +346,7 @@ func TestAccAWSRoute53HealthCheck_disappears(t *testing.T) {
 				Config: testAccRoute53HealthCheckConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53HealthCheckExists(resourceName, &check),
-					testAccCheckRoute53HealthCheckDisappears(&check),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53HealthCheck(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -411,19 +412,6 @@ func testAccCheckRoute53HealthCheckExists(n string, hCheck *route53.HealthCheck)
 
 		}
 		return fmt.Errorf("Health Check does not exist")
-	}
-}
-
-func testAccCheckRoute53HealthCheckDisappears(hCheck *route53.HealthCheck) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).r53conn
-		input := &route53.DeleteHealthCheckInput{
-			HealthCheckId: hCheck.Id,
-		}
-		log.Printf("[DEBUG] Deleting Route53 Health Check: %#v", input)
-		_, err := conn.DeleteHealthCheck(input)
-
-		return err
 	}
 }
 

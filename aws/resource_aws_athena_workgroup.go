@@ -66,13 +66,9 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"encryption_option": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														athena.EncryptionOptionCseKms,
-														athena.EncryptionOptionSseKms,
-														athena.EncryptionOptionSseS3,
-													}, false),
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(athena.EncryptionOption_Values(), false),
 												},
 												"kms_key_arn": {
 													Type:         schema.TypeString,
@@ -88,6 +84,11 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 									},
 								},
 							},
+						},
+						"requester_pays_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 					},
 				},
@@ -107,13 +108,10 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 				),
 			},
 			"state": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  athena.WorkGroupStateEnabled,
-				ValidateFunc: validation.StringInSlice([]string{
-					athena.WorkGroupStateDisabled,
-					athena.WorkGroupStateEnabled,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      athena.WorkGroupStateEnabled,
+				ValidateFunc: validation.StringInSlice(athena.WorkGroupState_Values(), false),
 			},
 			"force_destroy": {
 				Type:     schema.TypeBool,
@@ -323,6 +321,10 @@ func expandAthenaWorkGroupConfiguration(l []interface{}) *athena.WorkGroupConfig
 		configuration.ResultConfiguration = expandAthenaWorkGroupResultConfiguration(v.([]interface{}))
 	}
 
+	if v, ok := m["requester_pays_enabled"]; ok {
+		configuration.RequesterPaysEnabled = aws.Bool(v.(bool))
+	}
+
 	return configuration
 }
 
@@ -351,6 +353,10 @@ func expandAthenaWorkGroupConfigurationUpdates(l []interface{}) *athena.WorkGrou
 
 	if v, ok := m["result_configuration"]; ok {
 		configurationUpdates.ResultConfigurationUpdates = expandAthenaWorkGroupResultConfigurationUpdates(v.([]interface{}))
+	}
+
+	if v, ok := m["requester_pays_enabled"]; ok {
+		configurationUpdates.RequesterPaysEnabled = aws.Bool(v.(bool))
 	}
 
 	return configurationUpdates
@@ -430,6 +436,7 @@ func flattenAthenaWorkGroupConfiguration(configuration *athena.WorkGroupConfigur
 		"enforce_workgroup_configuration":    aws.BoolValue(configuration.EnforceWorkGroupConfiguration),
 		"publish_cloudwatch_metrics_enabled": aws.BoolValue(configuration.PublishCloudWatchMetricsEnabled),
 		"result_configuration":               flattenAthenaWorkGroupResultConfiguration(configuration.ResultConfiguration),
+		"requester_pays_enabled":             aws.BoolValue(configuration.RequesterPaysEnabled),
 	}
 
 	return []interface{}{m}

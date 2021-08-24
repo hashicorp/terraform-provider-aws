@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -36,7 +37,8 @@ func TestAccAWSSESIdentityPolicy_basic(t *testing.T) {
 }
 
 func TestAccAWSSESIdentityPolicy_Identity_Email(t *testing.T) {
-	email := testAccRandomDomainName()
+	emailPrefix := acctest.RandomWithPrefix("tf-acc-test")
+	email := fmt.Sprintf("%s@%s", emailPrefix, testAccRandomDomainName())
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{

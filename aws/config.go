@@ -115,6 +115,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediapackage"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mediastoredata"
+	"github.com/aws/aws-sdk-go/service/memorydb"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/mwaa"
 	"github.com/aws/aws-sdk-go/service/neptune"
@@ -136,6 +137,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53domains"
+	"github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
+	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3control"
@@ -326,6 +329,7 @@ type AWSClient struct {
 	mediapackageconn                    *mediapackage.MediaPackage
 	mediastoreconn                      *mediastore.MediaStore
 	mediastoredataconn                  *mediastoredata.MediaStoreData
+	memorydbconn                        *memorydb.MemoryDB
 	mqconn                              *mq.MQ
 	mwaaconn                            *mwaa.MWAA
 	neptuneconn                         *neptune.Neptune
@@ -350,6 +354,8 @@ type AWSClient struct {
 	resourcegroupstaggingapiconn        *resourcegroupstaggingapi.ResourceGroupsTaggingAPI
 	reverseDnsPrefix                    string
 	route53domainsconn                  *route53domains.Route53Domains
+	route53recoverycontrolconfigconn    *route53recoverycontrolconfig.Route53RecoveryControlConfig
+	route53recoveryreadinessconn        *route53recoveryreadiness.Route53RecoveryReadiness
 	route53resolverconn                 *route53resolver.Route53Resolver
 	s3conn                              *s3.S3
 	s3connUriCleaningDisabled           *s3.S3
@@ -575,6 +581,7 @@ func (c *Config) Client() (interface{}, error) {
 		mediapackageconn:                    mediapackage.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediapackage"])})),
 		mediastoreconn:                      mediastore.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediastore"])})),
 		mediastoredataconn:                  mediastoredata.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediastoredata"])})),
+		memorydbconn:                        memorydb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["memorydb"])})),
 		mqconn:                              mq.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mq"])})),
 		mwaaconn:                            mwaa.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mwaa"])})),
 		neptuneconn:                         neptune.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["neptune"])})),
@@ -598,6 +605,8 @@ func (c *Config) Client() (interface{}, error) {
 		resourcegroupstaggingapiconn:        resourcegroupstaggingapi.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["resourcegroupstaggingapi"])})),
 		reverseDnsPrefix:                    ReverseDns(dnsSuffix),
 		route53domainsconn:                  route53domains.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53domains"])})),
+		route53recoverycontrolconfigconn:    route53recoverycontrolconfig.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53recoverycontrolconfig"])})),
+		route53recoveryreadinessconn:        route53recoveryreadiness.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53recoveryreadiness"])})),
 		route53resolverconn:                 route53resolver.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53resolver"])})),
 		s3controlconn:                       s3control.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3control"])})),
 		s3outpostsconn:                      s3outposts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3outposts"])})),
@@ -640,6 +649,12 @@ func (c *Config) Client() (interface{}, error) {
 	route53Config := &aws.Config{
 		Endpoint: aws.String(c.Endpoints["route53"]),
 	}
+	route53RecoveryControlConfigConfig := &aws.Config{
+		Endpoint: aws.String(c.Endpoints["route53recoverycontrolconfig"]),
+	}
+	route53RecoveryReadinessConfig := &aws.Config{
+		Endpoint: aws.String(c.Endpoints["route53recoveryreadiness"]),
+	}
 	shieldConfig := &aws.Config{
 		Endpoint: aws.String(c.Endpoints["shield"]),
 	}
@@ -660,6 +675,8 @@ func (c *Config) Client() (interface{}, error) {
 	case endpoints.AwsPartitionID:
 		globalAcceleratorConfig.Region = aws.String(endpoints.UsWest2RegionID)
 		route53Config.Region = aws.String(endpoints.UsEast1RegionID)
+		route53RecoveryControlConfigConfig.Region = aws.String(endpoints.UsWest2RegionID)
+		route53RecoveryReadinessConfig.Region = aws.String(endpoints.UsWest2RegionID)
 		shieldConfig.Region = aws.String(endpoints.UsEast1RegionID)
 	case endpoints.AwsCnPartitionID:
 		// The AWS Go SDK is missing endpoint information for Route 53 in the AWS China partition.
@@ -674,6 +691,8 @@ func (c *Config) Client() (interface{}, error) {
 
 	client.globalacceleratorconn = globalaccelerator.New(sess.Copy(globalAcceleratorConfig))
 	client.r53conn = route53.New(sess.Copy(route53Config))
+	client.route53recoverycontrolconfigconn = route53recoverycontrolconfig.New(sess.Copy(route53RecoveryControlConfigConfig))
+	client.route53recoveryreadinessconn = route53recoveryreadiness.New(sess.Copy(route53RecoveryReadinessConfig))
 	client.shieldconn = shield.New(sess.Copy(shieldConfig))
 
 	client.apigatewayconn.Handlers.Retry.PushBack(func(r *request.Request) {

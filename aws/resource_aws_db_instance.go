@@ -130,6 +130,10 @@ func resourceAwsDbInstance() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"customer_owned_ip_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"db_subnet_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -186,10 +190,13 @@ func resourceAwsDbInstance() *schema.Resource {
 				},
 			},
 			"engine_version": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				DiffSuppressFunc: suppressAwsDbEngineVersionDiffs,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"engine_version_actual": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"final_snapshot_identifier": {
 				Type:     schema.TypeString,
@@ -287,6 +294,12 @@ func resourceAwsDbInstance() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"nchar_character_set_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -999,6 +1012,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			}
 		}
 
+		if attr, ok := d.GetOk("customer_owned_ip_enabled"); ok {
+			opts.EnableCustomerOwnedIp = aws.Bool(attr.(bool))
+		}
+
 		log.Printf("[DEBUG] DB Instance restore from snapshot configuration: %s", opts)
 		_, err := conn.RestoreDBInstanceFromDBSnapshot(&opts)
 
@@ -1102,6 +1119,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 				input.VpcSecurityGroupIds = expandStringSet(v.(*schema.Set))
 			}
 
+			if attr, ok := d.GetOk("customer_owned_ip_enabled"); ok {
+				input.EnableCustomerOwnedIp = aws.Bool(attr.(bool))
+			}
+
 			log.Printf("[DEBUG] DB Instance restore to point in time configuration: %s", input)
 
 			_, err := conn.RestoreDBInstanceToPointInTime(input)
@@ -1149,6 +1170,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("character_set_name"); ok {
 			opts.CharacterSetName = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("nchar_character_set_name"); ok {
+			opts.NcharCharacterSetName = aws.String(attr.(string))
 		}
 
 		if attr, ok := d.GetOk("timezone"); ok {
@@ -1246,6 +1271,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.PerformanceInsightsRetentionPeriod = aws.Int64(int64(attr.(int)))
 		}
 
+		if attr, ok := d.GetOk("customer_owned_ip_enabled"); ok {
+			opts.EnableCustomerOwnedIp = aws.Bool(attr.(bool))
+		}
+
 		log.Printf("[DEBUG] DB Instance create configuration: %#v", opts)
 		var err error
 		var createdDBInstanceOutput *rds.CreateDBInstanceOutput
@@ -1260,7 +1289,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			return nil
 		})
 		if isResourceTimeoutError(err) {
-			_, err = conn.CreateDBInstance(&opts)
+			createdDBInstanceOutput, err = conn.CreateDBInstance(&opts)
 		}
 		if err != nil {
 			if isAWSErr(err, "InvalidParameterValue", "") {
@@ -1351,7 +1380,6 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("username", v.MasterUsername)
 	d.Set("deletion_protection", v.DeletionProtection)
 	d.Set("engine", v.Engine)
-	d.Set("engine_version", v.EngineVersion)
 	d.Set("allocated_storage", v.AllocatedStorage)
 	d.Set("iops", v.Iops)
 	d.Set("copy_tags_to_snapshot", v.CopyTagsToSnapshot)
@@ -1376,12 +1404,11 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group_name", v.DBSubnetGroup.DBSubnetGroupName)
 	}
-
-	if v.CharacterSetName != nil {
-		d.Set("character_set_name", v.CharacterSetName)
-	}
-
+	d.Set("character_set_name", v.CharacterSetName)
+	d.Set("nchar_character_set_name", v.NcharCharacterSetName)
 	d.Set("timezone", v.Timezone)
+
+	dbSetResourceDataEngineVersionFromInstance(d, v)
 
 	if len(v.DBParameterGroups) > 0 {
 		d.Set("parameter_group_name", v.DBParameterGroups[0].DBParameterGroupName)
@@ -1467,6 +1494,8 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
 
 	d.Set("ca_cert_identifier", v.CACertificateIdentifier)
+
+	d.Set("customer_owned_ip_enabled", v.CustomerOwnedIpEnabled)
 
 	return nil
 }
@@ -1710,6 +1739,11 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		requestUpdate = true
 	}
 
+	if d.HasChange("customer_owned_ip_enabled") {
+		req.EnableCustomerOwnedIp = aws.Bool(d.Get("customer_owned_ip_enabled").(bool))
+		requestUpdate = true
+	}
+
 	log.Printf("[DEBUG] Send DB Instance Modification request: %t", requestUpdate)
 	if requestUpdate {
 		log.Printf("[DEBUG] DB Instance Modification request: %s", req)
@@ -1936,4 +1970,10 @@ func expandRestoreToPointInTime(l []interface{}) *rds.RestoreDBInstanceToPointIn
 	}
 
 	return input
+}
+
+func dbSetResourceDataEngineVersionFromInstance(d *schema.ResourceData, c *rds.DBInstance) {
+	oldVersion := d.Get("engine_version").(string)
+	newVersion := aws.StringValue(c.EngineVersion)
+	compareActualEngineVersion(d, oldVersion, newVersion)
 }

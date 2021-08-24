@@ -2,16 +2,101 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_appconfig_environment", &resource.Sweeper{
+		Name: "aws_appconfig_environment",
+		F:    testSweepAppConfigEnvironments,
+	})
+}
+
+func testSweepAppConfigEnvironments(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*AWSClient).appconfigconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
+
+	input := &appconfig.ListApplicationsInput{}
+
+	err = conn.ListApplicationsPages(input, func(page *appconfig.ListApplicationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, item := range page.Items {
+			if item == nil {
+				continue
+			}
+
+			appId := aws.StringValue(item.Id)
+
+			envInput := &appconfig.ListEnvironmentsInput{
+				ApplicationId: item.Id,
+			}
+
+			err := conn.ListEnvironmentsPages(envInput, func(page *appconfig.ListEnvironmentsOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, item := range page.Items {
+					if item == nil {
+						continue
+					}
+
+					id := fmt.Sprintf("%s:%s", aws.StringValue(item.Id), appId)
+
+					log.Printf("[INFO] Deleting AppConfig Environment (%s)", id)
+					r := resourceAwsAppconfigEnvironment()
+					d := r.Data(nil)
+					d.SetId(id)
+
+					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+				}
+
+				return !lastPage
+			})
+
+			if err != nil {
+				errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Environments for Application (%s): %w", appId, err))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
+	}
+
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Environments for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping AppConfig Environments sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
 
 func TestAccAWSAppConfigEnvironment_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")

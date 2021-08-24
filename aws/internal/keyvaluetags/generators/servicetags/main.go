@@ -144,6 +144,7 @@ var mapServiceNames = []string{
 	"qldb",
 	"pinpoint",
 	"resourcegroups",
+	"route53recoveryreadiness",
 	"securityhub",
 	"schemas",
 	"signer",

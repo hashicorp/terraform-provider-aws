@@ -92,6 +92,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/schemas"
@@ -114,6 +115,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/xray"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 // AccessanalyzerListTags lists accessanalyzer service tags.
@@ -125,6 +128,13 @@ func AccessanalyzerListTags(conn *accessanalyzer.AccessAnalyzer, identifier stri
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -143,6 +153,13 @@ func AcmListTags(conn *acm.ACM, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTagsForCertificate(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -159,6 +176,13 @@ func AcmpcaListTags(conn *acmpca.ACMPCA, identifier string) (KeyValueTags, error
 	}
 
 	output, err := conn.ListTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -177,6 +201,13 @@ func AmplifyListTags(conn *amplify.Amplify, identifier string) (KeyValueTags, er
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -193,6 +224,13 @@ func Apigatewayv2ListTags(conn *apigatewayv2.ApiGatewayV2, identifier string) (K
 	}
 
 	output, err := conn.GetTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -211,6 +249,13 @@ func AppconfigListTags(conn *appconfig.AppConfig, identifier string) (KeyValueTa
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -227,6 +272,13 @@ func AppmeshListTags(conn *appmesh.AppMesh, identifier string) (KeyValueTags, er
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -245,6 +297,13 @@ func ApprunnerListTags(conn *apprunner.AppRunner, identifier string) (KeyValueTa
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -261,6 +320,13 @@ func AppstreamListTags(conn *appstream.AppStream, identifier string) (KeyValueTa
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -279,6 +345,13 @@ func AppsyncListTags(conn *appsync.AppSync, identifier string) (KeyValueTags, er
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -295,6 +368,13 @@ func AthenaListTags(conn *athena.Athena, identifier string) (KeyValueTags, error
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -318,6 +398,13 @@ func AutoscalingListTags(conn *autoscaling.AutoScaling, identifier string, resou
 
 	output, err := conn.DescribeTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -334,6 +421,13 @@ func BackupListTags(conn *backup.Backup, identifier string) (KeyValueTags, error
 	}
 
 	output, err := conn.ListTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -352,6 +446,13 @@ func BatchListTags(conn *batch.Batch, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -368,6 +469,13 @@ func Cloud9ListTags(conn *cloud9.Cloud9, identifier string) (KeyValueTags, error
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -386,6 +494,13 @@ func CloudfrontListTags(conn *cloudfront.CloudFront, identifier string) (KeyValu
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -402,6 +517,13 @@ func Cloudhsmv2ListTags(conn *cloudhsmv2.CloudHSMV2, identifier string) (KeyValu
 	}
 
 	output, err := conn.ListTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -420,6 +542,13 @@ func CloudtrailListTags(conn *cloudtrail.CloudTrail, identifier string) (KeyValu
 
 	output, err := conn.ListTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -436,6 +565,13 @@ func CloudwatchListTags(conn *cloudwatch.CloudWatch, identifier string) (KeyValu
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -454,6 +590,13 @@ func CloudwatcheventsListTags(conn *cloudwatchevents.CloudWatchEvents, identifie
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -470,6 +613,13 @@ func CloudwatchlogsListTags(conn *cloudwatchlogs.CloudWatchLogs, identifier stri
 	}
 
 	output, err := conn.ListTagsLogGroup(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -488,6 +638,13 @@ func CodeartifactListTags(conn *codeartifact.CodeArtifact, identifier string) (K
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -504,6 +661,13 @@ func CodecommitListTags(conn *codecommit.CodeCommit, identifier string) (KeyValu
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -522,6 +686,13 @@ func CodedeployListTags(conn *codedeploy.CodeDeploy, identifier string) (KeyValu
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -538,6 +709,13 @@ func CodepipelineListTags(conn *codepipeline.CodePipeline, identifier string) (K
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -556,6 +734,13 @@ func CodestarconnectionsListTags(conn *codestarconnections.CodeStarConnections, 
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -572,6 +757,13 @@ func CodestarnotificationsListTags(conn *codestarnotifications.CodeStarNotificat
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -590,6 +782,13 @@ func CognitoidentityListTags(conn *cognitoidentity.CognitoIdentity, identifier s
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -606,6 +805,13 @@ func CognitoidentityproviderListTags(conn *cognitoidentityprovider.CognitoIdenti
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -624,6 +830,13 @@ func ConfigserviceListTags(conn *configservice.ConfigService, identifier string)
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -640,6 +853,13 @@ func DatabasemigrationserviceListTags(conn *databasemigrationservice.DatabaseMig
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -658,6 +878,13 @@ func DataexchangeListTags(conn *dataexchange.DataExchange, identifier string) (K
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -674,6 +901,13 @@ func DatasyncListTags(conn *datasync.DataSync, identifier string) (KeyValueTags,
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -692,6 +926,13 @@ func DaxListTags(conn *dax.DAX, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -708,6 +949,13 @@ func DevicefarmListTags(conn *devicefarm.DeviceFarm, identifier string) (KeyValu
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -726,6 +974,13 @@ func DirectconnectListTags(conn *directconnect.DirectConnect, identifier string)
 
 	output, err := conn.DescribeTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -742,6 +997,13 @@ func DirectoryserviceListTags(conn *directoryservice.DirectoryService, identifie
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -760,6 +1022,13 @@ func DlmListTags(conn *dlm.DLM, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -777,6 +1046,13 @@ func DocdbListTags(conn *docdb.DocDB, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -793,6 +1069,13 @@ func DynamodbListTags(conn *dynamodb.DynamoDB, identifier string) (KeyValueTags,
 	}
 
 	output, err := conn.ListTagsOfResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -816,6 +1099,13 @@ func Ec2ListTags(conn *ec2.EC2, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.DescribeTags(input)
 
+	if tfawserr.ErrCodeContains(err, ".NotFound") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -832,6 +1122,13 @@ func EcrListTags(conn *ecr.ECR, identifier string) (KeyValueTags, error) {
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -850,6 +1147,13 @@ func EcsListTags(conn *ecs.ECS, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrMessageContains(err, "InvalidParameterException", "The specified cluster is inactive. Specify an active cluster and try again.") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -866,6 +1170,13 @@ func EfsListTags(conn *efs.EFS, identifier string) (KeyValueTags, error) {
 	}
 
 	output, err := conn.DescribeTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -884,6 +1195,13 @@ func EksListTags(conn *eks.EKS, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -900,6 +1218,13 @@ func ElasticacheListTags(conn *elasticache.ElastiCache, identifier string) (KeyV
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -918,6 +1243,13 @@ func ElasticbeanstalkListTags(conn *elasticbeanstalk.ElasticBeanstalk, identifie
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -934,6 +1266,13 @@ func ElasticsearchserviceListTags(conn *elasticsearchservice.ElasticsearchServic
 	}
 
 	output, err := conn.ListTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -952,6 +1291,13 @@ func ElbListTags(conn *elb.ELB, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.DescribeTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -968,6 +1314,13 @@ func Elbv2ListTags(conn *elbv2.ELBV2, identifier string) (KeyValueTags, error) {
 	}
 
 	output, err := conn.DescribeTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -986,6 +1339,13 @@ func FirehoseListTags(conn *firehose.Firehose, identifier string) (KeyValueTags,
 
 	output, err := conn.ListTagsForDeliveryStream(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1002,6 +1362,13 @@ func FsxListTags(conn *fsx.FSx, identifier string) (KeyValueTags, error) {
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1020,6 +1387,13 @@ func GameliftListTags(conn *gamelift.GameLift, identifier string) (KeyValueTags,
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1036,6 +1410,13 @@ func GlacierListTags(conn *glacier.Glacier, identifier string) (KeyValueTags, er
 	}
 
 	output, err := conn.ListTagsForVault(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1054,6 +1435,13 @@ func GlobalacceleratorListTags(conn *globalaccelerator.GlobalAccelerator, identi
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1070,6 +1458,13 @@ func GlueListTags(conn *glue.Glue, identifier string) (KeyValueTags, error) {
 	}
 
 	output, err := conn.GetTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1088,6 +1483,13 @@ func GreengrassListTags(conn *greengrass.Greengrass, identifier string) (KeyValu
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1104,6 +1506,13 @@ func GuarddutyListTags(conn *guardduty.GuardDuty, identifier string) (KeyValueTa
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1122,6 +1531,13 @@ func ImagebuilderListTags(conn *imagebuilder.Imagebuilder, identifier string) (K
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1138,6 +1554,13 @@ func InspectorListTags(conn *inspector.Inspector, identifier string) (KeyValueTa
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1156,6 +1579,13 @@ func IotListTags(conn *iot.IoT, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1172,6 +1602,13 @@ func IotanalyticsListTags(conn *iotanalytics.IoTAnalytics, identifier string) (K
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1190,6 +1627,13 @@ func IoteventsListTags(conn *iotevents.IoTEvents, identifier string) (KeyValueTa
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1206,6 +1650,13 @@ func KafkaListTags(conn *kafka.Kafka, identifier string) (KeyValueTags, error) {
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1224,6 +1675,13 @@ func KinesisListTags(conn *kinesis.Kinesis, identifier string) (KeyValueTags, er
 
 	output, err := conn.ListTagsForStream(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1240,6 +1698,13 @@ func KinesisanalyticsListTags(conn *kinesisanalytics.KinesisAnalytics, identifie
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1258,6 +1723,13 @@ func Kinesisanalyticsv2ListTags(conn *kinesisanalyticsv2.KinesisAnalyticsV2, ide
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1274,6 +1746,13 @@ func KinesisvideoListTags(conn *kinesisvideo.KinesisVideo, identifier string) (K
 	}
 
 	output, err := conn.ListTagsForStream(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1292,6 +1771,13 @@ func KmsListTags(conn *kms.KMS, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListResourceTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1308,6 +1794,13 @@ func LambdaListTags(conn *lambda.Lambda, identifier string) (KeyValueTags, error
 	}
 
 	output, err := conn.ListTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1326,6 +1819,13 @@ func LicensemanagerListTags(conn *licensemanager.LicenseManager, identifier stri
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1342,6 +1842,13 @@ func MediaconnectListTags(conn *mediaconnect.MediaConnect, identifier string) (K
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1360,6 +1867,13 @@ func MediaconvertListTags(conn *mediaconvert.MediaConvert, identifier string) (K
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1376,6 +1890,13 @@ func MedialiveListTags(conn *medialive.MediaLive, identifier string) (KeyValueTa
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1394,6 +1915,13 @@ func MediapackageListTags(conn *mediapackage.MediaPackage, identifier string) (K
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1410,6 +1938,13 @@ func MediastoreListTags(conn *mediastore.MediaStore, identifier string) (KeyValu
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1428,6 +1963,13 @@ func MqListTags(conn *mq.MQ, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1444,6 +1986,13 @@ func NeptuneListTags(conn *neptune.Neptune, identifier string) (KeyValueTags, er
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1462,6 +2011,13 @@ func NetworkfirewallListTags(conn *networkfirewall.NetworkFirewall, identifier s
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1478,6 +2034,13 @@ func NetworkmanagerListTags(conn *networkmanager.NetworkManager, identifier stri
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1496,6 +2059,13 @@ func OpsworksListTags(conn *opsworks.OpsWorks, identifier string) (KeyValueTags,
 
 	output, err := conn.ListTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1512,6 +2082,13 @@ func OrganizationsListTags(conn *organizations.Organizations, identifier string)
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1530,6 +2107,13 @@ func PinpointListTags(conn *pinpoint.Pinpoint, identifier string) (KeyValueTags,
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1546,6 +2130,13 @@ func QldbListTags(conn *qldb.QLDB, identifier string) (KeyValueTags, error) {
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1564,6 +2155,13 @@ func QuicksightListTags(conn *quicksight.QuickSight, identifier string) (KeyValu
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1581,6 +2179,13 @@ func RdsListTags(conn *rds.RDS, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1597,6 +2202,13 @@ func ResourcegroupsListTags(conn *resourcegroups.ResourceGroups, identifier stri
 	}
 
 	output, err := conn.GetTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1616,11 +2228,42 @@ func Route53ListTags(conn *route53.Route53, identifier string, resourceType stri
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return Route53KeyValueTags(output.ResourceTagSet.Tags), nil
+}
+
+// Route53recoveryreadinessListTags lists route53recoveryreadiness service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Route53recoveryreadinessListTags(conn *route53recoveryreadiness.Route53RecoveryReadiness, identifier string) (KeyValueTags, error) {
+	input := &route53recoveryreadiness.ListTagsForResourcesInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResources(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return Route53recoveryreadinessKeyValueTags(output.Tags), nil
 }
 
 // Route53resolverListTags lists route53resolver service tags.
@@ -1632,6 +2275,13 @@ func Route53resolverListTags(conn *route53resolver.Route53Resolver, identifier s
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1650,6 +2300,13 @@ func SagemakerListTags(conn *sagemaker.SageMaker, identifier string) (KeyValueTa
 
 	output, err := conn.ListTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1666,6 +2323,13 @@ func SchemasListTags(conn *schemas.Schemas, identifier string) (KeyValueTags, er
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1684,6 +2348,13 @@ func SecurityhubListTags(conn *securityhub.SecurityHub, identifier string) (KeyV
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1700,6 +2371,13 @@ func ServicediscoveryListTags(conn *servicediscovery.ServiceDiscovery, identifie
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1718,6 +2396,13 @@ func SfnListTags(conn *sfn.SFN, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1734,6 +2419,13 @@ func ShieldListTags(conn *shield.Shield, identifier string) (KeyValueTags, error
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1752,6 +2444,13 @@ func SignerListTags(conn *signer.Signer, identifier string) (KeyValueTags, error
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1769,6 +2468,13 @@ func SnsListTags(conn *sns.SNS, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1785,6 +2491,13 @@ func SqsListTags(conn *sqs.SQS, identifier string) (KeyValueTags, error) {
 	}
 
 	output, err := conn.ListQueueTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1804,6 +2517,13 @@ func SsmListTags(conn *ssm.SSM, identifier string, resourceType string) (KeyValu
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1822,6 +2542,13 @@ func SsoadminListTags(conn *ssoadmin.SSOAdmin, identifier string, resourceType s
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1838,6 +2565,13 @@ func StoragegatewayListTags(conn *storagegateway.StorageGateway, identifier stri
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1856,6 +2590,13 @@ func SwfListTags(conn *swf.SWF, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1872,6 +2613,13 @@ func TimestreamwriteListTags(conn *timestreamwrite.TimestreamWrite, identifier s
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1890,6 +2638,13 @@ func TransferListTags(conn *transfer.Transfer, identifier string) (KeyValueTags,
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1906,6 +2661,13 @@ func WafListTags(conn *waf.WAF, identifier string) (KeyValueTags, error) {
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1924,6 +2686,13 @@ func WafregionalListTags(conn *wafregional.WAFRegional, identifier string) (KeyV
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1940,6 +2709,13 @@ func Wafv2ListTags(conn *wafv2.WAFV2, identifier string) (KeyValueTags, error) {
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1958,6 +2734,13 @@ func WorklinkListTags(conn *worklink.WorkLink, identifier string) (KeyValueTags,
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1975,6 +2758,13 @@ func WorkspacesListTags(conn *workspaces.WorkSpaces, identifier string) (KeyValu
 
 	output, err := conn.DescribeTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -1991,6 +2781,13 @@ func XrayListTags(conn *xray.XRay, identifier string) (KeyValueTags, error) {
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err

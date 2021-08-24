@@ -32,20 +32,19 @@ func main() {
 		ServiceNames: serviceNames,
 	}
 	templateFuncMap := template.FuncMap{
-		"ClientType":                        keyvaluetags.ServiceClientType,
-		"ResourceNotFoundErrorCode":         keyvaluetags.ServiceResourceNotFoundErrorCode,
-		"ResourceNotFoundErrorCodeContains": keyvaluetags.ServiceResourceNotFoundErrorCodeContains,
-		"RetryCreationOnResourceNotFound":   keyvaluetags.ServiceRetryCreationOnResourceNotFound,
-		"TagFunction":                       keyvaluetags.ServiceTagFunction,
-		"TagFunctionBatchSize":              keyvaluetags.ServiceTagFunctionBatchSize,
-		"TagInputCustomValue":               keyvaluetags.ServiceTagInputCustomValue,
-		"TagInputIdentifierField":           keyvaluetags.ServiceTagInputIdentifierField,
-		"TagInputIdentifierRequiresSlice":   keyvaluetags.ServiceTagInputIdentifierRequiresSlice,
-		"TagInputTagsField":                 keyvaluetags.ServiceTagInputTagsField,
-		"TagPackage":                        keyvaluetags.ServiceTagPackage,
-		"TagResourceTypeField":              keyvaluetags.ServiceTagResourceTypeField,
-		"TagTypeIdentifierField":            keyvaluetags.ServiceTagTypeIdentifierField,
-		"Title":                             strings.Title,
+		"ClientType":                      keyvaluetags.ServiceClientType,
+		"ParentResourceNotFoundError":     keyvaluetags.ServiceParentResourceNotFoundError,
+		"RetryCreationOnResourceNotFound": keyvaluetags.ServiceRetryCreationOnResourceNotFound,
+		"TagFunction":                     keyvaluetags.ServiceTagFunction,
+		"TagFunctionBatchSize":            keyvaluetags.ServiceTagFunctionBatchSize,
+		"TagInputCustomValue":             keyvaluetags.ServiceTagInputCustomValue,
+		"TagInputIdentifierField":         keyvaluetags.ServiceTagInputIdentifierField,
+		"TagInputIdentifierRequiresSlice": keyvaluetags.ServiceTagInputIdentifierRequiresSlice,
+		"TagInputTagsField":               keyvaluetags.ServiceTagInputTagsField,
+		"TagPackage":                      keyvaluetags.ServiceTagPackage,
+		"TagResourceTypeField":            keyvaluetags.ServiceTagResourceTypeField,
+		"TagTypeIdentifierField":          keyvaluetags.ServiceTagTypeIdentifierField,
+		"Title":                           strings.Title,
 	}
 
 	tmpl, err := template.New("createtags").Funcs(templateFuncMap).Parse(templateBody)
@@ -133,31 +132,13 @@ func {{ . | Title }}CreateTags(conn {{ . | ClientType }}, identifier string{{ if
 
 	{{- if . | RetryCreationOnResourceNotFound }}
 
-	err := resource.Retry(EventualConsistencyTimeout, func() *resource.RetryError {
-		_, err := conn.{{ . | TagFunction }}(input)
+	_, err := tfresource.RetryWhenNotFound(EventualConsistencyTimeout, func() (interface{}, error) {
+		output, err := conn.{{ . | TagFunction }}(input)
 
-		{{- if . | ResourceNotFoundErrorCodeContains }}
+		{{ . | ParentResourceNotFoundError }}
 
-		if tfawserr.ErrCodeContains(err, "{{ . | ResourceNotFoundErrorCodeContains }}") {
-
-		{{- else }}
-
-		if tfawserr.ErrCodeEquals(err, {{ . | ResourceNotFoundErrorCode }}) {
-
-		{{- end }}
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
+		return output, err
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.{{ . | TagFunction }}(input)
-	}
 	{{- else }}
 	_, err := conn.{{ . | TagFunction }}(input)
 	{{- end }}

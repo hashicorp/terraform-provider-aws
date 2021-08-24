@@ -53,10 +53,11 @@ func resourceAwsElasticacheUser() *schema.Resource {
 				Default:  false,
 			},
 			"passwords": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 2,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:      schema.TypeSet,
+				Optional:  true,
+				MaxItems:  2,
+				Elem:      &schema.Schema{Type: schema.TypeString},
+				Sensitive: true,
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
@@ -173,8 +174,8 @@ func resourceAwsElasticacheUserUpdate(d *schema.ResourceData, meta interface{}) 
 			hasChange = true
 		}
 
-		if d.HasChange("password") {
-			req.Passwords = expandStringSet(d.Get("password").(*schema.Set))
+		if d.HasChange("passwords") {
+			req.Passwords = expandStringSet(d.Get("passwords").(*schema.Set))
 			hasChange = true
 		}
 
@@ -190,7 +191,6 @@ func resourceAwsElasticacheUserUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 
 	}
-
 	// Tags are currently only supported in AWS Commercial.
 	if d.HasChange("tags_all") && meta.(*AWSClient).partition == endpoints.AwsPartitionID {
 		o, n := d.GetChange("tags_all")

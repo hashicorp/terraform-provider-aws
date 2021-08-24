@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
@@ -305,7 +306,7 @@ func resourceAwsS3ObjectCopyRead(d *schema.ResourceData, meta interface{}) error
 			Key:    aws.String(key),
 		})
 
-	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, 404) {
+	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
 		log.Printf("[WARN] S3 Object (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
