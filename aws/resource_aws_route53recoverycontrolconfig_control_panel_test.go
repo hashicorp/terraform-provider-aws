@@ -16,7 +16,7 @@ func testAccAWSRoute53RecoveryControlConfigControlPanel_basic(t *testing.T) {
 	resourceName := "aws_route53recoverycontrolconfig_control_panel.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(r53rcc.EndpointsID, t) },
 		ErrorCheck:   testAccErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigControlPanelDestroy,
@@ -45,7 +45,7 @@ func testAccAWSRoute53RecoveryControlConfigControlPanel_disappears(t *testing.T)
 	resourceName := "aws_route53recoverycontrolconfig_control_panel.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(r53rcc.EndpointsID, t) },
 		ErrorCheck:   testAccErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigControlPanelDestroy,

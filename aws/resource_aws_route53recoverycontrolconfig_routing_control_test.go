@@ -16,7 +16,7 @@ func testAccAWSRoute53RecoveryControlConfigRoutingControl_basic(t *testing.T) {
 	resourceName := "aws_route53recoverycontrolconfig_routing_control.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(r53rcc.EndpointsID, t) },
 		ErrorCheck:   testAccErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigRoutingControlDestroy,
@@ -46,7 +46,7 @@ func testAccAWSRoute53RecoveryControlConfigRoutingControl_disappears(t *testing.
 	resourceName := "aws_route53recoverycontrolconfig_routing_control.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(r53rcc.EndpointsID, t) },
 		ErrorCheck:   testAccErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigRoutingControlDestroy,
@@ -68,7 +68,7 @@ func testAccAWSRoute53RecoveryControlConfigRoutingControl_nonDefaultControlPanel
 	resourceName := "aws_route53recoverycontrolconfig_routing_control.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(r53rcc.EndpointsID, t) },
 		ErrorCheck:   testAccErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigRoutingControlDestroy,

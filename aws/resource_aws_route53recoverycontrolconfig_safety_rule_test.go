@@ -16,7 +16,7 @@ func testAccAWSRoute53RecoveryControlConfigSafetyRule_assertionRule(t *testing.T
 	resourceName := "aws_route53recoverycontrolconfig_safety_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(r53rcc.EndpointsID, t) },
 		ErrorCheck:   testAccErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigSafetyRuleDestroy,
@@ -46,7 +46,7 @@ func testAccAWSRoute53RecoveryControlConfigSafetyRule_disappears(t *testing.T) {
 	resourceName := "aws_route53recoverycontrolconfig_safety_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(r53rcc.EndpointsID, t) },
 		ErrorCheck:   testAccErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigSafetyRuleDestroy,
@@ -68,7 +68,7 @@ func testAccAWSRoute53RecoveryControlConfigSafetyRule_gatingRule(t *testing.T) {
 	resourceName := "aws_route53recoverycontrolconfig_safety_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(r53rcc.EndpointsID, t) },
 		ErrorCheck:   testAccErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigSafetyRuleDestroy,

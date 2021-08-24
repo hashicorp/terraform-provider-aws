@@ -16,7 +16,7 @@ func testAccAWSRoute53RecoveryControlConfigCluster_basic(t *testing.T) {
 	resourceName := "aws_route53recoverycontrolconfig_cluster.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(r53rcc.EndpointsID, t) },
 		ErrorCheck:   testAccErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigClusterDestroy,
@@ -45,7 +45,7 @@ func testAccAWSRoute53RecoveryControlConfigCluster_disappears(t *testing.T) {
 	resourceName := "aws_route53recoverycontrolconfig_cluster.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(r53rcc.EndpointsID, t) },
 		ErrorCheck:   testAccErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigClusterDestroy,
