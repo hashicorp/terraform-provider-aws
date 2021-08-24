@@ -3,14 +3,14 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig"
+	waiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig"
 )
 
 func resourceAwsRoute53RecoveryControlConfigSafetyRule() *schema.Resource {
@@ -24,67 +24,84 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"safety_rule_arn": {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"asserted_controls": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				ExactlyOneOf: []string{
+					"asserted_controls",
+					"gating_controls",
+				},
 			},
 			"control_panel_arn": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
+			"gating_controls": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				ExactlyOneOf: []string{
+					"asserted_controls",
+					"gating_controls",
+				},
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"rule_config": {
+				Type:     schema.TypeList,
+				Required: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"inverted": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"threshold": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(route53recoverycontrolconfig.RuleType_Values(), true),
+						},
+					},
+				},
 			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"wait_period_ms": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"inverted": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			"threshold": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				StateFunc: func(val interface{}) string {
-					return strings.ToUpper(val.(string))
-				},
-				ValidateFunc: validation.StringInSlice([]string{
-					route53recoverycontrolconfig.RuleTypeAtleast,
-					route53recoverycontrolconfig.RuleTypeAnd,
-					route53recoverycontrolconfig.RuleTypeOr,
-				}, true),
-			},
-			"asserted_controls": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"gating_controls": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
 			"target_controls": {
 				Type:     schema.TypeList,
 				Optional: true,
+				ForceNew: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+				RequiredWith: []string{
+					"gating_controls",
+				},
+			},
+			"wait_period_ms": {
+				Type:     schema.TypeInt,
+				Required: true,
 			},
 		},
 	}
@@ -111,19 +128,23 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRuleRead(d *schema.ResourceDat
 
 	output, err := conn.DescribeSafetyRule(input)
 
-	if err != nil {
-		return fmt.Errorf("Error describing Route53 Recovery Control Config Safety Rule: %s", err)
-	}
-
-	if !d.IsNewResource() && output == nil {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Route53 Recovery Control Config Safety Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
+	if err != nil {
+		return fmt.Errorf("Error describing Route53 Recovery Control Config Safety Rule: %s", err)
+	}
+
+	if output == nil {
+		return fmt.Errorf("Error describing Route53 Recovery Control Config Safety Rule: %s", "empty response")
+	}
+
 	if output.AssertionRule != nil {
 		result := output.AssertionRule
-		d.Set("safety_rule_arn", result.SafetyRuleArn)
+		d.Set("arn", result.SafetyRuleArn)
 		d.Set("control_panel_arn", result.ControlPanelArn)
 		d.Set("name", result.Name)
 		d.Set("status", result.Status)
@@ -134,16 +155,17 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRuleRead(d *schema.ResourceDat
 		}
 
 		if result.RuleConfig != nil {
-			d.Set("inverted", result.RuleConfig.Inverted)
-			d.Set("threshold", result.RuleConfig.Threshold)
-			d.Set("type", result.RuleConfig.Type)
+			d.Set("rule_config", []interface{}{flattenRoute53RecoveryControlConfigRuleConfig(result.RuleConfig)})
+		} else {
+			d.Set("rule_config", nil)
 		}
 
+		return nil
 	}
 
 	if output.GatingRule != nil {
 		result := output.GatingRule
-		d.Set("safety_rule_arn", result.SafetyRuleArn)
+		d.Set("arn", result.SafetyRuleArn)
 		d.Set("control_panel_arn", result.ControlPanelArn)
 		d.Set("name", result.Name)
 		d.Set("status", result.Status)
@@ -158,34 +180,21 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRuleRead(d *schema.ResourceDat
 		}
 
 		if result.RuleConfig != nil {
-			d.Set("inverted", result.RuleConfig.Inverted)
-			d.Set("threshold", result.RuleConfig.Threshold)
-			d.Set("type", result.RuleConfig.Type)
+			d.Set("rule_config", []interface{}{flattenRoute53RecoveryControlConfigRuleConfig(result.RuleConfig)})
+		} else {
+			d.Set("rule_config", nil)
 		}
-
 	}
+
 	return nil
 }
 
 func resourceAwsRoute53RecoveryControlConfigSafetyRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
-
-	// First check type of rule
-	describeRuleInput := &route53recoverycontrolconfig.DescribeSafetyRuleInput{
-		SafetyRuleArn: aws.String(d.Get("safety_rule_arn").(string)),
-	}
-
-	output, err := conn.DescribeSafetyRule(describeRuleInput)
-
-	if err != nil {
-		return fmt.Errorf("Error describing Route53 Recovery Control Config Safety Rule: %s", err)
-	}
-
-	if output.AssertionRule != nil {
+	if _, ok := d.GetOk("asserted_controls"); ok {
 		return updateAssertionRule(d, meta)
 	}
 
-	if output.GatingRule != nil {
+	if _, ok := d.GetOk("gating_controls"); ok {
 		return updateGatingRule(d, meta)
 	}
 
@@ -201,17 +210,21 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRuleDelete(d *schema.ResourceD
 
 	_, err := conn.DeleteSafetyRule(input)
 
+	if tfawserr.ErrCodeEquals(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		if isAWSErr(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
 		return fmt.Errorf("Error deleting Route53 Recovery Control Config Safety Rule: %s", err)
 	}
 
-	if _, err := waiter.Route53RecoveryControlConfigSafetyRuleDeleted(conn, d.Id()); err != nil {
-		if isResourceNotFoundError(err) {
-			return nil
-		}
+	_, err = waiter.Route53RecoveryControlConfigSafetyRuleDeleted(conn, d.Id())
+
+	if tfawserr.ErrCodeEquals(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
 		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Safety Rule (%s) to be deleted: %w", d.Id(), err)
 	}
 
@@ -221,17 +234,11 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRuleDelete(d *schema.ResourceD
 func createAssertionRule(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
 
-	ruleConfig := &route53recoverycontrolconfig.RuleConfig{
-		Inverted:  aws.Bool(d.Get("inverted").(bool)),
-		Threshold: aws.Int64(int64(d.Get("threshold").(int))),
-		Type:      aws.String(d.Get("type").(string)),
-	}
-
 	assertionRule := &route53recoverycontrolconfig.NewAssertionRule{
 		Name:             aws.String(d.Get("name").(string)),
 		ControlPanelArn:  aws.String(d.Get("control_panel_arn").(string)),
 		WaitPeriodMs:     aws.Int64(int64(d.Get("wait_period_ms").(int))),
-		RuleConfig:       ruleConfig,
+		RuleConfig:       expandRoute53RecoveryControlConfigRuleConfig(d.Get("rule_config").([]interface{})[0].(map[string]interface{})),
 		AssertedControls: expandStringList(d.Get("asserted_controls").([]interface{})),
 	}
 
@@ -258,23 +265,16 @@ func createAssertionRule(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return resourceAwsRoute53RecoveryControlConfigSafetyRuleRead(d, meta)
-
 }
 
 func createGatingRule(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
 
-	ruleConfig := &route53recoverycontrolconfig.RuleConfig{
-		Inverted:  aws.Bool(d.Get("inverted").(bool)),
-		Threshold: aws.Int64(int64(d.Get("threshold").(int))),
-		Type:      aws.String(d.Get("type").(string)),
-	}
-
 	gatingRule := &route53recoverycontrolconfig.NewGatingRule{
 		Name:            aws.String(d.Get("name").(string)),
 		ControlPanelArn: aws.String(d.Get("control_panel_arn").(string)),
 		WaitPeriodMs:    aws.Int64(int64(d.Get("wait_period_ms").(int))),
-		RuleConfig:      ruleConfig,
+		RuleConfig:      expandRoute53RecoveryControlConfigRuleConfig(d.Get("rule_config").([]interface{})[0].(map[string]interface{})),
 		GatingControls:  expandStringList(d.Get("gating_controls").([]interface{})),
 		TargetControls:  expandStringList(d.Get("target_controls").([]interface{})),
 	}
@@ -285,7 +285,7 @@ func createGatingRule(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	output, err := conn.CreateSafetyRule(input)
-	result := output.AssertionRule
+	result := output.GatingRule
 
 	if err != nil {
 		return fmt.Errorf("Error creating Route53 Recovery Control Config Gating Rule: %w", err)
@@ -308,7 +308,7 @@ func updateAssertionRule(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
 
 	assertionRuleUpdate := &route53recoverycontrolconfig.AssertionRuleUpdate{
-		SafetyRuleArn: aws.String(d.Get("safety_rule_arn").(string)),
+		SafetyRuleArn: aws.String(d.Get("arn").(string)),
 	}
 
 	if d.HasChange("name") {
@@ -324,6 +324,7 @@ func updateAssertionRule(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	_, err := conn.UpdateSafetyRule(input)
+
 	if err != nil {
 		return fmt.Errorf("error updating Route53 Recovery Control Config Assertion Rule: %s", err)
 	}
@@ -335,7 +336,7 @@ func updateGatingRule(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53recoverycontrolconfigconn
 
 	gatingRuleUpdate := &route53recoverycontrolconfig.GatingRuleUpdate{
-		SafetyRuleArn: aws.String(d.Get("safety_rule_arn").(string)),
+		SafetyRuleArn: aws.String(d.Get("arn").(string)),
 	}
 
 	if d.HasChange("name") {
@@ -351,9 +352,53 @@ func updateGatingRule(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	_, err := conn.UpdateSafetyRule(input)
+
 	if err != nil {
 		return fmt.Errorf("error updating Route53 Recovery Control Config Gating Rule: %s", err)
 	}
 
 	return resourceAwsRoute53RecoveryControlConfigControlPanelRead(d, meta)
+}
+
+func expandRoute53RecoveryControlConfigRuleConfig(tfMap map[string]interface{}) *route53recoverycontrolconfig.RuleConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &route53recoverycontrolconfig.RuleConfig{}
+
+	if v, ok := tfMap["inverted"].(bool); ok {
+		apiObject.Inverted = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["threshold"].(int); ok {
+		apiObject.Threshold = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		apiObject.Type = aws.String(v)
+	}
+	return apiObject
+}
+
+func flattenRoute53RecoveryControlConfigRuleConfig(apiObject *route53recoverycontrolconfig.RuleConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Inverted; v != nil {
+		tfMap["inverted"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.Threshold; v != nil {
+		tfMap["threshold"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
