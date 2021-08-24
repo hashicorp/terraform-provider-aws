@@ -7,7 +7,6 @@ import (
 	"log"
 	"reflect"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -3187,69 +3186,6 @@ func testAccCheckAWSS3BucketLogging(n, b, p string) resource.TestCheckFunc {
 			if *v != p {
 				return fmt.Errorf("bad target prefix, expected: %s, got %s", p, *v)
 			}
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckAWSS3BucketReplicationRules(n string, rules []*s3.ReplicationRule) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs := s.RootModule().Resources[n]
-		for _, rule := range rules {
-			if dest := rule.Destination; dest != nil {
-				if account := dest.Account; account != nil && strings.HasPrefix(aws.StringValue(dest.Account), "${") {
-					resourceReference := strings.Replace(aws.StringValue(dest.Account), "${", "", 1)
-					resourceReference = strings.Replace(resourceReference, "}", "", 1)
-					resourceReferenceParts := strings.Split(resourceReference, ".")
-					resourceAttribute := resourceReferenceParts[len(resourceReferenceParts)-1]
-					resourceName := strings.Join(resourceReferenceParts[:len(resourceReferenceParts)-1], ".")
-					value := s.RootModule().Resources[resourceName].Primary.Attributes[resourceAttribute]
-					dest.Account = aws.String(value)
-				}
-				if ec := dest.EncryptionConfiguration; ec != nil {
-					if ec.ReplicaKmsKeyID != nil {
-						key_arn := s.RootModule().Resources["aws_kms_key.replica"].Primary.Attributes["arn"]
-						ec.ReplicaKmsKeyID = aws.String(strings.Replace(*ec.ReplicaKmsKeyID, "${aws_kms_key.replica.arn}", key_arn, -1))
-					}
-				}
-			}
-			// Sort filter tags by key.
-			if filter := rule.Filter; filter != nil {
-				if and := filter.And; and != nil {
-					if tags := and.Tags; tags != nil {
-						sort.Slice(tags, func(i, j int) bool { return *tags[i].Key < *tags[j].Key })
-					}
-				}
-			}
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
-		out, err := conn.GetBucketReplication(&s3.GetBucketReplicationInput{
-			Bucket: aws.String(rs.Primary.ID),
-		})
-		if err != nil {
-			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
-				return fmt.Errorf("S3 bucket not found")
-			}
-			if rules == nil {
-				return nil
-			}
-			return fmt.Errorf("GetReplicationConfiguration error: %v", err)
-		}
-
-		for _, rule := range out.ReplicationConfiguration.Rules {
-			// Sort filter tags by key.
-			if filter := rule.Filter; filter != nil {
-				if and := filter.And; and != nil {
-					if tags := and.Tags; tags != nil {
-						sort.Slice(tags, func(i, j int) bool { return *tags[i].Key < *tags[j].Key })
-					}
-				}
-			}
-		}
-		if !reflect.DeepEqual(out.ReplicationConfiguration.Rules, rules) {
-			return fmt.Errorf("bad replication rules, expected: %v, got %v", rules, out.ReplicationConfiguration.Rules)
 		}
 
 		return nil
