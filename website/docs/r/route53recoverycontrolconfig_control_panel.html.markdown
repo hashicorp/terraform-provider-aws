@@ -33,7 +33,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - ARN of the control panel.
 * `default_control_panel` - Whether a control panel is default.
 * `routing_control_count` - Number routing controls in a control panel.
-* `status` - Status of control panel: `PENDING` when it is being created/updated, `PENDING_DELETION` when its being deleted, and `DEPLOYED` otherwise.
+* `status` - Status of control panel: `PENDING` when it is being created/updated, `PENDING_DELETION` when it is being deleted, and `DEPLOYED` otherwise.
 
 ## Import
 

@@ -69,7 +69,7 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the safety rule.
-* `status` - Status of the safety rule. `PENDING` when its being created/updated, `PENDING_DELETION` when its being deleted, and `DEPLOYED` otherwise.
+* `status` - Status of the safety rule. `PENDING` when it is being created/updated, `PENDING_DELETION` when it is being deleted, and `DEPLOYED` otherwise.
 
 ## Import
 

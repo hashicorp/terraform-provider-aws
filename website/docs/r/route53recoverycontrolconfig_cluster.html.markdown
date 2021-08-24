@@ -30,7 +30,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the cluster
 * `cluster_endpoints` - List of 5 endpoints in 5 regions that can be used to talk to the cluster. See below.
-* `status` - Status of cluster. `PENDING` when its being created, `PENDING_DELETION` when its being deleted and `DEPLOYED` otherwise.
+* `status` - Status of cluster. `PENDING` when it is being created, `PENDING_DELETION` when it is being deleted and `DEPLOYED` otherwise.
 
 ### cluster_endpoints
 
