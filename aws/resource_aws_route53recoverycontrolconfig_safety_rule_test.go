@@ -159,9 +159,9 @@ resource "aws_route53recoverycontrolconfig_safety_rule" "test" {
   asserted_controls = [aws_route53recoverycontrolconfig_routing_control.test.arn]
 
   rule_config {
-    inverted = false
+    inverted  = false
     threshold = 0
-    type = "AND"
+    type      = "AND"
   }
 }
 `, rName)
@@ -192,9 +192,9 @@ resource "aws_route53recoverycontrolconfig_safety_rule" "test" {
   target_controls   = [aws_route53recoverycontrolconfig_routing_control.test.arn]
 
   rule_config {
-    inverted = false
+    inverted  = false
     threshold = 0
-    type = "AND"
+    type      = "AND"
   }
 }
 `, rName)
