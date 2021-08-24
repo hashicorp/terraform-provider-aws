@@ -27,7 +27,6 @@ func TestAccAwsAppStreamFleet_basic(t *testing.T) {
 	var fleetOutput appstream.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	instanceType := "stream.standard.small"
-	instanceType = "stream.standard.large"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -62,7 +61,6 @@ func TestAccAwsAppStreamFleet_disappears(t *testing.T) {
 	var fleetOutput appstream.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	instanceType := "stream.standard.small"
-	instanceType = "stream.standard.large"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -94,7 +92,6 @@ func TestAccAwsAppStreamFleet_completeWithStop(t *testing.T) {
 	descriptionUpdated := "Updated Description of a test"
 	fleetType := "ON_DEMAND"
 	instanceType := "stream.standard.small"
-	instanceType = "stream.standard.large"
 	instanceTypeUpdate := "stream.standard.medium"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -144,7 +141,6 @@ func TestAccAwsAppStreamFleet_completeWithoutStop(t *testing.T) {
 	description := "Description of a test"
 	fleetType := "ON_DEMAND"
 	instanceType := "stream.standard.small"
-	instanceType = "stream.standard.large"
 	displayName := "display name of a test"
 	displayNameUpdated := "display name of a test updated"
 
