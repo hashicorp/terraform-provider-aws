@@ -79,15 +79,10 @@ func resourceAwsGlueCrawler() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"schema_change_policy": {
-				Type:     schema.TypeList,
-				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
-				MaxItems: 1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				MaxItems:         1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"delete_behavior": {
@@ -129,6 +124,11 @@ func resourceAwsGlueCrawler() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"sample_size": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(1, 249),
 						},
 					},
 				},
@@ -233,15 +233,10 @@ func resourceAwsGlueCrawler() *schema.Resource {
 				ValidateFunc: validation.StringIsJSON,
 			},
 			"lineage_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"crawler_lineage_settings": {
@@ -254,15 +249,10 @@ func resourceAwsGlueCrawler() *schema.Resource {
 				},
 			},
 			"recrawl_policy": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"recrawl_behavior": {
@@ -403,16 +393,14 @@ func updateCrawlerInput(d *schema.ResourceData, crawlerName string) (*glue.Updat
 
 	crawlerInput.TablePrefix = aws.String(d.Get("table_prefix").(string))
 
-	if configuration, ok := d.GetOk("configuration"); ok {
-		crawlerInput.Configuration = aws.String(configuration.(string))
-	}
-
 	if v, ok := d.GetOk("configuration"); ok {
 		configuration, err := structure.NormalizeJsonString(v)
 		if err != nil {
 			return nil, fmt.Errorf("Configuration contains an invalid JSON: %v", err)
 		}
 		crawlerInput.Configuration = aws.String(configuration)
+	} else {
+		crawlerInput.Configuration = aws.String("")
 	}
 
 	if securityConfiguration, ok := d.GetOk("security_configuration"); ok {
@@ -521,13 +509,18 @@ func expandGlueS3Target(cfg map[string]interface{}) *glue.S3Target {
 		Path: aws.String(cfg["path"].(string)),
 	}
 
-	if connection, ok := cfg["connection_name"]; ok {
-		target.ConnectionName = aws.String(connection.(string))
+	if v, ok := cfg["connection_name"]; ok {
+		target.ConnectionName = aws.String(v.(string))
 	}
 
-	if exclusions, ok := cfg["exclusions"]; ok {
-		target.Exclusions = expandStringList(exclusions.([]interface{}))
+	if v, ok := cfg["exclusions"]; ok {
+		target.Exclusions = expandStringList(v.([]interface{}))
 	}
+
+	if v, ok := cfg["sample_size"]; ok && v.(int) > 0 {
+		target.SampleSize = aws.Int64(int64(v.(int)))
+	}
+
 	return target
 }
 
@@ -767,6 +760,10 @@ func flattenGlueS3Targets(s3Targets []*glue.S3Target) []map[string]interface{} {
 		attrs["exclusions"] = flattenStringList(s3Target.Exclusions)
 		attrs["path"] = aws.StringValue(s3Target.Path)
 		attrs["connection_name"] = aws.StringValue(s3Target.ConnectionName)
+
+		if s3Target.SampleSize != nil {
+			attrs["sample_size"] = aws.Int64Value(s3Target.SampleSize)
+		}
 
 		result = append(result, attrs)
 	}

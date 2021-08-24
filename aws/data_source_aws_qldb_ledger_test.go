@@ -23,6 +23,7 @@ func TestAccDataSourceAwsQLDBLedger_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair("data.aws_qldb_ledger.by_name", "arn", "aws_qldb_ledger.tf_test", "arn"),
 					resource.TestCheckResourceAttrPair("data.aws_qldb_ledger.by_name", "deletion_protection", "aws_qldb_ledger.tf_test", "deletion_protection"),
 					resource.TestCheckResourceAttrPair("data.aws_qldb_ledger.by_name", "name", "aws_qldb_ledger.tf_test", "name"),
+					resource.TestCheckResourceAttrPair("data.aws_qldb_ledger.by_name", "permissions_mode", "aws_qldb_ledger.tf_test", "permissions_mode"),
 				),
 			},
 		},
@@ -33,16 +34,19 @@ func testAccDataSourceAwsQLDBLedgerConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_qldb_ledger" "tf_wrong1" {
   name                = "%[1]s1"
+  permissions_mode    = "STANDARD"
   deletion_protection = false
 }
 
 resource "aws_qldb_ledger" "tf_test" {
   name                = "%[1]s2"
+  permissions_mode    = "STANDARD"
   deletion_protection = false
 }
 
 resource "aws_qldb_ledger" "tf_wrong2" {
   name                = "%[1]s3"
+  permissions_mode    = "STANDARD"
   deletion_protection = false
 }
 

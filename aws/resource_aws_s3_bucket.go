@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
@@ -524,6 +525,11 @@ func resourceAwsS3Bucket() *schema.Resource {
 											},
 										},
 									},
+									"delete_marker_replication_status": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice([]string{s3.DeleteMarkerReplicationStatusEnabled}, false),
+									},
 								},
 							},
 						},
@@ -681,11 +687,9 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		log.Printf("[DEBUG] Trying to create new S3 bucket: %q", bucket)
 		_, err := s3conn.CreateBucket(req)
 		if awsErr, ok := err.(awserr.Error); ok {
 			if awsErr.Code() == "OperationAborted" {
-				log.Printf("[WARN] Got an error while trying to create S3 bucket %s: %s", bucket, err)
 				return resource.RetryableError(
 					fmt.Errorf("Error creating S3 bucket %s, retrying: %s", bucket, err))
 			}
@@ -816,7 +820,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(s3BucketCreationTimeout, func() *resource.RetryError {
 		_, err := s3conn.HeadBucket(input)
 
-		if d.IsNewResource() && isAWSErrRequestFailureStatusCode(err, 404) {
+		if d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
 			return resource.RetryableError(err)
 		}
 
@@ -835,7 +839,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		_, err = s3conn.HeadBucket(input)
 	}
 
-	if !d.IsNewResource() && isAWSErrRequestFailureStatusCode(err, 404) {
+	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
 		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -2109,8 +2113,15 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 			} else {
 				rcRule.Filter.Prefix = aws.String(filter["prefix"].(string))
 			}
-			rcRule.DeleteMarkerReplication = &s3.DeleteMarkerReplication{
-				Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+
+			if dmr, ok := rr["delete_marker_replication_status"].(string); ok && dmr != "" {
+				rcRule.DeleteMarkerReplication = &s3.DeleteMarkerReplication{
+					Status: aws.String(dmr),
+				}
+			} else {
+				rcRule.DeleteMarkerReplication = &s3.DeleteMarkerReplication{
+					Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+				}
 			}
 		} else {
 			// XML schema V1.
@@ -2407,6 +2418,10 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 				m["tags"] = keyvaluetags.S3KeyValueTags(a.Tags).IgnoreAws().Map()
 			}
 			t["filter"] = []interface{}{m}
+
+			if v.DeleteMarkerReplication != nil && v.DeleteMarkerReplication.Status != nil && aws.StringValue(v.DeleteMarkerReplication.Status) == s3.DeleteMarkerReplicationStatusEnabled {
+				t["delete_marker_replication_status"] = aws.StringValue(v.DeleteMarkerReplication.Status)
+			}
 		}
 
 		rules = append(rules, t)
@@ -2576,6 +2591,10 @@ func rulesHash(v interface{}) int {
 	}
 	if v, ok := m["filter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		buf.WriteString(fmt.Sprintf("%d-", replicationRuleFilterHash(v[0])))
+
+		if v, ok := m["delete_marker_replication_status"]; ok && v.(string) == s3.DeleteMarkerReplicationStatusEnabled {
+			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		}
 	}
 	return hashcode.String(buf.String())
 }

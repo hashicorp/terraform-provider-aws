@@ -31,22 +31,26 @@ resource "aws_security_group" "allow_tls" {
   description = "Allow TLS inbound traffic"
   vpc_id      = aws_vpc.main.id
 
-  ingress {
-    description      = "TLS from VPC"
-    from_port        = 443
-    to_port          = 443
-    protocol         = "tcp"
-    cidr_blocks      = [aws_vpc.main.cidr_block]
-    ipv6_cidr_blocks = [aws_vpc.main.ipv6_cidr_block]
-  }
+  ingress = [
+    {
+      description      = "TLS from VPC"
+      from_port        = 443
+      to_port          = 443
+      protocol         = "tcp"
+      cidr_blocks      = [aws_vpc.main.cidr_block]
+      ipv6_cidr_blocks = [aws_vpc.main.ipv6_cidr_block]
+    }
+  ]
 
-  egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
+  egress = [
+    {
+      from_port        = 0
+      to_port          = 0
+      protocol         = "-1"
+      cidr_blocks      = ["0.0.0.0/0"]
+      ipv6_cidr_blocks = ["::/0"]
+    }
+  ]
 
   tags = {
     Name = "allow_tls"
@@ -60,13 +64,15 @@ resource "aws_security_group" "allow_tls" {
 resource "aws_security_group" "example" {
   # ... other configuration ...
 
-  egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
+  egress = [
+    {
+      from_port        = 0
+      to_port          = 0
+      protocol         = "-1"
+      cidr_blocks      = ["0.0.0.0/0"]
+      ipv6_cidr_blocks = ["::/0"]
+    }
+  ]
 }
 ```
 
@@ -81,12 +87,14 @@ Prefix list IDs are exported on VPC Endpoints, so you can use this format:
 resource "aws_security_group" "example" {
   # ... other configuration ...
 
-  egress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    prefix_list_ids = [aws_vpc_endpoint.my_endpoint.prefix_list_id]
-  }
+  egress = [
+    {
+      from_port       = 0
+      to_port         = 0
+      protocol        = "-1"
+      prefix_list_ids = [aws_vpc_endpoint.my_endpoint.prefix_list_id]
+    }
+  ]
 }
 
 resource "aws_vpc_endpoint" "my_endpoint" {
@@ -111,6 +119,8 @@ The following arguments are supported:
 
 ### ingress
 
+This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
+
 The following arguments are required:
 
 * `from_port` - (Required) Start port (or ICMP type number if protocol is `icmp` or `icmpv6`).
@@ -127,6 +137,8 @@ The following arguments are optional:
 * `self` - (Optional) Whether the security group itself will be added as a source to this ingress rule.
 
 ### egress
+
+This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 
 The following arguments are required:
 

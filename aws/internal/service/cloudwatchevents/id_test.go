@@ -6,7 +6,7 @@ import (
 	tfevents "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents"
 )
 
-func TestPermissionParseID(t *testing.T) {
+func TestPermissionParseResourceID(t *testing.T) {
 	testCases := []struct {
 		TestName      string
 		InputID       string
@@ -27,13 +27,13 @@ func TestPermissionParseID(t *testing.T) {
 		},
 		{
 			TestName:      "two parts",
-			InputID:       tfevents.PermissionCreateID("TestEventBus", "TestStatement"),
+			InputID:       tfevents.PermissionCreateResourceID("TestEventBus", "TestStatement"),
 			ExpectedPart0: "TestEventBus",
 			ExpectedPart1: "TestStatement",
 		},
 		{
 			TestName:      "two parts with default event bus",
-			InputID:       tfevents.PermissionCreateID(tfevents.DefaultEventBusName, "TestStatement"),
+			InputID:       tfevents.PermissionCreateResourceID(tfevents.DefaultEventBusName, "TestStatement"),
 			ExpectedPart0: tfevents.DefaultEventBusName,
 			ExpectedPart1: "TestStatement",
 		},
@@ -66,7 +66,7 @@ func TestPermissionParseID(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
-			gotPart0, gotPart1, err := tfevents.PermissionParseID(testCase.InputID)
+			gotPart0, gotPart1, err := tfevents.PermissionParseResourceID(testCase.InputID)
 
 			if err == nil && testCase.ExpectedError {
 				t.Fatalf("expected error, got no error")
@@ -87,7 +87,7 @@ func TestPermissionParseID(t *testing.T) {
 	}
 }
 
-func TestRuleParseID(t *testing.T) {
+func TestRuleParseResourceID(t *testing.T) {
 	testCases := []struct {
 		TestName      string
 		InputID       string
@@ -108,20 +108,32 @@ func TestRuleParseID(t *testing.T) {
 		},
 		{
 			TestName:      "two parts",
-			InputID:       tfevents.RuleCreateID("TestEventBus", "TestRule"),
+			InputID:       tfevents.RuleCreateResourceID("TestEventBus", "TestRule"),
 			ExpectedPart0: "TestEventBus",
 			ExpectedPart1: "TestRule",
 		},
 		{
 			TestName:      "two parts with default event bus",
-			InputID:       tfevents.RuleCreateID(tfevents.DefaultEventBusName, "TestRule"),
+			InputID:       tfevents.RuleCreateResourceID(tfevents.DefaultEventBusName, "TestRule"),
 			ExpectedPart0: tfevents.DefaultEventBusName,
 			ExpectedPart1: "TestRule",
 		},
 		{
-			TestName:      "partner event bus",
+			TestName:      "partner event bus 1",
 			InputID:       "aws.partner/example.com/Test/TestRule",
 			ExpectedPart0: "aws.partner/example.com/Test",
+			ExpectedPart1: "TestRule",
+		},
+		{
+			TestName:      "partner event bus 2",
+			InputID:       "aws.partner/foo.com/foo/18554d09-58ff-aa42-ba9c-c4c33899006f/test",
+			ExpectedPart0: "aws.partner/foo.com/foo/18554d09-58ff-aa42-ba9c-c4c33899006f",
+			ExpectedPart1: "test",
+		},
+		{
+			TestName:      "ARN event bus",
+			InputID:       tfevents.RuleCreateResourceID("arn:aws:events:us-east-2:123456789012:event-bus/default", "TestRule"),
+			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/default",
 			ExpectedPart1: "TestRule",
 		},
 		{
@@ -163,7 +175,7 @@ func TestRuleParseID(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
-			gotPart0, gotPart1, err := tfevents.RuleParseID(testCase.InputID)
+			gotPart0, gotPart1, err := tfevents.RuleParseResourceID(testCase.InputID)
 
 			if err == nil && testCase.ExpectedError {
 				t.Fatalf("expected error, got no error")
@@ -278,6 +290,13 @@ func TestTargetParseImportID(t *testing.T) {
 			TestName:      "partner event bus",
 			InputID:       "aws.partner/example.com/Test/TestRule/TestTarget",
 			ExpectedPart0: "aws.partner/example.com/Test",
+			ExpectedPart1: "TestRule",
+			ExpectedPart2: "TestTarget",
+		},
+		{
+			TestName:      "ARN event bus",
+			InputID:       "arn:aws:events:us-east-2:123456789012:event-bus/default/TestRule/TestTarget",
+			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/default",
 			ExpectedPart1: "TestRule",
 			ExpectedPart2: "TestTarget",
 		},

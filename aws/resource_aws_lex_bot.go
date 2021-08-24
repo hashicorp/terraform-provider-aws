@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -177,7 +178,39 @@ func resourceAwsLexBot() *schema.Resource {
 				Computed: true,
 			},
 		},
+		CustomizeDiff: updateComputedAttributesOnBotCreateVersion,
 	}
+}
+
+func updateComputedAttributesOnBotCreateVersion(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	createVersion := d.Get("create_version").(bool)
+	if createVersion && hasBotConfigChanges(d) {
+		d.SetNewComputed("version")
+	}
+	return nil
+}
+
+func hasBotConfigChanges(d resourceDiffer) bool {
+	for _, key := range []string{
+		"description",
+		"child_directed",
+		"detect_sentiment",
+		"enable_model_improvements",
+		"idle_session_ttl_in_seconds",
+		"intent",
+		"locale",
+		"nlu_intent_confidence_threshold",
+		"abort_statement.0.response_card",
+		"abort_statement.0.message",
+		"clarification_prompt",
+		"process_behavior",
+		"voice_id",
+	} {
+		if d.HasChange(key) {
+			return true
+		}
+	}
+	return false
 }
 
 var validateLexBotName = validation.All(
@@ -235,7 +268,7 @@ func resourceAwsLexBotCreate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 
-	if tfresource.TimedOut(err) {
+	if tfresource.TimedOut(err) { // nosemgrep: helper-schema-TimeoutError-check-doesnt-return-output
 		_, err = conn.PutBot(input)
 	}
 

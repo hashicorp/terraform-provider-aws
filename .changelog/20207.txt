@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_db_instance: Use engine_version and engine_version_actual to set and track engine versions
+```

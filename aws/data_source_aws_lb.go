@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
@@ -158,6 +159,8 @@ func dataSourceAwsLbRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elbv2conn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
+	tagsToMatch := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
 	input := &elbv2.DescribeLoadBalancersInput{}
 
 	if v, ok := d.GetOk("arn"); ok {
@@ -180,6 +183,31 @@ func dataSourceAwsLbRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		return fmt.Errorf("error retrieving LB: %w", err)
+	}
+
+	if len(tagsToMatch) > 0 {
+		var loadBalancers []*elbv2.LoadBalancer
+
+		for _, loadBalancer := range results {
+			arn := aws.StringValue(loadBalancer.LoadBalancerArn)
+			tags, err := keyvaluetags.Elbv2ListTags(conn, arn)
+
+			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error listing tags for (%s): %w", arn, err)
+			}
+
+			if !tags.ContainsAll(tagsToMatch) {
+				continue
+			}
+
+			loadBalancers = append(loadBalancers, loadBalancer)
+		}
+
+		results = loadBalancers
 	}
 
 	if len(results) != 1 {

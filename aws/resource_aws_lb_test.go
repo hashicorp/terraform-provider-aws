@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -44,6 +45,7 @@ func testSweepLBs(region string) error {
 	}
 	conn := client.(*AWSClient).elbv2conn
 
+	var sweeperErrs *multierror.Error
 	err = conn.DescribeLoadBalancersPages(&elbv2.DescribeLoadBalancersInput{}, func(page *elbv2.DescribeLoadBalancersOutput, lastPage bool) bool {
 		if page == nil || len(page.LoadBalancers) == 0 {
 			log.Print("[DEBUG] No LBs to sweep")
@@ -58,19 +60,21 @@ func testSweepLBs(region string) error {
 				LoadBalancerArn: loadBalancer.LoadBalancerArn,
 			})
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete LB (%s): %s", name, err)
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("failed to delete LB (%s): %w", name, err))
+				continue
 			}
 		}
 		return !lastPage
 	})
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping LB sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving LBs: %s", err)
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping LB sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
-	return nil
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving LBs: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestLBCloudwatchSuffixFromARN(t *testing.T) {

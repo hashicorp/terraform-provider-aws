@@ -484,6 +484,18 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 {
 		// since perm list could include TableWithColumns, get the right one
 		for _, perm := range cleanPermissions {
+			if perm.Resource == nil {
+				continue
+			}
+
+			if perm.Resource.TableWithColumns != nil && perm.Resource.TableWithColumns.ColumnWildcard != nil {
+				if err := d.Set("table", []interface{}{flattenLakeFormationTableWithColumnsResourceAsTable(perm.Resource.TableWithColumns)}); err != nil {
+					return fmt.Errorf("error setting table: %w", err)
+				}
+				tableSet = true
+				break
+			}
+
 			if perm.Resource.Table != nil {
 				if err := d.Set("table", []interface{}{flattenLakeFormationTableResource(perm.Resource.Table)}); err != nil {
 					return fmt.Errorf("error setting table: %w", err)
@@ -585,7 +597,7 @@ func resourceAwsLakeFormationPermissionsDelete(d *schema.ResourceData, meta inte
 		_, err = conn.RevokePermissions(input)
 	}
 
-	if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "No permissions revoked. Grantee has no") {
+	if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "No permissions revoked. Grantee") {
 		return nil
 	}
 
@@ -616,7 +628,11 @@ func resourceAwsLakeFormationPermissionsDelete(d *schema.ResourceData, meta inte
 		_, err = conn.RevokePermissions(input)
 	}
 
-	if err != nil && !tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "No permissions revoked. Grantee has no") {
+	if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "No permissions revoked. Grantee") {
+		return nil
+	}
+
+	if err != nil {
 		return fmt.Errorf("unable to revoke LakeFormation Permissions (input: %v): %w", input, err)
 	}
 
@@ -838,6 +854,33 @@ func flattenLakeFormationTableWithColumnsResource(apiObject *lakeformation.Table
 	}
 
 	if v := apiObject.Name; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+// This only happens in very specific situations:
+// (Select) TWC + ColumnWildcard              = (Select) Table
+// (Select) TWC + ColumnWildcard + ALL_TABLES = (Select) Table + TableWildcard
+func flattenLakeFormationTableWithColumnsResourceAsTable(apiObject *lakeformation.TableWithColumnsResource) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CatalogId; v != nil {
+		tfMap["catalog_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.DatabaseName; v != nil {
+		tfMap["database_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Name; v != nil && aws.StringValue(v) == tflakeformation.TableNameAllTables && apiObject.ColumnWildcard != nil {
+		tfMap["wildcard"] = true
+	} else if v := apiObject.Name; v != nil {
 		tfMap["name"] = aws.StringValue(v)
 	}
 

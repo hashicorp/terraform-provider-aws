@@ -8,35 +8,42 @@ func TestAccAWSLakeFormation_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"DataLakeSettings": {
 			"basic":            testAccAWSLakeFormationDataLakeSettings_basic,
+			"dataSource":       testAccAWSLakeFormationDataLakeSettingsDataSource_basic,
 			"disappears":       testAccAWSLakeFormationDataLakeSettings_disappears,
 			"withoutCatalogId": testAccAWSLakeFormationDataLakeSettings_withoutCatalogId,
-			"dataSource":       testAccAWSLakeFormationDataLakeSettingsDataSource_basic,
 		},
-		"BasicPermissions": {
-			"basic":        testAccAWSLakeFormationPermissions_basic,
-			"dataLocation": testAccAWSLakeFormationPermissions_dataLocation,
-			"database":     testAccAWSLakeFormationPermissions_database,
-			"disappears":   testAccAWSLakeFormationPermissions_disappears,
+		"PermissionsBasic": {
+			"basic":              testAccAWSLakeFormationPermissions_basic,
+			"database":           testAccAWSLakeFormationPermissions_database,
+			"databaseIAMAllowed": testAccAWSLakeFormationPermissions_databaseIAMAllowed,
+			"databaseMultiple":   testAccAWSLakeFormationPermissions_databaseMultiple,
+			"dataLocation":       testAccAWSLakeFormationPermissions_dataLocation,
+			"disappears":         testAccAWSLakeFormationPermissions_disappears,
 		},
-		"TablePermissions": {
-			"implicitTablePermissions": testAccAWSLakeFormationPermissions_implicitTablePermissions,
-			"selectPermissions":        testAccAWSLakeFormationPermissions_selectPermissions,
-			"tableName":                testAccAWSLakeFormationPermissions_tableName,
-			"tableWildcard":            testAccAWSLakeFormationPermissions_tableWildcard,
-			"tableWildcardPermissions": testAccAWSLakeFormationPermissions_tableWildcardPermissions,
+		"PermissionsDataSource": {
+			"basic":            testAccAWSLakeFormationPermissionsDataSource_basic,
+			"database":         testAccAWSLakeFormationPermissionsDataSource_database,
+			"dataLocation":     testAccAWSLakeFormationPermissionsDataSource_dataLocation,
+			"table":            testAccAWSLakeFormationPermissionsDataSource_table,
+			"tableWithColumns": testAccAWSLakeFormationPermissionsDataSource_tableWithColumns,
 		},
-		"TableWithColumnsPermissions": {
-			"columnWildcardExcludedColumnsPermissions": testAccAWSLakeFormationPermissions_columnWildcardExcludedColumnsPermissions,
-			"columnWildcardPermissions":                testAccAWSLakeFormationPermissions_columnWildcardPermissions,
-			"implicitTableWithColumnsPermissions":      testAccAWSLakeFormationPermissions_implicitTableWithColumnsPermissions,
-			"tableWithColumns":                         testAccAWSLakeFormationPermissions_tableWithColumns,
+		"PermissionsTable": {
+			"basic":              testAccAWSLakeFormationPermissions_tableBasic,
+			"iamAllowed":         testAccAWSLakeFormationPermissions_tableIAMAllowed,
+			"implicit":           testAccAWSLakeFormationPermissions_tableImplicit,
+			"multipleRoles":      testAccAWSLakeFormationPermissions_tableMultipleRoles,
+			"selectOnly":         testAccAWSLakeFormationPermissions_tableSelectOnly,
+			"selectPlus":         testAccAWSLakeFormationPermissions_tableSelectPlus,
+			"wildcardNoSelect":   testAccAWSLakeFormationPermissions_tableWildcardNoSelect,
+			"wildcardSelectOnly": testAccAWSLakeFormationPermissions_tableWildcardSelectOnly,
+			"wildcardSelectPlus": testAccAWSLakeFormationPermissions_tableWildcardSelectPlus,
 		},
-		"DataSourcePermissions": {
-			"basicDataSource":            testAccAWSLakeFormationPermissionsDataSource_basic,
-			"dataLocationDataSource":     testAccAWSLakeFormationPermissionsDataSource_dataLocation,
-			"databaseDataSource":         testAccAWSLakeFormationPermissionsDataSource_database,
-			"tableDataSource":            testAccAWSLakeFormationPermissionsDataSource_table,
-			"tableWithColumnsDataSource": testAccAWSLakeFormationPermissionsDataSource_tableWithColumns,
+		"PermissionsTableWithColumns": {
+			"basic":                   testAccAWSLakeFormationPermissions_twcBasic,
+			"implicit":                testAccAWSLakeFormationPermissions_twcImplicit,
+			"wildcardExcludedColumns": testAccAWSLakeFormationPermissions_twcWildcardExcludedColumns,
+			"wildcardSelectOnly":      testAccAWSLakeFormationPermissions_twcWildcardSelectOnly,
+			"wildcardSelectPlus":      testAccAWSLakeFormationPermissions_twcWildcardSelectPlus,
 		},
 	}
 

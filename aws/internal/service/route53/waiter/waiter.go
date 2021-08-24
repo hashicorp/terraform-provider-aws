@@ -29,7 +29,7 @@ func ChangeInfoStatusInsync(conn *route53.Route53, changeID string) (*route53.Ch
 	stateConf := &resource.StateChangeConf{
 		Pending:      []string{route53.ChangeStatusPending},
 		Target:       []string{route53.ChangeStatusInsync},
-		Delay:        time.Duration(rand.Int63n(20)+10) * time.Second,
+		Delay:        time.Duration(rand.Int63n(20)+10) * time.Second, //nolint:gomnd
 		MinTimeout:   ChangeMinTimeout,
 		PollInterval: ChangePollInterval,
 		Refresh:      ChangeInfoStatus(conn, changeID),

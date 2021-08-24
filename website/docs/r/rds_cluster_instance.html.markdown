@@ -97,7 +97,7 @@ In addition to all arguments above, the following attributes are exported:
 * `availability_zone` - The availability zone of the instance
 * `endpoint` - The DNS address for this instance. May not be writable
 * `engine` - The database engine
-* `engine_version` - The database engine version
+* `engine_version_actual` - The database engine version
 * `port` - The database port
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted.
 * `kms_key_id` - The ARN for the KMS encryption key if one is set to the cluster.

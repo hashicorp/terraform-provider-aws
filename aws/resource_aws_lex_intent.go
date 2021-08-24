@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -247,7 +248,36 @@ func resourceAwsLexIntent() *schema.Resource {
 				Computed: true,
 			},
 		},
+		CustomizeDiff: updateComputedAttributesOnIntentCreateVersion,
 	}
+}
+
+func updateComputedAttributesOnIntentCreateVersion(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	createVersion := d.Get("create_version").(bool)
+	if createVersion && hasIntentConfigChanges(d) {
+		d.SetNewComputed("version")
+	}
+	return nil
+}
+
+func hasIntentConfigChanges(d resourceDiffer) bool {
+	for _, key := range []string{
+		"description",
+		"conclusion_statement",
+		"confirmation_prompt",
+		"dialog_code_hook",
+		"follow_up_prompt",
+		"fulfillment_activity",
+		"parent_intent_signature",
+		"rejection_statement",
+		"sample_utterances",
+		"slot",
+	} {
+		if d.HasChange(key) {
+			return true
+		}
+	}
+	return false
 }
 
 func resourceAwsLexIntentCreate(d *schema.ResourceData, meta interface{}) error {
@@ -310,7 +340,7 @@ func resourceAwsLexIntentCreate(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	})
 
-	if tfresource.TimedOut(err) {
+	if tfresource.TimedOut(err) { // nosemgrep: helper-schema-TimeoutError-check-doesnt-return-output
 		_, err = conn.PutIntent(input)
 	}
 

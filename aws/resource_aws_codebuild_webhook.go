@@ -29,6 +29,11 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"build_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(codebuild.WebhookBuildType_Values(), false),
+			},
 			"branch_filter": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -45,16 +50,9 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"type": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											codebuild.WebhookFilterTypeEvent,
-											codebuild.WebhookFilterTypeActorAccountId,
-											codebuild.WebhookFilterTypeBaseRef,
-											codebuild.WebhookFilterTypeFilePath,
-											codebuild.WebhookFilterTypeHeadRef,
-											codebuild.WebhookFilterTypeCommitMessage,
-										}, false),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(codebuild.WebhookFilterType_Values(), false),
 									},
 									"exclude_matched_pattern": {
 										Type:     schema.TypeBool,
@@ -96,6 +94,10 @@ func resourceAwsCodeBuildWebhookCreate(d *schema.ResourceData, meta interface{})
 	input := &codebuild.CreateWebhookInput{
 		ProjectName:  aws.String(d.Get("project_name").(string)),
 		FilterGroups: expandWebhookFilterGroups(d),
+	}
+
+	if v, ok := d.GetOk("build_type"); ok {
+		input.BuildType = aws.String(v.(string))
 	}
 
 	// The CodeBuild API requires this to be non-empty if defined
@@ -180,6 +182,7 @@ func resourceAwsCodeBuildWebhookRead(d *schema.ResourceData, meta interface{}) e
 		return nil
 	}
 
+	d.Set("build_type", project.Webhook.BuildType)
 	d.Set("branch_filter", project.Webhook.BranchFilter)
 	d.Set("filter_group", flattenAwsCodeBuildWebhookFilterGroups(project.Webhook.FilterGroups))
 	d.Set("payload_url", project.Webhook.PayloadUrl)
@@ -199,12 +202,14 @@ func resourceAwsCodeBuildWebhookUpdate(d *schema.ResourceData, meta interface{})
 	if len(filterGroups) >= 1 {
 		_, err = conn.UpdateWebhook(&codebuild.UpdateWebhookInput{
 			ProjectName:  aws.String(d.Id()),
+			BuildType:    aws.String(d.Get("build_type").(string)),
 			FilterGroups: filterGroups,
 			RotateSecret: aws.Bool(false),
 		})
 	} else {
 		_, err = conn.UpdateWebhook(&codebuild.UpdateWebhookInput{
 			ProjectName:  aws.String(d.Id()),
+			BuildType:    aws.String(d.Get("build_type").(string)),
 			BranchFilter: aws.String(d.Get("branch_filter").(string)),
 			RotateSecret: aws.Bool(false),
 		})
