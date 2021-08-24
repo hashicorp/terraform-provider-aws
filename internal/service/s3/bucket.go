@@ -3048,6 +3048,9 @@ func flattenCannedACL(d *schema.ResourceData, ap *s3.GetBucketAclOutput) bool {
 		d.Set("acl", "aws-exec-read")
 	case owner_full_control && !all_users_read && !all_users_write && !authenticated_users_read && !ec2_read && logdelivery_read_acp && logdelivery_write:
 		d.Set("acl", "log-delivery-write")
+	default:
+		// No combination matched a canned ACL
+		return false
 	}
 	return true
 }

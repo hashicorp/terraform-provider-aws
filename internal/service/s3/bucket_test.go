@@ -629,6 +629,36 @@ func TestAccS3Bucket_Security_updateGrant(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
+				Config: testAccBucketWithGrantsEnsureNotCanned(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "grant.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
+						"permissions.#": "1",
+						"type":          "CanonicalUser",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "grant.*.permissions.*", "FULL_CONTROL"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
+						"permissions.#": "1",
+						"type":          "Group",
+						"uri":           "http://acs.amazonaws.com/groups/global/AllUsers",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "grant.*.permissions.*", "READ"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
+						"permissions.#": "1",
+						"type":          "Group",
+						"uri":           "http://acs.amazonaws.com/groups/s3/LogDelivery",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "grant.*.permissions.*", "READ_ACP"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+			{
 				Config: testAccBucketConfig_Basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
@@ -4002,6 +4032,36 @@ resource "aws_s3_bucket" "bucket" {
     id          = data.aws_canonical_user_id.current.id
     type        = "CanonicalUser"
     permissions = ["READ"]
+  }
+
+  grant {
+    type        = "Group"
+    permissions = ["READ_ACP"]
+    uri         = "http://acs.amazonaws.com/groups/s3/LogDelivery"
+  }
+}
+`, bucketName)
+}
+
+func testAccBucketWithGrantsEnsureNotCanned(bucketName string) string {
+	return fmt.Sprintf(`
+data "aws_canonical_user_id" "current" {}
+
+# This is a mix of several grant combinations that could make canned ACLs
+# but as a result do not match a single canned ACL.
+resource "aws_s3_bucket" "bucket" {
+  bucket = %[1]q
+
+  grant {
+    id          = data.aws_canonical_user_id.current.id
+    type        = "CanonicalUser"
+    permissions = ["FULL_CONTROL"]
+  }
+
+  grant {
+    type        = "Group"
+    permissions = ["READ"]
+    uri         = "http://acs.amazonaws.com/groups/global/AllUsers"
   }
 
   grant {
