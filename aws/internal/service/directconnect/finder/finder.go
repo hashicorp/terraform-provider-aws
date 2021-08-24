@@ -7,6 +7,46 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
+func ConnectionByID(conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {
+	input := &directconnect.DescribeConnectionsInput{
+		ConnectionId: aws.String(id),
+	}
+
+	output, err := conn.DescribeConnections(input)
+
+	if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "Could not find Connection with ID") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Connections) == 0 || output.Connections[0] == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	// TODO Check for multiple results.
+	// TODO https://github.com/hashicorp/terraform-provider-aws/pull/17613.
+
+	connection := output.Connections[0]
+
+	if state := aws.StringValue(connection.ConnectionState); state == directconnect.ConnectionStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	return connection, nil
+}
+
 func GatewayByID(conn *directconnect.DirectConnect, id string) (*directconnect.Gateway, error) {
 	input := &directconnect.DescribeDirectConnectGatewaysInput{
 		DirectConnectGatewayId: aws.String(id),
@@ -142,68 +182,12 @@ func GatewayAssociationProposalByID(conn *directconnect.DirectConnect, id string
 	return proposal, nil
 }
 
-// ConnectionByID returns the connections corresponding to the specified connection ID.
-// Returns NotFoundError if no connection is found.
-func ConnectionByID(conn *directconnect.DirectConnect, connectionID string) (*directconnect.Connection, error) {
-	input := &directconnect.DescribeConnectionsInput{
-		ConnectionId: aws.String(connectionID),
-	}
-
-	connections, err := Connections(conn, input)
-
-	if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "Could not find Connection with ID") {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Handle any empty result.
-	if len(connections) == 0 {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
-	}
-
-	if state := aws.StringValue(connections[0].ConnectionState); state == directconnect.ConnectionStateDeleted {
-		return nil, &resource.NotFoundError{
-			Message:     state,
-			LastRequest: input,
-		}
-	}
-
-	return connections[0], nil
-}
-
-// Connections returns the connections corresponding to the specified input.
-// Returns an empty slice if no connections are found.
-func Connections(conn *directconnect.DirectConnect, input *directconnect.DescribeConnectionsInput) ([]*directconnect.Connection, error) {
-	output, err := conn.DescribeConnections(input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return []*directconnect.Connection{}, nil
-	}
-
-	return output.Connections, nil
-}
-
-// LagByID returns the locations corresponding to the specified LAG ID.
-// Returns NotFoundError if no LAG is found.
-func LagByID(conn *directconnect.DirectConnect, lagID string) (*directconnect.Lag, error) {
+func LagByID(conn *directconnect.DirectConnect, id string) (*directconnect.Lag, error) {
 	input := &directconnect.DescribeLagsInput{
-		LagId: aws.String(lagID),
+		LagId: aws.String(id),
 	}
 
-	lags, err := Lags(conn, input)
+	output, err := conn.DescribeLags(input)
 
 	if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "Could not find Lag with ID") {
 		return nil, &resource.NotFoundError{
@@ -216,43 +200,29 @@ func LagByID(conn *directconnect.DirectConnect, lagID string) (*directconnect.La
 		return nil, err
 	}
 
-	// Handle any empty result.
-	if len(lags) == 0 {
+	if output == nil || len(output.Lags) == 0 || output.Lags[0] == nil {
 		return nil, &resource.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
 	}
 
-	if state := aws.StringValue(lags[0].LagState); state == directconnect.LagStateDeleted {
+	// TODO Check for multiple results.
+	// TODO https://github.com/hashicorp/terraform-provider-aws/pull/17613.
+
+	lag := output.Lags[0]
+
+	if state := aws.StringValue(lag.LagState); state == directconnect.LagStateDeleted {
 		return nil, &resource.NotFoundError{
 			Message:     state,
 			LastRequest: input,
 		}
 	}
 
-	return lags[0], nil
+	return lag, nil
 }
 
-// Lags returns the LAGs corresponding to the specified input.
-// Returns an empty slice if no LAGs are found.
-func Lags(conn *directconnect.DirectConnect, input *directconnect.DescribeLagsInput) ([]*directconnect.Lag, error) {
-	output, err := conn.DescribeLags(input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return []*directconnect.Lag{}, nil
-	}
-
-	return output.Lags, nil
-}
-
-// LocationByCode returns the locations corresponding to the specified location code.
-// Returns NotFoundError if no location is found.
-func LocationByCode(conn *directconnect.DirectConnect, locationCode string) (*directconnect.Location, error) {
+func LocationByCode(conn *directconnect.DirectConnect, code string) (*directconnect.Location, error) {
 	input := &directconnect.DescribeLocationsInput{}
 
 	locations, err := Locations(conn, input)
@@ -262,7 +232,7 @@ func LocationByCode(conn *directconnect.DirectConnect, locationCode string) (*di
 	}
 
 	for _, location := range locations {
-		if aws.StringValue(location.LocationCode) == locationCode {
+		if aws.StringValue(location.LocationCode) == code {
 			return location, nil
 		}
 	}
@@ -273,8 +243,6 @@ func LocationByCode(conn *directconnect.DirectConnect, locationCode string) (*di
 	}
 }
 
-// Locations returns the locations corresponding to the specified input.
-// Returns an empty slice if no locations are found.
 func Locations(conn *directconnect.DirectConnect, input *directconnect.DescribeLocationsInput) ([]*directconnect.Location, error) {
 	output, err := conn.DescribeLocations(input)
 
@@ -282,8 +250,11 @@ func Locations(conn *directconnect.DirectConnect, input *directconnect.DescribeL
 		return nil, err
 	}
 
-	if output == nil {
-		return []*directconnect.Location{}, nil
+	if output == nil || len(output.Locations) == 0 {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
 	}
 
 	return output.Locations, nil
