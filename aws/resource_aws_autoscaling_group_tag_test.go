@@ -8,6 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfautoscaling "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscaling"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tagresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSAutoscalingGroupTag_basic(t *testing.T) {
@@ -99,21 +102,23 @@ func testAccCheckAutoscalingGroupTagDestroy(s *terraform.State) error {
 			continue
 		}
 
-		asgName, key, err := extractAutoscalingGroupNameAndKeyFromAutoscalingGroupTagID(rs.Primary.ID)
+		identifier, key, err := tagresource.GetResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		exists, _, err := keyvaluetags.AutoscalingGetTag(conn, asgName, autoscalingTagResourceTypeAutoScalingGroup, key)
+		_, err = keyvaluetags.AutoscalingGetTag(conn, identifier, tfautoscaling.TagResourceTypeAutoScalingGroup, key)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
 			return err
 		}
 
-		if exists {
-			return fmt.Errorf("Tag (%s) for resource (%s) still exists", key, asgName)
-		}
+		return fmt.Errorf("AutoScaling Group (%s) tag (%s) still exists", identifier, key)
 	}
 
 	return nil
@@ -123,14 +128,14 @@ func testAccCheckAutoscalingGroupTagExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("%s: missing resource ID", n)
 		}
 
-		asgName, key, err := extractAutoscalingGroupNameAndKeyFromAutoscalingGroupTagID(rs.Primary.ID)
+		identifier, key, err := tagresource.GetResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -138,14 +143,10 @@ func testAccCheckAutoscalingGroupTagExists(n string) resource.TestCheckFunc {
 
 		conn := testAccProvider.Meta().(*AWSClient).autoscalingconn
 
-		exists, _, err := keyvaluetags.AutoscalingGetTag(conn, asgName, autoscalingTagResourceTypeAutoScalingGroup, key)
+		_, err = keyvaluetags.AutoscalingGetTag(conn, identifier, tfautoscaling.TagResourceTypeAutoScalingGroup, key)
 
 		if err != nil {
 			return err
-		}
-
-		if !exists {
-			return fmt.Errorf("Tag (%s) for resource (%s) not found", key, asgName)
 		}
 
 		return nil
@@ -153,52 +154,41 @@ func testAccCheckAutoscalingGroupTagExists(n string) resource.TestCheckFunc {
 }
 
 func testAccAutoscalingGroupTagConfig(key string, value string) string {
-	return fmt.Sprintf(`
-data "aws_ami" "latest_al2" {
-	owners      = ["amazon"]
-	most_recent = true
-
-	filter {
-		name   = "name"
-		values = ["amzn2-ami-hvm-*-x86_64-ebs"]
-	}
-}
-
+	return composeConfig(
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-	name_prefix   = "terraform-test-"
-	image_id      = data.aws_ami.latest_al2.id
-	instance_type = "t2.nano"
-}
-
-data "aws_availability_zones" "available" {
-	state = "available"
+  name_prefix   = "terraform-test-"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.nano"
 }
 
 resource "aws_autoscaling_group" "test" {
-	lifecycle {
-		ignore_changes = [tag]
-	}
+  lifecycle {
+    ignore_changes = [tag]
+  }
 
-	availability_zones = data.aws_availability_zones.available.names
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
-	min_size = 0
-	max_size = 0
+  min_size = 0
+  max_size = 0
 
-	launch_template {
-		id      = aws_launch_template.test.id
-		version = "$Latest"
-	}
+  launch_template {
+    id      = aws_launch_template.test.id
+    version = "$Latest"
+  }
 }
 
 resource "aws_autoscaling_group_tag" "test" {
-	asg_name = aws_autoscaling_group.test.name
+  autoscaling_group_name = aws_autoscaling_group.test.name
 
-	tag {
-		key   = %[1]q
-		value = %[2]q
+  tag {
+    key   = %[1]q
+    value = %[2]q
 
-		propagate_at_launch = true
-	}
+    propagate_at_launch = true
+  }
 }
-`, key, value)
+`, key, value))
 }

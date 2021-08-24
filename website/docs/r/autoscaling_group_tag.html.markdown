@@ -18,7 +18,7 @@ Manages an individual Autoscaling Group (ASG) tag. This resource should only be 
 
 ```terraform
 resource "aws_eks_node_group" "example" {
-  cluster_name = "example"
+  cluster_name    = "example"
   node_group_name = "example"
 
   # ... other configuration ...
@@ -31,7 +31,7 @@ resource "aws_autoscaling_group_tag" "example" {
     ): asg.name]
   )
 
-  asg_name = each.value
+  autoscaling_group_name = each.value
 
   tag {
     key   = "k8s.io/cluster-autoscaler/node-template/label/eks.amazonaws.com/capacityType"
@@ -46,7 +46,7 @@ resource "aws_autoscaling_group_tag" "example" {
 
 The following arguments are supported:
 
-* `asg_name` - (Required) The name of the Autoscaling Group to apply the tag to.
+* `autoscaling_group_name` - (Required) The name of the Autoscaling Group to apply the tag to.
 * `tag` - (Required) The tag to create. The `tag` block is documented below.
 
 The `tag` block supports the following arguments:
