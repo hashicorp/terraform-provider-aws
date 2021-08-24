@@ -940,22 +940,29 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	//Read the Grant ACL. Reset if `acl` (canned ACL) is set.
-	if acl, ok := d.GetOk("acl"); ok && acl.(string) != "private" {
+	// Read the canned ACL or grants
+	apResponse, err := verify.RetryOnAWSCode("NoSuchBucket", func() (interface{}, error) {
+		return conn.GetBucketAcl(&s3.GetBucketAclInput{
+			Bucket: aws.String(d.Id()),
+		})
+	})
+	if err != nil {
+		return fmt.Errorf("error getting S3 Bucket (%s) ACL: %s", d.Id(), err)
+	}
+
+	log.Printf("[DEBUG] S3 bucket: %s, read ACL grants policy: %+v", d.Id(), apResponse)
+	ap := apResponse.(*s3.GetBucketAclOutput)
+	if flattenCannedACL(d, ap) {
+		// Reset the Grant ACL if a canned ACL is set.
 		if err := d.Set("grant", nil); err != nil {
 			return fmt.Errorf("error resetting grant %s", err)
 		}
 	} else {
-		apResponse, err := verify.RetryOnAWSCode("NoSuchBucket", func() (interface{}, error) {
-			return conn.GetBucketAcl(&s3.GetBucketAclInput{
-				Bucket: aws.String(d.Id()),
-			})
-		})
-		if err != nil {
-			return fmt.Errorf("error getting S3 Bucket (%s) ACL: %s", d.Id(), err)
-		}
-		log.Printf("[DEBUG] S3 bucket: %s, read ACL grants policy: %+v", d.Id(), apResponse)
-		grants := flattenGrants(apResponse.(*s3.GetBucketAclOutput))
+		// `acl` attribute defaults to `private` but it conflicts with `grant` so it cannot be set manually in configuration.
+		// Set it in state here for resolving issues with imported resources.
+		d.Set("acl", "private")
+
+		grants := flattenGrants(ap)
 		if err := d.Set("grant", schema.NewSet(grantHash, grants)); err != nil {
 			return fmt.Errorf("error setting grant %s", err)
 		}
@@ -2976,13 +2983,76 @@ func flattenS3ObjectLockConfiguration(conf *s3.ObjectLockConfiguration) []interf
 	return []interface{}{mConf}
 }
 
-func flattenGrants(ap *s3.GetBucketAclOutput) []interface{} {
-	//if ACL grants contains bucket owner FULL_CONTROL only - it is default "private" acl
-	if len(ap.Grants) == 1 && aws.StringValue(ap.Grants[0].Grantee.ID) == aws.StringValue(ap.Owner.ID) &&
-		aws.StringValue(ap.Grants[0].Permission) == s3.PermissionFullControl {
-		return nil
+func flattenCannedACL(d *schema.ResourceData, ap *s3.GetBucketAclOutput) bool {
+	var owner_full_control bool
+	var all_users_read bool
+	var all_users_write bool
+	var authenticated_users_read bool
+	var ec2_read bool
+	var logdelivery_read_acp bool
+	var logdelivery_write bool
+	// There may be more than one occurrence of each grant combination but it is apparently unimportant as
+	// the AWS console states "The console displays combined access grants for duplicate grantees"
+	for _, granteeObject := range ap.Grants {
+		if aws.StringValue(granteeObject.Grantee.ID) == aws.StringValue(ap.Owner.ID) &&
+			aws.StringValue(granteeObject.Permission) == s3.PermissionFullControl {
+			owner_full_control = true
+			continue
+		}
+		if aws.StringValue(granteeObject.Grantee.URI) == "http://acs.amazonaws.com/groups/global/AllUsers" &&
+			aws.StringValue(granteeObject.Permission) == s3.PermissionRead {
+			all_users_read = true
+			continue
+		}
+		if aws.StringValue(granteeObject.Grantee.URI) == "http://acs.amazonaws.com/groups/global/AllUsers" &&
+			aws.StringValue(granteeObject.Permission) == s3.PermissionWrite {
+			all_users_write = true
+			continue
+		}
+		if aws.StringValue(granteeObject.Grantee.URI) == "http://acs.amazonaws.com/groups/global/AuthenticatedUsers" &&
+			aws.StringValue(granteeObject.Permission) == s3.PermissionRead {
+			authenticated_users_read = true
+			continue
+		}
+		// This is the Amazon ID for the za-team group used for EC2 operations in S3 buckets
+		if aws.StringValue(granteeObject.Grantee.ID) == "6aa5a366c34c1cbe25dc49211496e913e0351eb0e8c37aa3477e40942ec6b97c" &&
+			aws.StringValue(granteeObject.Permission) == s3.PermissionRead {
+			ec2_read = true
+			continue
+		}
+		if aws.StringValue(granteeObject.Grantee.URI) == "http://acs.amazonaws.com/groups/s3/LogDelivery" &&
+			aws.StringValue(granteeObject.Permission) == s3.PermissionReadAcp {
+			logdelivery_read_acp = true
+			continue
+		}
+		if aws.StringValue(granteeObject.Grantee.URI) == "http://acs.amazonaws.com/groups/s3/LogDelivery" &&
+			aws.StringValue(granteeObject.Permission) == s3.PermissionWrite {
+			logdelivery_write = true
+			continue
+		}
+
+		// This is a non standard grant combination, so it's not a canned ACL
+		return false
 	}
 
+	switch {
+	case owner_full_control && !all_users_read && !all_users_write && !authenticated_users_read && !ec2_read && !logdelivery_read_acp && !logdelivery_write:
+		d.Set("acl", "private")
+	case owner_full_control && all_users_read && !all_users_write && !authenticated_users_read && !ec2_read && !logdelivery_read_acp && !logdelivery_write:
+		d.Set("acl", "public-read")
+	case owner_full_control && all_users_read && all_users_write && !authenticated_users_read && !ec2_read && !logdelivery_read_acp && !logdelivery_write:
+		d.Set("acl", "public-read-write")
+	case owner_full_control && !all_users_read && !all_users_write && authenticated_users_read && !ec2_read && !logdelivery_read_acp && !logdelivery_write:
+		d.Set("acl", "authenticated-read")
+	case owner_full_control && !all_users_read && !all_users_write && !authenticated_users_read && ec2_read && !logdelivery_read_acp && !logdelivery_write:
+		d.Set("acl", "aws-exec-read")
+	case owner_full_control && !all_users_read && !all_users_write && !authenticated_users_read && !ec2_read && logdelivery_read_acp && logdelivery_write:
+		d.Set("acl", "log-delivery-write")
+	}
+	return true
+}
+
+func flattenGrants(ap *s3.GetBucketAclOutput) []interface{} {
 	getGrant := func(grants []interface{}, grantee map[string]interface{}) (interface{}, bool) {
 		for _, pg := range grants {
 			pgt := pg.(map[string]interface{})
