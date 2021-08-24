@@ -11,27 +11,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSRoute53RecoveryControlConfigSafetyRule_assertionrule(t *testing.T) {
-	rClusterName := acctest.RandomWithPrefix("tf-acc-test-cluster")
-	rControlPanelName := acctest.RandomWithPrefix("tf-acc-test-control-panel")
-	rRoutingControlName := acctest.RandomWithPrefix("tf-acc-test-routing-control")
-	rSafetyRuleName := acctest.RandomWithPrefix("tf-acc-test-safety-rule")
-	resourceName := "aws_route53recoverycontrolconfig_safety_rule.test.assertion_rule"
-	resource.ParallelTest(t, resource.TestCase{
+func testAccAWSRoute53RecoveryControlConfigSafetyRule_assertionRule(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_route53recoverycontrolconfig_safety_rule.test"
+
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, route53recoverycontrolconfig.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigSafetyRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53RecoveryControlConfigRoutingControlConfigSafetyRuleAssertion(rClusterName, rControlPanelName, rRoutingControlName, rSafetyRuleName),
+				Config: testAccAwsRoute53RecoveryControlConfigRoutingControlConfigSafetyRuleAssertion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRoute53RecoveryControlConfigSafetyRuleExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rSafetyRuleName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "status", "DEPLOYED"),
-					resource.TestCheckResourceAttr(resourceName, "wait_perios_ms", "5000"),
+					resource.TestCheckResourceAttr(resourceName, "wait_period_ms", "5000"),
 					resource.TestCheckResourceAttr(resourceName, "asserted_controls.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "control_panel_arn", "aws_route53recoverycontrolconfig_control_panel.test", "control_panel_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "control_panel_arn", "aws_route53recoverycontrolconfig_control_panel.test", "arn"),
 				),
 			},
 			{
@@ -43,28 +41,48 @@ func TestAccAWSRoute53RecoveryControlConfigSafetyRule_assertionrule(t *testing.T
 	})
 }
 
-func TestAccAWSRoute53RecoveryControlConfigSafetyRule_gatingrule(t *testing.T) {
-	rClusterName := acctest.RandomWithPrefix("tf-acc-test-cluster")
-	rControlPanelName := acctest.RandomWithPrefix("tf-acc-test-control-panel")
-	rRoutingControlName := acctest.RandomWithPrefix("tf-acc-test-routing-control")
-	rSafetyRuleName := acctest.RandomWithPrefix("tf-acc-test-safety-rule")
-	resourceName := "aws_route53recoverycontrolconfig_safety_rule.test.gating_rule"
-	resource.ParallelTest(t, resource.TestCase{
+func testAccAWSRoute53RecoveryControlConfigSafetyRule_disappears(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_route53recoverycontrolconfig_safety_rule.test"
+
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, route53recoverycontrolconfig.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigSafetyRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53RecoveryControlConfigRoutingControlConfigSafetyRuleGating(rClusterName, rControlPanelName, rRoutingControlName, rSafetyRuleName),
+				Config: testAccAwsRoute53RecoveryControlConfigRoutingControlConfigSafetyRuleAssertion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRoute53RecoveryControlConfigSafetyRuleExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rSafetyRuleName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53RecoveryControlConfigSafetyRule(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccAWSRoute53RecoveryControlConfigSafetyRule_gatingRule(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_route53recoverycontrolconfig_safety_rule.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, route53recoverycontrolconfig.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigSafetyRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsRoute53RecoveryControlConfigRoutingControlConfigSafetyRuleGating(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRoute53RecoveryControlConfigSafetyRuleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "status", "DEPLOYED"),
-					resource.TestCheckResourceAttr(resourceName, "wait_perios_ms", "5000"),
+					resource.TestCheckResourceAttr(resourceName, "wait_period_ms", "5000"),
 					resource.TestCheckResourceAttr(resourceName, "target_controls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "gating_controls.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "control_panel_arn", "aws_route53recoverycontrolconfig_control_panel.test", "control_panel_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "control_panel_arn", "aws_route53recoverycontrolconfig_control_panel.test", "arn"),
 				),
 			},
 			{
@@ -117,58 +135,67 @@ func testAccCheckAwsRoute53RecoveryControlConfigSafetyRuleExists(name string) re
 	}
 }
 
-func testAccAwsRoute53RecoveryControlConfigRoutingControlConfigSafetyRuleAssertion(rName, rName2, rName3, rName4 string) string {
+func testAccAwsRoute53RecoveryControlConfigRoutingControlConfigSafetyRuleAssertion(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53recoverycontrolconfig_cluster" "test" {
   name = %[1]q
 }
 
 resource "aws_route53recoverycontrolconfig_control_panel" "test" {
-  name        = %[2]q
-  cluster_arn = aws_route53recoverycontrolconfig_cluster.test.cluster_arn
+  name        = %[1]q
+  cluster_arn = aws_route53recoverycontrolconfig_cluster.test.arn
 }
 
 resource "aws_route53recoverycontrolconfig_routing_control" "test" {
-  name              = %[3]q
-  cluster_arn       = aws_route53recoverycontrolconfig_cluster.test.cluster_arn
-  control_panel_arn = aws_route53recoverycontrolconfig_control_panel.test.control_panel_arn
+  name              = %[1]q
+  cluster_arn       = aws_route53recoverycontrolconfig_cluster.test.arn
+  control_panel_arn = aws_route53recoverycontrolconfig_control_panel.test.arn
 }
 
 resource "aws_route53recoverycontrolconfig_safety_rule" "test" {
-  name              = %[4]q
-  control_panel_arn = aws_route53recoverycontrolconfig_control_panel.test.control_panel_arn
+  name              = %[1]q
+  control_panel_arn = aws_route53recoverycontrolconfig_control_panel.test.arn
   wait_period_ms    = 5000
-  asserted_controls = [aws_route53recoverycontrolconfig_routing_control.test.routing_control_arn]
-  rule_config       = { inverted = false, threshold = 0, type = "AND"}
+  asserted_controls = [aws_route53recoverycontrolconfig_routing_control.test.arn]
+
+  rule_config {
+    inverted = false
+    threshold = 0
+    type = "AND"
+  }
 }
-`, rName, rName2, rName3, rName4)
+`, rName)
 }
 
-func testAccAwsRoute53RecoveryControlConfigRoutingControlConfigSafetyRuleGating(rName, rName2, rName3, rName4 string) string {
+func testAccAwsRoute53RecoveryControlConfigRoutingControlConfigSafetyRuleGating(rName string) string {
 	return fmt.Sprintf(`
-
-resource "aws_route53recoverycontrolconfig_cluster" "test2" {
+resource "aws_route53recoverycontrolconfig_cluster" "test" {
   name = %[1]q
 }
 
-resource "aws_route53recoverycontrolconfig_control_panel" "test2" {
-  name        = %[2]q
-  cluster_arn = aws_route53recoverycontrolconfig_cluster.test2.cluster_arn
+resource "aws_route53recoverycontrolconfig_control_panel" "test" {
+  name        = %[1]q
+  cluster_arn = aws_route53recoverycontrolconfig_cluster.test.arn
 }
 
-resource "aws_route53recoverycontrolconfig_routing_control" "test2" {
-  name              = %[3]q
-  cluster_arn       = aws_route53recoverycontrolconfig_cluster.test.cluster_arn
-  control_panel_arn = aws_route53recoverycontrolconfig_control_panel.test2.control_panel_arn
+resource "aws_route53recoverycontrolconfig_routing_control" "test" {
+  name              = %[1]q
+  cluster_arn       = aws_route53recoverycontrolconfig_cluster.test.arn
+  control_panel_arn = aws_route53recoverycontrolconfig_control_panel.test.arn
 }
 
-resource "aws_route53recoverycontrolconfig_safety_rule" "test2" {
-  name              = %[4]q
-  control_panel_arn = aws_route53recoverycontrolconfig_control_panel.test2.control_panel_arn
+resource "aws_route53recoverycontrolconfig_safety_rule" "test" {
+  name              = %[1]q
+  control_panel_arn = aws_route53recoverycontrolconfig_control_panel.test.arn
   wait_period_ms    = 5000
-  gating_controls   = [aws_route53recoverycontrolconfig_routing_control.test2.routing_control_arn]
-  target_controls   = [aws_route53recoverycontrolconfig_routing_control.test2.routing_control_arn]
-  rule_config       = { inverted = false, threshold = 0, type = "AND"}
+  gating_controls   = [aws_route53recoverycontrolconfig_routing_control.test.arn]
+  target_controls   = [aws_route53recoverycontrolconfig_routing_control.test.arn]
+
+  rule_config {
+    inverted = false
+    threshold = 0
+    type = "AND"
+  }
 }
-`, rName, rName2, rName3, rName4)
+`, rName)
 }
