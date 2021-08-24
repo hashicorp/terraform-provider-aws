@@ -6,9 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig"
+	waiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53recoverycontrolconfig"
 )
 
 func resourceAwsRoute53RecoveryControlConfigRoutingControl() *schema.Resource {
@@ -21,7 +22,7 @@ func resourceAwsRoute53RecoveryControlConfigRoutingControl() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"routing_control_arn": {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -33,6 +34,7 @@ func resourceAwsRoute53RecoveryControlConfigRoutingControl() *schema.Resource {
 			"control_panel_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -63,17 +65,17 @@ func resourceAwsRoute53RecoveryControlConfigRoutingControlCreate(d *schema.Resou
 	result := output.RoutingControl
 
 	if err != nil {
-		return fmt.Errorf("Error creating Route53 Recovery Control Config Routing Control: %w", err)
+		return fmt.Errorf("error creating Route53 Recovery Control Config Routing Control: %w", err)
 	}
 
 	if result == nil {
-		return fmt.Errorf("Error creating Route53 Recovery Control Config Routing Control empty response")
+		return fmt.Errorf("error creating Route53 Recovery Control Config Routing Control: empty response")
 	}
 
 	d.SetId(aws.StringValue(result.RoutingControlArn))
 
 	if _, err := waiter.Route53RecoveryControlConfigRoutingControlCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Routing Control (%s) to be Deployed: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for Route53 Recovery Control Config Routing Control (%s) to be Deployed: %w", d.Id(), err)
 	}
 
 	return resourceAwsRoute53RecoveryControlConfigRoutingControlRead(d, meta)
@@ -87,19 +89,23 @@ func resourceAwsRoute53RecoveryControlConfigRoutingControlRead(d *schema.Resourc
 	}
 
 	output, err := conn.DescribeRoutingControl(input)
-	result := output.RoutingControl
 
-	if err != nil {
-		return fmt.Errorf("Error describing Route53 Recovery Control Config Routing Control: %s", err)
-	}
-
-	if !d.IsNewResource() && result == nil {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Route53 Recovery Control Config Routing Control (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("routing_control_arn", result.RoutingControlArn)
+	if err != nil {
+		return fmt.Errorf("error describing Route53 Recovery Control Config Routing Control: %w", err)
+	}
+
+	if output == nil || output.RoutingControl == nil {
+		return fmt.Errorf("error describing Route53 Recovery Control Config Routing Control: %s", "empty response")
+	}
+
+	result := output.RoutingControl
+	d.Set("arn", result.RoutingControlArn)
 	d.Set("control_panel_arn", result.ControlPanelArn)
 	d.Set("name", result.Name)
 	d.Set("status", result.Status)
@@ -112,10 +118,11 @@ func resourceAwsRoute53RecoveryControlConfigRoutingControlUpdate(d *schema.Resou
 
 	input := &route53recoverycontrolconfig.UpdateRoutingControlInput{
 		RoutingControlName: aws.String(d.Get("name").(string)),
-		RoutingControlArn:  aws.String(d.Get("routing_control_arn").(string)),
+		RoutingControlArn:  aws.String(d.Get("arn").(string)),
 	}
 
 	_, err := conn.UpdateRoutingControl(input)
+
 	if err != nil {
 		return fmt.Errorf("error updating Route53 Recovery Control Config Routing Control: %s", err)
 	}
@@ -132,18 +139,22 @@ func resourceAwsRoute53RecoveryControlConfigRoutingControlDelete(d *schema.Resou
 
 	_, err := conn.DeleteRoutingControl(input)
 
-	if err != nil {
-		if isAWSErr(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
-		return fmt.Errorf("error deleting Route53 Recovery Control Config Routing Control: %s", err)
+	if tfawserr.ErrCodeEquals(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException) {
+		return nil
 	}
 
-	if _, err := waiter.Route53RecoveryControlConfigRoutingControlDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
-		return fmt.Errorf("Error waiting for Route53 Recovery Control Config  Routing Control (%s) to be deleted: %w", d.Id(), err)
+	if err != nil {
+		return fmt.Errorf("error deleting Route53 Recovery Control Config Routing Control: %w", err)
+	}
+
+	_, err = waiter.Route53RecoveryControlConfigRoutingControlDeleted(conn, d.Id())
+
+	if tfawserr.ErrCodeEquals(err, route53recoverycontrolconfig.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error waiting for Route53 Recovery Control Config Routing Control (%s) to be deleted: %w", d.Id(), err)
 	}
 
 	return nil
