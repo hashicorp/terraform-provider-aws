@@ -12,10 +12,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+func init() {
+	RegisterServiceErrorCheckFunc(appstream.EndpointsID, testAccErrorCheckSkipAppStream)
+}
+
+// testAccErrorCheckSkipAppStream skips AppStream tests that have error messages indicating unsupported features
+func testAccErrorCheckSkipAppStream(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"ResourceNotFoundException: The image",
+	)
+}
+
 func TestAccAwsAppStreamFleet_basic(t *testing.T) {
 	var fleetOutput appstream.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	instanceType := "stream.standard.small"
+	instanceType = "stream.standard.large"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -50,6 +62,7 @@ func TestAccAwsAppStreamFleet_disappears(t *testing.T) {
 	var fleetOutput appstream.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	instanceType := "stream.standard.small"
+	instanceType = "stream.standard.large"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -81,6 +94,7 @@ func TestAccAwsAppStreamFleet_completeWithStop(t *testing.T) {
 	descriptionUpdated := "Updated Description of a test"
 	fleetType := "ON_DEMAND"
 	instanceType := "stream.standard.small"
+	instanceType = "stream.standard.large"
 	instanceTypeUpdate := "stream.standard.medium"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -130,6 +144,7 @@ func TestAccAwsAppStreamFleet_completeWithoutStop(t *testing.T) {
 	description := "Description of a test"
 	fleetType := "ON_DEMAND"
 	instanceType := "stream.standard.small"
+	instanceType = "stream.standard.large"
 	displayName := "display name of a test"
 	displayNameUpdated := "display name of a test updated"
 
@@ -282,18 +297,19 @@ func testAccCheckAwsAppStreamFleetDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccAwsAppStreamFleetConfig(name, instanceType string) string {
+	// "Amazon-AppStream2-Sample-Image-02-04-2019" is not available in GovCloud
 	return fmt.Sprintf(`
 resource "aws_appstream_fleet" "test" {
-  name       = %[1]q
-  image_name = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  name          = %[1]q
+  image_name    = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  instance_type = %[2]q
+
   compute_capacity {
     desired_instances = 1
   }
-  instance_type = %[2]q
 }
 `, name, instanceType)
 }
@@ -317,15 +333,18 @@ resource "aws_subnet" "example" {
 resource "aws_appstream_fleet" "test" {
   name       = %[1]q
   image_name = "Amazon-AppStream2-Sample-Image-02-04-2019"
+
   compute_capacity {
     desired_instances = 1
   }
+
   description                        = %[2]q
   idle_disconnect_timeout_in_seconds = 70
   enable_default_internet_access     = false
   fleet_type                         = %[3]q
   instance_type                      = %[4]q
   max_user_duration_in_seconds       = 1000
+
   vpc_config {
     subnet_ids = [aws_subnet.example.id]
   }
@@ -352,9 +371,11 @@ resource "aws_subnet" "example" {
 resource "aws_appstream_fleet" "test" {
   name       = %[1]q
   image_name = "Amazon-AppStream2-Sample-Image-02-04-2019"
+
   compute_capacity {
     desired_instances = 1
   }
+
   description                        = %[2]q
   display_name                       = %[5]q
   idle_disconnect_timeout_in_seconds = 70
@@ -362,6 +383,7 @@ resource "aws_appstream_fleet" "test" {
   fleet_type                         = %[3]q
   instance_type                      = %[4]q
   max_user_duration_in_seconds       = 1000
+
   vpc_config {
     subnet_ids = [aws_subnet.example.id]
   }
@@ -374,9 +396,11 @@ func testAccAwsAppStreamFleetConfigWithTags(name, description, fleetType, instan
 resource "aws_appstream_fleet" "test" {
   name       = %[1]q
   image_name = "Amazon-AppStream2-Sample-Image-02-04-2019"
+
   compute_capacity {
     desired_instances = 1
   }
+
   description                        = %[2]q
   display_name                       = %[5]q
   idle_disconnect_timeout_in_seconds = 70
@@ -384,6 +408,7 @@ resource "aws_appstream_fleet" "test" {
   fleet_type                         = %[3]q
   instance_type                      = %[4]q
   max_user_duration_in_seconds       = 1000
+
   tags = {
     Key = "value"
   }
