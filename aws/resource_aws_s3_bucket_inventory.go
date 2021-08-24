@@ -164,7 +164,7 @@ func resourceAwsS3BucketInventory() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
+					Type:         schema.TypeString,
 					ValidateFunc: validation.StringInSlice(s3.InventoryOptionalField_Values(), false),
 				},
 				Set: schema.HashString,
