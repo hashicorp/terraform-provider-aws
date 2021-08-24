@@ -8,42 +8,37 @@ description: |-
 
 # Resource: aws_route53recoverycontrolconfig_control_panel
 
-Provides an AWS Route 53 Recovery Control Config Control Panel
+Provides an AWS Route 53 Recovery Control Config Control Panel.
 
 ## Example Usage
 
 ```terraform
-resource "aws_route53recoverycontrolconfig_control_panel" "mypanel" {
-  name        = aws_route53recoverycontrolconfig_control_panel
-  cluster_arn = i_belong_to_this_cluster
+resource "aws_route53recoverycontrolconfig_control_panel" "example" {
+  name        = "balmorhea"
+  cluster_arn = "arn:aws:route53-recovery-control::123456789012:cluster/8d47920e-d789-437d-803a-2dcc4b204393"
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
-* `name` - (Required) The name describing the control panel
-* `cluster_arn` - (Required) ARN of the cluster in which this control panel will reside
+* `cluster_arn` - (Required) ARN of the cluster in which this control panel will reside.
+* `name` - (Required) Name describing the control panel.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `control_panel_arn` - The ARN of the control panel
-* `cluster_arn` - ARN of the cluster that the control panel belongs to
-* `default_control_panel` - This is true if a control panel is default, false otherwise
-* `routing_contol_count` - The number routing controls in a control panel
-* `status` - Represents status of control panel. PENDING when its being created/updated, PENDING_DELETION when its being deleted and DEPLOYED otherwise
+* `arn` - ARN of the control panel.
+* `default_control_panel` - Whether a control panel is default.
+* `routing_control_count` - Number routing controls in a control panel.
+* `status` - Status of control panel: `PENDING` when it is being created/updated, `PENDING_DELETION` when its being deleted, and `DEPLOYED` otherwise.
 
 ## Import
 
 Route53 Recovery Control Config Control Panel can be imported via the control panel arn, e.g.
 
 ```
-$ terraform import aws_route53recoverycontrolconfig_control_panel.mypanel mypanel
+$ terraform import aws_route53recoverycontrolconfig_control_panel.mypanel arn:aws:route53-recovery-control::123456789012:cluster/8d47920e-d789-437d-803a-2dcc4b204393
 ```
-
-## Timeouts
-
-`aws_route53recoverycontrolconfig_control_panel` has a timeout of 1 minute for creation, updation and deletion
