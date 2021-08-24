@@ -2,19 +2,13 @@ package waiter
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
+	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-const (
-	Route53RecoveryControlConfigStatusPending         = "PENDING"
-	Route53RecoveryControlConfigStatusPendingDeletion = "PENDING_DELETION"
-	Route53RecoveryControlConfigStatusDeployed        = "DEPLOYED"
-)
-
-func Route53RecoveryControlConfigClusterStatus(conn *route53recoverycontrolconfig.Route53RecoveryControlConfig, clusterArn string) resource.StateRefreshFunc {
+func Route53RecoveryControlConfigClusterStatus(conn *r53rcc.Route53RecoveryControlConfig, clusterArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &route53recoverycontrolconfig.DescribeClusterInput{
+		input := &r53rcc.DescribeClusterInput{
 			ClusterArn: aws.String(clusterArn),
 		}
 
@@ -28,9 +22,9 @@ func Route53RecoveryControlConfigClusterStatus(conn *route53recoverycontrolconfi
 	}
 }
 
-func Route53RecoveryControlConfigRoutingControlStatus(conn *route53recoverycontrolconfig.Route53RecoveryControlConfig, routingControlArn string) resource.StateRefreshFunc {
+func Route53RecoveryControlConfigRoutingControlStatus(conn *r53rcc.Route53RecoveryControlConfig, routingControlArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &route53recoverycontrolconfig.DescribeRoutingControlInput{
+		input := &r53rcc.DescribeRoutingControlInput{
 			RoutingControlArn: aws.String(routingControlArn),
 		}
 
@@ -44,9 +38,9 @@ func Route53RecoveryControlConfigRoutingControlStatus(conn *route53recoverycontr
 	}
 }
 
-func Route53RecoveryControlConfigControlPanelStatus(conn *route53recoverycontrolconfig.Route53RecoveryControlConfig, controlPanelArn string) resource.StateRefreshFunc {
+func Route53RecoveryControlConfigControlPanelStatus(conn *r53rcc.Route53RecoveryControlConfig, controlPanelArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &route53recoverycontrolconfig.DescribeControlPanelInput{
+		input := &r53rcc.DescribeControlPanelInput{
 			ControlPanelArn: aws.String(controlPanelArn),
 		}
 
@@ -60,9 +54,9 @@ func Route53RecoveryControlConfigControlPanelStatus(conn *route53recoverycontrol
 	}
 }
 
-func Route53RecoveryControlConfigSafetyRuleStatus(conn *route53recoverycontrolconfig.Route53RecoveryControlConfig, safetyRuleArn string) resource.StateRefreshFunc {
+func Route53RecoveryControlConfigSafetyRuleStatus(conn *r53rcc.Route53RecoveryControlConfig, safetyRuleArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &route53recoverycontrolconfig.DescribeSafetyRuleInput{
+		input := &r53rcc.DescribeSafetyRuleInput{
 			SafetyRuleArn: aws.String(safetyRuleArn),
 		}
 
