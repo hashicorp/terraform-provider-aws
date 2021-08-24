@@ -288,6 +288,7 @@ func resourceAwsAppStreamFleetRead(ctx context.Context, d *schema.ResourceData, 
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeFleetsWithContext(ctx, &appstream.DescribeFleetsInput{Names: []*string{aws.String(d.Id())}})
+
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Appstream Fleet (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -298,53 +299,70 @@ func resourceAwsAppStreamFleetRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(fmt.Errorf("error reading Appstream Fleet (%s): %w", d.Id(), err))
 	}
 
-	for _, v := range resp.Fleets {
-		d.Set("arn", v.Arn)
-		if err = d.Set("compute_capacity", flattenComputeCapacity(v.ComputeCapacityStatus)); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Fleet (%s): %w", "compute_capacity", d.Id(), err))
-		}
-		d.Set("created_time", aws.TimeValue(v.CreatedTime).Format(time.RFC3339))
-		d.Set("description", v.Description)
-		d.Set("display_name", v.DisplayName)
-		d.Set("disconnect_timeout_in_seconds", v.DisconnectTimeoutInSeconds)
-		if err = d.Set("domain_join_info", flattenDomainInfo(v.DomainJoinInfo)); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Fleet (%s): %w", "domain_join_info", d.Id(), err))
-		}
-		d.Set("idle_disconnect_timeout_in_seconds", v.IdleDisconnectTimeoutInSeconds)
-		d.Set("enable_default_internet_access", v.EnableDefaultInternetAccess)
-		d.Set("fleet_type", v.FleetType)
-		d.Set("iam_role_arn", v.IamRoleArn)
-		d.Set("image_name", v.ImageName)
-		d.Set("image_arn", v.ImageArn)
-		d.Set("instance_type", v.InstanceType)
-		d.Set("max_user_duration_in_seconds", v.MaxUserDurationInSeconds)
-		d.Set("name", v.Name)
-		d.Set("state", v.State)
-		d.Set("stream_view", v.StreamView)
-		if err = d.Set("vpc_config", flattenVpcConfig(v.VpcConfig)); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Fleet (%s): %w", "vpc_config", d.Id(), err))
-		}
-
-		tg, err := conn.ListTagsForResource(&appstream.ListTagsForResourceInput{
-			ResourceArn: v.Arn,
-		})
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error listing stack tags for AppStream Stack (%s): %w", d.Id(), err))
-		}
-		if tg.Tags == nil {
-			log.Printf("[DEBUG] Apsstream Stack tags (%s) not found", d.Id())
-			return nil
-		}
-		tags := keyvaluetags.AppstreamKeyValueTags(tg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
-
-		if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "tags", d.Id(), err))
-		}
-
-		if err = d.Set("tags_all", tags.Map()); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "tags_all", d.Id(), err))
-		}
+	if len(resp.Fleets) == 0 {
+		return diag.FromErr(fmt.Errorf("error reading Appstream Fleet (%s): %s", d.Id(), "empty response"))
 	}
+
+	if len(resp.Fleets) > 1 {
+		return diag.FromErr(fmt.Errorf("error reading Appstream Fleet (%s): %s", d.Id(), "multiple fleets found"))
+	}
+
+	fleet := resp.Fleets[0]
+
+	d.Set("arn", fleet.Arn)
+
+	if err = d.Set("compute_capacity", flattenComputeCapacity(fleet.ComputeCapacityStatus)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Fleet (%s): %w", "compute_capacity", d.Id(), err))
+	}
+
+	d.Set("created_time", aws.TimeValue(fleet.CreatedTime).Format(time.RFC3339))
+	d.Set("description", fleet.Description)
+	d.Set("display_name", fleet.DisplayName)
+	d.Set("disconnect_timeout_in_seconds", fleet.DisconnectTimeoutInSeconds)
+
+	if err = d.Set("domain_join_info", flattenDomainInfo(fleet.DomainJoinInfo)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Fleet (%s): %w", "domain_join_info", d.Id(), err))
+	}
+
+	d.Set("idle_disconnect_timeout_in_seconds", fleet.IdleDisconnectTimeoutInSeconds)
+	d.Set("enable_default_internet_access", fleet.EnableDefaultInternetAccess)
+	d.Set("fleet_type", fleet.FleetType)
+	d.Set("iam_role_arn", fleet.IamRoleArn)
+	d.Set("image_name", fleet.ImageName)
+	d.Set("image_arn", fleet.ImageArn)
+	d.Set("instance_type", fleet.InstanceType)
+	d.Set("max_user_duration_in_seconds", fleet.MaxUserDurationInSeconds)
+	d.Set("name", fleet.Name)
+	d.Set("state", fleet.State)
+	d.Set("stream_view", fleet.StreamView)
+
+	if err = d.Set("vpc_config", flattenVpcConfig(fleet.VpcConfig)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Fleet (%s): %w", "vpc_config", d.Id(), err))
+	}
+
+	tg, err := conn.ListTagsForResource(&appstream.ListTagsForResourceInput{
+		ResourceArn: fleet.Arn,
+	})
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error listing stack tags for AppStream Stack (%s): %w", d.Id(), err))
+	}
+
+	if tg.Tags == nil {
+		log.Printf("[DEBUG] AppStream Stack tags (%s) not found", d.Id())
+		return nil
+	}
+
+	tags := keyvaluetags.AppstreamKeyValueTags(tg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "tags", d.Id(), err))
+	}
+
+	if err = d.Set("tags_all", tags.Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "tags_all", d.Id(), err))
+	}
+
 	return nil
 }
 
