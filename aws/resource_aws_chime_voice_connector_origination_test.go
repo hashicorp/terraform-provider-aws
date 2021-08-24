@@ -31,7 +31,7 @@ func TestAccAWSChimeVoiceConnectorOrigination_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
+				ResourceName:      vcResourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -83,16 +83,16 @@ func TestAccAWSChimeVoiceConnectorOrigination_update(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      vcResourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSChimeVoiceConnectorOriginationUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "route.1.port", "5060"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})

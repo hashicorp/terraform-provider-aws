@@ -2,12 +2,12 @@ package aws
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/chime"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -92,7 +92,7 @@ func resourceAwsChimeVoiceConnectorOriginationPut(ctx context.Context, d *schema
 		return diag.Errorf("error creating Chime Voice Connector (%s) origination: %s", vcId, err)
 	}
 
-	d.SetId(resource.UniqueId())
+	d.SetId(fmt.Sprintf("origination-%s", vcId))
 	return resourceAwsChimeVoiceConnectorOriginationRead(ctx, d, meta)
 }
 

@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/fsx/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -55,15 +57,15 @@ func testSweepFSXLustreFileSystems(region string) error {
 	})
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing FSx Lustre Filesystems for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("error listing FSx Lustre File Systems for %s: %w", region, err))
 	}
 
 	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Lustre Filesystems for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Lustre File Systems for %s: %w", region, err))
 	}
 
 	if testSweepSkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping FSx Lustre Filesystems sweep for %s: %s", region, errs)
+		log.Printf("[WARN] Skipping FSx Lustre File System sweep for %s: %s", region, errs)
 		return nil
 	}
 
@@ -600,6 +602,35 @@ func TestAccAWSFsxLustreFileSystem_DeploymentTypePersistent1(t *testing.T) {
 	})
 }
 
+func TestAccAWSFsxLustreFileSystem_fromBackup(t *testing.T) {
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxLustreFileSystemFromBackup(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "per_unit_storage_throughput", "50"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypePersistent1),
+					resource.TestCheckResourceAttrPair(resourceName, "backup_id", "aws_fsx_backup.test", "id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids", "backup_id"},
+			},
+		},
+	})
+}
+
 func TestAccAWSFsxLustreFileSystem_KmsKeyId(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
@@ -795,14 +826,13 @@ func testAccCheckFsxLustreFileSystemExists(resourceName string, fs *fsx.FileSyst
 
 		conn := testAccProvider.Meta().(*AWSClient).fsxconn
 
-		filesystem, err := describeFsxFileSystem(conn, rs.Primary.ID)
-
+		filesystem, err := finder.FileSystemByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
 		if filesystem == nil {
-			return fmt.Errorf("FSx File System (%s) not found", rs.Primary.ID)
+			return fmt.Errorf("FSx Lustre File System (%s) not found", rs.Primary.ID)
 		}
 
 		*fs = *filesystem
@@ -819,18 +849,13 @@ func testAccCheckFsxLustreFileSystemDestroy(s *terraform.State) error {
 			continue
 		}
 
-		filesystem, err := describeFsxFileSystem(conn, rs.Primary.ID)
-
-		if isAWSErr(err, fsx.ErrCodeFileSystemNotFound, "") {
+		filesystem, err := finder.FileSystemByID(conn, rs.Primary.ID)
+		if tfresource.NotFound(err) {
 			continue
 		}
 
-		if err != nil {
-			return err
-		}
-
 		if filesystem != nil {
-			return fmt.Errorf("FSx File System (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("FSx Lustre File System (%s) still exists", rs.Primary.ID)
 		}
 	}
 	return nil
@@ -1115,6 +1140,29 @@ resource "aws_fsx_lustre_file_system" "test" {
   per_unit_storage_throughput = %[1]d
 }
 `, perUnitStorageThroughput))
+}
+
+func testAccAwsFsxLustreFileSystemFromBackup() string {
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), `
+resource "aws_fsx_lustre_file_system" "base" {
+  storage_capacity            = 1200
+  subnet_ids                  = [aws_subnet.test1.id]
+  deployment_type             = "PERSISTENT_1"
+  per_unit_storage_throughput = 50
+}
+
+resource "aws_fsx_backup" "test" {
+  file_system_id = aws_fsx_lustre_file_system.base.id
+}
+
+resource "aws_fsx_lustre_file_system" "test" {
+  storage_capacity            = 1200
+  subnet_ids                  = [aws_subnet.test1.id]
+  deployment_type             = "PERSISTENT_1"
+  per_unit_storage_throughput = 50
+  backup_id                   = aws_fsx_backup.test.id
+}
+`)
 }
 
 func testAccAwsFsxLustreFileSystemConfigKmsKeyId1() string {

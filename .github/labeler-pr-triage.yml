@@ -560,6 +560,10 @@ service/mediatailor:
   - 'aws/internal/service/mediatailor/**/*'
   - '**/*_media_tailor_*'
   - '**/media_tailor_*'
+service/memorydb:
+  - 'aws/internal/service/memorydb/**/*'
+  - '**/*_memorydb_*'
+  - '**/memorydb_*'
 service/mobile:
   - 'aws/internal/service/mobile/**/*'
   - '**/*_mobile_*'

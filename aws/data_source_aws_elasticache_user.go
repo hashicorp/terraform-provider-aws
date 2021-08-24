@@ -27,10 +27,11 @@ func dataSourceAwsElastiCacheUser() *schema.Resource {
 				Optional: true,
 			},
 			"passwords": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				Type:      schema.TypeSet,
+				Optional:  true,
+				Elem:      &schema.Schema{Type: schema.TypeString},
+				Set:       schema.HashString,
+				Sensitive: true,
 			},
 			"user_id": {
 				Type:     schema.TypeString,
