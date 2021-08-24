@@ -74,6 +74,13 @@ resource "aws_api_gateway_usage_plan" "example" {
   api_stages {
     api_id = aws_api_gateway_rest_api.example.id
     stage  = aws_api_gateway_stage.production.stage_name
+    throttle {
+      method = "/pets/GET"
+      throttle_settings {
+        burst_limit = 3
+        rate_limit  = 6
+      }
+    }
   }
 
   quota_settings {
@@ -107,6 +114,7 @@ The API Gateway Usage Plan argument layout is a structure composed of several su
 
 * `api_id` (Required) - API Id of the associated API stage in a usage plan.
 * `stage` (Required) - API stage name of the associated API stage in a usage plan.
+* `throttle` (Optional) - Method-level throttling information for an API stage in a usage plan.
 
 #### Quota Settings Arguments
 
@@ -118,6 +126,11 @@ The API Gateway Usage Plan argument layout is a structure composed of several su
 
 * `burst_limit` (Optional) - The API request burst limit, the maximum rate limit over a time ranging from one to a few seconds, depending upon whether the underlying token bucket is at its full capacity.
 * `rate_limit` (Optional) - The API request steady-state rate limit.
+
+##### Api Stages Method Throttling arguments
+
+* `method` (Required) - Method for which to configure custom throttling, for example, "/pets/GET".
+* `throttle_settings` (Required) - The [throttling limits](#throttling-settings-arguments) of the method.
 
 ## Attributes Reference
 
