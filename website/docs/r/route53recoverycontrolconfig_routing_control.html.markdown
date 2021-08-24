@@ -8,48 +8,47 @@ description: |-
 
 # Resource: aws_route53recoverycontrolconfig_routing_control
 
-Provides an AWS Route 53 Recovery Control Config Routing Control
+Provides an AWS Route 53 Recovery Control Config Routing Control.
 
 ## Example Usage
 
 ```terraform
-resource "aws_route53recoverycontrolconfig_routing_control" "mycontrol" {
-  name        = aws_route53recoverycontrolconfig_routing_control
-  cluster_arn = i_belong_to_this_cluster
+resource "aws_route53recoverycontrolconfig_routing_control" "example" {
+  name        = "tinlicker"
+  cluster_arn = "arn:aws:route53-recovery-control::881188118811:cluster/8d47920e-d789-437d-803a-2dcc4b204393"
 }
 ```
 
 ```terraform
-resource "aws_route53recoverycontrolconfig_routing_control" "mycontrol" {
-  name              = aws_route53recoverycontrolconfig_routing_control
-  cluster_arn       = i_belong_to_this_cluster
-  control_panel_arn = i_have_to_belong_this_control_panel_in_cluster
+resource "aws_route53recoverycontrolconfig_routing_control" "example" {
+  name              = "thomasoliver"
+  cluster_arn       = "arn:aws:route53-recovery-control::881188118811:cluster/8d47920e-d789-437d-803a-2dcc4b204393"
+  control_panel_arn = "arn:aws:route53-recovery-control::428113431245:controlpanel/abd5fbfc052d4844a082dbf400f61da8"
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
-* `name` - (Required) The name describing the routing control
-* `cluster_arn` - (Required) ARN of the cluster in which this routing control will reside
-* `control_panel_arn` - (Optional) ARN of the control panel in which this routing control will reside
+* `cluster_arn` - (Required) ARN of the cluster in which this routing control will reside.
+* `name` - (Required) The name describing the routing control.
+
+The following arguments are optional:
+
+* `control_panel_arn` - (Optional) ARN of the control panel in which this routing control will reside.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `routing_control_arn` - The ARN of the routing control.
-* `status` - Represents status of routing control. PENDING when its being created/updated, PENDING_DELETION when its being deleted and DEPLOYED otherwise
+* `arn` - ARN of the routing control.
+* `status` - Status of routing control. `PENDING` when its being created/updated, `PENDING_DELETION` when its being deleted, and `DEPLOYED` otherwise.
 
 ## Import
 
 Route53 Recovery Control Config Routing Control can be imported via the routing control arn, e.g.
 
 ```
-$ terraform import aws_route53recoverycontrolconfig_routing_control.mycontrol mycontrol
+$ terraform import aws_route53recoverycontrolconfig_routing_control.mycontrol arn:aws:route53-recovery-control::313517334327:controlpanel/abd5fbfc052d4844a082dbf400f61da8/routingcontrol/d5d90e587870494b
 ```
-
-## Timeouts
-
-`aws_route53recoverycontrolconfig_routing_control` has a timeout of 1 minute for creation, updation and deletion
