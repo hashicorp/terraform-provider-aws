@@ -238,6 +238,7 @@ func Provider() *schema.Provider {
 			"aws_directory_service_directory":                dataSourceAwsDirectoryServiceDirectory(),
 			"aws_docdb_engine_version":                       dataSourceAwsDocdbEngineVersion(),
 			"aws_docdb_orderable_db_instance":                dataSourceAwsDocdbOrderableDbInstance(),
+			"aws_dx_connection":                              dataSourceAwsDxConnection(),
 			"aws_dx_gateway":                                 dataSourceAwsDxGateway(),
 			"aws_dx_location":                                dataSourceAwsDxLocation(),
 			"aws_dx_locations":                               dataSourceAwsDxLocations(),

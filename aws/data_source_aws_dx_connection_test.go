@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -19,11 +18,7 @@ func TestAccDataSourceAwsDxConnection_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataSourceAwsDxConnectionConfig_NonExistent,
-				ExpectError: regexp.MustCompile(`Direct Connect Connection not found`),
-			},
-			{
-				Config: testAccDataSourceAwsDxConnectionConfig_Name(rName, "1Gbps", "EqDC2"),
+				Config: testAccDataSourceAwsDxConnectionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
@@ -34,28 +29,18 @@ func TestAccDataSourceAwsDxConnection_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsDxConnectionConfig_Name(rName, rBandwidth, rLocation string) string {
+func testAccDataSourceAwsDxConnectionConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dx_connection" "wrong" {
-  name            = "%s-wrong"
-	bandwidth				= "%s"
-	location				= "%s"
-}
+data "aws_dx_locations" "test" {}
 
 resource "aws_dx_connection" "test" {
-  name            = "%s"
-	bandwidth				= "%s"
-	location				= "%s"
+  name      = %[1]q
+  bandwidth = "1Gbps"
+  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
 }
 
 data "aws_dx_connection" "test" {
   name = aws_dx_connection.test.name
 }
-`, rName, rBandwidth, rLocation, rName, rBandwidth, rLocation)
+`, rName)
 }
-
-const testAccDataSourceAwsDxConnectionConfig_NonExistent = `
-data "aws_dx_connection" "test" {
-  name = "tf-acc-test-does-not-exist"
-}
-`
