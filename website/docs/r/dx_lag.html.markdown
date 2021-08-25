@@ -37,10 +37,11 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the LAG.
 * `arn` - The ARN of the LAG.
-* `jumbo_frame_capable` -Indicates whether jumbo frames (9001 MTU) are supported.
 * `has_logical_redundancy` - Indicates whether the LAG supports a secondary BGP peer in the same address family (IPv4/IPv6).
+* `id` - The ID of the LAG.
+* `jumbo_frame_capable` -Indicates whether jumbo frames (9001 MTU) are supported.
+* `owner_account_id` - The ID of the AWS account that owns the LAG.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import

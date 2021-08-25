@@ -58,6 +58,10 @@ func resourceAwsDxLag() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"owner_account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 		},
@@ -132,6 +136,7 @@ func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("jumbo_frame_capable", lag.JumboFrameCapable)
 	d.Set("location", lag.Location)
 	d.Set("name", lag.LagName)
+	d.Set("owner_account_id", lag.OwnerAccount)
 
 	tags, err := keyvaluetags.DirectconnectListTags(conn, arn)
 

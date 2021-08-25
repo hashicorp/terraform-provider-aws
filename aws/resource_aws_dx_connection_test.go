@@ -98,6 +98,7 @@ func TestAccAwsDxConnection_basic(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxcon/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth", "1Gbps"),
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),

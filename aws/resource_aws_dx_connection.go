@@ -48,15 +48,19 @@ func resourceAwsDxConnection() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"location": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"location": {
+			"owner_account_id": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
@@ -125,6 +129,7 @@ func resourceAwsDxConnectionRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("jumbo_frame_capable", connection.JumboFrameCapable)
 	d.Set("location", connection.Location)
 	d.Set("name", connection.ConnectionName)
+	d.Set("owner_account_id", connection.OwnerAccount)
 
 	tags, err := keyvaluetags.DirectconnectListTags(conn, arn)
 
