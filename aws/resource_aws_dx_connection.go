@@ -62,6 +62,11 @@ func resourceAwsDxConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"provider_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 		},
@@ -80,6 +85,10 @@ func resourceAwsDxConnectionCreate(d *schema.ResourceData, meta interface{}) err
 		Bandwidth:      aws.String(d.Get("bandwidth").(string)),
 		ConnectionName: aws.String(name),
 		Location:       aws.String(d.Get("location").(string)),
+	}
+
+	if v, ok := d.GetOk("provider_name"); ok {
+		input.ProviderName = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
@@ -130,6 +139,7 @@ func resourceAwsDxConnectionRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("location", connection.Location)
 	d.Set("name", connection.ConnectionName)
 	d.Set("owner_account_id", connection.OwnerAccount)
+	d.Set("provider_name", connection.ProviderName)
 
 	tags, err := keyvaluetags.DirectconnectListTags(conn, arn)
 

@@ -100,6 +100,7 @@ func TestAccAwsDxConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "provider_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -131,6 +132,40 @@ func TestAccAwsDxConnection_disappears(t *testing.T) {
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsDxConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsDxConnection_ProviderName(t *testing.T) {
+	var connection directconnect.Connection
+	resourceName := "aws_dx_connection.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsDxConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDxConnectionConfigProviderName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxConnectionExists(resourceName, &connection),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxcon/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "bandwidth", "1Gbps"),
+					resource.TestCheckResourceAttrSet(resourceName, "location"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_account_id"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "provider_name"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			// Test import.
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -242,6 +277,24 @@ resource "aws_dx_connection" "test" {
   name      = %[1]q
   bandwidth = "1Gbps"
   location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+}
+`, rName)
+}
+
+func testAccDxConnectionConfigProviderName(rName string) string {
+	return fmt.Sprintf(`
+data "aws_dx_locations" "test" {}
+
+data "aws_dx_location" "test" {
+  location_code = tolist(data.aws_dx_locations.test.location_codes)[0]
+}
+
+resource "aws_dx_connection" "test" {
+  name      = %[1]q
+  bandwidth = "1Gbps"
+  location  = data.aws_dx_location.test.location_code
+
+  provider_name = data.aws_dx_location.test.available_providers[0]
 }
 `, rName)
 }

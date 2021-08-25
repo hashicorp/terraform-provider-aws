@@ -62,6 +62,11 @@ func resourceAwsDxLag() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"provider_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 		},
@@ -81,6 +86,10 @@ func resourceAwsDxLagCreate(d *schema.ResourceData, meta interface{}) error {
 		LagName:              aws.String(name),
 		Location:             aws.String(d.Get("location").(string)),
 		NumberOfConnections:  aws.Int64(int64(1)),
+	}
+
+	if v, ok := d.GetOk("provider_name"); ok {
+		input.ProviderName = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
@@ -137,6 +146,7 @@ func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("location", lag.Location)
 	d.Set("name", lag.LagName)
 	d.Set("owner_account_id", lag.OwnerAccount)
+	d.Set("provider_name", lag.ProviderName)
 
 	tags, err := keyvaluetags.DirectconnectListTags(conn, arn)
 
@@ -226,12 +236,4 @@ func resourceAwsDxLagDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
-}
-
-func isNoSuchDxLagErr(err error) bool {
-	return isAWSErr(err, "DirectConnectClientException", "Could not find Lag with ID")
-}
-
-func isNoSuchDxConnectionErr(err error) bool {
-	return isAWSErr(err, "DirectConnectClientException", "Could not find Connection with ID")
 }

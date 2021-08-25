@@ -105,6 +105,7 @@ func TestAccAwsDxLag_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_account_id"),
+					resource.TestCheckResourceAttr(resourceName, "provider_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -120,6 +121,45 @@ func TestAccAwsDxLag_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_account_id"),
+					resource.TestCheckResourceAttr(resourceName, "provider_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			// Test import.
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
+func TestAccAwsDxLag_ProviderName(t *testing.T) {
+	var lag directconnect.Lag
+	resourceName := "aws_dx_lag.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsDxLagDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDxLagConfigProviderName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxLagExists(resourceName, &lag),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxlag/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
+					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "has_logical_redundancy"),
+					resource.TestCheckResourceAttrSet(resourceName, "jumbo_frame_capable"),
+					resource.TestCheckResourceAttrSet(resourceName, "location"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "provider_name"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -264,6 +304,24 @@ resource "aws_dx_lag" "test" {
   name                  = %[1]q
   connections_bandwidth = "1Gbps"
   location              = tolist(data.aws_dx_locations.test.location_codes)[0]
+}
+`, rName)
+}
+
+func testAccDxLagConfigProviderName(rName string) string {
+	return fmt.Sprintf(`
+data "aws_dx_locations" "test" {}
+
+data "aws_dx_location" "test" {
+  location_code = tolist(data.aws_dx_locations.test.location_codes)[0]
+}
+
+resource "aws_dx_lag" "test" {
+  name                  = %[1]q
+  connections_bandwidth = "1Gbps"
+  location              = data.aws_dx_location.test.location_code
+
+  provider_name = data.aws_dx_location.test.available_providers[0]
 }
 `, rName)
 }
