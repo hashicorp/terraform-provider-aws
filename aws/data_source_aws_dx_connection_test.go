@@ -20,9 +20,14 @@ func TestAccDataSourceAwsDxConnection_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsDxConnectionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "aws_device", resourceName, "aws_device"),
+					resource.TestCheckResourceAttrPair(datasourceName, "bandwidth", resourceName, "bandwidth"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "location", resourceName, "location"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "owner_account_id", resourceName, "owner_account_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "provider_name", resourceName, "provider_name"),
 				),
 			},
 		},
