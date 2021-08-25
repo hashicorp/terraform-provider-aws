@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	ConnectionDeletedTimeout = 10 * time.Minute
-	LagDeletedTimeout        = 10 * time.Minute
+	ConnectionDeletedTimeout       = 10 * time.Minute
+	ConnectionDisassociatedTimeout = 1 * time.Minute
+	LagDeletedTimeout              = 10 * time.Minute
 )
 
 func ConnectionDeleted(conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {

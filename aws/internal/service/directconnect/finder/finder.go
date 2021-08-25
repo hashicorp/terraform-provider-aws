@@ -46,6 +46,20 @@ func ConnectionByID(conn *directconnect.DirectConnect, id string) (*directconnec
 	return connection, nil
 }
 
+func ConnectionAssociationExists(conn *directconnect.DirectConnect, connectionID, lagID string) error {
+	connection, err := ConnectionByID(conn, connectionID)
+
+	if err != nil {
+		return err
+	}
+
+	if lagID != aws.StringValue(connection.LagId) {
+		return &resource.NotFoundError{}
+	}
+
+	return nil
+}
+
 func GatewayByID(conn *directconnect.DirectConnect, id string) (*directconnect.Gateway, error) {
 	input := &directconnect.DescribeDirectConnectGatewaysInput{
 		DirectConnectGatewayId: aws.String(id),
