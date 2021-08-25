@@ -82,11 +82,11 @@ func resourceAwsDxConnectionCreate(d *schema.ResourceData, meta interface{}) err
 		input.Tags = tags.IgnoreAws().DirectconnectTags()
 	}
 
-	log.Printf("[DEBUG] Creating Direct Connect connection: %s", input)
+	log.Printf("[DEBUG] Creating Direct Connect Connection: %s", input)
 	output, err := conn.CreateConnection(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Direct Connect connection (%s): %w", name, err)
+		return fmt.Errorf("error creating Direct Connect Connection (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.ConnectionId))
@@ -102,13 +102,13 @@ func resourceAwsDxConnectionRead(d *schema.ResourceData, meta interface{}) error
 	connection, err := finder.ConnectionByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Direct Connect connection (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Direct Connect Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Direct Connect connection (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading Direct Connect Connection (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -129,7 +129,7 @@ func resourceAwsDxConnectionRead(d *schema.ResourceData, meta interface{}) error
 	tags, err := keyvaluetags.DirectconnectListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Direct Connect connection (%s): %w", arn, err)
+		return fmt.Errorf("error listing tags for Direct Connect Connection (%s): %w", arn, err)
 	}
 
 	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
@@ -154,7 +154,7 @@ func resourceAwsDxConnectionUpdate(d *schema.ResourceData, meta interface{}) err
 		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.DirectconnectUpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Direct Connect connection (%s) tags: %w", arn, err)
+			return fmt.Errorf("error updating Direct Connect Connection (%s) tags: %w", arn, err)
 		}
 	}
 
@@ -164,19 +164,27 @@ func resourceAwsDxConnectionUpdate(d *schema.ResourceData, meta interface{}) err
 func resourceAwsDxConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
 
-	log.Printf("[DEBUG] Deleting Direct Connect connection: %s", d.Id())
+	return deleteDirectConnectConnection(conn, d.Id())
+}
+
+func deleteDirectConnectConnection(conn *directconnect.DirectConnect, connectionID string) error {
+	log.Printf("[DEBUG] Deleting Direct Connect Connection: %s", connectionID)
 	_, err := conn.DeleteConnection(&directconnect.DeleteConnectionInput{
-		ConnectionId: aws.String(d.Id()),
+		ConnectionId: aws.String(connectionID),
 	})
 
 	if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "Could not find Connection with ID") {
 		return nil
 	}
 
-	_, err = waiter.ConnectionDeleted(conn, d.Id())
+	if err != nil {
+		return fmt.Errorf("error deleting Direct Connect Connection (%s): %w", connectionID, err)
+	}
+
+	_, err = waiter.ConnectionDeleted(conn, connectionID)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Direct Connect connection (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for Direct Connect Connection (%s) delete: %w", connectionID, err)
 	}
 
 	return nil

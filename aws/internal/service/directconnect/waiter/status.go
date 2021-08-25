@@ -55,3 +55,19 @@ func GatewayAssociationState(conn *directconnect.DirectConnect, id string) resou
 		return output, aws.StringValue(output.AssociationState), nil
 	}
 }
+
+func LagState(conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.LagByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.LagState), nil
+	}
+}

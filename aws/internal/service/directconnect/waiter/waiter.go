@@ -12,6 +12,7 @@ import (
 
 const (
 	ConnectionDeletedTimeout = 10 * time.Minute
+	LagDeletedTimeout        = 10 * time.Minute
 )
 
 func ConnectionDeleted(conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {
@@ -120,6 +121,23 @@ func GatewayAssociationDeleted(conn *directconnect.DirectConnect, id string, tim
 	if output, ok := outputRaw.(*directconnect.GatewayAssociation); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateChangeError)))
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+func LagDeleted(conn *directconnect.DirectConnect, id string) (*directconnect.Lag, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{directconnect.LagStateAvailable, directconnect.LagStateRequested, directconnect.LagStatePending, directconnect.LagStateDeleting},
+		Target:  []string{},
+		Refresh: LagState(conn, id),
+		Timeout: LagDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*directconnect.Lag); ok {
 		return output, err
 	}
 
