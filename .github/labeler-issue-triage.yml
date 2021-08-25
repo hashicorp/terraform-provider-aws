@@ -248,6 +248,8 @@ service/mediastore:
   - '((\*|-) ?`?|(data|resource) "?)aws_media_store_'
 service/mediatailor:
   - '((\*|-) ?`?|(data|resource) "?)aws_media_tailor_'
+service/memorydb:
+  - '((\*|-) ?`?|(data|resource) "?)aws_memorydb_'
 service/mobile:
   - '((\*|-) ?`?|(data|resource) "?)aws_mobile_'
 service/mq:

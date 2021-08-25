@@ -9,6 +9,7 @@ AppConfig
 AppMesh
 App Runner
 AppSync
+AppStream
 Application Autoscaling
 Athena
 Audit Manager
@@ -94,6 +95,7 @@ Managed Streaming for Kafka (MSK)
 MediaConvert
 MediaPackage
 MediaStore
+MemoryDB
 Managed Workflows for Apache Airflow (MWAA)
 Neptune
 Network Firewall

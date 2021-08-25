@@ -10,10 +10,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/fsx/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/fsx/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsFsxWindowsFileSystem() *schema.Resource {
@@ -96,6 +100,11 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 				Optional:     true,
 				Default:      7,
 				ValidateFunc: validation.IntBetween(0, 90),
+			},
+			"backup_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 			"copy_tags_to_backups": {
 				Type:     schema.TypeBool,
@@ -192,7 +201,8 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 			},
 			"storage_capacity": {
 				Type:         schema.TypeInt,
-				Required:     true,
+				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.IntBetween(32, 65536),
 			},
 			"subnet_ids": {
@@ -273,65 +283,100 @@ func resourceAwsFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interfac
 		},
 	}
 
+	backupInput := &fsx.CreateFileSystemFromBackupInput{
+		ClientRequestToken: aws.String(resource.UniqueId()),
+		SubnetIds:          expandStringList(d.Get("subnet_ids").([]interface{})),
+		WindowsConfiguration: &fsx.CreateFileSystemWindowsConfiguration{
+			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
+			CopyTagsToBackups:            aws.Bool(d.Get("copy_tags_to_backups").(bool)),
+			ThroughputCapacity:           aws.Int64(int64(d.Get("throughput_capacity").(int))),
+		},
+	}
+
 	if v, ok := d.GetOk("active_directory_id"); ok {
 		input.WindowsConfiguration.ActiveDirectoryId = aws.String(v.(string))
+		backupInput.WindowsConfiguration.ActiveDirectoryId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("aliases"); ok {
 		input.WindowsConfiguration.Aliases = expandStringSet(v.(*schema.Set))
+		backupInput.WindowsConfiguration.Aliases = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("deployment_type"); ok {
 		input.WindowsConfiguration.DeploymentType = aws.String(v.(string))
+		backupInput.WindowsConfiguration.DeploymentType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("preferred_subnet_id"); ok {
 		input.WindowsConfiguration.PreferredSubnetId = aws.String(v.(string))
+		backupInput.WindowsConfiguration.PreferredSubnetId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("daily_automatic_backup_start_time"); ok {
 		input.WindowsConfiguration.DailyAutomaticBackupStartTime = aws.String(v.(string))
+		backupInput.WindowsConfiguration.DailyAutomaticBackupStartTime = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
+		backupInput.KmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("security_group_ids"); ok {
 		input.SecurityGroupIds = expandStringSet(v.(*schema.Set))
+		backupInput.SecurityGroupIds = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("self_managed_active_directory"); ok {
 		input.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandFsxSelfManagedActiveDirectoryConfigurationCreate(v.([]interface{}))
+		backupInput.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandFsxSelfManagedActiveDirectoryConfigurationCreate(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("audit_log_configuration"); ok && len(v.([]interface{})) > 0 {
 		input.WindowsConfiguration.AuditLogConfiguration = expandFsxWindowsAuditLogCreateConfiguration(v.([]interface{}))
+		backupInput.WindowsConfiguration.AuditLogConfiguration = expandFsxWindowsAuditLogCreateConfiguration(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
 		input.Tags = tags.IgnoreAws().FsxTags()
+		backupInput.Tags = tags.IgnoreAws().FsxTags()
 	}
 
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
 		input.WindowsConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
+		backupInput.WindowsConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("storage_type"); ok {
 		input.StorageType = aws.String(v.(string))
+		backupInput.StorageType = aws.String(v.(string))
 	}
 
-	result, err := conn.CreateFileSystem(input)
-	if err != nil {
-		return fmt.Errorf("Error creating FSx filesystem: %w", err)
+	if v, ok := d.GetOk("backup_id"); ok {
+		backupInput.BackupId = aws.String(v.(string))
+
+		log.Printf("[DEBUG] Creating FSx Windows File System: %s", backupInput)
+		result, err := conn.CreateFileSystemFromBackup(backupInput)
+
+		if err != nil {
+			return fmt.Errorf("error creating FSx Windows File System from backup: %w", err)
+		}
+
+		d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
+	} else {
+		log.Printf("[DEBUG] Creating FSx Windows File System: %s", input)
+		result, err := conn.CreateFileSystem(input)
+
+		if err != nil {
+			return fmt.Errorf("error creating FSx Windows File System: %w", err)
+		}
+
+		d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
 	}
 
-	d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
-
-	log.Println("[DEBUG] Waiting for filesystem to become available")
-
-	if err := waitForFsxFileSystemCreation(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("Error waiting for filesystem (%s) to become available: %w", d.Id(), err)
+	if _, err := waiter.FileSystemAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for FSx Windows File System (%s) to be available: %w", d.Id(), err)
 	}
 
 	return resourceAwsFsxWindowsFileSystemRead(d, meta)
@@ -397,8 +442,8 @@ func resourceAwsFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interfac
 			return fmt.Errorf("error updating FSx Windows File System (%s): %w", d.Id(), err)
 		}
 
-		if err := waitForFsxFileSystemUpdateAdministrativeActionsStatusFileSystemUpdate(conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for FSx Windows File System (%s) update: %w", d.Id(), err)
+		if _, err := waiter.FileSystemAdministrativeActionsCompleted(conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for FSx Windows File System (%s) to update: %w", d.Id(), err)
 		}
 	}
 
@@ -410,22 +455,15 @@ func resourceAwsFsxWindowsFileSystemRead(d *schema.ResourceData, meta interface{
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	filesystem, err := describeFsxFileSystem(conn, d.Id())
-
-	if isAWSErr(err, fsx.ErrCodeFileSystemNotFound, "") {
-		log.Printf("[WARN] FSx File System (%s) not found, removing from state", d.Id())
+	filesystem, err := finder.FileSystemByID(conn, d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] FSx Windows File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error reading FSx File System (%s): %w", d.Id(), err)
-	}
-
-	if filesystem == nil {
-		log.Printf("[WARN] FSx File System (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return fmt.Errorf("error reading FSx Windows File System (%s): %w", d.Id(), err)
 	}
 
 	if filesystem.LustreConfiguration != nil {
@@ -450,7 +488,7 @@ func resourceAwsFsxWindowsFileSystemRead(d *schema.ResourceData, meta interface{
 	d.Set("storage_type", filesystem.StorageType)
 
 	if err := d.Set("aliases", aws.StringValueSlice(expandFsxAliasValues(filesystem.WindowsConfiguration.Aliases))); err != nil {
-		return fmt.Errorf("error setting aliases: %s", err)
+		return fmt.Errorf("error setting aliases: %w", err)
 	}
 
 	if err := d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds)); err != nil {
@@ -502,20 +540,19 @@ func resourceAwsFsxWindowsFileSystemDelete(d *schema.ResourceData, meta interfac
 		},
 	}
 
+	log.Printf("[DEBUG] Deleting FSx Windows File System: %s", d.Id())
 	_, err := conn.DeleteFileSystem(input)
 
-	if isAWSErr(err, fsx.ErrCodeFileSystemNotFound, "") {
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting FSx filesystem: %w", err)
+		return fmt.Errorf("error deleting FSx Windows File System (%s): %w", d.Id(), err)
 	}
 
-	log.Println("[DEBUG] Waiting for filesystem to delete")
-
-	if err := waitForFsxFileSystemDeletion(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("Error waiting for filesystem (%s) to delete: %w", d.Id(), err)
+	if _, err := waiter.FileSystemDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for FSx Windows File System (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil
@@ -547,8 +584,8 @@ func updateFsxAliases(conn *fsx.FSx, identifier string, oldSet *schema.Set, newS
 				return fmt.Errorf("error associating aliases to FSx file system (%s): %w", identifier, err)
 			}
 
-			if err := waitForFsxFileSystemUpdateAdministrativeActionsStatusFileSystemUpdate(conn, identifier, fsx.AdministrativeActionTypeFileSystemAliasAssociation, timeout); err != nil {
-				return fmt.Errorf("Error waiting for FSX Windows filesystem (%s) alias to be associated: %w", identifier, err)
+			if _, err := waiter.FileSystemAdministrativeActionsCompleted(conn, identifier, fsx.AdministrativeActionTypeFileSystemAliasAssociation, timeout); err != nil {
+				return fmt.Errorf("error waiting for FSx Windows File System (%s) alias to be associated: %w", identifier, err)
 			}
 		}
 	}
@@ -566,8 +603,8 @@ func updateFsxAliases(conn *fsx.FSx, identifier string, oldSet *schema.Set, newS
 				return fmt.Errorf("error disassociating aliases from FSx file system (%s): %w", identifier, err)
 			}
 
-			if err := waitForFsxFileSystemUpdateAdministrativeActionsStatusFileSystemUpdate(conn, identifier, fsx.AdministrativeActionTypeFileSystemAliasDisassociation, timeout); err != nil {
-				return fmt.Errorf("Error waiting for FSX Windows filesystem (%s) alias to disassociated: %w", identifier, err)
+			if _, err := waiter.FileSystemAdministrativeActionsCompleted(conn, identifier, fsx.AdministrativeActionTypeFileSystemAliasDisassociation, timeout); err != nil {
+				return fmt.Errorf("error waiting for FSx Windows File System (%s) alias to be disassociated: %w", identifier, err)
 			}
 		}
 	}

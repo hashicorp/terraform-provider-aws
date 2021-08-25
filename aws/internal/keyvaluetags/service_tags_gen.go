@@ -457,6 +457,16 @@ func ResourcegroupsKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// Route53recoveryreadinessTags returns route53recoveryreadiness service tags.
+func (tags KeyValueTags) Route53recoveryreadinessTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// Route53recoveryreadinessKeyValueTags creates KeyValueTags from route53recoveryreadiness service tags.
+func Route53recoveryreadinessKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // SchemasTags returns schemas service tags.
 func (tags KeyValueTags) SchemasTags() map[string]*string {
 	return aws.StringMap(tags.Map())
