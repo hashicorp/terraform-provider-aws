@@ -1,21 +1,23 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsQuickSightGroupMembership() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsQuickSightGroupMembershipCreate,
-		Read:   resourceAwsQuickSightGroupMembershipRead,
-		Delete: resourceAwsQuickSightGroupMembershipDelete,
+		CreateContext: resourceAwsQuickSightGroupMembershipCreate,
+		ReadContext:   resourceAwsQuickSightGroupMembershipRead,
+		DeleteContext: resourceAwsQuickSightGroupMembershipDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -59,7 +61,7 @@ func resourceAwsQuickSightGroupMembership() *schema.Resource {
 	}
 }
 
-func resourceAwsQuickSightGroupMembershipCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsQuickSightGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).quicksightconn
 
 	awsAccountID := meta.(*AWSClient).accountid
@@ -77,22 +79,22 @@ func resourceAwsQuickSightGroupMembershipCreate(d *schema.ResourceData, meta int
 		Namespace:    aws.String(namespace),
 	}
 
-	resp, err := conn.CreateGroupMembership(createOpts)
+	resp, err := conn.CreateGroupMembershipWithContext(ctx, createOpts)
 	if err != nil {
-		return fmt.Errorf("Error adding QuickSight user to group: %s", err)
+		return diag.Errorf("Error adding QuickSight user to group: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s/%s/%s", awsAccountID, namespace, groupName, aws.StringValue(resp.GroupMember.MemberName)))
 
-	return resourceAwsQuickSightGroupMembershipRead(d, meta)
+	return resourceAwsQuickSightGroupMembershipRead(ctx, d, meta)
 }
 
-func resourceAwsQuickSightGroupMembershipRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsQuickSightGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).quicksightconn
 
 	awsAccountID, namespace, groupName, userName, err := resourceAwsQuickSightGroupMembershipParseID(d.Id())
 	if err != nil {
-		return err
+		return diag.Errorf("%s", err)
 	}
 
 	listOpts := &quicksight.ListUserGroupsInput{
@@ -104,14 +106,14 @@ func resourceAwsQuickSightGroupMembershipRead(d *schema.ResourceData, meta inter
 	found := false
 
 	for {
-		resp, err := conn.ListUserGroups(listOpts)
+		resp, err := conn.ListUserGroupsWithContext(ctx, listOpts)
 		if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] QuickSight User %s is not found", d.Id())
 			d.SetId("")
 			return nil
 		}
 		if err != nil {
-			return fmt.Errorf("Error listing QuickSight User groups (%s): %s", d.Id(), err)
+			return diag.Errorf("Error listing QuickSight User groups (%s): %s", d.Id(), err)
 		}
 
 		for _, group := range resp.GroupList {
@@ -141,12 +143,12 @@ func resourceAwsQuickSightGroupMembershipRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsQuickSightGroupMembershipDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsQuickSightGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).quicksightconn
 
 	awsAccountID, namespace, groupName, userName, err := resourceAwsQuickSightGroupMembershipParseID(d.Id())
 	if err != nil {
-		return err
+		return diag.Errorf("%s", err)
 	}
 
 	deleteOpts := &quicksight.DeleteGroupMembershipInput{
@@ -156,11 +158,11 @@ func resourceAwsQuickSightGroupMembershipDelete(d *schema.ResourceData, meta int
 		GroupName:    aws.String(groupName),
 	}
 
-	if _, err := conn.DeleteGroupMembership(deleteOpts); err != nil {
+	if _, err := conn.DeleteGroupMembershipWithContext(ctx, deleteOpts); err != nil {
 		if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
-		return fmt.Errorf("Error deleting QuickSight User-group membership %s: %s", d.Id(), err)
+		return diag.Errorf("Error deleting QuickSight User-group membership %s: %s", d.Id(), err)
 	}
 
 	return nil
