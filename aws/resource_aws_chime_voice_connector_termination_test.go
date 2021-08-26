@@ -93,6 +93,9 @@ func TestAccAWSChimeVoiceConnectorTermination_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "cps_limit", "1"),
 					resource.TestCheckResourceAttr(resourceName, "calling_regions.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_allow_list.0", "100.35.78.97/32"),
+					resource.TestCheckResourceAttr(resourceName, "disabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_phone_number", ""),
 				),
 			},
 		},
