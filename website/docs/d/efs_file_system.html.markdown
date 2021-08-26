@@ -24,7 +24,7 @@ data "aws_efs_file_system" "by_id" {
 
 data "aws_efs_file_system" "by_tag" {
   tags = {
-    environment = "dev"
+    Environment = "dev"
   }
 }
 ```
