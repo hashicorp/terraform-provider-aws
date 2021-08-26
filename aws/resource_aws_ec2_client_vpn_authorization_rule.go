@@ -21,6 +21,11 @@ func resourceAwsEc2ClientVpnAuthorizationRule() *schema.Resource {
 			State: resourceAwsEc2ClientVpnAuthorizationRuleImport,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(waiter.ClientVpnAuthorizationRuleActiveTimeout),
+			Delete: schema.DefaultTimeout(waiter.ClientVpnAuthorizationRuleRevokedTimeout),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"client_vpn_endpoint_id": {
 				Type:     schema.TypeString,
