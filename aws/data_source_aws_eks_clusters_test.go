@@ -52,7 +52,7 @@ func testAccAWSEksClustersDataSourceConfig_Basic(rName1 string) string {
 	return composeConfig(
 		testAccAWSEksClusterConfig_Required(rName1), `
 data "aws_eks_clusters" "clusters" {
-	depends_on = [aws_eks_cluster.test]
+  depends_on = [aws_eks_cluster.test]
 }
 `)
 }
