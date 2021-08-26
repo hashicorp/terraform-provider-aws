@@ -194,14 +194,14 @@ data "aws_efs_file_system" "test" {
 
 const testAccDataSourceAwsEfsFileSystemTagsConfig = `
 resource "aws_efs_file_system" "test" {
-	tags = {
+  tags = {
     Name        = "default-efs"
     Environment = "dev"
   }
 }
 
 resource "aws_efs_file_system" "wrong-env" {
-	tags = {
+  tags = {
     Environment = "test"
   }
 }
