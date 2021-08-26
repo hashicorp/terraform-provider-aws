@@ -247,6 +247,34 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 					},
 				},
 			},
+			"update_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_unavailable": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(1, 100),
+							ExactlyOneOf: []string{
+								"update_config.0.max_unavailable",
+								"update_config.0.max_unavailable_percentage",
+							},
+						},
+						"max_unavailable_percentage": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(1, 100),
+							ExactlyOneOf: []string{
+								"update_config.0.max_unavailable",
+								"update_config.0.max_unavailable_percentage",
+							},
+						},
+					},
+				},
+			},
 			"version": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -305,12 +333,16 @@ func resourceAwsEksNodeGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		input.RemoteAccess = expandEksRemoteAccessConfig(v)
 	}
 
-	if v := d.Get("scaling_config").([]interface{}); len(v) > 0 {
-		input.ScalingConfig = expandEksNodegroupScalingConfig(v)
+	if v, ok := d.GetOk("scaling_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ScalingConfig = expandEksNodegroupScalingConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("taint"); ok && v.(*schema.Set).Len() > 0 {
 		input.Taints = expandEksTaints(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("update_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.UpdateConfig = expandEksNodegroupUpdateConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("version"); ok {
@@ -392,8 +424,12 @@ func resourceAwsEksNodeGroupRead(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("error setting resources: %s", err)
 	}
 
-	if err := d.Set("scaling_config", flattenEksNodeGroupScalingConfig(nodeGroup.ScalingConfig)); err != nil {
-		return diag.Errorf("error setting scaling_config: %s", err)
+	if nodeGroup.ScalingConfig != nil {
+		if err := d.Set("scaling_config", []interface{}{flattenEksNodeGroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
+			return diag.Errorf("error setting scaling_config: %s", err)
+		}
+	} else {
+		d.Set("scaling_config", nil)
 	}
 
 	d.Set("status", nodeGroup.Status)
@@ -404,6 +440,14 @@ func resourceAwsEksNodeGroupRead(ctx context.Context, d *schema.ResourceData, me
 
 	if err := d.Set("taint", flattenEksTaints(nodeGroup.Taints)); err != nil {
 		return diag.Errorf("error setting taint: %s", err)
+	}
+
+	if nodeGroup.UpdateConfig != nil {
+		if err := d.Set("update_config", []interface{}{flattenEksNodeGroupUpdateConfig(nodeGroup.UpdateConfig)}); err != nil {
+			return diag.Errorf("error setting update_config: %s", err)
+		}
+	} else {
+		d.Set("update_config", nil)
 	}
 
 	d.Set("version", nodeGroup.Version)
@@ -483,22 +527,29 @@ func resourceAwsEksNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if d.HasChanges("labels", "scaling_config", "taint") {
+	if d.HasChanges("labels", "scaling_config", "taint", "update_config") {
 		oldLabelsRaw, newLabelsRaw := d.GetChange("labels")
+		oldTaintsRaw, newTaintsRaw := d.GetChange("taint")
 
 		input := &eks.UpdateNodegroupConfigInput{
 			ClientRequestToken: aws.String(resource.UniqueId()),
 			ClusterName:        aws.String(clusterName),
 			Labels:             expandEksUpdateLabelsPayload(oldLabelsRaw, newLabelsRaw),
 			NodegroupName:      aws.String(nodeGroupName),
+			Taints:             expandEksUpdateTaintsPayload(oldTaintsRaw.(*schema.Set).List(), newTaintsRaw.(*schema.Set).List()),
 		}
 
-		if v := d.Get("scaling_config").([]interface{}); len(v) > 0 {
-			input.ScalingConfig = expandEksNodegroupScalingConfig(v)
+		if d.HasChange("scaling_config") {
+			if v, ok := d.GetOk("scaling_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.ScalingConfig = expandEksNodegroupScalingConfig(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
-		oldTaintsRaw, newTaintsRaw := d.GetChange("taint")
-		input.Taints = expandEksUpdateTaintsPayload(oldTaintsRaw.(*schema.Set).List(), newTaintsRaw.(*schema.Set).List())
+		if d.HasChange("update_config") {
+			if v, ok := d.GetOk("update_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.UpdateConfig = expandEksNodegroupUpdateConfig(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
 
 		output, err := conn.UpdateNodegroupConfig(input)
 
@@ -581,28 +632,26 @@ func expandEksLaunchTemplateSpecification(l []interface{}) *eks.LaunchTemplateSp
 	return config
 }
 
-func expandEksNodegroupScalingConfig(l []interface{}) *eks.NodegroupScalingConfig {
-	if len(l) == 0 || l[0] == nil {
+func expandEksNodegroupScalingConfig(tfMap map[string]interface{}) *eks.NodegroupScalingConfig {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	apiObject := &eks.NodegroupScalingConfig{}
 
-	config := &eks.NodegroupScalingConfig{}
-
-	if v, ok := m["desired_size"].(int); ok {
-		config.DesiredSize = aws.Int64(int64(v))
+	if v, ok := tfMap["desired_size"].(int); ok {
+		apiObject.DesiredSize = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["max_size"].(int); ok && v != 0 {
-		config.MaxSize = aws.Int64(int64(v))
+	if v, ok := tfMap["max_size"].(int); ok && v != 0 {
+		apiObject.MaxSize = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["min_size"].(int); ok {
-		config.MinSize = aws.Int64(int64(v))
+	if v, ok := tfMap["min_size"].(int); ok {
+		apiObject.MinSize = aws.Int64(int64(v))
 	}
 
-	return config
+	return apiObject
 }
 
 func expandEksTaints(l []interface{}) []*eks.Taint {
@@ -727,6 +776,24 @@ func expandEksRemoteAccessConfig(l []interface{}) *eks.RemoteAccessConfig {
 	return config
 }
 
+func expandEksNodegroupUpdateConfig(tfMap map[string]interface{}) *eks.NodegroupUpdateConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &eks.NodegroupUpdateConfig{}
+
+	if v, ok := tfMap["max_unavailable"].(int); ok && v != 0 {
+		apiObject.MaxUnavailable = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["max_unavailable_percentage"].(int); ok && v != 0 {
+		apiObject.MaxUnavailablePercentage = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
 func expandEksUpdateLabelsPayload(oldLabelsMap, newLabelsMap interface{}) *eks.UpdateLabelsPayload {
 	// EKS Labels operate similarly to keyvaluetags
 	oldLabels := keyvaluetags.New(oldLabelsMap)
@@ -805,18 +872,44 @@ func flattenEksNodeGroupResources(resources *eks.NodegroupResources) []map[strin
 	return []map[string]interface{}{m}
 }
 
-func flattenEksNodeGroupScalingConfig(config *eks.NodegroupScalingConfig) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenEksNodeGroupScalingConfig(apiObject *eks.NodegroupScalingConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{
-		"desired_size": aws.Int64Value(config.DesiredSize),
-		"max_size":     aws.Int64Value(config.MaxSize),
-		"min_size":     aws.Int64Value(config.MinSize),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DesiredSize; v != nil {
+		tfMap["desired_size"] = aws.Int64Value(v)
 	}
 
-	return []map[string]interface{}{m}
+	if v := apiObject.MaxSize; v != nil {
+		tfMap["max_size"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.MinSize; v != nil {
+		tfMap["min_size"] = aws.Int64Value(v)
+	}
+
+	return tfMap
+}
+
+func flattenEksNodeGroupUpdateConfig(apiObject *eks.NodegroupUpdateConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.MaxUnavailable; v != nil {
+		tfMap["max_unavailable"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.MaxUnavailablePercentage; v != nil {
+		tfMap["max_unavailable_percentage"] = aws.Int64Value(v)
+	}
+
+	return tfMap
 }
 
 func flattenEksRemoteAccessConfig(config *eks.RemoteAccessConfig) []map[string]interface{} {
