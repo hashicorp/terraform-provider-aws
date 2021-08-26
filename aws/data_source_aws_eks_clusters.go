@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -35,7 +34,8 @@ func dataSourceAwsEksClustersRead(d *schema.ResourceData, meta interface{}) erro
 		},
 	)
 
-	d.SetId(resource.UniqueId())
+	d.SetId(meta.(*AWSClient).region)
+
 	if err != nil {
 		log.Printf("[DEBUG] There was an error while listing EKS Clusters: %v", err)
 	}
