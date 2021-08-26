@@ -193,7 +193,6 @@ data "aws_efs_file_system" "test" {
 `
 
 const testAccDataSourceAwsEfsFileSystemTagsConfig = `
-
 resource "aws_efs_file_system" "test" {
 	tags = {
     Name        = "default-efs"
