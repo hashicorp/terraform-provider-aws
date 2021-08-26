@@ -27,6 +27,7 @@ ENHANCEMENTS:
 * resource/aws_dx_connection: Add `provider_name` argument ([#17852](https://github.com/hashicorp/terraform-provider-aws/issues/17852))
 * resource/aws_dx_lag: Add `owner_account_id` attribute ([#17852](https://github.com/hashicorp/terraform-provider-aws/issues/17852))
 * resource/aws_dx_lag: Add `provider_name` argument ([#17852](https://github.com/hashicorp/terraform-provider-aws/issues/17852))
+* resource/aws_eks_node_group: Add `update_config` argument to support parallel node upgrades ([#20137](https://github.com/hashicorp/terraform-provider-aws/issues/20137))
 * resource/aws_elasticache_user: Mark `passwords` argument as sensitive. ([#20629](https://github.com/hashicorp/terraform-provider-aws/issues/20629))
 * resource/aws_fsx_lustre_filesystem: Allow creating filesystem from backup using `backup_id`. ([#20614](https://github.com/hashicorp/terraform-provider-aws/issues/20614))
 * resource/aws_fsx_windows_filesystem: Allow creating filesystem from backup using `backup_id`. ([#20643](https://github.com/hashicorp/terraform-provider-aws/issues/20643))
@@ -43,6 +44,7 @@ BUG FIXES:
 
 * data-source/aws_kms_public_key: Correctly base64 encode `public_key` value ([#19944](https://github.com/hashicorp/terraform-provider-aws/issues/19944))
 * data-source/aws_route53_resolver_rule: Fix lack of pagination when listing rules ([#20642](https://github.com/hashicorp/terraform-provider-aws/issues/20642))
+* resource/aws_codebuild_webhook: Only update `build_type` if a value is specified ([#20671](https://github.com/hashicorp/terraform-provider-aws/issues/20671))
 * resource/aws_route53_delegation_set: Properly remove from state when resource does not exist ([#20664](https://github.com/hashicorp/terraform-provider-aws/issues/20664))
 * resource/aws_route53_query_log: Properly remove from state when resource does not exist ([#20666](https://github.com/hashicorp/terraform-provider-aws/issues/20666))
 
