@@ -426,7 +426,7 @@ func resourceAwsEksNodeGroupRead(ctx context.Context, d *schema.ResourceData, me
 
 	if nodeGroup.ScalingConfig != nil {
 		if err := d.Set("scaling_config", []interface{}{flattenEksNodeGroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
-			return fmt.Errorf("error setting scaling_config: %w", err)
+			return diag.Errorf("error setting scaling_config: %s", err)
 		}
 	} else {
 		d.Set("scaling_config", nil)
@@ -444,7 +444,7 @@ func resourceAwsEksNodeGroupRead(ctx context.Context, d *schema.ResourceData, me
 
 	if nodeGroup.UpdateConfig != nil {
 		if err := d.Set("update_config", []interface{}{flattenEksNodeGroupUpdateConfig(nodeGroup.UpdateConfig)}); err != nil {
-			return fmt.Errorf("error setting update_config: %w", err)
+			return diag.Errorf("error setting update_config: %s", err)
 		}
 	} else {
 		d.Set("update_config", nil)
