@@ -1,4 +1,4 @@
-## 3.56.0 (Unreleased)
+## 3.56.0 (August 26, 2021)
 
 FEATURES:
 
