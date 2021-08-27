@@ -21,6 +21,11 @@ func resourceAwsEc2ClientVpnNetworkAssociation() *schema.Resource {
 			State: resourceAwsEc2ClientVpnNetworkAssociationImport,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(waiter.ClientVpnNetworkAssociationAssociatedTimeout),
+			Delete: schema.DefaultTimeout(waiter.ClientVpnNetworkAssociationDisassociatedTimeout),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"association_id": {
 				Type:     schema.TypeString,
