@@ -53,11 +53,17 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.NoZeroValues,
+
+										// maybe don't need?
+										Sensitive: true,
 									},
 									"username": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.NoZeroValues,
+
+										// maybe don't need?
+										Sensitive: true,
 									},
 								},
 							},

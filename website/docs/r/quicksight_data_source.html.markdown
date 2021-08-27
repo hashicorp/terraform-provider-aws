@@ -42,6 +42,8 @@ of several sub-resources - these resources are laid out below.
 
  * `parameters` - (Required) The [parameters](#parameters-arguments) used to connect to this data source (exactly one).
 
+ * `credentials` - (Optional) TODO
+
 #### Parameters Arguments
 
 To specify data source connection parameters, exactly one of the following sub-objects must be provided.
