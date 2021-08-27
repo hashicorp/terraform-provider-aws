@@ -3,7 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
-	"regexp",
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
