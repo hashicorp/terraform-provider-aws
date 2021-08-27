@@ -50,6 +50,14 @@ In addition to all arguments above, the following attributes are exported:
 * `status` - The current state of the target network association.
 * `vpc_id` - The ID of the VPC in which the target subnet is located.
 
+## Timeouts
+
+`aws_ec2_client_vpn_network_association` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
+configuration options:
+
+- `create` - (Default `30m`) How long to wait for the subnet to be associated.
+- `delete` - (Default `30m`) How long to wait for the subnet to be disassociated.
+
 ## Import
 
 AWS Client VPN network associations can be imported using the endpoint ID and the association ID. Values are separated by a `,`.
