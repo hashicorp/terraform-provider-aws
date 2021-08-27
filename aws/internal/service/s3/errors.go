@@ -7,4 +7,5 @@ const (
 	ErrCodeNoSuchConfiguration                  = "NoSuchConfiguration"
 	ErrCodeNoSuchPublicAccessBlockConfiguration = "NoSuchPublicAccessBlockConfiguration"
 	ErrCodeNoSuchTagSet                         = "NoSuchTagSet"
+	ErrCodeOperationAborted                     = "OperationAborted"
 )
