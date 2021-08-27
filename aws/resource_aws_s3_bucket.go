@@ -26,23 +26,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfs3 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
-
-const s3BucketCreationTimeout = 2 * time.Minute
-
-// These should be defined in the AWS SDK for Go. There is an open issue https://github.com/aws/aws-sdk-go/issues/2683
-const (
-	BucketCannedACLAwsExecRead      = "aws-exec-read"
-	BucketCannedACLLogDeliveryWrite = "log-delivery-write"
-)
-
-func BucketCannedACL_Values() []string {
-	result := s3.BucketCannedACL_Values()
-	result = appendUniqueString(result, BucketCannedACLAwsExecRead)
-	result = appendUniqueString(result, BucketCannedACLLogDeliveryWrite)
-	return result
-}
 
 func resourceAwsS3Bucket() *schema.Resource {
 	return &schema.Resource{
@@ -92,7 +79,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 				Default:       "private",
 				Optional:      true,
 				ConflictsWith: []string{"grant"},
-				ValidateFunc:  validation.StringInSlice(BucketCannedACL_Values(), false),
+				ValidateFunc:  validation.StringInSlice(tfs3.BucketCannedACL_Values(), false),
 			},
 
 			"grant": {
@@ -817,7 +804,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		Bucket: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(s3BucketCreationTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.BucketCreatedTimeout, func() *resource.RetryError {
 		_, err := s3conn.HeadBucket(input)
 
 		if d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
@@ -1970,9 +1957,15 @@ func resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(s3conn *s3.S3, d
 	}
 	log.Printf("[DEBUG] S3 put bucket replication configuration: %#v", i)
 
-	_, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return s3conn.PutBucketEncryption(i)
-	})
+	_, err := tfresource.RetryWhenAwsErrCodeEquals(
+		waiter.PropagationTimeout,
+		func() (interface{}, error) {
+			return s3conn.PutBucketEncryption(i)
+		},
+		s3.ErrCodeNoSuchBucket,
+		tfs3.ErrCodeOperationAborted,
+	)
+
 	if err != nil {
 		return fmt.Errorf("error putting S3 server side encryption configuration: %s", err)
 	}
