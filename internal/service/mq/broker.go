@@ -565,6 +565,26 @@ func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.HasChange("host_instance_type") {
+		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
+			BrokerId:         aws.String(d.Id()),
+			HostInstanceType: aws.String(d.Get("host_instance_type")),
+		})
+		if err != nil {
+			return fmt.Errorf("error updating MQ Broker (%s) host instance type: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("auto_minor_version_upgrade") {
+		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
+			BrokerId:                aws.String(d.Id()),
+			AutoMinorVersionUpgrade: aws.String(d.Get("auto_minor_version_upgrade")),
+		})
+		if err != nil {
+			return fmt.Errorf("error updating MQ Broker (%s) auto minor version upgrade: %w", d.Id(), err)
+		}
+	}
+
 	return nil
 }
 
