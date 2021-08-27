@@ -578,7 +578,7 @@ func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("auto_minor_version_upgrade") {
 		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
 			BrokerId:                aws.String(d.Id()),
-			AutoMinorVersionUpgrade: aws.String(d.Get("auto_minor_version_upgrade")),
+			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		})
 		if err != nil {
 			return fmt.Errorf("error updating MQ Broker (%s) auto minor version upgrade: %w", d.Id(), err)
