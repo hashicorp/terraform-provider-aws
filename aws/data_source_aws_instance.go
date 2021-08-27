@@ -495,11 +495,11 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 					return fmt.Errorf("error setting secondary_private_ips: %w", err)
 				}
 
-				Ipv6Addresses := make([]string, 0, len(ni.Ipv6Addresses))
+				ipV6Addresses := make([]string, 0, len(ni.Ipv6Addresses))
 				for _, ip := range ni.Ipv6Addresses {
-					Ipv6Addresses = append(Ipv6Addresses, aws.StringValue(ip.Ipv6Address))
+					ipV6Addresses = append(ipV6Addresses, aws.StringValue(ip.Ipv6Address))
 				}
-				if err := d.Set("ipv6_addresses", Ipv6Addresses); err != nil {
+				if err := d.Set("ipv6_addresses", ipV6Addresses); err != nil {
 					return fmt.Errorf("error setting ipv6_addresses: %w", err)
 				}
 			}

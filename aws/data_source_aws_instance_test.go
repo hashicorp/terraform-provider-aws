@@ -250,6 +250,27 @@ func TestAccAWSInstanceDataSource_secondaryPrivateIPs(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstanceDataSource_ipv6Addresses(t *testing.T) {
+	resourceName := "aws_instance.test"
+	datasourceName := "data.aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_ipv6Addresses(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ipv6_addresses.#", resourceName, "ipv6_address_count"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstanceDataSource_keyPair(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
@@ -826,8 +847,27 @@ data "aws_instance" "test" {
 `)
 }
 
+func testAccInstanceDataSourceConfig_ipv6Addresses(rName string) string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), testAccAwsInstanceVpcIpv6Config(rName), fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami                = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type      = "t2.micro"
+  subnet_id          = aws_subnet.test.id
+  ipv6_address_count = 1
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_instance" "test" {
+  instance_id = aws_instance.test.id
+}
+`, rName))
+}
+
 func testAccInstanceDataSourceConfig_keyPair(rName, publicKey string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = %[2]q
@@ -854,7 +894,7 @@ data "aws_instance" "test" {
     values = [aws_instance.test.key_name]
   }
 }
-`, rName, publicKey)
+`, rName, publicKey))
 }
 
 func testAccInstanceDataSourceConfig_VPC(rName string) string {
