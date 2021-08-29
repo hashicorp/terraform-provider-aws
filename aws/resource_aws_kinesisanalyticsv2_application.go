@@ -833,6 +833,25 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 				Computed: true,
 			},
 
+			"maintenance_window": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"maintenance_window_start_time": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(5, 5),
+								validation.StringMatch(regexp.MustCompile(`^([01][0-9]|2[0-3]):[0-5][0-9]$`), "must be in 24h format"),
+							),
+						},
+					},
+				},
+				ConflictsWith: []string{"application_configuration.0.sql_application_configuration"},
+			},
+
 			"cloudwatch_logging_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -961,6 +980,19 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 		}
 	}
 
+	if _, ok := d.GetOk("maintenance_window.0.maintenance_window_start_time"); ok {
+		input := &kinesisanalyticsv2.UpdateApplicationMaintenanceConfigurationInput{
+			ApplicationName: aws.String(applicationName),
+			ApplicationMaintenanceConfigurationUpdate: &kinesisanalyticsv2.ApplicationMaintenanceConfigurationUpdate{
+				ApplicationMaintenanceWindowStartTimeUpdate: aws.String(d.Get("maintenance_window.0.maintenance_window_start_time").(string)),
+			},
+		}
+
+		if err := kinesisAnalyticsV2UpdateMaintenance(conn, input); err != nil {
+			return err
+		}
+	}
+
 	return resourceAwsKinesisAnalyticsV2ApplicationRead(d, meta)
 }
 
@@ -991,6 +1023,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta i
 	d.Set("service_execution_role", application.ServiceExecutionRole)
 	d.Set("status", application.ApplicationStatus)
 	d.Set("version_id", application.ApplicationVersionId)
+
+	if err := d.Set("maintenance_window", flattenKinesisAnalyticsV2ApplicationMaintenanceDescription(application.ApplicationMaintenanceConfigurationDescription)); err != nil {
+		return fmt.Errorf("error setting maintenance_window: %w", err)
+	}
 
 	if err := d.Set("application_configuration", flattenKinesisAnalyticsV2ApplicationConfigurationDescription(application.ApplicationConfigurationDescription)); err != nil {
 		return fmt.Errorf("error setting application_configuration: %w", err)
@@ -1502,6 +1538,23 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 		}
 	}
 
+	if d.HasChanges("maintenance_window.0.maintenance_window_start_time") {
+		_, n := d.GetChange("maintenance_window.0.maintenance_window_start_time")
+
+		mNewMaintenanceDescription := n.([]interface{})[0].(map[string]interface{})
+
+		input := &kinesisanalyticsv2.UpdateApplicationMaintenanceConfigurationInput{
+			ApplicationName: aws.String(applicationName),
+			ApplicationMaintenanceConfigurationUpdate: &kinesisanalyticsv2.ApplicationMaintenanceConfigurationUpdate{
+				ApplicationMaintenanceWindowStartTimeUpdate: aws.String(mNewMaintenanceDescription["maintenance_window_start_time"].(string)),
+			},
+		}
+
+		if err := kinesisAnalyticsV2UpdateMaintenance(conn, input); err != nil {
+			return fmt.Errorf("error updating Kinesis Analytics v2 Application Maintenance Configuration (%s): %w", d.Id(), err)
+		}
+	}
+
 	return resourceAwsKinesisAnalyticsV2ApplicationRead(d, meta)
 }
 
@@ -1553,6 +1606,14 @@ func resourceAwsKinesisAnalyticsV2ApplicationImport(d *schema.ResourceData, meta
 	d.Set("name", parts[1])
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func kinesisAnalyticsV2UpdateMaintenance(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.UpdateApplicationMaintenanceConfigurationInput) error {
+	applicationName := aws.StringValue(input.ApplicationName)
+	if _, err := conn.UpdateApplicationMaintenanceConfiguration(input); err != nil {
+		return fmt.Errorf("error updating Kinesis Analytics v2 Application Maintenance Configuration (%s): %w", applicationName, err)
+	}
+	return nil
 }
 
 func kinesisAnalyticsV2StartApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.StartApplicationInput) error {
@@ -2775,6 +2836,18 @@ func flattenKinesisAnalyticsV2CloudWatchLoggingOptionDescriptions(cloudWatchLogg
 	}
 
 	return []interface{}{mCloudWatchLoggingOption}
+}
+
+func flattenKinesisAnalyticsV2ApplicationMaintenanceDescription(applicationMaintenanceDescription *kinesisanalyticsv2.ApplicationMaintenanceConfigurationDescription) []interface{} {
+	if applicationMaintenanceDescription == nil {
+		return []interface{}{}
+	}
+
+	mMaintenanceDescription := map[string]interface{}{
+		"maintenance_window_start_time": aws.StringValue(applicationMaintenanceDescription.ApplicationMaintenanceWindowStartTime),
+	}
+
+	return []interface{}{mMaintenanceDescription}
 }
 
 func flattenKinesisAnalyticsV2SourceSchema(sourceSchema *kinesisanalyticsv2.SourceSchema) []interface{} {
