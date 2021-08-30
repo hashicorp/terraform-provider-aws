@@ -147,6 +147,13 @@ func TestAccAWSCodeBuildWebhook_BuildType(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccAWSCodeBuildWebhookConfig_GitHub(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
 				Config: testAccAWSCodeBuildWebhookConfig_BuildType(rName, "BUILD_BATCH"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),

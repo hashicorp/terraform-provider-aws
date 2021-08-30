@@ -61,6 +61,10 @@ func testSweepEksFargateProfiles(region string) error {
 				return !lastPage
 			})
 
+			if testSweepSkipSweepError(err) {
+				continue
+			}
+
 			if err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Fargate Profiles (%s): %w", region, err))
 			}
