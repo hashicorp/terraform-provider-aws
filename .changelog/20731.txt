@@ -1,0 +1,4 @@
+
+```release-note:enhancement
+resoucre_aws_route53_health_check: Add `RECOVERY_CONTROL` health check type and `routing_control_arn` attriute
+```
