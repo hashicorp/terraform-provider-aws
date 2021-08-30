@@ -41,6 +41,7 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 					route53.HealthCheckTypeHttps,
 					route53.HealthCheckTypeHttpsStrMatch,
 					route53.HealthCheckTypeTcp,
+					route53.HealthCheckTypeRecoveryControl,
 				}, true),
 			},
 			"failure_threshold": {
@@ -151,6 +152,12 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+
+			"routing_control_arn": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
 			},
 
 			"tags":     tagsSchema(),
@@ -333,6 +340,12 @@ func resourceAwsRoute53HealthCheckCreate(d *schema.ResourceData, meta interface{
 		healthConfig.Disabled = aws.Bool(v.(bool))
 	}
 
+	if *healthConfig.Type == route53.HealthCheckTypeRecoveryControl {
+		if v, ok := d.GetOk("routing_control_arn"); ok {
+			healthConfig.RoutingControlArn = aws.String(v.(string))
+		}
+	}
+
 	input := &route53.CreateHealthCheckInput{
 		CallerReference:   aws.String(callerRef),
 		HealthCheckConfig: healthConfig,
@@ -384,6 +397,7 @@ func resourceAwsRoute53HealthCheckRead(d *schema.ResourceData, meta interface{})
 	d.Set("measure_latency", updated.MeasureLatency)
 	d.Set("invert_healthcheck", updated.Inverted)
 	d.Set("disabled", updated.Disabled)
+	d.Set("routing_control_arn", updated.RoutingControlArn)
 
 	if err := d.Set("child_healthchecks", flattenStringList(updated.ChildHealthChecks)); err != nil {
 		return fmt.Errorf("error setting child_healthchecks: %s", err)

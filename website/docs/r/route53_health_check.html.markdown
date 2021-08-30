@@ -79,6 +79,25 @@ resource "aws_route53_health_check" "foo" {
 }
 ```
 
+### Recovery control health check
+
+```terraform
+
+resource "aws_route53recoverycontrolconfig_cluster" "test" {
+  name = "tf-acc-test-cluster"
+}
+
+resource "aws_route53recoverycontrolconfig_routing_control" "test" {
+  name        = "tf-acc-test"
+  cluster_arn = aws_route53recoverycontrolconfig_cluster.test.arn
+}
+
+resource "aws_route53_health_check" "test" {
+  type                = "RECOVERY_CONTROL"
+  routing_control_arn = aws_route53recoverycontrolconfig_routing_control.test.arn
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -90,7 +109,7 @@ The following arguments are supported:
 * `fqdn` - (Optional) The fully qualified domain name of the endpoint to be checked.
 * `ip_address` - (Optional) The IP address of the endpoint to be checked.
 * `port` - (Optional) The port of the endpoint to be checked.
-* `type` - (Required) The protocol to use when performing health checks. Valid values are `HTTP`, `HTTPS`, `HTTP_STR_MATCH`, `HTTPS_STR_MATCH`, `TCP`, `CALCULATED` and `CLOUDWATCH_METRIC`.
+* `type` - (Required) The protocol to use when performing health checks. Valid values are `HTTP`, `HTTPS`, `HTTP_STR_MATCH`, `HTTPS_STR_MATCH`, `TCP`, `CALCULATED`, `CLOUDWATCH_METRIC` and `RECOVERY_CONTROL`.
 * `failure_threshold` - (Required) The number of consecutive health checks that an endpoint must pass or fail.
 * `request_interval` - (Required) The number of seconds between the time that Amazon Route 53 gets a response from your endpoint and the time that it sends the next health-check request.
 * `resource_path` - (Optional) The path that you want Amazon Route 53 to request when performing health checks.
@@ -110,6 +129,7 @@ The following arguments are supported:
 * `cloudwatch_alarm_region` - (Optional) The CloudWatchRegion that the CloudWatch alarm was created in.
 * `insufficient_data_health_status` - (Optional) The status of the health check when CloudWatch has insufficient data about the state of associated alarm. Valid values are `Healthy` , `Unhealthy` and `LastKnownStatus`.
 * `regions` - (Optional) A list of AWS regions that you want Amazon Route 53 health checkers to check the specified endpoint from.
+* `routing_control_arn` - (Optional) The Amazon Resource Name (ARN) for the Route 53 Application Recovery Controller routing control. This is used when health check type is RECOVERY_CONTROL
 * `tags` - (Optional) A map of tags to assign to the health check. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
