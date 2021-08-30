@@ -731,6 +731,68 @@ func TestAccAWSS3BucketReplicationConfig_schemaV2SameRegion(t *testing.T) {
 	})
 }
 
+const isExistingObjectReplicationBlocked = true
+
+func TestAccAWSS3BucketReplicationConfig_existingObjectReplication(t *testing.T) {
+	if isExistingObjectReplicationBlocked {
+		/*  https://aws.amazon.com/blogs/storage/replicating-existing-objects-between-s3-buckets/
+		    A request to AWS Technical Support needs to be made in order to allow ExistingObjectReplication.
+			Once that request is approved, this can be unblocked for testing. */
+		return
+	}
+	resourceName := "aws_s3_bucket_replication_configuration.replication"
+	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rNameDestination := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketReplicationConfig_existingObjectReplication(rName, rNameDestination, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceAttrGlobalARN(resourceName, "role", "iam", fmt.Sprintf("role/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "1"),
+					testAccCheckAWSS3BucketReplicationRules(
+						resourceName,
+						[]*s3.ReplicationRule{
+							{
+								ID: aws.String("testid"),
+								Destination: &s3.Destination{
+									Bucket:       aws.String(fmt.Sprintf("arn:%s:s3:::%s", testAccGetPartition(), rNameDestination)),
+									StorageClass: aws.String(s3.ObjectStorageClassStandard),
+								},
+								Status: aws.String(s3.ReplicationRuleStatusEnabled),
+								Filter: &s3.ReplicationRuleFilter{
+									Prefix: aws.String("testprefix"),
+								},
+								Priority: aws.Int64(0),
+								DeleteMarkerReplication: &s3.DeleteMarkerReplication{
+									Status: aws.String(s3.DeleteMarkerReplicationStatusEnabled),
+								},
+								ExistingObjectReplication: &s3.ExistingObjectReplication{
+									Status: aws.String(s3.ExistingObjectReplicationStatusEnabled),
+								},
+							},
+						},
+					),
+				),
+			},
+			{
+				Config:            testAccAWSS3BucketReplicationConfig_existingObjectReplication(rName, rNameDestination, rInt),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
 func testAccCheckAWSS3BucketReplicationRules(n string, rules []*s3.ReplicationRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
@@ -1415,6 +1477,79 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
       filter {
         prefix = "testprefix"
       }
+
+      delete_marker_replication_status = "Enabled"
+
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+      }
+    }
+} `, rName, rNameDestination, rInt)
+}
+
+func testAccAWSS3BucketReplicationConfig_existingObjectReplication(rName, rNameDestination string, rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "s3.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_s3_bucket" "destination" {
+  bucket   = %[2]q
+
+  versioning {
+    enabled = true
+  }
+
+  lifecycle {
+	  ignore_changes = [replication_configuration]
+  }
+}
+
+resource "aws_s3_bucket" "source" {
+  bucket   = "tf-test-bucket-source-%[3]d"
+  acl = "private"
+
+  versioning {
+    enabled = true
+  }
+
+  lifecycle {
+	  ignore_changes = [replication_configuration]
+  }
+}
+
+resource "aws_s3_bucket_replication_configuration" "replication" {
+    bucket = aws_s3_bucket.source.id
+    role = aws_iam_role.test.arn
+
+    rules {
+      id     = "testid"
+      status = "Enabled"
+
+      filter {
+        prefix = "testprefix"
+      }
+
+	  existing_object_replication {
+		  status = "Enabled"
+	  }
 
       delete_marker_replication_status = "Enabled"
 
