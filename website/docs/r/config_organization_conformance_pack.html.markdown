@@ -117,6 +117,7 @@ In addition to all arguments above, the following attributes are exported:
 - `create` - (Default `10 minutes`) Used for creating conformance pack
 - `update` - (Default `10 minutes`) Used for conformance pack modifications
 - `delete` - (Default `20 minutes`) Used for destroying conformance pack
+
 ## Import
 
 Config Organization Conformance Packs can be imported using the `name`, e.g.
