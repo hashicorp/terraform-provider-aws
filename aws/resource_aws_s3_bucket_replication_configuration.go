@@ -148,6 +148,21 @@ func resourceAwsS3BucketReplicationConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"existing_object_replication": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MinItems: 1,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"status": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice([]string{s3.ExistingObjectReplicationStatusEnabled}, false),
+									},
+								},
+							},
+						},
 						"delete_marker_replication_status": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -248,7 +263,6 @@ func resourceAwsS3BucketReplicationConfigurationRead(d *schema.ResourceData, met
 		d.Set("role", aws.StringValue(r.Role))
 	}
 
-	// set rules, these need to be flattened
 	rules := make([]interface{}, 0, len(r.Rules))
 	for _, v := range r.Rules {
 		t := make(map[string]interface{})
@@ -275,6 +289,12 @@ func resourceAwsS3BucketReplicationConfigurationRead(d *schema.ResourceData, met
 				rd["access_control_translation"] = []interface{}{rdt}
 			}
 			t["destination"] = []interface{}{rd}
+		}
+
+		if v.ExistingObjectReplication.Status != nil {
+			status := make(map[string]interface{})
+			status["status"] = aws.StringValue(v.ExistingObjectReplication.Status)
+			t["existing_object_replication"] = status
 		}
 
 		if v.ID != nil {
@@ -352,6 +372,14 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(d *schema.ResourceData, m
 
 		if rrid, ok := rr["id"]; ok && rrid != "" {
 			rcRule.ID = aws.String(rrid.(string))
+		}
+
+		eor := rr["existing_object_replication"].([]interface{})
+		if len(eor) > 0 {
+			s := eor[0].(map[string]interface{})
+			rcRule.ExistingObjectReplication = &s3.ExistingObjectReplication{
+				Status: aws.String(s["status"].(string)),
+			}
 		}
 
 		ruleDestination := &s3.Destination{}
