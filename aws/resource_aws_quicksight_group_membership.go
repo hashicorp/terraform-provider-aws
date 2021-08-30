@@ -117,7 +117,7 @@ func resourceAwsQuickSightGroupMembershipRead(ctx context.Context, d *schema.Res
 		}
 
 		for _, group := range resp.GroupList {
-			if *group.GroupName == groupName {
+			if aws.StringValue(group.GroupName) == groupName {
 				found = true
 				break
 			}

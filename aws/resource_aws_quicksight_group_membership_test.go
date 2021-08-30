@@ -20,6 +20,7 @@ func TestAccAWSQuickSightGroupMembership_basic(t *testing.T) {
 		PreCheck: func() { testAccPreCheck(t) },
 		// There's no way to actual retrieve a group membership after
 		// the user and group have been destroyed.
+		ErrorCheck:   testAccErrorCheck(t, quicksight.EndpointsID),
 		CheckDestroy: testAccCheckQuickSightGroupMembershipWaveHandsEverythingsOkay,
 		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
@@ -44,8 +45,9 @@ func TestAccAWSQuickSightGroupMembership_disappears(t *testing.T) {
 	resourceName := "aws_quicksight_group_membership.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, quicksight.EndpointsID),
+		Providers:  testAccProviders,
 		// There's no way to actual retrieve a group membership after
 		// the user and group have been destroyed.
 		CheckDestroy: testAccCheckQuickSightGroupMembershipWaveHandsEverythingsOkay,

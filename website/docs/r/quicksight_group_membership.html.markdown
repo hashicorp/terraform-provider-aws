@@ -12,7 +12,7 @@ Resource for managing QuickSight Group Membership
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_quicksight_group_membership" "example" {
 	group_name  = "all-access-users"
 	member_name = "john_smith"
