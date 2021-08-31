@@ -8,13 +8,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/redshift/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -86,10 +87,10 @@ func TestAccAWSRedshiftCluster_basic(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "cluster_type", "single-node"),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "publicly_accessible", "true"),
+					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "cluster_nodes.#", "1"),
+					resource.TestCheckResourceAttrSet("aws_redshift_cluster.default", "cluster_nodes.0.public_ip_address"),
+					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "cluster_type", "single-node"),
+					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "publicly_accessible", "true"),
 					resource.TestMatchResourceAttr("aws_redshift_cluster.default", "dns_name", regexp.MustCompile(fmt.Sprintf("^tf-redshift-cluster-%d.*\\.redshift\\..*", ri))),
 				),
 			},
@@ -605,34 +606,24 @@ func TestAccAWSRedshiftCluster_changeEncryption2(t *testing.T) {
 }
 
 func testAccCheckAWSRedshiftClusterDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_cluster" {
 			continue
 		}
 
-		// Try to find the Group
-		conn := testAccProvider.Meta().(*AWSClient).redshiftconn
-		var err error
-		resp, err := conn.DescribeClusters(
-			&redshift.DescribeClustersInput{
-				ClusterIdentifier: aws.String(rs.Primary.ID),
-			})
+		_, err := finder.ClusterByID(conn, rs.Primary.ID)
 
-		if err == nil {
-			if len(resp.Clusters) != 0 &&
-				*resp.Clusters[0].ClusterIdentifier == rs.Primary.ID {
-				return fmt.Errorf("Redshift Cluster %s still exists", rs.Primary.ID)
-			}
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// Return nil if the cluster is already destroyed
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "ClusterNotFound" {
-				return nil
-			}
+		if err != nil {
+			return err
 		}
 
-		return err
+		return fmt.Errorf("Redshift Cluster %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -659,28 +650,17 @@ func testAccCheckAWSRedshiftClusterSnapshot(rInt int) resource.TestCheckFunc {
 				return fmt.Errorf("error deleting Redshift Cluster Snapshot (%s): %w", snapshot_identifier, err)
 			}
 
-			//lastly check that the Cluster is missing
-			resp, err := conn.DescribeClusters(
-				&redshift.DescribeClustersInput{
-					ClusterIdentifier: aws.String(rs.Primary.ID),
-				})
+			_, err = finder.ClusterByID(conn, rs.Primary.ID)
 
-			if err == nil {
-				if len(resp.Clusters) != 0 &&
-					*resp.Clusters[0].ClusterIdentifier == rs.Primary.ID {
-					return fmt.Errorf("Redshift Cluster %s still exists", rs.Primary.ID)
-				}
+			if tfresource.NotFound(err) {
+				return nil
 			}
 
-			// Return nil if the cluster is already destroyed
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "ClusterNotFound" {
-					return nil
-				}
-
+			if err != nil {
 				return err
 			}
 
+			return fmt.Errorf("Redshift Cluster %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -695,26 +675,20 @@ func testAccCheckAWSRedshiftClusterExists(n string, v *redshift.Cluster) resourc
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Redshift Cluster Instance ID is set")
+			return fmt.Errorf("No Redshift Cluster ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).redshiftconn
-		resp, err := conn.DescribeClusters(&redshift.DescribeClustersInput{
-			ClusterIdentifier: aws.String(rs.Primary.ID),
-		})
+
+		output, err := finder.ClusterByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		for _, c := range resp.Clusters {
-			if *c.ClusterIdentifier == rs.Primary.ID {
-				*v = *c
-				return nil
-			}
-		}
+		*v = *output
 
-		return fmt.Errorf("Redshift Cluster (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
