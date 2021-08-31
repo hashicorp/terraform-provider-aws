@@ -109,6 +109,15 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name (ARN) of the organization conformance pack.
 * `id` - The name of the organization conformance pack.
 
+## Timeouts
+
+`aws_config_organization_conformance_pack` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for creating conformance pack
+- `update` - (Default `10 minutes`) Used for conformance pack modifications
+- `delete` - (Default `20 minutes`) Used for destroying conformance pack
+
 ## Import
 
 Config Organization Conformance Packs can be imported using the `name`, e.g.

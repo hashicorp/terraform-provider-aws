@@ -15,10 +15,6 @@ const (
 	ConfigConformancePackCreateTimeout = 5 * time.Minute
 	ConfigConformancePackDeleteTimeout = 5 * time.Minute
 
-	ConfigOrganizationConformancePackCreateTimeout = 10 * time.Minute
-	ConfigOrganizationConformancePackUpdateTimeout = 10 * time.Minute
-	ConfigOrganizationConformancePackDeleteTimeout = 20 * time.Minute
-
 	ConfigConformancePackStatusNotFound = "NotFound"
 	ConfigConformancePackStatusUnknown  = "Unknown"
 )
@@ -417,11 +413,11 @@ func configWaitForConformancePackStateDeleteComplete(conn *configservice.ConfigS
 	return err
 }
 
-func configWaitForOrganizationConformancePackStatusCreateSuccessful(conn *configservice.ConfigService, name string) error {
+func configWaitForOrganizationConformancePackStatusCreateSuccessful(conn *configservice.ConfigService, name string, timeout time.Duration) error {
 	stateChangeConf := resource.StateChangeConf{
 		Pending: []string{configservice.OrganizationResourceStatusCreateInProgress},
 		Target:  []string{configservice.OrganizationResourceStatusCreateSuccessful},
-		Timeout: ConfigOrganizationConformancePackCreateTimeout,
+		Timeout: timeout,
 		Refresh: configRefreshOrganizationConformancePackCreationStatus(conn, name),
 		// Include a delay to help avoid ResourceDoesNotExist errors
 		Delay: 30 * time.Second,
@@ -433,11 +429,11 @@ func configWaitForOrganizationConformancePackStatusCreateSuccessful(conn *config
 
 }
 
-func configWaitForOrganizationConformancePackStatusUpdateSuccessful(conn *configservice.ConfigService, name string) error {
+func configWaitForOrganizationConformancePackStatusUpdateSuccessful(conn *configservice.ConfigService, name string, timeout time.Duration) error {
 	stateChangeConf := resource.StateChangeConf{
 		Pending: []string{configservice.OrganizationResourceStatusUpdateInProgress},
 		Target:  []string{configservice.OrganizationResourceStatusUpdateSuccessful},
-		Timeout: ConfigOrganizationConformancePackUpdateTimeout,
+		Timeout: timeout,
 		Refresh: configRefreshOrganizationConformancePackStatus(conn, name),
 	}
 
@@ -446,11 +442,11 @@ func configWaitForOrganizationConformancePackStatusUpdateSuccessful(conn *config
 	return err
 }
 
-func configWaitForOrganizationConformancePackStatusDeleteSuccessful(conn *configservice.ConfigService, name string) error {
+func configWaitForOrganizationConformancePackStatusDeleteSuccessful(conn *configservice.ConfigService, name string, timeout time.Duration) error {
 	stateChangeConf := resource.StateChangeConf{
 		Pending: []string{configservice.OrganizationResourceStatusDeleteInProgress},
 		Target:  []string{configservice.OrganizationResourceStatusDeleteSuccessful},
-		Timeout: ConfigOrganizationConformancePackDeleteTimeout,
+		Timeout: timeout,
 		Refresh: configRefreshOrganizationConformancePackStatus(conn, name),
 	}
 
