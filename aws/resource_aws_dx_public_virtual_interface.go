@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,8 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -23,7 +25,10 @@ func resourceAwsDxPublicVirtualInterface() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDxPublicVirtualInterfaceImport,
 		},
-		CustomizeDiff: resourceAwsDxPublicVirtualInterfaceCustomizeDiff,
+		CustomizeDiff: customdiff.Sequence(
+			resourceAwsDxPublicVirtualInterfaceCustomizeDiff,
+			SetTagsDiff,
+		),
 
 		Schema: map[string]*schema.Schema{
 			"address_family": {
@@ -87,7 +92,8 @@ func resourceAwsDxPublicVirtualInterface() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				MinItems: 1,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"vlan": {
 				Type:         schema.TypeInt,
 				Required:     true,
@@ -105,6 +111,8 @@ func resourceAwsDxPublicVirtualInterface() *schema.Resource {
 
 func resourceAwsDxPublicVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &directconnect.CreatePublicVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get("connection_id").(string)),
@@ -115,20 +123,20 @@ func resourceAwsDxPublicVirtualInterfaceCreate(d *schema.ResourceData, meta inte
 			Vlan:                 aws.Int64(int64(d.Get("vlan").(int))),
 		},
 	}
-	if v, ok := d.GetOk("amazon_address"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("amazon_address"); ok {
 		req.NewPublicVirtualInterface.AmazonAddress = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("bgp_auth_key"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("bgp_auth_key"); ok {
 		req.NewPublicVirtualInterface.AuthKey = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("customer_address"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("customer_address"); ok {
 		req.NewPublicVirtualInterface.CustomerAddress = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("route_filter_prefixes"); ok {
 		req.NewPublicVirtualInterface.RouteFilterPrefixes = expandDxRouteFilterPrefixes(v.(*schema.Set))
 	}
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		req.NewPublicVirtualInterface.Tags = keyvaluetags.New(v).IgnoreAws().DirectconnectTags()
+	if len(tags) > 0 {
+		req.NewPublicVirtualInterface.Tags = tags.IgnoreAws().DirectconnectTags()
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect public virtual interface: %s", req)
@@ -148,6 +156,8 @@ func resourceAwsDxPublicVirtualInterfaceCreate(d *schema.ResourceData, meta inte
 
 func resourceAwsDxPublicVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
 	if err != nil {
@@ -187,8 +197,15 @@ func resourceAwsDxPublicVirtualInterfaceRead(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error listing tags for Direct Connect public virtual interface (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -224,7 +241,7 @@ func resourceAwsDxPublicVirtualInterfaceImport(d *schema.ResourceData, meta inte
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceAwsDxPublicVirtualInterfaceCustomizeDiff(diff *schema.ResourceDiff, meta interface{}) error {
+func resourceAwsDxPublicVirtualInterfaceCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	if diff.Id() == "" {
 		// New resource.
 		if addressFamily := diff.Get("address_family").(string); addressFamily == directconnect.AddressFamilyIpv4 {

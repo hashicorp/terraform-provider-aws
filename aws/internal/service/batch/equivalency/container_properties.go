@@ -20,8 +20,53 @@ func (cp *containerProperties) Reduce() error {
 	})
 
 	// Prevent difference of API response that adds an empty array when not configured during the request
+	if len(cp.Command) == 0 {
+		cp.Command = nil
+	}
+
+	// Prevent difference of API response that adds an empty array when not configured during the request
 	if len(cp.Environment) == 0 {
 		cp.Environment = nil
+	}
+
+	// Prevent difference of API response that contains the default Fargate platform configuration
+	if cp.FargatePlatformConfiguration != nil {
+		if aws.StringValue(cp.FargatePlatformConfiguration.PlatformVersion) == "LATEST" {
+			cp.FargatePlatformConfiguration = nil
+		}
+	}
+
+	if cp.LinuxParameters != nil {
+		if len(cp.LinuxParameters.Devices) == 0 {
+			cp.LinuxParameters.Devices = nil
+		}
+
+		for _, device := range cp.LinuxParameters.Devices {
+			if len(device.Permissions) == 0 {
+				device.Permissions = nil
+			}
+		}
+
+		if len(cp.LinuxParameters.Tmpfs) == 0 {
+			cp.LinuxParameters.Tmpfs = nil
+		}
+
+		for _, tmpfs := range cp.LinuxParameters.Tmpfs {
+			if len(tmpfs.MountOptions) == 0 {
+				tmpfs.MountOptions = nil
+			}
+		}
+	}
+
+	// Prevent difference of API response that adds an empty array when not configured during the request
+	if cp.LogConfiguration != nil {
+		if len(cp.LogConfiguration.Options) == 0 {
+			cp.LogConfiguration.Options = nil
+		}
+
+		if len(cp.LogConfiguration.SecretOptions) == 0 {
+			cp.LogConfiguration.SecretOptions = nil
+		}
 	}
 
 	// Prevent difference of API response that adds an empty array when not configured during the request
@@ -32,6 +77,11 @@ func (cp *containerProperties) Reduce() error {
 	// Prevent difference of API response that adds an empty array when not configured during the request
 	if len(cp.ResourceRequirements) == 0 {
 		cp.ResourceRequirements = nil
+	}
+
+	// Prevent difference of API response that adds an empty array when not configured during the request
+	if len(cp.Secrets) == 0 {
+		cp.Secrets = nil
 	}
 
 	// Prevent difference of API response that adds an empty array when not configured during the request

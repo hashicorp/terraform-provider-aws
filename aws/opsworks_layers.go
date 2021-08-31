@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -213,7 +213,8 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"tags": tagsSchema(),
+		"tags":     tagsSchema(),
+		"tags_all": tagsSchemaComputed(),
 	}
 
 	if lt.CustomShortName {
@@ -247,30 +248,31 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 
 	return &schema.Resource{
 		Read: func(d *schema.ResourceData, meta interface{}) error {
-			client := meta.(*AWSClient).opsworksconn
-			return lt.Read(d, client)
+			return lt.Read(d, meta)
 		},
 		Create: func(d *schema.ResourceData, meta interface{}) error {
-			client := meta.(*AWSClient).opsworksconn
-			return lt.Create(d, client, meta)
+			return lt.Create(d, meta)
 		},
 		Update: func(d *schema.ResourceData, meta interface{}) error {
-			client := meta.(*AWSClient).opsworksconn
-			return lt.Update(d, client)
+			return lt.Update(d, meta)
 		},
 		Delete: func(d *schema.ResourceData, meta interface{}) error {
-			client := meta.(*AWSClient).opsworksconn
-			return lt.Delete(d, client)
+			return lt.Delete(d, meta)
 		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: resourceSchema,
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
-func (lt *opsworksLayerType) Read(d *schema.ResourceData, client *opsworks.OpsWorks) error {
+func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).opsworksconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &opsworks.DescribeLayersInput{
 		LayerIds: []*string{
@@ -280,7 +282,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, client *opsworks.OpsWo
 
 	log.Printf("[DEBUG] Reading OpsWorks layer: %s", d.Id())
 
-	resp, err := client.DescribeLayers(req)
+	resp, err := conn.DescribeLayers(req)
 	if err != nil {
 		if isAWSErr(err, opsworks.ErrCodeResourceNotFoundException, "") {
 			d.SetId("")
@@ -316,7 +318,10 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, client *opsworks.OpsWo
 		d.Set("custom_json", policy)
 	}
 
-	lt.SetAttributeMap(d, layer.Attributes)
+	err = lt.SetAttributeMap(d, layer.Attributes)
+	if err != nil {
+		return err
+	}
 	lt.SetLifecycleEventConfiguration(d, layer.LifecycleEventConfiguration)
 	lt.SetCustomRecipes(d, layer.CustomRecipes)
 	lt.SetVolumeConfigurations(d, layer.VolumeConfigurations)
@@ -327,7 +332,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, client *opsworks.OpsWo
 			aws.String(d.Id()),
 		},
 	}
-	loadBalancers, err := client.DescribeElasticLoadBalancers(ebsRequest)
+	loadBalancers, err := conn.DescribeElasticLoadBalancers(ebsRequest)
 	if err != nil {
 		return err
 	}
@@ -343,21 +348,35 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, client *opsworks.OpsWo
 
 	arn := aws.StringValue(layer.Arn)
 	d.Set("arn", arn)
-	tags, err := keyvaluetags.OpsworksListTags(client, arn)
+	tags, err := keyvaluetags.OpsworksListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Opsworks Layer (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
 }
 
-func (lt *opsworksLayerType) Create(d *schema.ResourceData, client *opsworks.OpsWorks, meta interface{}) error {
+func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).opsworksconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
+	attributes, err := lt.AttributeMap(d)
+	if err != nil {
+		return err
+	}
 	req := &opsworks.CreateLayerInput{
 		AutoAssignElasticIps:        aws.Bool(d.Get("auto_assign_elastic_ips").(bool)),
 		AutoAssignPublicIps:         aws.Bool(d.Get("auto_assign_public_ips").(bool)),
@@ -372,7 +391,7 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, client *opsworks.Ops
 		Type:                        aws.String(lt.TypeName),
 		StackId:                     aws.String(d.Get("stack_id").(string)),
 		UseEbsOptimizedInstances:    aws.Bool(d.Get("use_ebs_optimized_instances").(bool)),
-		Attributes:                  lt.AttributeMap(d),
+		Attributes:                  attributes,
 		VolumeConfigurations:        lt.VolumeConfigurations(d),
 	}
 
@@ -386,7 +405,7 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, client *opsworks.Ops
 
 	log.Printf("[DEBUG] Creating OpsWorks layer: %s", d.Id())
 
-	resp, err := client.CreateLayer(req)
+	resp, err := conn.CreateLayer(req)
 	if err != nil {
 		return err
 	}
@@ -397,7 +416,7 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, client *opsworks.Ops
 	loadBalancer := aws.String(d.Get("elastic_load_balancer").(string))
 	if loadBalancer != nil && *loadBalancer != "" {
 		log.Printf("[DEBUG] Attaching load balancer: %s", *loadBalancer)
-		_, err := client.AttachElasticLoadBalancer(&opsworks.AttachElasticLoadBalancerInput{
+		_, err := conn.AttachElasticLoadBalancer(&opsworks.AttachElasticLoadBalancerInput{
 			ElasticLoadBalancerName: loadBalancer,
 			LayerId:                 &layerId,
 		})
@@ -414,17 +433,22 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, client *opsworks.Ops
 		Resource:  fmt.Sprintf("layer/%s", d.Id()),
 	}.String()
 
-	if v, ok := d.GetOk("tags"); ok {
-		if err := keyvaluetags.OpsworksUpdateTags(client, arn, nil, v.(map[string]interface{})); err != nil {
+	if len(tags) > 0 {
+		if err := keyvaluetags.OpsworksUpdateTags(conn, arn, nil, tags); err != nil {
 			return fmt.Errorf("error updating Opsworks stack (%s) tags: %s", arn, err)
 		}
 	}
 
-	return lt.Read(d, client)
+	return lt.Read(d, meta)
 }
 
-func (lt *opsworksLayerType) Update(d *schema.ResourceData, client *opsworks.OpsWorks) error {
+func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).opsworksconn
 
+	attributes, err := lt.AttributeMap(d)
+	if err != nil {
+		return err
+	}
 	req := &opsworks.UpdateLayerInput{
 		LayerId:                     aws.String(d.Id()),
 		AutoAssignElasticIps:        aws.Bool(d.Get("auto_assign_elastic_ips").(bool)),
@@ -438,7 +462,7 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, client *opsworks.Ops
 		Name:                        aws.String(d.Get("name").(string)),
 		Packages:                    expandStringSet(d.Get("system_packages").(*schema.Set)),
 		UseEbsOptimizedInstances:    aws.Bool(d.Get("use_ebs_optimized_instances").(bool)),
-		Attributes:                  lt.AttributeMap(d),
+		Attributes:                  attributes,
 		VolumeConfigurations:        lt.VolumeConfigurations(d),
 	}
 
@@ -460,7 +484,7 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, client *opsworks.Ops
 
 		if loadBalancerOld != nil && *loadBalancerOld != "" {
 			log.Printf("[DEBUG] Dettaching load balancer: %s", *loadBalancerOld)
-			_, err := client.DetachElasticLoadBalancer(&opsworks.DetachElasticLoadBalancerInput{
+			_, err := conn.DetachElasticLoadBalancer(&opsworks.DetachElasticLoadBalancerInput{
 				ElasticLoadBalancerName: loadBalancerOld,
 				LayerId:                 aws.String(d.Id()),
 			})
@@ -471,7 +495,7 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, client *opsworks.Ops
 
 		if loadBalancerNew != nil && *loadBalancerNew != "" {
 			log.Printf("[DEBUG] Attaching load balancer: %s", *loadBalancerNew)
-			_, err := client.AttachElasticLoadBalancer(&opsworks.AttachElasticLoadBalancerInput{
+			_, err := conn.AttachElasticLoadBalancer(&opsworks.AttachElasticLoadBalancerInput{
 				ElasticLoadBalancerName: loadBalancerNew,
 				LayerId:                 aws.String(d.Id()),
 			})
@@ -481,35 +505,37 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, client *opsworks.Ops
 		}
 	}
 
-	_, err := client.UpdateLayer(req)
+	_, err = conn.UpdateLayer(req)
 	if err != nil {
 		return err
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		arn := d.Get("arn").(string)
-		if err := keyvaluetags.OpsworksUpdateTags(client, arn, o, n); err != nil {
+		if err := keyvaluetags.OpsworksUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Opsworks Layer (%s) tags: %s", arn, err)
 		}
 	}
 
-	return lt.Read(d, client)
+	return lt.Read(d, meta)
 }
 
-func (lt *opsworksLayerType) Delete(d *schema.ResourceData, client *opsworks.OpsWorks) error {
+func (lt *opsworksLayerType) Delete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).opsworksconn
+
 	req := &opsworks.DeleteLayerInput{
 		LayerId: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting OpsWorks layer: %s", d.Id())
 
-	_, err := client.DeleteLayer(req)
+	_, err := conn.DeleteLayer(req)
 	return err
 }
 
-func (lt *opsworksLayerType) AttributeMap(d *schema.ResourceData) map[string]*string {
+func (lt *opsworksLayerType) AttributeMap(d *schema.ResourceData) (map[string]*string, error) {
 	attrs := map[string]*string{}
 
 	for key, def := range lt.Attributes {
@@ -531,14 +557,14 @@ func (lt *opsworksLayerType) AttributeMap(d *schema.ResourceData) map[string]*st
 			}
 		default:
 			// should never happen
-			panic(fmt.Errorf("Unsupported OpsWorks layer attribute type"))
+			return nil, fmt.Errorf("Unsupported OpsWorks layer attribute type: %s", def.Type)
 		}
 	}
 
-	return attrs
+	return attrs, nil
 }
 
-func (lt *opsworksLayerType) SetAttributeMap(d *schema.ResourceData, attrs map[string]*string) {
+func (lt *opsworksLayerType) SetAttributeMap(d *schema.ResourceData, attrs map[string]*string) error {
 	for key, def := range lt.Attributes {
 		// Ignore write-only attributes; we'll just keep what we already have stored.
 		// (The AWS API returns garbage placeholder values for these.)
@@ -568,14 +594,15 @@ func (lt *opsworksLayerType) SetAttributeMap(d *schema.ResourceData, attrs map[s
 				d.Set(key, boolValue)
 			default:
 				// should never happen
-				panic(fmt.Errorf("Unsupported OpsWorks layer attribute type"))
+				return fmt.Errorf("Unsupported OpsWorks layer attribute type: %s", def.Type)
 			}
-			return
+			return nil
 
 		} else {
 			d.Set(key, nil)
 		}
 	}
+	return nil
 }
 
 func (lt *opsworksLayerType) LifecycleEventConfiguration(d *schema.ResourceData) *opsworks.LifecycleEventConfiguration {

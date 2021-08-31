@@ -7,8 +7,9 @@ import (
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -20,10 +21,14 @@ func dataSourceAwsCustomerGateway() *schema.Resource {
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
-
 			"bgp_asn": {
 				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"device_name": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"ip_address": {
@@ -35,12 +40,18 @@ func dataSourceAwsCustomerGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
 
 func dataSourceAwsCustomerGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	input := ec2.DescribeCustomerGatewaysInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
@@ -55,7 +66,7 @@ func dataSourceAwsCustomerGatewayRead(d *schema.ResourceData, meta interface{}) 
 	output, err := conn.DescribeCustomerGateways(&input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Customer Gateways: %s", err)
+		return fmt.Errorf("error reading EC2 Customer Gateways: %w", err)
 	}
 
 	if output == nil || len(output.CustomerGateways) == 0 {
@@ -73,20 +84,31 @@ func dataSourceAwsCustomerGatewayRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("ip_address", cg.IpAddress)
 	d.Set("type", cg.Type)
+	d.Set("device_name", cg.DeviceName)
 	d.SetId(aws.StringValue(cg.CustomerGatewayId))
 
 	if v := aws.StringValue(cg.BgpAsn); v != "" {
 		asn, err := strconv.ParseInt(v, 0, 0)
 		if err != nil {
-			return fmt.Errorf("error parsing BGP ASN %q: %s", v, err)
+			return fmt.Errorf("error parsing BGP ASN %q: %w", v, err)
 		}
 
 		d.Set("bgp_asn", int(asn))
 	}
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(cg.Tags).IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags for EC2 Customer Gateway %q: %s", aws.StringValue(cg.CustomerGatewayId), err)
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(cg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags for EC2 Customer Gateway %q: %w", aws.StringValue(cg.CustomerGatewayId), err)
 	}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("customer-gateway/%s", d.Id()),
+	}.String()
+
+	d.Set("arn", arn)
 
 	return nil
 }

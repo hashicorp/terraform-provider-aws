@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -59,7 +59,7 @@ func dataSourceAwsApiGatewayRestApi() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"vpc_endpoint_ids": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -77,6 +77,8 @@ func dataSourceAwsApiGatewayRestApi() *schema.Resource {
 
 func dataSourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	params := &apigateway.GetRestApisInput{}
 
 	target := d.Get("name")
@@ -91,7 +93,7 @@ func dataSourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}
 		return !lastPage
 	})
 	if err != nil {
-		return fmt.Errorf("error describing API Gateway REST APIs: %s", err)
+		return fmt.Errorf("error describing API Gateway REST APIs: %w", err)
 	}
 
 	if len(matchedApis) == 0 {
@@ -103,7 +105,7 @@ func dataSourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}
 
 	match := matchedApis[0]
 
-	d.SetId(*match.Id)
+	d.SetId(aws.StringValue(match.Id))
 
 	restApiArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
@@ -124,11 +126,11 @@ func dataSourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if err := d.Set("endpoint_configuration", flattenApiGatewayEndpointConfiguration(match.EndpointConfiguration)); err != nil {
-		return fmt.Errorf("error setting endpoint_configuration: %s", err)
+		return fmt.Errorf("error setting endpoint_configuration: %w", err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.ApigatewayKeyValueTags(match.Tags).IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	if err := d.Set("tags", keyvaluetags.ApigatewayKeyValueTags(match.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	executionArn := arn.ARN{
@@ -146,7 +148,7 @@ func dataSourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}
 
 	err = conn.GetResourcesPages(resourceParams, func(page *apigateway.GetResourcesOutput, lastPage bool) bool {
 		for _, item := range page.Items {
-			if *item.Path == "/" {
+			if aws.StringValue(item.Path) == "/" {
 				d.Set("root_resource_id", item.Id)
 				return false
 			}

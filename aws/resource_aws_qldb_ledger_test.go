@@ -6,13 +6,12 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/qldb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/qldb"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -69,16 +68,56 @@ func TestAccAWSQLDBLedger_basic(t *testing.T) {
 	resourceName := "aws_qldb_ledger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(qldb.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, qldb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSQLDBLedgerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSQLDBLedgerConfig(rInt),
+				Config: testAccAWSQLDBLedgerConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSQLDBLedgerExists(resourceName, &qldbCluster),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "qldb", regexp.MustCompile(`ledger/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("test-ledger-[0-9]+")),
+					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "ALLOW_ALL"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSQLDBLedger_update(t *testing.T) {
+	var qldbCluster qldb.DescribeLedgerOutput
+	rInt := acctest.RandInt()
+	resourceName := "aws_qldb_ledger.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(qldb.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, qldb.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSQLDBLedgerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSQLDBLedgerConfig_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSQLDBLedgerExists(resourceName, &qldbCluster),
+					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "ALLOW_ALL"),
+				),
+			},
+			{
+				Config: testAccAWSQLDBLedgerConfig_update(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSQLDBLedgerExists(resourceName, &qldbCluster),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "qldb", regexp.MustCompile(`ledger/.+`)),
+					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("test-ledger-[0-9]+")),
+					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -159,11 +198,22 @@ func testAccCheckAWSQLDBLedgerExists(n string, v *qldb.DescribeLedgerOutput) res
 	}
 }
 
-func testAccAWSQLDBLedgerConfig(n int) string {
+func testAccAWSQLDBLedgerConfig_basic(n int) string {
 	return fmt.Sprintf(`
 resource "aws_qldb_ledger" "test" {
-  name                            = "test-ledger-%d"
-  deletion_protection             = false
+  name                = "test-ledger-%d"
+  permissions_mode    = "ALLOW_ALL"
+  deletion_protection = false
+}
+`, n)
+}
+
+func testAccAWSQLDBLedgerConfig_update(n int) string {
+	return fmt.Sprintf(`
+resource "aws_qldb_ledger" "test" {
+  name                = "test-ledger-%d"
+  permissions_mode    = "STANDARD"
+  deletion_protection = false
 }
 `, n)
 }
@@ -174,7 +224,8 @@ func TestAccAWSQLDBLedger_Tags(t *testing.T) {
 	resourceName := "aws_qldb_ledger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(qldb.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, qldb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSQLDBLedgerDestroy,
 		Steps: []resource.TestStep{
@@ -216,6 +267,7 @@ func testAccAWSQLDBLedgerConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_qldb_ledger" "test" {
   name                = %[1]q
+  permissions_mode    = "ALLOW_ALL"
   deletion_protection = false
 
   tags = {
@@ -229,6 +281,7 @@ func testAccAWSQLDBLedgerConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValu
 	return fmt.Sprintf(`
 resource "aws_qldb_ledger" "test" {
   name                = %[1]q
+  permissions_mode    = "ALLOW_ALL"
   deletion_protection = false
 
   tags = {

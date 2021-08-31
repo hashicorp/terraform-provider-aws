@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/swf"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -58,13 +58,18 @@ func resourceAwsSwfDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsSwfDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).swfconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
 
@@ -79,7 +84,7 @@ func resourceAwsSwfDomainCreate(d *schema.ResourceData, meta interface{}) error 
 	input := &swf.RegisterDomainInput{
 		Name:                                   aws.String(name),
 		WorkflowExecutionRetentionPeriodInDays: aws.String(d.Get("workflow_execution_retention_period_in_days").(string)),
-		Tags:                                   keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().SwfTags(),
+		Tags:                                   tags.IgnoreAws().SwfTags(),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -98,6 +103,8 @@ func resourceAwsSwfDomainCreate(d *schema.ResourceData, meta interface{}) error 
 
 func resourceAwsSwfDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).swfconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &swf.DescribeDomainInput{
 		Name: aws.String(d.Id()),
@@ -126,8 +133,15 @@ func resourceAwsSwfDomainRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for SWF Domain (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	d.Set("arn", resp.DomainInfo.Arn)
@@ -141,8 +155,8 @@ func resourceAwsSwfDomainRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsSwfDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).swfconn
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.SwfUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating SWF Domain (%s) tags: %s", d.Id(), err)

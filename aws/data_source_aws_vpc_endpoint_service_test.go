@@ -2,24 +2,26 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsVpcEndpointService_gateway(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
-	region := testAccGetRegion()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointServiceGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "service_name", fmt.Sprintf("com.amazonaws.%s.s3", region)),
+					testAccCheckResourceAttrRegionalReverseDnsService(datasourceName, "service_name", "dynamodb"),
 					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "false"),
 					resource.TestCheckResourceAttrPair(datasourceName, "availability_zones.#", "data.aws_availability_zones.available", "names.#"),
 					resource.TestCheckResourceAttr(datasourceName, "base_endpoint_dns_names.#", "1"),
@@ -29,6 +31,7 @@ func TestAccDataSourceAwsVpcEndpointService_gateway(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Gateway"),
 					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
+					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
 				),
 			},
 		},
@@ -37,24 +40,25 @@ func TestAccDataSourceAwsVpcEndpointService_gateway(t *testing.T) {
 
 func TestAccDataSourceAwsVpcEndpointService_interface(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
-	region := testAccGetRegion()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointServiceInterfaceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "service_name", fmt.Sprintf("com.amazonaws.%s.ec2", region)),
+					testAccCheckResourceAttrRegionalReverseDnsService(datasourceName, "service_name", "ec2"),
 					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "base_endpoint_dns_names.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "owner", "amazon"),
-					resource.TestCheckResourceAttr(datasourceName, "private_dns_name", fmt.Sprintf("ec2.%s.%s", region, testAccGetPartitionDNSSuffix())),
+					testAccCheckResourceAttrRegionalHostnameService(datasourceName, "private_dns_name", "ec2"),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
 					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
+					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
 				),
 			},
 		},
@@ -63,11 +67,12 @@ func TestAccDataSourceAwsVpcEndpointService_interface(t *testing.T) {
 
 func TestAccDataSourceAwsVpcEndpointService_custom(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
-	rName := fmt.Sprintf("tf-testacc-vpcesvc-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointServiceCustomConfig(rName),
@@ -80,6 +85,7 @@ func TestAccDataSourceAwsVpcEndpointService_custom(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.Name", rName),
+					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
 				),
 			},
 		},
@@ -88,11 +94,12 @@ func TestAccDataSourceAwsVpcEndpointService_custom(t *testing.T) {
 
 func TestAccDataSourceAwsVpcEndpointService_custom_filter(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
-	rName := fmt.Sprintf("tf-testacc-vpcesvc-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointServiceCustomConfigFilter(rName),
@@ -105,6 +112,7 @@ func TestAccDataSourceAwsVpcEndpointService_custom_filter(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.Name", rName),
+					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
 				),
 			},
 		},
@@ -113,11 +121,12 @@ func TestAccDataSourceAwsVpcEndpointService_custom_filter(t *testing.T) {
 
 func TestAccDataSourceAwsVpcEndpointService_custom_filter_tags(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
-	rName := fmt.Sprintf("tf-testacc-vpcesvc-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointServiceCustomConfigFilterTags(rName),
@@ -130,6 +139,45 @@ func TestAccDataSourceAwsVpcEndpointService_custom_filter_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.Name", rName),
+					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsVpcEndpointService_ServiceType_Gateway(t *testing.T) {
+	datasourceName := "data.aws_vpc_endpoint_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsVpcEndpointServiceConfig_ServiceType("s3", "Gateway"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceAttrRegionalReverseDnsService(datasourceName, "service_name", "s3"),
+					resource.TestCheckResourceAttr(datasourceName, "service_type", "Gateway"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsVpcEndpointService_ServiceType_Interface(t *testing.T) {
+	datasourceName := "data.aws_vpc_endpoint_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsVpcEndpointServiceConfig_ServiceType("ec2", "Interface"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceAttrRegionalReverseDnsService(datasourceName, "service_name", "ec2"),
+					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
 				),
 			},
 		},
@@ -140,7 +188,7 @@ const testAccDataSourceAwsVpcEndpointServiceGatewayConfig = `
 data "aws_availability_zones" "available" {}
 
 data "aws_vpc_endpoint_service" "test" {
-  service = "s3"
+  service = "dynamodb"
 }
 `
 
@@ -149,6 +197,15 @@ data "aws_vpc_endpoint_service" "test" {
   service = "ec2"
 }
 `
+
+func testAccDataSourceAwsVpcEndpointServiceConfig_ServiceType(service string, serviceType string) string {
+	return fmt.Sprintf(`
+data "aws_vpc_endpoint_service" "test" {
+  service      = %[1]q
+  service_type = %[2]q
+}
+`, service, serviceType)
+}
 
 func testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName string) string {
 	return fmt.Sprintf(`
@@ -164,8 +221,8 @@ resource "aws_lb" "test" {
   name = %[1]q
 
   subnets = [
-    "${aws_subnet.test1.id}",
-    "${aws_subnet.test2.id}",
+    aws_subnet.test1.id,
+    aws_subnet.test2.id,
   ]
 
   load_balancer_type         = "network"
@@ -188,9 +245,9 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_subnet" "test1" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
@@ -198,9 +255,9 @@ resource "aws_subnet" "test1" {
 }
 
 resource "aws_subnet" "test2" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.2.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
     Name = %[1]q
@@ -211,7 +268,7 @@ resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = true
 
   network_load_balancer_arns = [
-    "${aws_lb.test.id}",
+    aws_lb.test.id,
   ]
 
   tags = {
@@ -222,30 +279,30 @@ resource "aws_vpc_endpoint_service" "test" {
 }
 
 func testAccDataSourceAwsVpcEndpointServiceCustomConfig(rName string) string {
-	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + fmt.Sprintf(`
+	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + `
 data "aws_vpc_endpoint_service" "test" {
-  service_name = "${aws_vpc_endpoint_service.test.service_name}"
+  service_name = aws_vpc_endpoint_service.test.service_name
 }
-`)
+`
 }
 
 func testAccDataSourceAwsVpcEndpointServiceCustomConfigFilter(rName string) string {
-	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + fmt.Sprintf(`
+	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + `
 data "aws_vpc_endpoint_service" "test" {
   filter {
     name   = "service-name"
-    values = ["${aws_vpc_endpoint_service.test.service_name}"]
+    values = [aws_vpc_endpoint_service.test.service_name]
   }
 }
-`)
+`
 }
 
 func testAccDataSourceAwsVpcEndpointServiceCustomConfigFilterTags(rName string) string {
-	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + fmt.Sprintf(`
+	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + `
 data "aws_vpc_endpoint_service" "test" {
   tags = {
-    Name  = "${aws_vpc_endpoint_service.test.tags["Name"]}"
+    Name = aws_vpc_endpoint_service.test.tags["Name"]
   }
 }
-`)
+`
 }

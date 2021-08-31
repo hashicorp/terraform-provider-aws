@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_storagegateway_file_system_association
+```
+
+```release-note:enhancement
+resource/aws_storagegateway_gateway: Add new option for gateway_type, `FILE_FSX_SMB`, to be used with `aws_storagegateway_file_system_association`
+```

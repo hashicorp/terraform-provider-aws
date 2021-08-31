@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dlm"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -87,7 +87,7 @@ func resourceAwsDlmLifecyclePolicy() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
-														ValidateFunc: validation.StringMatch(regexp.MustCompile("^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html#dlm-Type-CreateRule-Times"),
+														ValidateFunc: validation.StringMatch(regexp.MustCompile("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html#dlm-Type-CreateRule-Times"),
 													},
 												},
 											},
@@ -115,6 +115,7 @@ func resourceAwsDlmLifecyclePolicy() *schema.Resource {
 									"tags_to_add": {
 										Type:     schema.TypeMap,
 										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 								},
 							},
@@ -122,6 +123,7 @@ func resourceAwsDlmLifecyclePolicy() *schema.Resource {
 						"target_tags": {
 							Type:     schema.TypeMap,
 							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -135,13 +137,18 @@ func resourceAwsDlmLifecyclePolicy() *schema.Resource {
 					dlm.SettablePolicyStateValuesEnabled,
 				}, false),
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsDlmLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dlmconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := dlm.CreateLifecyclePolicyInput{
 		Description:      aws.String(d.Get("description").(string)),
@@ -150,8 +157,8 @@ func resourceAwsDlmLifecyclePolicyCreate(d *schema.ResourceData, meta interface{
 		State:            aws.String(d.Get("state").(string)),
 	}
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		input.Tags = keyvaluetags.New(v).IgnoreAws().DlmTags()
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().DlmTags()
 	}
 
 	log.Printf("[INFO] Creating DLM lifecycle policy: %s", input)
@@ -160,13 +167,15 @@ func resourceAwsDlmLifecyclePolicyCreate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error creating DLM Lifecycle Policy: %s", err)
 	}
 
-	d.SetId(*out.PolicyId)
+	d.SetId(aws.StringValue(out.PolicyId))
 
 	return resourceAwsDlmLifecyclePolicyRead(d, meta)
 }
 
 func resourceAwsDlmLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dlmconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading DLM lifecycle policy: %s", d.Id())
 	out, err := conn.GetLifecyclePolicy(&dlm.GetLifecyclePolicyInput{
@@ -191,8 +200,15 @@ func resourceAwsDlmLifecyclePolicyRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting policy details %s", err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.DlmKeyValueTags(out.Policy.Tags).IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags := keyvaluetags.DlmKeyValueTags(out.Policy.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -231,8 +247,8 @@ func resourceAwsDlmLifecyclePolicyUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.DlmUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}

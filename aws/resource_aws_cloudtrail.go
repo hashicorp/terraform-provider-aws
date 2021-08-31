@@ -3,14 +3,14 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsCloudTrail() *schema.Resource {
@@ -110,7 +110,7 @@ func resourceAwsCloudTrail() *schema.Resource {
 									"type": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringInSlice([]string{"AWS::S3::Object", "AWS::Lambda::Function"}, false),
+										ValidateFunc: validation.StringInSlice([]string{"AWS::S3::Object", "AWS::Lambda::Function", "AWS::DynamoDB::Table"}, false),
 									},
 									"values": {
 										Type:     schema.TypeList,
@@ -132,14 +132,31 @@ func resourceAwsCloudTrail() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
+			"insight_selector": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"insight_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(cloudtrail.InsightType_Values(), false),
+						},
+					},
+				},
+			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudtrailconn
-	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CloudtrailTags()
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := cloudtrail.CreateTrailInput{
 		Name:         aws.String(d.Get("name").(string)),
@@ -147,7 +164,7 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if len(tags) > 0 {
-		input.TagsList = tags
+		input.TagsList = tags.IgnoreAws().CloudtrailTags()
 	}
 
 	if v, ok := d.GetOk("cloud_watch_logs_group_arn"); ok {
@@ -179,7 +196,7 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	var t *cloudtrail.CreateTrailOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		t, err = conn.CreateTrail(&input)
 		if err != nil {
@@ -202,7 +219,7 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] CloudTrail created: %s", t)
 
-	d.SetId(*t.Name)
+	d.SetId(aws.StringValue(t.Name))
 
 	// AWS CloudTrail sets newly-created trails to false.
 	if v, ok := d.GetOk("enable_logging"); ok && v.(bool) {
@@ -219,11 +236,19 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
+	if _, ok := d.GetOk("insight_selector"); ok {
+		if err := cloudTrailSetInsightSelectors(conn, d); err != nil {
+			return err
+		}
+	}
+
 	return resourceAwsCloudTrailRead(d, meta)
 }
 
 func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudtrailconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := cloudtrail.DescribeTrailsInput{
 		TrailNameList: []*string{
@@ -239,7 +264,7 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	// you're looking for is not found. Instead, it's simply not in the list.
 	var trail *cloudtrail.Trail
 	for _, c := range resp.TrailList {
-		if d.Id() == *c.Name {
+		if d.Id() == aws.StringValue(c.Name) {
 			trail = c
 		}
 	}
@@ -277,8 +302,15 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Cloudtrail (%s): %s", *trail.TrailARN, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	logstatus, err := cloudTrailGetLoggingStatus(conn, trail.Name)
@@ -299,6 +331,21 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	// Get InsightSelectors
+	insightSelectors, err := conn.GetInsightSelectors(&cloudtrail.GetInsightSelectorsInput{
+		TrailName: aws.String(d.Id()),
+	})
+	if err != nil {
+		if !isAWSErr(err, cloudtrail.ErrCodeInsightNotEnabledException, "") {
+			return fmt.Errorf("error getting Cloud Trail (%s) Insight Selectors: %w", d.Id(), err)
+		}
+	}
+	if insightSelectors != nil {
+		if err := d.Set("insight_selector", flattenAwsCloudTrailInsightSelector(insightSelectors.InsightSelectors)); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -315,7 +362,7 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("s3_key_prefix") {
 		input.S3KeyPrefix = aws.String(d.Get("s3_key_prefix").(string))
 	}
-	if d.HasChange("cloud_watch_logs_role_arn") || d.HasChange("cloud_watch_logs_group_arn") {
+	if d.HasChanges("cloud_watch_logs_role_arn", "cloud_watch_logs_group_arn") {
 		// Both of these need to be provided together
 		// in the update call otherwise API complains
 		input.CloudWatchLogsRoleArn = aws.String(d.Get("cloud_watch_logs_role_arn").(string))
@@ -342,7 +389,7 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] Updating CloudTrail: %s", input)
 	var t *cloudtrail.UpdateTrailOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		t, err = conn.UpdateTrail(&input)
 		if err != nil {
@@ -363,8 +410,8 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error updating CloudTrail: %s", err)
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.CloudtrailUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating ECR Repository (%s) tags: %s", d.Get("arn").(string), err)
@@ -382,6 +429,13 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 	if !d.IsNewResource() && d.HasChange("event_selector") {
 		log.Printf("[DEBUG] Updating event selector on CloudTrail: %s", input)
 		if err := cloudTrailSetEventSelectors(conn, d); err != nil {
+			return err
+		}
+	}
+
+	if !d.IsNewResource() && d.HasChange("insight_selector") {
+		log.Printf("[DEBUG] Updating insight selector on CloudTrail: %s", input)
+		if err := cloudTrailSetInsightSelectors(conn, d); err != nil {
 			return err
 		}
 	}
@@ -450,6 +504,15 @@ func cloudTrailSetEventSelectors(conn *cloudtrail.CloudTrail, d *schema.Resource
 	}
 
 	eventSelectors := expandAwsCloudTrailEventSelector(d.Get("event_selector").([]interface{}))
+	// If no defined selectors revert to the single default selector
+	if len(eventSelectors) == 0 {
+		es := &cloudtrail.EventSelector{
+			IncludeManagementEvents: aws.Bool(true),
+			ReadWriteType:           aws.String("All"),
+			DataResources:           make([]*cloudtrail.DataResource, 0),
+		}
+		eventSelectors = append(eventSelectors, es)
+	}
 	input.EventSelectors = eventSelectors
 
 	if err := input.Validate(); err != nil {
@@ -509,14 +572,14 @@ func flattenAwsCloudTrailEventSelector(configured []*cloudtrail.EventSelector) [
 	eventSelectors := make([]map[string]interface{}, 0, len(configured))
 
 	// Prevent default configurations shows differences
-	if len(configured) == 1 && len(configured[0].DataResources) == 0 {
+	if len(configured) == 1 && len(configured[0].DataResources) == 0 && aws.StringValue(configured[0].ReadWriteType) == "All" {
 		return eventSelectors
 	}
 
 	for _, raw := range configured {
 		item := make(map[string]interface{})
-		item["read_write_type"] = *raw.ReadWriteType
-		item["include_management_events"] = *raw.IncludeManagementEvents
+		item["read_write_type"] = aws.StringValue(raw.ReadWriteType)
+		item["include_management_events"] = aws.BoolValue(raw.IncludeManagementEvents)
 		item["data_resource"] = flattenAwsCloudTrailEventSelectorDataResource(raw.DataResources)
 
 		eventSelectors = append(eventSelectors, item)
@@ -530,11 +593,59 @@ func flattenAwsCloudTrailEventSelectorDataResource(configured []*cloudtrail.Data
 
 	for _, raw := range configured {
 		item := make(map[string]interface{})
-		item["type"] = *raw.Type
+		item["type"] = aws.StringValue(raw.Type)
 		item["values"] = flattenStringList(raw.Values)
 
 		dataResources = append(dataResources, item)
 	}
 
 	return dataResources
+}
+
+func cloudTrailSetInsightSelectors(conn *cloudtrail.CloudTrail, d *schema.ResourceData) error {
+	input := &cloudtrail.PutInsightSelectorsInput{
+		TrailName: aws.String(d.Id()),
+	}
+
+	insightSelector := expandAwsCloudTrailInsightSelector(d.Get("insight_selector").([]interface{}))
+	input.InsightSelectors = insightSelector
+
+	if err := input.Validate(); err != nil {
+		return fmt.Errorf("Error validate CloudTrail (%s): %s", d.Id(), err)
+	}
+
+	_, err := conn.PutInsightSelectors(input)
+	if err != nil {
+		return fmt.Errorf("Error set insight selector on CloudTrail (%s): %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func expandAwsCloudTrailInsightSelector(configured []interface{}) []*cloudtrail.InsightSelector {
+	insightSelectors := make([]*cloudtrail.InsightSelector, 0, len(configured))
+
+	for _, raw := range configured {
+		data := raw.(map[string]interface{})
+
+		is := &cloudtrail.InsightSelector{
+			InsightType: aws.String(data["insight_type"].(string)),
+		}
+		insightSelectors = append(insightSelectors, is)
+	}
+
+	return insightSelectors
+}
+
+func flattenAwsCloudTrailInsightSelector(configured []*cloudtrail.InsightSelector) []map[string]interface{} {
+	insightSelectors := make([]map[string]interface{}, 0, len(configured))
+
+	for _, raw := range configured {
+		item := make(map[string]interface{})
+		item["insight_type"] = aws.StringValue(raw.InsightType)
+
+		insightSelectors = append(insightSelectors, item)
+	}
+
+	return insightSelectors
 }

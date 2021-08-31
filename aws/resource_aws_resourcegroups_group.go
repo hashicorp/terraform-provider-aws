@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -62,8 +62,11 @@ func resourceAwsResourceGroupsGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
@@ -78,12 +81,14 @@ func extractResourceGroupResourceQuery(resourceQueryList []interface{}) *resourc
 
 func resourceAwsResourceGroupsGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).resourcegroupsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := resourcegroups.CreateGroupInput{
 		Description:   aws.String(d.Get("description").(string)),
 		Name:          aws.String(d.Get("name").(string)),
 		ResourceQuery: extractResourceGroupResourceQuery(d.Get("resource_query").([]interface{})),
-		Tags:          keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ResourcegroupsTags(),
+		Tags:          tags.IgnoreAws().ResourcegroupsTags(),
 	}
 
 	res, err := conn.CreateGroup(&input)
@@ -98,6 +103,8 @@ func resourceAwsResourceGroupsGroupCreate(d *schema.ResourceData, meta interface
 
 func resourceAwsResourceGroupsGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).resourcegroupsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	g, err := conn.GetGroup(&resourcegroups.GetGroupInput{
 		GroupName: aws.String(d.Id()),
@@ -114,8 +121,8 @@ func resourceAwsResourceGroupsGroupRead(d *schema.ResourceData, meta interface{}
 	}
 
 	arn := aws.StringValue(g.Group.GroupArn)
-	d.Set("name", aws.StringValue(g.Group.Name))
-	d.Set("description", aws.StringValue(g.Group.Description))
+	d.Set("name", g.Group.Name)
+	d.Set("description", g.Group.Description)
 	d.Set("arn", arn)
 
 	q, err := conn.GetGroupQuery(&resourcegroups.GetGroupQueryInput{
@@ -137,8 +144,15 @@ func resourceAwsResourceGroupsGroupRead(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
 	}
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -171,8 +185,8 @@ func resourceAwsResourceGroupsGroupUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.ResourcegroupsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}

@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAwsElasticBeanstalkApplication() *schema.Resource {
@@ -20,7 +20,6 @@ func dataSourceAwsElasticBeanstalkApplication() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -64,7 +63,7 @@ func dataSourceAwsElasticBeanstalkApplicationRead(d *schema.ResourceData, meta i
 		ApplicationNames: []*string{aws.String(name)},
 	})
 	if err != nil {
-		return fmt.Errorf("Error describing Applications (%s): %s", name, err)
+		return fmt.Errorf("Error describing Applications (%s): %w", name, err)
 	}
 
 	if len(resp.Applications) > 1 || len(resp.Applications) < 1 {
