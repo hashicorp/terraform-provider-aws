@@ -7,6 +7,7 @@ ENHANCEMENTS:
 * resource/aws_cloudformation_stack_set: Retry when `OperationInProgress` errors are returned from the AWS API ([#10969](https://github.com/hashicorp/terraform-provider-aws/issues/10969))
 * resource/aws_cloudformation_stack_set_instance: Retry when `OperationInProgress` errors are returned from the AWS API ([#10969](https://github.com/hashicorp/terraform-provider-aws/issues/10969))
 * resource/aws_config_organization_conformance_pack: Add configurable timeouts ([#20560](https://github.com/hashicorp/terraform-provider-aws/issues/20560))
+* resource/aws_redshift_cluster: Add `cluster_nodes` attribute ([#4563](https://github.com/hashicorp/terraform-provider-aws/issues/4563))
 * resource/aws_s3_bucket: Retry on `PutBucketEncryption` HTTP 409 errors due to eventual consistency ([#11795](https://github.com/hashicorp/terraform-provider-aws/issues/11795))
 * resource/aws_sagemaker_notebook_instance: Add `platform_identifier` argument ([#20711](https://github.com/hashicorp/terraform-provider-aws/issues/20711))
 
