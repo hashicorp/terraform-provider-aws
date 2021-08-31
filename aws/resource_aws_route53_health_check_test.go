@@ -335,6 +335,7 @@ func TestAccAWSRoute53HealthCheck_Disabled(t *testing.T) {
 
 func TestAccAWSRoute53HealthCheck_withRoutingControlArn(t *testing.T) {
 	var check route53.HealthCheck
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -343,7 +344,7 @@ func TestAccAWSRoute53HealthCheck_withRoutingControlArn(t *testing.T) {
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckConfigRoutingControlArn,
+				Config: testAccRoute53HealthCheckConfigRoutingControlArn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53HealthCheckExists(resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "type", "RECOVERY_CONTROL"),
@@ -716,18 +717,18 @@ resource "aws_route53_health_check" "test" {
 `, disabled)
 }
 
-const testAccRoute53HealthCheckConfigRoutingControlArn = `
+func testAccRoute53HealthCheckConfigRoutingControlArn (rName string) string {
+    return fmt.Sprintf(`
 resource "aws_route53recoverycontrolconfig_cluster" "test" {
-  name = "tf-acc-test-cluster"
+  name = %[1]q
 }
-
 resource "aws_route53recoverycontrolconfig_routing_control" "test" {
-  name        = "tf-acc-test"
+  name        = %[1]q
   cluster_arn = aws_route53recoverycontrolconfig_cluster.test.arn
 }
-
 resource "aws_route53_health_check" "test" {
   type                = "RECOVERY_CONTROL"
   routing_control_arn = aws_route53recoverycontrolconfig_routing_control.test.arn
 }
-`
+`, rName)
+}
