@@ -26,9 +26,9 @@ func StackState(ctx context.Context, conn *appstream.AppStream, name string) res
 }
 
 //FleetState fetches the fleet and its state
-func FleetState(conn *appstream.AppStream, name string) resource.StateRefreshFunc {
+func FleetState(ctx context.Context, conn *appstream.AppStream, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		fleet, err := finder.FleetByName(conn, name)
+		fleet, err := finder.FleetByName(ctx, conn, name)
 
 		if err != nil {
 			return nil, "Unknown", err

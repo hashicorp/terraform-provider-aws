@@ -16,6 +16,7 @@ func StackByName(ctx context.Context, conn *appstream.AppStream, name string) (*
 
 	var stack *appstream.Stack
 	resp, err := conn.DescribeStacksWithContext(ctx, input)
+
 	if err != nil {
 		return nil, err
 	}
@@ -32,13 +33,14 @@ func StackByName(ctx context.Context, conn *appstream.AppStream, name string) (*
 }
 
 // FleetByName Retrieve a appstream fleet by name
-func FleetByName(conn *appstream.AppStream, name string) (*appstream.Fleet, error) {
+func FleetByName(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) {
 	input := &appstream.DescribeFleetsInput{
 		Names: []*string{aws.String(name)},
 	}
 
 	var fleet *appstream.Fleet
-	resp, err := conn.DescribeFleets(input)
+	resp, err := conn.DescribeFleetsWithContext(ctx, input)
+
 	if err != nil {
 		return nil, err
 	}

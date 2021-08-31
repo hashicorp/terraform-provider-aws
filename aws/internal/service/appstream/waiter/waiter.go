@@ -13,7 +13,7 @@ const (
 	StackOperationTimeout = 4 * time.Minute
 
 	// FleetStateTimeout Maximum amount of time to wait for the FleetState to be RUNNING or STOPPED
-	FleetStateTimeout = 30 * time.Minute
+	FleetStateTimeout = 60 * time.Minute
 	// FleetOperationTimeout Maximum amount of time to wait for Fleet operation eventual consistency
 	FleetOperationTimeout = 4 * time.Minute
 )
@@ -40,7 +40,7 @@ func FleetStateRunning(ctx context.Context, conn *appstream.AppStream, name stri
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{appstream.FleetStateStarting},
 		Target:  []string{appstream.FleetStateRunning},
-		Refresh: FleetState(conn, name),
+		Refresh: FleetState(ctx, conn, name),
 		Timeout: FleetStateTimeout,
 	}
 
@@ -58,7 +58,7 @@ func FleetStateStopped(ctx context.Context, conn *appstream.AppStream, name stri
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{appstream.FleetStateStopping},
 		Target:  []string{appstream.FleetStateStopped},
-		Refresh: FleetState(conn, name),
+		Refresh: FleetState(ctx, conn, name),
 		Timeout: FleetStateTimeout,
 	}
 
