@@ -121,8 +121,14 @@ In addition to all arguments above, the following attributes are exported:
 * `cluster_subnet_group_name` - The name of a cluster subnet group to be associated with this cluster
 * `cluster_public_key` - The public key for the cluster
 * `cluster_revision_number` - The specific revision number of the database in the cluster
-* `cluster_node_ips` - The IPs associated with the cluster nodes
+* `cluster_nodes` - The nodes in the cluster. Cluster node blocks are documented below
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+
+Cluster nodes (for `cluster_nodes`) support the following attributes:
+
+* `node_role` - Whether the node is a leader node or a compute node
+* `private_ip_address` - The private IP address of a node within a cluster
+* `public_ip_address` - The public IP address of a node within a cluster
 
 ## Import
 
