@@ -717,8 +717,8 @@ resource "aws_route53_health_check" "test" {
 `, disabled)
 }
 
-func testAccRoute53HealthCheckConfigRoutingControlArn (rName string) string {
-    return fmt.Sprintf(`
+func testAccRoute53HealthCheckConfigRoutingControlArn(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_route53recoverycontrolconfig_cluster" "test" {
   name = %[1]q
 }
