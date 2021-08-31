@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAthenaDatabase_basic(t *testing.T) {
@@ -18,6 +18,7 @@ func TestAccAWSAthenaDatabase_basic(t *testing.T) {
 	dbName := acctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
@@ -36,6 +37,7 @@ func TestAccAWSAthenaDatabase_encryption(t *testing.T) {
 	dbName := acctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
@@ -55,6 +57,7 @@ func TestAccAWSAthenaDatabase_nameStartsWithUnderscore(t *testing.T) {
 	dbName := "_" + acctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
@@ -74,12 +77,13 @@ func TestAccAWSAthenaDatabase_nameCantHaveUppercase(t *testing.T) {
 	dbName := "A" + acctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAthenaDatabaseConfig(rInt, dbName, false),
-				ExpectError: regexp.MustCompile(`see .*\.com`),
+				ExpectError: regexp.MustCompile(`must be lowercase letters, numbers, or underscore \('_'\)`),
 			},
 		},
 	})
@@ -90,6 +94,7 @@ func TestAccAWSAthenaDatabase_destroyFailsIfTablesExist(t *testing.T) {
 	dbName := acctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
@@ -111,6 +116,7 @@ func TestAccAWSAthenaDatabase_forceDestroyAlwaysSucceeds(t *testing.T) {
 	dbName := acctest.RandString(8)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaDatabaseDestroy,
 		Steps: []resource.TestStep{
@@ -136,7 +142,7 @@ func testAccCheckAWSAthenaDatabaseDestroy(s *terraform.State) error {
 		}
 
 		rInt := acctest.RandInt()
-		bucketName := fmt.Sprintf("tf-athena-db-%d", rInt)
+		bucketName := fmt.Sprintf("tf-test-athena-db-%d", rInt)
 		_, err := s3conn.CreateBucket(&s3.CreateBucketInput{
 			Bucket: aws.String(bucketName),
 		})
@@ -145,7 +151,7 @@ func testAccCheckAWSAthenaDatabaseDestroy(s *terraform.State) error {
 		}
 
 		input := &athena.StartQueryExecutionInput{
-			QueryString: aws.String(fmt.Sprint("show databases;")),
+			QueryString: aws.String("show databases;"),
 			ResultConfiguration: &athena.ResultConfiguration{
 				OutputLocation: aws.String("s3://" + bucketName),
 			},
@@ -332,17 +338,17 @@ func testAccAthenaDatabaseFindBucketName(s *terraform.State, dbName string) (buc
 
 func testAccAthenaDatabaseConfig(randInt int, dbName string, forceDestroy bool) string {
 	return fmt.Sprintf(`
-    resource "aws_s3_bucket" "hoge" {
-      bucket = "tf-athena-db-%[1]d"
-      force_destroy = true
-    }
+resource "aws_s3_bucket" "hoge" {
+  bucket        = "tf-test-athena-db-%[1]d"
+  force_destroy = true
+}
 
-    resource "aws_athena_database" "hoge" {
-      name = "%[2]s"
-	  bucket = "${aws_s3_bucket.hoge.bucket}"
-	  force_destroy = %[3]t
-    }
-    `, randInt, dbName, forceDestroy)
+resource "aws_athena_database" "hoge" {
+  name          = "%[2]s"
+  bucket        = aws_s3_bucket.hoge.bucket
+  force_destroy = %[3]t
+}
+`, randInt, dbName, forceDestroy)
 }
 
 func testAccAthenaDatabaseWithKMSConfig(randInt int, dbName string, forceDestroy bool) string {
@@ -352,13 +358,13 @@ resource "aws_kms_key" "hoge" {
 }
 
 resource "aws_s3_bucket" "hoge" {
-  bucket        = "tf-athena-db-%[1]d"
+  bucket        = "tf-test-athena-db-%[1]d"
   force_destroy = true
 
   server_side_encryption_configuration {
     rule {
       apply_server_side_encryption_by_default {
-        kms_master_key_id = "${aws_kms_key.hoge.arn}"
+        kms_master_key_id = aws_kms_key.hoge.arn
         sse_algorithm     = "aws:kms"
       }
     }
@@ -367,13 +373,13 @@ resource "aws_s3_bucket" "hoge" {
 
 resource "aws_athena_database" "hoge" {
   name          = "%[2]s"
-  bucket        = "${aws_s3_bucket.hoge.bucket}"
+  bucket        = aws_s3_bucket.hoge.bucket
   force_destroy = %[3]t
 
   encryption_configuration {
     encryption_option = "SSE_KMS"
-    kms_key           = "${aws_kms_key.hoge.arn}" 
+    kms_key           = aws_kms_key.hoge.arn
   }
 }
-    `, randInt, dbName, forceDestroy)
+`, randInt, dbName, forceDestroy)
 }

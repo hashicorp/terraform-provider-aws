@@ -3,11 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsCognitoIdentityProvider() *schema.Resource {
@@ -25,29 +27,46 @@ func resourceAwsCognitoIdentityProvider() *schema.Resource {
 			"attribute_mapping": {
 				Type:     schema.TypeMap,
 				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 
 			"idp_identifiers": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 50,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 40),
+						validation.StringMatch(regexp.MustCompile(`^[\w\s+=.@-]+$`), "see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateIdentityProvider.html#API_CreateIdentityProvider_RequestSyntax"),
+					),
 				},
 			},
 
 			"provider_details": {
 				Type:     schema.TypeMap,
 				Required: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"provider_name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 32),
+					validation.StringMatch(regexp.MustCompile(`^[^_][\p{L}\p{M}\p{S}\p{N}\p{P}][^_]+$`), "see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateIdentityProvider.html#API_CreateIdentityProvider_RequestSyntax"),
+				),
 			},
 
 			"provider_type": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(cognitoidentityprovider.IdentityProviderTypeType_Values(), false),
 			},
 
 			"user_pool_id": {
@@ -72,11 +91,11 @@ func resourceAwsCognitoIdentityProviderCreate(d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("attribute_mapping"); ok {
-		params.AttributeMapping = stringMapToPointers(v.(map[string]interface{}))
+		params.AttributeMapping = expandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("provider_details"); ok {
-		params.ProviderDetails = stringMapToPointers(v.(map[string]interface{}))
+		params.ProviderDetails = expandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("idp_identifiers"); ok {
@@ -85,7 +104,7 @@ func resourceAwsCognitoIdentityProviderCreate(d *schema.ResourceData, meta inter
 
 	_, err := conn.CreateIdentityProvider(params)
 	if err != nil {
-		return fmt.Errorf("Error creating Cognito Identity Provider: %s", err)
+		return fmt.Errorf("Error creating Cognito Identity Provider: %w", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", userPoolID, providerName))
@@ -128,15 +147,15 @@ func resourceAwsCognitoIdentityProviderRead(d *schema.ResourceData, meta interfa
 	d.Set("user_pool_id", ip.UserPoolId)
 
 	if err := d.Set("attribute_mapping", aws.StringValueMap(ip.AttributeMapping)); err != nil {
-		return fmt.Errorf("error setting attribute_mapping error: %s", err)
+		return fmt.Errorf("error setting attribute_mapping error: %w", err)
 	}
 
 	if err := d.Set("provider_details", aws.StringValueMap(ip.ProviderDetails)); err != nil {
-		return fmt.Errorf("error setting provider_details error: %s", err)
+		return fmt.Errorf("error setting provider_details error: %w", err)
 	}
 
 	if err := d.Set("idp_identifiers", flattenStringList(ip.IdpIdentifiers)); err != nil {
-		return fmt.Errorf("error setting idp_identifiers error: %s", err)
+		return fmt.Errorf("error setting idp_identifiers error: %w", err)
 	}
 
 	return nil
@@ -157,20 +176,20 @@ func resourceAwsCognitoIdentityProviderUpdate(d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("attribute_mapping") {
-		params.AttributeMapping = stringMapToPointers(d.Get("attribute_mapping").(map[string]interface{}))
+		params.AttributeMapping = expandStringMap(d.Get("attribute_mapping").(map[string]interface{}))
 	}
 
 	if d.HasChange("provider_details") {
-		params.ProviderDetails = stringMapToPointers(d.Get("provider_details").(map[string]interface{}))
+		params.ProviderDetails = expandStringMap(d.Get("provider_details").(map[string]interface{}))
 	}
 
 	if d.HasChange("idp_identifiers") {
-		params.IdpIdentifiers = expandStringList(d.Get("supported_login_providers").([]interface{}))
+		params.IdpIdentifiers = expandStringList(d.Get("idp_identifiers").([]interface{}))
 	}
 
 	_, err = conn.UpdateIdentityProvider(params)
 	if err != nil {
-		return fmt.Errorf("Error updating Cognito Identity Provider: %s", err)
+		return fmt.Errorf("Error updating Cognito Identity Provider: %w", err)
 	}
 
 	return resourceAwsCognitoIdentityProviderRead(d, meta)

@@ -8,10 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
-
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSLoadBalancerListenerPolicy_basic(t *testing.T) {
@@ -20,6 +19,7 @@ func TestAccAWSLoadBalancerListenerPolicy_basic(t *testing.T) {
 	mcName := rChar
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLoadBalancerListenerPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -147,16 +147,16 @@ func testAccCheckAWSLoadBalancerListenerPolicyState(loadBalancerName string, loa
 }
 
 func testAccAWSLoadBalancerListenerPolicyConfig_basic0(lbName, mcName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
-  name = "%s"
-  availability_zones = ["us-west-2a"]
+  name               = "%s"
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
-    instance_port = 80
+    instance_port     = 80
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
   tags = {
@@ -165,35 +165,38 @@ resource "aws_elb" "test-lb" {
 }
 
 resource "aws_load_balancer_policy" "magic-cookie-sticky" {
-  load_balancer_name = "${aws_elb.test-lb.name}"
-  policy_name = "%s"
-  policy_type_name = "AppCookieStickinessPolicyType"
+  load_balancer_name = aws_elb.test-lb.name
+  policy_name        = "%s"
+  policy_type_name   = "AppCookieStickinessPolicyType"
+
   policy_attribute {
-    name = "CookieName"
+    name  = "CookieName"
     value = "magic_cookie"
   }
 }
 
 resource "aws_load_balancer_listener_policy" "test-lb-listener-policies-80" {
-  load_balancer_name = "${aws_elb.test-lb.name}"
+  load_balancer_name = aws_elb.test-lb.name
   load_balancer_port = 80
+
   policy_names = [
-    "${aws_load_balancer_policy.magic-cookie-sticky.policy_name}",
+    aws_load_balancer_policy.magic-cookie-sticky.policy_name,
   ]
-}`, lbName, mcName)
+}
+`, lbName, mcName))
 }
 
 func testAccAWSLoadBalancerListenerPolicyConfig_basic1(lbName, mcName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
-  name = "%s"
-  availability_zones = ["us-west-2a"]
+  name               = "%s"
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
-    instance_port = 80
+    instance_port     = 80
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
   tags = {
@@ -202,39 +205,43 @@ resource "aws_elb" "test-lb" {
 }
 
 resource "aws_load_balancer_policy" "magic-cookie-sticky" {
-  load_balancer_name = "${aws_elb.test-lb.name}"
-  policy_name = "%s"
-  policy_type_name = "AppCookieStickinessPolicyType"
+  load_balancer_name = aws_elb.test-lb.name
+  policy_name        = "%s"
+  policy_type_name   = "AppCookieStickinessPolicyType"
+
   policy_attribute {
-    name = "CookieName"
+    name  = "CookieName"
     value = "unicorn_cookie"
   }
 }
 
 resource "aws_load_balancer_listener_policy" "test-lb-listener-policies-80" {
-  load_balancer_name = "${aws_elb.test-lb.name}"
+  load_balancer_name = aws_elb.test-lb.name
   load_balancer_port = 80
+
   policy_names = [
-    "${aws_load_balancer_policy.magic-cookie-sticky.policy_name}"
+    aws_load_balancer_policy.magic-cookie-sticky.policy_name,
   ]
-}`, lbName, mcName)
+}
+`, lbName, mcName))
 }
 
 func testAccAWSLoadBalancerListenerPolicyConfig_basic2(lbName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
-  name = "%s"
-  availability_zones = ["us-west-2a"]
+  name               = "%s"
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
-    instance_port = 80
+    instance_port     = 80
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
   tags = {
     Name = "tf-acc-test"
   }
-}`, lbName)
+}
+`, lbName))
 }

@@ -1,21 +1,21 @@
 ---
+subcategory: "Redshift"
 layout: "aws"
 page_title: "AWS: aws_redshift_cluster"
-sidebar_current: "docs-aws-resource-redshift-cluster"
 description: |-
   Provides a Redshift Cluster resource.
 ---
 
-# aws_redshift_cluster
+# Resource: aws_redshift_cluster
 
 Provides a Redshift Cluster Resource.
 
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
-[Read more about sensitive data in state](/docs/state/sensitive-data.html).
+[Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_redshift_cluster" "default" {
   cluster_identifier = "tf-redshift-cluster"
   database_name      = "mydb"
@@ -71,14 +71,23 @@ string.
 * `iam_roles` - (Optional) A list of IAM Role ARNs to associate with the cluster. A Maximum of 10 can be associated to the cluster at any time.
 * `logging` - (Optional) Logging, documented below.
 * `snapshot_copy` - (Optional) Configuration of automatic copy of snapshots from one region to another. Documented below.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### Timeouts
+
+`aws_redshift_cluster` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `75 minutes`) Used for creating Clusters.
+- `update` - (Default `75 minutes`) Used for updating Clusters.
+- `delete` - (Default `40 minutes`) Used for destroying Clusters.
 
 ### Nested Blocks
 
 #### `logging`
 
 * `enable` - (Required) Enables logging information such as queries and connection attempts, for the specified Amazon Redshift cluster.
-* `bucket_name` - (Optional, required when `enable_logging` is `true`) The name of an existing S3 bucket where the log files are to be stored. Must be in the same region as the cluster and the cluster must have read bucket and put object permissions.
+* `bucket_name` - (Optional, required when `enable` is `true`) The name of an existing S3 bucket where the log files are to be stored. Must be in the same region as the cluster and the cluster must have read bucket and put object permissions.
 For more information on the permissions required for the bucket, please read the AWS [documentation](http://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-enable-logging)
 * `s3_key_prefix` - (Optional) The prefix applied to the log file names.
 
@@ -92,6 +101,7 @@ For more information on the permissions required for the bucket, please read the
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of cluster
 * `id` - The Redshift Cluster ID.
 * `cluster_identifier` - The Cluster Identifier
 * `cluster_type` - The cluster type
@@ -111,6 +121,7 @@ In addition to all arguments above, the following attributes are exported:
 * `cluster_subnet_group_name` - The name of a cluster subnet group to be associated with this cluster
 * `cluster_public_key` - The public key for the cluster
 * `cluster_revision_number` - The specific revision number of the database in the cluster
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 

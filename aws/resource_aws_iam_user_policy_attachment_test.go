@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSUserPolicyAttachment_basic(t *testing.T) {
@@ -21,6 +21,7 @@ func TestAccAWSUserPolicyAttachment_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -62,6 +63,7 @@ func TestAccAWSUserPolicyAttachment_basic(t *testing.T) {
 		},
 	})
 }
+
 func testAccCheckAWSUserPolicyAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
@@ -94,6 +96,7 @@ func testAccCheckAWSUserPolicyAttachmentExists(n string, c int, out *iam.ListAtt
 		return nil
 	}
 }
+
 func testAccCheckAWSUserPolicyAttachmentAttributes(policies []string, out *iam.ListAttachedUserPoliciesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		matched := 0
@@ -128,13 +131,14 @@ func testAccAWSIAMUserPolicyAttachmentImportStateIdFunc(resourceName string) res
 func testAccAWSUserPolicyAttachConfig(rName, policyName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
-    name = "test-user-%s"
+  name = "test-user-%s"
 }
 
 resource "aws_iam_policy" "policy" {
-    name = "%s"
-    description = "A test policy"
-    policy = <<EOF
+  name        = "%s"
+  description = "A test policy"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -151,21 +155,23 @@ EOF
 }
 
 resource "aws_iam_user_policy_attachment" "test-attach" {
-    user = "${aws_iam_user.user.name}"
-    policy_arn = "${aws_iam_policy.policy.arn}"
-}`, rName, policyName)
+  user       = aws_iam_user.user.name
+  policy_arn = aws_iam_policy.policy.arn
+}
+`, rName, policyName)
 }
 
 func testAccAWSUserPolicyAttachConfigUpdate(rName, policyName1, policyName2, policyName3 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
-    name = "test-user-%s"
+  name = "test-user-%s"
 }
 
 resource "aws_iam_policy" "policy" {
-    name = "%s"
-    description = "A test policy"
-    policy = <<EOF
+  name        = "%s"
+  description = "A test policy"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -182,9 +188,10 @@ EOF
 }
 
 resource "aws_iam_policy" "policy2" {
-    name = "%s"
-    description = "A test policy"
-    policy = <<EOF
+  name        = "%s"
+  description = "A test policy"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -201,9 +208,10 @@ EOF
 }
 
 resource "aws_iam_policy" "policy3" {
-    name = "%s"
-    description = "A test policy"
-    policy = <<EOF
+  name        = "%s"
+  description = "A test policy"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -220,12 +228,13 @@ EOF
 }
 
 resource "aws_iam_user_policy_attachment" "test-attach" {
-    user = "${aws_iam_user.user.name}"
-    policy_arn = "${aws_iam_policy.policy2.arn}"
+  user       = aws_iam_user.user.name
+  policy_arn = aws_iam_policy.policy2.arn
 }
 
 resource "aws_iam_user_policy_attachment" "test-attach2" {
-    user = "${aws_iam_user.user.name}"
-    policy_arn = "${aws_iam_policy.policy3.arn}"
-}`, rName, policyName1, policyName2, policyName3)
+  user       = aws_iam_user.user.name
+  policy_arn = aws_iam_policy.policy3.arn
+}
+`, rName, policyName1, policyName2, policyName3)
 }

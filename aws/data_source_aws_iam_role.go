@@ -7,7 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsIAMRole() *schema.Resource {
@@ -18,11 +19,6 @@ func dataSourceAwsIAMRole() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"assume_role_policy_document": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "Use `assume_role_policy` instead",
 			},
 			"assume_role_policy": {
 				Type:     schema.TypeString,
@@ -36,11 +32,6 @@ func dataSourceAwsIAMRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"role_id": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "Use `unique_id` instead",
-			},
 			"unique_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -49,14 +40,9 @@ func dataSourceAwsIAMRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"role_name": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Use `name` instead",
-			},
 			"name": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"create_date": {
 				Type:     schema.TypeString,
@@ -66,40 +52,29 @@ func dataSourceAwsIAMRole() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceAwsIAMRoleRead(d *schema.ResourceData, meta interface{}) error {
 	iamconn := meta.(*AWSClient).iamconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	name, hasName := d.GetOk("name")
-	roleName, hasRoleName := d.GetOk("role_name")
-
-	if !hasName && !hasRoleName {
-		return fmt.Errorf("`%s` must be set", "name")
-	}
-
-	var id string
-	if hasName {
-		id = name.(string)
-	} else if hasRoleName {
-		id = roleName.(string)
-	}
-	d.SetId(id)
+	name := d.Get("name").(string)
 
 	input := &iam.GetRoleInput{
-		RoleName: aws.String(d.Id()),
+		RoleName: aws.String(name),
 	}
 
 	output, err := iamconn.GetRole(input)
 	if err != nil {
-		return fmt.Errorf("Error reading IAM Role %s: %s", d.Id(), err)
+		return fmt.Errorf("error reading IAM Role (%s): %w", name, err)
 	}
 
 	d.Set("arn", output.Role.Arn)
 	if err := d.Set("create_date", output.Role.CreateDate.Format(time.RFC3339)); err != nil {
-		return err
+		return fmt.Errorf("error setting create_date: %w", err)
 	}
 	d.Set("description", output.Role.Description)
 	d.Set("max_session_duration", output.Role.MaxSessionDuration)
@@ -110,18 +85,17 @@ func dataSourceAwsIAMRoleRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("permissions_boundary", output.Role.PermissionsBoundary.PermissionsBoundaryArn)
 	}
 	d.Set("unique_id", output.Role.RoleId)
+	d.Set("tags", keyvaluetags.IamKeyValueTags(output.Role.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 
 	assumRolePolicy, err := url.QueryUnescape(aws.StringValue(output.Role.AssumeRolePolicyDocument))
 	if err != nil {
-		return err
+		return fmt.Errorf("error parsing assume role policy document: %w", err)
 	}
 	if err := d.Set("assume_role_policy", assumRolePolicy); err != nil {
-		return err
+		return fmt.Errorf("error setting assume_role_policy: %w", err)
 	}
 
-	// Keep backward compatibility with previous attributes
-	d.Set("role_id", output.Role.RoleId)
-	d.Set("assume_role_policy_document", assumRolePolicy)
+	d.SetId(name)
 
 	return nil
 }

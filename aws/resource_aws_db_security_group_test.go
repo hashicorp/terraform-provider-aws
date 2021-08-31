@@ -2,35 +2,42 @@ package aws
 
 import (
 	"fmt"
-	"os"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSDBSecurityGroup_importBasic(t *testing.T) {
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
+func TestAccAWSDBSecurityGroup_basic(t *testing.T) {
+	var v rds.DBSecurityGroup
+	resourceName := "aws_db_security_group.test"
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandString(5))
-	resourceName := "aws_db_security_group.bar"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBSecurityGroupDestroy,
+		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ErrorCheck:        testAccErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSDBSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBSecurityGroupConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBSecurityGroupExists(resourceName, &v),
+					testAccCheckAWSDBSecurityGroupAttributes(&v),
+					testAccCheckResourceAttrRegionalARNEc2Classic(resourceName, "arn", "rds", fmt.Sprintf("secgrp:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr": "10.0.0.1/24",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -40,44 +47,8 @@ func TestAccAWSDBSecurityGroup_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBSecurityGroup_basic(t *testing.T) {
-	var v rds.DBSecurityGroup
-
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
-	rName := fmt.Sprintf("tf-acc-%s", acctest.RandString(5))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBSecurityGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDBSecurityGroupConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBSecurityGroupExists("aws_db_security_group.bar", &v),
-					testAccCheckAWSDBSecurityGroupAttributes(&v),
-					resource.TestMatchResourceAttr("aws_db_security_group.bar", "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:\d{12}:secgrp:.+`)),
-					resource.TestCheckResourceAttr(
-						"aws_db_security_group.bar", "name", rName),
-					resource.TestCheckResourceAttr(
-						"aws_db_security_group.bar", "description", "Managed by Terraform"),
-					resource.TestCheckResourceAttr(
-						"aws_db_security_group.bar", "ingress.3363517775.cidr", "10.0.0.1/24"),
-					resource.TestCheckResourceAttr(
-						"aws_db_security_group.bar", "ingress.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_db_security_group.bar", "tags.%", "1"),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckAWSDBSecurityGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := testAccProviderEc2Classic.Meta().(*AWSClient).rdsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_security_group" {
@@ -144,7 +115,7 @@ func testAccCheckAWSDBSecurityGroupExists(n string, v *rds.DBSecurityGroup) reso
 			return fmt.Errorf("No DB Security Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := testAccProviderEc2Classic.Meta().(*AWSClient).rdsconn
 
 		opts := rds.DescribeDBSecurityGroupsInput{
 			DBSecurityGroupName: aws.String(rs.Primary.ID),
@@ -168,17 +139,19 @@ func testAccCheckAWSDBSecurityGroupExists(n string, v *rds.DBSecurityGroup) reso
 }
 
 func testAccAWSDBSecurityGroupConfig(name string) string {
-	return fmt.Sprintf(`
-resource "aws_db_security_group" "bar" {
-    name = "%s"
+	return composeConfig(
+		testAccEc2ClassicRegionProviderConfig(),
+		fmt.Sprintf(`
+resource "aws_db_security_group" "test" {
+  name = "%s"
 
-    ingress {
-        cidr = "10.0.0.1/24"
-    }
+  ingress {
+    cidr = "10.0.0.1/24"
+  }
 
   tags = {
-		foo = "bar"
-    }
+    foo = "test"
+  }
 }
-`, name)
+`, name))
 }

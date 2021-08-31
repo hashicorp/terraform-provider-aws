@@ -2,384 +2,744 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
+	"strconv"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
-	"github.com/jen20/awspolicyequivalence"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awspolicy "github.com/jen20/awspolicyequivalence"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	tfsqs "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sqs"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sqs/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
-func TestAccAWSSQSQueue_importBasic(t *testing.T) {
-	resourceName := "aws_sqs_queue.queue"
-	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(5))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSQSConfigWithDefaults(queueName),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "fifo_queue", "false"),
-				),
-			},
+func init() {
+	resource.AddTestSweepers("aws_sqs_queue", &resource.Sweeper{
+		Name: "aws_sqs_queue",
+		F:    testSweepSqsQueues,
+		Dependencies: []string{
+			"aws_autoscaling_group",
+			"aws_cloudwatch_event_rule",
+			"aws_elastic_beanstalk_environment",
+			"aws_iot_topic_rule",
+			"aws_lambda_function",
+			"aws_s3_bucket",
+			"aws_sns_topic",
 		},
 	})
 }
 
-func TestAccAWSSQSQueue_importFifo(t *testing.T) {
-	resourceName := "aws_sqs_queue.queue"
-	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(5))
+func testSweepSqsQueues(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*AWSClient).sqsconn
+	input := &sqs.ListQueuesInput{}
+	var sweeperErrs *multierror.Error
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSQSFifoConfigWithDefaults(queueName),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "fifo_queue", "true"),
-				),
-			},
-		},
+	err = conn.ListQueuesPages(input, func(page *sqs.ListQueuesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, queueUrl := range page.QueueUrls {
+			r := resourceAwsSqsQueue()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(queueUrl))
+			err = r.Delete(d, client)
+
+			if err != nil {
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
+				continue
+			}
+		}
+
+		return !lastPage
 	})
-}
 
-func TestAccAWSSQSQueue_importEncryption(t *testing.T) {
-	resourceName := "aws_sqs_queue.queue"
-	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(5))
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping SQS Queue sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSQSConfigWithEncryption(queueName),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "kms_master_key_id", "alias/aws/sqs"),
-				),
-			},
-		},
-	})
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing SQS Queues: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSSQSQueue_basic(t *testing.T) {
-	var queueAttributes map[string]*string
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSQSConfigWithDefaults(queueName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.queue", &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
+				Config: testAccAWSSQSConfigName(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sqs", rName),
+					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "false"),
+					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", ""),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", strconv.Itoa(tfsqs.DefaultQueueDelaySeconds)),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "false"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", ""),
+					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", strconv.Itoa(tfsqs.DefaultQueueKmsDataKeyReusePeriodSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "max_message_size", strconv.Itoa(tfsqs.DefaultQueueMaximumMessageSize)),
+					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", strconv.Itoa(tfsqs.DefaultQueueMessageRetentionPeriod)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "policy", ""),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "redrive_policy", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "url", resourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
 				),
 			},
 			{
-				Config: testAccAWSSQSConfigWithOverrides(queueName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_disappears(t *testing.T) {
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.queue", &queueAttributes),
-					testAccCheckAWSSQSQueueOverrideAttributes(&queueAttributes),
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSqsQueue(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_Name_Generated(t *testing.T) {
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSQueueConfigNameGenerated,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "false"),
 				),
 			},
 			{
-				Config: testAccAWSSQSConfigWithDefaults(queueName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_Name_Generated_FIFOQueue(t *testing.T) {
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSQueueConfigNameGeneratedFIFOQueue,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.queue", &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					naming.TestCheckResourceAttrNameWithSuffixGenerated(resourceName, "name", tfsqs.FifoQueueNameSuffix),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_NamePrefix(t *testing.T) {
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSQueueConfigNamePrefix("tf-acc-test-prefix-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_NamePrefix_FIFOQueue(t *testing.T) {
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSQueueConfigNamePrefixFIFOQueue("tf-acc-test-prefix-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					naming.TestCheckResourceAttrNameWithSuffixFromPrefix(resourceName, "name", "tf-acc-test-prefix-", tfsqs.FifoQueueNameSuffix),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_Tags(t *testing.T) {
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSQSConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSSQSConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSSQSQueue_tags(t *testing.T) {
-	var queueAttributes map[string]*string
+func TestAccAWSSQSQueue_Update(t *testing.T) {
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSQSConfigWithTags(queueName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.queue", &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
-					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "tags.%", "2"),
-					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "tags.Usage", "original"),
+				Config: testAccAWSSQSConfigName(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sqs", rName),
+					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "false"),
+					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", ""),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", strconv.Itoa(tfsqs.DefaultQueueDelaySeconds)),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "false"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", ""),
+					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", strconv.Itoa(tfsqs.DefaultQueueKmsDataKeyReusePeriodSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "max_message_size", strconv.Itoa(tfsqs.DefaultQueueMaximumMessageSize)),
+					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", strconv.Itoa(tfsqs.DefaultQueueMessageRetentionPeriod)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "policy", ""),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "redrive_policy", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
 				),
 			},
 			{
-				Config: testAccAWSSQSConfigWithTagsChanged(queueName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.queue", &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
-					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "tags.Usage", "changed"),
+				Config: testAccAWSSQSConfigUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sqs", rName),
+					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "false"),
+					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", ""),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "90"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "false"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", ""),
+					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", strconv.Itoa(tfsqs.DefaultQueueKmsDataKeyReusePeriodSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "max_message_size", "2048"),
+					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", "86400"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "policy", ""),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", "10"),
+					resource.TestCheckResourceAttr(resourceName, "redrive_policy", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "60"),
 				),
 			},
 			{
-				Config: testAccAWSSQSConfigWithDefaults(queueName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_Policy(t *testing.T) {
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.queue", &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
-					resource.TestCheckNoResourceAttr("aws_sqs_queue.queue", "tags"),
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					testAccCheckAWSSQSQueuePolicyAttribute(&queueAttributes, rName),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "90"),
+					resource.TestCheckResourceAttr(resourceName, "max_message_size", "2048"),
+					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", "86400"),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", "10"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "60"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_RecentlyDeleted(t *testing.T) {
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSqsQueue(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccAWSSQSConfigName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSSQSQueue_namePrefix(t *testing.T) {
-	var queueAttributes map[string]*string
+func TestAccAWSSQSQueue_RedrivePolicy(t *testing.T) {
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	prefix := "acctest-sqs-queue"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSQSConfigWithNamePrefix(prefix),
+				Config: testAccAWSSQSConfigRedrivePolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.queue", &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
-					resource.TestMatchResourceAttr("aws_sqs_queue.queue", "name", regexp.MustCompile(`^acctest-sqs-queue`)),
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "redrive_policy"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "300"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_FIFOQueue(t *testing.T) {
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+	rName := fmt.Sprintf("%s.fifo", acctest.RandomWithPrefix("tf-acc-test"))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigFIFOQueue(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", "queue"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", "perQueue"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_FIFOQueue_ExpectNameError(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSSQSConfigFIFOQueue(rName),
+				ExpectError: regexp.MustCompile(`invalid queue name:`),
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_FIFOQueue_ContentBasedDeduplication(t *testing.T) {
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+	rName := fmt.Sprintf("%s.fifo", acctest.RandomWithPrefix("tf-acc-test"))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigFIFOQueueContentBasedDeduplication(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_FIFOQueue_HighThroughputMode(t *testing.T) {
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+	rName := fmt.Sprintf("%s.fifo", acctest.RandomWithPrefix("tf-acc-test"))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigFIFOQueueHighThroughputMode(rName, "null", "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", "queue"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", "perQueue"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSQSConfigFIFOQueueHighThroughputMode(rName, "messageGroup", "perMessageGroupId"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", "messageGroup"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", "perMessageGroupId"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSSQSQueue_namePrefix_fifo(t *testing.T) {
-	var queueAttributes map[string]*string
+func TestAccAWSSQSQueue_StandardQueue_ExpectContentBasedDeduplicationError(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	prefix := "acctest-sqs-queue"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSQSFifoConfigWithNamePrefix(prefix),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.queue", &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
-					resource.TestMatchResourceAttr("aws_sqs_queue.queue", "name", regexp.MustCompile(`^acctest-sqs-queue.*\.fifo$`)),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSSQSQueue_policy(t *testing.T) {
-	var queueAttributes map[string]*string
-
-	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
-	topicName := fmt.Sprintf("sns-topic-%s", acctest.RandString(10))
-
-	expectedPolicyText := fmt.Sprintf(
-		`{"Version": "2012-10-17","Id": "sqspolicy","Statement":[{"Sid": "Stmt1451501026839","Effect": "Allow","Principal":"*","Action":"sqs:SendMessage","Resource":"arn:aws:sqs:us-west-2:470663696735:%s","Condition":{"ArnEquals":{"aws:SourceArn":"arn:aws:sns:us-west-2:470663696735:%s"}}}]}`,
-		topicName, queueName)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSQSConfig_PolicyFormat(topicName, queueName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.test-email-events", &queueAttributes),
-					testAccCheckAWSSQSQueuePolicyAttribute(&queueAttributes, expectedPolicyText),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSSQSQueue_queueDeletedRecently(t *testing.T) {
-	var queueAttributes map[string]*string
-
-	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSQSConfigWithDefaults(queueName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.queue", &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
-				),
-			},
-			{
-				Config: testAccAWSSQSConfigWithDefaults(queueName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.queue", &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
-				),
-				Taint: []string{"aws_sqs_queue.queue"},
-			},
-		},
-	})
-}
-
-func TestAccAWSSQSQueue_redrivePolicy(t *testing.T) {
-	var queueAttributes map[string]*string
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSQSConfigWithRedrive(acctest.RandString(10)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.my_dead_letter_queue", &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
-				),
-			},
-		},
-	})
-}
-
-// Tests formatting and compacting of Policy, Redrive json
-func TestAccAWSSQSQueue_Policybasic(t *testing.T) {
-	var queueAttributes map[string]*string
-
-	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
-	topicName := fmt.Sprintf("sns-topic-%s", acctest.RandString(10))
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSQSConfig_PolicyFormat(topicName, queueName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.test-email-events", &queueAttributes),
-					testAccCheckAWSSQSQueueOverrideAttributes(&queueAttributes),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSSQSQueue_FIFO(t *testing.T) {
-	var queueAttributes map[string]*string
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSQSConfigWithFIFO(acctest.RandString(10)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.queue", &queueAttributes),
-					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "fifo_queue", "true"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSSQSQueue_FIFOExpectNameError(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAWSSQSConfigWithFIFOExpectError(acctest.RandString(10)),
-				ExpectError: regexp.MustCompile(`Error validating the FIFO queue name`),
-			},
-		},
-	})
-}
-
-func TestAccAWSSQSQueue_FIFOWithContentBasedDeduplication(t *testing.T) {
-	var queueAttributes map[string]*string
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSQSConfigWithFIFOContentBasedDeduplication(acctest.RandString(10)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.queue", &queueAttributes),
-					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "fifo_queue", "true"),
-					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "content_based_deduplication", "true"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSSQSQueue_ExpectContentBasedDeduplicationError(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccExpectContentBasedDeduplicationError(acctest.RandString(10)),
-				ExpectError: regexp.MustCompile(`Content based deduplication can only be set with FIFO queues`),
+				Config:      testAccAWSSQSConfigStandardQueueExpectContentBasedDeduplicationError(rName),
+				ExpectError: regexp.MustCompile(`content-based deduplication can only be set for FIFO queue`),
 			},
 		},
 	})
 }
 
 func TestAccAWSSQSQueue_Encryption(t *testing.T) {
-	var queueAttributes map[string]*string
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSQSConfigWithEncryption(acctest.RandString(10)),
+				Config: testAccAWSSQSConfigEncryption(rName, "null"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.queue", &queueAttributes),
-					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "kms_master_key_id", "alias/aws/sqs"),
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", "300"),
+					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", "alias/aws/sqs"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSQSConfigEncryption(rName, "3600"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", "alias/aws/sqs"),
 				),
 			},
 		},
 	})
+}
+
+func TestAccAWSSQSQueue_ZeroVisibilityTimeoutSeconds(t *testing.T) {
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigZeroVisibilityTimeoutSeconds(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/19786.
+func TestAccAWSSQSQueue_DefaultKmsDataKeyReusePeriodSeconds(t *testing.T) {
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigDefaultKmsDataKeyReusePeriodSeconds(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", strconv.Itoa(tfsqs.DefaultQueueKmsDataKeyReusePeriodSeconds)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAWSSQSQueuePolicyAttribute(queueAttributes *map[string]string, rName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		expectedPolicyText := fmt.Sprintf(
+			`{
+"Version": "2012-10-17",
+"Id": "sqspolicy",
+"Statement":[{
+  "Sid": "Stmt1451501026839",
+  "Effect": "Allow",
+  "Principal":"*",
+  "Action":"sqs:SendMessage",
+  "Resource":"arn:%[1]s:sqs:%[2]s:%[3]s:%[4]s",
+  "Condition":{
+    "ArnEquals":{"aws:SourceArn":"arn:%[1]s:sns:%[2]s:%[3]s:%[5]s"}
+  }
+}]
+             }`,
+			testAccGetPartition(), testAccGetRegion(), testAccGetAccountID(), rName, rName)
+
+		var actualPolicyText string
+		for key, value := range *queueAttributes {
+			if key == sqs.QueueAttributeNamePolicy {
+				actualPolicyText = value
+				break
+			}
+		}
+
+		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
+		if err != nil {
+			return fmt.Errorf("Error testing policy equivalence: %s", err)
+		}
+		if !equivalent {
+			return fmt.Errorf("Non-equivalent policy error:\n\nexpected: %s\n\n     got: %s\n", expectedPolicyText, actualPolicyText)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSSQSQueueExists(resourceName string, v *map[string]string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No SQS Queue URL is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).sqsconn
+
+		output, err := finder.QueueAttributesByURL(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = output
+
+		return nil
+	}
 }
 
 func testAccCheckAWSSQSQueueDestroy(s *terraform.State) error {
@@ -390,223 +750,113 @@ func testAccCheckAWSSQSQueueDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Check if queue exists by checking for its attributes
-		params := &sqs.GetQueueAttributesInput{
-			QueueUrl: aws.String(rs.Primary.ID),
+		_, err := finder.QueueAttributesByURL(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
-		err := resource.Retry(15*time.Second, func() *resource.RetryError {
-			_, err := conn.GetQueueAttributes(params)
-			if err != nil {
-				if isAWSErr(err, sqs.ErrCodeQueueDoesNotExist, "") {
-					return nil
-				}
-				return resource.NonRetryableError(err)
-			}
-			return resource.RetryableError(fmt.Errorf("Queue %s still exists. Failing!", rs.Primary.ID))
-		})
+
 		if err != nil {
 			return err
 		}
+
+		return fmt.Errorf("SQS Queue %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
-func testAccCheckAWSSQSQueuePolicyAttribute(queueAttributes *map[string]*string, expectedPolicyText string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		var actualPolicyText string
-		for key, valuePointer := range *queueAttributes {
-			if key == "Policy" {
-				actualPolicyText = aws.StringValue(valuePointer)
-				break
-			}
-		}
 
-		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
-		if err != nil {
-			return fmt.Errorf("Error testing policy equivalence: %s", err)
-		}
-		if !equivalent {
-			return fmt.Errorf("Non-equivalent policy error:\n\nexpected: %s\n\n     got: %s\n",
-				expectedPolicyText, actualPolicyText)
-		}
+const testAccAWSSQSQueueConfigNameGenerated = `
+resource "aws_sqs_queue" "test" {}
+`
 
-		return nil
-	}
-}
-
-func testAccCheckAWSSQSQueueExists(resourceName string, queueAttributes *map[string]*string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Queue URL specified!")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).sqsconn
-
-		input := &sqs.GetQueueAttributesInput{
-			QueueUrl:       aws.String(rs.Primary.ID),
-			AttributeNames: []*string{aws.String("All")},
-		}
-		output, err := conn.GetQueueAttributes(input)
-
-		if err != nil {
-			return err
-		}
-
-		*queueAttributes = output.Attributes
-
-		return nil
-	}
-}
-
-func testAccCheckAWSSQSQueueDefaultAttributes(queueAttributes *map[string]*string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		// checking if attributes are defaults
-		for key, valuePointer := range *queueAttributes {
-			value := aws.StringValue(valuePointer)
-			if key == "VisibilityTimeout" && value != "30" {
-				return fmt.Errorf("VisibilityTimeout (%s) was not set to 30", value)
-			}
-
-			if key == "MessageRetentionPeriod" && value != "345600" {
-				return fmt.Errorf("MessageRetentionPeriod (%s) was not set to 345600", value)
-			}
-
-			if key == "MaximumMessageSize" && value != "262144" {
-				return fmt.Errorf("MaximumMessageSize (%s) was not set to 262144", value)
-			}
-
-			if key == "DelaySeconds" && value != "0" {
-				return fmt.Errorf("DelaySeconds (%s) was not set to 0", value)
-			}
-
-			if key == "ReceiveMessageWaitTimeSeconds" && value != "0" {
-				return fmt.Errorf("ReceiveMessageWaitTimeSeconds (%s) was not set to 0", value)
-			}
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckAWSSQSQueueOverrideAttributes(queueAttributes *map[string]*string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		// checking if attributes match our overrides
-		for key, valuePointer := range *queueAttributes {
-			value := aws.StringValue(valuePointer)
-			if key == "VisibilityTimeout" && value != "60" {
-				return fmt.Errorf("VisibilityTimeout (%s) was not set to 60", value)
-			}
-
-			if key == "MessageRetentionPeriod" && value != "86400" {
-				return fmt.Errorf("MessageRetentionPeriod (%s) was not set to 86400", value)
-			}
-
-			if key == "MaximumMessageSize" && value != "2048" {
-				return fmt.Errorf("MaximumMessageSize (%s) was not set to 2048", value)
-			}
-
-			if key == "DelaySeconds" && value != "90" {
-				return fmt.Errorf("DelaySeconds (%s) was not set to 90", value)
-			}
-
-			if key == "ReceiveMessageWaitTimeSeconds" && value != "10" {
-				return fmt.Errorf("ReceiveMessageWaitTimeSeconds (%s) was not set to 10", value)
-			}
-		}
-
-		return nil
-	}
-}
-
-func testAccAWSSQSConfigWithDefaults(r string) string {
-	return fmt.Sprintf(`
-resource "aws_sqs_queue" "queue" {
-  name = "%s"
-}
-`, r)
-}
-
-func testAccAWSSQSConfigWithNamePrefix(r string) string {
-	return fmt.Sprintf(`
-resource "aws_sqs_queue" "queue" {
-  name_prefix = "%s"
-}
-`, r)
-}
-
-func testAccAWSSQSFifoConfigWithNamePrefix(r string) string {
-	return fmt.Sprintf(`
-resource "aws_sqs_queue" "queue" {
-  name_prefix = "%s"
-  fifo_queue  = true
-}
-`, r)
-}
-
-func testAccAWSSQSFifoConfigWithDefaults(r string) string {
-	return fmt.Sprintf(`
-resource "aws_sqs_queue" "queue" {
-  name = "%s.fifo"
+const testAccAWSSQSQueueConfigNameGeneratedFIFOQueue = `
+resource "aws_sqs_queue" "test" {
   fifo_queue = true
 }
-`, r)
+`
+
+func testAccAWSSQSConfigName(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  name = %[1]q
+}
+`, rName)
 }
 
-func testAccAWSSQSConfigWithOverrides(r string) string {
+func testAccAWSSQSQueueConfigNamePrefix(prefix string) string {
 	return fmt.Sprintf(`
-resource "aws_sqs_queue" "queue" {
-  name                       = "%s"
+resource "aws_sqs_queue" "test" {
+  name_prefix = %[1]q
+}
+`, prefix)
+}
+
+func testAccAWSSQSQueueConfigNamePrefixFIFOQueue(prefix string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  name_prefix = %[1]q
+  fifo_queue  = true
+}
+`, prefix)
+}
+
+func testAccAWSSQSConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSSQSConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAWSSQSConfigUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  name                       = %[1]q
   delay_seconds              = 90
   max_message_size           = 2048
   message_retention_seconds  = 86400
   receive_wait_time_seconds  = 10
   visibility_timeout_seconds = 60
-}`, r)
+}
+`, rName)
 }
 
-func testAccAWSSQSConfigWithRedrive(name string) string {
+func testAccAWSSQSConfigPolicy(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_sqs_queue" "my_queue" {
-  name                       = "tftestqueuq-%s"
-  delay_seconds              = 0
-  visibility_timeout_seconds = 300
-
-  redrive_policy = <<EOF
-{
-  "maxReceiveCount": 3,
-  "deadLetterTargetArn": "${aws_sqs_queue.my_dead_letter_queue.arn}"
-}
-EOF
+locals {
+  queue_name = %[1]q
 }
 
-resource "aws_sqs_queue" "my_dead_letter_queue" {
-  name = "tfotherqueuq-%s"
-}
-`, name, name)
+resource "aws_sns_topic" "test" {
+  name = %[1]q
 }
 
-func testAccAWSSQSConfig_PolicyFormat(queue, topic string) string {
-	return fmt.Sprintf(`
-variable "sns_name" {
-  default = "%s"
-}
+data "aws_partition" "current" {}
 
-variable "sqs_name" {
-  default = "%s"
-}
+data "aws_region" "current" {}
 
-resource "aws_sns_topic" "test_topic" {
-  name = "${var.sns_name}"
-}
+data "aws_caller_identity" "current" {}
 
-resource "aws_sqs_queue" "test-email-events" {
-  name                       = "${var.sqs_name}"
-  depends_on                 = ["aws_sns_topic.test_topic"]
+resource "aws_sqs_queue" "test" {
+  name                       = local.queue_name
   delay_seconds              = 90
   max_message_size           = 2048
   message_retention_seconds  = 86400
@@ -623,10 +873,10 @@ resource "aws_sqs_queue" "test-email-events" {
       "Effect": "Allow",
       "Principal": "*",
       "Action": "sqs:SendMessage",
-      "Resource": "arn:aws:sqs:us-west-2:470663696735:${var.sqs_name}",
+      "Resource": "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${local.queue_name}",
       "Condition": {
         "ArnEquals": {
-          "aws:SourceArn": "arn:aws:sns:us-west-2:470663696735:${var.sns_name}"
+          "aws:SourceArn": "${aws_sns_topic.test.arn}"
         }
       }
     }
@@ -635,82 +885,107 @@ resource "aws_sqs_queue" "test-email-events" {
 EOF
 }
 
-resource "aws_sns_topic_subscription" "test_queue_target" {
-  topic_arn = "${aws_sns_topic.test_topic.arn}"
+resource "aws_sns_topic_subscription" "test" {
+  topic_arn = aws_sns_topic.test.arn
   protocol  = "sqs"
-  endpoint  = "${aws_sqs_queue.test-email-events.arn}"
+  endpoint  = aws_sqs_queue.test.arn
 }
-`, topic, queue)
+`, rName)
 }
 
-func testAccAWSSQSConfigWithFIFO(queue string) string {
+func testAccAWSSQSConfigRedrivePolicy(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_sqs_queue" "queue" {
-  name       = "%s.fifo"
+resource "aws_sqs_queue" "test" {
+  name                       = "%[1]s-1"
+  delay_seconds              = 0
+  visibility_timeout_seconds = 300
+
+  redrive_policy = <<EOF
+{
+  "maxReceiveCount": 3,
+  "deadLetterTargetArn": "${aws_sqs_queue.dlq.arn}"
+}
+EOF
+}
+
+resource "aws_sqs_queue" "dlq" {
+  name = "%[1]s-2"
+}
+`, rName)
+}
+
+func testAccAWSSQSConfigFIFOQueue(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  name       = %[1]q
   fifo_queue = true
 }
-`, queue)
+`, rName)
 }
 
-func testAccAWSSQSConfigWithFIFOContentBasedDeduplication(queue string) string {
+func testAccAWSSQSConfigFIFOQueueContentBasedDeduplication(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_sqs_queue" "queue" {
-  name                        = "%s.fifo"
+resource "aws_sqs_queue" "test" {
+  name                        = %[1]q
   fifo_queue                  = true
   content_based_deduplication = true
 }
-`, queue)
+`, rName)
 }
 
-func testAccAWSSQSConfigWithFIFOExpectError(queue string) string {
+func testAccAWSSQSConfigFIFOQueueHighThroughputMode(rName, deduplicationScope, fifoThroughputLimit string) string {
+	if deduplicationScope != "null" {
+		deduplicationScope = strconv.Quote(deduplicationScope)
+	}
+
+	if fifoThroughputLimit != "null" {
+		fifoThroughputLimit = strconv.Quote(fifoThroughputLimit)
+	}
+
 	return fmt.Sprintf(`
-resource "aws_sqs_queue" "queue" {
-  name       = "%s"
+resource "aws_sqs_queue" "test" {
+  name       = %[1]q
   fifo_queue = true
+
+  deduplication_scope   = %[2]s
+  fifo_throughput_limit = %[3]s
 }
-`, queue)
+`, rName, deduplicationScope, fifoThroughputLimit)
 }
 
-func testAccExpectContentBasedDeduplicationError(queue string) string {
+func testAccAWSSQSConfigStandardQueueExpectContentBasedDeduplicationError(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_sqs_queue" "queue" {
-  name                        = "%s"
+resource "aws_sqs_queue" "test" {
+  name                        = %[1]q
   content_based_deduplication = true
 }
-`, queue)
+`, rName)
 }
 
-func testAccAWSSQSConfigWithEncryption(queue string) string {
+func testAccAWSSQSConfigEncryption(rName, kmsDataKeyReusePeriodSeconds string) string {
 	return fmt.Sprintf(`
-resource "aws_sqs_queue" "queue" {
-  name                              = "%s"
+resource "aws_sqs_queue" "test" {
+  name                              = %[1]q
   kms_master_key_id                 = "alias/aws/sqs"
+  kms_data_key_reuse_period_seconds = %[2]s
+}
+`, rName, kmsDataKeyReusePeriodSeconds)
+}
+
+func testAccAWSSQSConfigZeroVisibilityTimeoutSeconds(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  name                       = %[1]q
+  visibility_timeout_seconds = 0
+}
+`, rName)
+}
+
+func testAccAWSSQSConfigDefaultKmsDataKeyReusePeriodSeconds(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  name                              = %[1]q
   kms_data_key_reuse_period_seconds = 300
 }
-`, queue)
-}
-
-func testAccAWSSQSConfigWithTags(r string) string {
-	return fmt.Sprintf(`
-resource "aws_sqs_queue" "queue" {
-  name = "%s"
-
-  tags = {
-    Environment = "production"
-    Usage = "original"
-  }
-}
-`, r)
-}
-
-func testAccAWSSQSConfigWithTagsChanged(r string) string {
-	return fmt.Sprintf(`
-resource "aws_sqs_queue" "queue" {
-  name = "%s"
-
-  tags = {
-    Usage = "changed"
-  }
-}
-`, r)
+`, rName)
 }

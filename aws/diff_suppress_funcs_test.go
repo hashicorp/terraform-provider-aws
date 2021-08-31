@@ -3,7 +3,7 @@ package aws
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func TestSuppressEquivalentJsonDiffsWhitespaceAndNoWhitespace(t *testing.T) {
@@ -67,6 +67,200 @@ func TestSuppressEquivalentTypeStringBoolean(t *testing.T) {
 
 		if !tc.equivalent && value {
 			t.Fatalf("expected test case %d to not be equivalent", i)
+		}
+	}
+}
+
+func TestSuppressEquivalentJsonOrYamlDiffs(t *testing.T) {
+	testCases := []struct {
+		description string
+		equivalent  bool
+		old         string
+		new         string
+	}{
+		{
+			description: `JSON no change`,
+			equivalent:  true,
+			old: `
+{
+   "Resources": {
+      "TestVpc": {
+         "Type": "AWS::EC2::VPC",
+         "Properties": {
+            "CidrBlock": "10.0.0.0/16"
+         }
+      }
+   },
+   "Outputs": {
+      "TestVpcID": {
+         "Value": { "Ref" : "TestVpc" }
+      }
+   }
+}
+`,
+			new: `
+{
+   "Resources": {
+      "TestVpc": {
+         "Type": "AWS::EC2::VPC",
+         "Properties": {
+            "CidrBlock": "10.0.0.0/16"
+         }
+      }
+   },
+   "Outputs": {
+      "TestVpcID": {
+         "Value": { "Ref" : "TestVpc" }
+      }
+   }
+}
+`,
+		},
+		{
+			description: `JSON whitespace`,
+			equivalent:  true,
+			old:         `{"Resources":{"TestVpc":{"Type":"AWS::EC2::VPC","Properties":{"CidrBlock":"10.0.0.0/16"}}},"Outputs":{"TestVpcID":{"Value":{"Ref":"TestVpc"}}}}`,
+			new: `
+{
+   "Resources": {
+      "TestVpc": {
+         "Type": "AWS::EC2::VPC",
+         "Properties": {
+            "CidrBlock": "10.0.0.0/16"
+         }
+      }
+   },
+   "Outputs": {
+      "TestVpcID": {
+         "Value": { "Ref" : "TestVpc" }
+      }
+   }
+}
+`,
+		},
+		{
+			description: `JSON change`,
+			equivalent:  false,
+			old: `
+{
+   "Resources": {
+      "TestVpc": {
+         "Type": "AWS::EC2::VPC",
+         "Properties": {
+            "CidrBlock": "10.0.0.0/16"
+         }
+      }
+   },
+   "Outputs": {
+      "TestVpcID": {
+         "Value": { "Ref" : "TestVpc" }
+      }
+   }
+}
+`,
+			new: `
+{
+   "Resources": {
+      "TestVpc": {
+         "Type": "AWS::EC2::VPC",
+         "Properties": {
+            "CidrBlock": "172.16.0.0/16"
+         }
+      }
+   },
+   "Outputs": {
+      "TestVpcID": {
+         "Value": { "Ref" : "TestVpc" }
+      }
+   }
+}
+`,
+		},
+		{
+			description: `YAML no change`,
+			equivalent:  true,
+			old: `
+Resources:
+  TestVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+Outputs:
+  TestVpcID:
+    Value: !Ref TestVpc
+`,
+			new: `
+Resources:
+  TestVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+Outputs:
+  TestVpcID:
+    Value: !Ref TestVpc
+`,
+		},
+		{
+			description: `YAML whitespace`,
+			equivalent:  false,
+			old: `
+Resources:
+  TestVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+
+Outputs:
+  TestVpcID:
+    Value: !Ref TestVpc
+
+`,
+			new: `
+Resources:
+  TestVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+Outputs:
+  TestVpcID:
+    Value: !Ref TestVpc
+`,
+		},
+		{
+			description: `YAML change`,
+			equivalent:  false,
+			old: `
+Resources:
+  TestVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 172.16.0.0/16
+Outputs:
+  TestVpcID:
+    Value: !Ref TestVpc
+`,
+			new: `
+Resources:
+  TestVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+Outputs:
+  TestVpcID:
+    Value: !Ref TestVpc
+`,
+		},
+	}
+
+	for _, tc := range testCases {
+		value := suppressEquivalentJsonOrYamlDiffs("test_property", tc.old, tc.new, nil)
+
+		if tc.equivalent && !value {
+			t.Fatalf("expected test case (%s) to be equivalent", tc.description)
+		}
+
+		if !tc.equivalent && value {
+			t.Fatalf("expected test case (%s) to not be equivalent", tc.description)
 		}
 	}
 }

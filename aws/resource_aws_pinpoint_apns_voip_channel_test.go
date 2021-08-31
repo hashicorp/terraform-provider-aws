@@ -7,11 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/pinpoint"
-
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/aws/aws-sdk-go/service/pinpoint"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 /**
@@ -89,20 +88,16 @@ func testAccAwsPinpointAPNSVoipChannelTokenConfigurationFromEnv(t *testing.T) *t
 }
 
 func TestAccAWSPinpointAPNSVoipChannel_basicCertificate(t *testing.T) {
-	oldDefaultRegion := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldDefaultRegion)
-
 	var channel pinpoint.APNSVoipChannelResponse
 	resourceName := "aws_pinpoint_apns_voip_channel.test_channel"
 
 	configuration := testAccAwsPinpointAPNSVoipChannelCertConfigurationFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSPinpointAPNSVoipChannelDestroy,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPinpointAPNSVoipChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSPinpointAPNSVoipChannelConfig_basicCertificate(configuration),
@@ -127,20 +122,16 @@ func TestAccAWSPinpointAPNSVoipChannel_basicCertificate(t *testing.T) {
 }
 
 func TestAccAWSPinpointAPNSVoipChannel_basicToken(t *testing.T) {
-	oldDefaultRegion := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldDefaultRegion)
-
 	var channel pinpoint.APNSVoipChannelResponse
 	resourceName := "aws_pinpoint_apns_voip_channel.test_channel"
 
 	configuration := testAccAwsPinpointAPNSVoipChannelTokenConfigurationFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSPinpointAPNSVoipChannelDestroy,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPinpointAPNSVoipChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSPinpointAPNSVoipChannelConfig_basicToken(configuration),
@@ -195,40 +186,34 @@ func testAccCheckAWSPinpointAPNSVoipChannelExists(n string, channel *pinpoint.AP
 
 func testAccAWSPinpointAPNSVoipChannelConfig_basicCertificate(conf *testAccAwsPinpointAPNSVoipChannelCertConfiguration) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_pinpoint_app" "test_app" {}
 
 resource "aws_pinpoint_apns_voip_channel" "test_channel" {
-  application_id                = "${aws_pinpoint_app.test_app.application_id}"
+  application_id                = aws_pinpoint_app.test_app.application_id
   enabled                       = false
   default_authentication_method = "CERTIFICATE"
   certificate                   = %s
   private_key                   = %s
-}`, conf.Certificate, conf.PrivateKey)
+}
+`, conf.Certificate, conf.PrivateKey)
 }
 
 func testAccAWSPinpointAPNSVoipChannelConfig_basicToken(conf *testAccAwsPinpointAPNSVoipChannelTokenConfiguration) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_pinpoint_app" "test_app" {}
 
 resource "aws_pinpoint_apns_voip_channel" "test_channel" {
-  application_id = "${aws_pinpoint_app.test_app.application_id}"
+  application_id = aws_pinpoint_app.test_app.application_id
   enabled        = false
-  
+
   default_authentication_method = "TOKEN"
 
-  bundle_id      = %s
-  team_id        = %s
-  token_key      = %s
-  token_key_id   = %s
-}`, conf.BundleId, conf.TeamId, conf.TokenKey, conf.TokenKeyId)
+  bundle_id    = %s
+  team_id      = %s
+  token_key    = %s
+  token_key_id = %s
+}
+`, conf.BundleId, conf.TeamId, conf.TokenKey, conf.TokenKeyId)
 }
 
 func testAccCheckAWSPinpointAPNSVoipChannelDestroy(s *terraform.State) error {

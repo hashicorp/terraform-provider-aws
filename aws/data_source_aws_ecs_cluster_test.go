@@ -4,58 +4,85 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccAWSEcsDataSource_ecsCluster(t *testing.T) {
+	dataSourceName := "data.aws_ecs_cluster.test"
+	resourceName := "aws_ecs_cluster.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ecs.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsEcsClusterDataSourceConfig,
+				Config: testAccCheckAwsEcsClusterDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_ecs_cluster.default", "status", "ACTIVE"),
-					resource.TestCheckResourceAttr("data.aws_ecs_cluster.default", "pending_tasks_count", "0"),
-					resource.TestCheckResourceAttr("data.aws_ecs_cluster.default", "running_tasks_count", "0"),
-					resource.TestCheckResourceAttr("data.aws_ecs_cluster.default", "registered_container_instances_count", "0"),
-					resource.TestCheckResourceAttrSet("data.aws_ecs_cluster.default", "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "pending_tasks_count", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "registered_container_instances_count", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "running_tasks_count", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "status", "ACTIVE"),
 				),
 			},
 		},
 	})
 }
 
-var testAccCheckAwsEcsClusterDataSourceConfig = fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
-  name = "default-%d"
+func TestAccAWSEcsDataSource_ecsClusterContainerInsights(t *testing.T) {
+	dataSourceName := "data.aws_ecs_cluster.test"
+	resourceName := "aws_ecs_cluster.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ecs.EndpointsID),
+		Providers:  testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckAwsEcsClusterDataSourceConfigContainerInsights(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "pending_tasks_count", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "registered_container_instances_count", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "running_tasks_count", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "setting.#", resourceName, "setting.#"),
+				),
+			},
+		},
+	})
 }
 
-resource "aws_ecs_task_definition" "mongo" {
-  family = "mongodb"
-  container_definitions = <<DEFINITION
-[
-  {
-    "cpu": 128,
-    "essential": true,
-    "image": "mongo:latest",
-    "memory": 128,
-    "memoryReservation": 64,
-    "name": "mongodb"
+func testAccCheckAwsEcsClusterDataSourceConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+data "aws_ecs_cluster" "test" {
+  cluster_name = aws_ecs_cluster.test.name
+}
+`, rName)
+}
+
+func testAccCheckAwsEcsClusterDataSourceConfigContainerInsights(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
   }
-]
-DEFINITION
 }
 
-resource "aws_ecs_service" "mongo" {
-  name = "mongodb"
-  cluster = "${aws_ecs_cluster.default.id}"
-  task_definition = "${aws_ecs_task_definition.mongo.arn}"
-  desired_count = 1
+data "aws_ecs_cluster" "test" {
+  cluster_name = aws_ecs_cluster.test.name
 }
-
-data "aws_ecs_cluster" "default" {
-  cluster_name = "${aws_ecs_cluster.default.name}"
+`, rName)
 }
-`, acctest.RandInt())

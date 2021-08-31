@@ -6,10 +6,12 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsIamRolePolicyAttachment() *schema.Resource {
@@ -47,50 +49,65 @@ func resourceAwsIamRolePolicyAttachmentCreate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("Error attaching policy %s to IAM Role %s: %v", arn, role, err)
 	}
 
+	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
 	d.SetId(resource.PrefixedUniqueId(fmt.Sprintf("%s-", role)))
+
 	return resourceAwsIamRolePolicyAttachmentRead(d, meta)
 }
 
 func resourceAwsIamRolePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iamconn
 	role := d.Get("role").(string)
-	arn := d.Get("policy_arn").(string)
+	policyARN := d.Get("policy_arn").(string)
+	// Human friendly ID for error messages since d.Id() is non-descriptive
+	id := fmt.Sprintf("%s:%s", role, policyARN)
 
-	_, err := conn.GetRole(&iam.GetRoleInput{
-		RoleName: aws.String(role),
-	})
+	var hasPolicyAttachment bool
 
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NoSuchEntity" {
-				log.Printf("[WARN] No such entity found for Policy Attachment (%s)", role)
-				d.SetId("")
-				return nil
-			}
-		}
-		return err
-	}
+	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+		var err error
 
-	args := iam.ListAttachedRolePoliciesInput{
-		RoleName: aws.String(role),
-	}
-	var policy string
-	err = conn.ListAttachedRolePoliciesPages(&args, func(page *iam.ListAttachedRolePoliciesOutput, lastPage bool) bool {
-		for _, p := range page.AttachedPolicies {
-			if *p.PolicyArn == arn {
-				policy = *p.PolicyArn
-			}
+		hasPolicyAttachment, err = iamRoleHasPolicyARNAttachment(conn, role, policyARN)
+
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+			return resource.RetryableError(err)
 		}
 
-		return policy == ""
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		if d.IsNewResource() && !hasPolicyAttachment {
+			return resource.RetryableError(&resource.NotFoundError{
+				LastError: fmt.Errorf("IAM Role Managed Policy Attachment (%s) not found", id),
+			})
+		}
+
+		return nil
 	})
-	if err != nil {
-		return err
+
+	if tfresource.TimedOut(err) {
+		hasPolicyAttachment, err = iamRoleHasPolicyARNAttachment(conn, role, policyARN)
 	}
-	if policy == "" {
-		log.Printf("[WARN] No such policy found for Role Policy Attachment (%s)", role)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		log.Printf("[WARN] IAM Role Managed Policy Attachment (%s) not found, removing from state", id)
 		d.SetId("")
+		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("error reading IAM Role Managed Policy Attachment (%s): %w", id, err)
+	}
+
+	if !d.IsNewResource() && !hasPolicyAttachment {
+		log.Printf("[WARN] IAM Role Managed Policy Attachment (%s) not found, removing from state", id)
+		d.SetId("")
+		return nil
+	}
+
+	d.Set("policy_arn", policyARN)
+	d.Set("role", role)
 
 	return nil
 }
@@ -101,6 +118,11 @@ func resourceAwsIamRolePolicyAttachmentDelete(d *schema.ResourceData, meta inter
 	arn := d.Get("policy_arn").(string)
 
 	err := detachPolicyFromRole(conn, role, arn)
+
+	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error removing policy %s from IAM Role %s: %v", arn, role, err)
 	}
@@ -137,4 +159,24 @@ func detachPolicyFromRole(conn *iam.IAM, role string, arn string) error {
 		PolicyArn: aws.String(arn),
 	})
 	return err
+}
+
+func iamRoleHasPolicyARNAttachment(conn *iam.IAM, role string, policyARN string) (bool, error) {
+	hasPolicyAttachment := false
+	input := &iam.ListAttachedRolePoliciesInput{
+		RoleName: aws.String(role),
+	}
+
+	err := conn.ListAttachedRolePoliciesPages(input, func(page *iam.ListAttachedRolePoliciesOutput, lastPage bool) bool {
+		for _, p := range page.AttachedPolicies {
+			if aws.StringValue(p.PolicyArn) == policyARN {
+				hasPolicyAttachment = true
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	return hasPolicyAttachment, err
 }

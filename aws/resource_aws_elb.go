@@ -14,10 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 )
 
 func resourceAwsElb() *schema.Resource {
@@ -29,6 +31,8 @@ func resourceAwsElb() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		CustomizeDiff: SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -245,13 +249,16 @@ func resourceAwsElb() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Expand the "listener" set to aws-sdk-go compat []*elb.Listener
 	listeners, err := expandListeners(d.Get("listener").(*schema.Set).List())
@@ -271,28 +278,30 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 		d.Set("name", elbName)
 	}
 
-	tags := tagsFromMapELB(d.Get("tags").(map[string]interface{}))
 	// Provision the elb
 	elbOpts := &elb.CreateLoadBalancerInput{
 		LoadBalancerName: aws.String(elbName),
 		Listeners:        listeners,
-		Tags:             tags,
 	}
 
-	if scheme, ok := d.GetOk("internal"); ok && scheme.(bool) {
+	if len(tags) > 0 {
+		elbOpts.Tags = tags.IgnoreAws().ElbTags()
+	}
+
+	if _, ok := d.GetOk("internal"); ok {
 		elbOpts.Scheme = aws.String("internal")
 	}
 
 	if v, ok := d.GetOk("availability_zones"); ok {
-		elbOpts.AvailabilityZones = expandStringList(v.(*schema.Set).List())
+		elbOpts.AvailabilityZones = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("security_groups"); ok {
-		elbOpts.SecurityGroups = expandStringList(v.(*schema.Set).List())
+		elbOpts.SecurityGroups = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("subnets"); ok {
-		elbOpts.Subnets = expandStringList(v.(*schema.Set).List())
+		elbOpts.Subnets = expandStringSet(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] ELB create configuration: %#v", elbOpts)
@@ -302,7 +311,7 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
 				// Check for IAM SSL Cert error, eventual consistancy issue
-				if awsErr.Code() == "CertificateNotFound" {
+				if awsErr.Code() == elb.ErrCodeCertificateNotFoundException {
 					return resource.RetryableError(
 						fmt.Errorf("Error creating ELB Listener with SSL Cert, retrying: %s", err))
 				}
@@ -311,31 +320,25 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		_, err = elbconn.CreateLoadBalancer(elbOpts)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating ELB: %s", err)
 	}
 
 	// Assign the elb's unique identifier for use later
 	d.SetId(elbName)
 	log.Printf("[INFO] ELB ID: %s", d.Id())
 
-	// Enable partial mode and record what we set
-	d.Partial(true)
-	d.SetPartial("name")
-	d.SetPartial("internal")
-	d.SetPartial("availability_zones")
-	d.SetPartial("listener")
-	d.SetPartial("security_groups")
-	d.SetPartial("subnets")
-
-	d.Set("tags", tagsToMapELB(tags))
-
 	return resourceAwsElbUpdate(d, meta)
 }
 
 func resourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	elbName := d.Id()
 
 	arn := arn.ARN{
@@ -366,11 +369,11 @@ func resourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Unable to find ELB: %#v", describeResp.LoadBalancerDescriptions)
 	}
 
-	return flattenAwsELbResource(d, meta.(*AWSClient).ec2conn, elbconn, describeResp.LoadBalancerDescriptions[0])
+	return flattenAwsELbResource(d, meta.(*AWSClient).ec2conn, elbconn, describeResp.LoadBalancerDescriptions[0], ignoreTagsConfig, defaultTagsConfig)
 }
 
 // flattenAwsELbResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
-func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *elb.ELB, lb *elb.LoadBalancerDescription) error {
+func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *elb.ELB, lb *elb.LoadBalancerDescription, ignoreTagsConfig *keyvaluetags.IgnoreConfig, defaultTagsConfig *keyvaluetags.DefaultConfig) error {
 	describeAttrsOpts := &elb.DescribeLoadBalancerAttributesInput{
 		LoadBalancerName: aws.String(d.Id()),
 	}
@@ -394,6 +397,7 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 	d.Set("instances", flattenInstances(lb.Instances))
 	d.Set("listener", flattenListeners(lb.ListenerDescriptions))
 	d.Set("security_groups", flattenStringList(lb.SecurityGroups))
+
 	if lb.SourceSecurityGroup != nil {
 		group := lb.SourceSecurityGroup.GroupName
 		if lb.SourceSecurityGroup.OwnerAlias != nil && *lb.SourceSecurityGroup.OwnerAlias != "" {
@@ -402,14 +406,12 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 		d.Set("source_security_group", group)
 
 		// Manually look up the ELB Security Group ID, since it's not provided
-		var elbVpc string
 		if lb.VPCId != nil {
-			elbVpc = *lb.VPCId
-			sgId, err := sourceSGIdByName(ec2conn, *lb.SourceSecurityGroup.GroupName, elbVpc)
+			sg, err := finder.SecurityGroupByNameAndVpcID(ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), aws.StringValue(lb.VPCId))
 			if err != nil {
-				return fmt.Errorf("Error looking up ELB Security Group ID: %s", err)
+				return fmt.Errorf("Error looking up ELB Security Group ID: %w", err)
 			} else {
-				d.Set("source_security_group_id", sgId)
+				d.Set("source_security_group_id", sg.GroupId)
 			}
 		}
 	}
@@ -445,18 +447,22 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 		}
 	}
 
-	resp, err := elbconn.DescribeTags(&elb.DescribeTagsInput{
-		LoadBalancerNames: []*string{lb.LoadBalancerName},
-	})
+	tags, err := keyvaluetags.ElbListTags(elbconn, d.Id())
+
 	if err != nil {
-		return fmt.Errorf("error describing tags for ELB (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for ELB (%s): %s", d.Id(), err)
 	}
 
-	var et []*elb.Tag
-	if len(resp.TagDescriptions) > 0 {
-		et = resp.TagDescriptions[0].Tags
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
-	d.Set("tags", tagsToMapELB(et))
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
 
 	// There's only one health check, so save that to state as we
 	// currently can
@@ -469,8 +475,6 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 
 func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbconn
-
-	d.Partial(true)
 
 	if d.HasChange("listener") {
 		o, n := d.GetChange("listener")
@@ -502,7 +506,7 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if len(add) > 0 {
-			createListenersOpts := &elb.CreateLoadBalancerListenersInput{
+			input := &elb.CreateLoadBalancerListenersInput{
 				LoadBalancerName: aws.String(d.Id()),
 				Listeners:        add,
 			}
@@ -510,17 +514,15 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 			// Occasionally AWS will error with a 'duplicate listener', without any
 			// other listeners on the ELB. Retry here to eliminate that.
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-				log.Printf("[DEBUG] ELB Create Listeners opts: %s", createListenersOpts)
-				if _, err := elbconn.CreateLoadBalancerListeners(createListenersOpts); err != nil {
-					if awsErr, ok := err.(awserr.Error); ok {
-						if awsErr.Code() == "DuplicateListener" {
-							log.Printf("[DEBUG] Duplicate listener found for ELB (%s), retrying", d.Id())
-							return resource.RetryableError(awsErr)
-						}
-						if awsErr.Code() == "CertificateNotFound" && strings.Contains(awsErr.Message(), "Server Certificate not found for the key: arn") {
-							log.Printf("[DEBUG] SSL Cert not found for given ARN, retrying")
-							return resource.RetryableError(awsErr)
-						}
+				_, err := elbconn.CreateLoadBalancerListeners(input)
+				if err != nil {
+					if isAWSErr(err, elb.ErrCodeDuplicateListenerException, "") {
+						log.Printf("[DEBUG] Duplicate listener found for ELB (%s), retrying", d.Id())
+						return resource.RetryableError(err)
+					}
+					if isAWSErr(err, elb.ErrCodeCertificateNotFoundException, "Server Certificate not found for the key: arn") {
+						log.Printf("[DEBUG] SSL Cert not found for given ARN, retrying")
+						return resource.RetryableError(err)
 					}
 
 					// Didn't recognize the error, so shouldn't retry.
@@ -529,12 +531,13 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 				// Successful creation
 				return nil
 			})
+			if isResourceTimeoutError(err) {
+				_, err = elbconn.CreateLoadBalancerListeners(input)
+			}
 			if err != nil {
 				return fmt.Errorf("Failure adding new or updated ELB listeners: %s", err)
 			}
 		}
-
-		d.SetPartial("listener")
 	}
 
 	// If we currently have instances, or did have instances,
@@ -569,11 +572,9 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("Failure deregistering instances from ELB: %s", err)
 			}
 		}
-
-		d.SetPartial("instances")
 	}
 
-	if d.HasChange("cross_zone_load_balancing") || d.HasChange("idle_timeout") || d.HasChange("access_logs") {
+	if d.HasChanges("cross_zone_load_balancing", "idle_timeout", "access_logs") {
 		attrs := elb.ModifyLoadBalancerAttributesInput{
 			LoadBalancerName: aws.String(d.Get("name").(string)),
 			LoadBalancerAttributes: &elb.LoadBalancerAttributes{
@@ -607,17 +608,13 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("Failure configuring ELB attributes: %s", err)
 		}
-
-		d.SetPartial("cross_zone_load_balancing")
-		d.SetPartial("idle_timeout")
-		d.SetPartial("connection_draining_timeout")
 	}
 
 	// We have to do these changes separately from everything else since
 	// they have some weird undocumented rules. You can't set the timeout
 	// without having connection draining to true, so we set that to true,
 	// set the timeout, then reset it to false if requested.
-	if d.HasChange("connection_draining") || d.HasChange("connection_draining_timeout") {
+	if d.HasChanges("connection_draining", "connection_draining_timeout") {
 		// We do timeout changes first since they require us to set draining
 		// to true for a hot second.
 		if d.HasChange("connection_draining_timeout") {
@@ -635,8 +632,6 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				return fmt.Errorf("Failure configuring ELB attributes: %s", err)
 			}
-
-			d.SetPartial("connection_draining_timeout")
 		}
 
 		// Then we always set connection draining even if there is no change.
@@ -655,8 +650,6 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("Failure configuring ELB attributes: %s", err)
 		}
-
-		d.SetPartial("connection_draining")
 	}
 
 	if d.HasChange("health_check") {
@@ -677,24 +670,19 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				return fmt.Errorf("Failure configuring health check for ELB: %s", err)
 			}
-			d.SetPartial("health_check")
 		}
 	}
 
 	if d.HasChange("security_groups") {
-		groups := d.Get("security_groups").(*schema.Set).List()
-
 		applySecurityGroupsOpts := elb.ApplySecurityGroupsToLoadBalancerInput{
 			LoadBalancerName: aws.String(d.Id()),
-			SecurityGroups:   expandStringList(groups),
+			SecurityGroups:   expandStringSet(d.Get("security_groups").(*schema.Set)),
 		}
 
 		_, err := elbconn.ApplySecurityGroupsToLoadBalancer(&applySecurityGroupsOpts)
 		if err != nil {
 			return fmt.Errorf("Failure applying security groups to ELB: %s", err)
 		}
-
-		d.SetPartial("security_groups")
 	}
 
 	if d.HasChange("availability_zones") {
@@ -702,8 +690,8 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		removed := expandStringList(os.Difference(ns).List())
-		added := expandStringList(ns.Difference(os).List())
+		removed := expandStringSet(os.Difference(ns))
+		added := expandStringSet(ns.Difference(os))
 
 		if len(added) > 0 {
 			enableOpts := &elb.EnableAvailabilityZonesForLoadBalancerInput{
@@ -730,8 +718,6 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("Failure disabling ELB availability zones: %s", err)
 			}
 		}
-
-		d.SetPartial("availability_zones")
 	}
 
 	if d.HasChange("subnets") {
@@ -739,8 +725,8 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		removed := expandStringList(os.Difference(ns).List())
-		added := expandStringList(ns.Difference(os).List())
+		removed := expandStringSet(os.Difference(ns))
+		added := expandStringSet(ns.Difference(os))
 
 		if len(removed) > 0 {
 			detachOpts := &elb.DetachLoadBalancerFromSubnetsInput{
@@ -765,32 +751,32 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				_, err := elbconn.AttachLoadBalancerToSubnets(attachOpts)
 				if err != nil {
-					if awsErr, ok := err.(awserr.Error); ok {
+					if isAWSErr(err, elb.ErrCodeInvalidConfigurationRequestException, "cannot be attached to multiple subnets in the same AZ") {
 						// eventually consistent issue with removing a subnet in AZ1 and
 						// immediately adding a new one in the same AZ
-						if awsErr.Code() == "InvalidConfigurationRequest" && strings.Contains(awsErr.Message(), "cannot be attached to multiple subnets in the same AZ") {
-							log.Printf("[DEBUG] retrying az association")
-							return resource.RetryableError(awsErr)
-						}
+						log.Printf("[DEBUG] retrying az association")
+						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)
 				}
 				return nil
 			})
+			if isResourceTimeoutError(err) {
+				_, err = elbconn.AttachLoadBalancerToSubnets(attachOpts)
+			}
 			if err != nil {
 				return fmt.Errorf("Failure adding ELB subnets: %s", err)
 			}
 		}
-
-		d.SetPartial("subnets")
 	}
 
-	if err := setTagsELB(elbconn, d); err != nil {
-		return err
-	}
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
-	d.SetPartial("tags")
-	d.Partial(false)
+		if err := keyvaluetags.ElbUpdateTags(elbconn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating ELB(%s) tags: %s", d.Id(), err)
+		}
+	}
 
 	return resourceAwsElbRead(d, meta)
 }
@@ -837,55 +823,7 @@ func resourceAwsElbListenerHash(v interface{}) int {
 
 func isLoadBalancerNotFound(err error) bool {
 	elberr, ok := err.(awserr.Error)
-	return ok && elberr.Code() == "LoadBalancerNotFound"
-}
-
-func sourceSGIdByName(conn *ec2.EC2, sg, vpcId string) (string, error) {
-	var filters []*ec2.Filter
-	var sgFilterName, sgFilterVPCID *ec2.Filter
-	sgFilterName = &ec2.Filter{
-		Name:   aws.String("group-name"),
-		Values: []*string{aws.String(sg)},
-	}
-
-	if vpcId != "" {
-		sgFilterVPCID = &ec2.Filter{
-			Name:   aws.String("vpc-id"),
-			Values: []*string{aws.String(vpcId)},
-		}
-	}
-
-	filters = append(filters, sgFilterName)
-
-	if sgFilterVPCID != nil {
-		filters = append(filters, sgFilterVPCID)
-	}
-
-	req := &ec2.DescribeSecurityGroupsInput{
-		Filters: filters,
-	}
-	resp, err := conn.DescribeSecurityGroups(req)
-	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok {
-			if ec2err.Code() == "InvalidSecurityGroupID.NotFound" ||
-				ec2err.Code() == "InvalidGroup.NotFound" {
-				resp = nil
-				err = nil
-			}
-		}
-
-		if err != nil {
-			log.Printf("Error on ELB SG look up: %s", err)
-			return "", err
-		}
-	}
-
-	if resp == nil || len(resp.SecurityGroups) == 0 {
-		return "", fmt.Errorf("No security groups found for name %s and vpc id %s", sg, vpcId)
-	}
-
-	group := resp.SecurityGroups[0]
-	return *group.GroupId, nil
+	return ok && elberr.Code() == elb.ErrCodeAccessPointNotFoundException
 }
 
 func validateAccessLogsInterval(v interface{}, k string) (ws []string, errors []error) {
@@ -916,7 +854,7 @@ func validateHeathCheckTarget(v interface{}, k string) (ws []string, errors []er
 		// Invalid target? Return immediately,
 		// there is no need to collect other
 		// errors.
-		return
+		return ws, errors
 	}
 
 	// Check if the value contains a valid protocol.
@@ -962,7 +900,7 @@ func validateHeathCheckTarget(v interface{}, k string) (ws []string, errors []er
 
 	}
 
-	return
+	return ws, errors
 }
 
 func isValidProtocol(s string) bool {

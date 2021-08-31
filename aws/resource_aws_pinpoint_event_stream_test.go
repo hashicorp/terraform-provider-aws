@@ -2,34 +2,34 @@ package aws
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/pinpoint"
-
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/aws/aws-sdk-go/service/pinpoint"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSPinpointEventStream_basic(t *testing.T) {
-	oldDefaultRegion := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldDefaultRegion)
-
 	var stream pinpoint.EventStream
-	resourceName := "aws_pinpoint_event_stream.test_event_stream"
+	resourceName := "aws_pinpoint_event_stream.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSPinpointEventStreamDestroy,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPinpointEventStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPinpointEventStreamConfig_basic,
+				Config: testAccAWSPinpointEventStreamConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPinpointEventStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttrPair(resourceName, "application_id", "aws_pinpoint_app.test", "application_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_stream_arn", "aws_kinesis_stream.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 				),
 			},
 			{
@@ -38,10 +38,36 @@ func TestAccAWSPinpointEventStream_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSPinpointEventStreamConfig_update,
+				Config: testAccAWSPinpointEventStreamConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPinpointEventStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttrPair(resourceName, "application_id", "aws_pinpoint_app.test", "application_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_stream_arn", "aws_kinesis_stream.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSPinpointEventStream_disappears(t *testing.T) {
+	var stream pinpoint.EventStream
+	resourceName := "aws_pinpoint_event_stream.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPinpointEventStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSPinpointEventStreamConfig_basic(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPinpointEventStreamExists(resourceName, &stream),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsPinpointEventStream(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -76,25 +102,24 @@ func testAccCheckAWSPinpointEventStreamExists(n string, stream *pinpoint.EventSt
 	}
 }
 
-const testAccAWSPinpointEventStreamConfig_basic = `
-provider "aws" {
-  region = "us-east-1"
+func testAccAWSPinpointEventStreamConfig_basic(rName, streamName string) string {
+	return fmt.Sprintf(`
+resource "aws_pinpoint_app" "test" {}
+
+resource "aws_pinpoint_event_stream" "test" {
+  application_id         = aws_pinpoint_app.test.application_id
+  destination_stream_arn = aws_kinesis_stream.test.arn
+  role_arn               = aws_iam_role.test.arn
 }
 
-resource "aws_pinpoint_app" "test_app" {}
-
-resource "aws_pinpoint_event_stream" "test_event_stream" {
-  application_id         = "${aws_pinpoint_app.test_app.application_id}"
-  destination_stream_arn = "${aws_kinesis_stream.test_stream.arn}"
-  role_arn               = "${aws_iam_role.test_role.arn}"
-}
-
-resource "aws_kinesis_stream" "test_stream" {
-  name        = "terraform-kinesis-test"
+resource "aws_kinesis_stream" "test" {
+  name        = %[2]q
   shard_count = 1
 }
 
-resource "aws_iam_role" "test_role" {
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -102,7 +127,7 @@ resource "aws_iam_role" "test_role" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "pinpoint.us-east-1.amazonaws.com"
+        "Service": "pinpoint.amazonaws.com"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -112,9 +137,10 @@ resource "aws_iam_role" "test_role" {
 EOF
 }
 
-resource "aws_iam_role_policy" "test_role_policy" {
-  name   = "test_policy"
-  role   = "${aws_iam_role.test_role.id}"
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -125,70 +151,14 @@ resource "aws_iam_role_policy" "test_role_policy" {
     ],
     "Effect": "Allow",
     "Resource": [
-      "arn:aws:kinesis:us-east-1:*:*/*"
+      "${aws_kinesis_stream.test.arn}"
     ]
   }
 }
 EOF
 }
-`
-
-const testAccAWSPinpointEventStreamConfig_update = `
-provider "aws" {
-  region = "us-east-1"
+`, rName, streamName)
 }
-
-resource "aws_pinpoint_app" "test_app" {}
-
-resource "aws_pinpoint_event_stream" "test_event_stream" {
-  application_id         = "${aws_pinpoint_app.test_app.application_id}"
-  destination_stream_arn = "${aws_kinesis_stream.test_stream_updated.arn}"
-  role_arn               = "${aws_iam_role.test_role.arn}"
-}
-
-resource "aws_kinesis_stream" "test_stream_updated" {
-  name        = "terraform-kinesis-test-updated"
-  shard_count = 1
-}
-
-resource "aws_iam_role" "test_role" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "pinpoint.us-east-1.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "test_role_policy" {
-  name   = "test_policy"
-  role   = "${aws_iam_role.test_role.id}"
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Action": [
-      "kinesis:PutRecords",
-      "kinesis:DescribeStream"
-    ],
-    "Effect": "Allow",
-    "Resource": [
-      "arn:aws:kinesis:us-east-1:*:*/*"
-    ]
-  }
-}
-EOF
-}
-`
 
 func testAccCheckAWSPinpointEventStreamDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).pinpointconn

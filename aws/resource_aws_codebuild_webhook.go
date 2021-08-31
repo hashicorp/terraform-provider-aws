@@ -1,11 +1,15 @@
 package aws
 
 import (
+	"bytes"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 )
 
 func resourceAwsCodeBuildWebhook() *schema.Resource {
@@ -25,9 +29,47 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"build_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(codebuild.WebhookBuildType_Values(), false),
+			},
 			"branch_filter": {
-				Type:     schema.TypeString,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"filter_group"},
+			},
+			"filter_group": {
+				Type:     schema.TypeSet,
 				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"filter": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"type": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(codebuild.WebhookFilterType_Values(), false),
+									},
+									"exclude_matched_pattern": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
+									"pattern": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+				Set:           resourceAwsCodeBuildWebhookFilterHash,
+				ConflictsWith: []string{"branch_filter"},
 			},
 			"payload_url": {
 				Type:     schema.TypeString,
@@ -49,12 +91,25 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 func resourceAwsCodeBuildWebhookCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codebuildconn
 
-	resp, err := conn.CreateWebhook(&codebuild.CreateWebhookInput{
+	input := &codebuild.CreateWebhookInput{
 		ProjectName:  aws.String(d.Get("project_name").(string)),
-		BranchFilter: aws.String(d.Get("branch_filter").(string)),
-	})
+		FilterGroups: expandWebhookFilterGroups(d),
+	}
+
+	if v, ok := d.GetOk("build_type"); ok {
+		input.BuildType = aws.String(v.(string))
+	}
+
+	// The CodeBuild API requires this to be non-empty if defined
+	if v, ok := d.GetOk("branch_filter"); ok {
+		input.BranchFilter = aws.String(v.(string))
+	}
+
+	log.Printf("[DEBUG] Creating CodeBuild Webhook: %s", input)
+	resp, err := conn.CreateWebhook(input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating CodeBuild Webhook: %s", err)
 	}
 
 	// Secret is only returned on create, so capture it at the start
@@ -62,6 +117,42 @@ func resourceAwsCodeBuildWebhookCreate(d *schema.ResourceData, meta interface{})
 	d.SetId(d.Get("project_name").(string))
 
 	return resourceAwsCodeBuildWebhookRead(d, meta)
+}
+
+func expandWebhookFilterGroups(d *schema.ResourceData) [][]*codebuild.WebhookFilter {
+	configs := d.Get("filter_group").(*schema.Set).List()
+
+	webhookFilters := make([][]*codebuild.WebhookFilter, 0)
+
+	if len(configs) == 0 {
+		return nil
+	}
+
+	for _, config := range configs {
+		filters := expandWebhookFilterData(config.(map[string]interface{}))
+		webhookFilters = append(webhookFilters, filters)
+	}
+
+	return webhookFilters
+}
+
+func expandWebhookFilterData(data map[string]interface{}) []*codebuild.WebhookFilter {
+	filters := make([]*codebuild.WebhookFilter, 0)
+
+	filterConfigs := data["filter"].([]interface{})
+
+	for i, filterConfig := range filterConfigs {
+		filter := filterConfig.(map[string]interface{})
+		filters = append(filters, &codebuild.WebhookFilter{
+			Type:                  aws.String(filter["type"].(string)),
+			ExcludeMatchedPattern: aws.Bool(filter["exclude_matched_pattern"].(bool)),
+		})
+		if v := filter["pattern"]; v != nil {
+			filters[i].Pattern = aws.String(v.(string))
+		}
+	}
+
+	return filters
 }
 
 func resourceAwsCodeBuildWebhookRead(d *schema.ResourceData, meta interface{}) error {
@@ -91,7 +182,9 @@ func resourceAwsCodeBuildWebhookRead(d *schema.ResourceData, meta interface{}) e
 		return nil
 	}
 
+	d.Set("build_type", project.Webhook.BuildType)
 	d.Set("branch_filter", project.Webhook.BranchFilter)
+	d.Set("filter_group", flattenAwsCodeBuildWebhookFilterGroups(project.Webhook.FilterGroups))
 	d.Set("payload_url", project.Webhook.PayloadUrl)
 	d.Set("project_name", project.Name)
 	d.Set("url", project.Webhook.Url)
@@ -103,11 +196,29 @@ func resourceAwsCodeBuildWebhookRead(d *schema.ResourceData, meta interface{}) e
 func resourceAwsCodeBuildWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codebuildconn
 
-	_, err := conn.UpdateWebhook(&codebuild.UpdateWebhookInput{
-		ProjectName:  aws.String(d.Id()),
-		BranchFilter: aws.String(d.Get("branch_filter").(string)),
-		RotateSecret: aws.Bool(false),
-	})
+	var err error
+	filterGroups := expandWebhookFilterGroups(d)
+
+	var buildType *string = nil
+	if v, ok := d.GetOk("build_type"); ok {
+		buildType = aws.String(v.(string))
+	}
+
+	if len(filterGroups) >= 1 {
+		_, err = conn.UpdateWebhook(&codebuild.UpdateWebhookInput{
+			ProjectName:  aws.String(d.Id()),
+			BuildType:    buildType,
+			FilterGroups: filterGroups,
+			RotateSecret: aws.Bool(false),
+		})
+	} else {
+		_, err = conn.UpdateWebhook(&codebuild.UpdateWebhookInput{
+			ProjectName:  aws.String(d.Id()),
+			BuildType:    buildType,
+			BranchFilter: aws.String(d.Get("branch_filter").(string)),
+			RotateSecret: aws.Bool(false),
+		})
+	}
 
 	if err != nil {
 		return err
@@ -131,4 +242,48 @@ func resourceAwsCodeBuildWebhookDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	return nil
+}
+
+func flattenAwsCodeBuildWebhookFilterGroups(filterList [][]*codebuild.WebhookFilter) *schema.Set {
+	filterSet := schema.Set{
+		F: resourceAwsCodeBuildWebhookFilterHash,
+	}
+
+	for _, filters := range filterList {
+		filterSet.Add(flattenAwsCodeBuildWebhookFilterData(filters))
+	}
+	return &filterSet
+}
+
+func resourceAwsCodeBuildWebhookFilterHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+
+	for _, g := range m {
+		for _, f := range g.([]interface{}) {
+			r := f.(map[string]interface{})
+			buf.WriteString(fmt.Sprintf("%s-", r["type"].(string)))
+			buf.WriteString(fmt.Sprintf("%s-", r["pattern"].(string)))
+			buf.WriteString(fmt.Sprintf("%q", r["exclude_matched_pattern"]))
+		}
+	}
+
+	return hashcode.String(buf.String())
+}
+
+func flattenAwsCodeBuildWebhookFilterData(filters []*codebuild.WebhookFilter) map[string]interface{} {
+	values := map[string]interface{}{}
+	ff := make([]interface{}, 0)
+
+	for _, f := range filters {
+		ff = append(ff, map[string]interface{}{
+			"type":                    *f.Type,
+			"pattern":                 *f.Pattern,
+			"exclude_matched_pattern": *f.ExcludeMatchedPattern,
+		})
+	}
+
+	values["filter"] = ff
+
+	return values
 }

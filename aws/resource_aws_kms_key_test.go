@@ -3,14 +3,18 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
-	"github.com/jen20/awspolicyequivalence"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awspolicy "github.com/jen20/awspolicyequivalence"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -23,34 +27,37 @@ func init() {
 func testSweepKmsKeys(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).kmsconn
 
 	err = conn.ListKeysPages(&kms.ListKeysInput{Limit: aws.Int64(int64(1000))}, func(out *kms.ListKeysOutput, lastPage bool) bool {
 		for _, k := range out.Keys {
+			kKeyId := aws.StringValue(k.KeyId)
 			kOut, err := conn.DescribeKey(&kms.DescribeKeyInput{
 				KeyId: k.KeyId,
 			})
 			if err != nil {
-				log.Printf("Error: Failed to describe key %q: %s", *k.KeyId, err)
+				log.Printf("Error: Failed to describe key %q: %s", kKeyId, err)
 				return false
 			}
-			if *kOut.KeyMetadata.KeyManager == kms.KeyManagerTypeAws {
+			if aws.StringValue(kOut.KeyMetadata.KeyManager) == kms.KeyManagerTypeAws {
 				// Skip (default) keys which are managed by AWS
 				continue
 			}
-			if *kOut.KeyMetadata.KeyState == kms.KeyStatePendingDeletion {
+			if aws.StringValue(kOut.KeyMetadata.KeyState) == kms.KeyStatePendingDeletion {
 				// Skip keys which are already scheduled for deletion
 				continue
 			}
 
-			_, err = conn.ScheduleKeyDeletion(&kms.ScheduleKeyDeletionInput{
-				KeyId:               k.KeyId,
-				PendingWindowInDays: aws.Int64(int64(7)),
-			})
+			r := resourceAwsKmsKey()
+			d := r.Data(nil)
+			d.SetId(kKeyId)
+			d.Set("key_id", kKeyId)
+			d.Set("deletion_window_in_days", "7")
+			err = r.Delete(d, client)
 			if err != nil {
-				log.Printf("Error: Failed to schedule key %q for deletion: %s", *k.KeyId, err)
+				log.Printf("Error: Failed to schedule key %q for deletion: %s", kKeyId, err)
 				return false
 			}
 		}
@@ -61,54 +68,58 @@ func testSweepKmsKeys(region string) error {
 			log.Printf("[WARN] Skipping KMS Key sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error describing KMS keys: %s", err)
+		return fmt.Errorf("Error describing KMS keys: %w", err)
 	}
 
 	return nil
 }
 
-func TestAccAWSKmsKey_importBasic(t *testing.T) {
-	resourceName := "aws_kms_key.foo"
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+func TestAccAWSKmsKey_basic(t *testing.T) {
+	var key kms.KeyMetadata
+	resourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsKey(rName),
+				Config: testAccAWSKmsKeyConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsKeyExists(resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "customer_master_key_spec", "SYMMETRIC_DEFAULT"),
+					resource.TestCheckResourceAttr(resourceName, "key_usage", "ENCRYPT_DECRYPT"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
 			},
-
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days"},
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
 			},
 		},
 	})
 }
 
-func TestAccAWSKmsKey_basic(t *testing.T) {
-	var keyBefore, keyAfter kms.KeyMetadata
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+func TestAccAWSKmsKey_asymmetricKey(t *testing.T) {
+	var key kms.KeyMetadata
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsKey(rName),
+				Config: testAccAWSKmsKey_asymmetric(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsKeyExists("aws_kms_key.foo", &keyBefore),
-				),
-			},
-			{
-				Config: testAccAWSKmsKey_removedPolicy(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsKeyExists("aws_kms_key.foo", &keyAfter),
+					testAccCheckAWSKmsKeyExists(resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "customer_master_key_spec", "ECC_NIST_P384"),
+					resource.TestCheckResourceAttr(resourceName, "key_usage", "SIGN_VERIFY"),
 				),
 			},
 		},
@@ -117,22 +128,21 @@ func TestAccAWSKmsKey_basic(t *testing.T) {
 
 func TestAccAWSKmsKey_disappears(t *testing.T) {
 	var key kms.KeyMetadata
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsKey(rName),
+				Config: testAccAWSKmsKeyConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsKeyExists("aws_kms_key.foo", &key),
+					testAccCheckAWSKmsKeyExists(resourceName, &key),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsKmsKey(), resourceName),
 				),
-			},
-			{
-				Config:             testAccAWSKmsKey_other_region(rName),
-				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -141,20 +151,150 @@ func TestAccAWSKmsKey_disappears(t *testing.T) {
 
 func TestAccAWSKmsKey_policy(t *testing.T) {
 	var key kms.KeyMetadata
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kms_key.test"
 	expectedPolicyText := `{"Version":"2012-10-17","Id":"kms-tf-1","Statement":[{"Sid":"Enable IAM User Permissions","Effect":"Allow","Principal":{"AWS":"*"},"Action":"kms:*","Resource":"*"}]}`
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsKey(rName),
+				Config: testAccAWSKmsKey_policy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsKeyExists("aws_kms_key.foo", &key),
-					testAccCheckAWSKmsKeyHasPolicy("aws_kms_key.foo", expectedPolicyText),
+					testAccCheckAWSKmsKeyExists(resourceName, &key),
+					testAccCheckAWSKmsKeyHasPolicy(resourceName, expectedPolicyText),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
+			},
+			{
+				Config: testAccAWSKmsKey_removedPolicy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsKeyExists(resourceName, &key),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKmsKey_policyBypass(t *testing.T) {
+	var key kms.KeyMetadata
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSKmsKey_policyBypass(rName, false),
+				ExpectError: regexp.MustCompile(`The new key policy will not allow you to update the key policy in the future`),
+			},
+			{
+				Config: testAccAWSKmsKey_policyBypass(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsKeyExists(resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
+			},
+		},
+	})
+}
+
+func TestAccAWSKmsKey_policyBypassUpdate(t *testing.T) {
+	var before, after kms.KeyMetadata
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSKmsKeyConfigName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsKeyExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
+				),
+			},
+			{
+				Config: testAccAWSKmsKey_policyBypass(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsKeyExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKmsKey_Policy_IamRole(t *testing.T) {
+	var key kms.KeyMetadata
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSKmsKeyConfigPolicyIamRole(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsKeyExists(resourceName, &key),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7646
+func TestAccAWSKmsKey_Policy_IamServiceLinkedRole(t *testing.T) {
+	var key kms.KeyMetadata
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSKmsKeyConfigPolicyIamServiceLinkedRole(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsKeyExists(resourceName, &key),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
 			},
 		},
 	})
@@ -162,38 +302,46 @@ func TestAccAWSKmsKey_policy(t *testing.T) {
 
 func TestAccAWSKmsKey_isEnabled(t *testing.T) {
 	var key1, key2, key3 kms.KeyMetadata
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSKmsKey_enabledRotation(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsKeyExists("aws_kms_key.bar", &key1),
-					resource.TestCheckResourceAttr("aws_kms_key.bar", "is_enabled", "true"),
+					testAccCheckAWSKmsKeyExists(resourceName, &key1),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
 					testAccCheckAWSKmsKeyIsEnabled(&key1, true),
-					resource.TestCheckResourceAttr("aws_kms_key.bar", "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr("aws_kms_key.test", "enable_key_rotation", "true"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
 			},
 			{
 				Config: testAccAWSKmsKey_disabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsKeyExists("aws_kms_key.bar", &key2),
-					resource.TestCheckResourceAttr("aws_kms_key.bar", "is_enabled", "false"),
+					testAccCheckAWSKmsKeyExists(resourceName, &key2),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
 					testAccCheckAWSKmsKeyIsEnabled(&key2, false),
-					resource.TestCheckResourceAttr("aws_kms_key.bar", "enable_key_rotation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "false"),
 				),
 			},
 			{
 				Config: testAccAWSKmsKey_enabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsKeyExists("aws_kms_key.bar", &key3),
-					resource.TestCheckResourceAttr("aws_kms_key.bar", "is_enabled", "true"),
+					testAccCheckAWSKmsKeyExists(resourceName, &key3),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
 					testAccCheckAWSKmsKeyIsEnabled(&key3, true),
-					resource.TestCheckResourceAttr("aws_kms_key.bar", "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
 				),
 			},
 		},
@@ -201,19 +349,45 @@ func TestAccAWSKmsKey_isEnabled(t *testing.T) {
 }
 
 func TestAccAWSKmsKey_tags(t *testing.T) {
-	var keyBefore kms.KeyMetadata
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	var key kms.KeyMetadata
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsKey_tags(rName),
+				Config: testAccAWSKmsKeyConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsKeyExists("aws_kms_key.foo", &keyBefore),
-					resource.TestCheckResourceAttr("aws_kms_key.foo", "tags.%", "3"),
+					testAccCheckAWSKmsKeyExists(resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
+			},
+			{
+				Config: testAccAWSKmsKeyConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsKeyExists(resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSKmsKeyConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsKeyExists(resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -264,19 +438,17 @@ func testAccCheckAWSKmsKeyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		out, err := conn.DescribeKey(&kms.DescribeKeyInput{
-			KeyId: aws.String(rs.Primary.ID),
-		})
+		_, err := finder.KeyByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
 			return err
 		}
 
-		if *out.KeyMetadata.KeyState == "PendingDeletion" {
-			return nil
-		}
-
-		return fmt.Errorf("KMS key still exists:\n%#v", out.KeyMetadata)
+		return fmt.Errorf("KMS Key %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -295,17 +467,15 @@ func testAccCheckAWSKmsKeyExists(name string, key *kms.KeyMetadata) resource.Tes
 
 		conn := testAccProvider.Meta().(*AWSClient).kmsconn
 
-		o, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
-			return conn.DescribeKey(&kms.DescribeKeyInput{
-				KeyId: aws.String(rs.Primary.ID),
-			})
+		outputRaw, err := tfresource.RetryWhenNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
+			return finder.KeyByID(conn, rs.Primary.ID)
 		})
+
 		if err != nil {
 			return err
 		}
-		out := o.(*kms.DescribeKeyOutput)
 
-		*key = *out.KeyMetadata
+		*key = *(outputRaw.(*kms.KeyMetadata))
 
 		return nil
 	}
@@ -313,52 +483,48 @@ func testAccCheckAWSKmsKeyExists(name string, key *kms.KeyMetadata) resource.Tes
 
 func testAccCheckAWSKmsKeyIsEnabled(key *kms.KeyMetadata, isEnabled bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if *key.Enabled != isEnabled {
-			return fmt.Errorf("Expected key %q to have is_enabled=%t, given %t",
-				*key.Arn, isEnabled, *key.Enabled)
+		if got, want := aws.BoolValue(key.Enabled), isEnabled; got != want {
+			return fmt.Errorf("Expected key %q to have is_enabled=%t, given %t", aws.StringValue(key.Arn), want, got)
 		}
 
 		return nil
 	}
 }
 
-func testAccAWSKmsKey(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "foo" {
-    description = "Terraform acc test %s"
-    deletion_window_in_days = 7
-    policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "kms-tf-1",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    }
-  ]
-}
-POLICY
-	tags = {
-		Name = "tf-acc-test-kms-key-%s"
-	}
-}`, rName, rName)
+func testAccAWSKmsKeyConfig() string {
+	return `
+resource "aws_kms_key" "test" {}
+`
 }
 
-func testAccAWSKmsKey_other_region(rName string) string {
+func testAccAWSKmsKeyConfigName(rName string) string {
 	return fmt.Sprintf(`
-provider "aws" { 
-	region = "us-east-1"
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
-resource "aws_kms_key" "foo" {
-    description = "Terraform acc test %s"
-    deletion_window_in_days = 7
-    policy = <<POLICY
+`, rName)
+}
+
+func testAccAWSKmsKey_asymmetric(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+
+  key_usage                = "SIGN_VERIFY"
+  customer_master_key_spec = "ECC_NIST_P384"
+}
+`, rName)
+}
+
+func testAccAWSKmsKey_policy(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -375,69 +541,220 @@ resource "aws_kms_key" "foo" {
   ]
 }
 POLICY
-	tags = {
-		Name = "tf-acc-test-kms-key-%s"
-	}
-}`, rName, rName)
+}
+`, rName)
+}
+
+func testAccAWSKmsKey_policyBypass(rName string, bypassFlag bool) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+
+  bypass_policy_lockout_safety_check = %[2]t
+
+  policy = <<-POLICY
+    {
+      "Version": "2012-10-17",
+      "Id": "kms-tf-1",
+      "Statement": [
+        {
+          "Sid": "Enable IAM User Permissions",
+          "Effect": "Allow",
+          "Principal": {
+            "AWS": "${data.aws_caller_identity.current.arn}"
+          },
+          "Action": [
+            "kms:CreateKey",
+            "kms:DescribeKey",
+            "kms:ScheduleKeyDeletion",
+            "kms:Describe*",
+            "kms:Get*",
+            "kms:List*",
+            "kms:TagResource",
+            "kms:UntagResource"
+          ],
+          "Resource": "*"
+        }
+      ]
+    }
+  POLICY
+}
+`, rName, bypassFlag)
+}
+
+func testAccAWSKmsKeyConfigPolicyIamRole(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}"
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+
+  policy = jsonencode({
+    Id = "kms-tf-1"
+    Statement = [
+      {
+        Action = "kms:*"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+
+        Resource = "*"
+        Sid      = "Enable IAM User Permissions"
+      },
+      {
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:DescribeKey",
+        ]
+        Effect = "Allow"
+        Principal = {
+          AWS = [aws_iam_role.test.arn]
+        }
+
+        Resource = "*"
+        Sid      = "Enable IAM User Permissions"
+      },
+    ]
+    Version = "2012-10-17"
+  })
+}
+`, rName)
+}
+
+func testAccAWSKmsKeyConfigPolicyIamServiceLinkedRole(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_service_linked_role" "test" {
+  aws_service_name = "autoscaling.${data.aws_partition.current.dns_suffix}"
+  custom_suffix    = %[1]q
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+
+  policy = jsonencode({
+    Id = "kms-tf-1"
+    Statement = [
+      {
+        Action = "kms:*"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+
+        Resource = "*"
+        Sid      = "Enable IAM User Permissions"
+      },
+      {
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:DescribeKey",
+        ]
+        Effect = "Allow"
+        Principal = {
+          AWS = [aws_iam_service_linked_role.test.arn]
+        }
+
+        Resource = "*"
+        Sid      = "Enable IAM User Permissions"
+      },
+    ]
+    Version = "2012-10-17"
+  })
+}
+`, rName)
 }
 
 func testAccAWSKmsKey_removedPolicy(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "foo" {
-    description = "Terraform acc test %s"
-    deletion_window_in_days = 7
-  tags = {
-		Name = "tf-acc-test-kms-key-%s"
-	}
-}`, rName, rName)
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+`, rName)
 }
 
 func testAccAWSKmsKey_enabledRotation(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "bar" {
-    description = "Terraform acc test is_enabled %s"
-    deletion_window_in_days = 7
-    enable_key_rotation = true
-  tags = {
-		Name = "tf-acc-test-kms-key-%s"
-	}
-}`, rName, rName)
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+`, rName)
 }
 
 func testAccAWSKmsKey_disabled(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "bar" {
-    description = "Terraform acc test is_enabled %s"
-    deletion_window_in_days = 7
-    enable_key_rotation = false
-    is_enabled = false
-  tags = {
-		Name = "tf-acc-test-kms-key-%s"
-	}
-}`, rName, rName)
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = false
+  is_enabled              = false
+}
+`, rName)
 }
 
 func testAccAWSKmsKey_enabled(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "bar" {
-    description = "Terraform acc test is_enabled %s"
-    deletion_window_in_days = 7
-    enable_key_rotation = true
-    is_enabled = true
-  tags = {
-		Name = "tf-acc-test-kms-key-%s"
-	}
-}`, rName, rName)
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+  is_enabled              = true
+}
+`, rName)
 }
 
-func testAccAWSKmsKey_tags(rName string) string {
+func testAccAWSKmsKeyConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "foo" {
-    description = "Terraform acc test %s"
-	tags = {
-		Name = "tf-acc-test-kms-key-%s"
-		Key1 = "Value One"
-		Description = "Very interesting"
-	}
-}`, rName, rName)
+resource "aws_kms_key" "test" {
+  description = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSKmsKeyConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

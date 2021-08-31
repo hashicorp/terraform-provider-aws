@@ -1,18 +1,18 @@
 ---
+subcategory: "Elastic Map Reduce (EMR)"
 layout: "aws"
 page_title: "AWS: aws_emr_security_configuration"
-sidebar_current: "docs-aws-resource-emr-security-configuration"
 description: |-
   Provides a resource to manage AWS EMR Security Configurations
 ---
 
-# aws_emr_security_configuration
+# Resource: aws_emr_security_configuration
 
 Provides a resource to manage AWS EMR Security Configurations
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_emr_security_configuration" "foo" {
   name = "emrsc_other"
 

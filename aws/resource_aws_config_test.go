@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestAccAWSConfig(t *testing.T) {
+func TestAccAWSConfig_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Config": {
 			"basic":            testAccConfigConfigRule_basic,
@@ -15,6 +15,7 @@ func TestAccAWSConfig(t *testing.T) {
 			"scopeTagKey":      testAccConfigConfigRule_Scope_TagKey,
 			"scopeTagKeyEmpty": testAccConfigConfigRule_Scope_TagKey_Empty,
 			"scopeTagValue":    testAccConfigConfigRule_Scope_TagValue,
+			"tags":             testAccConfigConfigRule_tags,
 		},
 		"ConfigurationRecorderStatus": {
 			"basic":        testAccConfigConfigurationRecorderStatus_basic,
@@ -26,10 +27,71 @@ func TestAccAWSConfig(t *testing.T) {
 			"allParams":   testAccConfigConfigurationRecorder_allParams,
 			"importBasic": testAccConfigConfigurationRecorder_importBasic,
 		},
+		"ConformancePack": {
+			"basic":                     testAccConfigConformancePack_basic,
+			"disappears":                testAccConfigConformancePack_disappears,
+			"forceNew":                  testAccConfigConformancePack_forceNew,
+			"inputParameters":           testAccConfigConformancePack_inputParameters,
+			"S3Delivery":                testAccConfigConformancePack_S3Delivery,
+			"S3Template":                testAccConfigConformancePack_S3Template,
+			"S3TemplateAndTemplateBody": testAccConfigConformancePack_S3TemplateAndTemplateBody,
+			"updateInputParameters":     testAccConfigConformancePack_updateInputParameters,
+			"updateS3Delivery":          testAccConfigConformancePack_updateS3Delivery,
+			"updateS3Template":          testAccConfigConformancePack_updateS3Template,
+			"updateTemplateBody":        testAccConfigConformancePack_updateTemplateBody,
+		},
 		"DeliveryChannel": {
 			"basic":       testAccConfigDeliveryChannel_basic,
 			"allParams":   testAccConfigDeliveryChannel_allParams,
 			"importBasic": testAccConfigDeliveryChannel_importBasic,
+		},
+		"OrganizationConformancePack": {
+			"basic":                 testAccConfigOrganizationConformancePack_basic,
+			"disappears":            testAccConfigOrganizationConformancePack_disappears,
+			"excludedAccounts":      testAccConfigOrganizationConformancePack_excludedAccounts,
+			"forceNew":              testAccConfigOrganizationConformancePack_forceNew,
+			"inputParameters":       testAccConfigOrganizationConformancePack_inputParameters,
+			"S3Delivery":            testAccConfigOrganizationConformancePack_S3Delivery,
+			"S3Template":            testAccConfigOrganizationConformancePack_S3Template,
+			"updateInputParameters": testAccConfigOrganizationConformancePack_updateInputParameters,
+			"updateS3Delivery":      testAccConfigOrganizationConformancePack_updateS3Delivery,
+			"updateS3Template":      testAccConfigOrganizationConformancePack_updateS3Template,
+			"updateTemplateBody":    testAccConfigOrganizationConformancePack_updateTemplateBody,
+		},
+		"OrganizationCustomRule": {
+			"basic":                     testAccConfigOrganizationCustomRule_basic,
+			"disappears":                testAccConfigOrganizationCustomRule_disappears,
+			"errorHandling":             testAccConfigOrganizationCustomRule_errorHandling,
+			"Description":               testAccConfigOrganizationCustomRule_Description,
+			"ExcludedAccounts":          testAccConfigOrganizationCustomRule_ExcludedAccounts,
+			"InputParameters":           testAccConfigOrganizationCustomRule_InputParameters,
+			"LambdaFunctionArn":         testAccConfigOrganizationCustomRule_LambdaFunctionArn,
+			"MaximumExecutionFrequency": testAccConfigOrganizationCustomRule_MaximumExecutionFrequency,
+			"ResourceIdScope":           testAccConfigOrganizationCustomRule_ResourceIdScope,
+			"ResourceTypesScope":        testAccConfigOrganizationCustomRule_ResourceTypesScope,
+			"TagKeyScope":               testAccConfigOrganizationCustomRule_TagKeyScope,
+			"TagValueScope":             testAccConfigOrganizationCustomRule_TagValueScope,
+			"TriggerTypes":              testAccConfigOrganizationCustomRule_TriggerTypes,
+		},
+		"OrganizationManagedRule": {
+			"basic":                     testAccConfigOrganizationManagedRule_basic,
+			"disappears":                testAccConfigOrganizationManagedRule_disappears,
+			"errorHandling":             testAccConfigOrganizationManagedRule_errorHandling,
+			"Description":               testAccConfigOrganizationManagedRule_Description,
+			"ExcludedAccounts":          testAccConfigOrganizationManagedRule_ExcludedAccounts,
+			"InputParameters":           testAccConfigOrganizationManagedRule_InputParameters,
+			"MaximumExecutionFrequency": testAccConfigOrganizationManagedRule_MaximumExecutionFrequency,
+			"ResourceIdScope":           testAccConfigOrganizationManagedRule_ResourceIdScope,
+			"ResourceTypesScope":        testAccConfigOrganizationManagedRule_ResourceTypesScope,
+			"RuleIdentifier":            testAccConfigOrganizationManagedRule_RuleIdentifier,
+			"TagKeyScope":               testAccConfigOrganizationManagedRule_TagKeyScope,
+			"TagValueScope":             testAccConfigOrganizationManagedRule_TagValueScope,
+		},
+		"RemediationConfiguration": {
+			"basic":      testAccConfigRemediationConfiguration_basic,
+			"disappears": testAccConfigRemediationConfiguration_disappears,
+			"recreates":  testAccConfigRemediationConfiguration_recreates,
+			"updates":    testAccConfigRemediationConfiguration_updates,
 		},
 	}
 

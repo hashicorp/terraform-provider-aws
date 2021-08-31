@@ -6,7 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsEip() *schema.Resource {
@@ -44,12 +45,32 @@ func dataSourceAwsEip() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"private_dns": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"public_ip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
+			"public_dns": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"public_ipv4_pool": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"carrier_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"customer_owned_ipv4_pool": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"customer_owned_ip": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,6 +81,7 @@ func dataSourceAwsEip() *schema.Resource {
 
 func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeAddressesInput{}
 
@@ -77,19 +99,20 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 		d.Get("filter").(*schema.Set),
 	)...)
 
-	req.Filters = append(req.Filters, buildEC2TagFilterList(
-		tagsFromMap(d.Get("tags").(map[string]interface{})),
-	)...)
+	if tags, tagsOk := d.GetOk("tags"); tagsOk {
+		req.Filters = append(req.Filters, buildEC2TagFilterList(
+			keyvaluetags.New(tags.(map[string]interface{})).Ec2Tags(),
+		)...)
+	}
 
 	if len(req.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
 		req.Filters = nil
 	}
 
-	log.Printf("[DEBUG] Reading EIP: %s", req)
 	resp, err := conn.DescribeAddresses(req)
 	if err != nil {
-		return fmt.Errorf("error describing EC2 Address: %s", err)
+		return fmt.Errorf("error describing EC2 Address: %w", err)
 	}
 	if resp == nil || len(resp.Addresses) == 0 {
 		return fmt.Errorf("no matching Elastic IP found")
@@ -112,10 +135,26 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("instance_id", eip.InstanceId)
 	d.Set("network_interface_id", eip.NetworkInterfaceId)
 	d.Set("network_interface_owner_id", eip.NetworkInterfaceOwnerId)
+
+	region := aws.StringValue(conn.Config.Region)
+
 	d.Set("private_ip", eip.PrivateIpAddress)
+	if eip.PrivateIpAddress != nil {
+		d.Set("private_dns", fmt.Sprintf("ip-%s.%s", resourceAwsEc2DashIP(aws.StringValue(eip.PrivateIpAddress)), resourceAwsEc2RegionalPrivateDnsSuffix(region)))
+	}
+
 	d.Set("public_ip", eip.PublicIp)
+	if eip.PublicIp != nil {
+		d.Set("public_dns", meta.(*AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s", resourceAwsEc2DashIP(aws.StringValue(eip.PublicIp)), resourceAwsEc2RegionalPublicDnsSuffix(region))))
+	}
 	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
-	d.Set("tags", tagsToMap(eip.Tags))
+	d.Set("carrier_ip", eip.CarrierIp)
+	d.Set("customer_owned_ipv4_pool", eip.CustomerOwnedIpv4Pool)
+	d.Set("customer_owned_ip", eip.CustomerOwnedIp)
+
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(eip.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
 
 	return nil
 }

@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsRedshiftEventSubscription() *schema.Resource {
@@ -25,6 +27,11 @@ func resourceAwsRedshiftEventSubscription() *schema.Resource {
 			Update: schema.DefaultTimeout(40 * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -68,17 +75,18 @@ func resourceAwsRedshiftEventSubscription() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsRedshiftEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &redshift.CreateEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Get("name").(string)),
@@ -88,7 +96,7 @@ func resourceAwsRedshiftEventSubscriptionCreate(d *schema.ResourceData, meta int
 		SourceType:       aws.String(d.Get("source_type").(string)),
 		Severity:         aws.String(d.Get("severity").(string)),
 		EventCategories:  expandStringSet(d.Get("event_categories").(*schema.Set)),
-		Tags:             tagsFromMapRedshift(d.Get("tags").(map[string]interface{})),
+		Tags:             tags.IgnoreAws().RedshiftTags(),
 	}
 
 	log.Println("[DEBUG] Create Redshift Event Subscription:", request)
@@ -105,6 +113,18 @@ func resourceAwsRedshiftEventSubscriptionCreate(d *schema.ResourceData, meta int
 
 func resourceAwsRedshiftEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "redshift",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("eventsubscription:%s", d.Id()),
+	}.String()
+
+	d.Set("arn", arn)
 
 	sub, err := resourceAwsRedshiftEventSubscriptionRetrieve(d.Id(), conn)
 	if err != nil {
@@ -143,8 +163,15 @@ func resourceAwsRedshiftEventSubscriptionRead(d *schema.ResourceData, meta inter
 	if err := d.Set("customer_aws_id", sub.CustomerAwsId); err != nil {
 		return err
 	}
-	if err := d.Set("tags", tagsToMapRedshift(sub.Tags)); err != nil {
-		return err
+	tags := keyvaluetags.RedshiftKeyValueTags(sub.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -189,6 +216,14 @@ func resourceAwsRedshiftEventSubscriptionUpdate(d *schema.ResourceData, meta int
 	_, err := conn.ModifyEventSubscription(req)
 	if err != nil {
 		return fmt.Errorf("Modifying Redshift Event Subscription %s failed: %s", d.Id(), err)
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := keyvaluetags.RedshiftUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Redshift Event Subscription (%s) tags: %s", d.Get("arn").(string), err)
+		}
 	}
 
 	return nil

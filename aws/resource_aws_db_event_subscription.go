@@ -7,8 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsDbEventSubscription() *schema.Resource {
@@ -18,7 +19,10 @@ func resourceAwsDbEventSubscription() *schema.Resource {
 		Update: resourceAwsDbEventSubscriptionUpdate,
 		Delete: resourceAwsDbEventSubscriptionDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsDbEventSubscriptionImport,
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("name", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(40 * time.Minute),
@@ -76,13 +80,18 @@ func resourceAwsDbEventSubscription() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsDbEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	var name string
 	if v, ok := d.GetOk("name"); ok {
 		name = v.(string)
@@ -91,8 +100,6 @@ func resourceAwsDbEventSubscriptionCreate(d *schema.ResourceData, meta interface
 	} else {
 		name = resource.UniqueId()
 	}
-
-	tags := tagsFromMapRDS(d.Get("tags").(map[string]interface{}))
 
 	sourceIdsSet := d.Get("source_ids").(*schema.Set)
 	sourceIds := make([]*string, sourceIdsSet.Len())
@@ -113,7 +120,7 @@ func resourceAwsDbEventSubscriptionCreate(d *schema.ResourceData, meta interface
 		SourceIds:        sourceIds,
 		SourceType:       aws.String(d.Get("source_type").(string)),
 		EventCategories:  eventCategories,
-		Tags:             tags,
+		Tags:             tags.IgnoreAws().RdsTags(),
 	}
 
 	log.Println("[DEBUG] Create RDS Event Subscription:", request)
@@ -124,10 +131,6 @@ func resourceAwsDbEventSubscriptionCreate(d *schema.ResourceData, meta interface
 	}
 
 	d.SetId(aws.StringValue(output.EventSubscription.CustSubscriptionId))
-
-	if err := setTagsRDS(conn, d, aws.StringValue(output.EventSubscription.EventSubscriptionArn)); err != nil {
-		return fmt.Errorf("Error creating RDS Event Subscription (%s) tags: %s", d.Id(), err)
-	}
 
 	log.Println(
 		"[INFO] Waiting for RDS Event Subscription to be ready")
@@ -152,11 +155,21 @@ func resourceAwsDbEventSubscriptionCreate(d *schema.ResourceData, meta interface
 
 func resourceAwsDbEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	sub, err := resourceAwsDbEventSubscriptionRetrieve(d.Id(), conn)
-	if err != nil {
-		return fmt.Errorf("Error retrieving RDS Event Subscription %s: %s", d.Id(), err)
+
+	if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+		log.Printf("[WARN] RDS Event Subscription (%s) not found - removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("error retrieving RDS Event Subscription (%s): %s", d.Id(), err)
+	}
+
 	if sub == nil {
 		log.Printf("[WARN] RDS Event Subscription (%s) not found - removing from state", d.Id())
 		d.SetId("")
@@ -186,52 +199,58 @@ func resourceAwsDbEventSubscriptionRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	// list tags for resource
-	resp, err := conn.ListTagsForResource(&rds.ListTagsForResourceInput{
-		ResourceName: sub.EventSubscriptionArn,
-	})
+	tags, err := keyvaluetags.RdsListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		log.Printf("[DEBUG] Error retrieving tags for ARN: %s", aws.StringValue(sub.EventSubscriptionArn))
+		return fmt.Errorf("error listing tags for RDS Event Subscription (%s): %s", d.Get("arn").(string), err)
 	}
 
-	var dt []*rds.Tag
-	if len(resp.TagList) > 0 {
-		dt = resp.TagList
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
-	if err := d.Set("tags", tagsToMapRDS(dt)); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
 }
 
 func resourceAwsDbEventSubscriptionRetrieve(name string, conn *rds.RDS) (*rds.EventSubscription, error) {
-
-	request := &rds.DescribeEventSubscriptionsInput{
+	input := &rds.DescribeEventSubscriptionsInput{
 		SubscriptionName: aws.String(name),
 	}
 
-	describeResp, err := conn.DescribeEventSubscriptions(request)
-	if err != nil {
-		if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
-			log.Printf("[WARN] No RDS Event Subscription by name (%s) found", name)
-			return nil, nil
+	var eventSubscription *rds.EventSubscription
+
+	err := conn.DescribeEventSubscriptionsPages(input, func(page *rds.DescribeEventSubscriptionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		return nil, fmt.Errorf("Error reading RDS Event Subscription %s: %s", name, err)
-	}
 
-	if len(describeResp.EventSubscriptionsList) != 1 {
-		return nil, fmt.Errorf("Unable to find RDS Event Subscription: %#v", describeResp.EventSubscriptionsList)
-	}
+		for _, es := range page.EventSubscriptionsList {
+			if es == nil {
+				continue
+			}
 
-	return describeResp.EventSubscriptionsList[0], nil
+			if aws.StringValue(es.CustSubscriptionId) == name {
+				eventSubscription = es
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	return eventSubscription, err
 }
 
 func resourceAwsDbEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
-	d.Partial(true)
 	requestUpdate := false
 
 	req := &rds.ModifyEventSubscriptionInput{
@@ -288,16 +307,14 @@ func resourceAwsDbEventSubscriptionUpdate(d *schema.ResourceData, meta interface
 		if err != nil {
 			return fmt.Errorf("Modifying RDS Event Subscription %s failed: %s", d.Id(), err)
 		}
-		d.SetPartial("event_categories")
-		d.SetPartial("enabled")
-		d.SetPartial("sns_topic")
-		d.SetPartial("source_type")
 	}
 
-	if err := setTagsRDS(conn, d, d.Get("arn").(string)); err != nil {
-		return err
-	} else {
-		d.SetPartial("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := keyvaluetags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating RDS Event Subscription (%s) tags: %s", d.Get("arn").(string), err)
+		}
 	}
 
 	if d.HasChange("source_ids") {
@@ -311,8 +328,8 @@ func resourceAwsDbEventSubscriptionUpdate(d *schema.ResourceData, meta interface
 
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
-		remove := expandStringList(os.Difference(ns).List())
-		add := expandStringList(ns.Difference(os).List())
+		remove := expandStringSet(os.Difference(ns))
+		add := expandStringSet(ns.Difference(os))
 
 		if len(remove) > 0 {
 			for _, removing := range remove {
@@ -339,10 +356,7 @@ func resourceAwsDbEventSubscriptionUpdate(d *schema.ResourceData, meta interface
 				}
 			}
 		}
-		d.SetPartial("source_ids")
 	}
-
-	d.Partial(false)
 
 	return nil
 }
@@ -353,26 +367,23 @@ func resourceAwsDbEventSubscriptionDelete(d *schema.ResourceData, meta interface
 		SubscriptionName: aws.String(d.Id()),
 	}
 
-	if _, err := conn.DeleteEventSubscription(&deleteOpts); err != nil {
-		if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
-			return nil
-		}
-		return fmt.Errorf("Error deleting RDS Event Subscription %s: %s", d.Id(), err)
+	_, err := conn.DeleteEventSubscription(&deleteOpts)
+
+	if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+		return nil
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"deleting"},
-		Target:     []string{},
-		Refresh:    resourceAwsDbEventSubscriptionRefreshFunc(d.Id(), conn),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
-	}
-	_, err := stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("Error deleting RDS Event Subscription %s: %s", d.Id(), err)
+		return fmt.Errorf("error deleting RDS Event Subscription (%s): %s", d.Id(), err)
 	}
-	return err
+
+	err = waitForRdsEventSubscriptionDeletion(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+
+	if err != nil {
+		return fmt.Errorf("error waiting for RDS Event Subscription (%s) deletion: %s", d.Id(), err)
+	}
+
+	return nil
 }
 
 func resourceAwsDbEventSubscriptionRefreshFunc(name string, conn *rds.RDS) resource.StateRefreshFunc {
@@ -380,8 +391,11 @@ func resourceAwsDbEventSubscriptionRefreshFunc(name string, conn *rds.RDS) resou
 	return func() (interface{}, string, error) {
 		sub, err := resourceAwsDbEventSubscriptionRetrieve(name, conn)
 
+		if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+			return nil, "", nil
+		}
+
 		if err != nil {
-			log.Printf("Error on retrieving DB Event Subscription when waiting: %s", err)
 			return nil, "", err
 		}
 
@@ -389,10 +403,21 @@ func resourceAwsDbEventSubscriptionRefreshFunc(name string, conn *rds.RDS) resou
 			return nil, "", nil
 		}
 
-		if sub.Status != nil {
-			log.Printf("[DEBUG] DB Event Subscription status for %s: %s", name, *sub.Status)
-		}
-
-		return sub, *sub.Status, nil
+		return sub, aws.StringValue(sub.Status), nil
 	}
+}
+
+func waitForRdsEventSubscriptionDeletion(conn *rds.RDS, name string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"deleting"},
+		Target:     []string{},
+		Refresh:    resourceAwsDbEventSubscriptionRefreshFunc(name, conn),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
 }

@@ -1,12 +1,12 @@
 ---
+subcategory: "License Manager"
 layout: "aws"
 page_title: "AWS: aws_licensemanager_association"
-sidebar_current: "docs-aws-resource-licensemanager-association"
 description: |-
   Provides a License Manager association resource.
 ---
 
-# aws_licensemanager_association
+# Resource: aws_licensemanager_association
 
 Provides a License Manager association.
 
@@ -14,14 +14,10 @@ Provides a License Manager association.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ami" "example" {
-  most_recent      = true
-
-  filter {
-    name   = "owner-alias"
-    values = ["amazon"]
-  }
+  most_recent = true
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
@@ -30,7 +26,7 @@ data "aws_ami" "example" {
 }
 
 resource "aws_instance" "example" {
-  ami           = "${data.aws_ami.example.id}"
+  ami           = data.aws_ami.example.id
   instance_type = "t2.micro"
 }
 
@@ -40,8 +36,8 @@ resource "aws_licensemanager_license_configuration" "example" {
 }
 
 resource "aws_licensemanager_association" "example" {
-  license_configuration_arn = "${aws_licensemanager_license_configuration.example.arn}"
-  resource_arn              = "${aws_instance.example.arn}"
+  license_configuration_arn = aws_licensemanager_license_configuration.example.arn
+  resource_arn              = aws_instance.example.arn
 }
 ```
 

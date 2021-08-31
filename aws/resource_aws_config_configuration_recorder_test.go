@@ -3,14 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -69,21 +68,21 @@ func testAccConfigConfigurationRecorder_basic(t *testing.T) {
 	expectedName := fmt.Sprintf("tf-acc-test-%d", rInt)
 	expectedRoleName := fmt.Sprintf("tf-acc-test-awsconfig-%d", rInt)
 
+	resourceName := "aws_config_configuration_recorder.foo"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigConfigurationRecorderConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigConfigurationRecorderExists("aws_config_configuration_recorder.foo", &cr),
-					testAccCheckConfigConfigurationRecorderName("aws_config_configuration_recorder.foo", expectedName, &cr),
-					testAccCheckConfigConfigurationRecorderRoleArn("aws_config_configuration_recorder.foo",
-						regexp.MustCompile(`arn:aws:iam::[0-9]{12}:role/`+expectedRoleName), &cr),
-					resource.TestCheckResourceAttr("aws_config_configuration_recorder.foo", "name", expectedName),
-					resource.TestMatchResourceAttr("aws_config_configuration_recorder.foo", "role_arn",
-						regexp.MustCompile(`arn:aws:iam::[0-9]{12}:role/`+expectedRoleName)),
+					testAccCheckConfigConfigurationRecorderExists(resourceName, &cr),
+					testAccCheckConfigConfigurationRecorderName(resourceName, expectedName, &cr),
+					testAccCheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf("role/%s", expectedRoleName)),
+					resource.TestCheckResourceAttr(resourceName, "name", expectedName),
 				),
 			},
 		},
@@ -96,25 +95,25 @@ func testAccConfigConfigurationRecorder_allParams(t *testing.T) {
 	expectedName := fmt.Sprintf("tf-acc-test-%d", rInt)
 	expectedRoleName := fmt.Sprintf("tf-acc-test-awsconfig-%d", rInt)
 
+	resourceName := "aws_config_configuration_recorder.foo"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigConfigurationRecorderConfig_allParams(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigConfigurationRecorderExists("aws_config_configuration_recorder.foo", &cr),
-					testAccCheckConfigConfigurationRecorderName("aws_config_configuration_recorder.foo", expectedName, &cr),
-					testAccCheckConfigConfigurationRecorderRoleArn("aws_config_configuration_recorder.foo",
-						regexp.MustCompile(`arn:aws:iam::[0-9]{12}:role/`+expectedRoleName), &cr),
-					resource.TestCheckResourceAttr("aws_config_configuration_recorder.foo", "name", expectedName),
-					resource.TestMatchResourceAttr("aws_config_configuration_recorder.foo", "role_arn",
-						regexp.MustCompile(`arn:aws:iam::[0-9]{12}:role/`+expectedRoleName)),
-					resource.TestCheckResourceAttr("aws_config_configuration_recorder.foo", "recording_group.#", "1"),
-					resource.TestCheckResourceAttr("aws_config_configuration_recorder.foo", "recording_group.0.all_supported", "false"),
-					resource.TestCheckResourceAttr("aws_config_configuration_recorder.foo", "recording_group.0.include_global_resource_types", "false"),
-					resource.TestCheckResourceAttr("aws_config_configuration_recorder.foo", "recording_group.0.resource_types.#", "2"),
+					testAccCheckConfigConfigurationRecorderExists(resourceName, &cr),
+					testAccCheckConfigConfigurationRecorderName(resourceName, expectedName, &cr),
+					testAccCheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf("role/%s", expectedRoleName)),
+					resource.TestCheckResourceAttr(resourceName, "name", expectedName),
+					resource.TestCheckResourceAttr(resourceName, "recording_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "recording_group.0.all_supported", "false"),
+					resource.TestCheckResourceAttr(resourceName, "recording_group.0.include_global_resource_types", "false"),
+					resource.TestCheckResourceAttr(resourceName, "recording_group.0.resource_types.#", "2"),
 				),
 			},
 		},
@@ -127,6 +126,7 @@ func testAccConfigConfigurationRecorder_importBasic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderDestroy,
 		Steps: []resource.TestStep{
@@ -153,22 +153,6 @@ func testAccCheckConfigConfigurationRecorderName(n string, desired string, obj *
 		if *obj.Name != desired {
 			return fmt.Errorf("Expected configuration recorder %q name to be %q, given: %q",
 				n, desired, *obj.Name)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckConfigConfigurationRecorderRoleArn(n string, desired *regexp.Regexp, obj *configservice.ConfigurationRecorder) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if !desired.MatchString(*obj.RoleARN) {
-			return fmt.Errorf("Expected configuration recorder %q role ARN to match %q, given: %q",
-				n, desired.String(), *obj.RoleARN)
 		}
 
 		return nil
@@ -230,13 +214,14 @@ func testAccCheckConfigConfigurationRecorderDestroy(s *terraform.State) error {
 func testAccConfigConfigurationRecorderConfig_basic(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_config_configuration_recorder" "foo" {
-  name = "tf-acc-test-%d"
-  role_arn = "${aws_iam_role.r.arn}"
+  name     = "tf-acc-test-%d"
+  role_arn = aws_iam_role.r.arn
 }
 
 resource "aws_iam_role" "r" {
-    name = "tf-acc-test-awsconfig-%d"
-    assume_role_policy = <<POLICY
+  name = "tf-acc-test-awsconfig-%d"
+
+  assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -254,9 +239,10 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "p" {
-    name = "tf-acc-test-awsconfig-%d"
-    role = "${aws_iam_role.r.id}"
-    policy = <<EOF
+  name = "tf-acc-test-awsconfig-%d"
+  role = aws_iam_role.r.id
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -276,14 +262,14 @@ EOF
 }
 
 resource "aws_s3_bucket" "b" {
-  bucket = "tf-acc-test-awsconfig-%d"
+  bucket        = "tf-acc-test-awsconfig-%d"
   force_destroy = true
 }
 
 resource "aws_config_delivery_channel" "foo" {
-  name = "tf-acc-test-awsconfig-%d"
-  s3_bucket_name = "${aws_s3_bucket.b.bucket}"
-  depends_on = ["aws_config_configuration_recorder.foo"]
+  name           = "tf-acc-test-awsconfig-%d"
+  s3_bucket_name = aws_s3_bucket.b.bucket
+  depends_on     = [aws_config_configuration_recorder.foo]
 }
 `, randInt, randInt, randInt, randInt, randInt)
 }
@@ -291,18 +277,20 @@ resource "aws_config_delivery_channel" "foo" {
 func testAccConfigConfigurationRecorderConfig_allParams(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_config_configuration_recorder" "foo" {
-  name = "tf-acc-test-%d"
-  role_arn = "${aws_iam_role.r.arn}"
+  name     = "tf-acc-test-%d"
+  role_arn = aws_iam_role.r.arn
+
   recording_group {
-    all_supported = false
+    all_supported                 = false
     include_global_resource_types = false
-    resource_types = ["AWS::EC2::Instance", "AWS::CloudTrail::Trail"]
+    resource_types                = ["AWS::EC2::Instance", "AWS::CloudTrail::Trail"]
   }
 }
 
 resource "aws_iam_role" "r" {
-    name = "tf-acc-test-awsconfig-%d"
-    assume_role_policy = <<POLICY
+  name = "tf-acc-test-awsconfig-%d"
+
+  assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -320,9 +308,10 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "p" {
-    name = "tf-acc-test-awsconfig-%d"
-    role = "${aws_iam_role.r.id}"
-    policy = <<EOF
+  name = "tf-acc-test-awsconfig-%d"
+  role = aws_iam_role.r.id
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -342,14 +331,14 @@ EOF
 }
 
 resource "aws_s3_bucket" "b" {
-  bucket = "tf-acc-test-awsconfig-%d"
+  bucket        = "tf-acc-test-awsconfig-%d"
   force_destroy = true
 }
 
 resource "aws_config_delivery_channel" "foo" {
-  name = "tf-acc-test-awsconfig-%d"
-  s3_bucket_name = "${aws_s3_bucket.b.bucket}"
-  depends_on = ["aws_config_configuration_recorder.foo"]
+  name           = "tf-acc-test-awsconfig-%d"
+  s3_bucket_name = aws_s3_bucket.b.bucket
+  depends_on     = [aws_config_configuration_recorder.foo]
 }
 `, randInt, randInt, randInt, randInt, randInt)
 }

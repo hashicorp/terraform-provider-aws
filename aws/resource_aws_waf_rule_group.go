@@ -5,8 +5,10 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsWafRuleGroup() *schema.Resource {
@@ -15,6 +17,9 @@ func resourceAwsWafRuleGroup() *schema.Resource {
 		Read:   resourceAwsWafRuleGroupRead,
 		Update: resourceAwsWafRuleGroupUpdate,
 		Delete: resourceAwsWafRuleGroupDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -62,12 +67,22 @@ func resourceAwsWafRuleGroup() *schema.Resource {
 					},
 				},
 			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsWafRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	wr := newWafRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -77,18 +92,35 @@ func resourceAwsWafRuleGroupCreate(d *schema.ResourceData, meta interface{}) err
 			Name:        aws.String(d.Get("name").(string)),
 		}
 
+		if len(tags) > 0 {
+			params.Tags = tags.IgnoreAws().WafTags()
+		}
+
 		return conn.CreateRuleGroup(params)
 	})
 	if err != nil {
 		return err
 	}
 	resp := out.(*waf.CreateRuleGroupOutput)
-	d.SetId(*resp.RuleGroup.RuleGroupId)
-	return resourceAwsWafRuleGroupUpdate(d, meta)
+	d.SetId(aws.StringValue(resp.RuleGroup.RuleGroupId))
+
+	activatedRules := d.Get("activated_rule").(*schema.Set).List()
+	if len(activatedRules) > 0 {
+		noActivatedRules := []interface{}{}
+
+		err := updateWafRuleGroupResource(d.Id(), noActivatedRules, activatedRules, conn)
+		if err != nil {
+			return fmt.Errorf("Error Updating WAF Rule Group: %s", err)
+		}
+	}
+
+	return resourceAwsWafRuleGroupRead(d, meta)
 }
 
 func resourceAwsWafRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	params := &waf.GetRuleGroupInput{
 		RuleGroupId: aws.String(d.Id()),
@@ -96,7 +128,7 @@ func resourceAwsWafRuleGroupRead(d *schema.ResourceData, meta interface{}) error
 
 	resp, err := conn.GetRuleGroup(params)
 	if err != nil {
-		if isAWSErr(err, "WAFNonexistentItemException", "") {
+		if isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
 			log.Printf("[WARN] WAF Rule Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -110,6 +142,30 @@ func resourceAwsWafRuleGroupRead(d *schema.ResourceData, meta interface{}) error
 	})
 	if err != nil {
 		return fmt.Errorf("error listing activated rules in WAF Rule Group (%s): %s", d.Id(), err)
+	}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "waf",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("rulegroup/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+
+	tags, err := keyvaluetags.WafListTags(conn, arn)
+	if err != nil {
+		return fmt.Errorf("error listing tags for WAF Rule Group (%s): %s", arn, err)
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	d.Set("activated_rule", flattenWafActivatedRules(rResp.ActivatedRules))
@@ -129,6 +185,14 @@ func resourceAwsWafRuleGroupUpdate(d *schema.ResourceData, meta interface{}) err
 		err := updateWafRuleGroupResource(d.Id(), oldRules, newRules, conn)
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Rule Group: %s", err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := keyvaluetags.WafUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
 

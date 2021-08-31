@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 type WafRetryer struct {
@@ -20,27 +20,36 @@ func (t *WafRetryer) RetryWithToken(f withTokenFunc) (interface{}, error) {
 	defer awsMutexKV.Unlock("WafRetryer")
 
 	var out interface{}
+	var tokenOut *waf.GetChangeTokenOutput
 	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
 		var err error
-		var tokenOut *waf.GetChangeTokenOutput
-
 		tokenOut, err = t.Connection.GetChangeToken(&waf.GetChangeTokenInput{})
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("Failed to acquire change token: %s", err))
+			return resource.NonRetryableError(fmt.Errorf("Failed to acquire change token: %w", err))
 		}
 
 		out, err = f(tokenOut.ChangeToken)
 		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if ok && awsErr.Code() == "WAFStaleDataException" {
+			if tfawserr.ErrCodeEquals(err, waf.ErrCodeStaleDataException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		tokenOut, err = t.Connection.GetChangeToken(&waf.GetChangeTokenInput{})
 
-	return out, err
+		if err != nil {
+			return nil, fmt.Errorf("error getting WAF change token: %w", err)
+		}
+
+		out, err = f(tokenOut.ChangeToken)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func newWafRetryer(conn *waf.WAF) *WafRetryer {

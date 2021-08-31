@@ -1,19 +1,19 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_placement_group"
-sidebar_current: "docs-aws-resource-placement-group"
 description: |-
   Provides an EC2 placement group.
 ---
 
-# aws_placement_group
+# Resource: aws_placement_group
 
 Provides an EC2 placement group. Read more about placement groups
 in [AWS Docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html).
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_placement_group" "web" {
   name     = "hunky-dory-pg"
   strategy = "cluster"
@@ -25,13 +25,18 @@ resource "aws_placement_group" "web" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the placement group.
-* `strategy` - (Required) The placement strategy.
+* `strategy` - (Required) The placement strategy. Can be `"cluster"`, `"partition"` or `"spread"`.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of the placement group.
 * `id` - The name of the placement group.
+* `placement_group_id` - The ID of the placement group.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 

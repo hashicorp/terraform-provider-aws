@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSRolePolicyAttachment_basic(t *testing.T) {
@@ -21,6 +21,7 @@ func TestAccAWSRolePolicyAttachment_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRolePolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -62,7 +63,86 @@ func TestAccAWSRolePolicyAttachment_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAWSRolePolicyAttachment_disappears(t *testing.T) {
+	var attachedRolePolicies iam.ListAttachedRolePoliciesOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_iam_role_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRolePolicyAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMRolePolicyAttachmentConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRolePolicyAttachmentExists(resourceName, 1, &attachedRolePolicies),
+					testAccCheckAWSIAMRolePolicyAttachmentDisappears(resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRolePolicyAttachment_disappears_Role(t *testing.T) {
+	var attachedRolePolicies iam.ListAttachedRolePoliciesOutput
+	var role iam.GetRoleOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	iamRoleResourceName := "aws_iam_role.test"
+	resourceName := "aws_iam_role_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRolePolicyAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMRolePolicyAttachmentConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(iamRoleResourceName, &role),
+					testAccCheckAWSRolePolicyAttachmentExists(resourceName, 1, &attachedRolePolicies),
+					// DeleteConflict: Cannot delete entity, must detach all policies first.
+					testAccCheckAWSIAMRolePolicyAttachmentDisappears(resourceName),
+					testAccCheckAWSRoleDisappears(&role),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSRolePolicyAttachmentDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).iamconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_iam_role_policy_attachment" {
+			continue
+		}
+
+		policyARN := rs.Primary.Attributes["policy_arn"]
+		role := rs.Primary.Attributes["role"]
+
+		hasPolicyAttachment, err := iamRoleHasPolicyARNAttachment(conn, role, policyARN)
+
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		if hasPolicyAttachment {
+			return fmt.Errorf("IAM Role (%s) Policy Attachment (%s) still exists", role, policyARN)
+		}
+	}
+
 	return nil
 }
 
@@ -94,6 +174,7 @@ func testAccCheckAWSRolePolicyAttachmentExists(n string, c int, out *iam.ListAtt
 		return nil
 	}
 }
+
 func testAccCheckAWSRolePolicyAttachmentAttributes(policies []string, out *iam.ListAttachedRolePoliciesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		matched := 0
@@ -114,6 +195,23 @@ func testAccCheckAWSRolePolicyAttachmentAttributes(policies []string, out *iam.L
 	}
 }
 
+func testAccCheckAWSIAMRolePolicyAttachmentDisappears(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		rs, ok := s.RootModule().Resources[resourceName]
+
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		policyARN := rs.Primary.Attributes["policy_arn"]
+		role := rs.Primary.Attributes["role"]
+
+		return detachPolicyFromRole(conn, role, policyARN)
+	}
+}
+
 func testAccAWSIAMRolePolicyAttachmentImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -127,135 +225,174 @@ func testAccAWSIAMRolePolicyAttachmentImportStateIdFunc(resourceName string) res
 
 func testAccAWSRolePolicyAttachConfig(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_iam_role" "role" {
-			name = "test-role-%d"
-			assume_role_policy = <<EOF
+resource "aws_iam_role" "role" {
+  name = "test-role-%d"
+
+  assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": "sts:AssumeRole",
-			"Principal": {
-				"Service": "ec2.amazonaws.com"
-			},
-			"Effect": "Allow",
-			"Sid": ""
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
 }
 EOF
-	}
+}
 
-	resource "aws_iam_policy" "policy" {
-			name = "tf-acctest-%d"
-			description = "A test policy"
-			policy = <<EOF
+resource "aws_iam_policy" "policy" {
+  name        = "tf-acctest-%d"
+  description = "A test policy"
+
+  policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": [
-				"iam:ChangePassword"
-			],
-			"Resource": "*",
-			"Effect": "Allow"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "iam:ChangePassword"
+      ],
+      "Resource": "*",
+      "Effect": "Allow"
+    }
+  ]
 }
 EOF
-	}
+}
 
-	resource "aws_iam_role_policy_attachment" "test-attach" {
-			role = "${aws_iam_role.role.name}"
-			policy_arn = "${aws_iam_policy.policy.arn}"
-	}`, rInt, rInt)
+resource "aws_iam_role_policy_attachment" "test-attach" {
+  role       = aws_iam_role.role.name
+  policy_arn = aws_iam_policy.policy.arn
+}
+`, rInt, rInt)
 }
 
 func testAccAWSRolePolicyAttachConfigUpdate(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_iam_role" "role" {
-			name = "test-role-%d"
-			assume_role_policy = <<EOF
+resource "aws_iam_role" "role" {
+  name = "test-role-%d"
+
+  assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": "sts:AssumeRole",
-			"Principal": {
-				"Service": "ec2.amazonaws.com"
-			},
-			"Effect": "Allow",
-			"Sid": ""
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
 }
 EOF
-	}
+}
 
-	resource "aws_iam_policy" "policy" {
-			name = "tf-acctest-%d"
-			description = "A test policy"
-			policy = <<EOF
+resource "aws_iam_policy" "policy" {
+  name        = "tf-acctest-%d"
+  description = "A test policy"
+
+  policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": [
-				"iam:ChangePassword"
-			],
-			"Resource": "*",
-			"Effect": "Allow"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "iam:ChangePassword"
+      ],
+      "Resource": "*",
+      "Effect": "Allow"
+    }
+  ]
 }
 EOF
-	}
+}
 
-	resource "aws_iam_policy" "policy2" {
-			name = "tf-acctest2-%d"
-			description = "A test policy"
-			policy = <<EOF
+resource "aws_iam_policy" "policy2" {
+  name        = "tf-acctest2-%d"
+  description = "A test policy"
+
+  policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": [
-				"iam:ChangePassword"
-			],
-			"Resource": "*",
-			"Effect": "Allow"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "iam:ChangePassword"
+      ],
+      "Resource": "*",
+      "Effect": "Allow"
+    }
+  ]
 }
 EOF
-	}
+}
 
-	resource "aws_iam_policy" "policy3" {
-			name = "tf-acctest3-%d"
-			description = "A test policy"
-			policy = <<EOF
+resource "aws_iam_policy" "policy3" {
+  name        = "tf-acctest3-%d"
+  description = "A test policy"
+
+  policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": [
-				"iam:ChangePassword"
-			],
-			"Resource": "*",
-			"Effect": "Allow"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "iam:ChangePassword"
+      ],
+      "Resource": "*",
+      "Effect": "Allow"
+    }
+  ]
 }
 EOF
-	}
+}
 
-	resource "aws_iam_role_policy_attachment" "test-attach" {
-			role = "${aws_iam_role.role.name}"
-			policy_arn = "${aws_iam_policy.policy2.arn}"
-	}
+resource "aws_iam_role_policy_attachment" "test-attach" {
+  role       = aws_iam_role.role.name
+  policy_arn = aws_iam_policy.policy2.arn
+}
 
-	resource "aws_iam_role_policy_attachment" "test-attach2" {
-			role = "${aws_iam_role.role.name}"
-			policy_arn = "${aws_iam_policy.policy3.arn}"
-	}`, rInt, rInt, rInt, rInt)
+resource "aws_iam_role_policy_attachment" "test-attach2" {
+  role       = aws_iam_role.role.name
+  policy_arn = aws_iam_policy.policy3.arn
+}
+`, rInt, rInt, rInt, rInt)
+}
+
+func testAccAWSIAMRolePolicyAttachmentConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AdministratorAccess"
+  role       = aws_iam_role.test.name
+}
+`, rName)
 }

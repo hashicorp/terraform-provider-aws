@@ -2,34 +2,69 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSIotThingType_importBasic(t *testing.T) {
-	resourceName := "aws_iot_thing_type.foo"
-	rInt := acctest.RandInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSIotThingTypeDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSIotThingTypeConfig_basic(rInt),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
+func init() {
+	resource.AddTestSweepers("aws_iot_thing_type", &resource.Sweeper{
+		Name:         "aws_iot_thing_type",
+		F:            testSweepIotThingTypes,
+		Dependencies: []string{"aws_iot_thing"},
 	})
+}
+
+func testSweepIotThingTypes(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*AWSClient).iotconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
+
+	input := &iot.ListThingTypesInput{}
+
+	err = conn.ListThingTypesPages(input, func(page *iot.ListThingTypesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, thingTypes := range page.ThingTypes {
+			r := resourceAwsIotThingType()
+			d := r.Data(nil)
+
+			d.SetId(aws.StringValue(thingTypes.ThingTypeName))
+
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing IoT Thing Type for %s: %w", region, err))
+	}
+
+	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Thing Type for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping IoT Thing Type sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func TestAccAWSIotThingType_basic(t *testing.T) {
@@ -37,6 +72,7 @@ func TestAccAWSIotThingType_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIotThingTypeDestroy,
 		Steps: []resource.TestStep{
@@ -47,6 +83,11 @@ func TestAccAWSIotThingType_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_iot_thing_type.foo", "name", fmt.Sprintf("tf_acc_iot_thing_type_%d", rInt)),
 				),
 			},
+			{
+				ResourceName:      "aws_iot_thing_type.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -56,6 +97,7 @@ func TestAccAWSIotThingType_full(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIotThingTypeDestroy,
 		Steps: []resource.TestStep{
@@ -67,6 +109,11 @@ func TestAccAWSIotThingType_full(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_iot_thing_type.foo", "properties.0.searchable_attributes.#", "3"),
 					resource.TestCheckResourceAttr("aws_iot_thing_type.foo", "deprecated", "true"),
 				),
+			},
+			{
+				ResourceName:      "aws_iot_thing_type.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSIotThingTypeConfig_fullUpdated(rInt),

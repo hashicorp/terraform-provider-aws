@@ -9,10 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsLaunchConfiguration() *schema.Resource {
@@ -25,6 +27,11 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -37,6 +44,7 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validation.StringLenBetween(1, 255-resource.UniqueIDSuffixLength),
@@ -73,9 +81,9 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"user_data_base64"},
 				StateFunc: func(v interface{}) string {
-					switch v.(type) {
+					switch v := v.(type) {
 					case string:
-						return userDataHashSum(v.(string))
+						return userDataHashSum(v)
 					default:
 						return ""
 					}
@@ -173,9 +181,10 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 							ForceNew: true,
 						},
 
-						"no_device": {
+						"encrypted": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 							ForceNew: true,
 						},
 
@@ -186,8 +195,21 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 							ForceNew: true,
 						},
 
+						"no_device": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+
 						"snapshot_id": {
 							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+
+						"throughput": {
+							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
@@ -202,13 +224,6 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 
 						"volume_type": {
 							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-
-						"encrypted": {
-							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
@@ -243,6 +258,39 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 				},
 			},
 
+			"metadata_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"http_endpoint": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice([]string{autoscaling.InstanceMetadataEndpointStateEnabled, autoscaling.InstanceMetadataEndpointStateDisabled}, false),
+						},
+						"http_tokens": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice([]string{autoscaling.InstanceMetadataHttpTokensStateOptional, autoscaling.InstanceMetadataHttpTokensStateRequired}, false),
+						},
+						"http_put_response_hop_limit": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IntBetween(1, 64),
+						},
+					},
+				},
+			},
+
 			"root_block_device": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -260,7 +308,21 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 							ForceNew: true,
 						},
 
+						"encrypted": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+
 						"iops": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+
+						"throughput": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
@@ -291,8 +353,10 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 	autoscalingconn := meta.(*AWSClient).autoscalingconn
 	ec2conn := meta.(*AWSClient).ec2conn
 
+	lcName := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
+
 	createLaunchConfigurationOpts := autoscaling.CreateLaunchConfigurationInput{
-		LaunchConfigurationName: aws.String(d.Get("name").(string)),
+		LaunchConfigurationName: aws.String(lcName),
 		ImageId:                 aws.String(d.Get("image_id").(string)),
 		InstanceType:            aws.String(d.Get("instance_type").(string)),
 		EbsOptimized:            aws.Bool(d.Get("ebs_optimized").(bool)),
@@ -329,19 +393,19 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("security_groups"); ok {
-		createLaunchConfigurationOpts.SecurityGroups = expandStringList(
-			v.(*schema.Set).List(),
-		)
+		createLaunchConfigurationOpts.SecurityGroups = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("vpc_classic_link_id"); ok {
 		createLaunchConfigurationOpts.ClassicLinkVPCId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("metadata_options"); ok {
+		createLaunchConfigurationOpts.MetadataOptions = expandLaunchConfigInstanceMetadataOptions(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("vpc_classic_link_security_groups"); ok {
-		createLaunchConfigurationOpts.ClassicLinkVPCSecurityGroups = expandStringList(
-			v.(*schema.Set).List(),
-		)
+		createLaunchConfigurationOpts.ClassicLinkVPCSecurityGroups = expandStringSet(v.(*schema.Set))
 	}
 
 	var blockDevices []*autoscaling.BlockDeviceMapping
@@ -390,7 +454,11 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
-			if *aws.String(bd["device_name"].(string)) == *rootDeviceName {
+			if v, ok := bd["throughput"].(int); ok && v > 0 {
+				ebs.Throughput = aws.Int64(int64(v))
+			}
+
+			if bd["device_name"].(string) == aws.StringValue(rootDeviceName) {
 				return fmt.Errorf("Root device (%s) declared as an 'ebs_block_device'.  Use 'root_block_device' keyword.", *rootDeviceName)
 			}
 
@@ -421,6 +489,10 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
 			}
 
+			if v, ok := bd["encrypted"].(bool); ok && v {
+				ebs.Encrypted = aws.Bool(v)
+			}
+
 			if v, ok := bd["volume_size"].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
@@ -431,6 +503,10 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 
 			if v, ok := bd["iops"].(int); ok && v > 0 {
 				ebs.Iops = aws.Int64(int64(v))
+			}
+
+			if v, ok := bd["throughput"].(int); ok && v > 0 {
+				ebs.Throughput = aws.Int64(int64(v))
 			}
 
 			if dn, err := fetchRootDeviceName(d.Get("image_id").(string), ec2conn); err == nil {
@@ -453,21 +529,11 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 		createLaunchConfigurationOpts.BlockDeviceMappings = blockDevices
 	}
 
-	var lcName string
-	if v, ok := d.GetOk("name"); ok {
-		lcName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		lcName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		lcName = resource.UniqueId()
-	}
-	createLaunchConfigurationOpts.LaunchConfigurationName = aws.String(lcName)
-
 	log.Printf("[DEBUG] autoscaling create launch configuration: %s", createLaunchConfigurationOpts)
 
 	// IAM profiles can take ~10 seconds to propagate in AWS:
 	// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-	err = resource.Retry(90*time.Second, func() *resource.RetryError {
+	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := autoscalingconn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
 		if err != nil {
 			if isAWSErr(err, "ValidationError", "Invalid IamInstanceProfile") {
@@ -480,22 +546,16 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = autoscalingconn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating launch configuration: %s", err)
 	}
 
 	d.SetId(lcName)
-	log.Printf("[INFO] launch configuration ID: %s", d.Id())
 
-	// We put a Retry here since sometimes eventual consistency bites
-	// us and we need to retry a few times to get the LC to load properly
-	return resource.Retry(30*time.Second, func() *resource.RetryError {
-		err := resourceAwsLaunchConfigurationRead(d, meta)
-		if err != nil {
-			return resource.RetryableError(err)
-		}
-		return nil
-	})
+	return resourceAwsLaunchConfigurationRead(d, meta)
 }
 
 func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) error {
@@ -531,6 +591,8 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 	d.Set("image_id", lc.ImageId)
 	d.Set("instance_type", lc.InstanceType)
 	d.Set("name", lc.LaunchConfigurationName)
+	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(lc.LaunchConfigurationName)))
+	d.Set("arn", lc.LaunchConfigurationARN)
 
 	d.Set("iam_instance_profile", lc.IamInstanceProfile)
 	d.Set("ebs_optimized", lc.EbsOptimized)
@@ -554,6 +616,10 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error setting vpc_classic_link_security_groups: %s", err)
 	}
 
+	if err := d.Set("metadata_options", flattenLaunchConfigInstanceMetadataOptions(lc.MetadataOptions)); err != nil {
+		return fmt.Errorf("error setting metadata_options: %s", err)
+	}
+
 	if err := readLCBlockDevices(d, lc, ec2conn); err != nil {
 		return err
 	}
@@ -563,19 +629,36 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 
 func resourceAwsLaunchConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	autoscalingconn := meta.(*AWSClient).autoscalingconn
+	input := &autoscaling.DeleteLaunchConfigurationInput{
+		LaunchConfigurationName: aws.String(d.Id()),
+	}
 
-	log.Printf("[DEBUG] Launch Configuration destroy: %v", d.Id())
-	_, err := autoscalingconn.DeleteLaunchConfiguration(
-		&autoscaling.DeleteLaunchConfigurationInput{
-			LaunchConfigurationName: aws.String(d.Id()),
-		})
-	if err != nil {
+	log.Printf("[DEBUG] Deleting Autoscaling Launch Configuration: %s", d.Id())
+	// Retry for Autoscaling eventual consistency
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err := autoscalingconn.DeleteLaunchConfiguration(input)
+
+		if isAWSErr(err, autoscaling.ErrCodeResourceInUseFault, "") {
+			return resource.RetryableError(err)
+		}
+
 		if isAWSErr(err, "InvalidConfiguration.NotFound", "") {
-			log.Printf("[DEBUG] Launch configuration (%s) not found", d.Id())
 			return nil
 		}
 
-		return err
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		_, err = autoscalingconn.DeleteLaunchConfiguration(input)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting Autoscaling Launch Configuration (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -602,6 +685,46 @@ func readLCBlockDevices(d *schema.ResourceData, lc *autoscaling.LaunchConfigurat
 	}
 
 	return nil
+}
+
+func expandLaunchConfigInstanceMetadataOptions(l []interface{}) *autoscaling.InstanceMetadataOptions {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	opts := &autoscaling.InstanceMetadataOptions{
+		HttpEndpoint: aws.String(m["http_endpoint"].(string)),
+	}
+
+	if m["http_endpoint"].(string) == autoscaling.InstanceMetadataEndpointStateEnabled {
+		// These parameters are not allowed unless HttpEndpoint is enabled
+
+		if v, ok := m["http_tokens"].(string); ok && v != "" {
+			opts.HttpTokens = aws.String(v)
+		}
+
+		if v, ok := m["http_put_response_hop_limit"].(int); ok && v != 0 {
+			opts.HttpPutResponseHopLimit = aws.Int64(int64(v))
+		}
+	}
+
+	return opts
+}
+
+func flattenLaunchConfigInstanceMetadataOptions(opts *autoscaling.InstanceMetadataOptions) []interface{} {
+	if opts == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"http_endpoint":               aws.StringValue(opts.HttpEndpoint),
+		"http_put_response_hop_limit": aws.Int64Value(opts.HttpPutResponseHopLimit),
+		"http_tokens":                 aws.StringValue(opts.HttpTokens),
+	}
+
+	return []interface{}{m}
 }
 
 func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autoscaling.LaunchConfiguration, ec2conn *ec2.EC2) (
@@ -658,16 +781,20 @@ func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autosca
 		if bdm.Ebs != nil && bdm.Ebs.Iops != nil {
 			bd["iops"] = *bdm.Ebs.Iops
 		}
+		if bdm.Ebs != nil && bdm.Ebs.Throughput != nil {
+			bd["throughput"] = *bdm.Ebs.Throughput
+		}
+		if bdm.Ebs != nil && bdm.Ebs.Encrypted != nil {
+			bd["encrypted"] = *bdm.Ebs.Encrypted
+		}
 
 		if bdm.DeviceName != nil && *bdm.DeviceName == *rootDeviceName {
 			blockDevices["root"] = bd
 		} else {
-			if bdm.Ebs != nil && bdm.Ebs.Encrypted != nil {
-				bd["encrypted"] = *bdm.Ebs.Encrypted
-			}
 			if bdm.DeviceName != nil {
 				bd["device_name"] = *bdm.DeviceName
 			}
+
 			if bdm.VirtualName != nil {
 				bd["virtual_name"] = *bdm.VirtualName
 				blockDevices["ephemeral"] = append(blockDevices["ephemeral"].([]map[string]interface{}), bd)

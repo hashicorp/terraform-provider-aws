@@ -7,36 +7,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/codecommit"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
-
-func TestAccAWSCodeCommitRepository_importBasic(t *testing.T) {
-	resName := "aws_codecommit_repository.test"
-	rInt := acctest.RandInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCodeCommitRepository_basic(rInt),
-			},
-			{
-				ResourceName:      resName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
 
 func TestAccAWSCodeCommitRepository_basic(t *testing.T) {
 	rInt := acctest.RandInt()
+	resourceName := "aws_codecommit_repository.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, codecommit.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -46,14 +28,22 @@ func TestAccAWSCodeCommitRepository_basic(t *testing.T) {
 					testAccCheckCodeCommitRepositoryExists("aws_codecommit_repository.test"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
 func TestAccAWSCodeCommitRepository_withChanges(t *testing.T) {
 	rInt := acctest.RandInt()
+	resourceName := "aws_codecommit_repository.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, codecommit.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -64,6 +54,11 @@ func TestAccAWSCodeCommitRepository_withChanges(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_codecommit_repository.test", "description", "This is a test description"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccCodeCommitRepository_withChanges(rInt),
@@ -79,8 +74,11 @@ func TestAccAWSCodeCommitRepository_withChanges(t *testing.T) {
 
 func TestAccAWSCodeCommitRepository_create_default_branch(t *testing.T) {
 	rInt := acctest.RandInt()
+	resourceName := "aws_codecommit_repository.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, codecommit.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -92,14 +90,23 @@ func TestAccAWSCodeCommitRepository_create_default_branch(t *testing.T) {
 						"aws_codecommit_repository.test", "default_branch", "master"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"default_branch"},
+			},
 		},
 	})
 }
 
 func TestAccAWSCodeCommitRepository_create_and_update_default_branch(t *testing.T) {
 	rInt := acctest.RandInt()
+	resourceName := "aws_codecommit_repository.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, codecommit.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -112,11 +119,60 @@ func TestAccAWSCodeCommitRepository_create_and_update_default_branch(t *testing.
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccCodeCommitRepository_with_default_branch(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeCommitRepositoryExists("aws_codecommit_repository.test"),
 					resource.TestCheckResourceAttr(
 						"aws_codecommit_repository.test", "default_branch", "master"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeCommitRepository_tags(t *testing.T) {
+	rName := acctest.RandString(10)
+	resourceName := "aws_codecommit_repository.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, codecommit.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeCommitRepositoryConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodeCommitRepositoryExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodeCommitRepositoryConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodeCommitRepositoryExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSCodeCommitRepositoryConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodeCommitRepositoryExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -184,7 +240,7 @@ func testAccCodeCommitRepository_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_codecommit_repository" "test" {
   repository_name = "test_repository_%d"
-  description = "This is a test description"
+  description     = "This is a test description"
 }
 `, rInt)
 }
@@ -193,7 +249,7 @@ func testAccCodeCommitRepository_withChanges(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_codecommit_repository" "test" {
   repository_name = "test_repository_%d"
-  description = "This is a test description - with changes"
+  description     = "This is a test description - with changes"
 }
 `, rInt)
 }
@@ -202,8 +258,33 @@ func testAccCodeCommitRepository_with_default_branch(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_codecommit_repository" "test" {
   repository_name = "test_repository_%d"
-  description = "This is a test description"
-  default_branch = "master"
+  description     = "This is a test description"
+  default_branch  = "master"
 }
 `, rInt)
+}
+
+func testAccAWSCodeCommitRepositoryConfigTags1(r, tag1Key, tag1Value string) string {
+	return fmt.Sprintf(`
+resource "aws_codecommit_repository" "test" {
+  repository_name = "terraform-test-%s"
+
+  tags = {
+    %q = %q
+  }
+}
+`, r, tag1Key, tag1Value)
+}
+
+func testAccAWSCodeCommitRepositoryConfigTags2(r, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return fmt.Sprintf(`
+resource "aws_codecommit_repository" "test" {
+  repository_name = "terraform-test-%s"
+
+  tags = {
+    %q = %q
+    %q = %q
+  }
+}
+`, r, tag1Key, tag1Value, tag2Key, tag2Value)
 }

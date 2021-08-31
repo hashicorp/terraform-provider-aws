@@ -1,16 +1,16 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-
-	"github.com/hashicorp/terraform/helper/customdiff"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsConfigConfigurationAggregator() *schema.Resource {
@@ -27,12 +27,13 @@ func resourceAwsConfigConfigurationAggregator() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			// This is to prevent this error:
 			// All fields are ForceNew or Computed w/out Optional, Update is superfluous
-			customdiff.ForceNewIfChange("account_aggregation_source", func(old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("account_aggregation_source", func(_ context.Context, old, new, meta interface{}) bool {
 				return len(old.([]interface{})) == 0 && len(new.([]interface{})) > 0
 			}),
-			customdiff.ForceNewIfChange("organization_aggregation_source", func(old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("organization_aggregation_source", func(_ context.Context, old, new, meta interface{}) bool {
 				return len(old.([]interface{})) == 0 && len(new.([]interface{})) > 0
 			}),
+			SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -106,41 +107,55 @@ func resourceAwsConfigConfigurationAggregator() *schema.Resource {
 					},
 				},
 			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceAwsConfigConfigurationAggregatorPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).configconn
-
-	name := d.Get("name").(string)
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &configservice.PutConfigurationAggregatorInput{
-		ConfigurationAggregatorName: aws.String(name),
+		ConfigurationAggregatorName: aws.String(d.Get("name").(string)),
+		Tags:                        tags.IgnoreAws().ConfigserviceTags(),
 	}
 
-	account_aggregation_sources := d.Get("account_aggregation_source").([]interface{})
-	if len(account_aggregation_sources) > 0 {
-		req.AccountAggregationSources = expandConfigAccountAggregationSources(account_aggregation_sources)
+	if v, ok := d.GetOk("account_aggregation_source"); ok && len(v.([]interface{})) > 0 {
+		req.AccountAggregationSources = expandConfigAccountAggregationSources(v.([]interface{}))
 	}
 
-	organization_aggregation_sources := d.Get("organization_aggregation_source").([]interface{})
-	if len(organization_aggregation_sources) > 0 {
-		req.OrganizationAggregationSource = expandConfigOrganizationAggregationSource(organization_aggregation_sources[0].(map[string]interface{}))
+	if v, ok := d.GetOk("organization_aggregation_source"); ok && len(v.([]interface{})) > 0 {
+		req.OrganizationAggregationSource = expandConfigOrganizationAggregationSource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	_, err := conn.PutConfigurationAggregator(req)
+	resp, err := conn.PutConfigurationAggregator(req)
 	if err != nil {
-		return fmt.Errorf("Error creating aggregator: %s", err)
+		return fmt.Errorf("error creating aggregator: %w", err)
 	}
 
-	d.SetId(strings.ToLower(name))
+	configAgg := resp.ConfigurationAggregator
+	d.SetId(aws.StringValue(configAgg.ConfigurationAggregatorName))
+
+	if !d.IsNewResource() && d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		arn := aws.StringValue(configAgg.ConfigurationAggregatorArn)
+		if err := keyvaluetags.ConfigserviceUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating Config Configuration Aggregator (%s) tags: %w", arn, err)
+		}
+	}
 
 	return resourceAwsConfigConfigurationAggregatorRead(d, meta)
 }
 
 func resourceAwsConfigConfigurationAggregatorRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).configconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	req := &configservice.DescribeConfigurationAggregatorsInput{
 		ConfigurationAggregatorNames: []*string{aws.String(d.Id())},
 	}
@@ -162,7 +177,8 @@ func resourceAwsConfigConfigurationAggregatorRead(d *schema.ResourceData, meta i
 	}
 
 	aggregator := res.ConfigurationAggregators[0]
-	d.Set("arn", aggregator.ConfigurationAggregatorArn)
+	arn := aws.StringValue(aggregator.ConfigurationAggregatorArn)
+	d.Set("arn", arn)
 	d.Set("name", aggregator.ConfigurationAggregatorName)
 
 	if err := d.Set("account_aggregation_source", flattenConfigAccountAggregationSources(aggregator.AccountAggregationSources)); err != nil {
@@ -171,6 +187,23 @@ func resourceAwsConfigConfigurationAggregatorRead(d *schema.ResourceData, meta i
 
 	if err := d.Set("organization_aggregation_source", flattenConfigOrganizationAggregationSource(aggregator.OrganizationAggregationSource)); err != nil {
 		return fmt.Errorf("error setting organization_aggregation_source: %s", err)
+	}
+
+	tags, err := keyvaluetags.ConfigserviceListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Config Configuration Aggregator (%s): %w", arn, err)
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -183,10 +216,14 @@ func resourceAwsConfigConfigurationAggregatorDelete(d *schema.ResourceData, meta
 		ConfigurationAggregatorName: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteConfigurationAggregator(req)
-	if err != nil {
-		return err
+
+	if isAWSErr(err, configservice.ErrCodeNoSuchConfigurationAggregatorException, "") {
+		return nil
 	}
 
-	d.SetId("")
+	if err != nil {
+		return fmt.Errorf("error deleting Config Configuration Aggregator (%s): %w", d.Id(), err)
+	}
+
 	return nil
 }

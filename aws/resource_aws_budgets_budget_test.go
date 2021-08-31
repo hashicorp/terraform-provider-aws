@@ -1,440 +1,618 @@
 package aws
 
 import (
-	"bytes"
 	"fmt"
-	"reflect"
-	"regexp"
+	"log"
+	"strings"
 	"testing"
-	"text/template"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/budgets"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	tfbudgets "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
+func init() {
+	resource.AddTestSweepers("aws_budgets_budget", &resource.Sweeper{
+		Name: "aws_budgets_budget",
+		F:    testSweepBudgetsBudgets,
+	})
+}
+
+func testSweepBudgetsBudgets(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*AWSClient).budgetconn
+	accountID := client.(*AWSClient).accountid
+	input := &budgets.DescribeBudgetsInput{
+		AccountId: aws.String(accountID),
+	}
+	var sweeperErrs *multierror.Error
+
+	for {
+		output, err := conn.DescribeBudgets(input)
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Budgets sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		}
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Budgets: %w", err))
+			return sweeperErrs
+		}
+
+		for _, budget := range output.Budgets {
+			name := aws.StringValue(budget.BudgetName)
+
+			log.Printf("[INFO] Deleting Budget: %s", name)
+			_, err := conn.DeleteBudget(&budgets.DeleteBudgetInput{
+				AccountId:  aws.String(accountID),
+				BudgetName: aws.String(name),
+			})
+			if isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
+				continue
+			}
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting Budget (%s): %w", name, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+		input.NextToken = output.NextToken
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
 func TestAccAWSBudgetsBudget_basic(t *testing.T) {
-	costFilterKey := "AZ"
-	name := fmt.Sprintf("test-budget-%d", acctest.RandInt())
-	configBasicDefaults := testAccAWSBudgetsBudgetConfigDefaults(name)
-	accountID := "012345678910"
-	configBasicUpdate := testAccAWSBudgetsBudgetConfigUpdate(name)
+	var budget budgets.Budget
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_budgets_budget.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSBudgetsBudgetConfig_BasicDefaults(configBasicDefaults, costFilterKey),
+				Config: testAccAWSBudgetsBudgetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicDefaults),
-					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name", regexp.MustCompile(*configBasicDefaults.BudgetName)),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", *configBasicDefaults.BudgetType),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_amount", *configBasicDefaults.BudgetLimit.Amount),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_unit", *configBasicDefaults.BudgetLimit.Unit),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_start", configBasicDefaults.TimePeriod.Start.Format("2006-01-02_15:04")),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_end", configBasicDefaults.TimePeriod.End.Format("2006-01-02_15:04")),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_unit", *configBasicDefaults.TimeUnit),
+					testAccAWSBudgetsBudgetExists(resourceName, &budget),
+					testAccCheckResourceAttrAccountID(resourceName, "account_id"),
+					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "budgets", fmt.Sprintf(`budget/%s`, rName)),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "RI_UTILIZATION"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{
+						"name":     "Service",
+						"values.#": "1",
+						"values.0": "Amazon Elasticsearch Service",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.Service", "Amazon Elasticsearch Service"),
+					resource.TestCheckResourceAttr(resourceName, "limit_amount", "100.0"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "PERCENTAGE"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "time_period_end"),
+					resource.TestCheckResourceAttrSet(resourceName, "time_period_start"),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "QUARTERLY"),
 				),
 			},
 			{
-				PlanOnly:    true,
-				Config:      testAccAWSBudgetsBudgetConfig_WithAccountID(configBasicDefaults, accountID, costFilterKey),
-				ExpectError: regexp.MustCompile("account_id.*" + accountID),
-			},
-			{
-				Config: testAccAWSBudgetsBudgetConfig_Basic(configBasicUpdate, costFilterKey),
-				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicUpdate),
-					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name", regexp.MustCompile(*configBasicUpdate.BudgetName)),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", *configBasicUpdate.BudgetType),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_amount", *configBasicUpdate.BudgetLimit.Amount),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_unit", *configBasicUpdate.BudgetLimit.Unit),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_start", configBasicUpdate.TimePeriod.Start.Format("2006-01-02_15:04")),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_end", configBasicUpdate.TimePeriod.End.Format("2006-01-02_15:04")),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_unit", *configBasicUpdate.TimeUnit),
-				),
-			},
-			{
-				ResourceName:            "aws_budgets_budget.foo",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
-	costFilterKey := "AZ"
-	name := "test-budget-"
-	configBasicDefaults := testAccAWSBudgetsBudgetConfigDefaults(name)
-	configBasicUpdate := testAccAWSBudgetsBudgetConfigUpdate(name)
+func TestAccAWSBudgetsBudget_Name_Generated(t *testing.T) {
+	var budget budgets.Budget
+	resourceName := "aws_budgets_budget.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSBudgetsBudgetConfig_PrefixDefaults(configBasicDefaults, costFilterKey),
+				Config: testAccAWSBudgetsBudgetConfigNameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicDefaults),
-					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name_prefix", regexp.MustCompile(*configBasicDefaults.BudgetName)),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", *configBasicDefaults.BudgetType),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_amount", *configBasicDefaults.BudgetLimit.Amount),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_unit", *configBasicDefaults.BudgetLimit.Unit),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_start", configBasicDefaults.TimePeriod.Start.Format("2006-01-02_15:04")),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_end", configBasicDefaults.TimePeriod.End.Format("2006-01-02_15:04")),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_unit", *configBasicDefaults.TimeUnit),
+					testAccAWSBudgetsBudgetExists(resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "RI_COVERAGE"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{
+						"name":     "Service",
+						"values.#": "1",
+						"values.0": "Amazon Redshift",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.Service", "Amazon Redshift"),
+					resource.TestCheckResourceAttr(resourceName, "limit_amount", "100.0"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "PERCENTAGE"),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "time_period_end"),
+					resource.TestCheckResourceAttrSet(resourceName, "time_period_start"),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "ANNUALLY"),
 				),
 			},
-
 			{
-				Config: testAccAWSBudgetsBudgetConfig_Prefix(configBasicUpdate, costFilterKey),
-				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetExists("aws_budgets_budget.foo", configBasicUpdate),
-					resource.TestMatchResourceAttr("aws_budgets_budget.foo", "name_prefix", regexp.MustCompile(*configBasicUpdate.BudgetName)),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "budget_type", *configBasicUpdate.BudgetType),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_amount", *configBasicUpdate.BudgetLimit.Amount),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "limit_unit", *configBasicUpdate.BudgetLimit.Unit),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_start", configBasicUpdate.TimePeriod.Start.Format("2006-01-02_15:04")),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_period_end", configBasicUpdate.TimePeriod.End.Format("2006-01-02_15:04")),
-					resource.TestCheckResourceAttr("aws_budgets_budget.foo", "time_unit", *configBasicUpdate.TimeUnit),
-				),
-			},
-
-			{
-				ResourceName:            "aws_budgets_budget.foo",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func testAccAWSBudgetsBudgetExists(resourceName string, config budgets.Budget) resource.TestCheckFunc {
+func TestAccAWSBudgetsBudget_NamePrefix(t *testing.T) {
+	var budget budgets.Budget
+	resourceName := "aws_budgets_budget.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBudgetsBudgetConfigNamePrefix("tf-acc-test-prefix-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists(resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "SAVINGS_PLANS_UTILIZATION"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "limit_amount", "100.0"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "PERCENTAGE"),
+					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "time_period_end"),
+					resource.TestCheckResourceAttrSet(resourceName, "time_period_start"),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "MONTHLY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSBudgetsBudget_disappears(t *testing.T) {
+	var budget budgets.Budget
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_budgets_budget.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBudgetsBudgetConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists(resourceName, &budget),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsBudgetsBudget(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSBudgetsBudget_CostTypes(t *testing.T) {
+	var budget budgets.Budget
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_budgets_budget.test"
+
+	now := time.Now().UTC()
+	ts1 := now.AddDate(0, 0, -14)
+	ts2 := time.Date(2050, 1, 1, 00, 0, 0, 0, time.UTC)
+	ts3 := now.AddDate(0, 0, -28)
+	ts4 := time.Date(2060, 7, 1, 00, 0, 0, 0, time.UTC)
+	startDate1 := tfbudgets.TimePeriodTimestampToString(&ts1)
+	endDate1 := tfbudgets.TimePeriodTimestampToString(&ts2)
+	startDate2 := tfbudgets.TimePeriodTimestampToString(&ts3)
+	endDate2 := tfbudgets.TimePeriodTimestampToString(&ts4)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBudgetsBudgetConfigCostTypes(rName, startDate1, endDate1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists(resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{
+						"name":     "AZ",
+						"values.#": "2",
+						"values.0": testAccGetRegion(),
+						"values.1": testAccGetAlternateRegion(),
+					}),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.AZ", strings.Join([]string{testAccGetRegion(), testAccGetAlternateRegion()}, ",")),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_credit", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_discount", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_other_subscription", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_recurring", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_refund", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_subscription", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_support", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_tax", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_upfront", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.use_amortized", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.use_blended", "true"),
+					resource.TestCheckResourceAttr(resourceName, "limit_amount", "456.78"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "USD"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "time_period_end", endDate1),
+					resource.TestCheckResourceAttr(resourceName, "time_period_start", startDate1),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSBudgetsBudgetConfigCostTypesUpdated(rName, startDate2, endDate2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists(resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{
+						"name":     "AZ",
+						"values.#": "2",
+						"values.0": testAccGetAlternateRegion(),
+						"values.1": testAccGetThirdRegion(),
+					}),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.AZ", strings.Join([]string{testAccGetAlternateRegion(), testAccGetThirdRegion()}, ",")),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_credit", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_discount", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_other_subscription", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_recurring", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_refund", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_subscription", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_support", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_tax", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.include_upfront", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.use_amortized", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cost_types.0.use_blended", "false"),
+					resource.TestCheckResourceAttr(resourceName, "limit_amount", "567.89"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "USD"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "time_period_end", endDate2),
+					resource.TestCheckResourceAttr(resourceName, "time_period_start", startDate2),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSBudgetsBudget_Notifications(t *testing.T) {
+	var budget budgets.Budget
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_budgets_budget.test"
+	snsTopicResourceName := "aws_sns_topic.test"
+
+	domain := testAccRandomDomainName()
+	emailAddress1 := testAccRandomEmailAddress(domain)
+	emailAddress2 := testAccRandomEmailAddress(domain)
+	emailAddress3 := testAccRandomEmailAddress(domain)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBudgetsBudgetConfigNotifications(rName, emailAddress1, emailAddress2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists(resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "USAGE"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "limit_amount", "432.1"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "GBP"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "notification.*", map[string]string{
+						"comparison_operator":          "GREATER_THAN",
+						"notification_type":            "ACTUAL",
+						"subscriber_email_addresses.#": "0",
+						"subscriber_sns_topic_arns.#":  "1",
+						"threshold":                    "150",
+						"threshold_type":               "PERCENTAGE",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "notification.*.subscriber_sns_topic_arns.*", snsTopicResourceName, "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "notification.*", map[string]string{
+						"comparison_operator":          "EQUAL_TO",
+						"notification_type":            "FORECASTED",
+						"subscriber_email_addresses.#": "2",
+						"subscriber_sns_topic_arns.#":  "0",
+						"threshold":                    "200.1",
+						"threshold_type":               "ABSOLUTE_VALUE",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "notification.*.subscriber_email_addresses.*", emailAddress1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "notification.*.subscriber_email_addresses.*", emailAddress2),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "ANNUALLY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSBudgetsBudgetConfigNotificationsUpdated(rName, emailAddress3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists(resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "USAGE"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "limit_amount", "432.1"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "GBP"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "notification.*", map[string]string{
+						"comparison_operator":          "LESS_THAN",
+						"notification_type":            "ACTUAL",
+						"subscriber_email_addresses.#": "1",
+						"subscriber_sns_topic_arns.#":  "0",
+						"threshold":                    "123.45",
+						"threshold_type":               "ABSOLUTE_VALUE",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "notification.*.subscriber_email_addresses.*", emailAddress3),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "ANNUALLY"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAWSBudgetsBudgetExists(resourceName string, v *budgets.Budget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		accountID, budgetName, err := decodeBudgetsBudgetID(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("failed decoding ID: %v", err)
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Budget ID is set")
 		}
 
-		client := testAccProvider.Meta().(*AWSClient).budgetconn
-		b, err := client.DescribeBudget(&budgets.DescribeBudgetInput{
-			BudgetName: &budgetName,
-			AccountId:  &accountID,
-		})
+		conn := testAccProvider.Meta().(*AWSClient).budgetconn
+
+		accountID, budgetName, err := tfbudgets.BudgetParseResourceID(rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("Describebudget error: %v", err)
-		}
-
-		if b.Budget == nil {
-			return fmt.Errorf("No budget returned %v in %v", b.Budget, b)
-		}
-
-		if *b.Budget.BudgetLimit.Amount != *config.BudgetLimit.Amount {
-			return fmt.Errorf("budget limit incorrectly set %v != %v", *config.BudgetLimit.Amount, *b.Budget.BudgetLimit.Amount)
-		}
-
-		if err := testAccAWSBudgetsBudgetCheckCostTypes(config, *b.Budget.CostTypes); err != nil {
 			return err
 		}
 
-		if err := testAccAWSBudgetsBudgetCheckTimePeriod(*config.TimePeriod, *b.Budget.TimePeriod); err != nil {
+		output, err := finder.BudgetByAccountIDAndBudgetName(conn, accountID, budgetName)
+
+		if err != nil {
 			return err
 		}
 
-		if !reflect.DeepEqual(b.Budget.CostFilters, config.CostFilters) {
-			return fmt.Errorf("cost filter not set properly: %v != %v", b.Budget.CostFilters, config.CostFilters)
-		}
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccAWSBudgetsBudgetCheckTimePeriod(configTimePeriod, timePeriod budgets.TimePeriod) error {
-	if configTimePeriod.End.Format("2006-01-02_15:04") != timePeriod.End.Format("2006-01-02_15:04") {
-		return fmt.Errorf("TimePeriodEnd not set properly '%v' should be '%v'", *timePeriod.End, *configTimePeriod.End)
-	}
-
-	if configTimePeriod.Start.Format("2006-01-02_15:04") != timePeriod.Start.Format("2006-01-02_15:04") {
-		return fmt.Errorf("TimePeriodStart not set properly '%v' should be '%v'", *timePeriod.Start, *configTimePeriod.Start)
-	}
-
-	return nil
-}
-
-func testAccAWSBudgetsBudgetCheckCostTypes(config budgets.Budget, costTypes budgets.CostTypes) error {
-	if *costTypes.IncludeCredit != *config.CostTypes.IncludeCredit {
-		return fmt.Errorf("IncludeCredit not set properly '%v' should be '%v'", *costTypes.IncludeCredit, *config.CostTypes.IncludeCredit)
-	}
-
-	if *costTypes.IncludeOtherSubscription != *config.CostTypes.IncludeOtherSubscription {
-		return fmt.Errorf("IncludeOtherSubscription not set properly '%v' should be '%v'", *costTypes.IncludeOtherSubscription, *config.CostTypes.IncludeOtherSubscription)
-	}
-
-	if *costTypes.IncludeRecurring != *config.CostTypes.IncludeRecurring {
-		return fmt.Errorf("IncludeRecurring not set properly  '%v' should be '%v'", *costTypes.IncludeRecurring, *config.CostTypes.IncludeRecurring)
-	}
-
-	if *costTypes.IncludeRefund != *config.CostTypes.IncludeRefund {
-		return fmt.Errorf("IncludeRefund not set properly '%v' should be '%v'", *costTypes.IncludeRefund, *config.CostTypes.IncludeRefund)
-	}
-
-	if *costTypes.IncludeSubscription != *config.CostTypes.IncludeSubscription {
-		return fmt.Errorf("IncludeSubscription not set properly '%v' should be '%v'", *costTypes.IncludeSubscription, *config.CostTypes.IncludeSubscription)
-	}
-
-	if *costTypes.IncludeSupport != *config.CostTypes.IncludeSupport {
-		return fmt.Errorf("IncludeSupport not set properly '%v' should be '%v'", *costTypes.IncludeSupport, *config.CostTypes.IncludeSupport)
-	}
-
-	if *costTypes.IncludeTax != *config.CostTypes.IncludeTax {
-		return fmt.Errorf("IncludeTax not set properly '%v' should be '%v'", *costTypes.IncludeTax, *config.CostTypes.IncludeTax)
-	}
-
-	if *costTypes.IncludeUpfront != *config.CostTypes.IncludeUpfront {
-		return fmt.Errorf("IncludeUpfront not set properly '%v' should be '%v'", *costTypes.IncludeUpfront, *config.CostTypes.IncludeUpfront)
-	}
-
-	if *costTypes.UseBlended != *config.CostTypes.UseBlended {
-		return fmt.Errorf("UseBlended not set properly '%v' should be '%v'", *costTypes.UseBlended, *config.CostTypes.UseBlended)
-	}
-
-	return nil
-}
-
 func testAccAWSBudgetsBudgetDestroy(s *terraform.State) error {
-	meta := testAccProvider.Meta()
-	client := meta.(*AWSClient).budgetconn
+	conn := testAccProvider.Meta().(*AWSClient).budgetconn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_budgets_budget" {
 			continue
 		}
 
-		accountID, budgetName, err := decodeBudgetsBudgetID(rs.Primary.ID)
+		accountID, budgetName, err := tfbudgets.BudgetParseResourceID(rs.Primary.ID)
+
 		if err != nil {
-			return fmt.Errorf("Budget '%s': id could not be decoded and could not be deleted properly", rs.Primary.ID)
+			return err
 		}
 
-		_, err = client.DescribeBudget(&budgets.DescribeBudgetInput{
-			BudgetName: aws.String(budgetName),
-			AccountId:  aws.String(accountID),
-		})
-		if !isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
-			return fmt.Errorf("Budget '%s' was not deleted properly", rs.Primary.ID)
+		_, err = finder.BudgetByAccountIDAndBudgetName(conn, accountID, budgetName)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("Budget Action %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccAWSBudgetsBudgetConfigUpdate(name string) budgets.Budget {
-	dateNow := time.Now().UTC()
-	futureDate := dateNow.AddDate(0, 0, 14)
-	startDate := dateNow.AddDate(0, 0, -14)
-	return budgets.Budget{
-		BudgetName: aws.String(name),
-		BudgetType: aws.String("COST"),
-		BudgetLimit: &budgets.Spend{
-			Amount: aws.String("500"),
-			Unit:   aws.String("USD"),
-		},
-		CostFilters: map[string][]*string{
-			"AZ": {
-				aws.String("us-east-2"),
-			},
-		},
-		CostTypes: &budgets.CostTypes{
-			IncludeCredit:            aws.Bool(true),
-			IncludeOtherSubscription: aws.Bool(true),
-			IncludeRecurring:         aws.Bool(true),
-			IncludeRefund:            aws.Bool(true),
-			IncludeSubscription:      aws.Bool(false),
-			IncludeSupport:           aws.Bool(true),
-			IncludeTax:               aws.Bool(false),
-			IncludeUpfront:           aws.Bool(true),
-			UseBlended:               aws.Bool(false),
-		},
-		TimeUnit: aws.String("MONTHLY"),
-		TimePeriod: &budgets.TimePeriod{
-			End:   &futureDate,
-			Start: &startDate,
-		},
-	}
+func testAccAWSBudgetsBudgetConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name         = %[1]q
+  budget_type  = "RI_UTILIZATION"
+  limit_amount = "100.0"
+  limit_unit   = "PERCENTAGE"
+  time_unit    = "QUARTERLY"
+
+  cost_filters = {
+    Service = "Amazon Elasticsearch Service"
+  }
+}
+`, rName)
 }
 
-func testAccAWSBudgetsBudgetConfigDefaults(name string) budgets.Budget {
-	dateNow := time.Now().UTC()
-	futureDate := time.Date(2087, 6, 15, 00, 0, 0, 0, time.UTC)
-	startDate := dateNow.AddDate(0, 0, -14)
-	return budgets.Budget{
-		BudgetName: aws.String(name),
-		BudgetType: aws.String("COST"),
-		BudgetLimit: &budgets.Spend{
-			Amount: aws.String("100"),
-			Unit:   aws.String("USD"),
-		},
-		CostFilters: map[string][]*string{
-			"AZ": {
-				aws.String("us-east-1"),
-			},
-		},
-		CostTypes: &budgets.CostTypes{
-			IncludeCredit:            aws.Bool(true),
-			IncludeOtherSubscription: aws.Bool(true),
-			IncludeRecurring:         aws.Bool(true),
-			IncludeRefund:            aws.Bool(true),
-			IncludeSubscription:      aws.Bool(true),
-			IncludeSupport:           aws.Bool(true),
-			IncludeTax:               aws.Bool(true),
-			IncludeUpfront:           aws.Bool(true),
-			UseBlended:               aws.Bool(false),
-		},
-		TimeUnit: aws.String("MONTHLY"),
-		TimePeriod: &budgets.TimePeriod{
-			End:   &futureDate,
-			Start: &startDate,
-		},
-	}
+func testAccAWSBudgetsBudgetConfigNameGenerated() string {
+	return `
+resource "aws_budgets_budget" "test" {
+  budget_type  = "RI_COVERAGE"
+  limit_amount = "100.00"
+  limit_unit   = "PERCENTAGE"
+  time_unit    = "ANNUALLY"
+
+  cost_filter {
+    name   = "Service"
+    values = ["Amazon Redshift"]
+  }
+}
+`
 }
 
-func testAccAWSBudgetsBudgetConfig_WithAccountID(budgetConfig budgets.Budget, accountID, costFilterKey string) string {
-	t := template.Must(template.New("t1").
-		Parse(`
-resource "aws_budgets_budget" "foo" {
-	account_id = "` + accountID + `"
-	name_prefix = "{{.BudgetName}}"
-	budget_type = "{{.BudgetType}}"
- 	limit_amount = "{{.BudgetLimit.Amount}}"
- 	limit_unit = "{{.BudgetLimit.Unit}}"
-	time_period_start = "{{.TimePeriod.Start.Format "2006-01-02_15:04"}}" 
- 	time_unit = "{{.TimeUnit}}"
-	cost_filters = {
-		"` + costFilterKey + `" = "` + *budgetConfig.CostFilters[costFilterKey][0] + `"
-	}
+func testAccAWSBudgetsBudgetConfigNamePrefix(namePrefix string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name_prefix  = %[1]q
+  budget_type  = "SAVINGS_PLANS_UTILIZATION"
+  limit_amount = "100"
+  limit_unit   = "PERCENTAGE"
+  time_unit    = "MONTHLY"
 }
-`))
-	var doc bytes.Buffer
-	// TODO: Convert to fmt.Sprintf() (https://github.com/terraform-providers/terraform-provider-aws/issues/7456)
-	if err := t.Execute(&doc, budgetConfig); err != nil {
-		panic(fmt.Sprintf("error executing template: %s", err))
-	}
-	return doc.String()
+`, namePrefix)
 }
 
-func testAccAWSBudgetsBudgetConfig_PrefixDefaults(budgetConfig budgets.Budget, costFilterKey string) string {
-	t := template.Must(template.New("t1").
-		Parse(`
-resource "aws_budgets_budget" "foo" {
-	name_prefix = "{{.BudgetName}}"
-	budget_type = "{{.BudgetType}}"
- 	limit_amount = "{{.BudgetLimit.Amount}}"
- 	limit_unit = "{{.BudgetLimit.Unit}}"
-	time_period_start = "{{.TimePeriod.Start.Format "2006-01-02_15:04"}}" 
- 	time_unit = "{{.TimeUnit}}"
-	cost_filters = {
-		"` + costFilterKey + `" = "` + *budgetConfig.CostFilters[costFilterKey][0] + `"
-	}
+func testAccAWSBudgetsBudgetConfigCostTypes(rName, startDate, endDate string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name         = %[1]q
+  budget_type  = "COST"
+  limit_amount = "456.78"
+  limit_unit   = "USD"
+
+  time_period_start = %[2]q
+  time_period_end   = %[3]q
+  time_unit         = "DAILY"
+
+  cost_filter {
+    name   = "AZ"
+    values = [%[4]q, %[5]q]
+  }
+
+  cost_types {
+    include_discount     = false
+    include_subscription = true
+    include_tax          = false
+    use_blended          = true
+  }
 }
-`))
-	var doc bytes.Buffer
-	// TODO: Convert to fmt.Sprintf() (https://github.com/terraform-providers/terraform-provider-aws/issues/7456)
-	if err := t.Execute(&doc, budgetConfig); err != nil {
-		panic(fmt.Sprintf("error executing template: %s", err))
-	}
-	return doc.String()
+`, rName, startDate, endDate, testAccGetRegion(), testAccGetAlternateRegion())
 }
 
-func testAccAWSBudgetsBudgetConfig_Prefix(budgetConfig budgets.Budget, costFilterKey string) string {
-	t := template.Must(template.New("t1").
-		Parse(`
-resource "aws_budgets_budget" "foo" {
-	name_prefix = "{{.BudgetName}}"
-	budget_type = "{{.BudgetType}}"
- 	limit_amount = "{{.BudgetLimit.Amount}}"
- 	limit_unit = "{{.BudgetLimit.Unit}}"
-	cost_types {
-		include_tax = "{{.CostTypes.IncludeTax}}"
-		include_subscription = "{{.CostTypes.IncludeSubscription}}"
-		use_blended = "{{.CostTypes.UseBlended}}"
-	}
-	time_period_start = "{{.TimePeriod.Start.Format "2006-01-02_15:04"}}" 
-	time_period_end = "{{.TimePeriod.End.Format "2006-01-02_15:04"}}"
- 	time_unit = "{{.TimeUnit}}"
-	cost_filters = {
-		"` + costFilterKey + `" = "` + *budgetConfig.CostFilters[costFilterKey][0] + `"
-	}
+func testAccAWSBudgetsBudgetConfigCostTypesUpdated(rName, startDate, endDate string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name         = %[1]q
+  budget_type  = "COST"
+  limit_amount = "567.89"
+  limit_unit   = "USD"
+
+  time_period_start = %[2]q
+  time_period_end   = %[3]q
+  time_unit         = "DAILY"
+
+  cost_filter {
+    name   = "AZ"
+    values = [%[4]q, %[5]q]
+  }
+
+  cost_types {
+    include_credit       = false
+    include_discount     = true
+    include_refund       = false
+    include_subscription = true
+    include_tax          = true
+    use_blended          = false
+  }
 }
-`))
-	var doc bytes.Buffer
-	// TODO: Convert to fmt.Sprintf() (https://github.com/terraform-providers/terraform-provider-aws/issues/7456)
-	if err := t.Execute(&doc, budgetConfig); err != nil {
-		panic(fmt.Sprintf("error executing template: %s", err))
-	}
-	return doc.String()
+`, rName, startDate, endDate, testAccGetAlternateRegion(), testAccGetThirdRegion())
 }
 
-func testAccAWSBudgetsBudgetConfig_BasicDefaults(budgetConfig budgets.Budget, costFilterKey string) string {
-	t := template.Must(template.New("t1").
-		Parse(`
-resource "aws_budgets_budget" "foo" {
-	name = "{{.BudgetName}}"
-	budget_type = "{{.BudgetType}}"
- 	limit_amount = "{{.BudgetLimit.Amount}}"
- 	limit_unit = "{{.BudgetLimit.Unit}}"
-	time_period_start = "{{.TimePeriod.Start.Format "2006-01-02_15:04"}}" 
- 	time_unit = "{{.TimeUnit}}"
-	cost_filters = {
-		"` + costFilterKey + `" = "` + *budgetConfig.CostFilters[costFilterKey][0] + `"
-	}
-}
-`))
-	var doc bytes.Buffer
-	// TODO: Convert to fmt.Sprintf() (https://github.com/terraform-providers/terraform-provider-aws/issues/7456)
-	if err := t.Execute(&doc, budgetConfig); err != nil {
-		panic(fmt.Sprintf("error executing template: %s", err))
-	}
-	return doc.String()
+func testAccAWSBudgetsBudgetConfigNotifications(rName, emailAddress1, emailAddress2 string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
 }
 
-func testAccAWSBudgetsBudgetConfig_Basic(budgetConfig budgets.Budget, costFilterKey string) string {
-	t := template.Must(template.New("t1").
-		Parse(`
-resource "aws_budgets_budget" "foo" {
-	name = "{{.BudgetName}}"
-	budget_type = "{{.BudgetType}}"
- 	limit_amount = "{{.BudgetLimit.Amount}}"
- 	limit_unit = "{{.BudgetLimit.Unit}}"
-	cost_types {
-		include_tax = "{{.CostTypes.IncludeTax}}"
-		include_subscription = "{{.CostTypes.IncludeSubscription}}"
-		use_blended = "{{.CostTypes.UseBlended}}"
-	}
-	time_period_start = "{{.TimePeriod.Start.Format "2006-01-02_15:04"}}" 
-	time_period_end = "{{.TimePeriod.End.Format "2006-01-02_15:04"}}"
- 	time_unit = "{{.TimeUnit}}"
-	cost_filters = {
-		"` + costFilterKey + `" = "` + *budgetConfig.CostFilters[costFilterKey][0] + `"
-	}
+resource "aws_budgets_budget" "test" {
+  name         = %[1]q
+  budget_type  = "USAGE"
+  limit_amount = "432.10"
+  limit_unit   = "GBP"
+  time_unit    = "ANNUALLY"
+
+  notification {
+    comparison_operator       = "GREATER_THAN"
+    notification_type         = "ACTUAL"
+    threshold                 = 150
+    threshold_type            = "PERCENTAGE"
+    subscriber_sns_topic_arns = [aws_sns_topic.test.arn]
+  }
+
+  notification {
+    comparison_operator        = "EQUAL_TO"
+    notification_type          = "FORECASTED"
+    threshold                  = 200.10
+    threshold_type             = "ABSOLUTE_VALUE"
+    subscriber_email_addresses = [%[2]q, %[3]q]
+  }
 }
-`))
-	var doc bytes.Buffer
-	// TODO: Convert to fmt.Sprintf() (https://github.com/terraform-providers/terraform-provider-aws/issues/7456)
-	if err := t.Execute(&doc, budgetConfig); err != nil {
-		panic(fmt.Sprintf("error executing template: %s", err))
-	}
-	return doc.String()
+`, rName, emailAddress1, emailAddress2)
+}
+
+func testAccAWSBudgetsBudgetConfigNotificationsUpdated(rName, emailAddress1 string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name         = %[1]q
+  budget_type  = "USAGE"
+  limit_amount = "432.10"
+  limit_unit   = "GBP"
+  time_unit    = "ANNUALLY"
+
+  notification {
+    comparison_operator        = "LESS_THAN"
+    notification_type          = "ACTUAL"
+    threshold                  = 123.45
+    threshold_type             = "ABSOLUTE_VALUE"
+    subscriber_email_addresses = [%[2]q]
+  }
+}
+`, rName, emailAddress1)
 }

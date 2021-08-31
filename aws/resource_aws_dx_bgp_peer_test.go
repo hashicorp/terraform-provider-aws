@@ -8,8 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAwsDxBgpPeer_basic(t *testing.T) {
@@ -18,10 +19,11 @@ func TestAccAwsDxBgpPeer_basic(t *testing.T) {
 	if vifId == "" {
 		t.Skipf("Environment variable %s is not set", key)
 	}
-	bgpAsn := randIntRange(64512, 65534)
+	bgpAsn := acctest.RandIntRange(64512, 65534)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxBgpPeerDestroy,
 		Steps: []resource.TestStep{
@@ -78,8 +80,8 @@ func testAccDxBgpPeerConfig(vifId string, bgpAsn int) string {
 resource "aws_dx_bgp_peer" "foo" {
   virtual_interface_id = "%s"
 
-  address_family       = "ipv6"
-  bgp_asn              = %d
+  address_family = "ipv6"
+  bgp_asn        = %d
 }
 `, vifId, bgpAsn)
 }

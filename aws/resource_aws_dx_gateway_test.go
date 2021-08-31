@@ -3,15 +3,17 @@ package aws
 import (
 	"fmt"
 	"log"
-	"math/rand"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect/lister"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -27,73 +29,106 @@ func init() {
 func testSweepDirectConnectGateways(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).dxconn
 	input := &directconnect.DescribeDirectConnectGatewaysInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]*testSweepResource, 0)
 
-	for {
-		output, err := conn.DescribeDirectConnectGateways(input)
-
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Direct Connect Gateway sweep for %s: %s", region, err)
-			return nil
+	err = lister.DescribeDirectConnectGatewaysPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewaysOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			return fmt.Errorf("error retrieving Direct Connect Gateways: %s", err)
-		}
+		for _, gateway := range page.DirectConnectGateways {
+			directConnectGatewayID := aws.StringValue(gateway.DirectConnectGatewayId)
 
-		for _, gateway := range output.DirectConnectGateways {
-			id := aws.StringValue(gateway.DirectConnectGatewayId)
-
-			if aws.StringValue(gateway.DirectConnectGatewayState) != directconnect.GatewayStateAvailable {
-				log.Printf("[INFO] Skipping Direct Connect Gateway in non-available (%s) state: %s", aws.StringValue(gateway.DirectConnectGatewayState), id)
+			if state := aws.StringValue(gateway.DirectConnectGatewayState); state != directconnect.GatewayStateAvailable {
+				log.Printf("[INFO] Skipping Direct Connect Gateway in non-available (%s) state: %s", state, directConnectGatewayID)
 				continue
 			}
 
-			input := &directconnect.DeleteDirectConnectGatewayInput{
-				DirectConnectGatewayId: aws.String(id),
+			input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
+				DirectConnectGatewayId: aws.String(directConnectGatewayID),
 			}
 
-			log.Printf("[INFO] Deleting Direct Connect Gateway: %s", id)
-			_, err := conn.DeleteDirectConnectGateway(input)
+			var associations bool
 
-			if isAWSErr(err, directconnect.ErrCodeClientException, "does not exist") {
-				continue
-			}
+			err := lister.DescribeDirectConnectGatewayAssociationsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				// If associations still remain, its likely that our region is not the home
+				// region of those associations and the previous sweepers skipped them.
+				// When we hit this condition, we skip trying to delete the gateway as it
+				// will go from deleting -> available after a few minutes and timeout.
+				if len(page.DirectConnectGatewayAssociations) > 0 {
+					associations = true
+
+					return false
+				}
+
+				return !lastPage
+			})
 
 			if err != nil {
-				return fmt.Errorf("error deleting Direct Connect Gateway (%s): %s", id, err)
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Direct Connect Gateway Associations (%s): %w", region, err))
 			}
 
-			if err := waitForDirectConnectGatewayDeletion(conn, id, 20*time.Minute); err != nil {
-				return fmt.Errorf("error waiting for Direct Connect Gateway (%s) to be deleted: %s", id, err)
+			if associations {
+				log.Printf("[INFO] Skipping Direct Connect Gateway with remaining associations: %s", directConnectGatewayID)
+				continue
 			}
+
+			r := resourceAwsDxGateway()
+			d := r.Data(nil)
+			d.SetId(directConnectGatewayID)
+
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = output.NextToken
+	if testSweepSkipSweepError(err) {
+		log.Print(fmt.Errorf("[WARN] Skipping Direct Connect Gateway sweep for %s: %w", region, err))
+		return sweeperErrs // In case we have completed some pages, but had errors
 	}
 
-	return nil
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Direct Connect Gateways (%s): %w", region, err))
+	}
+
+	err = testSweepResourceOrchestrator(sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Direct Connect Gateways (%s): %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsDxGateway_importBasic(t *testing.T) {
+func TestAccAwsDxGateway_basic(t *testing.T) {
+	var v directconnect.Gateway
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	resourceName := "aws_dx_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayConfig(acctest.RandString(5), randIntRange(64512, 65534)),
+				Config: testAccDxGatewayConfig(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxGatewayExists(resourceName, &v),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_account_id"),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -103,44 +138,53 @@ func TestAccAwsDxGateway_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxGateway_importComplex(t *testing.T) {
-	checkFn := func(s []*terraform.InstanceState) error {
-		if len(s) != 3 {
-			return fmt.Errorf("Got %d resources, expected 3. State: %#v", len(s), s)
-		}
-		return nil
-	}
+func TestAccAwsDxGateway_disappears(t *testing.T) {
+	var v directconnect.Gateway
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	resourceName := "aws_dx_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationConfig_multiVgws(acctest.RandString(5), randIntRange(64512, 65534)),
-			},
-
-			{
-				ResourceName:      "aws_dx_gateway.test",
-				ImportState:       true,
-				ImportStateCheck:  checkFn,
-				ImportStateVerify: true,
+				Config: testAccDxGatewayConfig(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxGatewayExists(resourceName, &v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsDxGateway(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
 }
 
-func TestAccAwsDxGateway_basic(t *testing.T) {
+func TestAccAwsDxGateway_complex(t *testing.T) {
+	var v directconnect.Gateway
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	resourceName := "aws_dx_gateway.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayConfig(acctest.RandString(5), randIntRange(64512, 65534)),
+				Config: testAccDxGatewayAssociationConfig_multiVpnGatewaysSingleAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxGatewayExists("aws_dx_gateway.test"),
+					testAccCheckAwsDxGatewayExists(resourceName, &v),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_account_id"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -154,29 +198,41 @@ func testAccCheckAwsDxGatewayDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &directconnect.DescribeDirectConnectGatewaysInput{
-			DirectConnectGatewayId: aws.String(rs.Primary.ID),
+		_, err := finder.GatewayByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		resp, err := conn.DescribeDirectConnectGateways(input)
 		if err != nil {
 			return err
 		}
-		for _, v := range resp.DirectConnectGateways {
-			if *v.DirectConnectGatewayId == rs.Primary.ID && !(*v.DirectConnectGatewayState == directconnect.GatewayStateDeleted) {
-				return fmt.Errorf("[DESTROY ERROR] DX Gateway (%s) not deleted", rs.Primary.ID)
-			}
-		}
+
+		return fmt.Errorf("Direct Connect Gateway %s still exists", rs.Primary.ID)
 	}
 	return nil
 }
 
-func testAccCheckAwsDxGatewayExists(name string) resource.TestCheckFunc {
+func testAccCheckAwsDxGatewayExists(name string, v *directconnect.Gateway) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).dxconn
+
+		output, err := finder.GatewayByID(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
 
 		return nil
 	}
@@ -184,18 +240,9 @@ func testAccCheckAwsDxGatewayExists(name string) resource.TestCheckFunc {
 
 func testAccDxGatewayConfig(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
-    resource "aws_dx_gateway" "test" {
-      name = "terraform-testacc-dxgw-%s"
-      amazon_side_asn = "%d"
-    }
-    `, rName, rBgpAsn)
+resource "aws_dx_gateway" "test" {
+  name            = %[1]q
+  amazon_side_asn = "%[2]d"
 }
-
-// Local copy of acctest.RandIntRange until https://github.com/hashicorp/terraform/pull/17438 is merged.
-func randIntRange(min int, max int) int {
-	rand.Seed(time.Now().UTC().UnixNano())
-	source := rand.New(rand.NewSource(time.Now().UnixNano()))
-	rangeMax := max - min
-
-	return int(source.Int31n(int32(rangeMax))) + min
+`, rName, rBgpAsn)
 }

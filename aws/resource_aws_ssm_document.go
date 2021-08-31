@@ -3,21 +3,20 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strconv"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ssm/waiter"
 )
 
 const (
-	MINIMUM_VERSIONED_SCHEMA             = 2.0
 	SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT = 20
 )
 
@@ -27,6 +26,9 @@ func resourceAwsSsmDocument() *schema.Resource {
 		Read:   resourceAwsSsmDocumentRead,
 		Update: resourceAwsSsmDocumentUpdate,
 		Delete: resourceAwsSsmDocumentDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -36,30 +38,54 @@ func resourceAwsSsmDocument() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validateAwsSSMName,
+			},
+			"attachments_source": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 20,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(ssm.AttachmentsSourceKey_Values(), false),
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.All(
+								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+								validation.StringLenBetween(3, 128),
+							),
+						},
+						"values": {
+							Type:     schema.TypeList,
+							MinItems: 1,
+							Required: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 1024),
+							},
+						},
+					},
+				},
 			},
 			"content": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"document_format": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ssm.DocumentFormatJson,
-				ValidateFunc: validation.StringInSlice([]string{
-					ssm.DocumentFormatJson,
-					ssm.DocumentFormatYaml,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ssm.DocumentFormatJson,
+				ValidateFunc: validation.StringInSlice(ssm.DocumentFormat_Values(), false),
 			},
 			"document_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ssm.DocumentTypeCommand,
-					ssm.DocumentTypePolicy,
-					ssm.DocumentTypeAutomation,
-					ssm.DocumentTypeSession,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(ssm.DocumentType_Values(), false),
 			},
 			"schema_version": {
 				Type:     schema.TypeString,
@@ -74,6 +100,10 @@ func resourceAwsSsmDocument() *schema.Resource {
 				Computed: true,
 			},
 			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"document_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -129,26 +159,46 @@ func resourceAwsSsmDocument() *schema.Resource {
 			"permissions": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"account_ids": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
+			"target_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^\/[\w\.\-\:\/]*$`), "must contain a forward slash optionally followed by a resource type such as AWS::EC2::Instance"),
+					validation.StringLenBetween(1, 200),
+				),
+			},
+			"version_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+					validation.StringLenBetween(3, 128),
+				),
+			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*AWSClient).ssmconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+
+	// Validates permissions keys, if set, to be type and account_ids
+	// since ValidateFunc validates only the value not the key.
+	if v, ok := d.GetOk("permissions"); ok {
+		if errors := validateSSMDocumentPermissions(v.(map[string]interface{})); len(errors) > 0 {
+			return fmt.Errorf("Error validating Permissions: %v", errors)
+		}
+	}
 
 	log.Printf("[INFO] Creating SSM Document: %s", d.Get("name").(string))
 
@@ -159,21 +209,28 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 		DocumentType:   aws.String(d.Get("document_type").(string)),
 	}
 
-	log.Printf("[DEBUG] Waiting for SSM Document %q to be created", d.Get("name").(string))
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		resp, err := ssmconn.CreateDocument(docInput)
+	if len(tags) > 0 {
+		docInput.Tags = tags.IgnoreAws().SsmTags()
+	}
 
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
+	if v, ok := d.GetOk("attachments_source"); ok {
+		docInput.Attachments = expandSsmAttachmentsSources(v.([]interface{}))
+	}
 
-		d.SetId(*resp.DocumentDescription.Name)
-		return nil
-	})
+	if v, ok := d.GetOk("target_type"); ok {
+		docInput.TargetType = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("version_name"); ok {
+		docInput.VersionName = aws.String(v.(string))
+	}
+
+	resp, err := conn.CreateDocument(docInput)
 
 	if err != nil {
 		return fmt.Errorf("Error creating SSM document: %s", err)
 	}
+
+	d.SetId(aws.StringValue(resp.DocumentDescription.Name))
 
 	if v, ok := d.GetOk("permissions"); ok && v != nil {
 		if err := setDocumentPermissions(d, meta); err != nil {
@@ -183,8 +240,9 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 		log.Printf("[DEBUG] Not setting permissions for %q", d.Id())
 	}
 
-	if err := setTagsSSM(ssmconn, d, d.Id(), ssm.ResourceTypeForTaggingDocument); err != nil {
-		return fmt.Errorf("error setting SSM Document tags: %s", err)
+	_, err = waiter.DocumentActive(conn, d.Id())
+	if err != nil {
+		return fmt.Errorf("error waiting for SSM Document (%s) to be Active: %w", d.Id(), err)
 	}
 
 	return resourceAwsSsmDocumentRead(d, meta)
@@ -192,38 +250,61 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 
 func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error {
 	ssmconn := meta.(*AWSClient).ssmconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading SSM Document: %s", d.Id())
 
-	docInput := &ssm.DescribeDocumentInput{
-		Name: aws.String(d.Get("name").(string)),
+	describeDocumentInput := &ssm.DescribeDocumentInput{
+		Name: aws.String(d.Id()),
 	}
 
-	resp, err := ssmconn.DescribeDocument(docInput)
+	describeDocumentOutput, err := ssmconn.DescribeDocument(describeDocumentInput)
+
+	if isAWSErr(err, ssm.ErrCodeInvalidDocument, "") {
+		log.Printf("[WARN] SSM Document not found so removing from state")
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if ssmErr, ok := err.(awserr.Error); ok && ssmErr.Code() == "InvalidDocument" {
-			log.Printf("[WARN] SSM Document not found so removing from state")
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error describing SSM document: %s", err)
+		return fmt.Errorf("error describing SSM Document (%s): %s", d.Id(), err)
 	}
 
-	doc := resp.Document
-	d.Set("created_date", doc.CreatedDate)
+	if describeDocumentOutput == nil || describeDocumentOutput.Document == nil {
+		return fmt.Errorf("error describing SSM Document (%s): empty result", d.Id())
+	}
+
+	getDocumentInput := &ssm.GetDocumentInput{
+		DocumentFormat:  describeDocumentOutput.Document.DocumentFormat,
+		DocumentVersion: aws.String("$LATEST"),
+		Name:            describeDocumentOutput.Document.Name,
+	}
+
+	getDocumentOutput, err := ssmconn.GetDocument(getDocumentInput)
+
+	if err != nil {
+		return fmt.Errorf("error getting SSM Document (%s): %s", d.Id(), err)
+	}
+
+	if getDocumentOutput == nil {
+		return fmt.Errorf("error getting SSM Document (%s): empty result", d.Id())
+	}
+
+	doc := describeDocumentOutput.Document
+
+	d.Set("content", getDocumentOutput.Content)
+	d.Set("created_date", aws.TimeValue(doc.CreatedDate).Format(time.RFC3339))
 	d.Set("default_version", doc.DefaultVersion)
 	d.Set("description", doc.Description)
 	d.Set("schema_version", doc.SchemaVersion)
-
-	if _, ok := d.GetOk("document_type"); ok {
-		d.Set("document_type", doc.DocumentType)
-	}
-
 	d.Set("document_format", doc.DocumentFormat)
+	d.Set("document_type", doc.DocumentType)
 	d.Set("document_version", doc.DocumentVersion)
 	d.Set("hash", doc.Hash)
 	d.Set("hash_type", doc.HashType)
 	d.Set("latest_version", doc.LatestVersion)
+	d.Set("version_name", doc.VersionName)
 	d.Set("name", doc.Name)
 	d.Set("owner", doc.Owner)
 	d.Set("platform_types", flattenStringList(doc.PlatformTypes))
@@ -269,32 +350,44 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 		params = append(params, param)
 	}
 
-	if len(params) == 0 {
-		params = make([]map[string]interface{}, 1)
-	}
-
 	if err := d.Set("parameter", params); err != nil {
 		return err
 	}
 
-	tagList, err := ssmconn.ListTagsForResource(&ssm.ListTagsForResourceInput{
-		ResourceId:   aws.String(d.Id()),
-		ResourceType: aws.String(ssm.ResourceTypeForTaggingDocument),
-	})
-	if err != nil {
-		return fmt.Errorf("error listing SSM Document tags for %s: %s", d.Id(), err)
+	tags := keyvaluetags.SsmKeyValueTags(doc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
-	d.Set("tags", tagsToMapSSM(tagList.TagList))
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
+	if err := d.Set("target_type", doc.TargetType); err != nil {
+		return fmt.Errorf("error setting target type: %s", err)
+	}
 
 	return nil
 }
 
 func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*AWSClient).ssmconn
 
-	if d.HasChange("tags") {
-		if err := setTagsSSM(ssmconn, d, d.Id(), ssm.ResourceTypeForTaggingDocument); err != nil {
-			return fmt.Errorf("error setting SSM Document tags: %s", err)
+	// Validates permissions keys, if set, to be type and account_ids
+	// since ValidateFunc validates only the value not the key.
+	if v, ok := d.GetOk("permissions"); ok {
+		if errors := validateSSMDocumentPermissions(v.(map[string]interface{})); len(errors) > 0 {
+			return fmt.Errorf("Error validating Permissions: %v", errors)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := keyvaluetags.SsmUpdateTags(conn, d.Id(), ssm.ResourceTypeForTaggingDocument, o, n); err != nil {
+			return fmt.Errorf("error updating SSM Document (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -306,28 +399,29 @@ func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) erro
 		log.Printf("[DEBUG] Not setting document permissions on %q", d.Id())
 	}
 
-	if !d.HasChange("content") {
+	// update for schema version 1.x is not allowed
+	isSchemaVersion1, _ := regexp.MatchString("^1[.][0-9]$", d.Get("schema_version").(string))
+
+	if !d.HasChange("content") && isSchemaVersion1 {
 		return nil
 	}
 
-	if schemaVersion, ok := d.GetOk("schemaVersion"); ok {
-		schemaNumber, _ := strconv.ParseFloat(schemaVersion.(string), 64)
-
-		if schemaNumber < MINIMUM_VERSIONED_SCHEMA {
-			log.Printf("[DEBUG] Skipping document update because document version is not 2.0 %q", d.Id())
-			return nil
+	if d.HasChangesExcept("tags", "tags_all", "permissions") {
+		if err := updateAwsSSMDocument(d, meta); err != nil {
+			return err
 		}
-	}
 
-	if err := updateAwsSSMDocument(d, meta); err != nil {
-		return err
+		_, err := waiter.DocumentActive(conn, d.Id())
+		if err != nil {
+			return fmt.Errorf("error waiting for SSM Document (%s) to be Active: %w", d.Id(), err)
+		}
 	}
 
 	return resourceAwsSsmDocumentRead(d, meta)
 }
 
 func resourceAwsSsmDocumentDelete(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*AWSClient).ssmconn
 
 	if err := deleteDocumentPermissions(d, meta); err != nil {
 		return err
@@ -339,41 +433,49 @@ func resourceAwsSsmDocumentDelete(d *schema.ResourceData, meta interface{}) erro
 		Name: aws.String(d.Get("name").(string)),
 	}
 
-	_, err := ssmconn.DeleteDocument(params)
+	_, err := conn.DeleteDocument(params)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[DEBUG] Waiting for SSM Document %q to be deleted", d.Get("name").(string))
-	err = resource.Retry(10*time.Minute, func() *resource.RetryError {
-		_, err := ssmconn.DescribeDocument(&ssm.DescribeDocumentInput{
-			Name: aws.String(d.Get("name").(string)),
-		})
-
-		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if !ok {
-				return resource.NonRetryableError(err)
-			}
-
-			if awsErr.Code() == "InvalidDocument" {
-				return nil
-			}
-
-			return resource.NonRetryableError(err)
-		}
-
-		return resource.RetryableError(fmt.Errorf("SSM Document (%s) still exists", d.Id()))
-	})
+	_, err = waiter.DocumentDeleted(conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error waiting for SSM Document (%s) deletion: %s", d.Id(), err)
+		if isAWSErr(err, ssm.ErrCodeInvalidDocument, "") {
+			return nil
+		}
+		return fmt.Errorf("error waiting for SSM Document (%s) to be Deleted: %w", d.Id(), err)
 	}
 
 	return nil
 }
 
+func expandSsmAttachmentsSources(a []interface{}) []*ssm.AttachmentsSource {
+	if len(a) == 0 {
+		return nil
+	}
+
+	results := make([]*ssm.AttachmentsSource, 0)
+	for _, raw := range a {
+		at := raw.(map[string]interface{})
+		s := &ssm.AttachmentsSource{}
+		if val, ok := at["key"]; ok {
+			s.Key = aws.String(val.(string))
+		}
+		if val, ok := at["name"]; ok && val != "" {
+			s.Name = aws.String(val.(string))
+		}
+		if val, ok := at["values"]; ok {
+			s.Values = expandStringList(val.([]interface{}))
+		}
+
+		results = append(results, s)
+	}
+	return results
+
+}
+
 func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*AWSClient).ssmconn
 
 	log.Printf("[INFO] Setting permissions for document: %s", d.Id())
 
@@ -413,7 +515,7 @@ func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		if err := modifyDocumentPermissions(ssmconn, d.Get("name").(string), accountIdsToAdd, accountIdsToRemove); err != nil {
+		if err := modifyDocumentPermissions(conn, d.Get("name").(string), accountIdsToAdd, accountIdsToRemove); err != nil {
 			return fmt.Errorf("error modifying SSM document permissions: %s", err)
 		}
 
@@ -423,7 +525,7 @@ func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 }
 
 func getDocumentPermissions(d *schema.ResourceData, meta interface{}) (map[string]interface{}, error) {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*AWSClient).ssmconn
 
 	log.Printf("[INFO] Getting permissions for document: %s", d.Id())
 
@@ -435,7 +537,7 @@ func getDocumentPermissions(d *schema.ResourceData, meta interface{}) (map[strin
 		PermissionType: aws.String(permissionType),
 	}
 
-	resp, err := ssmconn.DescribeDocumentPermission(permInput)
+	resp, err := conn.DescribeDocumentPermission(permInput)
 
 	if err != nil {
 		return nil, fmt.Errorf("Error setting permissions for SSM document: %s", err)
@@ -465,7 +567,7 @@ func getDocumentPermissions(d *schema.ResourceData, meta interface{}) (map[strin
 }
 
 func deleteDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*AWSClient).ssmconn
 
 	log.Printf("[INFO] Removing permissions from document: %s", d.Id())
 
@@ -483,7 +585,7 @@ func deleteDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		if err := modifyDocumentPermissions(ssmconn, d.Get("name").(string), nil, accountIdsToRemove); err != nil {
+		if err := modifyDocumentPermissions(conn, d.Get("name").(string), nil, accountIdsToRemove); err != nil {
 			return fmt.Errorf("error removing SSM document permissions: %s", err)
 		}
 
@@ -560,12 +662,24 @@ func updateAwsSSMDocument(d *schema.ResourceData, meta interface{}) error {
 		DocumentVersion: aws.String(d.Get("default_version").(string)),
 	}
 
+	if v, ok := d.GetOk("target_type"); ok {
+		updateDocInput.TargetType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("version_name"); ok {
+		updateDocInput.VersionName = aws.String(v.(string))
+	}
+
+	if d.HasChange("attachments_source") {
+		updateDocInput.Attachments = expandSsmAttachmentsSources(d.Get("attachments_source").([]interface{}))
+	}
+
 	newDefaultVersion := d.Get("default_version").(string)
 
-	ssmconn := meta.(*AWSClient).ssmconn
-	updated, err := ssmconn.UpdateDocument(updateDocInput)
+	conn := meta.(*AWSClient).ssmconn
+	updated, err := conn.UpdateDocument(updateDocInput)
 
-	if isAWSErr(err, "DuplicateDocumentContent", "") {
+	if isAWSErr(err, ssm.ErrCodeDuplicateDocumentContent, "") {
 		log.Printf("[DEBUG] Content is a duplicate of the latest version so update is not necessary: %s", d.Id())
 		log.Printf("[INFO] Updating the default version to the latest version %s: %s", newDefaultVersion, d.Id())
 
@@ -582,10 +696,30 @@ func updateAwsSSMDocument(d *schema.ResourceData, meta interface{}) error {
 		DocumentVersion: aws.String(newDefaultVersion),
 	}
 
-	_, err = ssmconn.UpdateDocumentDefaultVersion(updateDefaultInput)
+	_, err = conn.UpdateDocumentDefaultVersion(updateDefaultInput)
 
 	if err != nil {
 		return fmt.Errorf("Error updating the default document version to that of the updated document: %s", err)
 	}
 	return nil
+}
+
+//Validates that type and account_ids are defined
+func validateSSMDocumentPermissions(v map[string]interface{}) (errors []error) {
+	k := "permissions"
+	t, hasType := v["type"].(string)
+	_, hasAccountIds := v["account_ids"].(string)
+
+	if hasType {
+		if t != ssm.DocumentPermissionTypeShare {
+			errors = append(errors, fmt.Errorf("%q: only %s \"type\" supported", k, ssm.DocumentPermissionTypeShare))
+		}
+	} else {
+		errors = append(errors, fmt.Errorf("%q: \"type\" must be defined", k))
+	}
+	if !hasAccountIds {
+		errors = append(errors, fmt.Errorf("%q: \"account_ids\" must be defined", k))
+	}
+
+	return
 }

@@ -8,9 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsRDSClusterInstance() *schema.Resource {
@@ -102,6 +103,11 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Computed: true,
+			},
+
+			"engine_version_actual": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 
@@ -205,15 +211,24 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"ca_cert_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
-	tags := tagsFromMapRDS(d.Get("tags").(map[string]interface{}))
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := &rds.CreateDBInstanceInput{
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
@@ -223,7 +238,7 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags:                    tags,
+		Tags:                    tags.IgnoreAws().RdsTags(),
 	}
 
 	if attr, ok := d.GetOk("availability_zone"); ok {
@@ -256,14 +271,12 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 		createOpts.MonitoringRoleArn = aws.String(attr.(string))
 	}
 
-	if attr, _ := d.GetOk("engine"); attr == "aurora-postgresql" || attr == "aurora" {
-		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
-			createOpts.EnablePerformanceInsights = aws.Bool(attr.(bool))
-		}
+	if attr, ok := d.GetOk("performance_insights_enabled"); ok {
+		createOpts.EnablePerformanceInsights = aws.Bool(attr.(bool))
+	}
 
-		if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
-			createOpts.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
-		}
+	if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+		createOpts.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
 	}
 
 	if attr, ok := d.GetOk("preferred_backup_window"); ok {
@@ -280,7 +293,7 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 
 	log.Printf("[DEBUG] Creating RDS DB Instance opts: %s", createOpts)
 	var resp *rds.CreateDBInstanceOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateDBInstance(createOpts)
 		if err != nil {
@@ -291,11 +304,14 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateDBInstance(createOpts)
+	}
 	if err != nil {
-		return fmt.Errorf("error creating RDS DB Instance: %s", err)
+		return fmt.Errorf("error creating RDS Cluster (%s) Instance: %w", d.Get("cluster_identifier").(string), err)
 	}
 
-	d.SetId(*resp.DBInstance.DBInstanceIdentifier)
+	d.SetId(aws.StringValue(resp.DBInstance.DBInstanceIdentifier))
 
 	// reuse db_instance refresh func
 	stateConf := &resource.StateChangeConf{
@@ -311,6 +327,63 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 	_, err = stateConf.WaitForState()
 	if err != nil {
 		return err
+	}
+
+	// See also: resource_aws_db_instance.go
+	// Some API calls (e.g. CreateDBInstanceReadReplica and
+	// RestoreDBInstanceFromDBSnapshot do not support all parameters to
+	// correctly apply all settings in one pass. For missing parameters or
+	// unsupported configurations, we may need to call ModifyDBInstance
+	// afterwards to prevent Terraform operators from API errors or needing
+	// to double apply.
+	var requiresModifyDbInstance bool
+	modifyDbInstanceInput := &rds.ModifyDBInstanceInput{
+		ApplyImmediately: aws.Bool(true),
+	}
+
+	// Some ModifyDBInstance parameters (e.g. DBParameterGroupName) require
+	// a database instance reboot to take affect. During resource creation,
+	// we expect everything to be in sync before returning completion.
+	var requiresRebootDbInstance bool
+
+	if attr, ok := d.GetOk("ca_cert_identifier"); ok && attr.(string) != aws.StringValue(resp.DBInstance.CACertificateIdentifier) {
+		modifyDbInstanceInput.CACertificateIdentifier = aws.String(attr.(string))
+		requiresModifyDbInstance = true
+		requiresRebootDbInstance = true
+	}
+
+	if requiresModifyDbInstance {
+		modifyDbInstanceInput.DBInstanceIdentifier = aws.String(d.Id())
+
+		log.Printf("[INFO] DB Instance (%s) configuration requires ModifyDBInstance: %s", d.Id(), modifyDbInstanceInput)
+		_, err := conn.ModifyDBInstance(modifyDbInstanceInput)
+		if err != nil {
+			return fmt.Errorf("error modifying DB Instance (%s): %s", d.Id(), err)
+		}
+
+		log.Printf("[INFO] Waiting for DB Instance (%s) to be available", d.Id())
+		err = waitUntilAwsDbInstanceIsAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %s", d.Id(), err)
+		}
+	}
+
+	if requiresRebootDbInstance {
+		rebootDbInstanceInput := &rds.RebootDBInstanceInput{
+			DBInstanceIdentifier: aws.String(d.Id()),
+		}
+
+		log.Printf("[INFO] DB Instance (%s) configuration requires RebootDBInstance: %s", d.Id(), rebootDbInstanceInput)
+		_, err := conn.RebootDBInstance(rebootDbInstanceInput)
+		if err != nil {
+			return fmt.Errorf("error rebooting DB Instance (%s): %s", d.Id(), err)
+		}
+
+		log.Printf("[INFO] Waiting for DB Instance (%s) to be available", d.Id())
+		err = waitUntilAwsDbInstanceIsAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsRDSClusterInstanceRead(d, meta)
@@ -335,6 +408,9 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 
 	// Retrieve DB Cluster information, to determine if this Instance is a writer
 	conn := meta.(*AWSClient).rdsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	resp, err := conn.DescribeDBClusters(&rds.DescribeDBClustersInput{
 		DBClusterIdentifier: db.DBClusterIdentifier,
 	})
@@ -376,11 +452,12 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("cluster_identifier", db.DBClusterIdentifier)
 	d.Set("copy_tags_to_snapshot", db.CopyTagsToSnapshot)
 	d.Set("dbi_resource_id", db.DbiResourceId)
-	d.Set("engine_version", db.EngineVersion)
 	d.Set("engine", db.Engine)
 	d.Set("identifier", db.DBInstanceIdentifier)
 	d.Set("instance_class", db.DBInstanceClass)
 	d.Set("kms_key_id", db.KmsKeyId)
+	d.Set("monitoring_interval", db.MonitoringInterval)
+	d.Set("monitoring_role_arn", db.MonitoringRoleArn)
 	d.Set("performance_insights_enabled", db.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", db.PerformanceInsightsKMSKeyId)
 	d.Set("preferred_backup_window", db.PreferredBackupWindow)
@@ -388,21 +465,27 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("promotion_tier", db.PromotionTier)
 	d.Set("publicly_accessible", db.PubliclyAccessible)
 	d.Set("storage_encrypted", db.StorageEncrypted)
+	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
 
-	if db.MonitoringInterval != nil {
-		d.Set("monitoring_interval", db.MonitoringInterval)
-	}
-
-	if db.MonitoringRoleArn != nil {
-		d.Set("monitoring_role_arn", db.MonitoringRoleArn)
-	}
+	rdsClusterSetResourceDataEngineVersionFromClusterInstance(d, db)
 
 	if len(db.DBParameterGroups) > 0 {
 		d.Set("db_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
 	}
 
-	if err := saveTagsRDS(conn, d, aws.StringValue(db.DBInstanceArn)); err != nil {
-		log.Printf("[WARN] Failed to save tags for RDS Cluster Instance (%s): %s", *db.DBClusterIdentifier, err)
+	tags, err := keyvaluetags.RdsListTags(conn, aws.StringValue(db.DBInstanceArn))
+	if err != nil {
+		return fmt.Errorf("error listing tags for RDS Cluster Instance (%s): %s", d.Id(), err)
+	}
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -428,69 +511,64 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if d.HasChange("monitoring_role_arn") {
-		d.SetPartial("monitoring_role_arn")
 		req.MonitoringRoleArn = aws.String(d.Get("monitoring_role_arn").(string))
 		requestUpdate = true
 	}
 
-	if d.HasChange("performance_insights_enabled") {
-		d.SetPartial("performance_insights_enabled")
+	if d.HasChanges("performance_insights_enabled", "performance_insights_kms_key_id") {
 		req.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
-		requestUpdate = true
-	}
 
-	if d.HasChange("performance_insights_kms_key_id") {
-		d.SetPartial("performance_insights_kms_key_id")
-		req.PerformanceInsightsKMSKeyId = aws.String(d.Get("performance_insights_kms_key_id").(string))
+		if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+			req.PerformanceInsightsKMSKeyId = aws.String(v.(string))
+		}
+
 		requestUpdate = true
 	}
 
 	if d.HasChange("preferred_backup_window") {
-		d.SetPartial("preferred_backup_window")
 		req.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
 		requestUpdate = true
 	}
 
 	if d.HasChange("preferred_maintenance_window") {
-		d.SetPartial("preferred_maintenance_window")
 		req.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
 		requestUpdate = true
 	}
 
 	if d.HasChange("monitoring_interval") {
-		d.SetPartial("monitoring_interval")
 		req.MonitoringInterval = aws.Int64(int64(d.Get("monitoring_interval").(int)))
 		requestUpdate = true
 	}
 
 	if d.HasChange("auto_minor_version_upgrade") {
-		d.SetPartial("auto_minor_version_upgrade")
 		req.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
 		requestUpdate = true
 	}
 
 	if d.HasChange("copy_tags_to_snapshot") {
-		d.SetPartial("copy_tags_to_snapshot")
 		req.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
 		requestUpdate = true
 	}
 
 	if d.HasChange("promotion_tier") {
-		d.SetPartial("promotion_tier")
 		req.PromotionTier = aws.Int64(int64(d.Get("promotion_tier").(int)))
 		requestUpdate = true
 	}
 
 	if d.HasChange("publicly_accessible") {
-		d.SetPartial("publicly_accessible")
 		req.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
+		requestUpdate = true
+	}
+
+	if d.HasChange("ca_cert_identifier") {
+		req.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
 		requestUpdate = true
 	}
 
 	log.Printf("[DEBUG] Send DB Instance Modification request: %#v", requestUpdate)
 	if requestUpdate {
 		log.Printf("[DEBUG] DB Instance Modification request: %#v", req)
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.ModifyDBInstance(req)
 			if err != nil {
 				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
@@ -500,6 +578,9 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.ModifyDBInstance(req)
+		}
 		if err != nil {
 			return fmt.Errorf("Error modifying DB Instance %s: %s", d.Id(), err)
 		}
@@ -522,8 +603,12 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 
 	}
 
-	if err := setTagsRDS(conn, d, d.Get("arn").(string)); err != nil {
-		return err
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := keyvaluetags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating RDS Cluster Instance (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsRDSClusterInstanceRead(d, meta)
@@ -537,8 +622,10 @@ func resourceAwsRDSClusterInstanceDelete(d *schema.ResourceData, meta interface{
 	opts := rds.DeleteDBInstanceInput{DBInstanceIdentifier: aws.String(d.Id())}
 
 	log.Printf("[DEBUG] RDS Cluster Instance destroy configuration: %s", opts)
-	if _, err := conn.DeleteDBInstance(&opts); err != nil {
-		return err
+	_, err := conn.DeleteDBInstance(&opts)
+
+	if err != nil && !isAWSErr(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
+		return fmt.Errorf("error deleting Database Instance %q: %s", d.Id(), err)
 	}
 
 	// re-uses db_instance refresh func
@@ -552,7 +639,7 @@ func resourceAwsRDSClusterInstanceDelete(d *schema.ResourceData, meta interface{
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err = stateConf.WaitForState()
 	return err
 
 }
@@ -560,6 +647,7 @@ func resourceAwsRDSClusterInstanceDelete(d *schema.ResourceData, meta interface{
 var resourceAwsRdsClusterInstanceCreateUpdatePendingStates = []string{
 	"backing-up",
 	"configuring-enhanced-monitoring",
+	"configuring-iam-database-auth",
 	"configuring-log-exports",
 	"creating",
 	"maintenance",
@@ -575,4 +663,10 @@ var resourceAwsRdsClusterInstanceDeletePendingStates = []string{
 	"configuring-log-exports",
 	"modifying",
 	"deleting",
+}
+
+func rdsClusterSetResourceDataEngineVersionFromClusterInstance(d *schema.ResourceData, c *rds.DBInstance) {
+	oldVersion := d.Get("engine_version").(string)
+	newVersion := aws.StringValue(c.EngineVersion)
+	compareActualEngineVersion(d, oldVersion, newVersion)
 }

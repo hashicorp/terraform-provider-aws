@@ -8,9 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsAcmCertificateValidation() *schema.Resource {
@@ -50,11 +51,15 @@ func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta inte
 	resp, err := acmconn.DescribeCertificate(params)
 
 	if err != nil {
-		return fmt.Errorf("Error describing certificate: %s", err)
+		return fmt.Errorf("Error describing certificate: %w", err)
 	}
 
-	if *resp.Certificate.Type != "AMAZON_ISSUED" {
-		return fmt.Errorf("Certificate %s has type %s, no validation necessary", *resp.Certificate.CertificateArn, *resp.Certificate.Type)
+	if resp == nil || resp.Certificate == nil {
+		return fmt.Errorf("Error describing certificate: empty output")
+	}
+
+	if aws.StringValue(resp.Certificate.Type) != acm.CertificateTypeAmazonIssued {
+		return fmt.Errorf("Certificate %s has type %s, no validation necessary", aws.StringValue(resp.Certificate.CertificateArn), aws.StringValue(resp.Certificate.Status))
 	}
 
 	if validation_record_fqdns, ok := d.GetOk("validation_record_fqdns"); ok {
@@ -66,20 +71,33 @@ func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta inte
 		log.Printf("[INFO] No validation_record_fqdns set, skipping check")
 	}
 
-	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		resp, err := acmconn.DescribeCertificate(params)
 
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("Error describing certificate: %s", err))
+			return resource.NonRetryableError(fmt.Errorf("Error describing certificate: %w", err))
 		}
 
-		if *resp.Certificate.Status != "ISSUED" {
-			return resource.RetryableError(fmt.Errorf("Expected certificate to be issued but was in state %s", *resp.Certificate.Status))
+		if aws.StringValue(resp.Certificate.Status) != acm.CertificateStatusIssued {
+			return resource.RetryableError(fmt.Errorf("Expected certificate to be issued but was in state %s", aws.StringValue(resp.Certificate.Status)))
 		}
 
 		log.Printf("[INFO] ACM Certificate validation for %s done, certificate was issued", certificate_arn)
-		return resource.NonRetryableError(resourceAwsAcmCertificateValidationRead(d, meta))
+		if err := resourceAwsAcmCertificateValidationRead(d, meta); err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = acmconn.DescribeCertificate(params)
+		if aws.StringValue(resp.Certificate.Status) != acm.CertificateStatusIssued {
+			return fmt.Errorf("Expected certificate to be issued but was in state %s", aws.StringValue(resp.Certificate.Status))
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error describing created certificate: %w", err)
+	}
+	return nil
 }
 
 func resourceAwsAcmCertificateCheckValidationRecords(validationRecordFqdns []interface{}, cert *acm.CertificateDetail, conn *acm.ACM) error {
@@ -89,29 +107,47 @@ func resourceAwsAcmCertificateCheckValidationRecords(validationRecordFqdns []int
 		input := &acm.DescribeCertificateInput{
 			CertificateArn: cert.CertificateArn,
 		}
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			log.Printf("[DEBUG] Certificate domain validation options empty for %q, retrying", *cert.CertificateArn)
-			output, err := conn.DescribeCertificate(input)
+		var err error
+		var output *acm.DescribeCertificateOutput
+		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+			log.Printf("[DEBUG] Certificate domain validation options empty for %s, retrying", aws.StringValue(cert.CertificateArn))
+			output, err = conn.DescribeCertificate(input)
 			if err != nil {
 				return resource.NonRetryableError(err)
 			}
 			if len(output.Certificate.DomainValidationOptions) == 0 {
-				return resource.RetryableError(fmt.Errorf("Certificate domain validation options empty for %s", *cert.CertificateArn))
+				return resource.RetryableError(fmt.Errorf("Certificate domain validation options empty for %s", aws.StringValue(cert.CertificateArn)))
 			}
 			cert = output.Certificate
 			return nil
 		})
-		if err != nil {
-			return err
+		if isResourceTimeoutError(err) {
+			output, err = conn.DescribeCertificate(input)
+			if err != nil {
+				return fmt.Errorf("Error describing ACM certificate: %w", err)
+			}
+			if len(output.Certificate.DomainValidationOptions) == 0 {
+				return fmt.Errorf("Certificate domain validation options empty for %s", aws.StringValue(cert.CertificateArn))
+			}
 		}
+		if err != nil {
+			return fmt.Errorf("Error checking certificate domain validation options: %w", err)
+		}
+		if output == nil || output.Certificate == nil {
+			return fmt.Errorf("Error checking certificate domain validation options: empty output")
+		}
+
+		cert = output.Certificate
 	}
 	for _, v := range cert.DomainValidationOptions {
 		if v.ValidationMethod != nil {
-			if *v.ValidationMethod != acm.ValidationMethodDns {
+			if aws.StringValue(v.ValidationMethod) != acm.ValidationMethodDns {
 				return fmt.Errorf("validation_record_fqdns is only valid for DNS validation")
 			}
-			newExpectedFqdn := strings.TrimSuffix(*v.ResourceRecord.Name, ".")
-			expectedFqdns[newExpectedFqdn] = v
+			if v.ResourceRecord != nil && aws.StringValue(v.ResourceRecord.Name) != "" {
+				newExpectedFqdn := strings.TrimSuffix(aws.StringValue(v.ResourceRecord.Name), ".")
+				expectedFqdns[newExpectedFqdn] = v
+			}
 		} else if len(v.ValidationEmails) > 0 {
 			// ACM API sometimes is not sending ValidationMethod for EMAIL validation
 			return fmt.Errorf("validation_record_fqdns is only valid for DNS validation")
@@ -125,7 +161,7 @@ func resourceAwsAcmCertificateCheckValidationRecords(validationRecordFqdns []int
 	if len(expectedFqdns) > 0 {
 		var errors error
 		for expectedFqdn, domainValidation := range expectedFqdns {
-			errors = multierror.Append(errors, fmt.Errorf("missing %s DNS validation record: %s", *domainValidation.DomainName, expectedFqdn))
+			errors = multierror.Append(errors, fmt.Errorf("missing %s DNS validation record: %s", aws.StringValue(domainValidation.DomainName), expectedFqdn))
 		}
 		return errors
 	}
@@ -142,19 +178,32 @@ func resourceAwsAcmCertificateValidationRead(d *schema.ResourceData, meta interf
 
 	resp, err := acmconn.DescribeCertificate(params)
 
-	if err != nil && isAWSErr(err, acm.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] ACM Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
-	} else if err != nil {
-		return fmt.Errorf("Error describing certificate: %s", err)
 	}
 
-	if *resp.Certificate.Status != "ISSUED" {
-		log.Printf("[INFO] Certificate status not issued, was %s, tainting validation", *resp.Certificate.Status)
-		d.SetId("")
-	} else {
-		d.SetId((*resp.Certificate.IssuedAt).String())
+	if err != nil {
+		return fmt.Errorf("error describing ACM Certificate (%s): %w", d.Id(), err)
 	}
+
+	if resp == nil || resp.Certificate == nil {
+		return fmt.Errorf("error describing ACM Certificate (%s): empty response", d.Id())
+	}
+
+	if status := aws.StringValue(resp.Certificate.Status); status != acm.CertificateStatusIssued {
+		if d.IsNewResource() {
+			return fmt.Errorf("ACM Certificate (%s) status not issued: %s", d.Id(), status)
+		}
+
+		log.Printf("[WARN] ACM Certificate (%s) status not issued (%s), removing from state", d.Id(), status)
+		d.SetId("")
+		return nil
+	}
+
+	d.SetId(aws.TimeValue(resp.Certificate.IssuedAt).String())
+
 	return nil
 }
 

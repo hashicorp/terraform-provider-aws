@@ -2,505 +2,1975 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalytics/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalytics/lister"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
+func init() {
+	resource.AddTestSweepers("aws_kinesis_analytics_application", &resource.Sweeper{
+		Name: "aws_kinesis_analytics_application",
+		F:    testSweepKinesisAnalyticsApplications,
+	})
+}
+
+func testSweepKinesisAnalyticsApplications(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*AWSClient).kinesisanalyticsconn
+	input := &kinesisanalytics.ListApplicationsInput{}
+	var sweeperErrs *multierror.Error
+
+	err = lister.ListApplicationsPages(conn, input, func(page *kinesisanalytics.ListApplicationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, applicationSummary := range page.ApplicationSummaries {
+			arn := aws.StringValue(applicationSummary.ApplicationARN)
+			name := aws.StringValue(applicationSummary.ApplicationName)
+
+			application, err := finder.ApplicationDetailByName(conn, name)
+
+			if tfawserr.ErrMessageContains(err, kinesisanalytics.ErrCodeUnsupportedOperationException, "was created/updated by kinesisanalyticsv2 SDK") {
+				continue
+			}
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error reading Kinesis Analytics Application (%s): %w", arn, err)
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+
+			r := resourceAwsKinesisAnalyticsApplication()
+			d := r.Data(nil)
+			d.SetId(arn)
+			d.Set("create_timestamp", aws.TimeValue(application.CreateTimestamp).Format(time.RFC3339))
+			d.Set("name", name)
+			err = r.Delete(d, client)
+
+			if err != nil {
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Kinesis Analytics Application sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Kinesis Analytics Applications: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
 func TestAccAWSKinesisAnalyticsApplication_basic(t *testing.T) {
-	var application kinesisanalytics.ApplicationDetail
-	resName := "aws_kinesis_analytics_application.test"
-	rInt := acctest.RandInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKinesisAnalyticsApplication_basic(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
-					resource.TestCheckResourceAttr(resName, "version", "1"),
-					resource.TestCheckResourceAttr(resName, "code", "testCode\n"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSKinesisAnalyticsApplication_update(t *testing.T) {
-	var application kinesisanalytics.ApplicationDetail
-	resName := "aws_kinesis_analytics_application.test"
-	rInt := acctest.RandInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKinesisAnalyticsApplication_basic(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
-				),
-			},
-			{
-				Config: testAccKinesisAnalyticsApplication_update(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "code", "testCode2\n"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSKinesisAnalyticsApplication_addCloudwatchLoggingOptions(t *testing.T) {
-	var application kinesisanalytics.ApplicationDetail
-	resName := "aws_kinesis_analytics_application.test"
-	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_basic(rInt)
-	thirdStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt, "testStream")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: firstStep,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
-					resource.TestCheckResourceAttr(resName, "version", "1"),
-				),
-			},
-			{
-				Config: thirdStep,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
-					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "cloudwatch_logging_options.#", "1"),
-					resource.TestCheckResourceAttrPair(resName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test", "arn"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSKinesisAnalyticsApplication_updateCloudwatchLoggingOptions(t *testing.T) {
-	var application kinesisanalytics.ApplicationDetail
-	resName := "aws_kinesis_analytics_application.test"
-	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt, "testStream")
-	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt, "testStream2")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: firstStep,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
-					resource.TestCheckResourceAttr(resName, "version", "1"),
-					resource.TestCheckResourceAttr(resName, "cloudwatch_logging_options.#", "1"),
-					resource.TestCheckResourceAttrPair(resName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test", "arn"),
-				),
-			},
-			{
-				Config: secondStep,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
-					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "cloudwatch_logging_options.#", "1"),
-					resource.TestCheckResourceAttrPair(resName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test", "arn"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSKinesisAnalyticsApplication_inputsKinesisStream(t *testing.T) {
-	var application kinesisanalytics.ApplicationDetail
-	resName := "aws_kinesis_analytics_application.test"
-	rInt := acctest.RandInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
-					resource.TestCheckResourceAttr(resName, "version", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.name_prefix", "test_prefix"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.kinesis_stream.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.parallelism.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_columns.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSKinesisAnalyticsApplication_inputsAdd(t *testing.T) {
-	var before, after kinesisanalytics.ApplicationDetail
-	resName := "aws_kinesis_analytics_application.test"
-	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_basic(rInt)
-	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: firstStep,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &before),
-					resource.TestCheckResourceAttr(resName, "version", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.#", "0"),
-				),
-			},
-			{
-				Config: secondStep,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &after),
-					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "inputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.name_prefix", "test_prefix"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.kinesis_stream.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.parallelism.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_columns.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSKinesisAnalyticsApplication_inputsUpdateKinesisStream(t *testing.T) {
-	var before, after kinesisanalytics.ApplicationDetail
-	resName := "aws_kinesis_analytics_application.test"
-	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt)
-	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsUpdateKinesisStream(rInt, "testStream")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: firstStep,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &before),
-					resource.TestCheckResourceAttr(resName, "version", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.name_prefix", "test_prefix"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.parallelism.0.count", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
-				),
-			},
-			{
-				Config: secondStep,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &after),
-					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "inputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.name_prefix", "test_prefix2"),
-					resource.TestCheckResourceAttrPair(resName, "inputs.0.kinesis_stream.0.resource_arn", "aws_kinesis_stream.test", "arn"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.parallelism.0.count", "2"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_columns.0.name", "test2"),
-					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSKinesisAnalyticsApplication_outputsKinesisStream(t *testing.T) {
-	var application kinesisanalytics.ApplicationDetail
-	resName := "aws_kinesis_analytics_application.test"
-	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsKinesisStream(rInt)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: firstStep,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
-					resource.TestCheckResourceAttr(resName, "version", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.name", "test_name"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.kinesis_stream.#", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.schema.#", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.schema.0.record_format_type", "JSON"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSKinesisAnalyticsApplication_outputsMultiple(t *testing.T) {
-	var application kinesisanalytics.ApplicationDetail
-	resName := "aws_kinesis_analytics_application.test"
-	rInt1 := acctest.RandInt()
-	rInt2 := acctest.RandInt()
-	step := testAccKinesisAnalyticsApplication_prereq(rInt1) + testAccKinesisAnalyticsApplication_outputsMultiple(rInt1, rInt2)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: step,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
-					resource.TestCheckResourceAttr(resName, "outputs.#", "2"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSKinesisAnalyticsApplication_outputsAdd(t *testing.T) {
-	var before, after kinesisanalytics.ApplicationDetail
-	resName := "aws_kinesis_analytics_application.test"
-	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_basic(rInt)
-	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsKinesisStream(rInt)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: firstStep,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &before),
-					resource.TestCheckResourceAttr(resName, "version", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.#", "0"),
-				),
-			},
-			{
-				Config: secondStep,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &after),
-					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "outputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.name", "test_name"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.kinesis_stream.#", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.schema.#", "1"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSKinesisAnalyticsApplication_outputsUpdateKinesisStream(t *testing.T) {
-	var before, after kinesisanalytics.ApplicationDetail
-	resName := "aws_kinesis_analytics_application.test"
-	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsKinesisStream(rInt)
-	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsUpdateKinesisStream(rInt, "testStream")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: firstStep,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &before),
-					resource.TestCheckResourceAttr(resName, "version", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.name", "test_name"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.kinesis_stream.#", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.schema.#", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.schema.0.record_format_type", "JSON"),
-				),
-			},
-			{
-				Config: secondStep,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &after),
-					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "outputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.name", "test_name2"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.kinesis_stream.#", "1"),
-					resource.TestCheckResourceAttrPair(resName, "outputs.0.kinesis_stream.0.resource_arn", "aws_kinesis_stream.test", "arn"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.schema.#", "1"),
-					resource.TestCheckResourceAttr(resName, "outputs.0.schema.0.record_format_type", "CSV"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSKinesisAnalyticsApplication_Outputs_Lambda_Add(t *testing.T) {
-	var application1, application2 kinesisanalytics.ApplicationDetail
-	iamRoleResourceName := "aws_iam_role.kinesis_analytics_application"
-	lambdaFunctionResourceName := "aws_lambda_function.test"
+	var v kinesisanalytics.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_basic(rInt),
+				Config: testAccKinesisAnalyticsApplicationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &application1),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
-				),
-			},
-			{
-				Config: testAccKinesisAnalyticsApplicationConfigOutputsLambda(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &application2),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
-					resource.TestCheckResourceAttr(resourceName, "outputs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "outputs.0.lambda.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "outputs.0.lambda.0.resource_arn", lambdaFunctionResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "outputs.0.lambda.0.role_arn", iamRoleResourceName, "arn"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSKinesisAnalyticsApplication_Outputs_Lambda_Create(t *testing.T) {
-	var application1 kinesisanalytics.ApplicationDetail
-	iamRoleResourceName := "aws_iam_role.kinesis_analytics_application"
-	lambdaFunctionResourceName := "aws_lambda_function.test"
-	resourceName := "aws_kinesis_analytics_application.test"
-	rInt := acctest.RandInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKinesisAnalyticsApplicationConfigOutputsLambda(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &application1),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_disappears(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsKinesisAnalyticsApplication(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_Tags(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_Code_Update(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigCode(rName, "SELECT 1;\n"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", "SELECT 1;\n"),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigCode(rName, "SELECT 2;\n"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", "SELECT 2;\n"),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_CloudWatchLoggingOptions_Add(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	iamRoleResourceName := "aws_iam_role.test.0"
+	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test.0"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigCloudWatchLoggingOptions(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_CloudWatchLoggingOptions_Delete(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	iamRoleResourceName := "aws_iam_role.test.0"
+	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test.0"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigCloudWatchLoggingOptions(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_CloudWatchLoggingOptions_Update(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	iamRole1ResourceName := "aws_iam_role.test.0"
+	iamRole2ResourceName := "aws_iam_role.test.1"
+	cloudWatchLogStream1ResourceName := "aws_cloudwatch_log_stream.test.0"
+	cloudWatchLogStream2ResourceName := "aws_cloudwatch_log_stream.test.1"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigCloudWatchLoggingOptions(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStream1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigCloudWatchLoggingOptions(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStream2ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_Input_Add(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	iamRoleResourceName := "aws_iam_role.test.0"
+	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigInput(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_column_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_row_delimiter", "|"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.name_prefix", "NAME_PREFIX_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_Input_Update(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	iamRole1ResourceName := "aws_iam_role.test.0"
+	iamRole2ResourceName := "aws_iam_role.test.1"
+	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	streamsResourceName := "aws_kinesis_stream.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigInput(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_column_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_row_delimiter", "|"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.name_prefix", "NAME_PREFIX_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigInputUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "42"),
+					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.mapping", "MAPPING-2"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_2"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "VARCHAR(8)"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.1.mapping", "MAPPING-3"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.1.name", "COLUMN_3"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.1.sql_type", "DOUBLE"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", "UTF-8"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.0.record_row_path", "$path.to.record"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.record_format_type", "JSON"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.name_prefix", "NAME_PREFIX_2"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "42"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Add(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	iamRoleResourceName := "aws_iam_role.test.0"
+	lambdaResourceName := "aws_lambda_function.test.0"
+	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigInput(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_column_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_row_delimiter", "|"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.name_prefix", "NAME_PREFIX_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigInputProcessingConfiguration(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_column_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_row_delimiter", "|"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.name_prefix", "NAME_PREFIX_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.0.lambda.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.resource_arn", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "3"), // Add input processing configuration + update input.
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Delete(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	iamRoleResourceName := "aws_iam_role.test.0"
+	lambdaResourceName := "aws_lambda_function.test.0"
+	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigInputProcessingConfiguration(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_column_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_row_delimiter", "|"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.name_prefix", "NAME_PREFIX_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.0.lambda.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.resource_arn", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigInput(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_column_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_row_delimiter", "|"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.name_prefix", "NAME_PREFIX_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "3"), // Delete input processing configuration + update input.
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Update(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	iamRole1ResourceName := "aws_iam_role.test.0"
+	iamRole2ResourceName := "aws_iam_role.test.1"
+	lambda1ResourceName := "aws_lambda_function.test.0"
+	lambda2ResourceName := "aws_lambda_function.test.1"
+	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigInputProcessingConfiguration(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_column_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_row_delimiter", "|"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.name_prefix", "NAME_PREFIX_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.0.lambda.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.resource_arn", lambda1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigInputProcessingConfiguration(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_column_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_row_delimiter", "|"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.name_prefix", "NAME_PREFIX_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.0.lambda.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.resource_arn", lambda2ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_Multiple_Update(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	iamRole1ResourceName := "aws_iam_role.test.0"
+	iamRole2ResourceName := "aws_iam_role.test.1"
+	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test"
+	lambdaResourceName := "aws_lambda_function.test.0"
+	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	streamsResourceName := "aws_kinesis_stream.test"
+	s3BucketResourceName := "aws_s3_bucket.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigMultiple(rName, "", ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_column_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_row_delimiter", "|"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.name_prefix", "NAME_PREFIX_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.0.lambda.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.resource_arn", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "outputs.0.lambda.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "outputs.0.lambda.0.resource_arn", lambdaFunctionResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "outputs.0.lambda.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+						"name":                        "OUTPUT_1",
+						"schema.#":                    "1",
+						"schema.0.record_format_type": "CSV",
+						"kinesis_firehose.#":          "1",
+						"kinesis_stream.#":            "0",
+						"lambda.#":                    "0",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigMultipleUpdated(rName, "", ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "42"),
+					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.mapping", "MAPPING-2"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_2"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "VARCHAR(8)"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.1.mapping", "MAPPING-3"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.1.name", "COLUMN_3"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.1.sql_type", "DOUBLE"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", "UTF-8"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.0.record_row_path", "$path.to.record"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.record_format_type", "JSON"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.name_prefix", "NAME_PREFIX_2"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "42"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+						"name":                        "OUTPUT_2",
+						"schema.#":                    "1",
+						"schema.0.record_format_type": "JSON",
+						"kinesis_firehose.#":          "0",
+						"kinesis_stream.#":            "1",
+						"lambda.#":                    "0",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+						"name":                        "OUTPUT_3",
+						"schema.#":                    "1",
+						"schema.0.record_format_type": "CSV",
+						"kinesis_firehose.#":          "0",
+						"kinesis_stream.#":            "0",
+						"lambda.#":                    "1",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.resource_arn", lambdaResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.sql_type", "INTEGER"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_column_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_row_delimiter", "|"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.bucket_arn", s3BucketResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.0.file_key", "KEY-1"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.table_name", "TABLE-1"),
+					resource.TestCheckResourceAttrSet(resourceName, "reference_data_sources.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
+					resource.TestCheckResourceAttr(resourceName, "version", "8"), // Delete CloudWatch logging options + add reference data source + delete input processing configuration+ update application + delete output + 2 * add output.
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_Output_Update(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	iamRole1ResourceName := "aws_iam_role.test.0"
+	iamRole2ResourceName := "aws_iam_role.test.1"
+	lambdaResourceName := "aws_lambda_function.test.0"
+	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	streamsResourceName := "aws_kinesis_stream.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplicationOutput(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+						"name":                        "OUTPUT_1",
+						"schema.#":                    "1",
+						"schema.0.record_format_type": "CSV",
+						"kinesis_firehose.#":          "1",
+						"kinesis_stream.#":            "0",
+						"lambda.#":                    "0",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationOutputUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+						"name":                        "OUTPUT_2",
+						"schema.#":                    "1",
+						"schema.0.record_format_type": "JSON",
+						"kinesis_firehose.#":          "0",
+						"kinesis_stream.#":            "1",
+						"lambda.#":                    "0",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+						"name":                        "OUTPUT_3",
+						"schema.#":                    "1",
+						"schema.0.record_format_type": "CSV",
+						"kinesis_firehose.#":          "0",
+						"kinesis_stream.#":            "0",
+						"lambda.#":                    "1",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.resource_arn", lambdaResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "4"), // 1 * output deletion + 2 * output addition.
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "6"), // 2 * output deletion.
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSKinesisAnalyticsApplication_referenceDataSource(t *testing.T) {
-	var application kinesisanalytics.ApplicationDetail
-	resName := "aws_kinesis_analytics_application.test"
-	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_referenceDataSource(rInt)
+func TestAccAWSKinesisAnalyticsApplication_ReferenceDataSource_Add(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	iamRoleResourceName := "aws_iam_role.test.0"
+	s3BucketResourceName := "aws_s3_bucket.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: firstStep,
+				Config: testAccKinesisAnalyticsApplicationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
-					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "reference_data_sources.#", "1"),
-					resource.TestCheckResourceAttr(resName, "reference_data_sources.0.schema.#", "1"),
-					resource.TestCheckResourceAttr(resName, "reference_data_sources.0.schema.0.record_columns.#", "1"),
-					resource.TestCheckResourceAttr(resName, "reference_data_sources.0.schema.0.record_format.#", "1"),
-					resource.TestCheckResourceAttr(resName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationReferenceDataSource(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.sql_type", "INTEGER"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_column_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_row_delimiter", "|"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.bucket_arn", s3BucketResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.0.file_key", "KEY-1"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.table_name", "TABLE-1"),
+					resource.TestCheckResourceAttrSet(resourceName, "reference_data_sources.0.id"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_ReferenceDataSource_Delete(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	iamRoleResourceName := "aws_iam_role.test.0"
+	s3BucketResourceName := "aws_s3_bucket.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplicationReferenceDataSource(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.sql_type", "INTEGER"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_column_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_row_delimiter", "|"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.bucket_arn", s3BucketResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.0.file_key", "KEY-1"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.table_name", "TABLE-1"),
+					resource.TestCheckResourceAttrSet(resourceName, "reference_data_sources.0.id"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_ReferenceDataSource_Update(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	iamRole1ResourceName := "aws_iam_role.test.0"
+	iamRole2ResourceName := "aws_iam_role.test.1"
+	s3BucketResourceName := "aws_s3_bucket.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplicationReferenceDataSource(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.sql_type", "INTEGER"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_column_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_row_delimiter", "|"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.bucket_arn", s3BucketResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.0.file_key", "KEY-1"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.table_name", "TABLE-1"),
+					resource.TestCheckResourceAttrSet(resourceName, "reference_data_sources.0.id"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationReferenceDataSourceUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.mapping", "MAPPING-2"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.name", "COLUMN_2"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.sql_type", "VARCHAR(8)"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.1.mapping", "MAPPING-3"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.1.name", "COLUMN_3"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.1.sql_type", "DOUBLE"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_encoding", "UTF-8"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json.0.record_row_path", "$path.to.record"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.record_format_type", "JSON"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.bucket_arn", s3BucketResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.0.file_key", "KEY-2"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.table_name", "TABLE-2"),
+					resource.TestCheckResourceAttrSet(resourceName, "reference_data_sources.0.id"),
+					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_StartApplication_OnCreate(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	iamRole1ResourceName := "aws_iam_role.test.0"
+	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigStartApplication(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_column_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_row_delimiter", "|"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.name_prefix", "NAME_PREFIX_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", "NOW"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "start_application", "true"),
+					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_application"},
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_StartApplication_OnUpdate(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	iamRole1ResourceName := "aws_iam_role.test.0"
+	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigStartApplication(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_column_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_row_delimiter", "|"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.name_prefix", "NAME_PREFIX_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", ""),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "start_application", "false"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_application"},
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigStartApplication(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_column_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_row_delimiter", "|"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.name_prefix", "NAME_PREFIX_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", "NOW"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "start_application", "true"),
+					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigStartApplication(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_column_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_row_delimiter", "|"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.name_prefix", "NAME_PREFIX_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", "NOW"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "start_application", "false"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "2"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSKinesisAnalyticsApplication_referenceDataSourceUpdate(t *testing.T) {
-	var before, after kinesisanalytics.ApplicationDetail
-	resName := "aws_kinesis_analytics_application.test"
-	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_referenceDataSource(rInt)
-	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_referenceDataSourceUpdate(rInt)
+func TestAccAWSKinesisAnalyticsApplication_StartApplication_Update(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	iamRole1ResourceName := "aws_iam_role.test.0"
+	iamRole2ResourceName := "aws_iam_role.test.1"
+	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test"
+	lambdaResourceName := "aws_lambda_function.test.0"
+	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	streamsResourceName := "aws_kinesis_stream.test"
+	s3BucketResourceName := "aws_s3_bucket.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: firstStep,
+				Config: testAccKinesisAnalyticsApplicationConfigMultiple(rName, "true", "LAST_STOPPED_POINT"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &before),
-					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "reference_data_sources.#", "1"),
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_column_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_row_delimiter", "|"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.name_prefix", "NAME_PREFIX_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.0.lambda.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.resource_arn", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.processing_configuration.0.lambda.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", "LAST_STOPPED_POINT"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+						"name":                        "OUTPUT_1",
+						"schema.#":                    "1",
+						"schema.0.record_format_type": "CSV",
+						"kinesis_firehose.#":          "1",
+						"kinesis_stream.#":            "0",
+						"lambda.#":                    "0",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "start_application", "true"),
+					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 				),
 			},
 			{
-				Config: secondStep,
+				Config: testAccKinesisAnalyticsApplicationConfigMultipleUpdated(rName, "true", "LAST_STOPPED_POINT"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &after),
-					resource.TestCheckResourceAttr(resName, "version", "3"),
-					resource.TestCheckResourceAttr(resName, "reference_data_sources.#", "1"),
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.stream_names.#", "42"),
+					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.mapping", "MAPPING-2"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_2"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "VARCHAR(8)"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.1.mapping", "MAPPING-3"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.1.name", "COLUMN_3"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.1.sql_type", "DOUBLE"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", "UTF-8"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.0.record_row_path", "$path.to.record"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.record_format_type", "JSON"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.name_prefix", "NAME_PREFIX_2"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.parallelism.0.count", "42"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.processing_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.starting_position_configuration.0.starting_position", "LAST_STOPPED_POINT"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+						"name":                        "OUTPUT_2",
+						"schema.#":                    "1",
+						"schema.0.record_format_type": "JSON",
+						"kinesis_firehose.#":          "0",
+						"kinesis_stream.#":            "1",
+						"lambda.#":                    "0",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+						"name":                        "OUTPUT_3",
+						"schema.#":                    "1",
+						"schema.0.record_format_type": "CSV",
+						"kinesis_firehose.#":          "0",
+						"kinesis_stream.#":            "0",
+						"lambda.#":                    "1",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.resource_arn", lambdaResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.sql_type", "INTEGER"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_column_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv.0.record_row_delimiter", "|"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.bucket_arn", s3BucketResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.s3.0.file_key", "KEY-1"),
+					resource.TestCheckResourceAttrPair(resourceName, "reference_data_sources.0.s3.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.table_name", "TABLE-1"),
+					resource.TestCheckResourceAttrSet(resourceName, "reference_data_sources.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "start_application", "true"),
+					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
+					resource.TestCheckResourceAttr(resourceName, "version", "8"), // Delete CloudWatch logging options + add reference data source + delete input processing configuration+ update application + delete output + 2 * add output.
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_application"},
 			},
 		},
 	})
 }
 
 func testAccCheckKinesisAnalyticsApplicationDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).kinesisanalyticsconn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kinesis_analytics_application" {
 			continue
 		}
-		conn := testAccProvider.Meta().(*AWSClient).kinesisanalyticsconn
-		describeOpts := &kinesisanalytics.DescribeApplicationInput{
-			ApplicationName: aws.String(rs.Primary.Attributes["name"]),
+
+		_, err := finder.ApplicationDetailByName(conn, rs.Primary.Attributes["name"])
+
+		if tfresource.NotFound(err) {
+			continue
 		}
-		resp, err := conn.DescribeApplication(describeOpts)
-		if err == nil {
-			if resp.ApplicationDetail != nil && *resp.ApplicationDetail.ApplicationStatus != kinesisanalytics.ApplicationStatusDeleting {
-				return fmt.Errorf("Error: Application still exists")
-			}
+
+		if err != nil {
+			return err
 		}
+
+		return fmt.Errorf("Kinesis Analytics Application %s still exists", rs.Primary.ID)
 	}
 	return nil
 }
 
-func testAccCheckKinesisAnalyticsApplicationExists(n string, application *kinesisanalytics.ApplicationDetail) resource.TestCheckFunc {
+func testAccCheckKinesisAnalyticsApplicationExists(n string, v *kinesisanalytics.ApplicationDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -512,396 +1982,735 @@ func testAccCheckKinesisAnalyticsApplicationExists(n string, application *kinesi
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).kinesisanalyticsconn
-		describeOpts := &kinesisanalytics.DescribeApplicationInput{
-			ApplicationName: aws.String(rs.Primary.Attributes["name"]),
-		}
-		resp, err := conn.DescribeApplication(describeOpts)
+
+		application, err := finder.ApplicationDetailByName(conn, rs.Primary.Attributes["name"])
+
 		if err != nil {
 			return err
 		}
 
-		*application = *resp.ApplicationDetail
+		*v = *application
 
 		return nil
 	}
 }
 
-func testAccKinesisAnalyticsApplication_basic(rInt int) string {
+func testAccPreCheckAWSKinesisAnalytics(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).kinesisanalyticsconn
+
+	input := &kinesisanalytics.ListApplicationsInput{}
+
+	_, err := conn.ListApplications(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_analytics_application" "test" {
-  name = "testAcc-%d"
-  code = "testCode\n"
+resource "aws_iam_role" "test" {
+  count = 2
+
+  name               = "%[1]s.${count.index}"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["sts:AssumeRole"],
+      "Principal": {"Service": "firehose.amazonaws.com"}
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["sts:AssumeRole"],
+      "Principal": {"Service": "kinesisanalytics.amazonaws.com"}
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["sts:AssumeRole"],
+      "Principal": {"Service": "lambda.amazonaws.com"}
+    }
+  ]
 }
-`, rInt)
+EOF
 }
 
-func testAccKinesisAnalyticsApplication_update(rInt int) string {
+resource "aws_iam_policy" "test" {
+  name   = %[1]q
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["ec2:*"],
+      "Resource": ["*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["firehose:*"],
+      "Resource": ["*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["lambda:*"],
+      "Resource": ["*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["logs:*"],
+      "Resource": ["*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:*"],
+      "Resource": ["*"]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  count = 2
+
+  role       = aws_iam_role.test[count.index].name
+  policy_arn = aws_iam_policy.test.arn
+}
+`, rName)
+}
+
+func testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_analytics_application" "test" {
-  name = "testAcc-%d"
-  code = "testCode2\n"
-}
-`, rInt)
-}
-
-func testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt int, streamName string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = "testAcc-%d"
-}
-
-resource "aws_cloudwatch_log_stream" "test" {
-  name = "testAcc-%s-%d"
-  log_group_name = "${aws_cloudwatch_log_group.test.name}"
-}
-
-resource "aws_kinesis_analytics_application" "test" {
-  name = "testAcc-%d"
-  code = "testCode\n"
-
-  cloudwatch_logging_options {
-    log_stream_arn = "${aws_cloudwatch_log_stream.test.arn}"
-    role_arn = "${aws_iam_role.test.arn}"
-  }
-}
-`, rInt, streamName, rInt, rInt)
-}
-
-func testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_kinesis_stream" "test" {
-  name = "testAcc-%d"
-  shard_count = 1
-}
-
-resource "aws_kinesis_analytics_application" "test" {
-  name = "testAcc-%d"
-  code = "testCode\n"
-
-  inputs {
-    name_prefix = "test_prefix"
-    kinesis_stream {
-      resource_arn = "${aws_kinesis_stream.test.arn}"
-      role_arn = "${aws_iam_role.test.arn}"
-    }
-    parallelism {
-      count = 1
-    }
-    schema {
-      record_columns {
-        mapping = "$.test"
-        name = "test"
-        sql_type = "VARCHAR(8)"
-      }
-      record_encoding = "UTF-8"
-      record_format {
-        mapping_parameters {
-          json {
-            record_row_path = "$"
-          }
-        }
-      }
-    }
-  }
-}
-`, rInt, rInt)
-}
-
-func testAccKinesisAnalyticsApplication_inputsUpdateKinesisStream(rInt int, streamName string) string {
-	return fmt.Sprintf(`
-resource "aws_kinesis_stream" "test" {
-  name = "testAcc-%s-%d"
-  shard_count = 1
-}
-
-resource "aws_kinesis_analytics_application" "test" {
-  name = "testAcc-%d"
-  code = "testCode\n"
-
-  inputs {
-    name_prefix = "test_prefix2"
-    kinesis_stream {
-      resource_arn = "${aws_kinesis_stream.test.arn}"
-      role_arn = "${aws_iam_role.test.arn}"
-    }
-    parallelism {
-      count = 2
-    }
-    schema {
-      record_columns {
-        mapping = "$.test2"
-        name = "test2"
-        sql_type = "VARCHAR(8)"
-      }
-      record_encoding = "UTF-8"
-      record_format {
-        mapping_parameters {
-          csv {
-            record_column_delimiter = ","
-            record_row_delimiter = "\n"
-          }
-        }
-      }
-    }
-  }
-}
-`, streamName, rInt, rInt)
-}
-
-func testAccKinesisAnalyticsApplication_outputsKinesisStream(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_kinesis_stream" "test" {
-  name = "testAcc-%d"
-  shard_count = 1
-}
-
-resource "aws_kinesis_analytics_application" "test" {
-  name = "testAcc-%d"
-  code = "testCode\n"
-
-  outputs {
-    name = "test_name"
-    kinesis_stream {
-      resource_arn = "${aws_kinesis_stream.test.arn}"
-      role_arn = "${aws_iam_role.test.arn}"
-    }
-    schema {
-      record_format_type = "JSON"
-    }
-  }
-}
-`, rInt, rInt)
-}
-
-func testAccKinesisAnalyticsApplication_outputsMultiple(rInt1, rInt2 int) string {
-	return fmt.Sprintf(`
-resource "aws_kinesis_stream" "test1" {
-  name = "testAcc-%d"
-  shard_count = 1
-}
-
-resource "aws_kinesis_stream" "test2" {
-  name = "testAcc-%d"
-  shard_count = 1
-}
-
-resource "aws_kinesis_analytics_application" "test" {
-  name = "testAcc-%d"
-  code = "testCode\n"
-
-  outputs {
-    name = "test_name1"
-    kinesis_stream {
-      resource_arn = "${aws_kinesis_stream.test1.arn}"
-      role_arn = "${aws_iam_role.test.arn}"
-    }
-    schema {
-      record_format_type = "JSON"
-    }
-  }
-
-  outputs {
-    name = "test_name2"
-    kinesis_stream {
-      resource_arn = "${aws_kinesis_stream.test2.arn}"
-      role_arn = "${aws_iam_role.test.arn}"
-    }
-    schema {
-      record_format_type = "JSON"
-    }
-  }
-}
-`, rInt1, rInt2, rInt1)
-}
-
-func testAccKinesisAnalyticsApplicationConfigOutputsLambda(rInt int) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "kinesisanalytics_assume_role_policy" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["kinesisanalytics.amazonaws.com"]
-    }
-  }
-}
-
-data "aws_iam_policy_document" "lambda_assume_role_policy" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["lambda.amazonaws.com"]
-    }
-  }
-}
-
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "kinesis_analytics_application" {
-  name               = "tf-acc-test-%d-kinesis"
-  assume_role_policy = "${data.aws_iam_policy_document.kinesisanalytics_assume_role_policy.json}"
-}
-
-resource "aws_iam_role_policy_attachment" "kinesis_analytics_application-AWSLambdaRole" {
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaRole"
-  role       = "${aws_iam_role.kinesis_analytics_application.name}"
-}
-
-resource "aws_iam_role" "lambda_function" {
-  name               = "tf-acc-test-%d-lambda"
-  assume_role_policy = "${data.aws_iam_policy_document.lambda_assume_role_policy.json}"
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_function-AWSLambdaBasicExecutionRole" {
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-  role       = "${aws_iam_role.lambda_function.name}"
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
 }
 
 resource "aws_lambda_function" "test" {
+  count = 2
+
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = "tf-acc-test-%d"
+  function_name = "%[1]s_${count.index}"
   handler       = "exports.example"
-  role          = "${aws_iam_role.lambda_function.arn}"
-  runtime       = "nodejs8.10"
+  role          = aws_iam_role.test[0].arn
+  runtime       = "nodejs12.x"
 }
 
-resource "aws_kinesis_analytics_application" "test" {
-  name = "testAcc-%d"
-  code = "testCode\n"
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  name        = %[1]q
+  destination = "extended_s3"
 
-  outputs {
-    name = "test_name"
-    lambda {
-      resource_arn = "${aws_lambda_function.test.arn}"
-      role_arn     = "${aws_iam_role.kinesis_analytics_application.arn}"
-    }
-    schema {
-      record_format_type = "JSON"
-    }
+  extended_s3_configuration {
+    bucket_arn = aws_s3_bucket.test.arn
+    role_arn   = aws_iam_role.test[0].arn
   }
 }
-`, rInt, rInt, rInt, rInt)
-}
 
-func testAccKinesisAnalyticsApplication_outputsUpdateKinesisStream(rInt int, streamName string) string {
-	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
-  name = "testAcc-%s-%d"
+  name        = %[1]q
   shard_count = 1
 }
+`, rName)
+}
+
+func testAccKinesisAnalyticsApplicationConfigBasic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_analytics_application" "test" {
+  name = %[1]q
+}
+`, rName)
+}
+
+func testAccKinesisAnalyticsApplicationConfigCode(rName, code string) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_analytics_application" "test" {
+  name        = %[1]q
+  description = "test"
+  code        = %[2]q
+}
+`, rName, code)
+}
+
+func testAccKinesisAnalyticsApplicationConfigCloudWatchLoggingOptions(rName string, streamIndex int) string {
+	return composeConfig(
+		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
+		fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_log_stream" "test" {
+  count = 2
+
+  name           = "%[1]s.${count.index}"
+  log_group_name = aws_cloudwatch_log_group.test.name
+}
 
 resource "aws_kinesis_analytics_application" "test" {
-  name = "testAcc-%d"
-  code = "testCode\n"
+  name = %[1]q
 
-  outputs {
-    name = "test_name2"
-    kinesis_stream {
-      resource_arn = "${aws_kinesis_stream.test.arn}"
-      role_arn = "${aws_iam_role.test.arn}"
-    }
-    schema {
-      record_format_type = "CSV"
-    }
+  cloudwatch_logging_options {
+    log_stream_arn = aws_cloudwatch_log_stream.test.%[2]d.arn
+    role_arn       = aws_iam_role.test.%[2]d.arn
   }
 }
-`, streamName, rInt, rInt)
+`, rName, streamIndex))
 }
 
-func testAccKinesisAnalyticsApplication_referenceDataSource(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = "testacc-%d"
-}
-
+func testAccKinesisAnalyticsApplicationConfigInput(rName string) string {
+	return composeConfig(
+		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
+		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
+		fmt.Sprintf(`
 resource "aws_kinesis_analytics_application" "test" {
-  name = "testAcc-%d"
+  name = %[1]q
 
-  reference_data_sources {
-    table_name = "test_table"
-    s3 {
-      bucket_arn = "${aws_s3_bucket.test.arn}"
-      file_key = "test_file_key"
-      role_arn = "${aws_iam_role.test.arn}"
-    }
+  inputs {
+    name_prefix = "NAME_PREFIX_1"
+
     schema {
       record_columns {
-        mapping = "$.test"
-        name = "test"
-        sql_type = "VARCHAR(8)"
+        name     = "COLUMN_1"
+        sql_type = "INTEGER"
       }
-      record_encoding = "UTF-8"
-      record_format {
-        mapping_parameters {
-          json {
-            record_row_path = "$"
-          }
-        }
-      }
-    }
-  }
-}
-`, rInt, rInt)
-}
 
-func testAccKinesisAnalyticsApplication_referenceDataSourceUpdate(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = "testacc2-%d"
-}
-
-resource "aws_kinesis_analytics_application" "test" {
-  name = "testAcc-%d"
-
-  reference_data_sources {
-    table_name = "test_table2"
-    s3 {
-      bucket_arn = "${aws_s3_bucket.test.arn}"
-      file_key = "test_file_key"
-      role_arn = "${aws_iam_role.test.arn}"
-    }
-    schema {
-      record_columns {
-        mapping = "$.test2"
-        name = "test2"
-        sql_type = "VARCHAR(8)"
-      }
-      record_encoding = "UTF-8"
       record_format {
         mapping_parameters {
           csv {
             record_column_delimiter = ","
-            record_row_delimiter = "\n"
+            record_row_delimiter    = "|"
           }
         }
       }
     }
-  }
-}
-`, rInt, rInt)
-}
 
-// this is used to set up the IAM role
-func testAccKinesisAnalyticsApplication_prereq(rInt int) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "test" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type = "Service"
-      identifiers = ["kinesisanalytics.amazonaws.com"]
+    kinesis_firehose {
+      resource_arn = aws_kinesis_firehose_delivery_stream.test.arn
+      role_arn     = aws_iam_role.test[0].arn
     }
   }
 }
-
-resource "aws_iam_role" "test" {
-  name = "testAcc-%d"
-  assume_role_policy = "${data.aws_iam_policy_document.test.json}" 
+`, rName))
 }
-`, rInt)
+
+func testAccKinesisAnalyticsApplicationConfigInputUpdated(rName string) string {
+	return composeConfig(
+		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
+		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_analytics_application" "test" {
+  name = %[1]q
+
+  inputs {
+    name_prefix = "NAME_PREFIX_2"
+
+    parallelism {
+      count = 42
+    }
+
+    schema {
+      record_columns {
+        name     = "COLUMN_2"
+        sql_type = "VARCHAR(8)"
+        mapping  = "MAPPING-2"
+      }
+
+      record_columns {
+        name     = "COLUMN_3"
+        sql_type = "DOUBLE"
+        mapping  = "MAPPING-3"
+      }
+
+      record_encoding = "UTF-8"
+
+      record_format {
+        mapping_parameters {
+          json {
+            record_row_path = "$path.to.record"
+          }
+        }
+      }
+    }
+
+    kinesis_stream {
+      resource_arn = aws_kinesis_stream.test.arn
+      role_arn     = aws_iam_role.test[1].arn
+    }
+  }
+}
+`, rName))
+}
+
+func testAccKinesisAnalyticsApplicationConfigInputProcessingConfiguration(rName string, lambdaIndex int) string {
+	return composeConfig(
+		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
+		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_analytics_application" "test" {
+  name = %[1]q
+
+  inputs {
+    name_prefix = "NAME_PREFIX_1"
+
+    schema {
+      record_columns {
+        name     = "COLUMN_1"
+        sql_type = "INTEGER"
+      }
+
+      record_format {
+        mapping_parameters {
+          csv {
+            record_column_delimiter = ","
+            record_row_delimiter    = "|"
+          }
+        }
+      }
+    }
+
+    processing_configuration {
+      lambda {
+        resource_arn = aws_lambda_function.test.%[2]d.arn
+        role_arn     = aws_iam_role.test.%[2]d.arn
+      }
+    }
+
+    kinesis_firehose {
+      resource_arn = aws_kinesis_firehose_delivery_stream.test.arn
+      role_arn     = aws_iam_role.test[0].arn
+    }
+  }
+}
+`, rName, lambdaIndex))
+}
+
+func testAccKinesisAnalyticsApplicationConfigMultiple(rName, startApplication, startingPosition string) string {
+	if startApplication == "" {
+		startApplication = "null"
+	}
+	if startingPosition == "" {
+		startingPosition = "null"
+	} else {
+		startingPosition = strconv.Quote(startingPosition)
+	}
+
+	return composeConfig(
+		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
+		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
+		fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_log_stream" "test" {
+  name           = %[1]q
+  log_group_name = aws_cloudwatch_log_group.test.name
+}
+
+resource "aws_kinesis_analytics_application" "test" {
+  name = %[1]q
+
+  cloudwatch_logging_options {
+    log_stream_arn = aws_cloudwatch_log_stream.test.arn
+    role_arn       = aws_iam_role.test[1].arn
+  }
+
+  inputs {
+    name_prefix = "NAME_PREFIX_1"
+
+    schema {
+      record_columns {
+        name     = "COLUMN_1"
+        sql_type = "INTEGER"
+      }
+
+      record_format {
+        mapping_parameters {
+          csv {
+            record_column_delimiter = ","
+            record_row_delimiter    = "|"
+          }
+        }
+      }
+    }
+
+    processing_configuration {
+      lambda {
+        resource_arn = aws_lambda_function.test[0].arn
+        role_arn     = aws_iam_role.test[0].arn
+      }
+    }
+
+    kinesis_firehose {
+      resource_arn = aws_kinesis_firehose_delivery_stream.test.arn
+      role_arn     = aws_iam_role.test[0].arn
+    }
+
+    starting_position_configuration {
+      starting_position = %[3]s
+    }
+  }
+
+  outputs {
+    name = "OUTPUT_1"
+
+    schema {
+      record_format_type = "CSV"
+    }
+
+    kinesis_firehose {
+      resource_arn = aws_kinesis_firehose_delivery_stream.test.arn
+      role_arn     = aws_iam_role.test[1].arn
+    }
+  }
+
+  tags = {
+    Key1 = "Value1"
+  }
+
+  start_application = %[2]s
+}
+`, rName, startApplication, startingPosition))
+}
+
+func testAccKinesisAnalyticsApplicationConfigMultipleUpdated(rName, startApplication, startingPosition string) string {
+	if startApplication == "" {
+		startApplication = "null"
+	}
+	if startingPosition == "" {
+		startingPosition = "null"
+	} else {
+		startingPosition = strconv.Quote(startingPosition)
+	}
+
+	return composeConfig(
+		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
+		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_analytics_application" "test" {
+  name = %[1]q
+
+  inputs {
+    name_prefix = "NAME_PREFIX_2"
+
+    parallelism {
+      count = 42
+    }
+
+    schema {
+      record_columns {
+        name     = "COLUMN_2"
+        sql_type = "VARCHAR(8)"
+        mapping  = "MAPPING-2"
+      }
+
+      record_columns {
+        name     = "COLUMN_3"
+        sql_type = "DOUBLE"
+        mapping  = "MAPPING-3"
+      }
+
+      record_encoding = "UTF-8"
+
+      record_format {
+        mapping_parameters {
+          json {
+            record_row_path = "$path.to.record"
+          }
+        }
+      }
+    }
+
+    kinesis_stream {
+      resource_arn = aws_kinesis_stream.test.arn
+      role_arn     = aws_iam_role.test[1].arn
+    }
+
+    starting_position_configuration {
+      starting_position = %[3]s
+    }
+  }
+
+  outputs {
+    name = "OUTPUT_2"
+
+    schema {
+      record_format_type = "JSON"
+    }
+
+    kinesis_stream {
+      resource_arn = aws_kinesis_stream.test.arn
+      role_arn     = aws_iam_role.test[1].arn
+    }
+  }
+
+  outputs {
+    name = "OUTPUT_3"
+
+    schema {
+      record_format_type = "CSV"
+    }
+
+    lambda {
+      resource_arn = aws_lambda_function.test[0].arn
+      role_arn     = aws_iam_role.test[0].arn
+    }
+  }
+
+  reference_data_sources {
+    table_name = "TABLE-1"
+
+    schema {
+      record_columns {
+        name     = "COLUMN_1"
+        sql_type = "INTEGER"
+      }
+
+      record_format {
+        mapping_parameters {
+          csv {
+            record_column_delimiter = ","
+            record_row_delimiter    = "|"
+          }
+        }
+      }
+    }
+
+    s3 {
+      bucket_arn = aws_s3_bucket.test.arn
+      file_key   = "KEY-1"
+      role_arn   = aws_iam_role.test[1].arn
+    }
+  }
+
+  tags = {
+    Key2 = "Value2"
+    Key3 = "Value3"
+  }
+
+  start_application = %[2]s
+}
+`, rName, startApplication, startingPosition))
+}
+
+func testAccKinesisAnalyticsApplicationOutput(rName string) string {
+	return composeConfig(
+		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
+		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_analytics_application" "test" {
+  name = %[1]q
+
+  outputs {
+    name = "OUTPUT_1"
+
+    schema {
+      record_format_type = "CSV"
+    }
+
+    kinesis_firehose {
+      resource_arn = aws_kinesis_firehose_delivery_stream.test.arn
+      role_arn     = aws_iam_role.test[0].arn
+    }
+  }
+}
+`, rName))
+}
+
+func testAccKinesisAnalyticsApplicationOutputUpdated(rName string) string {
+	return composeConfig(
+		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
+		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_analytics_application" "test" {
+  name = %[1]q
+
+  outputs {
+    name = "OUTPUT_2"
+
+    schema {
+      record_format_type = "JSON"
+    }
+
+    kinesis_stream {
+      resource_arn = aws_kinesis_stream.test.arn
+      role_arn     = aws_iam_role.test[1].arn
+    }
+  }
+
+  outputs {
+    name = "OUTPUT_3"
+
+    schema {
+      record_format_type = "CSV"
+    }
+
+    lambda {
+      resource_arn = aws_lambda_function.test[0].arn
+      role_arn     = aws_iam_role.test[0].arn
+    }
+  }
+}
+`, rName))
+}
+
+func testAccKinesisAnalyticsApplicationReferenceDataSource(rName string) string {
+	return composeConfig(
+		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_kinesis_analytics_application" "test" {
+  name = %[1]q
+
+  reference_data_sources {
+    table_name = "TABLE-1"
+
+    schema {
+      record_columns {
+        name     = "COLUMN_1"
+        sql_type = "INTEGER"
+      }
+
+      record_format {
+        mapping_parameters {
+          csv {
+            record_column_delimiter = ","
+            record_row_delimiter    = "|"
+          }
+        }
+      }
+    }
+
+    s3 {
+      bucket_arn = aws_s3_bucket.test.arn
+      file_key   = "KEY-1"
+      role_arn   = aws_iam_role.test[0].arn
+    }
+  }
+}
+`, rName))
+}
+
+func testAccKinesisAnalyticsApplicationReferenceDataSourceUpdated(rName string) string {
+	return composeConfig(
+		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_kinesis_analytics_application" "test" {
+  name = %[1]q
+
+  reference_data_sources {
+    table_name = "TABLE-2"
+
+    schema {
+      record_columns {
+        name     = "COLUMN_2"
+        sql_type = "VARCHAR(8)"
+        mapping  = "MAPPING-2"
+      }
+
+      record_columns {
+        name     = "COLUMN_3"
+        sql_type = "DOUBLE"
+        mapping  = "MAPPING-3"
+      }
+
+      record_encoding = "UTF-8"
+
+      record_format {
+        mapping_parameters {
+          json {
+            record_row_path = "$path.to.record"
+          }
+        }
+      }
+    }
+
+    s3 {
+      bucket_arn = aws_s3_bucket.test.arn
+      file_key   = "KEY-2"
+      role_arn   = aws_iam_role.test[1].arn
+    }
+  }
+}
+`, rName))
+}
+
+func testAccKinesisAnalyticsApplicationConfigStartApplication(rName string, start bool) string {
+	return composeConfig(
+		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
+		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_analytics_application" "test" {
+  name = %[1]q
+
+  inputs {
+    name_prefix = "NAME_PREFIX_1"
+
+    schema {
+      record_columns {
+        name     = "COLUMN_1"
+        sql_type = "INTEGER"
+      }
+
+      record_format {
+        mapping_parameters {
+          csv {
+            record_column_delimiter = ","
+            record_row_delimiter    = "|"
+          }
+        }
+      }
+    }
+
+    kinesis_firehose {
+      resource_arn = aws_kinesis_firehose_delivery_stream.test.arn
+      role_arn     = aws_iam_role.test[0].arn
+    }
+
+    starting_position_configuration {
+      starting_position = (%[2]t ? "NOW" : null)
+    }
+  }
+
+  start_application = %[2]t
+}
+`, rName, start))
+}
+
+func testAccKinesisAnalyticsApplicationConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_analytics_application" "test" {
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccKinesisAnalyticsApplicationConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_analytics_application" "test" {
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

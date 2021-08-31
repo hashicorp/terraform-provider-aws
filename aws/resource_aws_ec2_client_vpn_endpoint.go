@@ -3,13 +3,15 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 )
 
 func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
@@ -22,15 +24,18 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		CustomizeDiff: SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"client_cidr_block": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsCIDR,
 			},
 			"dns_servers": {
 				Type:     schema.TypeSet,
@@ -38,8 +43,14 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"server_certificate_arn": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
+			},
+			"split_tunnel": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"transport_protocol": {
 				Type:     schema.TypeString,
@@ -54,7 +65,7 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 			"authentication_options": {
 				Type:     schema.TypeList,
 				Required: true,
-				MaxItems: 1,
+				MaxItems: 2,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -64,7 +75,14 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{
 								ec2.ClientVpnAuthenticationTypeCertificateAuthentication,
 								ec2.ClientVpnAuthenticationTypeDirectoryServiceAuthentication,
+								ec2.ClientVpnAuthenticationTypeFederatedAuthentication,
 							}, false),
+						},
+						"saml_provider_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validateArn,
 						},
 						"active_directory_id": {
 							Type:     schema.TypeString,
@@ -72,9 +90,10 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 							ForceNew: true,
 						},
 						"root_certificate_chain_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -108,17 +127,27 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
 
 func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &ec2.CreateClientVpnEndpointInput{
 		ClientCidrBlock:      aws.String(d.Get("client_cidr_block").(string)),
 		ServerCertificateArn: aws.String(d.Get("server_certificate_arn").(string)),
 		TransportProtocol:    aws.String(d.Get("transport_protocol").(string)),
+		SplitTunnel:          aws.Bool(d.Get("split_tunnel").(bool)),
+		TagSpecifications:    ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeClientVpnEndpoint),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -126,30 +155,20 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 	}
 
 	if v, ok := d.GetOk("dns_servers"); ok {
-		req.DnsServers = expandStringList(v.(*schema.Set).List())
+		req.DnsServers = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("authentication_options"); ok {
-		authOptsSet := v.([]interface{})
-		attrs := authOptsSet[0].(map[string]interface{})
+		authOptions := v.([]interface{})
+		authRequests := make([]*ec2.ClientVpnAuthenticationRequest, 0, len(authOptions))
 
-		authOptsReq := &ec2.ClientVpnAuthenticationRequest{
-			Type: aws.String(attrs["type"].(string)),
+		for _, authOpt := range authOptions {
+			auth := authOpt.(map[string]interface{})
+
+			authReq := expandEc2ClientVpnAuthenticationRequest(auth)
+			authRequests = append(authRequests, authReq)
 		}
-
-		if attrs["type"].(string) == "certificate-authentication" {
-			authOptsReq.MutualAuthentication = &ec2.CertificateAuthenticationRequest{
-				ClientRootCertificateChainArn: aws.String(attrs["root_certificate_chain_arn"].(string)),
-			}
-		}
-
-		if attrs["type"].(string) == "directory-service-authentication" {
-			authOptsReq.ActiveDirectory = &ec2.DirectoryServiceAuthenticationRequest{
-				DirectoryId: aws.String(attrs["active_directory_id"].(string)),
-			}
-		}
-
-		req.AuthenticationOptions = []*ec2.ClientVpnAuthenticationRequest{authOptsReq}
+		req.AuthenticationOptions = authRequests
 	}
 
 	if v, ok := d.GetOk("connection_log_options"); ok {
@@ -171,39 +190,34 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 		req.ConnectionLogOptions = connLogReq
 	}
 
-	log.Printf("[DEBUG] Creating Client VPN endpoint: %#v", req)
-	var resp *ec2.CreateClientVpnEndpointOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
-		resp, err = conn.CreateClientVpnEndpoint(req)
-		if isAWSErr(err, "OperationNotPermitted", "Endpoint cannot be created while another endpoint is being created") {
-			return resource.RetryableError(err)
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
+	resp, err := conn.CreateClientVpnEndpoint(req)
 
 	if err != nil {
-		return fmt.Errorf("Error creating Client VPN endpoint: %s", err)
+		return fmt.Errorf("Error creating Client VPN endpoint: %w", err)
 	}
 
-	d.SetId(*resp.ClientVpnEndpointId)
+	d.SetId(aws.StringValue(resp.ClientVpnEndpointId))
 
 	return resourceAwsEc2ClientVpnEndpointRead(d, meta)
 }
 
 func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	var err error
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	result, err := conn.DescribeClientVpnEndpoints(&ec2.DescribeClientVpnEndpointsInput{
 		ClientVpnEndpointIds: []*string{aws.String(d.Id())},
 	})
 
+	if isAWSErr(err, tfec2.ErrCodeClientVpnAssociationIdNotFound, "") || isAWSErr(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
+		log.Printf("[WARN] EC2 Client VPN Endpoint (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("Error reading Client VPN endpoint: %s", err)
+		return fmt.Errorf("Error reading Client VPN endpoint: %w", err)
 	}
 
 	if result == nil || len(result.ClientVpnEndpoints) == 0 || result.ClientVpnEndpoints[0] == nil {
@@ -223,17 +237,42 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 	d.Set("server_certificate_arn", result.ClientVpnEndpoints[0].ServerCertificateArn)
 	d.Set("transport_protocol", result.ClientVpnEndpoints[0].TransportProtocol)
 	d.Set("dns_name", result.ClientVpnEndpoints[0].DnsName)
-	d.Set("status", result.ClientVpnEndpoints[0].Status)
+	d.Set("dns_servers", result.ClientVpnEndpoints[0].DnsServers)
+
+	if result.ClientVpnEndpoints[0].Status != nil {
+		d.Set("status", result.ClientVpnEndpoints[0].Status.Code)
+	}
+	d.Set("split_tunnel", result.ClientVpnEndpoints[0].SplitTunnel)
 
 	err = d.Set("authentication_options", flattenAuthOptsConfig(result.ClientVpnEndpoints[0].AuthenticationOptions))
 	if err != nil {
-		return err
+		return fmt.Errorf("error setting authentication_options: %w", err)
 	}
 
 	err = d.Set("connection_log_options", flattenConnLoggingConfig(result.ClientVpnEndpoints[0].ConnectionLogOptions))
 	if err != nil {
-		return err
+		return fmt.Errorf("error setting connection_log_options: %w", err)
 	}
+
+	tags := keyvaluetags.Ec2KeyValueTags(result.ClientVpnEndpoints[0].Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("client-vpn-endpoint/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 
 	return nil
 }
@@ -241,11 +280,9 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 func resourceAwsEc2ClientVpnEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	_, err := conn.DeleteClientVpnEndpoint(&ec2.DeleteClientVpnEndpointInput{
-		ClientVpnEndpointId: aws.String(d.Id()),
-	})
+	err := deleteClientVpnEndpoint(conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("Error deleting Client VPN endpoint: %s", err)
+		return fmt.Errorf("error deleting Client VPN endpoint: %w", err)
 	}
 
 	return nil
@@ -263,7 +300,7 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 	}
 
 	if d.HasChange("dns_servers") {
-		dnsValue := expandStringList(d.Get("dns_servers").(*schema.Set).List())
+		dnsValue := expandStringSet(d.Get("dns_servers").(*schema.Set))
 		var enabledValue *bool
 
 		if len(dnsValue) > 0 {
@@ -281,6 +318,10 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 
 	if d.HasChange("server_certificate_arn") {
 		req.ServerCertificateArn = aws.String(d.Get("server_certificate_arn").(string))
+	}
+
+	if d.HasChange("split_tunnel") {
+		req.SplitTunnel = aws.Bool(d.Get("split_tunnel").(bool))
 	}
 
 	if d.HasChange("connection_log_options") {
@@ -304,9 +345,15 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	_, err := conn.ModifyClientVpnEndpoint(req)
-	if err != nil {
-		return fmt.Errorf("Error modifying Client VPN endpoint: %s", err)
+	if _, err := conn.ModifyClientVpnEndpoint(req); err != nil {
+		return fmt.Errorf("Error modifying Client VPN endpoint: %w", err)
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EC2 Client VPN Endpoint (%s) tags: %w", d.Id(), err)
+		}
 	}
 
 	return resourceAwsEc2ClientVpnEndpointRead(d, meta)
@@ -325,13 +372,63 @@ func flattenConnLoggingConfig(lopts *ec2.ConnectionLogResponseOptions) []map[str
 }
 
 func flattenAuthOptsConfig(aopts []*ec2.ClientVpnAuthentication) []map[string]interface{} {
-	m := make(map[string]interface{})
-	if aopts[0].MutualAuthentication != nil {
-		m["root_certificate_chain_arn"] = *aopts[0].MutualAuthentication.ClientRootCertificateChain
+	result := make([]map[string]interface{}, 0, len(aopts))
+	for _, aopt := range aopts {
+		r := map[string]interface{}{
+			"type": aws.StringValue(aopt.Type),
+		}
+		if aopt.MutualAuthentication != nil {
+			r["root_certificate_chain_arn"] = aws.StringValue(aopt.MutualAuthentication.ClientRootCertificateChain)
+		}
+		if aopt.FederatedAuthentication != nil {
+			r["saml_provider_arn"] = aws.StringValue(aopt.FederatedAuthentication.SamlProviderArn)
+		}
+		if aopt.ActiveDirectory != nil {
+			r["active_directory_id"] = aws.StringValue(aopt.ActiveDirectory.DirectoryId)
+		}
+		result = append([]map[string]interface{}{r}, result...)
 	}
-	if aopts[0].ActiveDirectory != nil {
-		m["active_directory_id"] = *aopts[0].ActiveDirectory.DirectoryId
+	return result
+}
+
+func expandEc2ClientVpnAuthenticationRequest(data map[string]interface{}) *ec2.ClientVpnAuthenticationRequest {
+	req := &ec2.ClientVpnAuthenticationRequest{
+		Type: aws.String(data["type"].(string)),
 	}
-	m["type"] = *aopts[0].Type
-	return []map[string]interface{}{m}
+
+	if data["type"].(string) == ec2.ClientVpnAuthenticationTypeCertificateAuthentication {
+		req.MutualAuthentication = &ec2.CertificateAuthenticationRequest{
+			ClientRootCertificateChainArn: aws.String(data["root_certificate_chain_arn"].(string)),
+		}
+	}
+
+	if data["type"].(string) == ec2.ClientVpnAuthenticationTypeDirectoryServiceAuthentication {
+		req.ActiveDirectory = &ec2.DirectoryServiceAuthenticationRequest{
+			DirectoryId: aws.String(data["active_directory_id"].(string)),
+		}
+	}
+
+	if data["type"].(string) == ec2.ClientVpnAuthenticationTypeFederatedAuthentication {
+		req.FederatedAuthentication = &ec2.FederatedAuthenticationRequest{
+			SAMLProviderArn: aws.String(data["saml_provider_arn"].(string)),
+		}
+	}
+
+	return req
+}
+
+func deleteClientVpnEndpoint(conn *ec2.EC2, endpointID string) error {
+	_, err := conn.DeleteClientVpnEndpoint(&ec2.DeleteClientVpnEndpointInput{
+		ClientVpnEndpointId: aws.String(endpointID),
+	})
+	if isAWSErr(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	_, err = waiter.ClientVpnEndpointDeleted(conn, endpointID)
+
+	return err
 }

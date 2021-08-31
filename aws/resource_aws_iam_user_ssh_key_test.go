@@ -7,25 +7,29 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSUserSSHKey_basic(t *testing.T) {
 	var conf iam.GetSSHPublicKeyOutput
-
-	ri := acctest.RandInt()
-	config := fmt.Sprintf(testAccAWSSSHKeyConfig_sshEncoding, ri)
 	resourceName := "aws_iam_user_ssh_key.user"
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	publicKey, _, err := RandSSHKeyPairSize(2048, testAccDefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserSSHKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAWSSSHKeyConfig_sshEncoding(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSUserSSHKeyExists(resourceName, "Inactive", &conf),
 				),
@@ -49,6 +53,7 @@ func TestAccAWSUserSSHKey_pemEncoding(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserSSHKeyDestroy,
 		Steps: []resource.TestStep{
@@ -151,30 +156,33 @@ func testAccAWSUserSSHKeyImportStateIdFunc(resourceName string) resource.ImportS
 	}
 }
 
-const testAccAWSSSHKeyConfig_sshEncoding = `
+func testAccAWSSSHKeyConfig_sshEncoding(rName, publicKey string) string {
+	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
-	name = "test-user-%d"
-	path = "/"
+  name = %[1]q
+  path = "/"
 }
 
 resource "aws_iam_user_ssh_key" "user" {
-	username = "${aws_iam_user.user.name}"
-	encoding = "SSH"
-	public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
-	status = "Inactive"
+  username   = aws_iam_user.user.name
+  encoding   = "SSH"
+  public_key = %[2]q
+  status     = "Inactive"
 }
-`
+`, rName, publicKey)
+}
 
 const testAccAWSSSHKeyConfig_pemEncoding = `
 resource "aws_iam_user" "user" {
-	name = "test-user-%d"
-	path = "/"
+  name = "test-user-%d"
+  path = "/"
 }
 
 resource "aws_iam_user_ssh_key" "user" {
-	username = "${aws_iam_user.user.name}"
-	encoding = "PEM"
-	public_key = <<EOF
+  username = aws_iam_user.user.name
+  encoding = "PEM"
+
+  public_key = <<EOF
 -----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA9xercjxBRM1dC191/AbF
 3TLEM9cdnBIpCgxGNGiI+NaoMTAj/4rXp3ql0iBWQaeb4sz72qCEd1JvcSuzxqFv

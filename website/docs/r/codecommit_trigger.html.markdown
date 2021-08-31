@@ -1,30 +1,31 @@
 ---
+subcategory: "CodeCommit"
 layout: "aws"
 page_title: "AWS: aws_codecommit_trigger"
-sidebar_current: "docs-aws-resource-codecommit-trigger"
 description: |-
   Provides a CodeCommit Trigger Resource.
 ---
 
-# aws_codecommit_trigger
+# Resource: aws_codecommit_trigger
 
 Provides a CodeCommit Trigger Resource.
 
-~> **NOTE on CodeCommit**: The CodeCommit is not yet rolled out
-in all regions - available regions are listed
-[the AWS Docs](https://docs.aws.amazon.com/general/latest/gr/rande.html#codecommit_region).
+~> **NOTE:** Terraform currently can create only one trigger per repository, even if multiple aws_codecommit_trigger resources are defined. Moreover, creating triggers with Terraform will delete all other triggers in the repository (also manually-created triggers).
 
 ## Example Usage
 
-```hcl
+```terraform
+resource "aws_codecommit_repository" "test" {
+  repository_name = "test"
+}
+
 resource "aws_codecommit_trigger" "test" {
-  depends_on      = ["aws_codecommit_repository.test"]
-  repository_name = "my_test_repository"
+  repository_name = aws_codecommit_repository.test.repository_name
 
   trigger {
-    name            = "noname"
+    name            = "all"
     events          = ["all"]
-    destination_arn = "${aws_sns_topic.test.arn}"
+    destination_arn = aws_sns_topic.test.arn
   }
 }
 ```
@@ -39,3 +40,9 @@ The following arguments are supported:
 * `custom_data` - (Optional) Any custom data associated with the trigger that will be included in the information sent to the target of the trigger.
 * `branches` - (Optional) The branches that will be included in the trigger configuration. If no branches are specified, the trigger will apply to all branches.
 * `events` - (Required) The repository events that will cause the trigger to run actions in another service, such as sending a notification through Amazon Simple Notification Service (SNS). If no events are specified, the trigger will run for all repository events. Event types include: `all`, `updateReference`, `createReference`, `deleteReference`.
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `configuration_id` - System-generated unique identifier.

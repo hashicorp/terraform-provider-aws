@@ -1,7 +1,7 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_instance"
-sidebar_current: "docs-aws-datasource-db-instance"
 description: |-
   Get information on an RDS Database Instance.
 ---
@@ -12,7 +12,7 @@ Use this data source to get information about an RDS instance
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_db_instance" "database" {
   db_instance_identifier = "my-test-database"
 }
@@ -58,6 +58,7 @@ In addition to all arguments above, the following attributes are exported:
 * `preferred_backup_window` - Specifies the daily time range during which automated backups are created.
 * `preferred_maintenance_window` -  Specifies the weekly time range during which system maintenance can occur in UTC.
 * `publicly_accessible` - Specifies the accessibility options for the DB instance.
+* `resource_id` - The RDS Resource ID of this instance.
 * `storage_encrypted` - Specifies whether the DB instance is encrypted.
 * `storage_type` - Specifies the storage type associated with DB instance.
 * `timezone` - The time zone of the DB instance.

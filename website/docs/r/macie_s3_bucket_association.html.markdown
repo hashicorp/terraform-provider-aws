@@ -1,12 +1,14 @@
 ---
+subcategory: "Macie Classic"
 layout: "aws"
 page_title: "AWS: aws_macie_s3_bucket_association"
-sidebar_current: "docs-aws-macie-s3-bucket-association"
 description: |-
   Associates an S3 resource with Amazon Macie for monitoring and data classification.
 ---
 
-# aws_macie_s3_bucket_association
+# Resource: aws_macie_s3_bucket_association
+
+~> **NOTE:** This resource interacts with [Amazon Macie Classic](https://docs.aws.amazon.com/macie/latest/userguide/what-is-macie.html). Macie Classic cannot be activated in new accounts. See the [FAQ](https://aws.amazon.com/macie/classic-faqs/) for more details.
 
 Associates an S3 resource with Amazon Macie for monitoring and data classification.
 
@@ -14,7 +16,7 @@ Associates an S3 resource with Amazon Macie for monitoring and data classificati
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_macie_s3_bucket_association" "example" {
   bucket_name = "tf-macie-example"
   prefix      = "data"

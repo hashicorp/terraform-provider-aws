@@ -9,7 +9,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsDbClusterSnapshot() *schema.Resource {
@@ -104,12 +105,14 @@ func dataSourceAwsDbClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceAwsDbClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	clusterIdentifier, clusterIdentifierOk := d.GetOk("db_cluster_identifier")
 	snapshotIdentifier, snapshotIdentifierOk := d.GetOk("db_cluster_snapshot_identifier")
@@ -158,7 +161,7 @@ func dataSourceAwsDbClusterSnapshotRead(d *schema.ResourceData, meta interface{}
 	d.SetId(aws.StringValue(snapshot.DBClusterSnapshotIdentifier))
 	d.Set("allocated_storage", snapshot.AllocatedStorage)
 	if err := d.Set("availability_zones", flattenStringList(snapshot.AvailabilityZones)); err != nil {
-		return fmt.Errorf("error setting availability_zones: %s", err)
+		return fmt.Errorf("error setting availability_zones: %w", err)
 	}
 	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
 	d.Set("db_cluster_snapshot_arn", snapshot.DBClusterSnapshotArn)
@@ -176,6 +179,16 @@ func dataSourceAwsDbClusterSnapshotRead(d *schema.ResourceData, meta interface{}
 	d.Set("status", snapshot.Status)
 	d.Set("storage_encrypted", snapshot.StorageEncrypted)
 	d.Set("vpc_id", snapshot.VpcId)
+
+	tags, err := keyvaluetags.RdsListTags(conn, d.Get("db_cluster_snapshot_arn").(string))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for RDS DB Cluster Snapshot (%s): %w", d.Get("db_cluster_snapshot_arn").(string), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
 
 	return nil
 }

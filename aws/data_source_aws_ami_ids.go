@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 )
 
 func dataSourceAwsAmiIds() *schema.Resource {
@@ -23,20 +23,21 @@ func dataSourceAwsAmiIds() *schema.Resource {
 			"executable_users": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"name_regex": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.ValidateRegexp,
+				ValidateFunc: validation.StringIsValidRegExp,
 			},
 			"owners": {
 				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Required: true,
+				MinItems: 1,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.NoZeroValues,
+				},
 			},
 			"ids": {
 				Type:     schema.TypeList,
@@ -55,51 +56,15 @@ func dataSourceAwsAmiIds() *schema.Resource {
 func dataSourceAwsAmiIdsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	executableUsers, executableUsersOk := d.GetOk("executable_users")
-	filters, filtersOk := d.GetOk("filter")
-	nameRegex, nameRegexOk := d.GetOk("name_regex")
-	owners, ownersOk := d.GetOk("owners")
-	sortAscending := d.Get("sort_ascending").(bool)
-
-	if !executableUsersOk && !filtersOk && !nameRegexOk && !ownersOk {
-		return fmt.Errorf("One of executable_users, filters, name_regex, or owners must be assigned")
+	params := &ec2.DescribeImagesInput{
+		Owners: expandStringList(d.Get("owners").([]interface{})),
 	}
 
-	params := &ec2.DescribeImagesInput{}
-
-	if executableUsersOk {
-		params.ExecutableUsers = expandStringList(executableUsers.([]interface{}))
+	if v, ok := d.GetOk("executable_users"); ok {
+		params.ExecutableUsers = expandStringList(v.([]interface{}))
 	}
-	if filtersOk {
-		params.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
-	}
-	if ownersOk {
-		o := expandStringList(owners.([]interface{}))
-
-		if len(o) > 0 {
-			params.Owners = o
-		}
-	}
-
-	// Deprecated: pre-2.0.0 warning logging
-	if !ownersOk {
-		log.Print("[WARN] The \"owners\" argument will become required in the next major version.")
-		log.Print("[WARN] Documentation can be found at: https://www.terraform.io/docs/providers/aws/d/ami.html#owners")
-
-		missingOwnerFilter := true
-
-		if filtersOk {
-			for _, filter := range params.Filters {
-				if aws.StringValue(filter.Name) == "owner-alias" || aws.StringValue(filter.Name) == "owner-id" {
-					missingOwnerFilter = false
-					break
-				}
-			}
-		}
-
-		if missingOwnerFilter {
-			log.Print("[WARN] Potential security issue: missing \"owners\" filtering for AMI. Check AMI to ensure it came from trusted source.")
-		}
+	if v, ok := d.GetOk("filter"); ok {
+		params.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Reading AMI IDs: %s", params)
@@ -111,19 +76,20 @@ func dataSourceAwsAmiIdsRead(d *schema.ResourceData, meta interface{}) error {
 	var filteredImages []*ec2.Image
 	imageIds := make([]string, 0)
 
-	if nameRegexOk {
+	if nameRegex, ok := d.GetOk("name_regex"); ok {
 		r := regexp.MustCompile(nameRegex.(string))
 		for _, image := range resp.Images {
 			// Check for a very rare case where the response would include no
 			// image name. No name means nothing to attempt a match against,
 			// therefore we are skipping such image.
-			if image.Name == nil || *image.Name == "" {
+			name := aws.StringValue(image.Name)
+			if name == "" {
 				log.Printf("[WARN] Unable to find AMI name to match against "+
 					"for image ID %q owned by %q, nothing to do.",
-					*image.ImageId, *image.OwnerId)
+					aws.StringValue(image.ImageId), aws.StringValue(image.OwnerId))
 				continue
 			}
-			if r.MatchString(*image.Name) {
+			if r.MatchString(name) {
 				filteredImages = append(filteredImages, image)
 			}
 		}
@@ -134,7 +100,7 @@ func dataSourceAwsAmiIdsRead(d *schema.ResourceData, meta interface{}) error {
 	sort.Slice(filteredImages, func(i, j int) bool {
 		itime, _ := time.Parse(time.RFC3339, aws.StringValue(filteredImages[i].CreationDate))
 		jtime, _ := time.Parse(time.RFC3339, aws.StringValue(filteredImages[j].CreationDate))
-		if sortAscending {
+		if d.Get("sort_ascending").(bool) {
 			return itime.Unix() < jtime.Unix()
 		}
 		return itime.Unix() > jtime.Unix()

@@ -4,27 +4,57 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSVpcEndpointRouteTableAssociation_basic(t *testing.T) {
-	var vpce ec2.VpcEndpoint
+	resourceName := "aws_vpc_endpoint_route_table_association.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointRouteTableAssociationConfig,
+				Config: testAccVpcEndpointRouteTableAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointRouteTableAssociationExists(
-						"aws_vpc_endpoint_route_table_association.a", &vpce),
+					testAccCheckVpcEndpointRouteTableAssociationExists(resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSVpcEndpointRouteTableAssociationImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSVpcEndpointRouteTableAssociation_disappears(t *testing.T) {
+	resourceName := "aws_vpc_endpoint_route_table_association.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcEndpointRouteTableAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcEndpointRouteTableAssociationConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcEndpointRouteTableAssociationExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsVpcEndpointRouteTableAssociation(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -38,33 +68,23 @@ func testAccCheckVpcEndpointRouteTableAssociationDestroy(s *terraform.State) err
 			continue
 		}
 
-		// Try to find the resource
-		resp, err := conn.DescribeVpcEndpoints(&ec2.DescribeVpcEndpointsInput{
-			VpcEndpointIds: aws.StringSlice([]string{rs.Primary.Attributes["vpc_endpoint_id"]}),
-		})
-		if err != nil {
-			// Verify the error is what we want
-			ec2err, ok := err.(awserr.Error)
-			if !ok {
-				return err
-			}
-			if ec2err.Code() != "InvalidVpcEndpointId.NotFound" {
-				return err
-			}
-			return nil
+		err := finder.VpcEndpointRouteTableAssociationExists(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["route_table_id"])
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		vpce := resp.VpcEndpoints[0]
-		if len(vpce.RouteTableIds) > 0 {
-			return fmt.Errorf(
-				"VPC endpoint %s has route tables", *vpce.VpcEndpointId)
+		if err != nil {
+			return err
 		}
+
+		return fmt.Errorf("VPC Endpoint Route Table Association %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckVpcEndpointRouteTableAssociationExists(n string, vpce *ec2.VpcEndpoint) resource.TestCheckFunc {
+func testAccCheckVpcEndpointRouteTableAssociationExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -72,63 +92,59 @@ func testAccCheckVpcEndpointRouteTableAssociationExists(n string, vpce *ec2.VpcE
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No VPC Endpoint Route Table Association ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		resp, err := conn.DescribeVpcEndpoints(&ec2.DescribeVpcEndpointsInput{
-			VpcEndpointIds: aws.StringSlice([]string{rs.Primary.Attributes["vpc_endpoint_id"]}),
-		})
-		if err != nil {
-			return err
-		}
-		if len(resp.VpcEndpoints) == 0 {
-			return fmt.Errorf("VPC endpoint not found")
-		}
 
-		*vpce = *resp.VpcEndpoints[0]
-
-		if len(vpce.RouteTableIds) == 0 {
-			return fmt.Errorf("no route table associations")
-		}
-
-		for _, id := range vpce.RouteTableIds {
-			if *id == rs.Primary.Attributes["route_table_id"] {
-				return nil
-			}
-		}
-
-		return fmt.Errorf("route table association not found")
+		return finder.VpcEndpointRouteTableAssociationExists(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["route_table_id"])
 	}
 }
 
-const testAccVpcEndpointRouteTableAssociationConfig = `
-provider "aws" {
-    region = "us-west-2"
+func testAccAWSVpcEndpointRouteTableAssociationImportStateIdFunc(n string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", n)
+		}
+
+		id := fmt.Sprintf("%s/%s", rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["route_table_id"])
+		return id, nil
+	}
 }
 
-resource "aws_vpc" "foo" {
-    cidr_block = "10.0.0.0/16"
-  tags = {
-        Name = "terraform-testacc-vpc-endpoint-route-table-association"
-    }
-}
-
-resource "aws_vpc_endpoint" "s3" {
-    vpc_id = "${aws_vpc.foo.id}"
-    service_name = "com.amazonaws.us-west-2.s3"
-}
-
-resource "aws_route_table" "rt" {
-    vpc_id = "${aws_vpc.foo.id}"
+func testAccVpcEndpointRouteTableAssociationConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
 
   tags = {
-        Name = "test"
-    }
+    Name = %[1]q
+  }
 }
 
-resource "aws_vpc_endpoint_route_table_association" "a" {
-	vpc_endpoint_id = "${aws_vpc_endpoint.s3.id}"
-	route_table_id  = "${aws_route_table.rt.id}"
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id       = aws_vpc.test.id
+  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint_route_table_association" "test" {
+  vpc_endpoint_id = aws_vpc_endpoint.test.id
+  route_table_id  = aws_route_table.test.id
+}
+`, rName)
+}

@@ -7,8 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfdatasync "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/datasync"
 )
 
 func resourceAwsDataSyncLocationEfs() *schema.Resource {
@@ -70,27 +72,28 @@ func resourceAwsDataSyncLocationEfs() *schema.Resource {
 					return false
 				},
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"uri": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsDataSyncLocationEfsCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datasyncconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateLocationEfsInput{
 		Ec2Config:        expandDataSyncEc2Config(d.Get("ec2_config").([]interface{})),
 		EfsFilesystemArn: aws.String(d.Get("efs_file_system_arn").(string)),
 		Subdirectory:     aws.String(d.Get("subdirectory").(string)),
-		Tags:             expandDataSyncTagListEntry(d.Get("tags").(map[string]interface{})),
+		Tags:             tags.IgnoreAws().DatasyncTags(),
 	}
 
 	log.Printf("[DEBUG] Creating DataSync Location EFS: %s", input)
@@ -106,6 +109,8 @@ func resourceAwsDataSyncLocationEfsCreate(d *schema.ResourceData, meta interface
 
 func resourceAwsDataSyncLocationEfsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datasyncconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &datasync.DescribeLocationEfsInput{
 		LocationArn: aws.String(d.Id()),
@@ -124,21 +129,10 @@ func resourceAwsDataSyncLocationEfsRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error reading DataSync Location EFS (%s): %s", d.Id(), err)
 	}
 
-	tagsInput := &datasync.ListTagsForResourceInput{
-		ResourceArn: output.LocationArn,
-	}
-
-	log.Printf("[DEBUG] Reading DataSync Location EFS tags: %s", tagsInput)
-	tagsOutput, err := conn.ListTagsForResource(tagsInput)
+	subdirectory, err := tfdatasync.SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Location EFS (%s) tags: %s", d.Id(), err)
-	}
-
-	subdirectory, err := dataSyncParseLocationURI(aws.StringValue(output.LocationUri))
-
-	if err != nil {
-		return fmt.Errorf("error parsing Location EFS (%s) URI (%s): %s", d.Id(), aws.StringValue(output.LocationUri), err)
+		return err
 	}
 
 	d.Set("arn", output.LocationArn)
@@ -148,12 +142,24 @@ func resourceAwsDataSyncLocationEfsRead(d *schema.ResourceData, meta interface{}
 	}
 
 	d.Set("subdirectory", subdirectory)
+	d.Set("uri", output.LocationUri)
 
-	if err := d.Set("tags", flattenDataSyncTagListEntry(tagsOutput.Tags)); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags, err := keyvaluetags.DatasyncListTags(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for DataSync Location EFS (%s): %s", d.Id(), err)
 	}
 
-	d.Set("uri", output.LocationUri)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
 
 	return nil
 }
@@ -161,32 +167,11 @@ func resourceAwsDataSyncLocationEfsRead(d *schema.ResourceData, meta interface{}
 func resourceAwsDataSyncLocationEfsUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datasyncconn
 
-	if d.HasChange("tags") {
-		oldRaw, newRaw := d.GetChange("tags")
-		createTags, removeTags := dataSyncTagsDiff(expandDataSyncTagListEntry(oldRaw.(map[string]interface{})), expandDataSyncTagListEntry(newRaw.(map[string]interface{})))
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
-		if len(removeTags) > 0 {
-			input := &datasync.UntagResourceInput{
-				Keys:        dataSyncTagsKeys(removeTags),
-				ResourceArn: aws.String(d.Id()),
-			}
-
-			log.Printf("[DEBUG] Untagging DataSync Location EFS: %s", input)
-			if _, err := conn.UntagResource(input); err != nil {
-				return fmt.Errorf("error untagging DataSync Location EFS (%s): %s", d.Id(), err)
-			}
-		}
-
-		if len(createTags) > 0 {
-			input := &datasync.TagResourceInput{
-				ResourceArn: aws.String(d.Id()),
-				Tags:        createTags,
-			}
-
-			log.Printf("[DEBUG] Tagging DataSync Location EFS: %s", input)
-			if _, err := conn.TagResource(input); err != nil {
-				return fmt.Errorf("error tagging DataSync Location EFS (%s): %s", d.Id(), err)
-			}
+		if err := keyvaluetags.DatasyncUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating DataSync Location EFS (%s) tags: %s", d.Id(), err)
 		}
 	}
 

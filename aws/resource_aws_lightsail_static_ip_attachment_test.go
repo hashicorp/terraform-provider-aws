@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSLightsailStaticIpAttachment_basic(t *testing.T) {
@@ -20,7 +20,8 @@ func TestAccAWSLightsailStaticIpAttachment_basic(t *testing.T) {
 	keypairName := fmt.Sprintf("tf-test-lightsail-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
+		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailStaticIpAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -28,6 +29,7 @@ func TestAccAWSLightsailStaticIpAttachment_basic(t *testing.T) {
 				Config: testAccAWSLightsailStaticIpAttachmentConfig_basic(staticIpName, instanceName, keypairName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLightsailStaticIpAttachmentExists("aws_lightsail_static_ip_attachment.test", &staticIp),
+					resource.TestCheckResourceAttrSet("aws_lightsail_static_ip_attachment.test", "ip_address"),
 				),
 			},
 		},
@@ -54,7 +56,8 @@ func TestAccAWSLightsailStaticIpAttachment_disappears(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
+		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailStaticIpAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -135,13 +138,18 @@ func testAccCheckAWSLightsailStaticIpAttachmentDestroy(s *terraform.State) error
 
 func testAccAWSLightsailStaticIpAttachmentConfig_basic(staticIpName, instanceName, keypairName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_lightsail_static_ip_attachment" "test" {
-  static_ip_name = "${aws_lightsail_static_ip.test.name}"
-  instance_name = "${aws_lightsail_instance.test.name}"
+  static_ip_name = aws_lightsail_static_ip.test.name
+  instance_name  = aws_lightsail_instance.test.name
 }
 
 resource "aws_lightsail_static_ip" "test" {
@@ -150,10 +158,10 @@ resource "aws_lightsail_static_ip" "test" {
 
 resource "aws_lightsail_instance" "test" {
   name              = "%s"
-  availability_zone = "us-east-1b"
-  blueprint_id      = "wordpress_4_6_1"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  blueprint_id      = "amazon_linux"
   bundle_id         = "micro_1_0"
-  key_pair_name     = "${aws_lightsail_key_pair.test.name}"
+  key_pair_name     = aws_lightsail_key_pair.test.name
 }
 
 resource "aws_lightsail_key_pair" "test" {

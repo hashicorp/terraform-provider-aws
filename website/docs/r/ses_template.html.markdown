@@ -1,18 +1,18 @@
 ---
+subcategory: "SES"
 layout: "aws"
 page_title: "AWS: aws_ses_template"
-sidebar_current: "docs-aws-resource-ses-template"
 description: |-
   Provides a resource to create a SES template
 ---
 
-# aws_ses_template
+# Resource: aws_ses_template
 
 Provides a resource to create a SES template.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ses_template" "MyTemplate" {
   name    = "MyTemplate"
   subject = "Greetings, {{name}}!"
@@ -34,6 +34,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The ARN of the SES template
 * `id` - The name of the SES template
 
 ## Import

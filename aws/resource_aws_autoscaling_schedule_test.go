@@ -2,14 +2,15 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAutoscalingSchedule_basic(t *testing.T) {
@@ -18,16 +19,34 @@ func TestAccAWSAutoscalingSchedule_basic(t *testing.T) {
 	start := testAccAWSAutoscalingScheduleValidStart(t)
 	end := testAccAWSAutoscalingScheduleValidEnd(t)
 
+	scheduledActionName := "foobar"
+	resourceName := fmt.Sprintf("aws_autoscaling_schedule.%s", scheduledActionName)
+	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAutoscalingScheduleConfig(rName, start, end),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists("aws_autoscaling_schedule.foobar", &schedule),
+					testAccCheckScalingScheduleExists(resourceName, &schedule),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     importInput,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/nonexistent", rName),
+				ImportState:       true,
+				ImportStateVerify: false,
+				ExpectError:       regexp.MustCompile(`(Cannot import non-existent remote object)`),
 			},
 		},
 	})
@@ -41,6 +60,7 @@ func TestAccAWSAutoscalingSchedule_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
@@ -72,17 +92,29 @@ func TestAccAWSAutoscalingSchedule_recurrence(t *testing.T) {
 	var schedule autoscaling.ScheduledUpdateGroupAction
 
 	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
+
+	scheduledActionName := "foobar"
+	resourceName := fmt.Sprintf("aws_autoscaling_schedule.%s", scheduledActionName)
+	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAutoscalingScheduleConfig_recurrence(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists("aws_autoscaling_schedule.foobar", &schedule),
-					resource.TestCheckResourceAttr("aws_autoscaling_schedule.foobar", "recurrence", "0 8 * * *"),
+					testAccCheckScalingScheduleExists(resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "recurrence", "0 8 * * *"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     importInput,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -95,16 +127,27 @@ func TestAccAWSAutoscalingSchedule_zeroValues(t *testing.T) {
 	start := testAccAWSAutoscalingScheduleValidStart(t)
 	end := testAccAWSAutoscalingScheduleValidEnd(t)
 
+	scheduledActionName := "foobar"
+	resourceName := fmt.Sprintf("aws_autoscaling_schedule.%s", scheduledActionName)
+	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAutoscalingScheduleConfig_zeroValues(rName, start, end),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists("aws_autoscaling_schedule.foobar", &schedule),
+					testAccCheckScalingScheduleExists(resourceName, &schedule),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     importInput,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -117,18 +160,29 @@ func TestAccAWSAutoscalingSchedule_negativeOne(t *testing.T) {
 	start := testAccAWSAutoscalingScheduleValidStart(t)
 	end := testAccAWSAutoscalingScheduleValidEnd(t)
 
+	scheduledActionName := "foobar"
+	resourceName := fmt.Sprintf("aws_autoscaling_schedule.%s", scheduledActionName)
+	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAutoscalingScheduleConfig_negativeOne(rName, start, end),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists("aws_autoscaling_schedule.foobar", &schedule),
+					testAccCheckScalingScheduleExists(resourceName, &schedule),
 					testAccCheckScalingScheduleHasNoDesiredCapacity(&schedule),
-					resource.TestCheckResourceAttr("aws_autoscaling_schedule.foobar", "desired_capacity", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "-1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     importInput,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -218,144 +272,189 @@ func testAccCheckScalingScheduleHasNoDesiredCapacity(
 }
 
 func testAccAWSAutoscalingScheduleConfig(r, start, end string) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
-    name = "%s"
-    image_id = "ami-21f78e11"
-    instance_type = "t1.micro"
+  name          = "%s"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t1.micro"
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_autoscaling_group" "foobar" {
-    availability_zones = ["us-west-2a"]
-    name = "%s"
-    max_size = 1
-    min_size = 1
-    health_check_grace_period = 300
-    health_check_type = "ELB"
-    force_delete = true
-    termination_policies = ["OldestInstance"]
-    launch_configuration = "${aws_launch_configuration.foobar.name}"
-    tag {
-        key = "Foo"
-        value = "foo-bar"
-        propagate_at_launch = true
-    }
+  availability_zones        = [data.aws_availability_zones.available.names[1]]
+  name                      = "%s"
+  max_size                  = 1
+  min_size                  = 1
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+  force_delete              = true
+  termination_policies      = ["OldestInstance"]
+  launch_configuration      = aws_launch_configuration.foobar.name
+
+  tag {
+    key                 = "Foo"
+    value               = "foo-bar"
+    propagate_at_launch = true
+  }
 }
 
 resource "aws_autoscaling_schedule" "foobar" {
-    scheduled_action_name = "foobar"
-    min_size = 0
-    max_size = 1
-    desired_capacity = 0
-    start_time = "%s"
-    end_time = "%s"
-    autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
-}`, r, r, start, end)
+  scheduled_action_name  = "foobar"
+  min_size               = 0
+  max_size               = 1
+  desired_capacity       = 0
+  start_time             = "%s"
+  end_time               = "%s"
+  autoscaling_group_name = aws_autoscaling_group.foobar.name
+}
+`, r, r, start, end)
 }
 
 func testAccAWSAutoscalingScheduleConfig_recurrence(r string) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
-    name = "%s"
-    image_id = "ami-21f78e11"
-    instance_type = "t1.micro"
+  name          = "%s"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t1.micro"
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_autoscaling_group" "foobar" {
-    availability_zones = ["us-west-2a"]
-    name = "%s"
-    max_size = 1
-    min_size = 1
-    health_check_grace_period = 300
-    health_check_type = "ELB"
-    force_delete = true
-    termination_policies = ["OldestInstance"]
-    launch_configuration = "${aws_launch_configuration.foobar.name}"
-    tag {
-        key = "Foo"
-        value = "foo-bar"
-        propagate_at_launch = true
-    }
+  availability_zones        = [data.aws_availability_zones.available.names[1]]
+  name                      = "%s"
+  max_size                  = 1
+  min_size                  = 1
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+  force_delete              = true
+  termination_policies      = ["OldestInstance"]
+  launch_configuration      = aws_launch_configuration.foobar.name
+
+  tag {
+    key                 = "Foo"
+    value               = "foo-bar"
+    propagate_at_launch = true
+  }
 }
 
 resource "aws_autoscaling_schedule" "foobar" {
-    scheduled_action_name = "foobar"
-    min_size = 0
-    max_size = 1
-    desired_capacity = 0
-    recurrence = "0 8 * * *"
-    autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
-}`, r, r)
+  scheduled_action_name  = "foobar"
+  min_size               = 0
+  max_size               = 1
+  desired_capacity       = 0
+  recurrence             = "0 8 * * *"
+  time_zone              = "Pacific/Tahiti"
+  autoscaling_group_name = aws_autoscaling_group.foobar.name
+}
+`, r, r)
 }
 
 func testAccAWSAutoscalingScheduleConfig_zeroValues(r, start, end string) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
-    name = "%s"
-    image_id = "ami-21f78e11"
-    instance_type = "t1.micro"
+  name          = "%s"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t1.micro"
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_autoscaling_group" "foobar" {
-    availability_zones = ["us-west-2a"]
-    name = "%s"
-    max_size = 1
-    min_size = 1
-    health_check_grace_period = 300
-    health_check_type = "ELB"
-    force_delete = true
-    termination_policies = ["OldestInstance"]
-    launch_configuration = "${aws_launch_configuration.foobar.name}"
-    tag {
-        key = "Foo"
-        value = "foo-bar"
-        propagate_at_launch = true
-    }
+  availability_zones        = [data.aws_availability_zones.available.names[1]]
+  name                      = "%s"
+  max_size                  = 1
+  min_size                  = 1
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+  force_delete              = true
+  termination_policies      = ["OldestInstance"]
+  launch_configuration      = aws_launch_configuration.foobar.name
+
+  tag {
+    key                 = "Foo"
+    value               = "foo-bar"
+    propagate_at_launch = true
+  }
 }
 
 resource "aws_autoscaling_schedule" "foobar" {
-    scheduled_action_name = "foobar"
-    max_size = 0
-    min_size = 0
-    desired_capacity = 0
-    start_time = "%s"
-    end_time = "%s"
-    autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
-}`, r, r, start, end)
+  scheduled_action_name  = "foobar"
+  max_size               = 0
+  min_size               = 0
+  desired_capacity       = 0
+  start_time             = "%s"
+  end_time               = "%s"
+  autoscaling_group_name = aws_autoscaling_group.foobar.name
+}
+`, r, r, start, end)
 }
 
 func testAccAWSAutoscalingScheduleConfig_negativeOne(r, start, end string) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
-    name = "%s"
-    image_id = "ami-21f78e11"
-    instance_type = "t1.micro"
+  name          = "%s"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t1.micro"
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_autoscaling_group" "foobar" {
-    availability_zones = ["us-west-2a"]
-    name = "%s"
-    max_size = 1
-    min_size = 1
-    health_check_grace_period = 300
-    health_check_type = "ELB"
-    force_delete = true
-    termination_policies = ["OldestInstance"]
-    launch_configuration = "${aws_launch_configuration.foobar.name}"
-    tag {
-        key = "Foo"
-        value = "foo-bar"
-        propagate_at_launch = true
-    }
+  availability_zones        = [data.aws_availability_zones.available.names[1]]
+  name                      = "%s"
+  max_size                  = 1
+  min_size                  = 1
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+  force_delete              = true
+  termination_policies      = ["OldestInstance"]
+  launch_configuration      = aws_launch_configuration.foobar.name
+
+  tag {
+    key                 = "Foo"
+    value               = "foo-bar"
+    propagate_at_launch = true
+  }
 }
 
 resource "aws_autoscaling_schedule" "foobar" {
-    scheduled_action_name = "foobar"
-    max_size = 3
-    min_size = 1
-    desired_capacity = -1
-    start_time = "%s"
-    end_time = "%s"
-    autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
-}`, r, r, start, end)
+  scheduled_action_name  = "foobar"
+  max_size               = 3
+  min_size               = 1
+  desired_capacity       = -1
+  start_time             = "%s"
+  end_time               = "%s"
+  autoscaling_group_name = aws_autoscaling_group.foobar.name
+}
+`, r, r, start, end)
 }
