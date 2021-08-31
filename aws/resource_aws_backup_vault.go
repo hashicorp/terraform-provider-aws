@@ -5,11 +5,11 @@ import (
 	"log"
 	"regexp"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsBackupVault() *schema.Resource {
@@ -29,11 +29,8 @@ func resourceAwsBackupVault() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_\.]{1,50}$`), "must consist of lowercase letters, numbers, and hyphens."),
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"kms_key_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -50,18 +47,19 @@ func resourceAwsBackupVault() *schema.Resource {
 				Computed: true,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsBackupVaultCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).backupconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &backup.CreateBackupVaultInput{
 		BackupVaultName: aws.String(d.Get("name").(string)),
-	}
-
-	if v, ok := d.GetOk("tags"); ok {
-		input.BackupVaultTags = tagsFromMapGeneric(v.(map[string]interface{}))
+		BackupVaultTags: tags.IgnoreAws().BackupTags(),
 	}
 
 	if v, ok := d.GetOk("kms_key_arn"); ok {
@@ -80,6 +78,8 @@ func resourceAwsBackupVaultCreate(d *schema.ResourceData, meta interface{}) erro
 
 func resourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).backupconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &backup.DescribeBackupVaultInput{
 		BackupVaultName: aws.String(d.Id()),
@@ -91,6 +91,12 @@ func resourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) error 
 		d.SetId("")
 		return nil
 	}
+	if isAWSErr(err, "AccessDeniedException", "") {
+		log.Printf("[WARN] Backup Vault %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error reading Backup Vault (%s): %s", d.Id(), err)
 	}
@@ -99,16 +105,19 @@ func resourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("arn", resp.BackupVaultArn)
 	d.Set("recovery_points", resp.NumberOfRecoveryPoints)
 
-	tresp, err := conn.ListTags(&backup.ListTagsInput{
-		ResourceArn: aws.String(*resp.BackupVaultArn),
-	})
-
+	tags, err := keyvaluetags.BackupListTags(conn, d.Get("arn").(string))
 	if err != nil {
-		return fmt.Errorf("error retrieving Backup Vault (%s) tags: %s", aws.StringValue(resp.BackupVaultArn), err)
+		return fmt.Errorf("error listing tags for Backup Vault (%s): %s", d.Id(), err)
+	}
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	if err := d.Set("tags", tagsToMapGeneric(tresp.Tags)); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -117,45 +126,10 @@ func resourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) error 
 func resourceAwsBackupVaultUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).backupconn
 
-	if d.HasChange("tags") {
-		resourceArn := d.Get("arn").(string)
-		oraw, nraw := d.GetChange("tags")
-		create, remove := diffTagsGeneric(oraw.(map[string]interface{}), nraw.(map[string]interface{}))
-
-		if len(remove) > 0 {
-			log.Printf("[DEBUG] Removing tags: %#v", remove)
-			keys := make([]*string, 0, len(remove))
-			for k := range remove {
-				keys = append(keys, aws.String(k))
-			}
-
-			_, err := conn.UntagResource(&backup.UntagResourceInput{
-				ResourceArn: aws.String(resourceArn),
-				TagKeyList:  keys,
-			})
-			if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
-				log.Printf("[WARN] Backup Vault %s not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
-			if err != nil {
-				return fmt.Errorf("Error removing tags for (%s): %s", d.Id(), err)
-			}
-		}
-		if len(create) > 0 {
-			log.Printf("[DEBUG] Creating tags: %#v", create)
-			_, err := conn.TagResource(&backup.TagResourceInput{
-				ResourceArn: aws.String(resourceArn),
-				Tags:        create,
-			})
-			if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
-				log.Printf("[WARN] Backup Vault %s not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
-			if err != nil {
-				return fmt.Errorf("Error setting tags for (%s): %s", d.Id(), err)
-			}
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := keyvaluetags.BackupUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags for Backup Vault (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -165,13 +139,13 @@ func resourceAwsBackupVaultUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceAwsBackupVaultDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).backupconn
 
-	input := &backup.DeleteBackupVaultInput{
-		BackupVaultName: aws.String(d.Get("name").(string)),
-	}
+	log.Printf("[DEBUG] Deleting Backup Vault: %s", d.Id())
+	_, err := conn.DeleteBackupVault(&backup.DeleteBackupVaultInput{
+		BackupVaultName: aws.String(d.Id()),
+	})
 
-	_, err := conn.DeleteBackupVault(input)
 	if err != nil {
-		return fmt.Errorf("error deleting Backup Vault (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Backup Vault (%s): %w", d.Id(), err)
 	}
 
 	return nil

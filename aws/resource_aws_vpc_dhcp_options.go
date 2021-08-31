@@ -7,10 +7,12 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsVpcDhcpOptions() *schema.Resource {
@@ -59,16 +61,26 @@ func resourceAwsVpcDhcpOptions() *schema.Resource {
 
 			"tags": tagsSchema(),
 
+			"tags_all": tagsSchemaComputed(),
+
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsVpcDhcpOptionsCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	setDHCPOption := func(key string) *ec2.NewDhcpConfiguration {
 		log.Printf("[DEBUG] Setting DHCP option %s...", key)
@@ -111,6 +123,7 @@ func resourceAwsVpcDhcpOptionsCreate(d *schema.ResourceData, meta interface{}) e
 			setDHCPOption("netbios-node-type"),
 			setDHCPOption("netbios-name-servers"),
 		},
+		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeDhcpOptions),
 	}
 
 	resp, err := conn.CreateDhcpOptions(createOpts)
@@ -136,11 +149,14 @@ func resourceAwsVpcDhcpOptionsCreate(d *schema.ResourceData, meta interface{}) e
 			d.Id(), err)
 	}
 
-	return resourceAwsVpcDhcpOptionsUpdate(d, meta)
+	return resourceAwsVpcDhcpOptionsRead(d, meta)
 }
 
 func resourceAwsVpcDhcpOptionsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	req := &ec2.DescribeDhcpOptionsInput{
 		DhcpOptionsIds: []*string{
 			aws.String(d.Id()),
@@ -162,7 +178,18 @@ func resourceAwsVpcDhcpOptionsRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	opts := resp.DhcpOptions[0]
-	d.Set("tags", tagsToMap(opts.Tags))
+
+	tags := keyvaluetags.Ec2KeyValueTags(opts.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
 	d.Set("owner_id", opts.OwnerId)
 
 	for _, cfg := range opts.DhcpConfigurations {
@@ -180,14 +207,27 @@ func resourceAwsVpcDhcpOptionsRead(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*AWSClient).region,
+		AccountID: aws.StringValue(opts.OwnerId),
+		Resource:  fmt.Sprintf("dhcp-options/%s", d.Id()),
+	}.String()
+
+	d.Set("arn", arn)
+
 	return nil
 }
 
 func resourceAwsVpcDhcpOptionsUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	if err := setTags(conn, d); err != nil {
-		return err
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	return resourceAwsVpcDhcpOptionsRead(d, meta)
@@ -197,7 +237,6 @@ func resourceAwsVpcDhcpOptionsDelete(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).ec2conn
 
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
-		log.Printf("[INFO] Deleting DHCP Options ID %s...", d.Id())
 		_, err := conn.DeleteDhcpOptions(&ec2.DeleteDhcpOptionsInput{
 			DhcpOptionsId: aws.String(d.Id()),
 		})
@@ -205,8 +244,6 @@ func resourceAwsVpcDhcpOptionsDelete(d *schema.ResourceData, meta interface{}) e
 		if err == nil {
 			return nil
 		}
-
-		log.Printf("[WARN] %s", err)
 
 		ec2err, ok := err.(awserr.Error)
 		if !ok {
@@ -262,7 +299,7 @@ func findVPCsByDHCPOptionsID(conn *ec2.EC2, id string) ([]*ec2.Vpc, error) {
 
 	resp, err := conn.DescribeVpcs(req)
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidVpcID.NotFound" {
+		if isAWSErr(err, "InvalidVpcID.NotFound", "") {
 			return nil, nil
 		}
 		return nil, err

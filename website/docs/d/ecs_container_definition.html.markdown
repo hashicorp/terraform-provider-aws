@@ -1,4 +1,5 @@
 ---
+subcategory: "ECS"
 layout: "aws"
 page_title: "AWS: aws_ecs_container_definition"
 description: |-
@@ -12,9 +13,9 @@ a specific container within an AWS ECS service.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ecs_container_definition" "ecs-mongo" {
-  task_definition = "${aws_ecs_task_definition.mongo.id}"
+  task_definition = aws_ecs_task_definition.mongo.id
   container_name  = "mongodb"
 }
 ```

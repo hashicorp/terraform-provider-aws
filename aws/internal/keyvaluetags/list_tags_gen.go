@@ -4,31 +4,47 @@ package keyvaluetags
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/amplify"
+	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
+	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go/service/cloud9"
+	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
+	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
+	"github.com/aws/aws-sdk-go/service/codestarconnections"
+	"github.com/aws/aws-sdk-go/service/codestarnotifications"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/aws/aws-sdk-go/service/dataexchange"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
+	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/aws/aws-sdk-go/service/dlm"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/efs"
@@ -36,45 +52,96 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/aws/aws-sdk-go/service/glacier"
+	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/iotanalytics"
 	"github.com/aws/aws-sdk-go/service/iotevents"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
+	"github.com/aws/aws-sdk-go/service/kinesisvideo"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/aws/aws-sdk-go/service/mediaconnect"
+	"github.com/aws/aws-sdk-go/service/mediaconvert"
 	"github.com/aws/aws-sdk-go/service/medialive"
 	"github.com/aws/aws-sdk-go/service/mediapackage"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go/service/networkfirewall"
+	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/qldb"
+	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
+	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go/service/schemas"
 	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/aws/aws-sdk-go/service/shield"
+	"github.com/aws/aws-sdk-go/service/signer"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
+	"github.com/aws/aws-sdk-go/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/aws/aws-sdk-go/service/wafv2"
+	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/aws/aws-sdk-go/service/xray"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
+
+// AccessanalyzerListTags lists accessanalyzer service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func AccessanalyzerListTags(conn *accessanalyzer.AccessAnalyzer, identifier string) (KeyValueTags, error) {
+	input := &accessanalyzer.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return AccessanalyzerKeyValueTags(output.Tags), nil
+}
 
 // AcmListTags lists acm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
@@ -85,6 +152,13 @@ func AcmListTags(conn *acm.ACM, identifier string) (KeyValueTags, error) {
 	}
 
 	output, err := conn.ListTagsForCertificate(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -103,6 +177,13 @@ func AcmpcaListTags(conn *acmpca.ACMPCA, identifier string) (KeyValueTags, error
 
 	output, err := conn.ListTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -120,11 +201,66 @@ func AmplifyListTags(conn *amplify.Amplify, identifier string) (KeyValueTags, er
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return AmplifyKeyValueTags(output.Tags), nil
+}
+
+// Apigatewayv2ListTags lists apigatewayv2 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Apigatewayv2ListTags(conn *apigatewayv2.ApiGatewayV2, identifier string) (KeyValueTags, error) {
+	input := &apigatewayv2.GetTagsInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.GetTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return Apigatewayv2KeyValueTags(output.Tags), nil
+}
+
+// AppconfigListTags lists appconfig service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func AppconfigListTags(conn *appconfig.AppConfig, identifier string) (KeyValueTags, error) {
+	input := &appconfig.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return AppconfigKeyValueTags(output.Tags), nil
 }
 
 // AppmeshListTags lists appmesh service tags.
@@ -137,11 +273,42 @@ func AppmeshListTags(conn *appmesh.AppMesh, identifier string) (KeyValueTags, er
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return AppmeshKeyValueTags(output.Tags), nil
+}
+
+// ApprunnerListTags lists apprunner service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ApprunnerListTags(conn *apprunner.AppRunner, identifier string) (KeyValueTags, error) {
+	input := &apprunner.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return ApprunnerKeyValueTags(output.Tags), nil
 }
 
 // AppstreamListTags lists appstream service tags.
@@ -153,6 +320,13 @@ func AppstreamListTags(conn *appstream.AppStream, identifier string) (KeyValueTa
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -171,6 +345,13 @@ func AppsyncListTags(conn *appsync.AppSync, identifier string) (KeyValueTags, er
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -188,11 +369,47 @@ func AthenaListTags(conn *athena.Athena, identifier string) (KeyValueTags, error
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return AthenaKeyValueTags(output.Tags), nil
+}
+
+// AutoscalingListTags lists autoscaling service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func AutoscalingListTags(conn *autoscaling.AutoScaling, identifier string, resourceType string) (KeyValueTags, error) {
+	input := &autoscaling.DescribeTagsInput{
+		Filters: []*autoscaling.Filter{
+			{
+				Name:   aws.String("auto-scaling-group"),
+				Values: []*string{aws.String(identifier)},
+			},
+		},
+	}
+
+	output, err := conn.DescribeTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return AutoscalingKeyValueTags(output.Tags, identifier, resourceType), nil
 }
 
 // BackupListTags lists backup service tags.
@@ -205,11 +422,90 @@ func BackupListTags(conn *backup.Backup, identifier string) (KeyValueTags, error
 
 	output, err := conn.ListTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return BackupKeyValueTags(output.Tags), nil
+}
+
+// BatchListTags lists batch service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func BatchListTags(conn *batch.Batch, identifier string) (KeyValueTags, error) {
+	input := &batch.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return BatchKeyValueTags(output.Tags), nil
+}
+
+// Cloud9ListTags lists cloud9 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Cloud9ListTags(conn *cloud9.Cloud9, identifier string) (KeyValueTags, error) {
+	input := &cloud9.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return Cloud9KeyValueTags(output.Tags), nil
+}
+
+// CloudfrontListTags lists cloudfront service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CloudfrontListTags(conn *cloudfront.CloudFront, identifier string) (KeyValueTags, error) {
+	input := &cloudfront.ListTagsForResourceInput{
+		Resource: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return CloudfrontKeyValueTags(output.Tags.Items), nil
 }
 
 // Cloudhsmv2ListTags lists cloudhsmv2 service tags.
@@ -222,11 +518,42 @@ func Cloudhsmv2ListTags(conn *cloudhsmv2.CloudHSMV2, identifier string) (KeyValu
 
 	output, err := conn.ListTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return Cloudhsmv2KeyValueTags(output.TagList), nil
+}
+
+// CloudtrailListTags lists cloudtrail service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CloudtrailListTags(conn *cloudtrail.CloudTrail, identifier string) (KeyValueTags, error) {
+	input := &cloudtrail.ListTagsInput{
+		ResourceIdList: aws.StringSlice([]string{identifier}),
+	}
+
+	output, err := conn.ListTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return CloudtrailKeyValueTags(output.ResourceTagList[0].TagsList), nil
 }
 
 // CloudwatchListTags lists cloudwatch service tags.
@@ -238,6 +565,13 @@ func CloudwatchListTags(conn *cloudwatch.CloudWatch, identifier string) (KeyValu
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -256,6 +590,13 @@ func CloudwatcheventsListTags(conn *cloudwatchevents.CloudWatchEvents, identifie
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -273,11 +614,42 @@ func CloudwatchlogsListTags(conn *cloudwatchlogs.CloudWatchLogs, identifier stri
 
 	output, err := conn.ListTagsLogGroup(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return CloudwatchlogsKeyValueTags(output.Tags), nil
+}
+
+// CodeartifactListTags lists codeartifact service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CodeartifactListTags(conn *codeartifact.CodeArtifact, identifier string) (KeyValueTags, error) {
+	input := &codeartifact.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return CodeartifactKeyValueTags(output.Tags), nil
 }
 
 // CodecommitListTags lists codecommit service tags.
@@ -289,6 +661,13 @@ func CodecommitListTags(conn *codecommit.CodeCommit, identifier string) (KeyValu
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -307,6 +686,13 @@ func CodedeployListTags(conn *codedeploy.CodeDeploy, identifier string) (KeyValu
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -324,11 +710,66 @@ func CodepipelineListTags(conn *codepipeline.CodePipeline, identifier string) (K
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return CodepipelineKeyValueTags(output.Tags), nil
+}
+
+// CodestarconnectionsListTags lists codestarconnections service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CodestarconnectionsListTags(conn *codestarconnections.CodeStarConnections, identifier string) (KeyValueTags, error) {
+	input := &codestarconnections.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return CodestarconnectionsKeyValueTags(output.Tags), nil
+}
+
+// CodestarnotificationsListTags lists codestarnotifications service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CodestarnotificationsListTags(conn *codestarnotifications.CodeStarNotifications, identifier string) (KeyValueTags, error) {
+	input := &codestarnotifications.ListTagsForResourceInput{
+		Arn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return CodestarnotificationsKeyValueTags(output.Tags), nil
 }
 
 // CognitoidentityListTags lists cognitoidentity service tags.
@@ -340,6 +781,13 @@ func CognitoidentityListTags(conn *cognitoidentity.CognitoIdentity, identifier s
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -358,6 +806,13 @@ func CognitoidentityproviderListTags(conn *cognitoidentityprovider.CognitoIdenti
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -374,6 +829,13 @@ func ConfigserviceListTags(conn *configservice.ConfigService, identifier string)
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -392,11 +854,42 @@ func DatabasemigrationserviceListTags(conn *databasemigrationservice.DatabaseMig
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return DatabasemigrationserviceKeyValueTags(output.TagList), nil
+}
+
+// DataexchangeListTags lists dataexchange service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func DataexchangeListTags(conn *dataexchange.DataExchange, identifier string) (KeyValueTags, error) {
+	input := &dataexchange.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return DataexchangeKeyValueTags(output.Tags), nil
 }
 
 // DatasyncListTags lists datasync service tags.
@@ -408,6 +901,13 @@ func DatasyncListTags(conn *datasync.DataSync, identifier string) (KeyValueTags,
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -426,6 +926,13 @@ func DaxListTags(conn *dax.DAX, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -443,11 +950,42 @@ func DevicefarmListTags(conn *devicefarm.DeviceFarm, identifier string) (KeyValu
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return DevicefarmKeyValueTags(output.Tags), nil
+}
+
+// DirectconnectListTags lists directconnect service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func DirectconnectListTags(conn *directconnect.DirectConnect, identifier string) (KeyValueTags, error) {
+	input := &directconnect.DescribeTagsInput{
+		ResourceArns: aws.StringSlice([]string{identifier}),
+	}
+
+	output, err := conn.DescribeTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return DirectconnectKeyValueTags(output.ResourceTags[0].Tags), nil
 }
 
 // DirectoryserviceListTags lists directoryservice service tags.
@@ -460,11 +998,42 @@ func DirectoryserviceListTags(conn *directoryservice.DirectoryService, identifie
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return DirectoryserviceKeyValueTags(output.Tags), nil
+}
+
+// DlmListTags lists dlm service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func DlmListTags(conn *dlm.DLM, identifier string) (KeyValueTags, error) {
+	input := &dlm.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return DlmKeyValueTags(output.Tags), nil
 }
 
 // DocdbListTags lists docdb service tags.
@@ -476,6 +1045,13 @@ func DocdbListTags(conn *docdb.DocDB, identifier string) (KeyValueTags, error) {
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -494,11 +1070,47 @@ func DynamodbListTags(conn *dynamodb.DynamoDB, identifier string) (KeyValueTags,
 
 	output, err := conn.ListTagsOfResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return DynamodbKeyValueTags(output.Tags), nil
+}
+
+// Ec2ListTags lists ec2 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Ec2ListTags(conn *ec2.EC2, identifier string) (KeyValueTags, error) {
+	input := &ec2.DescribeTagsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("resource-id"),
+				Values: []*string{aws.String(identifier)},
+			},
+		},
+	}
+
+	output, err := conn.DescribeTags(input)
+
+	if tfawserr.ErrCodeContains(err, ".NotFound") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return Ec2KeyValueTags(output.Tags), nil
 }
 
 // EcrListTags lists ecr service tags.
@@ -510,6 +1122,13 @@ func EcrListTags(conn *ecr.ECR, identifier string) (KeyValueTags, error) {
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -528,6 +1147,13 @@ func EcsListTags(conn *ecs.ECS, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrMessageContains(err, "InvalidParameterException", "The specified cluster is inactive. Specify an active cluster and try again.") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -544,6 +1170,13 @@ func EfsListTags(conn *efs.EFS, identifier string) (KeyValueTags, error) {
 	}
 
 	output, err := conn.DescribeTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -562,6 +1195,13 @@ func EksListTags(conn *eks.EKS, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -578,6 +1218,13 @@ func ElasticacheListTags(conn *elasticache.ElastiCache, identifier string) (KeyV
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -596,6 +1243,13 @@ func ElasticbeanstalkListTags(conn *elasticbeanstalk.ElasticBeanstalk, identifie
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -613,11 +1267,42 @@ func ElasticsearchserviceListTags(conn *elasticsearchservice.ElasticsearchServic
 
 	output, err := conn.ListTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return ElasticsearchserviceKeyValueTags(output.TagList), nil
+}
+
+// ElbListTags lists elb service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ElbListTags(conn *elb.ELB, identifier string) (KeyValueTags, error) {
+	input := &elb.DescribeTagsInput{
+		LoadBalancerNames: aws.StringSlice([]string{identifier}),
+	}
+
+	output, err := conn.DescribeTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return ElbKeyValueTags(output.TagDescriptions[0].Tags), nil
 }
 
 // Elbv2ListTags lists elbv2 service tags.
@@ -629,6 +1314,13 @@ func Elbv2ListTags(conn *elbv2.ELBV2, identifier string) (KeyValueTags, error) {
 	}
 
 	output, err := conn.DescribeTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -647,6 +1339,13 @@ func FirehoseListTags(conn *firehose.Firehose, identifier string) (KeyValueTags,
 
 	output, err := conn.ListTagsForDeliveryStream(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -664,11 +1363,90 @@ func FsxListTags(conn *fsx.FSx, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return FsxKeyValueTags(output.Tags), nil
+}
+
+// GameliftListTags lists gamelift service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func GameliftListTags(conn *gamelift.GameLift, identifier string) (KeyValueTags, error) {
+	input := &gamelift.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return GameliftKeyValueTags(output.Tags), nil
+}
+
+// GlacierListTags lists glacier service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func GlacierListTags(conn *glacier.Glacier, identifier string) (KeyValueTags, error) {
+	input := &glacier.ListTagsForVaultInput{
+		VaultName: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForVault(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return GlacierKeyValueTags(output.Tags), nil
+}
+
+// GlobalacceleratorListTags lists globalaccelerator service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func GlobalacceleratorListTags(conn *globalaccelerator.GlobalAccelerator, identifier string) (KeyValueTags, error) {
+	input := &globalaccelerator.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return GlobalacceleratorKeyValueTags(output.Tags), nil
 }
 
 // GlueListTags lists glue service tags.
@@ -681,11 +1459,42 @@ func GlueListTags(conn *glue.Glue, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.GetTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return GlueKeyValueTags(output.Tags), nil
+}
+
+// GreengrassListTags lists greengrass service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func GreengrassListTags(conn *greengrass.Greengrass, identifier string) (KeyValueTags, error) {
+	input := &greengrass.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return GreengrassKeyValueTags(output.Tags), nil
 }
 
 // GuarddutyListTags lists guardduty service tags.
@@ -698,11 +1507,42 @@ func GuarddutyListTags(conn *guardduty.GuardDuty, identifier string) (KeyValueTa
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return GuarddutyKeyValueTags(output.Tags), nil
+}
+
+// ImagebuilderListTags lists imagebuilder service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ImagebuilderListTags(conn *imagebuilder.Imagebuilder, identifier string) (KeyValueTags, error) {
+	input := &imagebuilder.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return ImagebuilderKeyValueTags(output.Tags), nil
 }
 
 // InspectorListTags lists inspector service tags.
@@ -714,6 +1554,13 @@ func InspectorListTags(conn *inspector.Inspector, identifier string) (KeyValueTa
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -732,6 +1579,13 @@ func IotListTags(conn *iot.IoT, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -748,6 +1602,13 @@ func IotanalyticsListTags(conn *iotanalytics.IoTAnalytics, identifier string) (K
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -766,6 +1627,13 @@ func IoteventsListTags(conn *iotevents.IoTEvents, identifier string) (KeyValueTa
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -783,11 +1651,42 @@ func KafkaListTags(conn *kafka.Kafka, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return KafkaKeyValueTags(output.Tags), nil
+}
+
+// KinesisListTags lists kinesis service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func KinesisListTags(conn *kinesis.Kinesis, identifier string) (KeyValueTags, error) {
+	input := &kinesis.ListTagsForStreamInput{
+		StreamName: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForStream(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return KinesisKeyValueTags(output.Tags), nil
 }
 
 // KinesisanalyticsListTags lists kinesisanalytics service tags.
@@ -799,6 +1698,13 @@ func KinesisanalyticsListTags(conn *kinesisanalytics.KinesisAnalytics, identifie
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -817,11 +1723,42 @@ func Kinesisanalyticsv2ListTags(conn *kinesisanalyticsv2.KinesisAnalyticsV2, ide
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return Kinesisanalyticsv2KeyValueTags(output.Tags), nil
+}
+
+// KinesisvideoListTags lists kinesisvideo service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func KinesisvideoListTags(conn *kinesisvideo.KinesisVideo, identifier string) (KeyValueTags, error) {
+	input := &kinesisvideo.ListTagsForStreamInput{
+		StreamARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForStream(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return KinesisvideoKeyValueTags(output.Tags), nil
 }
 
 // KmsListTags lists kms service tags.
@@ -833,6 +1770,13 @@ func KmsListTags(conn *kms.KMS, identifier string) (KeyValueTags, error) {
 	}
 
 	output, err := conn.ListResourceTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -851,6 +1795,13 @@ func LambdaListTags(conn *lambda.Lambda, identifier string) (KeyValueTags, error
 
 	output, err := conn.ListTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -867,6 +1818,13 @@ func LicensemanagerListTags(conn *licensemanager.LicenseManager, identifier stri
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -885,11 +1843,42 @@ func MediaconnectListTags(conn *mediaconnect.MediaConnect, identifier string) (K
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return MediaconnectKeyValueTags(output.Tags), nil
+}
+
+// MediaconvertListTags lists mediaconvert service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func MediaconvertListTags(conn *mediaconvert.MediaConvert, identifier string) (KeyValueTags, error) {
+	input := &mediaconvert.ListTagsForResourceInput{
+		Arn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return MediaconvertKeyValueTags(output.ResourceTags.Tags), nil
 }
 
 // MedialiveListTags lists medialive service tags.
@@ -901,6 +1890,13 @@ func MedialiveListTags(conn *medialive.MediaLive, identifier string) (KeyValueTa
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -919,6 +1915,13 @@ func MediapackageListTags(conn *mediapackage.MediaPackage, identifier string) (K
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -935,6 +1938,13 @@ func MediastoreListTags(conn *mediastore.MediaStore, identifier string) (KeyValu
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -953,6 +1963,13 @@ func MqListTags(conn *mq.MQ, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
@@ -970,11 +1987,66 @@ func NeptuneListTags(conn *neptune.Neptune, identifier string) (KeyValueTags, er
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return NeptuneKeyValueTags(output.TagList), nil
+}
+
+// NetworkfirewallListTags lists networkfirewall service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func NetworkfirewallListTags(conn *networkfirewall.NetworkFirewall, identifier string) (KeyValueTags, error) {
+	input := &networkfirewall.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return NetworkfirewallKeyValueTags(output.Tags), nil
+}
+
+// NetworkmanagerListTags lists networkmanager service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func NetworkmanagerListTags(conn *networkmanager.NetworkManager, identifier string) (KeyValueTags, error) {
+	input := &networkmanager.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return NetworkmanagerKeyValueTags(output.TagList), nil
 }
 
 // OpsworksListTags lists opsworks service tags.
@@ -986,6 +2058,13 @@ func OpsworksListTags(conn *opsworks.OpsWorks, identifier string) (KeyValueTags,
 	}
 
 	output, err := conn.ListTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1004,11 +2083,42 @@ func OrganizationsListTags(conn *organizations.Organizations, identifier string)
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return OrganizationsKeyValueTags(output.Tags), nil
+}
+
+// PinpointListTags lists pinpoint service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func PinpointListTags(conn *pinpoint.Pinpoint, identifier string) (KeyValueTags, error) {
+	input := &pinpoint.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return PinpointKeyValueTags(output.TagsModel.Tags), nil
 }
 
 // QldbListTags lists qldb service tags.
@@ -1021,11 +2131,42 @@ func QldbListTags(conn *qldb.QLDB, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return QldbKeyValueTags(output.Tags), nil
+}
+
+// QuicksightListTags lists quicksight service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func QuicksightListTags(conn *quicksight.QuickSight, identifier string) (KeyValueTags, error) {
+	input := &quicksight.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return QuicksightKeyValueTags(output.Tags), nil
 }
 
 // RdsListTags lists rds service tags.
@@ -1037,6 +2178,13 @@ func RdsListTags(conn *rds.RDS, identifier string) (KeyValueTags, error) {
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1055,11 +2203,67 @@ func ResourcegroupsListTags(conn *resourcegroups.ResourceGroups, identifier stri
 
 	output, err := conn.GetTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return ResourcegroupsKeyValueTags(output.Tags), nil
+}
+
+// Route53ListTags lists route53 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Route53ListTags(conn *route53.Route53, identifier string, resourceType string) (KeyValueTags, error) {
+	input := &route53.ListTagsForResourceInput{
+		ResourceId:   aws.String(identifier),
+		ResourceType: aws.String(resourceType),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return Route53KeyValueTags(output.ResourceTagSet.Tags), nil
+}
+
+// Route53recoveryreadinessListTags lists route53recoveryreadiness service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Route53recoveryreadinessListTags(conn *route53recoveryreadiness.Route53RecoveryReadiness, identifier string) (KeyValueTags, error) {
+	input := &route53recoveryreadiness.ListTagsForResourcesInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResources(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return Route53recoveryreadinessKeyValueTags(output.Tags), nil
 }
 
 // Route53resolverListTags lists route53resolver service tags.
@@ -1071,6 +2275,13 @@ func Route53resolverListTags(conn *route53resolver.Route53Resolver, identifier s
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1089,11 +2300,42 @@ func SagemakerListTags(conn *sagemaker.SageMaker, identifier string) (KeyValueTa
 
 	output, err := conn.ListTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return SagemakerKeyValueTags(output.Tags), nil
+}
+
+// SchemasListTags lists schemas service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func SchemasListTags(conn *schemas.Schemas, identifier string) (KeyValueTags, error) {
+	input := &schemas.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return SchemasKeyValueTags(output.Tags), nil
 }
 
 // SecurityhubListTags lists securityhub service tags.
@@ -1106,11 +2348,42 @@ func SecurityhubListTags(conn *securityhub.SecurityHub, identifier string) (KeyV
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return SecurityhubKeyValueTags(output.Tags), nil
+}
+
+// ServicediscoveryListTags lists servicediscovery service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ServicediscoveryListTags(conn *servicediscovery.ServiceDiscovery, identifier string) (KeyValueTags, error) {
+	input := &servicediscovery.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return ServicediscoveryKeyValueTags(output.Tags), nil
 }
 
 // SfnListTags lists sfn service tags.
@@ -1123,11 +2396,66 @@ func SfnListTags(conn *sfn.SFN, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return SfnKeyValueTags(output.Tags), nil
+}
+
+// ShieldListTags lists shield service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ShieldListTags(conn *shield.Shield, identifier string) (KeyValueTags, error) {
+	input := &shield.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return ShieldKeyValueTags(output.Tags), nil
+}
+
+// SignerListTags lists signer service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func SignerListTags(conn *signer.Signer, identifier string) (KeyValueTags, error) {
+	input := &signer.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return SignerKeyValueTags(output.Tags), nil
 }
 
 // SnsListTags lists sns service tags.
@@ -1139,6 +2467,13 @@ func SnsListTags(conn *sns.SNS, identifier string) (KeyValueTags, error) {
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1156,6 +2491,13 @@ func SqsListTags(conn *sqs.SQS, identifier string) (KeyValueTags, error) {
 	}
 
 	output, err := conn.ListQueueTags(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1175,11 +2517,43 @@ func SsmListTags(conn *ssm.SSM, identifier string, resourceType string) (KeyValu
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return SsmKeyValueTags(output.TagList), nil
+}
+
+// SsoadminListTags lists ssoadmin service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func SsoadminListTags(conn *ssoadmin.SSOAdmin, identifier string, resourceType string) (KeyValueTags, error) {
+	input := &ssoadmin.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+		InstanceArn: aws.String(resourceType),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return SsoadminKeyValueTags(output.Tags), nil
 }
 
 // StoragegatewayListTags lists storagegateway service tags.
@@ -1191,6 +2565,13 @@ func StoragegatewayListTags(conn *storagegateway.StorageGateway, identifier stri
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1209,11 +2590,42 @@ func SwfListTags(conn *swf.SWF, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return SwfKeyValueTags(output.Tags), nil
+}
+
+// TimestreamwriteListTags lists timestreamwrite service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func TimestreamwriteListTags(conn *timestreamwrite.TimestreamWrite, identifier string) (KeyValueTags, error) {
+	input := &timestreamwrite.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return TimestreamwriteKeyValueTags(output.Tags), nil
 }
 
 // TransferListTags lists transfer service tags.
@@ -1225,6 +2637,13 @@ func TransferListTags(conn *transfer.Transfer, identifier string) (KeyValueTags,
 	}
 
 	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return New(nil), err
@@ -1243,11 +2662,90 @@ func WafListTags(conn *waf.WAF, identifier string) (KeyValueTags, error) {
 
 	output, err := conn.ListTagsForResource(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return WafKeyValueTags(output.TagInfoForResource.TagList), nil
+}
+
+// WafregionalListTags lists wafregional service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func WafregionalListTags(conn *wafregional.WAFRegional, identifier string) (KeyValueTags, error) {
+	input := &waf.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return WafregionalKeyValueTags(output.TagInfoForResource.TagList), nil
+}
+
+// Wafv2ListTags lists wafv2 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Wafv2ListTags(conn *wafv2.WAFV2, identifier string) (KeyValueTags, error) {
+	input := &wafv2.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return Wafv2KeyValueTags(output.TagInfoForResource.TagList), nil
+}
+
+// WorklinkListTags lists worklink service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func WorklinkListTags(conn *worklink.WorkLink, identifier string) (KeyValueTags, error) {
+	input := &worklink.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return WorklinkKeyValueTags(output.Tags), nil
 }
 
 // WorkspacesListTags lists workspaces service tags.
@@ -1260,9 +2758,40 @@ func WorkspacesListTags(conn *workspaces.WorkSpaces, identifier string) (KeyValu
 
 	output, err := conn.DescribeTags(input)
 
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
 
 	return WorkspacesKeyValueTags(output.TagList), nil
+}
+
+// XrayListTags lists xray service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func XrayListTags(conn *xray.XRay, identifier string) (KeyValueTags, error) {
+	input := &xray.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return XrayKeyValueTags(output.Tags), nil
 }

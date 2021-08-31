@@ -6,12 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsAthenaDatabase() *schema.Resource {
@@ -26,7 +25,7 @@ func resourceAwsAthenaDatabase() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile("^[_a-z0-9]+$"), "see https://docs.aws.amazon.com/athena/latest/ug/tables-databases-columns-names.html"),
+				ValidateFunc: validation.StringMatch(regexp.MustCompile("^[_a-z0-9]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
 			},
 			"bucket": {
 				Type:     schema.TypeString,
@@ -64,13 +63,13 @@ func resourceAwsAthenaDatabase() *schema.Resource {
 	}
 }
 
-func expandAthenaResultConfiguration(bucket string, encryptionConfigurationList []interface{}) (*athena.ResultConfiguration, error) {
+func expandAthenaResultConfiguration(bucket string, encryptionConfigurationList []interface{}) *athena.ResultConfiguration {
 	resultConfig := athena.ResultConfiguration{
 		OutputLocation: aws.String("s3://" + bucket),
 	}
 
 	if len(encryptionConfigurationList) <= 0 {
-		return &resultConfig, nil
+		return &resultConfig
 	}
 
 	data := encryptionConfigurationList[0].(map[string]interface{})
@@ -87,20 +86,15 @@ func expandAthenaResultConfiguration(bucket string, encryptionConfigurationList 
 
 	resultConfig.EncryptionConfiguration = &encryptionConfig
 
-	return &resultConfig, nil
+	return &resultConfig
 }
 
 func resourceAwsAthenaDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).athenaconn
 
-	resultConfig, err := expandAthenaResultConfiguration(d.Get("bucket").(string), d.Get("encryption_configuration").([]interface{}))
-	if err != nil {
-		return err
-	}
-
 	input := &athena.StartQueryExecutionInput{
 		QueryString:         aws.String(fmt.Sprintf("create database `%s`;", d.Get("name").(string))),
-		ResultConfiguration: resultConfig,
+		ResultConfiguration: expandAthenaResultConfiguration(d.Get("bucket").(string), d.Get("encryption_configuration").([]interface{})),
 	}
 
 	resp, err := conn.StartQueryExecution(input)
@@ -118,22 +112,12 @@ func resourceAwsAthenaDatabaseCreate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsAthenaDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).athenaconn
 
-	resultConfig, err := expandAthenaResultConfiguration(d.Get("bucket").(string), d.Get("encryption_configuration").([]interface{}))
+	input := &athena.GetDatabaseInput{
+		DatabaseName: aws.String(d.Get("name").(string)),
+		CatalogName:  aws.String("AwsDataCatalog"),
+	}
+	_, err := conn.GetDatabase(input)
 	if err != nil {
-		return err
-	}
-
-	input := &athena.StartQueryExecutionInput{
-		QueryString:         aws.String(fmt.Sprint("show databases;")),
-		ResultConfiguration: resultConfig,
-	}
-
-	resp, err := conn.StartQueryExecution(input)
-	if err != nil {
-		return err
-	}
-
-	if err := executeAndExpectMatchingRow(*resp.QueryExecutionId, d.Get("name").(string), conn); err != nil {
 		return err
 	}
 	return nil
@@ -146,11 +130,6 @@ func resourceAwsAthenaDatabaseUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsAthenaDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).athenaconn
 
-	resultConfig, err := expandAthenaResultConfiguration(d.Get("bucket").(string), d.Get("encryption_configuration").([]interface{}))
-	if err != nil {
-		return err
-	}
-
 	name := d.Get("name").(string)
 
 	queryString := fmt.Sprintf("drop database `%s`", name)
@@ -161,7 +140,7 @@ func resourceAwsAthenaDatabaseDelete(d *schema.ResourceData, meta interface{}) e
 
 	input := &athena.StartQueryExecutionInput{
 		QueryString:         aws.String(queryString),
-		ResultConfiguration: resultConfig,
+		ResultConfiguration: expandAthenaResultConfiguration(d.Get("bucket").(string), d.Get("encryption_configuration").([]interface{})),
 	}
 
 	resp, err := conn.StartQueryExecution(input)
@@ -184,21 +163,6 @@ func executeAndExpectNoRowsWhenCreate(qeid string, conn *athena.Athena) error {
 		return fmt.Errorf("Athena create database, unexpected query result: %s", flattenAthenaResultSet(rs))
 	}
 	return nil
-}
-
-func executeAndExpectMatchingRow(qeid string, dbName string, conn *athena.Athena) error {
-	rs, err := queryExecutionResult(qeid, conn)
-	if err != nil {
-		return err
-	}
-	for _, row := range rs.Rows {
-		for _, datum := range row.Data {
-			if *datum.VarCharValue == dbName {
-				return nil
-			}
-		}
-	}
-	return fmt.Errorf("Athena not found database: %s, query result: %s", dbName, flattenAthenaResultSet(rs))
 }
 
 func executeAndExpectNoRowsWhenDrop(qeid string, conn *athena.Athena) error {
@@ -245,12 +209,18 @@ func queryExecutionStateRefreshFunc(qeid string, conn *athena.Athena) resource.S
 		if err != nil {
 			return nil, "failed", err
 		}
-		status := out.QueryExecution.Status
-		if *status.State == athena.QueryExecutionStateFailed &&
-			status.StateChangeReason != nil {
-			err = fmt.Errorf("reason: %s", *status.StateChangeReason)
+
+		if out == nil || out.QueryExecution == nil || out.QueryExecution.Status == nil {
+			return nil, "", nil
 		}
-		return out, *out.QueryExecution.Status.State, err
+
+		status := out.QueryExecution.Status
+
+		if aws.StringValue(status.State) == athena.QueryExecutionStateFailed && status.StateChangeReason != nil {
+			err = fmt.Errorf("reason: %s", aws.StringValue(status.StateChangeReason))
+		}
+
+		return out, aws.StringValue(out.QueryExecution.Status.State), err
 	}
 }
 
@@ -258,7 +228,7 @@ func flattenAthenaResultSet(rs *athena.ResultSet) string {
 	ss := make([]string, 0)
 	for _, row := range rs.Rows {
 		for _, datum := range row.Data {
-			ss = append(ss, *datum.VarCharValue)
+			ss = append(ss, aws.StringValue(datum.VarCharValue))
 		}
 	}
 	return strings.Join(ss, "\n")

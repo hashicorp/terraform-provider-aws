@@ -7,8 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datapipeline"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsDataPipelinePipeline() *schema.Resource {
@@ -34,20 +35,25 @@ func resourceAwsDataPipelinePipeline() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsDataPipelinePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datapipelineconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	uniqueID := resource.UniqueId()
 
 	input := datapipeline.CreatePipelineInput{
 		Name:     aws.String(d.Get("name").(string)),
 		UniqueId: aws.String(uniqueID),
-		Tags:     tagsFromMapDataPipeline(d.Get("tags").(map[string]interface{})),
+		Tags:     tags.IgnoreAws().DatapipelineTags(),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -67,6 +73,8 @@ func resourceAwsDataPipelinePipelineCreate(d *schema.ResourceData, meta interfac
 
 func resourceAwsDataPipelinePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datapipelineconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	v, err := resourceAwsDataPipelinePipelineRetrieve(d.Id(), conn)
 	if isAWSErr(err, datapipeline.ErrCodePipelineNotFoundException, "") || isAWSErr(err, datapipeline.ErrCodePipelineDeletedException, "") || v == nil {
@@ -80,23 +88,29 @@ func resourceAwsDataPipelinePipelineRead(d *schema.ResourceData, meta interface{
 
 	d.Set("name", v.Name)
 	d.Set("description", v.Description)
-	if err := d.Set("tags", tagsToMapDataPipeline(v.Tags)); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags := keyvaluetags.DatapipelineKeyValueTags(v.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
 	return nil
 }
 
 func resourceAwsDataPipelinePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datapipelineconn
 
-	if err := setTagsDataPipeline(conn, d); err != nil {
-		if isAWSErr(err, datapipeline.ErrCodePipelineNotFoundException, "") || isAWSErr(err, datapipeline.ErrCodePipelineDeletedException, "") {
-			log.Printf("[WARN] DataPipeline (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
-		return fmt.Errorf("Error updating tags: %s", err)
+		if err := keyvaluetags.DatapipelineUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating Datapipeline Pipeline (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsDataPipelinePipelineRead(d, meta)

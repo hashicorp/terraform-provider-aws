@@ -1,4 +1,5 @@
 ---
+subcategory: ""
 layout: "aws"
 page_title: "AWS: aws_arn"
 description: |-
@@ -11,7 +12,7 @@ Parses an Amazon Resource Name (ARN) into its constituent parts.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_arn" "db_instance" {
   arn = "arn:aws:rds:eu-west-1:123456789012:db:mysql-db"
 }

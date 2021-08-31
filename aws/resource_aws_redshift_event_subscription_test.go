@@ -2,15 +2,66 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_redshift_event_subscription", &resource.Sweeper{
+		Name: "aws_redshift_event_subscription",
+		F:    testSweepRedshiftEventSubscriptions,
+	})
+}
+
+func testSweepRedshiftEventSubscriptions(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*AWSClient).redshiftconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
+
+	err = conn.DescribeEventSubscriptionsPages(&redshift.DescribeEventSubscriptionsInput{}, func(page *redshift.DescribeEventSubscriptionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, eventSubscription := range page.EventSubscriptionsList {
+			r := resourceAwsRedshiftEventSubscription()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(eventSubscription.CustSubscriptionId))
+
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Event Subscriptions: %w", err))
+	}
+
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Event Subscriptions for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping Redshift Event Subscriptions sweep for %s: %s", region, err)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
 
 func TestAccAWSRedshiftEventSubscription_basicUpdate(t *testing.T) {
 	var v redshift.EventSubscription
@@ -19,6 +70,7 @@ func TestAccAWSRedshiftEventSubscription_basicUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -59,6 +111,7 @@ func TestAccAWSRedshiftEventSubscription_withPrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -92,6 +145,7 @@ func TestAccAWSRedshiftEventSubscription_withSourceIds(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -139,6 +193,7 @@ func TestAccAWSRedshiftEventSubscription_categoryUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -180,6 +235,7 @@ func TestAccAWSRedshiftEventSubscription_tagsUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -268,24 +324,17 @@ func testAccCheckAWSRedshiftEventSubscriptionDestroy(s *terraform.State) error {
 				SubscriptionName: aws.String(rs.Primary.ID),
 			})
 
-		if ae, ok := err.(awserr.Error); ok && ae.Code() == "SubscriptionNotFound" {
+		if isAWSErr(err, redshift.ErrCodeSubscriptionNotFoundFault, "") {
 			continue
 		}
 
-		if err == nil {
-			if len(resp.EventSubscriptionsList) != 0 &&
-				*resp.EventSubscriptionsList[0].CustSubscriptionId == rs.Primary.ID {
-				return fmt.Errorf("Event Subscription still exists")
-			}
+		if err != nil {
+			return err
 		}
 
-		// Verify the error
-		newerr, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if newerr.Code() != "SubscriptionNotFound" {
-			return err
+		if len(resp.EventSubscriptionsList) != 0 &&
+			*resp.EventSubscriptionsList[0].CustSubscriptionId == rs.Primary.ID {
+			return fmt.Errorf("Event Subscription still exists")
 		}
 	}
 
@@ -300,7 +349,7 @@ resource "aws_sns_topic" "aws_sns_topic" {
 
 resource "aws_redshift_event_subscription" "bar" {
   name          = "tf-acc-test-redshift-event-subs-%d"
-  sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
+  sns_topic_arn = aws_sns_topic.aws_sns_topic.arn
   source_type   = "cluster"
   severity      = "INFO"
 
@@ -326,7 +375,7 @@ resource "aws_sns_topic" "aws_sns_topic" {
 
 resource "aws_redshift_event_subscription" "bar" {
   name          = "tf-acc-test-redshift-event-subs-%d"
-  sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
+  sns_topic_arn = aws_sns_topic.aws_sns_topic.arn
   enabled       = false
   source_type   = "cluster-snapshot"
   severity      = "INFO"
@@ -356,10 +405,10 @@ resource "aws_redshift_parameter_group" "bar" {
 
 resource "aws_redshift_event_subscription" "bar" {
   name          = "tf-acc-test-redshift-event-subs-with-ids-%d"
-  sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
+  sns_topic_arn = aws_sns_topic.aws_sns_topic.arn
   source_type   = "cluster-parameter-group"
   severity      = "INFO"
-  source_ids    = ["${aws_redshift_parameter_group.bar.id}"]
+  source_ids    = [aws_redshift_parameter_group.bar.id]
 
   event_categories = [
     "configuration",
@@ -392,10 +441,10 @@ resource "aws_redshift_parameter_group" "foo" {
 
 resource "aws_redshift_event_subscription" "bar" {
   name          = "tf-acc-test-redshift-event-subs-with-ids-%d"
-  sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
+  sns_topic_arn = aws_sns_topic.aws_sns_topic.arn
   source_type   = "cluster-parameter-group"
   severity      = "INFO"
-  source_ids    = ["${aws_redshift_parameter_group.bar.id}", "${aws_redshift_parameter_group.foo.id}"]
+  source_ids    = [aws_redshift_parameter_group.bar.id, aws_redshift_parameter_group.foo.id]
 
   event_categories = [
     "configuration",
@@ -416,7 +465,7 @@ resource "aws_sns_topic" "aws_sns_topic" {
 
 resource "aws_redshift_event_subscription" "bar" {
   name          = "tf-acc-test-redshift-event-subs-%d"
-  sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
+  sns_topic_arn = aws_sns_topic.aws_sns_topic.arn
   source_type   = "cluster"
   severity      = "INFO"
 
@@ -439,7 +488,7 @@ resource "aws_sns_topic" "aws_sns_topic" {
 
 resource "aws_redshift_event_subscription" "bar" {
   name          = "tf-acc-test-redshift-event-subs-%d"
-  sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
+  sns_topic_arn = aws_sns_topic.aws_sns_topic.arn
   source_type   = "cluster"
   severity      = "INFO"
 
@@ -451,8 +500,8 @@ resource "aws_redshift_event_subscription" "bar" {
   ]
 
   tags = {
-		Name = "name"
-		Test = "%s"
+    Name = "name"
+    Test = "%s"
   }
 }
 `, rInt, rInt, rString)

@@ -6,21 +6,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSSESDomainMailFrom_basic(t *testing.T) {
-	domain := fmt.Sprintf(
-		"%s.terraformtesting.com",
-		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	mailFromDomain1 := fmt.Sprintf("bounce1.%s", domain)
-	mailFromDomain2 := fmt.Sprintf("bounce2.%s", domain)
+	dn := testAccRandomDomain()
+	domain := dn.String()
+	mailFromDomain1 := dn.Subdomain("bounce1").String()
+	mailFromDomain2 := dn.Subdomain("bounce2").String()
 	resourceName := "aws_ses_domain_mail_from.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESDomainMailFromDestroy,
 		Steps: []resource.TestStep{
@@ -52,14 +51,14 @@ func TestAccAWSSESDomainMailFrom_basic(t *testing.T) {
 }
 
 func TestAccAWSSESDomainMailFrom_disappears(t *testing.T) {
-	domain := fmt.Sprintf(
-		"%s.terraformtesting.com",
-		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	mailFromDomain := fmt.Sprintf("bounce.%s", domain)
+	dn := testAccRandomDomain()
+	domain := dn.String()
+	mailFromDomain := dn.Subdomain("bounce").String()
 	resourceName := "aws_ses_domain_mail_from.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESDomainMailFromDestroy,
 		Steps: []resource.TestStep{
@@ -76,14 +75,14 @@ func TestAccAWSSESDomainMailFrom_disappears(t *testing.T) {
 }
 
 func TestAccAWSSESDomainMailFrom_disappears_Identity(t *testing.T) {
-	domain := fmt.Sprintf(
-		"%s.terraformtesting.com",
-		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	mailFromDomain := fmt.Sprintf("bounce.%s", domain)
+	dn := testAccRandomDomain()
+	domain := dn.String()
+	mailFromDomain := dn.Subdomain("bounce").String()
 	resourceName := "aws_ses_domain_mail_from.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESDomainMailFromDestroy,
 		Steps: []resource.TestStep{
@@ -100,13 +99,12 @@ func TestAccAWSSESDomainMailFrom_disappears_Identity(t *testing.T) {
 }
 
 func TestAccAWSSESDomainMailFrom_behaviorOnMxFailure(t *testing.T) {
-	domain := fmt.Sprintf(
-		"%s.terraformtesting.com",
-		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	domain := testAccRandomDomain().String()
 	resourceName := "aws_ses_domain_mail_from.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESDomainMailFromDestroy,
 		Steps: []resource.TestStep{
@@ -145,7 +143,7 @@ func testAccCheckAwsSESDomainMailFromExists(n string) resource.TestCheckFunc {
 		}
 
 		domain := rs.Primary.ID
-		conn := testAccProvider.Meta().(*AWSClient).sesConn
+		conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 		params := &ses.GetIdentityMailFromDomainAttributesInput{
 			Identities: []*string{
@@ -167,7 +165,7 @@ func testAccCheckAwsSESDomainMailFromExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckSESDomainMailFromDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesConn
+	conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_domain_mail_from" {
@@ -192,7 +190,7 @@ func testAccCheckSESDomainMailFromDestroy(s *terraform.State) error {
 
 func testAccCheckAwsSESDomainMailFromDisappears(identity string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).sesConn
+		conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 		input := &ses.SetIdentityMailFromDomainInput{
 			Identity:       aws.String(identity),
@@ -212,7 +210,7 @@ resource "aws_ses_domain_identity" "test" {
 }
 
 resource "aws_ses_domain_mail_from" "test" {
-  domain           = "${aws_ses_domain_identity.test.domain}"
+  domain           = aws_ses_domain_identity.test.domain
   mail_from_domain = "%s"
 }
 `, domain, mailFromDomain)
@@ -226,7 +224,7 @@ resource "aws_ses_domain_identity" "test" {
 
 resource "aws_ses_domain_mail_from" "test" {
   behavior_on_mx_failure = "%s"
-  domain                 = "${aws_ses_domain_identity.test.domain}"
+  domain                 = aws_ses_domain_identity.test.domain
   mail_from_domain       = "bounce.${aws_ses_domain_identity.test.domain}"
 }
 `, domain, behaviorOnMxFailure)

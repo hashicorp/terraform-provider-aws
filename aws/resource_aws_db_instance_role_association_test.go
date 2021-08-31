@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSDbInstanceRoleAssociation_basic(t *testing.T) {
@@ -20,6 +20,7 @@ func TestAccAWSDbInstanceRoleAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDbInstanceRoleAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -50,6 +51,7 @@ func TestAccAWSDbInstanceRoleAssociation_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDbInstanceRoleAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -158,37 +160,48 @@ func testAccCheckAWSDbInstanceRoleAssociationDisappears(dbInstance *rds.DBInstan
 
 func testAccAWSDbInstanceRoleAssociationConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine        = "oracle-se2"
+  license_model = "bring-your-own-license"
+  storage_type  = "standard"
+
+  preferred_instance_classes = ["db.m5.large", "db.m4.large", "db.r4.large"]
+}
+
 data "aws_iam_policy_document" "rds_assume_role_policy" {
   statement {
     actions = ["sts:AssumeRole"]
     effect  = "Allow"
 
     principals {
-      identifiers = ["rds.amazonaws.com"]
+      identifiers = ["rds.${data.aws_partition.current.dns_suffix}"]
       type        = "Service"
     }
   }
 }
 
 resource "aws_iam_role" "test" {
-  assume_role_policy = "${data.aws_iam_policy_document.rds_assume_role_policy.json}"
+  assume_role_policy = data.aws_iam_policy_document.rds_assume_role_policy.json
   name               = %[1]q
 }
 
 resource "aws_db_instance" "test" {
   allocated_storage   = 10
-  engine              = "oracle-se"
+  engine              = data.aws_rds_orderable_db_instance.test.engine
   identifier          = %[1]q
-  instance_class      = "db.t2.micro"
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model       = data.aws_rds_orderable_db_instance.test.license_model
   password            = "avoid-plaintext-passwords"
   username            = "tfacctest"
   skip_final_snapshot = true
 }
 
 resource "aws_db_instance_role_association" "test" {
-  db_instance_identifier = "${aws_db_instance.test.id}"
+  db_instance_identifier = aws_db_instance.test.id
   feature_name           = "S3_INTEGRATION"
-  role_arn               = "${aws_iam_role.test.arn}"
+  role_arn               = aws_iam_role.test.arn
 }
 `, rName)
 }

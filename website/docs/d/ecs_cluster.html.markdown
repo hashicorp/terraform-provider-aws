@@ -1,4 +1,5 @@
 ---
+subcategory: "ECS"
 layout: "aws"
 page_title: "AWS: aws_ecs_cluster"
 description: |-
@@ -12,7 +13,7 @@ cluster within an AWS ECS service.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ecs_cluster" "ecs-mongo" {
   cluster_name = "ecs-mongo-production"
 }

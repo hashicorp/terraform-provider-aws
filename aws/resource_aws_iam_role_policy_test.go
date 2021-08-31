@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSIAMRolePolicy_basic(t *testing.T) {
@@ -25,6 +25,7 @@ func TestAccAWSIAMRolePolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
 		Steps: []resource.TestStep{
@@ -72,6 +73,7 @@ func TestAccAWSIAMRolePolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
 		Steps: []resource.TestStep{
@@ -98,10 +100,10 @@ func TestAccAWSIAMRolePolicy_namePrefix(t *testing.T) {
 	roleName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckIAMRolePolicyDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIAMRolePolicyConfig_namePrefix(role, "*"),
@@ -143,10 +145,10 @@ func TestAccAWSIAMRolePolicy_generatedName(t *testing.T) {
 	roleName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckIAMRolePolicyDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIAMRolePolicyConfig_generatedName(role, "*"),
@@ -185,12 +187,30 @@ func TestAccAWSIAMRolePolicy_invalidJSON(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccIAMRolePolicyConfig_invalidJSON(role),
 				ExpectError: regexp.MustCompile("invalid JSON"),
+			},
+		},
+	})
+}
+
+func TestAccAWSIAMRolePolicy_Policy_InvalidResource(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccIAMRolePolicyConfig_Policy_InvalidResource(rName),
+				ExpectError: regexp.MustCompile("MalformedPolicyDocument"),
 			},
 		},
 	})
@@ -307,9 +327,24 @@ func testAccCheckAWSIAMRolePolicyNameMatches(i, j *iam.GetRolePolicyOutput) reso
 func testAccAwsIamRolePolicyConfig(suffix string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role_%[1]s" {
-  name               = "tf_test_role_test_%[1]s"
-  path               = "/"
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ec2.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
+  name = "tf_test_role_test_%[1]s"
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
 }
 
 resource "aws_iam_role_policy" "test_%[1]s" {
@@ -355,7 +390,7 @@ EOF
 
 resource "aws_iam_role_policy" "test" {
   name = "tf_test_policy_%s"
-  role = "${aws_iam_role.test.name}"
+  role = aws_iam_role.test.name
 
   policy = <<EOF
 {
@@ -396,7 +431,7 @@ EOF
 
 resource "aws_iam_role_policy" "test" {
   name_prefix = "tf_test_policy_"
-  role        = "${aws_iam_role.test.name}"
+  role        = aws_iam_role.test.name
 
   policy = <<EOF
 {
@@ -436,7 +471,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  role = "${aws_iam_role.test.name}"
+  role = aws_iam_role.test.name
 
   policy = <<EOF
 {
@@ -477,7 +512,7 @@ EOF
 
 resource "aws_iam_role_policy" "test" {
   name = "tf_test_policy_%s"
-  role = "${aws_iam_role.test.name}"
+  role = aws_iam_role.test.name
 
   policy = <<EOF
 {
@@ -493,7 +528,7 @@ EOF
 
 resource "aws_iam_role_policy" "test2" {
   name = "tf_test_policy_2_%s"
-  role = "${aws_iam_role.test.name}"
+  role = aws_iam_role.test.name
 
   policy = <<EOF
 {
@@ -534,18 +569,55 @@ EOF
 
 resource "aws_iam_role_policy" "test" {
   name = "tf_test_policy_%s"
-  role = "${aws_iam_role.test.name}"
+  role = aws_iam_role.test.name
 
   policy = <<EOF
-  {
-    "Version": "2012-10-17",
-    "Statement": {
-      "Effect": "Allow",
-      "Action": "*",
-      "Resource": "*"
-    }
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
   }
   EOF
 }
 `, role, role)
+}
+
+func testAccIAMRolePolicyConfig_Policy_InvalidResource(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
+
+  policy = jsonencode({
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "*"
+      Resource = [["*"]]
+    }]
+    Version = "2012-10-17"
+  })
+}
+`, rName)
 }

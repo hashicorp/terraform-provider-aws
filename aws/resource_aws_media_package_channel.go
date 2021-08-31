@@ -7,9 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediapackage"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsMediaPackageChannel() *schema.Resource {
@@ -66,34 +67,42 @@ func resourceAwsMediaPackageChannel() *schema.Resource {
 					},
 				},
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsMediaPackageChannelCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).mediapackageconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &mediapackage.CreateChannelInput{
 		Id:          aws.String(d.Get("channel_id").(string)),
 		Description: aws.String(d.Get("description").(string)),
 	}
 
-	if attr, ok := d.GetOk("tags"); ok {
-		input.Tags = tagsFromMapGeneric(attr.(map[string]interface{}))
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().MediapackageTags()
 	}
 
-	_, err := conn.CreateChannel(input)
+	resp, err := conn.CreateChannel(input)
 	if err != nil {
 		return fmt.Errorf("error creating MediaPackage Channel: %s", err)
 	}
 
-	d.SetId(d.Get("channel_id").(string))
+	d.SetId(aws.StringValue(resp.Id))
+
 	return resourceAwsMediaPackageChannelRead(d, meta)
 }
 
 func resourceAwsMediaPackageChannelRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).mediapackageconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &mediapackage.DescribeChannelInput{
 		Id: aws.String(d.Id()),
@@ -110,8 +119,15 @@ func resourceAwsMediaPackageChannelRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error setting hls_ingest: %s", err)
 	}
 
-	if err := d.Set("tags", tagsToMapGeneric(resp.Tags)); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags := keyvaluetags.MediapackageKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -130,8 +146,13 @@ func resourceAwsMediaPackageChannelUpdate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error updating MediaPackage Channel: %s", err)
 	}
 
-	if err := setTagsMediaPackage(conn, d, d.Get("arn").(string)); err != nil {
-		return fmt.Errorf("error updating MediaPackage Channel (%s) tags: %s", d.Id(), err)
+	arn := d.Get("arn").(string)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := keyvaluetags.MediapackageUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating MediaPackage Channel (%s) tags: %s", arn, err)
+		}
 	}
 
 	return resourceAwsMediaPackageChannelRead(d, meta)

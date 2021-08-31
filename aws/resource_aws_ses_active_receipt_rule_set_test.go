@@ -4,32 +4,83 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSSESActiveReceiptRuleSet_basic(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+// Only one SES Receipt RuleSet can be active at a time, so run serially
+// locally and in TeamCity.
+func TestAccAWSSESActiveReceiptRuleSet_serial(t *testing.T) {
+	testFuncs := map[string]func(t *testing.T){
+		"basic":      testAccAWSSESActiveReceiptRuleSet_basic,
+		"disappears": testAccAWSSESActiveReceiptRuleSet_disappears,
+	}
+
+	for name, testFunc := range testFuncs {
+		testFunc := testFunc
+
+		t.Run(name, func(t *testing.T) {
+			testFunc(t)
+		})
+	}
+}
+
+func testAccAWSSESActiveReceiptRuleSet_basic(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ses_active_receipt_rule_set.test"
+
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSSES(t)
+			testAccPreCheckSESReceiptRule(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESActiveReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESActiveReceiptRuleSetConfig,
+				Config: testAccAWSSESActiveReceiptRuleSetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESActiveReceiptRuleSetExists("aws_ses_active_receipt_rule_set.test"),
+					testAccCheckAwsSESActiveReceiptRuleSetExists(resourceName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s", rName)),
 				),
 			},
 		},
 	})
 }
 
+func testAccAWSSESActiveReceiptRuleSet_disappears(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ses_active_receipt_rule_set.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSSES(t)
+			testAccPreCheckSESReceiptRule(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSESActiveReceiptRuleSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSESActiveReceiptRuleSetConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESActiveReceiptRuleSetExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesActiveReceiptRuleSet(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckSESActiveReceiptRuleSetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesConn
+	conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_active_receipt_rule_set" {
@@ -41,7 +92,7 @@ func testAccCheckSESActiveReceiptRuleSetDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if response.Metadata != nil && *response.Metadata.Name == "test-receipt-rule" {
+		if response.Metadata != nil && (aws.StringValue(response.Metadata.Name) == rs.Primary.ID) {
 			return fmt.Errorf("Active receipt rule set still exists")
 		}
 
@@ -62,27 +113,29 @@ func testAccCheckAwsSESActiveReceiptRuleSetExists(n string) resource.TestCheckFu
 			return fmt.Errorf("SES Active Receipt Rule Set name not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sesConn
+		conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 		response, err := conn.DescribeActiveReceiptRuleSet(&ses.DescribeActiveReceiptRuleSetInput{})
 		if err != nil {
 			return err
 		}
 
-		if *response.Metadata.Name != "test-receipt-rule" {
-			return fmt.Errorf("The active receipt rule set (%s) was not set to test-receipt-rule", *response.Metadata.Name)
+		if response.Metadata != nil && (aws.StringValue(response.Metadata.Name) != rs.Primary.ID) {
+			return fmt.Errorf("The active receipt rule set (%s) was not set to %s", aws.StringValue(response.Metadata.Name), rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-const testAccAWSSESActiveReceiptRuleSetConfig = `
+func testAccAWSSESActiveReceiptRuleSetConfig(name string) string {
+	return fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
-    rule_set_name = "test-receipt-rule"
+  rule_set_name = %[1]q
 }
 
 resource "aws_ses_active_receipt_rule_set" "test" {
-    rule_set_name = "${aws_ses_receipt_rule_set.test.rule_set_name}"
+  rule_set_name = aws_ses_receipt_rule_set.test.rule_set_name
 }
-`
+`, name)
+}

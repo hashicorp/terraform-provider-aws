@@ -2,15 +2,15 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
@@ -19,10 +19,10 @@ func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
 	randClusterName := fmt.Sprintf("cluster-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_appautoscaling_target.bar",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSAppautoscalingTargetDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAppautoscalingTargetConfig(randClusterName),
@@ -53,17 +53,41 @@ func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppautoScalingTarget_spotFleetRequest(t *testing.T) {
+func TestAccAWSAppautoScalingTarget_disappears(t *testing.T) {
 	var target applicationautoscaling.ScalableTarget
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_appautoscaling_target.bar"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_appautoscaling_target.test",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSAppautoscalingTargetDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppautoscalingTargetSpotFleetRequestConfig,
+				Config: testAccAWSAppautoscalingTargetConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppautoscalingTargetExists(resourceName, &target),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppautoscalingTarget(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAppautoScalingTarget_spotFleetRequest(t *testing.T) {
+	var target applicationautoscaling.ScalableTarget
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAppautoscalingTargetSpotFleetRequestConfig(validUntil),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppautoscalingTargetExists("aws_appautoscaling_target.test", &target),
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.test", "service_namespace", "ec2"),
@@ -86,6 +110,7 @@ func TestAccAWSAppautoScalingTarget_emrCluster(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
 		Steps: []resource.TestStep{
@@ -116,6 +141,7 @@ func TestAccAWSAppautoScalingTarget_multipleTargets(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
 		Steps: []resource.TestStep{
@@ -147,10 +173,9 @@ func TestAccAWSAppautoScalingTarget_optionalRoleArn(t *testing.T) {
 	rInt := acctest.RandInt()
 	tableName := fmt.Sprintf("tf_acc_test_table_%d", rInt)
 
-	r, _ := regexp.Compile("arn:aws:iam::.*:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable")
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, applicationautoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
 		Steps: []resource.TestStep{
@@ -158,7 +183,8 @@ func TestAccAWSAppautoScalingTarget_optionalRoleArn(t *testing.T) {
 				Config: testAccAWSAppautoscalingTarget_optionalRoleArn(tableName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppautoscalingTargetExists("aws_appautoscaling_target.read", &readTarget),
-					resource.TestMatchResourceAttr("aws_appautoscaling_target.read", "role_arn", r),
+					testAccCheckResourceAttrGlobalARN("aws_appautoscaling_target.read", "role_arn", "iam",
+						"role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable"),
 				),
 			},
 		},
@@ -257,8 +283,8 @@ EOF
 
 resource "aws_ecs_service" "service" {
   name            = "foobar"
-  cluster         = "${aws_ecs_cluster.foo.id}"
-  task_definition = "${aws_ecs_task_definition.task.arn}"
+  cluster         = aws_ecs_cluster.foo.id
+  task_definition = aws_ecs_task_definition.task.arn
   desired_count   = 1
 
   deployment_maximum_percent         = 200
@@ -300,8 +326,8 @@ EOF
 
 resource "aws_ecs_service" "service" {
   name            = "foobar"
-  cluster         = "${aws_ecs_cluster.foo.id}"
-  task_definition = "${aws_ecs_task_definition.task.arn}"
+  cluster         = aws_ecs_cluster.foo.id
+  task_definition = aws_ecs_task_definition.task.arn
   desired_count   = 2
 
   deployment_maximum_percent         = 200
@@ -322,8 +348,13 @@ func testAccAWSAppautoscalingTargetEmrClusterConfig(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # The requested instance type m3.xlarge is not supported in the requested availability zone.
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 data "aws_partition" "current" {}
@@ -334,15 +365,20 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   applications  = ["Spark"]
 
   ec2_attributes {
-    subnet_id                         = "${aws_subnet.main.id}"
-    emr_managed_master_security_group = "${aws_security_group.allow_all.id}"
-    emr_managed_slave_security_group  = "${aws_security_group.allow_all.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    subnet_id                         = aws_subnet.main.id
+    emr_managed_master_security_group = aws_security_group.allow_all.id
+    emr_managed_slave_security_group  = aws_security_group.allow_all.id
+    instance_profile                  = aws_iam_instance_profile.emr_profile.arn
   }
 
-  master_instance_type = "m3.xlarge"
-  core_instance_type   = "m3.xlarge"
-  core_instance_count  = 2
+  master_instance_group {
+    instance_type = "m3.xlarge"
+  }
+
+  core_instance_group {
+    instance_count = 2
+    instance_type  = "m3.xlarge"
+  }
 
   tags = {
     role     = "rolename"
@@ -361,14 +397,14 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   configurations = "test-fixtures/emr_configurations.json"
 
-  depends_on = ["aws_main_route_table_association.a"]
+  depends_on = [aws_main_route_table_association.a]
 
-  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
-  autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
+  service_role     = aws_iam_role.iam_emr_default_role.arn
+  autoscaling_role = aws_iam_role.emr-autoscaling-role.arn
 }
 
 resource "aws_emr_instance_group" "task" {
-  cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
+  cluster_id     = aws_emr_cluster.tf-test-cluster.id
   instance_count = 1
   instance_type  = "m3.xlarge"
 }
@@ -376,7 +412,7 @@ resource "aws_emr_instance_group" "task" {
 resource "aws_security_group" "allow_all" {
   name        = "allow_all_%d"
   description = "Allow all inbound traffic"
-  vpc_id      = "${aws_vpc.main.id}"
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     from_port = 0
@@ -392,10 +428,13 @@ resource "aws_security_group" "allow_all" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  depends_on = ["aws_subnet.main"]
+  depends_on = [aws_subnet.main]
 
   lifecycle {
-    ignore_changes = ["ingress", "egress"]
+    ignore_changes = [
+      ingress,
+      egress,
+    ]
   }
 
   tags = {
@@ -413,9 +452,9 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "main" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "168.31.0.0/20"
-  vpc_id            = "${aws_vpc.main.id}"
+  vpc_id            = aws_vpc.main.id
 
   tags = {
     Name = "tf-acc-appautoscaling-target-emr-cluster"
@@ -423,21 +462,21 @@ resource "aws_subnet" "main" {
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 }
 
 resource "aws_route_table" "r" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.gw.id}"
+    gateway_id = aws_internet_gateway.gw.id
   }
 }
 
 resource "aws_main_route_table_association" "a" {
-  vpc_id         = "${aws_vpc.main.id}"
-  route_table_id = "${aws_route_table.r.id}"
+  vpc_id         = aws_vpc.main.id
+  route_table_id = aws_route_table.r.id
 }
 
 resource "aws_iam_role" "iam_emr_default_role" {
@@ -461,8 +500,8 @@ EOT
 }
 
 resource "aws_iam_role_policy_attachment" "service-attach" {
-  role       = "${aws_iam_role.iam_emr_default_role.id}"
-  policy_arn = "${aws_iam_policy.iam_emr_default_policy.arn}"
+  role       = aws_iam_role.iam_emr_default_role.id
+  policy_arn = aws_iam_policy.iam_emr_default_policy.arn
 }
 
 resource "aws_iam_policy" "iam_emr_default_policy" {
@@ -556,13 +595,13 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%d"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  name = "emr_profile_%d"
+  role = aws_iam_role.iam_emr_profile_role.name
 }
 
 resource "aws_iam_role_policy_attachment" "profile-attach" {
-  role       = "${aws_iam_role.iam_emr_profile_role.id}"
-  policy_arn = "${aws_iam_policy.iam_emr_profile_policy.arn}"
+  role       = aws_iam_role.iam_emr_profile_role.id
+  policy_arn = aws_iam_policy.iam_emr_profile_policy.arn
 }
 
 resource "aws_iam_policy" "iam_emr_profile_policy" {
@@ -606,7 +645,7 @@ EOT
 # IAM Role for autoscaling
 resource "aws_iam_role" "emr-autoscaling-role" {
   name               = "EMR_AutoScaling_DefaultRole_%d"
-  assume_role_policy = "${data.aws_iam_policy_document.emr-autoscaling-role-policy.json}"
+  assume_role_policy = data.aws_iam_policy_document.emr-autoscaling-role-policy.json
 }
 
 data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
@@ -622,7 +661,7 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
 }
 
 resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
-  role       = "${aws_iam_role.emr-autoscaling-role.name}"
+  role       = aws_iam_role.emr-autoscaling-role.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
 }
 
@@ -630,14 +669,15 @@ resource "aws_appautoscaling_target" "bar" {
   service_namespace  = "elasticmapreduce"
   resource_id        = "instancegroup/${aws_emr_cluster.tf-test-cluster.id}/${aws_emr_instance_group.task.id}"
   scalable_dimension = "elasticmapreduce:instancegroup:InstanceCount"
-  role_arn           = "${aws_iam_role.emr-autoscaling-role.arn}"
+  role_arn           = aws_iam_role.emr-autoscaling-role.arn
   min_capacity       = 1
   max_capacity       = 8
 }
 `, rInt, rInt, rInt, rInt, rInt, rInt, rInt, rInt)
 }
 
-var testAccAWSAppautoscalingTargetSpotFleetRequestConfig = fmt.Sprintf(`
+func testAccAWSAppautoscalingTargetSpotFleetRequestConfig(validUntil string) string {
+	return fmt.Sprintf(`
 data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   most_recent = true
   owners      = ["amazon"]
@@ -676,31 +716,32 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "fleet_role_policy" {
-  role = "${aws_iam_role.fleet_role.name}"
+  role       = aws_iam_role.fleet_role.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole"
 }
 
 resource "aws_spot_fleet_request" "test" {
-  iam_fleet_role = "${aws_iam_role.fleet_role.arn}"
-  spot_price = "0.005"
-  target_capacity = 2
-  valid_until = "2019-11-04T20:44:20Z"
+  iam_fleet_role                      = aws_iam_role.fleet_role.arn
+  spot_price                          = "0.005"
+  target_capacity                     = 2
+  valid_until                         = %[1]q
   terminate_instances_with_expiration = true
 
   launch_specification {
     instance_type = "m3.medium"
-    ami = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   }
 }
 
 resource "aws_appautoscaling_target" "test" {
-  service_namespace = "ec2"
-  resource_id = "spot-fleet-request/${aws_spot_fleet_request.test.id}"
+  service_namespace  = "ec2"
+  resource_id        = "spot-fleet-request/${aws_spot_fleet_request.test.id}"
   scalable_dimension = "ec2:spot-fleet-request:TargetCapacity"
-  min_capacity = 1
-  max_capacity = 3
+  min_capacity       = 1
+  max_capacity       = 3
 }
-`)
+`, validUntil)
+}
 
 func testAccAWSAppautoscalingTarget_multipleTargets(tableName string) string {
 	return fmt.Sprintf(`

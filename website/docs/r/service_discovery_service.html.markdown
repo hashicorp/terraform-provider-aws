@@ -1,4 +1,5 @@
 ---
+subcategory: "Service Discovery"
 layout: "aws"
 page_title: "AWS: aws_service_discovery_service"
 description: |-
@@ -11,7 +12,7 @@ Provides a Service Discovery Service resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_vpc" "example" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -21,14 +22,14 @@ resource "aws_vpc" "example" {
 resource "aws_service_discovery_private_dns_namespace" "example" {
   name        = "example.terraform.local"
   description = "example"
-  vpc         = "${aws_vpc.example.id}"
+  vpc         = aws_vpc.example.id
 }
 
 resource "aws_service_discovery_service" "example" {
   name = "example"
 
   dns_config {
-    namespace_id = "${aws_service_discovery_private_dns_namespace.example.id}"
+    namespace_id = aws_service_discovery_private_dns_namespace.example.id
 
     dns_records {
       ttl  = 10
@@ -44,7 +45,7 @@ resource "aws_service_discovery_service" "example" {
 }
 ```
 
-```hcl
+```terraform
 resource "aws_service_discovery_public_dns_namespace" "example" {
   name        = "example.terraform.com"
   description = "example"
@@ -54,7 +55,7 @@ resource "aws_service_discovery_service" "example" {
   name = "example"
 
   dns_config {
-    namespace_id = "${aws_service_discovery_public_dns_namespace.example.id}"
+    namespace_id = aws_service_discovery_public_dns_namespace.example.id
 
     dns_records {
       ttl  = 10
@@ -80,6 +81,7 @@ The following arguments are supported:
 * `health_check_config` - (Optional) A complex type that contains settings for an optional health check. Only for Public DNS namespaces.
 * `health_check_custom_config` - (Optional, ForceNew) A complex type that contains settings for ECS managed health checks.
 * `namespace_id` - (Optional) The ID of the namespace that you want to use to create the service.
+* `tags` - (Optional) A map of tags to assign to the service. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### dns_config
 
@@ -116,6 +118,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the service.
 * `arn` - The ARN of the service.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 

@@ -1,4 +1,5 @@
 ---
+subcategory: "DataPipeline"
 layout: "aws"
 page_title: "AWS: aws_datapipeline_pipeline"
 description: |-
@@ -11,9 +12,9 @@ Provides a Data Pipeline resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_datapipeline_pipeline" "default" {
-	name      	= "tf-pipeline-default"
+  name = "tf-pipeline-default"
 }
 ```
 
@@ -23,13 +24,14 @@ The following arguments are supported:
 
 * `name` - (Required) The name of Pipeline.
 * `description` - (Optional) The description of Pipeline.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The identifier of the client certificate.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 

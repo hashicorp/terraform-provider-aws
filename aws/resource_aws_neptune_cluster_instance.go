@@ -8,8 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsNeptuneClusterInstance() *schema.Resource {
@@ -133,7 +135,7 @@ func resourceAwsNeptuneClusterInstance() *schema.Resource {
 			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  8182,
+				Default:  neptuneDefaultPort,
 				ForceNew: true,
 			},
 
@@ -175,19 +177,23 @@ func resourceAwsNeptuneClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 
 			"writer": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsNeptuneClusterInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
-	tags := tagsFromMapNeptune(d.Get("tags").(map[string]interface{}))
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := &neptune.CreateDBInstanceInput{
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
@@ -196,7 +202,7 @@ func resourceAwsNeptuneClusterInstanceCreate(d *schema.ResourceData, meta interf
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags:                    tags,
+		Tags:                    tags.IgnoreAws().NeptuneTags(),
 	}
 
 	if attr, ok := d.GetOk("availability_zone"); ok {
@@ -236,7 +242,7 @@ func resourceAwsNeptuneClusterInstanceCreate(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG] Creating Neptune Instance: %s", createOpts)
 
 	var resp *neptune.CreateDBInstanceOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateDBInstance(createOpts)
 		if err != nil {
@@ -291,6 +297,9 @@ func resourceAwsNeptuneClusterInstanceRead(d *schema.ResourceData, meta interfac
 	}
 
 	conn := meta.(*AWSClient).neptuneconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	resp, err := conn.DescribeDBClusters(&neptune.DescribeDBClustersInput{
 		DBClusterIdentifier: db.DBClusterIdentifier,
 	})
@@ -347,8 +356,21 @@ func resourceAwsNeptuneClusterInstanceRead(d *schema.ResourceData, meta interfac
 		d.Set("neptune_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
 	}
 
-	if err := saveTagsNeptune(conn, d, aws.StringValue(db.DBInstanceArn)); err != nil {
-		return fmt.Errorf("Failed to save tags for Neptune Cluster Instance (%s): %s", aws.StringValue(db.DBInstanceIdentifier), err)
+	tags, err := keyvaluetags.NeptuneListTags(conn, d.Get("arn").(string))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Neptune Cluster Instance (%s): %s", d.Get("arn").(string), err)
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -374,25 +396,21 @@ func resourceAwsNeptuneClusterInstanceUpdate(d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChange("preferred_backup_window") {
-		d.SetPartial("preferred_backup_window")
 		req.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
 		requestUpdate = true
 	}
 
 	if d.HasChange("preferred_maintenance_window") {
-		d.SetPartial("preferred_maintenance_window")
 		req.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
 		requestUpdate = true
 	}
 
 	if d.HasChange("auto_minor_version_upgrade") {
-		d.SetPartial("auto_minor_version_upgrade")
 		req.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
 		requestUpdate = true
 	}
 
 	if d.HasChange("promotion_tier") {
-		d.SetPartial("promotion_tier")
 		req.PromotionTier = aws.Int64(int64(d.Get("promotion_tier").(int)))
 		requestUpdate = true
 	}
@@ -400,7 +418,7 @@ func resourceAwsNeptuneClusterInstanceUpdate(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG] Send Neptune Instance Modification request: %#v", requestUpdate)
 	if requestUpdate {
 		log.Printf("[DEBUG] Neptune Instance Modification request: %#v", req)
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.ModifyDBInstance(req)
 			if err != nil {
 				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
@@ -434,8 +452,12 @@ func resourceAwsNeptuneClusterInstanceUpdate(d *schema.ResourceData, meta interf
 
 	}
 
-	if err := setTagsNeptune(conn, d, d.Get("arn").(string)); err != nil {
-		return err
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := keyvaluetags.NeptuneUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Neptune Cluster Instance (%s) tags: %s", d.Get("arn").(string), err)
+		}
 	}
 
 	return resourceAwsNeptuneClusterInstanceRead(d, meta)
@@ -480,6 +502,9 @@ var resourceAwsNeptuneClusterInstanceCreateUpdatePendingStates = []string{
 	"renaming",
 	"starting",
 	"upgrading",
+	"configuring-log-exports",
+	"configuring-enhanced-monitoring",
+	"storage-optimization",
 }
 
 var resourceAwsNeptuneClusterInstanceDeletePendingStates = []string{

@@ -1,4 +1,5 @@
 ---
+subcategory: "DynamoDB"
 layout: "aws"
 page_title: "AWS: aws_dynamodb_table"
 description: |-
@@ -11,7 +12,7 @@ Provides information about a DynamoDB table.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_dynamodb_table" "tableName" {
   name = "tableName"
 }

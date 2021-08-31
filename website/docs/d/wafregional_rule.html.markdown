@@ -1,4 +1,5 @@
 ---
+subcategory: "WAF Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_rule"
 description: |-
@@ -11,7 +12,7 @@ description: |-
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_wafregional_rule" "example" {
   name = "tfWAFRegionalRule"
 }

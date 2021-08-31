@@ -4,35 +4,33 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
-func TestAccAWSRouteTableAssociation_basic(t *testing.T) {
-	var v, v2 ec2.RouteTable
-
-	resourceName := "aws_route_table_association.foo"
+func TestAccAWSRouteTableAssociation_Subnet_basic(t *testing.T) {
+	var rta ec2.RouteTableAssociation
+	resourceName := "aws_route_table_association.test"
+	resourceNameRouteTable := "aws_route_table.test"
+	resourceNameSubnet := "aws_subnet.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableAssociationConfig,
+				Config: testAccRouteTableAssociationConfigSubnet(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableAssociationExists(
-						resourceName, &v),
-				),
-			},
-			{
-				Config: testAccRouteTableAssociationConfigChange,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableAssociationExists(
-						resourceName, &v2),
+					testAccCheckRouteTableAssociationExists(resourceName, &rta),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", resourceNameSubnet, "id"),
 				),
 			},
 			{
@@ -45,20 +43,59 @@ func TestAccAWSRouteTableAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRouteTableAssociation_replace(t *testing.T) {
-	var v, v2 ec2.RouteTable
-	resourceName := "aws_route_table_association.foo"
+func TestAccAWSRouteTableAssociation_Subnet_ChangeRouteTable(t *testing.T) {
+	var rta ec2.RouteTableAssociation
+	resourceName := "aws_route_table_association.test"
+	resourceNameRouteTable1 := "aws_route_table.test"
+	resourceNameRouteTable2 := "aws_route_table.test2"
+	resourceNameSubnet := "aws_subnet.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableAssociationConfig,
+				Config: testAccRouteTableAssociationConfigSubnet(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableAssociationExists(
-						resourceName, &v),
+					testAccCheckRouteTableAssociationExists(resourceName, &rta),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable1, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", resourceNameSubnet, "id"),
+				),
+			},
+			{
+				Config: testAccRouteTableAssociationConfigSubnetChangeRouteTable(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableAssociationExists(resourceName, &rta),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable2, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", resourceNameSubnet, "id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRouteTableAssociation_Gateway_basic(t *testing.T) {
+	var rta ec2.RouteTableAssociation
+	resourceName := "aws_route_table_association.test"
+	resourceNameRouteTable := "aws_route_table.test"
+	resourceNameGateway := "aws_internet_gateway.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRouteTableAssociationConfigGateway(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableAssociationExists(resourceName, &rta),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, "id"),
 				),
 			},
 			{
@@ -67,12 +104,62 @@ func TestAccAWSRouteTableAssociation_replace(t *testing.T) {
 				ImportStateIdFunc: testAccAWSRouteTabAssocImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
+		},
+	})
+}
+
+func TestAccAWSRouteTableAssociation_Gateway_ChangeRouteTable(t *testing.T) {
+	var rta ec2.RouteTableAssociation
+	resourceName := "aws_route_table_association.test"
+	resourceNameRouteTable1 := "aws_route_table.test"
+	resourceNameRouteTable2 := "aws_route_table.test2"
+	resourceNameGateway := "aws_internet_gateway.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableAssociationConfigReplace,
+				Config: testAccRouteTableAssociationConfigGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableAssociationExists(
-						resourceName, &v2),
+					testAccCheckRouteTableAssociationExists(resourceName, &rta),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable1, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, "id"),
 				),
+			},
+			{
+				Config: testAccRouteTableAssociationConfigGatewayChangeRouteTable(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableAssociationExists(resourceName, &rta),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable2, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, "id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRouteTableAssociation_disappears(t *testing.T) {
+	var rta ec2.RouteTableAssociation
+	resourceName := "aws_route_table_association.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRouteTableAssociationConfigSubnet(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableAssociationExists(resourceName, &rta),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRouteTableAssociation(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -86,34 +173,23 @@ func testAccCheckRouteTableAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the resource
-		resp, err := conn.DescribeRouteTables(&ec2.DescribeRouteTablesInput{
-			RouteTableIds: []*string{aws.String(rs.Primary.Attributes["route_table_id"])},
-		})
+		_, err := finder.RouteTableAssociationByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
 		if err != nil {
-			// Verify the error is what we want
-			ec2err, ok := err.(awserr.Error)
-			if !ok {
-				return err
-			}
-			if ec2err.Code() != "InvalidRouteTableID.NotFound" {
-				return err
-			}
-			return nil
+			return err
 		}
 
-		rt := resp.RouteTables[0]
-		if len(rt.Associations) > 0 {
-			return fmt.Errorf(
-				"route table %s has associations", *rt.RouteTableId)
-
-		}
+		return fmt.Errorf("Route table association %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckRouteTableAssociationExists(n string, v *ec2.RouteTable) resource.TestCheckFunc {
+func testAccCheckRouteTableAssociationExists(n string, v *ec2.RouteTableAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -125,21 +201,14 @@ func testAccCheckRouteTableAssociationExists(n string, v *ec2.RouteTable) resour
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		resp, err := conn.DescribeRouteTables(&ec2.DescribeRouteTablesInput{
-			RouteTableIds: []*string{aws.String(rs.Primary.Attributes["route_table_id"])},
-		})
+
+		association, err := finder.RouteTableAssociationByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if len(resp.RouteTables) == 0 {
-			return fmt.Errorf("RouteTable not found")
-		}
 
-		*v = *resp.RouteTables[0]
-
-		if len(v.Associations) == 0 {
-			return fmt.Errorf("no associations")
-		}
+		*v = *association
 
 		return nil
 	}
@@ -151,129 +220,145 @@ func testAccAWSRouteTabAssocImportStateIdFunc(resourceName string) resource.Impo
 		if !ok {
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
-
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["subnet_id"], rs.Primary.Attributes["route_table_id"]), nil
+		var target string
+		if rs.Primary.Attributes["subnet_id"] != "" {
+			target = rs.Primary.Attributes["subnet_id"]
+		} else if rs.Primary.Attributes["gateway_id"] != "" {
+			target = rs.Primary.Attributes["gateway_id"]
+		}
+		return fmt.Sprintf("%s/%s", target, rs.Primary.Attributes["route_table_id"]), nil
 	}
 }
 
-const testAccRouteTableAssociationConfig = `
-resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "tf-acc-route-table-assoc"
-	}
+func testAccRouteTableAssociationConfigBaseVPC(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_subnet" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-	cidr_block = "10.1.1.0/24"
-	tags = {
-		Name = "tf-acc-route-table-assoc"
-	}
+resource "aws_subnet" "test" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "10.1.1.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_internet_gateway" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-route-table-assoc"
-	}
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
 }
 
-resource "aws_route_table" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-	route {
-		cidr_block = "10.0.0.0/8"
-		gateway_id = "${aws_internet_gateway.foo.id}"
-	}
-	tags = {
-		Name = "tf-acc-route-table-assoc"
-	}
+func testAccRouteTableAssociationConfigSubnet(rName string) string {
+	return composeConfig(testAccRouteTableAssociationConfigBaseVPC(rName), fmt.Sprintf(`
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block = "10.0.0.0/8"
+    gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_route_table_association" "foo" {
-	route_table_id = "${aws_route_table.foo.id}"
-	subnet_id = "${aws_subnet.foo.id}"
+resource "aws_route_table_association" "test" {
+  route_table_id = aws_route_table.test.id
+  subnet_id      = aws_subnet.test.id
 }
-`
-
-const testAccRouteTableAssociationConfigChange = `
-resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "tf-acc-route-table-assoc"
-	}
+`, rName))
 }
 
-resource "aws_subnet" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-	cidr_block = "10.1.1.0/24"
-	tags = {
-		Name = "tf-acc-route-table-assoc"
-	}
+func testAccRouteTableAssociationConfigSubnetChangeRouteTable(rName string) string {
+	return composeConfig(testAccRouteTableAssociationConfigBaseVPC(rName), fmt.Sprintf(`
+resource "aws_route_table" "test2" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block = "10.0.0.0/8"
+    gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_internet_gateway" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-
-	tags = {
-		Name = "tf-acc-route-table-assoc"
-	}
+resource "aws_route_table_association" "test" {
+  route_table_id = aws_route_table.test2.id
+  subnet_id      = aws_subnet.test.id
+}
+`, rName))
 }
 
-resource "aws_route_table" "bar" {
-	vpc_id = "${aws_vpc.foo.id}"
-	route {
-		cidr_block = "10.0.0.0/8"
-		gateway_id = "${aws_internet_gateway.foo.id}"
-	}
-	tags = {
-		Name = "tf-acc-route-change-table-assoc"
-	}
+func testAccRouteTableAssociationConfigGateway(rName string) string {
+	return composeConfig(testAccRouteTableAssociationConfigBaseVPC(rName), fmt.Sprintf(`
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block           = aws_subnet.test.cidr_block
+    network_interface_id = aws_network_interface.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_route_table_association" "foo" {
-	route_table_id = "${aws_route_table.bar.id}"
-	subnet_id = "${aws_subnet.foo.id}"
-}
-`
+resource "aws_network_interface" "test" {
+  subnet_id = aws_subnet.test.id
 
-const testAccRouteTableAssociationConfigReplace = `
-resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "tf-acc-route-table-assoc"
-	}
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_subnet" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
-	cidr_block = "10.1.1.0/24"
-	tags = {
-		Name = "tf-acc-route-table-assoc"
-	}
+resource "aws_route_table_association" "test" {
+  route_table_id = aws_route_table.test.id
+  gateway_id     = aws_internet_gateway.test.id
+}
+`, rName))
 }
 
-resource "aws_internet_gateway" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
+func testAccRouteTableAssociationConfigGatewayChangeRouteTable(rName string) string {
+	return composeConfig(testAccRouteTableAssociationConfigBaseVPC(rName), fmt.Sprintf(`
+resource "aws_route_table" "test2" {
+  vpc_id = aws_vpc.test.id
 
-	tags = {
-		Name = "tf-acc-route-table-assoc"
-	}
+  route {
+    cidr_block           = aws_subnet.test.cidr_block
+    network_interface_id = aws_network_interface.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_route_table" "bar" {
-	vpc_id = "${aws_vpc.foo.id}"
-	route {
-		cidr_block = "10.0.0.0/16"
-		gateway_id = "${aws_internet_gateway.foo.id}"
-	}
-	tags = {
-		Name = "tf-acc-replace-route-table-assoc"
-	}
+resource "aws_network_interface" "test" {
+  subnet_id = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_route_table_association" "foo" {
-	route_table_id = "${aws_route_table.bar.id}"
-	subnet_id = "${aws_subnet.foo.id}"
+resource "aws_route_table_association" "test" {
+  route_table_id = aws_route_table.test2.id
+  gateway_id     = aws_internet_gateway.test.id
 }
-`
+`, rName))
+}

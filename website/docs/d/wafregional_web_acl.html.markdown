@@ -1,4 +1,5 @@
 ---
+subcategory: "WAF Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_web_acl"
 description: |-
@@ -11,7 +12,7 @@ description: |-
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_wafregional_web_acl" "example" {
   name = "tfWAFRegionalWebACL"
 }

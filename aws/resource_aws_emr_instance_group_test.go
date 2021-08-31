@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
@@ -20,6 +20,7 @@ func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
@@ -33,10 +34,11 @@ func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"status"},
 			},
 		},
 	})
@@ -49,6 +51,7 @@ func TestAccAWSEMRInstanceGroup_BidPrice(t *testing.T) {
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
@@ -60,10 +63,11 @@ func TestAccAWSEMRInstanceGroup_BidPrice(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"status"},
 			},
 			{
 				Config: testAccAWSEmrInstanceGroupConfig_BidPrice(rInt),
@@ -74,10 +78,11 @@ func TestAccAWSEMRInstanceGroup_BidPrice(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"status"},
 			},
 			{
 				Config: testAccAWSEmrInstanceGroupConfig_basic(rInt),
@@ -98,6 +103,7 @@ func TestAccAWSEMRInstanceGroup_ConfigurationsJson(t *testing.T) {
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
@@ -109,10 +115,11 @@ func TestAccAWSEMRInstanceGroup_ConfigurationsJson(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"status"},
 			},
 			{
 				Config: testAccAWSEmrInstanceGroupConfig_ConfigurationsJson(rInt, "partitionName2"),
@@ -122,10 +129,11 @@ func TestAccAWSEMRInstanceGroup_ConfigurationsJson(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"status"},
 			},
 		},
 	})
@@ -138,6 +146,7 @@ func TestAccAWSEMRInstanceGroup_AutoScalingPolicy(t *testing.T) {
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
@@ -149,10 +158,11 @@ func TestAccAWSEMRInstanceGroup_AutoScalingPolicy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"status"},
 			},
 			{
 				Config: testAccAWSEmrInstanceGroupConfig_AutoScalingPolicy(rInt, 2, 3),
@@ -162,17 +172,18 @@ func TestAccAWSEMRInstanceGroup_AutoScalingPolicy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"status"},
 			},
 		},
 	})
 }
 
 // Confirm we can scale down the instance count.
-// Regression test for https://github.com/terraform-providers/terraform-provider-aws/issues/1264
+// Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/1264
 func TestAccAWSEMRInstanceGroup_InstanceCount(t *testing.T) {
 	var ig emr.InstanceGroup
 	rInt := acctest.RandInt()
@@ -180,6 +191,7 @@ func TestAccAWSEMRInstanceGroup_InstanceCount(t *testing.T) {
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
@@ -188,10 +200,11 @@ func TestAccAWSEMRInstanceGroup_InstanceCount(t *testing.T) {
 				Check:  testAccCheckAWSEmrInstanceGroupExists(resourceName, &ig),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"status"},
 			},
 			{
 				Config: testAccAWSEmrInstanceGroupConfig_zeroCount(rInt),
@@ -201,8 +214,8 @@ func TestAccAWSEMRInstanceGroup_InstanceCount(t *testing.T) {
 	})
 }
 
-// Regression test for https://github.com/terraform-providers/terraform-provider-aws/issues/1355
-func TestAccAWSEMRInstanceGroup_EmrClusterDisappears(t *testing.T) {
+// Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/1355
+func TestAccAWSEMRInstanceGroup_disappears_EmrCluster(t *testing.T) {
 	var cluster emr.Cluster
 	var ig emr.InstanceGroup
 	rInt := acctest.RandInt()
@@ -211,6 +224,7 @@ func TestAccAWSEMRInstanceGroup_EmrClusterDisappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
@@ -234,6 +248,7 @@ func TestAccAWSEMRInstanceGroup_EbsConfig_EbsOptimized(t *testing.T) {
 	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
@@ -246,10 +261,11 @@ func TestAccAWSEMRInstanceGroup_EbsConfig_EbsOptimized(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"status"},
 			},
 			{
 				Config: testAccAWSEmrInstanceGroupConfig_ebsConfig(rInt, false),
@@ -342,16 +358,29 @@ func testAccAWSEMRInstanceGroupRecreated(t *testing.T, before, after *emr.Instan
 }
 
 const testAccAWSEmrInstanceGroupBase = `
+data "aws_availability_zones" "available" {
+  # Many instance types are not available in this availability zone
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+data "aws_partition" "current" {}
+
 resource "aws_security_group" "allow_all" {
   name        = "allow_all"
   description = "Allow all inbound traffic"
-  vpc_id      = "${aws_vpc.main.id}"
+  vpc_id      = aws_vpc.main.id
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self        = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -361,7 +390,7 @@ resource "aws_security_group" "allow_all" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  depends_on = ["aws_subnet.main"]
+  depends_on = [aws_subnet.main]
 
   lifecycle {
     ignore_changes = ["ingress", "egress"]
@@ -374,61 +403,56 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "main" {
-  vpc_id     = "${aws_vpc.main.id}"
-  cidr_block = "168.31.0.0/20"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "168.31.0.0/20"
+  vpc_id            = aws_vpc.main.id
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 }
 
 resource "aws_route_table" "r" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.gw.id}"
+    gateway_id = aws_internet_gateway.gw.id
   }
 }
 
 resource "aws_main_route_table_association" "a" {
-  vpc_id         = "${aws_vpc.main.id}"
-  route_table_id = "${aws_route_table.r.id}"
+  vpc_id         = aws_vpc.main.id
+  route_table_id = aws_route_table.r.id
 }
 
 ## EMR Cluster Configuration
 resource "aws_emr_cluster" "tf-test-cluster" {
-  name          = "tf-test-emr-%[1]d"
-  release_label = "emr-5.26.0"
-  applications  = ["Spark"]
+  applications                      = ["Spark"]
+  autoscaling_role                  = aws_iam_role.emr-autoscaling-role.arn
+  configurations                    = "test-fixtures/emr_configurations.json"
+  keep_job_flow_alive_when_no_steps = true
+  name                              = "tf-test-emr-%[1]d"
+  release_label                     = "emr-5.26.0"
+  service_role                      = aws_iam_role.iam_emr_default_role.arn
 
   ec2_attributes {
-    subnet_id                         = "${aws_subnet.main.id}"
-    emr_managed_master_security_group = "${aws_security_group.allow_all.id}"
-    emr_managed_slave_security_group  = "${aws_security_group.allow_all.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    subnet_id                         = aws_subnet.main.id
+    emr_managed_master_security_group = aws_security_group.allow_all.id
+    emr_managed_slave_security_group  = aws_security_group.allow_all.id
+    instance_profile                  = aws_iam_instance_profile.emr_profile.arn
   }
 
   master_instance_group {
-		instance_type = "c4.large"
-	}
-
-  core_instance_group {
-		instance_type = "c4.large"
-		instance_count = 2
-	}
-
-  bootstrap_action {
-    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
-    name = "runif"
-    args = ["instance.isMaster=true", "echo running on master node"]
+    instance_type = "c4.large"
   }
 
-  configurations = "test-fixtures/emr_configurations.json"
-  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
-  autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
+  core_instance_group {
+    instance_type  = "c4.large"
+    instance_count = 2
+  }
 
-  depends_on = ["aws_internet_gateway.gw"]
+  depends_on = [aws_internet_gateway.gw]
 }
 
 
@@ -446,7 +470,7 @@ resource "aws_iam_role" "iam_emr_default_role" {
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "Service": "elasticmapreduce.amazonaws.com"
+        "Service": "elasticmapreduce.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -456,8 +480,8 @@ EOT
 }
 
 resource "aws_iam_role_policy_attachment" "service-attach" {
-  role       = "${aws_iam_role.iam_emr_default_role.id}"
-  policy_arn = "${aws_iam_policy.iam_emr_default_policy.arn}"
+  role       = aws_iam_role.iam_emr_default_role.id
+  policy_arn = aws_iam_policy.iam_emr_default_policy.arn
 }
 
 resource "aws_iam_policy" "iam_emr_default_policy" {
@@ -541,7 +565,7 @@ resource "aws_iam_role" "iam_emr_profile_role" {
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -551,13 +575,13 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%[1]d"
-  role = "${aws_iam_role.iam_emr_profile_role.name}"
+  name = "emr_profile_%[1]d"
+  role = aws_iam_role.iam_emr_profile_role.name
 }
 
 resource "aws_iam_role_policy_attachment" "profile-attach" {
-  role       = "${aws_iam_role.iam_emr_profile_role.id}"
-  policy_arn = "${aws_iam_policy.iam_emr_profile_policy.arn}"
+  role       = aws_iam_role.iam_emr_profile_role.id
+  policy_arn = aws_iam_policy.iam_emr_profile_policy.arn
 }
 
 resource "aws_iam_policy" "iam_emr_profile_policy" {
@@ -601,7 +625,7 @@ EOT
 # IAM Role for autoscaling
 resource "aws_iam_role" "emr-autoscaling-role" {
   name               = "EMR_AutoScaling_DefaultRole_%[1]d"
-  assume_role_policy = "${data.aws_iam_policy_document.emr-autoscaling-role-policy.json}"
+  assume_role_policy = data.aws_iam_policy_document.emr-autoscaling-role-policy.json
 }
 
 data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
@@ -610,45 +634,45 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
     actions = ["sts:AssumeRole"]
     principals {
       type        = "Service"
-      identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
+      identifiers = ["elasticmapreduce.${data.aws_partition.current.dns_suffix}", "application-autoscaling.${data.aws_partition.current.dns_suffix}"]
     }
   }
 }
 
 resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
-  role       = "${aws_iam_role.emr-autoscaling-role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
+  role       = aws_iam_role.emr-autoscaling-role.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
 }
 `
 
 func testAccAWSEmrInstanceGroupConfig_basic(r int) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
-	resource "aws_emr_instance_group" "task" {
-    cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
-    instance_count = 1
-    instance_type  = "c4.large"
-  }
+resource "aws_emr_instance_group" "task" {
+  cluster_id     = aws_emr_cluster.tf-test-cluster.id
+  instance_count = 1
+  instance_type  = "c4.large"
+}
 `, r)
 }
 
 func testAccAWSEmrInstanceGroupConfig_BidPrice(r int) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
-	resource "aws_emr_instance_group" "task" {
-    cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
-    bid_price			 = "0.30"
-    instance_count = 1
-    instance_type  = "c4.large"
-  }
+resource "aws_emr_instance_group" "task" {
+  cluster_id     = aws_emr_cluster.tf-test-cluster.id
+  bid_price      = "0.30"
+  instance_count = 1
+  instance_type  = "c4.large"
+}
 `, r)
 }
 
 func testAccAWSEmrInstanceGroupConfig_ConfigurationsJson(r int, name string) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
-	resource "aws_emr_instance_group" "task" {
-    cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
-    instance_count = 1
-    instance_type  = "c4.large"
-    configurations_json =  <<EOF
+resource "aws_emr_instance_group" "task" {
+  cluster_id          = aws_emr_cluster.tf-test-cluster.id
+  instance_count      = 1
+  instance_type       = "c4.large"
+  configurations_json = <<EOF
     [
       {
         "Classification": "yarn-site",
@@ -659,17 +683,17 @@ func testAccAWSEmrInstanceGroupConfig_ConfigurationsJson(r int, name string) str
       }
     ]
 EOF
-  }
+}
 `, r, name)
 }
 
 func testAccAWSEmrInstanceGroupConfig_AutoScalingPolicy(r, min, max int) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
-	resource "aws_emr_instance_group" "task" {
-    cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
-    instance_count = 1
-    instance_type  = "c4.large"
-    autoscaling_policy = <<EOT
+resource "aws_emr_instance_group" "task" {
+  cluster_id         = aws_emr_cluster.tf-test-cluster.id
+  instance_count     = 1
+  instance_type      = "c4.large"
+  autoscaling_policy = <<EOT
 {
   "Constraints": {
     "MinCapacity": %d,
@@ -708,25 +732,26 @@ EOT
 
 func testAccAWSEmrInstanceGroupConfig_ebsConfig(r int, o bool) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
-		resource "aws_emr_instance_group" "task" {
-    cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
-    instance_count = 1
-    instance_type  = "c4.large"
-    ebs_optimized = %t
-    ebs_config {
-      size = 10
-      type = "gp2"
-    }
+resource "aws_emr_instance_group" "task" {
+  cluster_id     = aws_emr_cluster.tf-test-cluster.id
+  instance_count = 1
+  instance_type  = "c4.large"
+  ebs_optimized  = %t
+
+  ebs_config {
+    size = 10
+    type = "gp2"
   }
+}
 `, r, o)
 }
 
 func testAccAWSEmrInstanceGroupConfig_zeroCount(r int) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
-	resource "aws_emr_instance_group" "task" {
-    cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
-    instance_count = 0
-    instance_type  = "c4.large"
-  }
+resource "aws_emr_instance_group" "task" {
+  cluster_id     = aws_emr_cluster.tf-test-cluster.id
+  instance_count = 0
+  instance_type  = "c4.large"
+}
 `, r)
 }

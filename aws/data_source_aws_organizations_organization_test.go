@@ -3,7 +3,8 @@ package aws
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func testAccDataSourceAwsOrganizationsOrganization_basic(t *testing.T) {
@@ -15,7 +16,8 @@ func testAccDataSourceAwsOrganizationsOrganization_basic(t *testing.T) {
 			testAccPreCheck(t)
 			testAccOrganizationsAccountPreCheck(t)
 		},
-		Providers: testAccProviders,
+		ErrorCheck: testAccErrorCheck(t, organizations.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsOrganizationResourceOnlyConfig,
@@ -29,6 +31,7 @@ func testAccDataSourceAwsOrganizationsOrganization_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "enabled_policy_types.#", dataSourceName, "enabled_policy_types.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "feature_set", dataSourceName, "feature_set"),
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceName, "status"),
 					resource.TestCheckResourceAttrPair(resourceName, "master_account_arn", dataSourceName, "master_account_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "master_account_email", dataSourceName, "master_account_email"),
 					resource.TestCheckResourceAttrPair(resourceName, "master_account_id", dataSourceName, "master_account_id"),

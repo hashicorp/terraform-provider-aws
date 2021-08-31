@@ -1,4 +1,5 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_account_alias"
 description: |-
@@ -13,7 +14,7 @@ Manages the account alias for the AWS Account.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_account_alias" "alias" {
   account_alias = "my-account-alias"
 }
@@ -24,6 +25,10 @@ resource "aws_iam_account_alias" "alias" {
 The following arguments are supported:
 
 * `account_alias` - (Required) The account alias
+
+## Attributes Reference
+
+No additional attributes are exported.
 
 ## Import
 

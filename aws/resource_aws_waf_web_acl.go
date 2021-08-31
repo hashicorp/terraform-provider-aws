@@ -3,12 +3,14 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -33,7 +35,7 @@ func resourceAwsWafWebAcl() *schema.Resource {
 				ForceNew: true,
 			},
 			"default_action": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -49,7 +51,7 @@ func resourceAwsWafWebAcl() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateWafMetricName,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z]+$`), "must contain only alphanumeric characters"),
 			},
 			"logging_configuration": {
 				Type:     schema.TypeList,
@@ -125,14 +127,10 @@ func resourceAwsWafWebAcl() *schema.Resource {
 							Required: true,
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  waf.WafRuleTypeRegular,
-							ValidateFunc: validation.StringInSlice([]string{
-								waf.WafRuleTypeRegular,
-								waf.WafRuleTypeRateBased,
-								waf.WafRuleTypeGroup,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      waf.WafRuleTypeRegular,
+							ValidateFunc: validation.StringInSlice(waf.WafRuleType_Values(), false),
 						},
 						"rule_id": {
 							Type:     schema.TypeString,
@@ -141,35 +139,41 @@ func resourceAwsWafWebAcl() *schema.Resource {
 					},
 				},
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
-	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().WafTags()
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	wr := newWafRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateWebACLInput{
 			ChangeToken:   token,
-			DefaultAction: expandWafAction(d.Get("default_action").(*schema.Set).List()),
+			DefaultAction: expandWafAction(d.Get("default_action").([]interface{})),
 			MetricName:    aws.String(d.Get("metric_name").(string)),
 			Name:          aws.String(d.Get("name").(string)),
 		}
 
 		if len(tags) > 0 {
-			params.Tags = tags
+			params.Tags = tags.IgnoreAws().WafTags()
 		}
 
 		return conn.CreateWebACL(params)
 	})
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating WAF Web ACL (%s): %w", d.Get("name").(string), err)
 	}
+
 	resp := out.(*waf.CreateWebACLOutput)
-	d.SetId(*resp.WebACL.WebACLId)
+	d.SetId(aws.StringValue(resp.WebACL.WebACLId))
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
@@ -178,72 +182,106 @@ func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error 
 		Resource:  fmt.Sprintf("webacl/%s", d.Id()),
 	}.String()
 
-	// Set for update
-	d.Set("arn", arn)
-	return resourceAwsWafWebAclUpdate(d, meta)
+	loggingConfiguration := d.Get("logging_configuration").([]interface{})
+	if len(loggingConfiguration) == 1 {
+		input := &waf.PutLoggingConfigurationInput{
+			LoggingConfiguration: expandWAFLoggingConfiguration(loggingConfiguration, arn),
+		}
+
+		if _, err := conn.PutLoggingConfiguration(input); err != nil {
+			return fmt.Errorf("error putting WAF Web ACL (%s) Logging Configuration: %w", d.Id(), err)
+		}
+	}
+
+	rules := d.Get("rules").(*schema.Set).List()
+	if len(rules) > 0 {
+		wr := newWafRetryer(conn)
+		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
+			req := &waf.UpdateWebACLInput{
+				ChangeToken:   token,
+				DefaultAction: expandWafAction(d.Get("default_action").([]interface{})),
+				Updates:       diffWafWebAclRules([]interface{}{}, rules),
+				WebACLId:      aws.String(d.Id()),
+			}
+			return conn.UpdateWebACL(req)
+		})
+
+		if err != nil {
+			return fmt.Errorf("error updating WAF Web ACL (%s): %w", d.Id(), err)
+		}
+	}
+
+	return resourceAwsWafWebAclRead(d, meta)
 }
 
 func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	params := &waf.GetWebACLInput{
 		WebACLId: aws.String(d.Id()),
 	}
 
 	resp, err := conn.GetWebACL(params)
-	if err != nil {
-		if isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
-			log.Printf("[WARN] WAF ACL (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-
-		return err
-	}
-
-	if resp == nil || resp.WebACL == nil {
-		log.Printf("[WARN] WAF ACL (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+		log.Printf("[WARN] WAF Web ACL (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "waf",
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("webacl/%s", d.Id()),
-	}.String()
-	d.Set("arn", arn)
+	if err != nil {
+		return fmt.Errorf("error reading WAF Web ACL (%s): %w", d.Id(), err)
+	}
+
+	if resp == nil || resp.WebACL == nil {
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading WAF Web ACL (%s): not found", d.Id())
+		}
+
+		log.Printf("[WARN] WAF Web ACL (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	d.Set("arn", resp.WebACL.WebACLArn)
+	arn := aws.StringValue(resp.WebACL.WebACLArn)
 
 	if err := d.Set("default_action", flattenWafAction(resp.WebACL.DefaultAction)); err != nil {
-		return fmt.Errorf("error setting default_action: %s", err)
+		return fmt.Errorf("error setting default_action: %w", err)
 	}
 	d.Set("name", resp.WebACL.Name)
 	d.Set("metric_name", resp.WebACL.MetricName)
 
-	tagList, err := conn.ListTagsForResource(&waf.ListTagsForResourceInput{
-		ResourceARN: aws.String(arn),
-	})
+	tags, err := keyvaluetags.WafListTags(conn, arn)
 	if err != nil {
-		return fmt.Errorf("Failed to get WAF ACL parameter tags for %s: %s", d.Get("name"), err)
+		return fmt.Errorf("error listing tags for WAF Web ACL (%s): %w", arn, err)
 	}
-	if err := d.Set("tags", keyvaluetags.WafKeyValueTags(tagList.TagInfoForResource.TagList).IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	if err := d.Set("rules", flattenWafWebAclRules(resp.WebACL.Rules)); err != nil {
-		return fmt.Errorf("error setting rules: %s", err)
+		return fmt.Errorf("error setting rules: %w", err)
 	}
 
 	getLoggingConfigurationInput := &waf.GetLoggingConfigurationInput{
-		ResourceArn: aws.String(d.Get("arn").(string)),
+		ResourceArn: aws.String(arn),
 	}
 	loggingConfiguration := []interface{}{}
 
-	log.Printf("[DEBUG] Getting WAF Web ACL (%s) Logging Configuration: %s", d.Id(), getLoggingConfigurationInput)
 	getLoggingConfigurationOutput, err := conn.GetLoggingConfiguration(getLoggingConfigurationInput)
 
-	if err != nil && !isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
-		return fmt.Errorf("error getting WAF Web ACL (%s) Logging Configuration: %s", d.Id(), err)
+	if err != nil && !tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+		return fmt.Errorf("error reading WAF Web ACL (%s) Logging Configuration: %w", d.Id(), err)
 	}
 
 	if getLoggingConfigurationOutput != nil {
@@ -251,7 +289,7 @@ func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("logging_configuration", loggingConfiguration); err != nil {
-		return fmt.Errorf("error setting logging_configuration: %s", err)
+		return fmt.Errorf("error setting logging_configuration: %w", err)
 	}
 
 	return nil
@@ -260,7 +298,7 @@ func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsWafWebAclUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
 
-	if d.HasChange("default_action") || d.HasChange("rules") {
+	if d.HasChanges("default_action", "rules") {
 		o, n := d.GetChange("rules")
 		oldR, newR := o.(*schema.Set).List(), n.(*schema.Set).List()
 
@@ -268,14 +306,14 @@ func resourceAwsWafWebAclUpdate(d *schema.ResourceData, meta interface{}) error 
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandWafAction(d.Get("default_action").(*schema.Set).List()),
+				DefaultAction: expandWafAction(d.Get("default_action").([]interface{})),
 				Updates:       diffWafWebAclRules(oldR, newR),
 				WebACLId:      aws.String(d.Id()),
 			}
 			return conn.UpdateWebACL(req)
 		})
 		if err != nil {
-			return fmt.Errorf("Error Updating WAF ACL: %s", err)
+			return fmt.Errorf("error updating WAF Web ACL (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -287,28 +325,26 @@ func resourceAwsWafWebAclUpdate(d *schema.ResourceData, meta interface{}) error 
 				LoggingConfiguration: expandWAFLoggingConfiguration(loggingConfiguration, d.Get("arn").(string)),
 			}
 
-			log.Printf("[DEBUG] Updating WAF Web ACL (%s) Logging Configuration: %s", d.Id(), input)
 			if _, err := conn.PutLoggingConfiguration(input); err != nil {
-				return fmt.Errorf("error updating WAF Web ACL (%s) Logging Configuration: %s", d.Id(), err)
+				return fmt.Errorf("error updating WAF Web ACL (%s) Logging Configuration: %w", d.Id(), err)
 			}
 		} else {
 			input := &waf.DeleteLoggingConfigurationInput{
 				ResourceArn: aws.String(d.Get("arn").(string)),
 			}
 
-			log.Printf("[DEBUG] Deleting WAF Web ACL (%s) Logging Configuration: %s", d.Id(), input)
 			if _, err := conn.DeleteLoggingConfiguration(input); err != nil {
-				return fmt.Errorf("error deleting WAF Web ACL (%s) Logging Configuration: %s", d.Id(), err)
+				return fmt.Errorf("error deleting WAF Web ACL (%s) Logging Configuration: %w", d.Id(), err)
 			}
 		}
 
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.WafUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating WAF Web ACL (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -325,14 +361,14 @@ func resourceAwsWafWebAclDelete(d *schema.ResourceData, meta interface{}) error 
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandWafAction(d.Get("default_action").(*schema.Set).List()),
+				DefaultAction: expandWafAction(d.Get("default_action").([]interface{})),
 				Updates:       diffWafWebAclRules(rules, []interface{}{}),
 				WebACLId:      aws.String(d.Id()),
 			}
 			return conn.UpdateWebACL(req)
 		})
 		if err != nil {
-			return fmt.Errorf("Error Removing WAF Regional ACL Rules: %s", err)
+			return fmt.Errorf("error removing WAF Web ACL (%s) rules: %w", d.Id(), err)
 		}
 	}
 
@@ -343,12 +379,16 @@ func resourceAwsWafWebAclDelete(d *schema.ResourceData, meta interface{}) error 
 			WebACLId:    aws.String(d.Id()),
 		}
 
-		log.Printf("[INFO] Deleting WAF ACL")
 		return conn.DeleteWebACL(req)
 	})
+
 	if err != nil {
-		return fmt.Errorf("Error Deleting WAF ACL: %s", err)
+		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+			return nil
+		}
+		return fmt.Errorf("error deleting WAF Web ACL (%s): %w", d.Id(), err)
 	}
+
 	return nil
 }
 

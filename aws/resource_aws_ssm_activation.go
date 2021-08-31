@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsSsmActivation() *schema.Resource {
@@ -17,6 +19,9 @@ func resourceAwsSsmActivation() *schema.Resource {
 		Create: resourceAwsSsmActivationCreate,
 		Read:   resourceAwsSsmActivationRead,
 		Delete: resourceAwsSsmActivationDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -30,14 +35,15 @@ func resourceAwsSsmActivation() *schema.Resource {
 				ForceNew: true,
 			},
 			"expired": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"expiration_date": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.ValidateRFC3339TimeString,
+				ValidateFunc: validation.IsRFC3339Time,
 			},
 			"iam_role": {
 				Type:     schema.TypeString,
@@ -57,13 +63,18 @@ func resourceAwsSsmActivation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchemaForceNew(),
+			"tags":     tagsSchemaForceNew(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsSsmActivationCreate(d *schema.ResourceData, meta interface{}) error {
 	ssmconn := meta.(*AWSClient).ssmconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	log.Printf("[DEBUG] SSM activation create: %s", d.Id())
 
@@ -91,22 +102,26 @@ func resourceAwsSsmActivationCreate(d *schema.ResourceData, meta interface{}) er
 	if _, ok := d.GetOk("registration_limit"); ok {
 		activationInput.RegistrationLimit = aws.Int64(int64(d.Get("registration_limit").(int)))
 	}
-	if v, ok := d.GetOk("tags"); ok {
-		activationInput.Tags = tagsFromMapSSM(v.(map[string]interface{}))
+	if len(tags) > 0 {
+		activationInput.Tags = tags.IgnoreAws().SsmTags()
 	}
 
 	// Retry to allow iam_role to be created and policy attachment to take place
 	var resp *ssm.CreateActivationOutput
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = ssmconn.CreateActivation(activationInput)
 
-		if err != nil {
+		if isAWSErr(err, "ValidationException", "Not existing role") {
 			return resource.RetryableError(err)
 		}
 
-		return resource.NonRetryableError(err)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
 	})
 
 	if isResourceTimeoutError(err) {
@@ -120,7 +135,7 @@ func resourceAwsSsmActivationCreate(d *schema.ResourceData, meta interface{}) er
 	if resp.ActivationId == nil {
 		return fmt.Errorf("ActivationId was nil")
 	}
-	d.SetId(*resp.ActivationId)
+	d.SetId(aws.StringValue(resp.ActivationId))
 	d.Set("activation_code", resp.ActivationCode)
 
 	return resourceAwsSsmActivationRead(d, meta)
@@ -128,6 +143,8 @@ func resourceAwsSsmActivationCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsSsmActivationRead(d *schema.ResourceData, meta interface{}) error {
 	ssmconn := meta.(*AWSClient).ssmconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading SSM Activation: %s", d.Id())
 
@@ -149,17 +166,29 @@ func resourceAwsSsmActivationRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Error reading SSM activation: %s", err)
 	}
 	if resp.ActivationList == nil || len(resp.ActivationList) == 0 {
-		return fmt.Errorf("ActivationList was nil or empty")
+		log.Printf("[WARN] SSM Activation (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	activation := resp.ActivationList[0] // Only 1 result as MaxResults is 1 above
 	d.Set("name", activation.DefaultInstanceName)
 	d.Set("description", activation.Description)
-	d.Set("expiration_date", activation.ExpirationDate)
+	d.Set("expiration_date", aws.TimeValue(activation.ExpirationDate).Format(time.RFC3339))
 	d.Set("expired", activation.Expired)
 	d.Set("iam_role", activation.IamRole)
 	d.Set("registration_limit", activation.RegistrationLimit)
 	d.Set("registration_count", activation.RegistrationsCount)
+	tags := keyvaluetags.SsmKeyValueTags(activation.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
 
 	return nil
 }

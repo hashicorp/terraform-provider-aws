@@ -1,4 +1,5 @@
 ---
+subcategory: "WAF"
 layout: "aws"
 page_title: "AWS: aws_waf_byte_match_set"
 description: |-
@@ -11,7 +12,7 @@ Provides a WAF Byte Match Set Resource
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_waf_byte_match_set" "byte_set" {
   name = "tf_waf_byte_match_set"
 

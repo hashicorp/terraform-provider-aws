@@ -4,21 +4,30 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAwsApiGatewayVpcLink(t *testing.T) {
+func TestAccDataSourceAwsApiGatewayVpcLink_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	resourceName := "aws_api_gateway_vpc_link.vpc_link"
+	dataSourceName := "data.aws_api_gateway_vpc_link.vpc_link"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, apigateway.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsApiGatewayVpcLinkConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair("data.aws_api_gateway_vpc_link.vpc_link", "name", "aws_api_gateway_vpc_link.vpc_link", "name"),
-					resource.TestCheckResourceAttrPair("data.aws_api_gateway_vpc_link.vpc_link", "id", "aws_api_gateway_vpc_link.vpc_link", "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "status_message"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "target_arns.#", "1"),
 				),
 			},
 		},
@@ -39,7 +48,7 @@ resource "aws_lb" "apigateway_vpclink_test" {
   name = "%s"
 
   subnets = [
-    "${aws_subnet.apigateway_vpclink_test_subnet1.id}",
+    aws_subnet.apigateway_vpclink_test_subnet1.id,
   ]
 
   load_balancer_type               = "network"
@@ -57,7 +66,7 @@ resource "aws_lb" "apigateway_vpclink_test2" {
   name = "%s-wrong"
 
   subnets = [
-    "${aws_subnet.apigateway_vpclink_test_subnet1.id}",
+    aws_subnet.apigateway_vpclink_test_subnet1.id,
   ]
 
   load_balancer_type               = "network"
@@ -72,7 +81,7 @@ resource "aws_lb" "apigateway_vpclink_test2" {
 }
 
 resource "aws_subnet" "apigateway_vpclink_test_subnet1" {
-  vpc_id     = "${aws_vpc.apigateway_vpclink_test.id}"
+  vpc_id     = aws_vpc.apigateway_vpclink_test.id
   cidr_block = "10.0.1.0/24"
 
   tags = {
@@ -82,16 +91,16 @@ resource "aws_subnet" "apigateway_vpclink_test_subnet1" {
 
 resource "aws_api_gateway_vpc_link" "vpc_link" {
   name        = "%s"
-  target_arns = ["${aws_lb.apigateway_vpclink_test.arn}"]
+  target_arns = [aws_lb.apigateway_vpclink_test.arn]
 }
 
 resource "aws_api_gateway_vpc_link" "vpc_link2" {
   name        = "%s-wrong"
-  target_arns = ["${aws_lb.apigateway_vpclink_test2.arn}"]
+  target_arns = [aws_lb.apigateway_vpclink_test2.arn]
 }
 
 data "aws_api_gateway_vpc_link" "vpc_link" {
-  name = "${aws_api_gateway_vpc_link.vpc_link.name}"
+  name = aws_api_gateway_vpc_link.vpc_link.name
 }
 `, r, r, r, r)
 }

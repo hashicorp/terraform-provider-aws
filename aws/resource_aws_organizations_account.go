@@ -8,9 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsOrganizationsAccount() *schema.Resource {
@@ -53,10 +54,13 @@ func resourceAwsOrganizationsAccount() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 50),
 			},
 			"email": {
-				ForceNew:     true,
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateAwsOrganizationsAccountEmail,
+				ForceNew: true,
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(6, 64),
+					validation.StringMatch(regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`), "must be a valid email address"),
+				),
 			},
 			"iam_user_access_to_billing": {
 				ForceNew:     true,
@@ -68,27 +72,37 @@ func resourceAwsOrganizationsAccount() *schema.Resource {
 				ForceNew:     true,
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateAwsOrganizationsAccountRoleName,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]{1,64}$`), "must consist of uppercase letters, lowercase letters, digits with no spaces, and any of the following characters"),
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsOrganizationsAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).organizationsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Create the account
 	createOpts := &organizations.CreateAccountInput{
 		AccountName: aws.String(d.Get("name").(string)),
 		Email:       aws.String(d.Get("email").(string)),
 	}
+
 	if role, ok := d.GetOk("role_name"); ok {
 		createOpts.RoleName = aws.String(role.(string))
 	}
 
 	if iam_user, ok := d.GetOk("iam_user_access_to_billing"); ok {
 		createOpts.IamUserAccessToBilling = aws.String(iam_user.(string))
+	}
+
+	if len(tags) > 0 {
+		createOpts.Tags = tags.IgnoreAws().OrganizationsTags()
 	}
 
 	log.Printf("[DEBUG] Creating AWS Organizations Account: %s", createOpts)
@@ -139,7 +153,7 @@ func resourceAwsOrganizationsAccountCreate(d *schema.ResourceData, meta interfac
 
 	// Store the ID
 	accountId := stateResp.(*organizations.CreateAccountStatus).AccountId
-	d.SetId(*accountId)
+	d.SetId(aws.StringValue(accountId))
 
 	if v, ok := d.GetOk("parent_id"); ok {
 		newParentID := v.(string)
@@ -163,24 +177,14 @@ func resourceAwsOrganizationsAccountCreate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	if tags := tagsFromMapOrganizations(d.Get("tags").(map[string]interface{})); len(tags) > 0 {
-		input := &organizations.TagResourceInput{
-			ResourceId: aws.String(d.Id()),
-			Tags:       tags,
-		}
-
-		log.Printf("[DEBUG] Adding Organizations Account (%s) tags: %s", d.Id(), input)
-
-		if _, err := conn.TagResource(input); err != nil {
-			return fmt.Errorf("error updating Organizations Account (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return resourceAwsOrganizationsAccountRead(d, meta)
 }
 
 func resourceAwsOrganizationsAccountRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).organizationsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	describeOpts := &organizations.DescribeAccountInput{
 		AccountId: aws.String(d.Id()),
 	}
@@ -208,30 +212,29 @@ func resourceAwsOrganizationsAccountRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error getting AWS Organizations Account (%s) parent: %s", d.Id(), err)
 	}
 
-	tagsInput := &organizations.ListTagsForResourceInput{
-		ResourceId: aws.String(d.Id()),
-	}
-
-	tagsOutput, err := conn.ListTagsForResource(tagsInput)
-
-	if err != nil {
-		return fmt.Errorf("error reading Organizations Account (%s) tags: %s", d.Id(), err)
-	}
-
-	if tagsOutput == nil {
-		return fmt.Errorf("error reading Organizations Account (%s) tags: empty result", d.Id())
-	}
-
 	d.Set("arn", account.Arn)
 	d.Set("email", account.Email)
 	d.Set("joined_method", account.JoinedMethod)
-	d.Set("joined_timestamp", account.JoinedTimestamp)
+	d.Set("joined_timestamp", aws.TimeValue(account.JoinedTimestamp).Format(time.RFC3339))
 	d.Set("name", account.Name)
 	d.Set("parent_id", parentId)
 	d.Set("status", account.Status)
 
-	if err := d.Set("tags", tagsToMapOrganizations(tagsOutput.Tags)); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags, err := keyvaluetags.OrganizationsListTags(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for AWS Organizations Account (%s): %s", d.Id(), err)
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -254,36 +257,11 @@ func resourceAwsOrganizationsAccountUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	if d.HasChange("tags") {
-		oraw, nraw := d.GetChange("tags")
-		o := oraw.(map[string]interface{})
-		n := nraw.(map[string]interface{})
-		create, remove := diffTagsOrganizations(tagsFromMapOrganizations(o), tagsFromMapOrganizations(n))
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
-		// Set tags
-		if len(remove) > 0 {
-			input := &organizations.UntagResourceInput{
-				ResourceId: aws.String(d.Id()),
-				TagKeys:    remove,
-			}
-
-			log.Printf("[DEBUG] Removing Organizations Account (%s) tags: %s", d.Id(), input)
-
-			if _, err := conn.UntagResource(input); err != nil {
-				return fmt.Errorf("error removing Organizations Account (%s) tags: %s", d.Id(), err)
-			}
-		}
-		if len(create) > 0 {
-			input := &organizations.TagResourceInput{
-				ResourceId: aws.String(d.Id()),
-				Tags:       create,
-			}
-
-			log.Printf("[DEBUG] Adding Organizations Account (%s) tags: %s", d.Id(), input)
-
-			if _, err := conn.TagResource(input); err != nil {
-				return fmt.Errorf("error updating Organizations Account (%s) tags: %s", d.Id(), err)
-			}
+		if err := keyvaluetags.OrganizationsUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating AWS Organizations Account (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -336,36 +314,6 @@ func resourceAwsOrganizationsAccountStateRefreshFunc(conn *organizations.Organiz
 		}
 		return accountStatus, *accountStatus.State, nil
 	}
-}
-
-func validateAwsOrganizationsAccountEmail(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if !regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q must be a valid email address", value))
-	}
-
-	if len(value) < 6 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be less than 6 characters", value))
-	}
-
-	if len(value) > 64 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be greater than 64 characters", value))
-	}
-
-	return
-}
-
-func validateAwsOrganizationsAccountRoleName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if !regexp.MustCompile(`^[\w+=,.@-]{1,64}$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q must consist of uppercase letters, lowercase letters, digits with no spaces, and any of the following characters: =,.@-", value))
-	}
-
-	return
 }
 
 func resourceAwsOrganizationsAccountGetParentId(conn *organizations.Organizations, childId string) (string, error) {

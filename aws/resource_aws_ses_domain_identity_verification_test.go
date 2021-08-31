@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func testAccAwsSesDomainIdentityDomainFromEnv(t *testing.T) string {
@@ -31,6 +31,7 @@ func TestAccAwsSesDomainIdentityVerification_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -43,12 +44,11 @@ func TestAccAwsSesDomainIdentityVerification_basic(t *testing.T) {
 }
 
 func TestAccAwsSesDomainIdentityVerification_timeout(t *testing.T) {
-	domain := fmt.Sprintf(
-		"%s.terraformtesting.com",
-		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	domain := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -61,12 +61,11 @@ func TestAccAwsSesDomainIdentityVerification_timeout(t *testing.T) {
 }
 
 func TestAccAwsSesDomainIdentityVerification_nonexistent(t *testing.T) {
-	domain := fmt.Sprintf(
-		"%s.terraformtesting.com",
-		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	domain := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -90,8 +89,7 @@ func testAccCheckAwsSesDomainIdentityVerificationPassed(n string) resource.TestC
 		}
 
 		domain := rs.Primary.ID
-		awsClient := testAccProvider.Meta().(*AWSClient)
-		conn := awsClient.sesConn
+		conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 		params := &ses.GetIdentityVerificationAttributesInput{
 			Identities: []*string{
@@ -113,9 +111,9 @@ func testAccCheckAwsSesDomainIdentityVerificationPassed(n string) resource.TestC
 		}
 
 		expected := arn.ARN{
-			AccountID: awsClient.accountid,
-			Partition: awsClient.partition,
-			Region:    awsClient.region,
+			AccountID: testAccProvider.Meta().(*AWSClient).accountid,
+			Partition: testAccProvider.Meta().(*AWSClient).partition,
+			Region:    testAccProvider.Meta().(*AWSClient).region,
 			Resource:  fmt.Sprintf("identity/%s", domain),
 			Service:   "ses",
 		}
@@ -140,17 +138,17 @@ resource "aws_ses_domain_identity" "test" {
 }
 
 resource "aws_route53_record" "domain_identity_verification" {
-  zone_id = "${data.aws_route53_zone.test.id}"
+  zone_id = data.aws_route53_zone.test.id
   name    = "_amazonses.${aws_ses_domain_identity.test.id}"
   type    = "TXT"
   ttl     = "600"
-  records = ["${aws_ses_domain_identity.test.verification_token}"]
+  records = [aws_ses_domain_identity.test.verification_token]
 }
 
 resource "aws_ses_domain_identity_verification" "test" {
-  domain = "${aws_ses_domain_identity.test.id}"
+  domain = aws_ses_domain_identity.test.id
 
-  depends_on = ["aws_route53_record.domain_identity_verification"]
+  depends_on = [aws_route53_record.domain_identity_verification]
 }
 `, rootDomain, domain)
 }
@@ -162,7 +160,7 @@ resource "aws_ses_domain_identity" "test" {
 }
 
 resource "aws_ses_domain_identity_verification" "test" {
-  domain = "${aws_ses_domain_identity.test.id}"
+  domain = aws_ses_domain_identity.test.id
 
   timeouts {
     create = "5s"

@@ -6,8 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codecommit"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCodeCommitRepository() *schema.Resource {
@@ -58,18 +59,23 @@ func resourceAwsCodeCommitRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsCodeCommitRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codecommitconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &codecommit.CreateRepositoryInput{
 		RepositoryName:        aws.String(d.Get("repository_name").(string)),
 		RepositoryDescription: aws.String(d.Get("description").(string)),
-		Tags:                  tagsFromMapCodeCommit(d.Get("tags").(map[string]interface{})),
+		Tags:                  tags.IgnoreAws().CodecommitTags(),
 	}
 
 	out, err := conn.CreateRepository(input)
@@ -83,36 +89,45 @@ func resourceAwsCodeCommitRepositoryCreate(d *schema.ResourceData, meta interfac
 	d.Set("clone_url_http", out.RepositoryMetadata.CloneUrlHttp)
 	d.Set("clone_url_ssh", out.RepositoryMetadata.CloneUrlSsh)
 
-	return resourceAwsCodeCommitRepositoryUpdate(d, meta)
+	if _, ok := d.GetOk("default_branch"); ok {
+		if err := resourceAwsCodeCommitUpdateDefaultBranch(conn, d); err != nil {
+			return fmt.Errorf("error updating CodeCommit Repository (%s) default branch: %s", d.Id(), err)
+		}
+	}
+
+	return resourceAwsCodeCommitRepositoryRead(d, meta)
 }
 
 func resourceAwsCodeCommitRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codecommitconn
 
-	if _, ok := d.GetOk("default_branch"); ok {
-		if d.HasChange("default_branch") {
-			if err := resourceAwsCodeCommitUpdateDefaultBranch(conn, d); err != nil {
-				return err
-			}
+	if d.HasChange("default_branch") {
+		if err := resourceAwsCodeCommitUpdateDefaultBranch(conn, d); err != nil {
+			return fmt.Errorf("error updating CodeCommit Repository (%s) default branch: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("description") {
 		if err := resourceAwsCodeCommitUpdateDescription(conn, d); err != nil {
-			return err
+			return fmt.Errorf("error updating CodeCommit Repository (%s) description: %s", d.Id(), err)
 		}
 	}
 
-	if !d.IsNewResource() {
-		if err := setTagsCodeCommit(conn, d); err != nil {
-			return fmt.Errorf("error updating CodeCommit Repository tags for %s: %s", d.Id(), err)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := keyvaluetags.CodecommitUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating CodeCommit Repository (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
+
 	return resourceAwsCodeCommitRepositoryRead(d, meta)
 }
 
 func resourceAwsCodeCommitRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codecommitconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &codecommit.GetRepositoryInput{
 		RepositoryName: aws.String(d.Id()),
@@ -142,15 +157,21 @@ func resourceAwsCodeCommitRepositoryRead(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	// List tags
-	tagList, err := conn.ListTagsForResource(&codecommit.ListTagsForResourceInput{
-		ResourceArn: out.RepositoryMetadata.Arn,
-	})
+	tags, err := keyvaluetags.CodecommitListTags(conn, d.Get("arn").(string))
+
 	if err != nil {
-		return fmt.Errorf("error listing CodeCommit Repository tags for %s: %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for CodeCommit Repository (%s): %s", d.Get("arn").(string), err)
 	}
-	if err := d.Set("tags", tagsToMapCodeCommit(tagList.Tags)); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil

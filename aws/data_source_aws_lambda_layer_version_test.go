@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAWSLambdaLayerVersion_basic(t *testing.T) {
@@ -14,8 +15,9 @@ func TestAccDataSourceAWSLambdaLayerVersion_basic(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, lambda.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLambdaLayerVersionConfigBasic(rName),
@@ -30,6 +32,8 @@ func TestAccDataSourceAWSLambdaLayerVersion_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "created_date", resourceName, "created_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "source_code_hash", resourceName, "source_code_hash"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "source_code_size", resourceName, "source_code_size"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "signing_profile_version_arn", resourceName, "signing_profile_version_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "signing_job_arn", resourceName, "signing_job_arn"),
 				),
 			},
 		},
@@ -42,8 +46,9 @@ func TestAccDataSourceAWSLambdaLayerVersion_version(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, lambda.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLambdaLayerVersionConfigVersion(rName),
@@ -62,8 +67,9 @@ func TestAccDataSourceAWSLambdaLayerVersion_runtime(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, lambda.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLambdaLayerVersionConfigRuntimes(rName),
@@ -81,11 +87,11 @@ func testAccDataSourceAWSLambdaLayerVersionConfigBasic(rName string) string {
 resource "aws_lambda_layer_version" "test" {
   filename            = "test-fixtures/lambdatest.zip"
   layer_name          = %[1]q
-  compatible_runtimes = ["nodejs8.10"]
+  compatible_runtimes = ["nodejs12.x"]
 }
 
 data "aws_lambda_layer_version" "test" {
-  layer_name = "${aws_lambda_layer_version.test.layer_name}"
+  layer_name = aws_lambda_layer_version.test.layer_name
 }
 `, rName)
 }
@@ -95,18 +101,18 @@ func testAccDataSourceAWSLambdaLayerVersionConfigVersion(rName string) string {
 resource "aws_lambda_layer_version" "test" {
   filename            = "test-fixtures/lambdatest.zip"
   layer_name          = %[1]q
-  compatible_runtimes = ["nodejs8.10"]
+  compatible_runtimes = ["nodejs12.x"]
 }
 
 resource "aws_lambda_layer_version" "test_two" {
   filename            = "test-fixtures/lambdatest_modified.zip"
   layer_name          = %[1]q
-  compatible_runtimes = ["nodejs8.10"]
+  compatible_runtimes = ["nodejs12.x"]
 }
 
 data "aws_lambda_layer_version" "test" {
-  layer_name = "${aws_lambda_layer_version.test_two.layer_name}"
-  version    = "${aws_lambda_layer_version.test.version}"
+  layer_name = aws_lambda_layer_version.test_two.layer_name
+  version    = aws_lambda_layer_version.test.version
 }
 `, rName)
 }
@@ -121,12 +127,12 @@ resource "aws_lambda_layer_version" "test" {
 
 resource "aws_lambda_layer_version" "test_two" {
   filename            = "test-fixtures/lambdatest_modified.zip"
-  layer_name          = "${aws_lambda_layer_version.test.layer_name}"
-  compatible_runtimes = ["nodejs8.10"]
+  layer_name          = aws_lambda_layer_version.test.layer_name
+  compatible_runtimes = ["nodejs12.x"]
 }
 
 data "aws_lambda_layer_version" "test" {
-  layer_name         = "${aws_lambda_layer_version.test_two.layer_name}"
+  layer_name         = aws_lambda_layer_version.test_two.layer_name
   compatible_runtime = "go1.x"
 }
 `, rName)

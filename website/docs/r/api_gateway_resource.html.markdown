@@ -1,4 +1,5 @@
 ---
+subcategory: "API Gateway (REST APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_resource"
 description: |-
@@ -11,15 +12,15 @@ Provides an API Gateway Resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_api_gateway_rest_api" "MyDemoAPI" {
   name        = "MyDemoAPI"
   description = "This is my API for demonstration purposes"
 }
 
 resource "aws_api_gateway_resource" "MyDemoResource" {
-  rest_api_id = "${aws_api_gateway_rest_api.MyDemoAPI.id}"
-  parent_id   = "${aws_api_gateway_rest_api.MyDemoAPI.root_resource_id}"
+  rest_api_id = aws_api_gateway_rest_api.MyDemoAPI.id
+  parent_id   = aws_api_gateway_rest_api.MyDemoAPI.root_resource_id
   path_part   = "mydemoresource"
 }
 ```

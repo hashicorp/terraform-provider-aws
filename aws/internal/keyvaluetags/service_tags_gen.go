@@ -3,20 +3,27 @@
 package keyvaluetags
 
 import (
+	"strconv"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/aws/aws-sdk-go/service/athena"
+	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
+	"github.com/aws/aws-sdk-go/service/codestarconnections"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/aws/aws-sdk-go/service/datapipeline"
@@ -25,7 +32,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/aws/aws-sdk-go/service/dlm"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -41,6 +47,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/iot"
@@ -54,28 +62,50 @@ import (
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go/service/networkfirewall"
+	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
+	"github.com/aws/aws-sdk-go/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/aws/aws-sdk-go/service/xray"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // map[string]*string handling
+
+// AccessanalyzerTags returns accessanalyzer service tags.
+func (tags KeyValueTags) AccessanalyzerTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// AccessanalyzerKeyValueTags creates KeyValueTags from accessanalyzer service tags.
+func AccessanalyzerKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
 
 // AmplifyTags returns amplify service tags.
 func (tags KeyValueTags) AmplifyTags() map[string]*string {
@@ -104,6 +134,16 @@ func (tags KeyValueTags) Apigatewayv2Tags() map[string]*string {
 
 // Apigatewayv2KeyValueTags creates KeyValueTags from apigatewayv2 service tags.
 func Apigatewayv2KeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
+// AppconfigTags returns appconfig service tags.
+func (tags KeyValueTags) AppconfigTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// AppconfigKeyValueTags creates KeyValueTags from appconfig service tags.
+func AppconfigKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
@@ -167,6 +207,16 @@ func CodecommitKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// CodestarnotificationsTags returns codestarnotifications service tags.
+func (tags KeyValueTags) CodestarnotificationsTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// CodestarnotificationsKeyValueTags creates KeyValueTags from codestarnotifications service tags.
+func CodestarnotificationsKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // CognitoidentityTags returns cognitoidentity service tags.
 func (tags KeyValueTags) CognitoidentityTags() map[string]*string {
 	return aws.StringMap(tags.Map())
@@ -184,6 +234,26 @@ func (tags KeyValueTags) CognitoidentityproviderTags() map[string]*string {
 
 // CognitoidentityproviderKeyValueTags creates KeyValueTags from cognitoidentityprovider service tags.
 func CognitoidentityproviderKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
+// DataexchangeTags returns dataexchange service tags.
+func (tags KeyValueTags) DataexchangeTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// DataexchangeKeyValueTags creates KeyValueTags from dataexchange service tags.
+func DataexchangeKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
+// DlmTags returns dlm service tags.
+func (tags KeyValueTags) DlmTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// DlmKeyValueTags creates KeyValueTags from dlm service tags.
+func DlmKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
@@ -217,6 +287,16 @@ func GlueKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// GreengrassTags returns greengrass service tags.
+func (tags KeyValueTags) GreengrassTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// GreengrassKeyValueTags creates KeyValueTags from greengrass service tags.
+func GreengrassKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // GuarddutyTags returns guardduty service tags.
 func (tags KeyValueTags) GuarddutyTags() map[string]*string {
 	return aws.StringMap(tags.Map())
@@ -224,6 +304,16 @@ func (tags KeyValueTags) GuarddutyTags() map[string]*string {
 
 // GuarddutyKeyValueTags creates KeyValueTags from guardduty service tags.
 func GuarddutyKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
+// ImagebuilderTags returns imagebuilder service tags.
+func (tags KeyValueTags) ImagebuilderTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// ImagebuilderKeyValueTags creates KeyValueTags from imagebuilder service tags.
+func ImagebuilderKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
@@ -237,6 +327,16 @@ func KafkaKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// KinesisvideoTags returns kinesisvideo service tags.
+func (tags KeyValueTags) KinesisvideoTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// KinesisvideoKeyValueTags creates KeyValueTags from kinesisvideo service tags.
+func KinesisvideoKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // LambdaTags returns lambda service tags.
 func (tags KeyValueTags) LambdaTags() map[string]*string {
 	return aws.StringMap(tags.Map())
@@ -244,6 +344,16 @@ func (tags KeyValueTags) LambdaTags() map[string]*string {
 
 // LambdaKeyValueTags creates KeyValueTags from lambda service tags.
 func LambdaKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
+// Macie2Tags returns macie2 service tags.
+func (tags KeyValueTags) Macie2Tags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// Macie2KeyValueTags creates KeyValueTags from macie2 service tags.
+func Macie2KeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
@@ -297,6 +407,16 @@ func MqKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// MwaaTags returns mwaa service tags.
+func (tags KeyValueTags) MwaaTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// MwaaKeyValueTags creates KeyValueTags from mwaa service tags.
+func MwaaKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // OpsworksTags returns opsworks service tags.
 func (tags KeyValueTags) OpsworksTags() map[string]*string {
 	return aws.StringMap(tags.Map())
@@ -337,6 +457,26 @@ func ResourcegroupsKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// Route53recoveryreadinessTags returns route53recoveryreadiness service tags.
+func (tags KeyValueTags) Route53recoveryreadinessTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// Route53recoveryreadinessKeyValueTags creates KeyValueTags from route53recoveryreadiness service tags.
+func Route53recoveryreadinessKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
+// SchemasTags returns schemas service tags.
+func (tags KeyValueTags) SchemasTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// SchemasKeyValueTags creates KeyValueTags from schemas service tags.
+func SchemasKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // SecurityhubTags returns securityhub service tags.
 func (tags KeyValueTags) SecurityhubTags() map[string]*string {
 	return aws.StringMap(tags.Map())
@@ -347,6 +487,16 @@ func SecurityhubKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// SignerTags returns signer service tags.
+func (tags KeyValueTags) SignerTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// SignerKeyValueTags creates KeyValueTags from signer service tags.
+func SignerKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // SqsTags returns sqs service tags.
 func (tags KeyValueTags) SqsTags() map[string]*string {
 	return aws.StringMap(tags.Map())
@@ -354,6 +504,26 @@ func (tags KeyValueTags) SqsTags() map[string]*string {
 
 // SqsKeyValueTags creates KeyValueTags from sqs service tags.
 func SqsKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
+// SyntheticsTags returns synthetics service tags.
+func (tags KeyValueTags) SyntheticsTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// SyntheticsKeyValueTags creates KeyValueTags from synthetics service tags.
+func SyntheticsKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
+// WorklinkTags returns worklink service tags.
+func (tags KeyValueTags) WorklinkTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// WorklinkKeyValueTags creates KeyValueTags from worklink service tags.
+func WorklinkKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
@@ -440,6 +610,33 @@ func AppmeshKeyValueTags(tags []*appmesh.TagRef) KeyValueTags {
 	return New(m)
 }
 
+// ApprunnerTags returns apprunner service tags.
+func (tags KeyValueTags) ApprunnerTags() []*apprunner.Tag {
+	result := make([]*apprunner.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &apprunner.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// ApprunnerKeyValueTags creates KeyValueTags from apprunner service tags.
+func ApprunnerKeyValueTags(tags []*apprunner.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
 // AthenaTags returns athena service tags.
 func (tags KeyValueTags) AthenaTags() []*athena.Tag {
 	result := make([]*athena.Tag, 0, len(tags))
@@ -458,6 +655,188 @@ func (tags KeyValueTags) AthenaTags() []*athena.Tag {
 
 // AthenaKeyValueTags creates KeyValueTags from athena service tags.
 func AthenaKeyValueTags(tags []*athena.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// AutoscalingListOfMap returns a list of autoscaling in flattened map.
+//
+// Compatible with setting Terraform state for strongly typed configuration blocks.
+//
+// This function strips tag resource identifier and type. Generally, this is
+// the desired behavior so the tag schema does not require those attributes.
+// Use (keyvaluetags.KeyValueTags).ListOfMap() for full tag information.
+func (tags KeyValueTags) AutoscalingListOfMap() []interface{} {
+	var result []interface{}
+
+	for _, key := range tags.Keys() {
+		m := map[string]interface{}{
+			"key":                 key,
+			"value":               aws.StringValue(tags.KeyValue(key)),
+			"propagate_at_launch": aws.BoolValue(tags.KeyAdditionalBoolValue(key, "PropagateAtLaunch")),
+		}
+
+		result = append(result, m)
+	}
+
+	return result
+}
+
+// AutoscalingListOfStringMap returns a list of autoscaling tags in flattened map of only string values.
+//
+// Compatible with setting Terraform state for legacy []map[string]string schema.
+// Deprecated: Will be removed in a future major version without replacement.
+func (tags KeyValueTags) AutoscalingListOfStringMap() []interface{} {
+	var result []interface{}
+
+	for _, key := range tags.Keys() {
+		m := map[string]string{
+			"key":                 key,
+			"value":               aws.StringValue(tags.KeyValue(key)),
+			"propagate_at_launch": strconv.FormatBool(aws.BoolValue(tags.KeyAdditionalBoolValue(key, "PropagateAtLaunch"))),
+		}
+
+		result = append(result, m)
+	}
+
+	return result
+}
+
+// AutoscalingTags returns autoscaling service tags.
+func (tags KeyValueTags) AutoscalingTags() []*autoscaling.Tag {
+	var result []*autoscaling.Tag
+
+	for _, key := range tags.Keys() {
+		tag := &autoscaling.Tag{
+			Key:               aws.String(key),
+			Value:             tags.KeyValue(key),
+			ResourceId:        tags.KeyAdditionalStringValue(key, "ResourceId"),
+			ResourceType:      tags.KeyAdditionalStringValue(key, "ResourceType"),
+			PropagateAtLaunch: tags.KeyAdditionalBoolValue(key, "PropagateAtLaunch"),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// AutoscalingKeyValueTags creates KeyValueTags from autoscaling service tags.
+//
+// Accepts the following types:
+//   - []*autoscaling.Tag
+//   - []*autoscaling.TagDescription
+//   - []interface{} (Terraform TypeList configuration block compatible)
+//   - *schema.Set (Terraform TypeSet configuration block compatible)
+func AutoscalingKeyValueTags(tags interface{}, identifier string, resourceType string) KeyValueTags {
+	switch tags := tags.(type) {
+	case []*autoscaling.Tag:
+		m := make(map[string]*TagData, len(tags))
+
+		for _, tag := range tags {
+			tagData := &TagData{
+				Value: tag.Value,
+			}
+
+			tagData.AdditionalBoolFields = make(map[string]*bool)
+			tagData.AdditionalBoolFields["PropagateAtLaunch"] = tag.PropagateAtLaunch
+			tagData.AdditionalStringFields = make(map[string]*string)
+			tagData.AdditionalStringFields["ResourceId"] = &identifier
+			tagData.AdditionalStringFields["ResourceType"] = &resourceType
+
+			m[aws.StringValue(tag.Key)] = tagData
+		}
+
+		return New(m)
+	case []*autoscaling.TagDescription:
+		m := make(map[string]*TagData, len(tags))
+
+		for _, tag := range tags {
+			tagData := &TagData{
+				Value: tag.Value,
+			}
+
+			tagData.AdditionalBoolFields = make(map[string]*bool)
+			tagData.AdditionalBoolFields["PropagateAtLaunch"] = tag.PropagateAtLaunch
+			tagData.AdditionalStringFields = make(map[string]*string)
+			tagData.AdditionalStringFields["ResourceId"] = &identifier
+			tagData.AdditionalStringFields["ResourceType"] = &resourceType
+
+			m[aws.StringValue(tag.Key)] = tagData
+		}
+
+		return New(m)
+	case *schema.Set:
+		return AutoscalingKeyValueTags(tags.List(), identifier, resourceType)
+	case []interface{}:
+		result := make(map[string]*TagData)
+
+		for _, tfMapRaw := range tags {
+			tfMap, ok := tfMapRaw.(map[string]interface{})
+
+			if !ok {
+				continue
+			}
+
+			key, ok := tfMap["key"].(string)
+
+			if !ok {
+				continue
+			}
+
+			tagData := &TagData{}
+
+			if v, ok := tfMap["value"].(string); ok {
+				tagData.Value = &v
+			}
+
+			tagData.AdditionalBoolFields = make(map[string]*bool)
+			if v, ok := tfMap["propagate_at_launch"].(bool); ok {
+				tagData.AdditionalBoolFields["PropagateAtLaunch"] = &v
+			}
+
+			// Deprecated: Legacy map handling
+			if v, ok := tfMap["propagate_at_launch"].(string); ok {
+				b, _ := strconv.ParseBool(v)
+				tagData.AdditionalBoolFields["PropagateAtLaunch"] = &b
+			}
+
+			tagData.AdditionalStringFields = make(map[string]*string)
+			tagData.AdditionalStringFields["ResourceId"] = &identifier
+			tagData.AdditionalStringFields["ResourceType"] = &resourceType
+
+			result[key] = tagData
+		}
+
+		return New(result)
+	default:
+		return New(nil)
+	}
+}
+
+// Cloud9Tags returns cloud9 service tags.
+func (tags KeyValueTags) Cloud9Tags() []*cloud9.Tag {
+	result := make([]*cloud9.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &cloud9.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// Cloud9KeyValueTags creates KeyValueTags from cloud9 service tags.
+func Cloud9KeyValueTags(tags []*cloud9.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -629,6 +1008,33 @@ func CloudwatcheventsKeyValueTags(tags []*cloudwatchevents.Tag) KeyValueTags {
 	return New(m)
 }
 
+// CodeartifactTags returns codeartifact service tags.
+func (tags KeyValueTags) CodeartifactTags() []*codeartifact.Tag {
+	result := make([]*codeartifact.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &codeartifact.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// CodeartifactKeyValueTags creates KeyValueTags from codeartifact service tags.
+func CodeartifactKeyValueTags(tags []*codeartifact.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
 // CodebuildTags returns codebuild service tags.
 func (tags KeyValueTags) CodebuildTags() []*codebuild.Tag {
 	result := make([]*codebuild.Tag, 0, len(tags))
@@ -701,6 +1107,33 @@ func (tags KeyValueTags) CodepipelineTags() []*codepipeline.Tag {
 
 // CodepipelineKeyValueTags creates KeyValueTags from codepipeline service tags.
 func CodepipelineKeyValueTags(tags []*codepipeline.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// CodestarconnectionsTags returns codestarconnections service tags.
+func (tags KeyValueTags) CodestarconnectionsTags() []*codestarconnections.Tag {
+	result := make([]*codestarconnections.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &codestarconnections.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// CodestarconnectionsKeyValueTags creates KeyValueTags from codestarconnections service tags.
+func CodestarconnectionsKeyValueTags(tags []*codestarconnections.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -926,33 +1359,6 @@ func DirectoryserviceKeyValueTags(tags []*directoryservice.Tag) KeyValueTags {
 	return New(m)
 }
 
-// DlmTags returns dlm service tags.
-func (tags KeyValueTags) DlmTags() []*dlm.Tag {
-	result := make([]*dlm.Tag, 0, len(tags))
-
-	for k, v := range tags.Map() {
-		tag := &dlm.Tag{
-			Key:   aws.String(k),
-			Value: aws.String(v),
-		}
-
-		result = append(result, tag)
-	}
-
-	return result
-}
-
-// DlmKeyValueTags creates KeyValueTags from dlm service tags.
-func DlmKeyValueTags(tags []*dlm.Tag) KeyValueTags {
-	m := make(map[string]*string, len(tags))
-
-	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
-	}
-
-	return New(m)
-}
-
 // DocdbTags returns docdb service tags.
 func (tags KeyValueTags) DocdbTags() []*docdb.Tag {
 	result := make([]*docdb.Tag, 0, len(tags))
@@ -1024,14 +1430,31 @@ func (tags KeyValueTags) Ec2Tags() []*ec2.Tag {
 }
 
 // Ec2KeyValueTags creates KeyValueTags from ec2 service tags.
-func Ec2KeyValueTags(tags []*ec2.Tag) KeyValueTags {
-	m := make(map[string]*string, len(tags))
+//
+// Accepts the following types:
+//   - []*ec2.Tag
+//   - []*ec2.TagDescription
+func Ec2KeyValueTags(tags interface{}) KeyValueTags {
+	switch tags := tags.(type) {
+	case []*ec2.Tag:
+		m := make(map[string]*string, len(tags))
 
-	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		for _, tag := range tags {
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
+
+		return New(m)
+	case []*ec2.TagDescription:
+		m := make(map[string]*string, len(tags))
+
+		for _, tag := range tags {
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
+
+		return New(m)
+	default:
+		return New(nil)
 	}
-
-	return New(m)
 }
 
 // EcrTags returns ecr service tags.
@@ -1196,6 +1619,21 @@ func ElasticsearchserviceKeyValueTags(tags []*elasticsearchservice.Tag) KeyValue
 	return New(m)
 }
 
+// ElbTagKeys returns elb service tag keys.
+func (tags KeyValueTags) ElbTagKeys() []*elb.TagKeyOnly {
+	result := make([]*elb.TagKeyOnly, 0, len(tags))
+
+	for k := range tags.Map() {
+		tagKey := &elb.TagKeyOnly{
+			Key: aws.String(k),
+		}
+
+		result = append(result, tagKey)
+	}
+
+	return result
+}
+
 // ElbTags returns elb service tags.
 func (tags KeyValueTags) ElbTags() []*elb.Tag {
 	result := make([]*elb.Tag, 0, len(tags))
@@ -1349,6 +1787,60 @@ func (tags KeyValueTags) FsxTags() []*fsx.Tag {
 
 // FsxKeyValueTags creates KeyValueTags from fsx service tags.
 func FsxKeyValueTags(tags []*fsx.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// GameliftTags returns gamelift service tags.
+func (tags KeyValueTags) GameliftTags() []*gamelift.Tag {
+	result := make([]*gamelift.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &gamelift.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// GameliftKeyValueTags creates KeyValueTags from gamelift service tags.
+func GameliftKeyValueTags(tags []*gamelift.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// GlobalacceleratorTags returns globalaccelerator service tags.
+func (tags KeyValueTags) GlobalacceleratorTags() []*globalaccelerator.Tag {
+	result := make([]*globalaccelerator.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &globalaccelerator.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// GlobalacceleratorKeyValueTags creates KeyValueTags from globalaccelerator service tags.
+func GlobalacceleratorKeyValueTags(tags []*globalaccelerator.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -1709,6 +2201,60 @@ func NeptuneKeyValueTags(tags []*neptune.Tag) KeyValueTags {
 	return New(m)
 }
 
+// NetworkfirewallTags returns networkfirewall service tags.
+func (tags KeyValueTags) NetworkfirewallTags() []*networkfirewall.Tag {
+	result := make([]*networkfirewall.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &networkfirewall.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// NetworkfirewallKeyValueTags creates KeyValueTags from networkfirewall service tags.
+func NetworkfirewallKeyValueTags(tags []*networkfirewall.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// NetworkmanagerTags returns networkmanager service tags.
+func (tags KeyValueTags) NetworkmanagerTags() []*networkmanager.Tag {
+	result := make([]*networkmanager.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &networkmanager.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// NetworkmanagerKeyValueTags creates KeyValueTags from networkmanager service tags.
+func NetworkmanagerKeyValueTags(tags []*networkmanager.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
 // OrganizationsTags returns organizations service tags.
 func (tags KeyValueTags) OrganizationsTags() []*organizations.Tag {
 	result := make([]*organizations.Tag, 0, len(tags))
@@ -1727,6 +2273,33 @@ func (tags KeyValueTags) OrganizationsTags() []*organizations.Tag {
 
 // OrganizationsKeyValueTags creates KeyValueTags from organizations service tags.
 func OrganizationsKeyValueTags(tags []*organizations.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// QuicksightTags returns quicksight service tags.
+func (tags KeyValueTags) QuicksightTags() []*quicksight.Tag {
+	result := make([]*quicksight.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &quicksight.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// QuicksightKeyValueTags creates KeyValueTags from quicksight service tags.
+func QuicksightKeyValueTags(tags []*quicksight.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -1817,6 +2390,33 @@ func RedshiftKeyValueTags(tags []*redshift.Tag) KeyValueTags {
 	return New(m)
 }
 
+// ResourcegroupstaggingapiTags returns resourcegroupstaggingapi service tags.
+func (tags KeyValueTags) ResourcegroupstaggingapiTags() []*resourcegroupstaggingapi.Tag {
+	result := make([]*resourcegroupstaggingapi.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &resourcegroupstaggingapi.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// ResourcegroupstaggingapiKeyValueTags creates KeyValueTags from resourcegroupstaggingapi service tags.
+func ResourcegroupstaggingapiKeyValueTags(tags []*resourcegroupstaggingapi.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
 // Route53Tags returns route53 service tags.
 func (tags KeyValueTags) Route53Tags() []*route53.Tag {
 	result := make([]*route53.Tag, 0, len(tags))
@@ -1889,6 +2489,33 @@ func (tags KeyValueTags) S3Tags() []*s3.Tag {
 
 // S3KeyValueTags creates KeyValueTags from s3 service tags.
 func S3KeyValueTags(tags []*s3.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// S3controlTags returns s3control service tags.
+func (tags KeyValueTags) S3controlTags() []*s3control.S3Tag {
+	result := make([]*s3control.S3Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &s3control.S3Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// S3controlKeyValueTags creates KeyValueTags from s3control service tags.
+func S3controlKeyValueTags(tags []*s3control.S3Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -2006,6 +2633,33 @@ func ServicecatalogKeyValueTags(tags []*servicecatalog.Tag) KeyValueTags {
 	return New(m)
 }
 
+// ServicediscoveryTags returns servicediscovery service tags.
+func (tags KeyValueTags) ServicediscoveryTags() []*servicediscovery.Tag {
+	result := make([]*servicediscovery.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &servicediscovery.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// ServicediscoveryKeyValueTags creates KeyValueTags from servicediscovery service tags.
+func ServicediscoveryKeyValueTags(tags []*servicediscovery.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
 // SfnTags returns sfn service tags.
 func (tags KeyValueTags) SfnTags() []*sfn.Tag {
 	result := make([]*sfn.Tag, 0, len(tags))
@@ -2024,6 +2678,33 @@ func (tags KeyValueTags) SfnTags() []*sfn.Tag {
 
 // SfnKeyValueTags creates KeyValueTags from sfn service tags.
 func SfnKeyValueTags(tags []*sfn.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// ShieldTags returns shield service tags.
+func (tags KeyValueTags) ShieldTags() []*shield.Tag {
+	result := make([]*shield.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &shield.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// ShieldKeyValueTags creates KeyValueTags from shield service tags.
+func ShieldKeyValueTags(tags []*shield.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -2087,6 +2768,33 @@ func SsmKeyValueTags(tags []*ssm.Tag) KeyValueTags {
 	return New(m)
 }
 
+// SsoadminTags returns ssoadmin service tags.
+func (tags KeyValueTags) SsoadminTags() []*ssoadmin.Tag {
+	result := make([]*ssoadmin.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &ssoadmin.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// SsoadminKeyValueTags creates KeyValueTags from ssoadmin service tags.
+func SsoadminKeyValueTags(tags []*ssoadmin.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
 // StoragegatewayTags returns storagegateway service tags.
 func (tags KeyValueTags) StoragegatewayTags() []*storagegateway.Tag {
 	result := make([]*storagegateway.Tag, 0, len(tags))
@@ -2132,6 +2840,33 @@ func (tags KeyValueTags) SwfTags() []*swf.ResourceTag {
 
 // SwfKeyValueTags creates KeyValueTags from swf service tags.
 func SwfKeyValueTags(tags []*swf.ResourceTag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// TimestreamwriteTags returns timestreamwrite service tags.
+func (tags KeyValueTags) TimestreamwriteTags() []*timestreamwrite.Tag {
+	result := make([]*timestreamwrite.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &timestreamwrite.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// TimestreamwriteKeyValueTags creates KeyValueTags from timestreamwrite service tags.
+func TimestreamwriteKeyValueTags(tags []*timestreamwrite.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -2195,6 +2930,60 @@ func WafKeyValueTags(tags []*waf.Tag) KeyValueTags {
 	return New(m)
 }
 
+// WafregionalTags returns wafregional service tags.
+func (tags KeyValueTags) WafregionalTags() []*waf.Tag {
+	result := make([]*waf.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &waf.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// WafregionalKeyValueTags creates KeyValueTags from wafregional service tags.
+func WafregionalKeyValueTags(tags []*waf.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// Wafv2Tags returns wafv2 service tags.
+func (tags KeyValueTags) Wafv2Tags() []*wafv2.Tag {
+	result := make([]*wafv2.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &wafv2.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// Wafv2KeyValueTags creates KeyValueTags from wafv2 service tags.
+func Wafv2KeyValueTags(tags []*wafv2.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
 // WorkspacesTags returns workspaces service tags.
 func (tags KeyValueTags) WorkspacesTags() []*workspaces.Tag {
 	result := make([]*workspaces.Tag, 0, len(tags))
@@ -2213,6 +3002,33 @@ func (tags KeyValueTags) WorkspacesTags() []*workspaces.Tag {
 
 // WorkspacesKeyValueTags creates KeyValueTags from workspaces service tags.
 func WorkspacesKeyValueTags(tags []*workspaces.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// XrayTags returns xray service tags.
+func (tags KeyValueTags) XrayTags() []*xray.Tag {
+	result := make([]*xray.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &xray.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// XrayKeyValueTags creates KeyValueTags from xray service tags.
+func XrayKeyValueTags(tags []*xray.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {

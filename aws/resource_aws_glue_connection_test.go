@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -57,23 +57,27 @@ func testSweepGlueConnections(region string) error {
 	return nil
 }
 
-func TestAccAWSGlueConnection_Basic(t *testing.T) {
+func TestAccAWSGlueConnection_basic(t *testing.T) {
 	var connection glue.Connection
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_connection.test"
+
+	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", testAccRandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGlueConnectionConfig_Required(rName),
+				Config: testAccAWSGlueConnectionConfig_Required(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("connection/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "connection_properties.JDBC_CONNECTION_URL", "jdbc:mysql://terraformacctesting.com/testdatabase"),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.JDBC_CONNECTION_URL", jdbcConnectionUrl),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.PASSWORD", "testpassword"),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.USERNAME", "testusername"),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "0"),
@@ -89,26 +93,133 @@ func TestAccAWSGlueConnection_Basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueConnection_Description(t *testing.T) {
+func TestAccAWSGlueConnection_MongoDB(t *testing.T) {
 	var connection glue.Connection
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_connection.test"
+
+	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", testAccRandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGlueConnectionConfig_Description(rName, "First Description"),
+				Config: testAccAWSGlueConnectionConfig_MongoDB(rName, connectionUrl),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.CONNECTION_URL", connectionUrl),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.USERNAME", "testusername"),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.PASSWORD", "testpassword"),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "MONGODB"),
+					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueConnection_Kafka(t *testing.T) {
+	var connection glue.Connection
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_connection.test"
+
+	bootstrapServers := fmt.Sprintf("%s:9094,%s:9094", testAccRandomDomainName(), testAccRandomDomainName())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueConnectionConfig_Kafka(rName, bootstrapServers),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.KAFKA_BOOTSTRAP_SERVERS", bootstrapServers),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "KAFKA"),
+					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueConnection_Network(t *testing.T) {
+	var connection glue.Connection
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueConnectionConfig_Network(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "NETWORK"),
+					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "physical_connection_requirements.0.availability_zone"),
+					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.0.security_group_id_list.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "physical_connection_requirements.0.subnet_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueConnection_Description(t *testing.T) {
+	var connection glue.Connection
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_connection.test"
+
+	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", testAccRandomDomainName())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueConnectionConfig_Description(rName, jdbcConnectionUrl, "First Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "description", "First Description"),
 				),
 			},
 			{
-				Config: testAccAWSGlueConnectionConfig_Description(rName, "Second Description"),
+				Config: testAccAWSGlueConnectionConfig_Description(rName, jdbcConnectionUrl, "Second Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "description", "Second Description"),
@@ -126,16 +237,19 @@ func TestAccAWSGlueConnection_Description(t *testing.T) {
 func TestAccAWSGlueConnection_MatchCriteria(t *testing.T) {
 	var connection glue.Connection
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_connection.test"
+
+	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", testAccRandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGlueConnectionConfig_MatchCriteria_First(rName),
+				Config: testAccAWSGlueConnectionConfig_MatchCriteria_First(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "4"),
@@ -146,7 +260,7 @@ func TestAccAWSGlueConnection_MatchCriteria(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSGlueConnectionConfig_MatchCriteria_Second(rName),
+				Config: testAccAWSGlueConnectionConfig_MatchCriteria_Second(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "1"),
@@ -154,7 +268,7 @@ func TestAccAWSGlueConnection_MatchCriteria(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSGlueConnectionConfig_MatchCriteria_Third(rName),
+				Config: testAccAWSGlueConnectionConfig_MatchCriteria_Third(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "3"),
@@ -175,11 +289,12 @@ func TestAccAWSGlueConnection_MatchCriteria(t *testing.T) {
 func TestAccAWSGlueConnection_PhysicalConnectionRequirements(t *testing.T) {
 	var connection glue.Connection
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -203,6 +318,32 @@ func TestAccAWSGlueConnection_PhysicalConnectionRequirements(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueConnection_disappears(t *testing.T) {
+	var connection glue.Connection
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_connection.test"
+
+	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", testAccRandomDomainName())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueConnectionConfig_Required(rName, jdbcConnectionUrl),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueConnection(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -281,69 +422,80 @@ func testAccCheckAWSGlueConnectionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSGlueConnectionConfig_Description(rName, description string) string {
+func testAccAWSGlueConnectionConfig_Description(rName, jdbcConnectionUrl, description string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_connection" "test" {
+  name        = %[1]q
+  description = %[2]q
+
   connection_properties = {
-    JDBC_CONNECTION_URL = "jdbc:mysql://terraformacctesting.com/testdatabase"
+    JDBC_CONNECTION_URL = %[3]q
     PASSWORD            = "testpassword"
     USERNAME            = "testusername"
   }
 
-  description = "%[1]s"
-  name        = "%[2]s"
 }
-`, description, rName)
+`, rName, description, jdbcConnectionUrl)
 }
 
-func testAccAWSGlueConnectionConfig_MatchCriteria_First(rName string) string {
+func testAccAWSGlueConnectionConfig_MatchCriteria_First(rName, jdbcConnectionUrl string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_connection" "test" {
-  connection_properties = {
-    JDBC_CONNECTION_URL = "jdbc:mysql://terraformacctesting.com/testdatabase"
-    PASSWORD            = "testpassword"
-    USERNAME            = "testusername"
-  }
+  name = %[1]q
 
   match_criteria = ["criteria1", "criteria2", "criteria3", "criteria4"]
-  name           = "%s"
-}
-`, rName)
-}
 
-func testAccAWSGlueConnectionConfig_MatchCriteria_Second(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_glue_connection" "test" {
   connection_properties = {
-    JDBC_CONNECTION_URL = "jdbc:mysql://terraformacctesting.com/testdatabase"
+    JDBC_CONNECTION_URL = %[2]q
     PASSWORD            = "testpassword"
     USERNAME            = "testusername"
   }
+}
+`, rName, jdbcConnectionUrl)
+}
+
+func testAccAWSGlueConnectionConfig_MatchCriteria_Second(rName, jdbcConnectionUrl string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_connection" "test" {
+  name = %[1]q
 
   match_criteria = ["criteria1"]
-  name           = "%s"
-}
-`, rName)
-}
 
-func testAccAWSGlueConnectionConfig_MatchCriteria_Third(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_glue_connection" "test" {
   connection_properties = {
-    JDBC_CONNECTION_URL = "jdbc:mysql://terraformacctesting.com/testdatabase"
+    JDBC_CONNECTION_URL = %[2]q
     PASSWORD            = "testpassword"
     USERNAME            = "testusername"
   }
+}
+`, rName, jdbcConnectionUrl)
+}
+
+func testAccAWSGlueConnectionConfig_MatchCriteria_Third(rName, jdbcConnectionUrl string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_connection" "test" {
+  name = "%s"
 
   match_criteria = ["criteria2", "criteria3", "criteria4"]
-  name           = "%s"
+
+  connection_properties = {
+    JDBC_CONNECTION_URL = %[2]q
+    PASSWORD            = "testpassword"
+    USERNAME            = "testusername"
+  }
 }
-`, rName)
+`, rName, jdbcConnectionUrl)
 }
 
 func testAccAWSGlueConnectionConfig_PhysicalConnectionRequirements(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -355,7 +507,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_security_group" "test" {
   name   = "%[1]s"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   ingress {
     from_port = 1
@@ -368,9 +520,9 @@ resource "aws_security_group" "test" {
 resource "aws_subnet" "test" {
   count = 2
 
-  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "terraform-testacc-glue-connection-base"
@@ -379,23 +531,23 @@ resource "aws_subnet" "test" {
 
 resource "aws_db_subnet_group" "test" {
   name       = "%[1]s"
-  subnet_ids = ["${aws_subnet.test.0.id}", "${aws_subnet.test.1.id}"]
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier              = "%[1]s"
   database_name                   = "gluedatabase"
   db_cluster_parameter_group_name = "default.aurora-mysql5.7"
-  db_subnet_group_name            = "${aws_db_subnet_group.test.name}"
+  db_subnet_group_name            = aws_db_subnet_group.test.name
   engine                          = "aurora-mysql"
   master_password                 = "gluepassword"
   master_username                 = "glueusername"
   skip_final_snapshot             = true
-  vpc_security_group_ids          = ["${aws_security_group.test.id}"]
+  vpc_security_group_ids          = [aws_security_group.test.id]
 }
 
 resource "aws_rds_cluster_instance" "test" {
-  cluster_identifier = "${aws_rds_cluster.test.id}"
+  cluster_identifier = aws_rds_cluster.test.id
   engine             = "aurora-mysql"
   identifier         = "%[1]s"
   instance_class     = "db.t2.medium"
@@ -404,31 +556,113 @@ resource "aws_rds_cluster_instance" "test" {
 resource "aws_glue_connection" "test" {
   connection_properties = {
     JDBC_CONNECTION_URL = "jdbc:mysql://${aws_rds_cluster.test.endpoint}/${aws_rds_cluster.test.database_name}"
-    PASSWORD            = "${aws_rds_cluster.test.master_password}"
-    USERNAME            = "${aws_rds_cluster.test.master_username}"
+    PASSWORD            = aws_rds_cluster.test.master_password
+    USERNAME            = aws_rds_cluster.test.master_username
   }
 
   name = "%[1]s"
 
   physical_connection_requirements {
-    availability_zone      = "${aws_subnet.test.0.availability_zone}"
-    security_group_id_list = ["${aws_security_group.test.id}"]
-    subnet_id              = "${aws_subnet.test.0.id}"
+    availability_zone      = aws_subnet.test[0].availability_zone
+    security_group_id_list = [aws_security_group.test.id]
+    subnet_id              = aws_subnet.test[0].id
   }
 }
 `, rName)
 }
 
-func testAccAWSGlueConnectionConfig_Required(rName string) string {
+func testAccAWSGlueConnectionConfig_Required(rName, jdbcConnectionUrl string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_connection" "test" {
+  name = %[1]q
+
   connection_properties = {
-    JDBC_CONNECTION_URL = "jdbc:mysql://terraformacctesting.com/testdatabase"
+    JDBC_CONNECTION_URL = %[2]q
     PASSWORD            = "testpassword"
     USERNAME            = "testusername"
   }
+}
+`, rName, jdbcConnectionUrl)
+}
 
-  name = "%s"
+func testAccAWSGlueConnectionConfig_MongoDB(rName, connectionUrl string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_connection" "test" {
+  name = %[1]q
+
+  connection_type = "MONGODB"
+  connection_properties = {
+    CONNECTION_URL = %[2]q
+    PASSWORD       = "testpassword"
+    USERNAME       = "testusername"
+  }
+}
+`, rName, connectionUrl)
+}
+
+func testAccAWSGlueConnectionConfig_Kafka(rName, bootstrapServers string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_connection" "test" {
+  name = %[1]q
+
+  connection_type = "KAFKA"
+  connection_properties = {
+    KAFKA_BOOTSTRAP_SERVERS = %[2]q
+  }
+}
+`, rName, bootstrapServers)
+}
+
+func testAccAWSGlueConnectionConfig_Network(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-glue-connection-network"
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "terraform-testacc-glue-connection-network"
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = "%[1]s"
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    protocol  = "tcp"
+    self      = true
+    from_port = 1
+    to_port   = 65535
+  }
+}
+
+resource "aws_glue_connection" "test" {
+  connection_type = "NETWORK"
+  name            = "%[1]s"
+
+  physical_connection_requirements {
+    availability_zone      = aws_subnet.test.availability_zone
+    security_group_id_list = [aws_security_group.test.id]
+    subnet_id              = aws_subnet.test.id
+  }
 }
 `, rName)
 }

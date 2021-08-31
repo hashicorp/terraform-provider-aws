@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,9 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsDmsReplicationTask() *schema.Resource {
@@ -59,7 +61,7 @@ func resourceAwsDmsReplicationTask() *schema.Resource {
 			"replication_task_settings": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 			},
 			"source_endpoint_arn": {
@@ -71,13 +73,11 @@ func resourceAwsDmsReplicationTask() *schema.Resource {
 			"table_mappings": {
 				Type:             schema.TypeString,
 				Required:         true,
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"target_endpoint_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -85,11 +85,15 @@ func resourceAwsDmsReplicationTask() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsDmsReplicationTaskCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dmsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &dms.CreateReplicationTaskInput{
 		MigrationType:             aws.String(d.Get("migration_type").(string)),
@@ -97,7 +101,7 @@ func resourceAwsDmsReplicationTaskCreate(d *schema.ResourceData, meta interface{
 		ReplicationTaskIdentifier: aws.String(d.Get("replication_task_id").(string)),
 		SourceEndpointArn:         aws.String(d.Get("source_endpoint_arn").(string)),
 		TableMappings:             aws.String(d.Get("table_mappings").(string)),
-		Tags:                      dmsTagsFromMap(d.Get("tags").(map[string]interface{})),
+		Tags:                      tags.IgnoreAws().DatabasemigrationserviceTags(),
 		TargetEndpointArn:         aws.String(d.Get("target_endpoint_arn").(string)),
 	}
 
@@ -143,6 +147,8 @@ func resourceAwsDmsReplicationTaskCreate(d *schema.ResourceData, meta interface{
 
 func resourceAwsDmsReplicationTaskRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dmsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	response, err := conn.DescribeReplicationTasks(&dms.DescribeReplicationTasksInput{
 		Filters: []*dms.Filter{
@@ -166,13 +172,22 @@ func resourceAwsDmsReplicationTaskRead(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	tagsResp, err := conn.ListTagsForResource(&dms.ListTagsForResourceInput{
-		ResourceArn: aws.String(d.Get("replication_task_arn").(string)),
-	})
+	tags, err := keyvaluetags.DatabasemigrationserviceListTags(conn, d.Get("replication_task_arn").(string))
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error listing tags for DMS Replication Task (%s): %s", d.Get("replication_task_arn").(string), err)
 	}
-	d.Set("tags", dmsTagsToMap(tagsResp.TagList))
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
 
 	return nil
 }
@@ -209,10 +224,12 @@ func resourceAwsDmsReplicationTaskUpdate(d *schema.ResourceData, meta interface{
 		hasChanges = true
 	}
 
-	if d.HasChange("tags") {
-		err := dmsSetTags(d.Get("replication_task_arn").(string), d, meta)
-		if err != nil {
-			return err
+	if d.HasChange("tags_all") {
+		arn := d.Get("replication_task_arn").(string)
+		o, n := d.GetChange("tags_all")
+
+		if err := keyvaluetags.DatabasemigrationserviceUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating DMS Replication Task (%s) tags: %s", arn, err)
 		}
 	}
 
@@ -279,16 +296,21 @@ func resourceAwsDmsReplicationTaskDelete(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDmsReplicationTaskSetState(d *schema.ResourceData, task *dms.ReplicationTask) error {
-	d.SetId(*task.ReplicationTaskIdentifier)
+	d.SetId(aws.StringValue(task.ReplicationTaskIdentifier))
 
 	d.Set("migration_type", task.MigrationType)
 	d.Set("replication_instance_arn", task.ReplicationInstanceArn)
 	d.Set("replication_task_arn", task.ReplicationTaskArn)
 	d.Set("replication_task_id", task.ReplicationTaskIdentifier)
-	d.Set("replication_task_settings", task.ReplicationTaskSettings)
 	d.Set("source_endpoint_arn", task.SourceEndpointArn)
 	d.Set("table_mappings", task.TableMappings)
 	d.Set("target_endpoint_arn", task.TargetEndpointArn)
+
+	settings, err := dmsReplicationTaskRemoveReadOnlySettings(*task.ReplicationTaskSettings)
+	if err != nil {
+		return err
+	}
+	d.Set("replication_task_settings", settings)
 
 	return nil
 }
@@ -324,4 +346,30 @@ func resourceAwsDmsReplicationTaskStateRefreshFunc(
 
 		return v, *v.ReplicationTasks[0].Status, nil
 	}
+}
+
+func dmsReplicationTaskRemoveReadOnlySettings(settings string) (*string, error) {
+	var settingsData map[string]interface{}
+	if err := json.Unmarshal([]byte(settings), &settingsData); err != nil {
+		return nil, err
+	}
+
+	controlTablesSettings, ok := settingsData["ControlTablesSettings"].(map[string]interface{})
+	if ok {
+		delete(controlTablesSettings, "historyTimeslotInMinutes")
+	}
+
+	logging, ok := settingsData["Logging"].(map[string]interface{})
+	if ok {
+		delete(logging, "CloudWatchLogGroup")
+		delete(logging, "CloudWatchLogStream")
+	}
+
+	cleanedSettings, err := json.Marshal(settingsData)
+	if err != nil {
+		return nil, err
+	}
+
+	cleanedSettingsString := string(cleanedSettings)
+	return &cleanedSettingsString, nil
 }

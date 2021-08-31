@@ -2,11 +2,14 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicequotas"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsServiceQuotasServiceQuota() *schema.Resource {
@@ -36,6 +39,11 @@ func resourceAwsServiceQuotasServiceQuota() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 128),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with alphabetic character"),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]+$`), "must contain only alphanumeric and hyphen characters"),
+				),
 			},
 			"quota_name": {
 				Type:     schema.TypeString,
@@ -53,6 +61,11 @@ func resourceAwsServiceQuotasServiceQuota() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 63),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with alphabetic character"),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]+$`), "must contain only alphanumeric and hyphen characters"),
+				),
 			},
 			"service_name": {
 				Type:     schema.TypeString,
@@ -86,8 +99,16 @@ func resourceAwsServiceQuotasServiceQuotaCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error getting Service Quotas Service Quota (%s): %s", d.Id(), err)
 	}
 
-	if output == nil {
+	if output == nil || output.Quota == nil {
 		return fmt.Errorf("error getting Service Quotas Service Quota (%s): empty result", d.Id())
+	}
+
+	if output.Quota.ErrorReason != nil {
+		return fmt.Errorf("error getting Service Quotas Service Quota (%s): %s: %s", d.Id(), aws.StringValue(output.Quota.ErrorReason.ErrorCode), aws.StringValue(output.Quota.ErrorReason.ErrorMessage))
+	}
+
+	if output.Quota.Value == nil {
+		return fmt.Errorf("error getting Service Quotas Service Quota (%s): empty value", d.Id())
 	}
 
 	if value > aws.Float64Value(output.Quota.Value) {
@@ -129,12 +150,26 @@ func resourceAwsServiceQuotasServiceQuotaRead(d *schema.ResourceData, meta inter
 
 	output, err := conn.GetServiceQuota(input)
 
+	if isAWSErr(err, servicequotas.ErrCodeNoSuchResourceException, "") {
+		log.Printf("[WARN] Service Quotas Service Quota (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error getting Service Quotas Service Quota (%s): %s", d.Id(), err)
 	}
 
-	if output == nil {
+	if output == nil || output.Quota == nil {
 		return fmt.Errorf("error getting Service Quotas Service Quota (%s): empty result", d.Id())
+	}
+
+	if output.Quota.ErrorReason != nil {
+		return fmt.Errorf("error getting Service Quotas Service Quota (%s): %s: %s", d.Id(), aws.StringValue(output.Quota.ErrorReason.ErrorCode), aws.StringValue(output.Quota.ErrorReason.ErrorMessage))
+	}
+
+	if output.Quota.Value == nil {
+		return fmt.Errorf("error getting Service Quotas Service Quota (%s): empty value", d.Id())
 	}
 
 	defaultInput := &servicequotas.GetAWSDefaultServiceQuotaInput{

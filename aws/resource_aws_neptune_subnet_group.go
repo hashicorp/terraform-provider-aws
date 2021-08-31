@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsNeptuneSubnetGroup() *schema.Resource {
@@ -58,14 +58,18 @@ func resourceAwsNeptuneSubnetGroup() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsNeptuneSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
-	tags := tagsFromMapNeptune(d.Get("tags").(map[string]interface{}))
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	subnetIdsSet := d.Get("subnet_ids").(*schema.Set)
 	subnetIds := make([]*string, subnetIdsSet.Len())
@@ -86,7 +90,7 @@ func resourceAwsNeptuneSubnetGroupCreate(d *schema.ResourceData, meta interface{
 		DBSubnetGroupName:        aws.String(groupName),
 		DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
 		SubnetIds:                subnetIds,
-		Tags:                     tags,
+		Tags:                     tags.IgnoreAws().NeptuneTags(),
 	}
 
 	log.Printf("[DEBUG] Create Neptune Subnet Group: %#v", createOpts)
@@ -102,6 +106,8 @@ func resourceAwsNeptuneSubnetGroupCreate(d *schema.ResourceData, meta interface{
 
 func resourceAwsNeptuneSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	describeOpts := neptune.DescribeDBSubnetGroupsInput{
 		DBSubnetGroupName: aws.String(d.Id()),
@@ -143,28 +149,33 @@ func resourceAwsNeptuneSubnetGroupRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting subnet_ids: %s", err)
 	}
 
-	// list tags for resource
-	// set tags
-
 	//Amazon Neptune shares the format of Amazon RDS ARNs. Neptune ARNs contain rds and not neptune.
 	//https://docs.aws.amazon.com/neptune/latest/userguide/tagging.ARN.html
 	d.Set("arn", subnetGroup.DBSubnetGroupArn)
-	resp, err := conn.ListTagsForResource(&neptune.ListTagsForResourceInput{
-		ResourceName: subnetGroup.DBSubnetGroupArn,
-	})
+
+	tags, err := keyvaluetags.NeptuneListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		log.Printf("[DEBUG] Error retreiving tags for ARN: %s", aws.StringValue(subnetGroup.DBSubnetGroupArn))
+		return fmt.Errorf("error listing tags for Neptune Subnet Group (%s): %s", d.Get("arn").(string), err)
 	}
 
-	d.Set("tags", tagsToMapNeptune(resp.TagList))
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
 
 	return nil
 }
 
 func resourceAwsNeptuneSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
-	if d.HasChange("subnet_ids") || d.HasChange("description") {
+	if d.HasChanges("subnet_ids", "description") {
 		_, n := d.GetChange("subnet_ids")
 		if n == nil {
 			n = new(schema.Set)
@@ -187,12 +198,12 @@ func resourceAwsNeptuneSubnetGroupUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	//https://docs.aws.amazon.com/neptune/latest/userguide/tagging.ARN.html
-	arn := d.Get("arn").(string)
-	if err := setTagsNeptune(conn, d, arn); err != nil {
-		return err
-	} else {
-		d.SetPartial("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := keyvaluetags.NeptuneUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Neptune Subnet Group (%s) tags: %s", d.Get("arn").(string), err)
+		}
 	}
 
 	return resourceAwsNeptuneSubnetGroupRead(d, meta)

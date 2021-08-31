@@ -2,19 +2,22 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsVpcEndpoint_gatewayBasic(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint.test"
-	rName := fmt.Sprintf("tf-testacc-vpce-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointConfig_gatewayBasic(rName),
@@ -30,6 +33,7 @@ func TestAccDataSourceAwsVpcEndpoint_gatewayBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
 					testAccCheckResourceAttrAccountID(datasourceName, "owner_id"),
+					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 		},
@@ -38,11 +42,12 @@ func TestAccDataSourceAwsVpcEndpoint_gatewayBasic(t *testing.T) {
 
 func TestAccDataSourceAwsVpcEndpoint_byId(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint.test"
-	rName := fmt.Sprintf("tf-testacc-vpce-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointConfig_byId(rName),
@@ -58,6 +63,7 @@ func TestAccDataSourceAwsVpcEndpoint_byId(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
 					testAccCheckResourceAttrAccountID(datasourceName, "owner_id"),
+					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 		},
@@ -66,11 +72,12 @@ func TestAccDataSourceAwsVpcEndpoint_byId(t *testing.T) {
 
 func TestAccDataSourceAwsVpcEndpoint_byFilter(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint.test"
-	rName := fmt.Sprintf("tf-testacc-vpce-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointConfig_byFilter(rName),
@@ -86,6 +93,7 @@ func TestAccDataSourceAwsVpcEndpoint_byFilter(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
 					testAccCheckResourceAttrAccountID(datasourceName, "owner_id"),
+					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 		},
@@ -94,11 +102,12 @@ func TestAccDataSourceAwsVpcEndpoint_byFilter(t *testing.T) {
 
 func TestAccDataSourceAwsVpcEndpoint_byTags(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint.test"
-	rName := fmt.Sprintf("tf-testacc-vpce-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointConfig_byTags(rName),
@@ -114,6 +123,7 @@ func TestAccDataSourceAwsVpcEndpoint_byTags(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "3"),
 					testAccCheckResourceAttrAccountID(datasourceName, "owner_id"),
+					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 		},
@@ -122,11 +132,12 @@ func TestAccDataSourceAwsVpcEndpoint_byTags(t *testing.T) {
 
 func TestAccDataSourceAwsVpcEndpoint_gatewayWithRouteTableAndTags(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint.test"
-	rName := fmt.Sprintf("tf-testacc-vpce-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointConfig_gatewayWithRouteTableAndTags(rName),
@@ -143,6 +154,7 @@ func TestAccDataSourceAwsVpcEndpoint_gatewayWithRouteTableAndTags(t *testing.T) 
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.Name", rName),
 					testAccCheckResourceAttrAccountID(datasourceName, "owner_id"),
+					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 		},
@@ -151,11 +163,12 @@ func TestAccDataSourceAwsVpcEndpoint_gatewayWithRouteTableAndTags(t *testing.T) 
 
 func TestAccDataSourceAwsVpcEndpoint_interface(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint.test"
-	rName := fmt.Sprintf("tf-testacc-vpce-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcEndpointConfig_interface(rName),
@@ -172,6 +185,7 @@ func TestAccDataSourceAwsVpcEndpoint_interface(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.Name", rName),
 					testAccCheckResourceAttrAccountID(datasourceName, "owner_id"),
+					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 		},
@@ -191,13 +205,13 @@ resource "aws_vpc" "test" {
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
-  vpc_id       = "${aws_vpc.test.id}"
+  vpc_id       = aws_vpc.test.id
   service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
 }
 
 data "aws_vpc_endpoint" "test" {
-  vpc_id       = "${aws_vpc.test.id}"
-  service_name = "${aws_vpc_endpoint.test.service_name}"
+  vpc_id       = aws_vpc.test.id
+  service_name = aws_vpc_endpoint.test.service_name
   state        = "available"
 }
 `, rName)
@@ -216,12 +230,12 @@ resource "aws_vpc" "test" {
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
-  vpc_id       = "${aws_vpc.test.id}"
+  vpc_id       = aws_vpc.test.id
   service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
 }
 
 data "aws_vpc_endpoint" "test" {
-  id = "${aws_vpc_endpoint.test.id}"
+  id = aws_vpc_endpoint.test.id
 }
 `, rName)
 }
@@ -239,14 +253,14 @@ resource "aws_vpc" "test" {
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
-  vpc_id       = "${aws_vpc.test.id}"
+  vpc_id       = aws_vpc.test.id
   service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
 }
 
 data "aws_vpc_endpoint" "test" {
   filter {
     name   = "vpc-endpoint-id"
-    values = ["${aws_vpc_endpoint.test.id}"]
+    values = [aws_vpc_endpoint.test.id]
   }
 }
 `, rName)
@@ -265,7 +279,7 @@ resource "aws_vpc" "test" {
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
-  vpc_id       = "${aws_vpc.test.id}"
+  vpc_id       = aws_vpc.test.id
   service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
 
   tags = {
@@ -276,7 +290,7 @@ resource "aws_vpc_endpoint" "test" {
 }
 
 data "aws_vpc_endpoint" "test" {
-  vpc_id = "${aws_vpc_endpoint.test.vpc_id}"
+  vpc_id = aws_vpc_endpoint.test.vpc_id
 
   tags = {
     Key1 = "Value1"
@@ -298,7 +312,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -308,11 +322,11 @@ resource "aws_route_table" "test" {
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
-  vpc_id       = "${aws_vpc.test.id}"
+  vpc_id       = aws_vpc.test.id
   service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
 
   route_table_ids = [
-    "${aws_route_table.test.id}",
+    aws_route_table.test.id,
   ]
 
   tags = {
@@ -321,8 +335,8 @@ resource "aws_vpc_endpoint" "test" {
 }
 
 data "aws_vpc_endpoint" "test" {
-  vpc_id       = "${aws_vpc.test.id}"
-  service_name = "${aws_vpc_endpoint.test.service_name}"
+  vpc_id       = aws_vpc.test.id
+  service_name = aws_vpc_endpoint.test.service_name
   state        = "available"
 }
 `, rName)
@@ -338,12 +352,19 @@ resource "aws_vpc" "test" {
   }
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_subnet" "test" {
-  vpc_id            = "${aws_vpc.test.id}"
-  cidr_block        = "${aws_vpc.test.cidr_block}"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = aws_vpc.test.cidr_block
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
@@ -351,7 +372,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
   name   = %[1]q
 
   tags = {
@@ -362,17 +383,17 @@ resource "aws_security_group" "test" {
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
-  vpc_id              = "${aws_vpc.test.id}"
+  vpc_id              = aws_vpc.test.id
   vpc_endpoint_type   = "Interface"
   service_name        = "com.amazonaws.${data.aws_region.current.name}.ec2"
   private_dns_enabled = false
 
   subnet_ids = [
-    "${aws_subnet.test.id}",
+    aws_subnet.test.id,
   ]
 
   security_group_ids = [
-    "${aws_security_group.test.id}",
+    aws_security_group.test.id,
   ]
 
   tags = {
@@ -381,8 +402,8 @@ resource "aws_vpc_endpoint" "test" {
 }
 
 data "aws_vpc_endpoint" "test" {
-  vpc_id       = "${aws_vpc.test.id}"
-  service_name = "${aws_vpc_endpoint.test.service_name}"
+  vpc_id       = aws_vpc.test.id
+  service_name = aws_vpc_endpoint.test.service_name
   state        = "available"
 }
 `, rName)

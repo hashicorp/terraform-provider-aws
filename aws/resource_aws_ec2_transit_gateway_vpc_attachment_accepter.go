@@ -6,7 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsEc2TransitGatewayVpcAttachmentAccepter() *schema.Resource {
@@ -19,7 +20,13 @@ func resourceAwsEc2TransitGatewayVpcAttachmentAccepter() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		CustomizeDiff: SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
+			"appliance_mode_support": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"dns_support": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -33,7 +40,8 @@ func resourceAwsEc2TransitGatewayVpcAttachmentAccepter() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"transit_gateway_attachment_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -67,6 +75,8 @@ func resourceAwsEc2TransitGatewayVpcAttachmentAccepter() *schema.Resource {
 
 func resourceAwsEc2TransitGatewayVpcAttachmentAccepterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.AcceptTransitGatewayVpcAttachmentInput{
 		TransitGatewayAttachmentId: aws.String(d.Get("transit_gateway_attachment_id").(string)),
@@ -85,8 +95,10 @@ func resourceAwsEc2TransitGatewayVpcAttachmentAccepterCreate(d *schema.ResourceD
 		return fmt.Errorf("error waiting for EC2 Transit Gateway VPC Attachment (%s) availability: %s", d.Id(), err)
 	}
 
-	if err := setTags(conn, d); err != nil {
-		return fmt.Errorf("error updating EC2 Transit Gateway VPC Attachment (%s) tags: %s", d.Id(), err)
+	if len(tags) > 0 {
+		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), tags); err != nil {
+			return fmt.Errorf("error updating EC2 Transit Gateway VPC Attachment (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	transitGateway, err := ec2DescribeTransitGateway(conn, transitGatewayID)
@@ -111,6 +123,8 @@ func resourceAwsEc2TransitGatewayVpcAttachmentAccepterCreate(d *schema.ResourceD
 
 func resourceAwsEc2TransitGatewayVpcAttachmentAccepterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	transitGatewayVpcAttachment, err := ec2DescribeTransitGatewayVpcAttachment(conn, d.Id())
 
@@ -162,6 +176,7 @@ func resourceAwsEc2TransitGatewayVpcAttachmentAccepterRead(d *schema.ResourceDat
 		return fmt.Errorf("error reading EC2 Transit Gateway VPC Attachment (%s): missing options", d.Id())
 	}
 
+	d.Set("appliance_mode_support", transitGatewayVpcAttachment.Options.ApplianceModeSupport)
 	d.Set("dns_support", transitGatewayVpcAttachment.Options.DnsSupport)
 	d.Set("ipv6_support", transitGatewayVpcAttachment.Options.Ipv6Support)
 
@@ -169,16 +184,23 @@ func resourceAwsEc2TransitGatewayVpcAttachmentAccepterRead(d *schema.ResourceDat
 		return fmt.Errorf("error setting subnet_ids: %s", err)
 	}
 
-	if err := d.Set("tags", tagsToMap(transitGatewayVpcAttachment.Tags)); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags := keyvaluetags.Ec2KeyValueTags(transitGatewayVpcAttachment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	d.Set("transit_gateway_attachment_id", aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId))
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
+	d.Set("transit_gateway_attachment_id", transitGatewayVpcAttachment.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_default_route_table_association", (transitGatewayDefaultRouteTableAssociation != nil))
 	d.Set("transit_gateway_default_route_table_propagation", (transitGatewayDefaultRouteTablePropagation != nil))
-	d.Set("transit_gateway_id", aws.StringValue(transitGatewayVpcAttachment.TransitGatewayId))
-	d.Set("vpc_id", aws.StringValue(transitGatewayVpcAttachment.VpcId))
-	d.Set("vpc_owner_id", aws.StringValue(transitGatewayVpcAttachment.VpcOwnerId))
+	d.Set("transit_gateway_id", transitGatewayVpcAttachment.TransitGatewayId)
+	d.Set("vpc_id", transitGatewayVpcAttachment.VpcId)
+	d.Set("vpc_owner_id", transitGatewayVpcAttachment.VpcOwnerId)
 
 	return nil
 }
@@ -186,7 +208,7 @@ func resourceAwsEc2TransitGatewayVpcAttachmentAccepterRead(d *schema.ResourceDat
 func resourceAwsEc2TransitGatewayVpcAttachmentAccepterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	if d.HasChange("transit_gateway_default_route_table_association") || d.HasChange("transit_gateway_default_route_table_propagation") {
+	if d.HasChanges("transit_gateway_default_route_table_association", "transit_gateway_default_route_table_propagation") {
 		transitGatewayID := d.Get("transit_gateway_id").(string)
 
 		transitGateway, err := ec2DescribeTransitGateway(conn, transitGatewayID)
@@ -211,8 +233,10 @@ func resourceAwsEc2TransitGatewayVpcAttachmentAccepterUpdate(d *schema.ResourceD
 		}
 	}
 
-	if d.HasChange("tags") {
-		if err := setTags(conn, d); err != nil {
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 Transit Gateway VPC Attachment (%s) tags: %s", d.Id(), err)
 		}
 	}

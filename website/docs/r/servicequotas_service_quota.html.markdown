@@ -1,4 +1,5 @@
 ---
+subcategory: "Service Quotas"
 layout: "aws"
 page_title: "AWS: aws_servicequotas_service_quota"
 description: |-
@@ -9,9 +10,11 @@ description: |-
 
 Manages an individual Service Quota.
 
+~> **NOTE:** Global quotas apply to all AWS regions, but can only be accessed in `us-east-1` in the Commercial partition or `us-gov-west-1` in the GovCloud partition. In other regions, the AWS API will return the error `The request failed because the specified service does not exist.`
+
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_servicequotas_service_quota" "example" {
   quota_code   = "L-F678F1CE"
   service_code = "vpc"
@@ -27,7 +30,7 @@ The following arguments are supported:
 * `service_code` - (Required) Code of the service to track. For example: `vpc`. Available values can be found with the [AWS CLI service-quotas list-services command](https://docs.aws.amazon.com/cli/latest/reference/service-quotas/list-services.html).
 * `value` - (Required) Float specifying the desired value for the service quota. If the desired value is higher than the current value, a quota increase request is submitted. When a known request is submitted and pending, the value reflects the desired value of the pending request.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

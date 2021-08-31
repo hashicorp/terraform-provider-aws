@@ -8,7 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsElasticBeanstalkApplicationVersion() *schema.Resource {
@@ -17,6 +18,8 @@ func resourceAwsElasticBeanstalkApplicationVersion() *schema.Resource {
 		Read:   resourceAwsElasticBeanstalkApplicationVersionRead,
 		Update: resourceAwsElasticBeanstalkApplicationVersionUpdate,
 		Delete: resourceAwsElasticBeanstalkApplicationVersionDelete,
+
+		CustomizeDiff: SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"application": {
@@ -52,13 +55,16 @@ func resourceAwsElasticBeanstalkApplicationVersion() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceAwsElasticBeanstalkApplicationVersionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticbeanstalkconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	application := d.Get("application").(string)
 	description := d.Get("description").(string)
@@ -75,8 +81,8 @@ func resourceAwsElasticBeanstalkApplicationVersionCreate(d *schema.ResourceData,
 		ApplicationName: aws.String(application),
 		Description:     aws.String(description),
 		SourceBundle:    &s3Location,
+		Tags:            tags.IgnoreElasticbeanstalk().ElasticbeanstalkTags(),
 		VersionLabel:    aws.String(name),
-		Tags:            tagsFromMapBeanstalk(d.Get("tags").(map[string]interface{})),
 	}
 
 	log.Printf("[DEBUG] Elastic Beanstalk Application Version create opts: %s", createOpts)
@@ -93,6 +99,8 @@ func resourceAwsElasticBeanstalkApplicationVersionCreate(d *schema.ResourceData,
 
 func resourceAwsElasticBeanstalkApplicationVersionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticbeanstalkconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeApplicationVersions(&elasticbeanstalk.DescribeApplicationVersionsInput{
 		ApplicationName: aws.String(d.Get("application").(string)),
@@ -113,16 +121,25 @@ func resourceAwsElasticBeanstalkApplicationVersionRead(d *schema.ResourceData, m
 			len(resp.ApplicationVersions), d.Id())
 	}
 
-	if err := d.Set("description", resp.ApplicationVersions[0].Description); err != nil {
-		return err
+	arn := aws.StringValue(resp.ApplicationVersions[0].ApplicationVersionArn)
+	d.Set("arn", arn)
+	d.Set("description", resp.ApplicationVersions[0].Description)
+
+	tags, err := keyvaluetags.ElasticbeanstalkListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Elastic Beanstalk Application version (%s): %w", arn, err)
 	}
 
-	if err := d.Set("arn", resp.ApplicationVersions[0].ApplicationVersionArn); err != nil {
-		return err
+	tags = tags.IgnoreElasticbeanstalk().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	if err := saveTagsBeanstalk(conn, d, aws.StringValue(resp.ApplicationVersions[0].ApplicationVersionArn)); err != nil {
-		return fmt.Errorf("error saving tags for %s: %s", d.Id(), err)
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -137,8 +154,13 @@ func resourceAwsElasticBeanstalkApplicationVersionUpdate(d *schema.ResourceData,
 		}
 	}
 
-	if err := setTagsBeanstalk(conn, d, d.Get("arn").(string)); err != nil {
-		return fmt.Errorf("error setting tags for %s: %s", d.Id(), err)
+	arn := d.Get("arn").(string)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := keyvaluetags.ElasticbeanstalkUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating Elastic Beanstalk Application version (%s) tags: %s", arn, err)
+		}
 	}
 
 	return resourceAwsElasticBeanstalkApplicationVersionRead(d, meta)

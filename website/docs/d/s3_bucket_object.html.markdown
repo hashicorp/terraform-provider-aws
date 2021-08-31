@@ -1,4 +1,5 @@
 ---
+subcategory: "S3"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_object"
 description: |-
@@ -17,7 +18,7 @@ _optionally_ (see below) content of an object stored inside S3 bucket.
 The following example retrieves a text object (which must have a `Content-Type`
 value starting with `text/`) and uses it as the `user_data` for an EC2 instance:
 
-```hcl
+```terraform
 data "aws_s3_bucket_object" "bootstrap_script" {
   bucket = "ourcorp-deploy-config"
   key    = "ec2-bootstrap-script.sh"
@@ -26,7 +27,7 @@ data "aws_s3_bucket_object" "bootstrap_script" {
 resource "aws_instance" "example" {
   instance_type = "t2.micro"
   ami           = "ami-2757f631"
-  user_data     = "${data.aws_s3_bucket_object.bootstrap_script.body}"
+  user_data     = data.aws_s3_bucket_object.bootstrap_script.body
 }
 ```
 
@@ -36,18 +37,18 @@ to AWS Lambda for use as a function implementation. More information about
 Lambda functions is available in the documentation for
 [`aws_lambda_function`](/docs/providers/aws/r/lambda_function.html).
 
-```hcl
+```terraform
 data "aws_s3_bucket_object" "lambda" {
   bucket = "ourcorp-lambda-functions"
   key    = "hello-world.zip"
 }
 
 resource "aws_lambda_function" "test_lambda" {
-  s3_bucket         = "${data.aws_s3_bucket_object.lambda.bucket}"
-  s3_key            = "${data.aws_s3_bucket_object.lambda.key}"
-  s3_object_version = "${data.aws_s3_bucket_object.lambda.version_id}"
+  s3_bucket         = data.aws_s3_bucket_object.lambda.bucket
+  s3_key            = data.aws_s3_bucket_object.lambda.key
+  s3_object_version = data.aws_s3_bucket_object.lambda.version_id
   function_name     = "lambda_function_name"
-  role              = "${aws_iam_role.iam_for_lambda.arn}"             # (not shown)
+  role              = aws_iam_role.iam_for_lambda.arn # (not shown)
   handler           = "exports.test"
 }
 ```
@@ -56,7 +57,7 @@ resource "aws_lambda_function" "test_lambda" {
 
 The following arguments are supported:
 
-* `bucket` - (Required) The name of the bucket to read the object from
+* `bucket` - (Required) The name of the bucket to read the object from. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
 * `key` - (Required) The full path to the object inside the bucket
 * `version_id` - (Optional) Specific version ID of the object returned (defaults to latest version)
 
@@ -65,6 +66,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `body` - Object data (see **limitations above** to understand cases in which this field is actually available)
+* `bucket_key_enabled` - (Optional) Whether or not to use [Amazon S3 Bucket Keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) for SSE-KMS.
 * `cache_control` - Specifies caching behavior along the request/reply chain.
 * `content_disposition` - Specifies presentational information for the object.
 * `content_encoding` - Specifies what content encodings have been applied to the object and thus what decoding mechanisms must be applied to obtain the media-type referenced by the Content-Type header field.
@@ -84,6 +86,6 @@ In addition to all arguments above, the following attributes are exported:
 * `storage_class` - [Storage class](http://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html) information of the object. Available for all objects except for `Standard` storage class objects.
 * `version_id` - The latest version ID of the object returned.
 * `website_redirect_location` - If the bucket is configured as a website, redirects requests for this object to another object in the same bucket or to an external URL. Amazon S3 stores the value of this header in the object metadata.
-* `tags`  - A mapping of tags assigned to the object.
+* `tags`  - A map of tags assigned to the object.
 
 -> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/index.html` and `index.html` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.

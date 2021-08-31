@@ -3,18 +3,21 @@ package aws
 import (
 	"bytes"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"log"
 	"math/big"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/encryption"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/encryption"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsIamUserLoginProfile() *schema.Resource {
@@ -76,7 +79,7 @@ const (
 
 // generateIAMPassword generates a random password of a given length, matching the
 // most restrictive iam password policy.
-func generateIAMPassword(length int) string {
+func generateIAMPassword(length int) (string, error) {
 	const charset = charLower + charUpper + charNumbers + charSymbols
 
 	result := make([]byte, length)
@@ -93,10 +96,10 @@ func generateIAMPassword(length int) string {
 		for i := range result {
 			r, err := rand.Int(rand.Reader, charsetSize)
 			if err != nil {
-				panic(err)
+				return "", err
 			}
 			if !r.IsInt64() {
-				panic("rand.Int() not representable as an Int64")
+				return "", errors.New("rand.Int() not representable as an Int64")
 			}
 
 			result[i] = charset[r.Int64()]
@@ -106,10 +109,10 @@ func generateIAMPassword(length int) string {
 			continue
 		}
 
-		return string(result)
+		return string(result), nil
 	}
 
-	panic("failed to generate acceptable password")
+	return "", errors.New("failed to generate acceptable password")
 }
 
 // Check the generated password contains all character classes listed in the
@@ -132,7 +135,10 @@ func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface
 
 	passwordResetRequired := d.Get("password_reset_required").(bool)
 	passwordLength := d.Get("password_length").(int)
-	initialPassword := generateIAMPassword(passwordLength)
+	initialPassword, err := generateIAMPassword(passwordLength)
+	if err != nil {
+		return err
+	}
 
 	fingerprint, encrypted, err := encryption.EncryptValue(encryptionKey, initialPassword, "Password")
 	if err != nil {
@@ -151,7 +157,7 @@ func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("Error creating IAM User Login Profile for %q: %s", username, err)
 	}
 
-	d.SetId(*createResp.LoginProfile.UserName)
+	d.SetId(aws.StringValue(createResp.LoginProfile.UserName))
 	d.Set("key_fingerprint", fingerprint)
 	d.Set("encrypted_password", encrypted)
 	return nil
@@ -164,24 +170,43 @@ func resourceAwsIamUserLoginProfileRead(d *schema.ResourceData, meta interface{}
 		UserName: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Getting IAM User Login Profile (%s): %s", d.Id(), input)
-	output, err := conn.GetLoginProfile(input)
+	var output *iam.GetLoginProfileOutput
 
-	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+		var err error
+
+		output, err = conn.GetLoginProfile(input)
+
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		output, err = conn.GetLoginProfile(input)
+	}
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		log.Printf("[WARN] IAM User Login Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting IAM User Login Profile (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading IAM User Login Profile (%s): %w", d.Id(), err)
 	}
 
 	if output == nil || output.LoginProfile == nil {
-		return fmt.Errorf("error getting IAM User Login Profile (%s): empty response", d.Id())
+		return fmt.Errorf("error reading IAM User Login Profile (%s): empty response", d.Id())
 	}
 
-	d.Set("user", aws.StringValue(output.LoginProfile.UserName))
+	d.Set("user", output.LoginProfile.UserName)
 
 	return nil
 }
@@ -195,7 +220,7 @@ func resourceAwsIamUserLoginProfileDelete(d *schema.ResourceData, meta interface
 
 	log.Printf("[DEBUG] Deleting IAM User Login Profile (%s): %s", d.Id(), input)
 	// Handle IAM eventual consistency
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteLoginProfile(input)
 
 		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {

@@ -5,9 +5,11 @@ import (
 	"log"
 	"sort"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsEbsVolume() *schema.Resource {
@@ -20,7 +22,6 @@ func dataSourceAwsEbsVolume() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-				ForceNew: true,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -36,6 +37,10 @@ func dataSourceAwsEbsVolume() *schema.Resource {
 			},
 			"iops": {
 				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"multi_attach_enabled": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"volume_type": {
@@ -54,11 +59,19 @@ func dataSourceAwsEbsVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"outpost_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"volume_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"tags": tagsSchemaComputed(),
+			"throughput": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -109,8 +122,8 @@ type volumeSort []*ec2.Volume
 func (a volumeSort) Len() int      { return len(a) }
 func (a volumeSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a volumeSort) Less(i, j int) bool {
-	itime := *a[i].CreateTime
-	jtime := *a[j].CreateTime
+	itime := aws.TimeValue(a[i].CreateTime)
+	jtime := aws.TimeValue(a[j].CreateTime)
 	return itime.Unix() < jtime.Unix()
 }
 
@@ -121,13 +134,13 @@ func mostRecentVolume(volumes []*ec2.Volume) *ec2.Volume {
 }
 
 func volumeDescriptionAttributes(d *schema.ResourceData, client *AWSClient, volume *ec2.Volume) error {
-	d.SetId(*volume.VolumeId)
+	d.SetId(aws.StringValue(volume.VolumeId))
 	d.Set("volume_id", volume.VolumeId)
 
 	arn := arn.ARN{
 		Partition: client.partition,
 		Region:    client.region,
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 		AccountID: client.accountid,
 		Resource:  fmt.Sprintf("volume/%s", d.Id()),
 	}
@@ -140,7 +153,13 @@ func volumeDescriptionAttributes(d *schema.ResourceData, client *AWSClient, volu
 	d.Set("size", volume.Size)
 	d.Set("snapshot_id", volume.SnapshotId)
 	d.Set("volume_type", volume.VolumeType)
+	d.Set("outpost_arn", volume.OutpostArn)
+	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
+	d.Set("throughput", volume.Throughput)
 
-	err := d.Set("tags", tagsToMap(volume.Tags))
-	return err
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(volume.Tags).IgnoreAws().IgnoreConfig(client.IgnoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	return nil
 }

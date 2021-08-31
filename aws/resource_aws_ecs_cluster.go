@@ -8,9 +8,19 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecs/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecs/waiter"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+)
+
+const (
+	ecsClusterTimeoutDelete = 10 * time.Minute
+	ecsClusterTimeoutUpdate = 10 * time.Minute
 )
 
 func resourceAwsEcsCluster() *schema.Resource {
@@ -23,16 +33,105 @@ func resourceAwsEcsCluster() *schema.Resource {
 			State: resourceAwsEcsClusterImport,
 		},
 
+		CustomizeDiff: SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"tags": tagsSchema(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"capacity_providers": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"execute_command_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kms_key_id": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"log_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"cloud_watch_encryption_enabled": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"cloud_watch_log_group_name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"s3_bucket_name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"s3_bucket_encryption_enabled": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"s3_key_prefix": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"logging": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(ecs.ExecuteCommandLogging_Values(), false),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"default_capacity_provider_strategy": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"base": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 100000),
+						},
+
+						"capacity_provider": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+
+						"weight": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 1000),
+						},
+					},
+				},
 			},
 			"setting": {
 				Type:     schema.TypeSet,
@@ -41,11 +140,9 @@ func resourceAwsEcsCluster() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								ecs.ClusterSettingNameContainerInsights,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(ecs.ClusterSettingName_Values(), false),
 						},
 						"value": {
 							Type:     schema.TypeString,
@@ -54,6 +151,8 @@ func resourceAwsEcsCluster() *schema.Resource {
 					},
 				},
 			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
@@ -72,43 +171,76 @@ func resourceAwsEcsClusterImport(d *schema.ResourceData, meta interface{}) ([]*s
 
 func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("name").(string)
 	log.Printf("[DEBUG] Creating ECS cluster %s", clusterName)
 
-	input := ecs.CreateClusterInput{
-		ClusterName: aws.String(clusterName),
-		Tags:        tagsFromMapECS(d.Get("tags").(map[string]interface{})),
+	input := &ecs.CreateClusterInput{
+		ClusterName:                     aws.String(clusterName),
+		DefaultCapacityProviderStrategy: expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
+		Tags:                            tags.IgnoreAws().EcsTags(),
+	}
+
+	if v, ok := d.GetOk("capacity_providers"); ok {
+		input.CapacityProviders = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("setting"); ok {
-		input.Settings = expandEcsSettings(v.(*schema.Set).List())
+		input.Settings = expandEcsSettings(v.(*schema.Set))
 	}
 
-	out, err := conn.CreateCluster(&input)
+	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 {
+		input.Configuration = expandECSClusterConfiguration(v.([]interface{}))
+	}
+
+	// CreateCluster will create the ECS IAM Service Linked Role on first ECS provision
+	// This process does not complete before the initial API call finishes.
+	var out *ecs.CreateClusterOutput
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+		var err error
+		out, err = conn.CreateCluster(input)
+
+		if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "Unable to assume the service linked role") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		out, err = conn.CreateCluster(input)
+	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating ECS Cluster (%s): %w", clusterName, err)
 	}
-	log.Printf("[DEBUG] ECS cluster %s created", *out.Cluster.ClusterArn)
 
-	d.SetId(*out.Cluster.ClusterArn)
+	log.Printf("[DEBUG] ECS cluster %s created", aws.StringValue(out.Cluster.ClusterArn))
+
+	d.SetId(aws.StringValue(out.Cluster.ClusterArn))
+
+	if _, err := waiter.ClusterAvailable(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
+	}
 
 	return resourceAwsEcsClusterRead(d, meta)
 }
 
 func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	input := &ecs.DescribeClustersInput{
-		Clusters: []*string{aws.String(d.Id())},
-		Include:  []*string{aws.String(ecs.ClusterFieldTags)},
-	}
-
-	log.Printf("[DEBUG] Reading ECS Cluster: %s", input)
 	var out *ecs.DescribeClustersOutput
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
-		out, err = conn.DescribeClusters(input)
+		out, err = finder.ClusterByARN(conn, d.Id())
 
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -124,7 +256,7 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if isResourceTimeoutError(err) {
-		out, err = conn.DescribeClusters(input)
+		out, err = finder.ClusterByARN(conn, d.Id())
 	}
 
 	if isResourceNotFoundError(err) {
@@ -161,12 +293,32 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", cluster.ClusterArn)
 	d.Set("name", cluster.ClusterName)
 
-	if err := d.Set("setting", flattenEcsSettings(cluster.Settings)); err != nil {
-		return fmt.Errorf("error setting setting: %s", err)
+	if err := d.Set("capacity_providers", aws.StringValueSlice(cluster.CapacityProviders)); err != nil {
+		return fmt.Errorf("error setting capacity_providers: %w", err)
+	}
+	if err := d.Set("default_capacity_provider_strategy", flattenEcsCapacityProviderStrategy(cluster.DefaultCapacityProviderStrategy)); err != nil {
+		return fmt.Errorf("error setting default_capacity_provider_strategy: %w", err)
 	}
 
-	if err := d.Set("tags", tagsToMapECS(cluster.Tags)); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	if err := d.Set("setting", flattenEcsSettings(cluster.Settings)); err != nil {
+		return fmt.Errorf("error setting setting: %w", err)
+	}
+
+	if cluster.Configuration != nil {
+		if err := d.Set("configuration", flattenECSClusterConfiguration(cluster.Configuration)); err != nil {
+			return fmt.Errorf("error setting configuration: %w", err)
+		}
+	}
+
+	tags := keyvaluetags.EcsKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -175,51 +327,69 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
 
-	if d.HasChange("setting") {
-		input := ecs.UpdateClusterSettingsInput{
-			Cluster:  aws.String(d.Id()),
-			Settings: expandEcsSettings(d.Get("setting").(*schema.Set).List()),
+	if d.HasChanges("setting", "configuration") {
+		input := ecs.UpdateClusterInput{
+			Cluster: aws.String(d.Id()),
 		}
 
-		_, err := conn.UpdateClusterSettings(&input)
+		if v, ok := d.GetOk("setting"); ok {
+			input.Settings = expandEcsSettings(v.(*schema.Set))
+		}
+
+		if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 {
+			input.Configuration = expandECSClusterConfiguration(v.([]interface{}))
+		}
+
+		_, err := conn.UpdateCluster(&input)
 		if err != nil {
-			return fmt.Errorf("error changing ECS cluster settings (%s): %s", d.Id(), err)
+			return fmt.Errorf("error changing ECS cluster (%s): %w", d.Id(), err)
+		}
+
+		if _, err := waiter.ClusterAvailable(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags") {
-		oldTagsRaw, newTagsRaw := d.GetChange("tags")
-		oldTagsMap := oldTagsRaw.(map[string]interface{})
-		newTagsMap := newTagsRaw.(map[string]interface{})
-		createTags, removeTags := diffTagsECS(tagsFromMapECS(oldTagsMap), tagsFromMapECS(newTagsMap))
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
-		if len(removeTags) > 0 {
-			removeTagKeys := make([]*string, len(removeTags))
-			for i, removeTag := range removeTags {
-				removeTagKeys[i] = removeTag.Key
-			}
+		if err := keyvaluetags.EcsUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating ECS Cluster (%s) tags: %w", d.Id(), err)
+		}
+	}
 
-			input := &ecs.UntagResourceInput{
-				ResourceArn: aws.String(d.Id()),
-				TagKeys:     removeTagKeys,
-			}
-
-			log.Printf("[DEBUG] Untagging ECS Cluster: %s", input)
-			if _, err := conn.UntagResource(input); err != nil {
-				return fmt.Errorf("error untagging ECS Cluster (%s): %s", d.Id(), err)
-			}
+	if d.HasChanges("capacity_providers", "default_capacity_provider_strategy") {
+		input := ecs.PutClusterCapacityProvidersInput{
+			Cluster:                         aws.String(d.Id()),
+			CapacityProviders:               expandStringSet(d.Get("capacity_providers").(*schema.Set)),
+			DefaultCapacityProviderStrategy: expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
 		}
 
-		if len(createTags) > 0 {
-			input := &ecs.TagResourceInput{
-				ResourceArn: aws.String(d.Id()),
-				Tags:        createTags,
+		err := resource.Retry(ecsClusterTimeoutUpdate, func() *resource.RetryError {
+			_, err := conn.PutClusterCapacityProviders(&input)
+			if err != nil {
+				if isAWSErr(err, ecs.ErrCodeClientException, "Cluster was not ACTIVE") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, ecs.ErrCodeResourceInUseException, "") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, ecs.ErrCodeUpdateInProgressException, "") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
 			}
+			return nil
+		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.PutClusterCapacityProviders(&input)
+		}
+		if err != nil {
+			return fmt.Errorf("error changing ECS cluster capacity provider settings (%s): %w", d.Id(), err)
+		}
 
-			log.Printf("[DEBUG] Tagging ECS Cluster: %s", input)
-			if _, err := conn.TagResource(input); err != nil {
-				return fmt.Errorf("error tagging ECS Cluster (%s): %s", d.Id(), err)
-			}
+		if _, err := waiter.ClusterAvailable(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
 		}
 	}
 
@@ -233,7 +403,7 @@ func resourceAwsEcsClusterDelete(d *schema.ResourceData, meta interface{}) error
 	input := &ecs.DeleteClusterInput{
 		Cluster: aws.String(d.Id()),
 	}
-	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(ecsClusterTimeoutDelete, func() *resource.RetryError {
 		_, err := conn.DeleteCluster(input)
 
 		if err == nil {
@@ -249,6 +419,10 @@ func resourceAwsEcsClusterDelete(d *schema.ResourceData, meta interface{}) error
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
+		if isAWSErr(err, ecs.ErrCodeUpdateInProgressException, "") {
+			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
+			return resource.RetryableError(err)
+		}
 		return resource.NonRetryableError(err)
 	})
 	if isResourceTimeoutError(err) {
@@ -258,60 +432,23 @@ func resourceAwsEcsClusterDelete(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error deleting ECS cluster: %s", err)
 	}
 
-	clusterName := d.Get("name").(string)
-	dcInput := &ecs.DescribeClustersInput{
-		Clusters: []*string{aws.String(clusterName)},
-	}
-	var out *ecs.DescribeClustersOutput
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		log.Printf("[DEBUG] Checking if ECS Cluster %q is INACTIVE", d.Id())
-		out, err = conn.DescribeClusters(dcInput)
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		if !ecsClusterInactive(out, clusterName) {
-			return resource.RetryableError(fmt.Errorf("ECS Cluster %q is not inactive", clusterName))
-		}
-
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		out, err = conn.DescribeClusters(dcInput)
-		if err != nil {
-			return fmt.Errorf("Error waiting for ECS cluster to become inactive: %s", err)
-		}
-		if !ecsClusterInactive(out, clusterName) {
-			return fmt.Errorf("ECS Cluster %q is still not inactive", clusterName)
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("Error waiting for ECS cluster to become inactive: %s", err)
+	if _, err := waiter.ClusterDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for ECS Cluster (%s) to become Deleted: %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] ECS cluster %q deleted", d.Id())
 	return nil
 }
 
-func ecsClusterInactive(out *ecs.DescribeClustersOutput, clusterName string) bool {
-	for _, c := range out.Clusters {
-		if aws.StringValue(c.ClusterName) == clusterName {
-			if *c.Status == "INACTIVE" {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func expandEcsSettings(configured []interface{}) []*ecs.ClusterSetting {
-	if len(configured) == 0 {
+func expandEcsSettings(configured *schema.Set) []*ecs.ClusterSetting {
+	list := configured.List()
+	if len(list) == 0 {
 		return nil
 	}
 
-	settings := make([]*ecs.ClusterSetting, 0, len(configured))
+	settings := make([]*ecs.ClusterSetting, 0, len(list))
 
-	for _, raw := range configured {
+	for _, raw := range list {
 		data := raw.(map[string]interface{})
 
 		setting := &ecs.ClusterSetting{
@@ -340,4 +477,131 @@ func flattenEcsSettings(list []*ecs.ClusterSetting) []map[string]interface{} {
 		result = append(result, l)
 	}
 	return result
+}
+
+func flattenECSClusterConfiguration(apiObject *ecs.ClusterConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if apiObject.ExecuteCommandConfiguration != nil {
+		tfMap["execute_command_configuration"] = flattenECSClusterConfigurationExecuteCommandConfiguration(apiObject.ExecuteCommandConfiguration)
+	}
+	return []interface{}{tfMap}
+}
+
+func flattenECSClusterConfigurationExecuteCommandConfiguration(apiObject *ecs.ExecuteCommandConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if apiObject.KmsKeyId != nil {
+		tfMap["kms_key_id"] = aws.StringValue(apiObject.KmsKeyId)
+	}
+
+	if apiObject.LogConfiguration != nil {
+		tfMap["log_configuration"] = flattenECSClusterConfigurationExecuteCommandConfigurationLogConfiguration(apiObject.LogConfiguration)
+	}
+
+	if apiObject.Logging != nil {
+		tfMap["logging"] = aws.StringValue(apiObject.Logging)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenECSClusterConfigurationExecuteCommandConfigurationLogConfiguration(apiObject *ecs.ExecuteCommandLogConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	tfMap["cloud_watch_encryption_enabled"] = aws.BoolValue(apiObject.CloudWatchEncryptionEnabled)
+	tfMap["s3_bucket_encryption_enabled"] = aws.BoolValue(apiObject.S3EncryptionEnabled)
+
+	if apiObject.CloudWatchLogGroupName != nil {
+		tfMap["cloud_watch_log_group_name"] = aws.StringValue(apiObject.CloudWatchLogGroupName)
+	}
+
+	if apiObject.S3BucketName != nil {
+		tfMap["s3_bucket_name"] = aws.StringValue(apiObject.S3BucketName)
+	}
+
+	if apiObject.S3KeyPrefix != nil {
+		tfMap["s3_key_prefix"] = aws.StringValue(apiObject.S3KeyPrefix)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func expandECSClusterConfiguration(nc []interface{}) *ecs.ClusterConfiguration {
+	if len(nc) == 0 {
+		return &ecs.ClusterConfiguration{}
+	}
+	raw := nc[0].(map[string]interface{})
+
+	config := &ecs.ClusterConfiguration{}
+	if v, ok := raw["execute_command_configuration"].([]interface{}); ok && len(v) > 0 {
+		config.ExecuteCommandConfiguration = expandECSClusterConfigurationExecuteCommandConfiguration(v)
+	}
+
+	return config
+}
+
+func expandECSClusterConfigurationExecuteCommandConfiguration(nc []interface{}) *ecs.ExecuteCommandConfiguration {
+	if len(nc) == 0 {
+		return &ecs.ExecuteCommandConfiguration{}
+	}
+	raw := nc[0].(map[string]interface{})
+
+	config := &ecs.ExecuteCommandConfiguration{}
+	if v, ok := raw["log_configuration"].([]interface{}); ok && len(v) > 0 {
+		config.LogConfiguration = expandECSClusterConfigurationExecuteCommandLogConfiguration(v)
+	}
+
+	if v, ok := raw["kms_key_id"].(string); ok && v != "" {
+		config.KmsKeyId = aws.String(v)
+	}
+
+	if v, ok := raw["logging"].(string); ok && v != "" {
+		config.Logging = aws.String(v)
+	}
+
+	return config
+}
+
+func expandECSClusterConfigurationExecuteCommandLogConfiguration(nc []interface{}) *ecs.ExecuteCommandLogConfiguration {
+	if len(nc) == 0 {
+		return &ecs.ExecuteCommandLogConfiguration{}
+	}
+	raw := nc[0].(map[string]interface{})
+
+	config := &ecs.ExecuteCommandLogConfiguration{}
+
+	if v, ok := raw["cloud_watch_log_group_name"].(string); ok && v != "" {
+		config.CloudWatchLogGroupName = aws.String(v)
+	}
+
+	if v, ok := raw["s3_bucket_name"].(string); ok && v != "" {
+		config.S3BucketName = aws.String(v)
+	}
+
+	if v, ok := raw["s3_key_prefix"].(string); ok && v != "" {
+		config.S3KeyPrefix = aws.String(v)
+	}
+
+	if v, ok := raw["cloud_watch_encryption_enabled"].(bool); ok {
+		config.CloudWatchEncryptionEnabled = aws.Bool(v)
+	}
+
+	if v, ok := raw["s3_bucket_encryption_enabled"].(bool); ok {
+		config.S3EncryptionEnabled = aws.Bool(v)
+	}
+
+	return config
 }

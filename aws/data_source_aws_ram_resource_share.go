@@ -5,8 +5,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsRamResourceShare() *schema.Resource {
@@ -51,15 +52,12 @@ func dataSourceAwsRamResourceShare() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": {
-				Type:     schema.TypeMap,
-				Computed: true,
-			},
-
-			"id": {
+			"owning_account_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"tags": tagsSchemaComputed(),
 
 			"status": {
 				Type:     schema.TypeString,
@@ -71,6 +69,7 @@ func dataSourceAwsRamResourceShare() *schema.Resource {
 
 func dataSourceAwsRamResourceShareRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ramconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
 	owner := d.Get("resource_owner").(string)
@@ -98,18 +97,18 @@ func dataSourceAwsRamResourceShareRead(d *schema.ResourceData, meta interface{})
 		}
 
 		if resp == nil || len(resp.ResourceShares) == 0 {
-			return fmt.Errorf("No matching resource found: %s", err)
+			return fmt.Errorf("No matching resource found: %w", err)
 		}
 
 		for _, r := range resp.ResourceShares {
 			if aws.StringValue(r.Name) == name {
 				d.SetId(aws.StringValue(r.ResourceShareArn))
-				d.Set("arn", aws.StringValue(r.ResourceShareArn))
-				d.Set("owning_account_id", aws.StringValue(r.OwningAccountId))
-				d.Set("status", aws.StringValue(r.Status))
+				d.Set("arn", r.ResourceShareArn)
+				d.Set("owning_account_id", r.OwningAccountId)
+				d.Set("status", r.Status)
 
-				if err := d.Set("tags", tagsToMapRAM(r.Tags)); err != nil {
-					return fmt.Errorf("error setting tags: %s", err)
+				if err := d.Set("tags", keyvaluetags.RamKeyValueTags(r.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+					return fmt.Errorf("error setting tags: %w", err)
 				}
 
 				break

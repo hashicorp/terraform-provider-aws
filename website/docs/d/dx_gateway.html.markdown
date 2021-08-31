@@ -1,4 +1,5 @@
 ---
+subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_gateway"
 description: |-
@@ -11,7 +12,7 @@ Retrieve information about a Direct Connect Gateway.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_dx_gateway" "example" {
   name = "example"
 }

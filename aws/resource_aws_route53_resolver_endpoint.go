@@ -8,10 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 const (
@@ -54,7 +55,7 @@ func resourceAwsRoute53ResolverEndpoint() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validation.SingleIP(),
+							ValidateFunc: validation.IsIPAddress,
 						},
 						"ip_id": {
 							Type:     schema.TypeString,
@@ -81,7 +82,8 @@ func resourceAwsRoute53ResolverEndpoint() *schema.Resource {
 				ValidateFunc: validateRoute53ResolverName,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 
 			"arn": {
 				Type:     schema.TypeString,
@@ -99,11 +101,15 @@ func resourceAwsRoute53ResolverEndpoint() *schema.Resource {
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsRoute53ResolverEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53resolverconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &route53resolver.CreateResolverEndpointInput{
 		CreatorRequestId: aws.String(resource.PrefixedUniqueId("tf-r53-resolver-endpoint-")),
@@ -115,7 +121,7 @@ func resourceAwsRoute53ResolverEndpointCreate(d *schema.ResourceData, meta inter
 		req.Name = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
-		req.Tags = tagsFromMapRoute53Resolver(v.(map[string]interface{}))
+		req.Tags = tags.IgnoreAws().Route53resolverTags()
 	}
 
 	log.Printf("[DEBUG] Creating Route53 Resolver endpoint: %#v", req)
@@ -138,6 +144,8 @@ func resourceAwsRoute53ResolverEndpointCreate(d *schema.ResourceData, meta inter
 
 func resourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53resolverconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	epRaw, state, err := route53ResolverEndpointRefresh(conn, d.Id())()
 	if err != nil {
@@ -179,8 +187,21 @@ func resourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta interfa
 		return err
 	}
 
-	if err := getTagsRoute53Resolver(conn, d); err != nil {
-		return fmt.Errorf("error getting Route53 Resolver endpoint (%s) tags: %s", d.Id(), err)
+	tags, err := keyvaluetags.Route53resolverListTags(conn, d.Get("arn").(string))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Route53 Resolver endpoint (%s): %s", d.Get("arn").(string), err)
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -189,7 +210,6 @@ func resourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta interfa
 func resourceAwsRoute53ResolverEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53resolverconn
 
-	d.Partial(true)
 	if d.HasChange("name") {
 		req := &route53resolver.UpdateResolverEndpointInput{
 			ResolverEndpointId: aws.String(d.Id()),
@@ -208,8 +228,6 @@ func resourceAwsRoute53ResolverEndpointUpdate(d *schema.ResourceData, meta inter
 		if err != nil {
 			return err
 		}
-
-		d.SetPartial("name")
 	}
 
 	if d.HasChange("ip_address") {
@@ -253,16 +271,15 @@ func resourceAwsRoute53ResolverEndpointUpdate(d *schema.ResourceData, meta inter
 				return err
 			}
 		}
-
-		d.SetPartial("ip_address")
 	}
 
-	if err := setTagsRoute53Resolver(conn, d); err != nil {
-		return fmt.Errorf("error setting Route53 Resolver endpoint (%s) tags: %s", d.Id(), err)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := keyvaluetags.Route53resolverUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Route53 Resolver endpoint (%s) tags: %s", d.Get("arn").(string), err)
+		}
 	}
-	d.SetPartial("tags")
 
-	d.Partial(false)
 	return resourceAwsRoute53ResolverEndpointRead(d, meta)
 }
 

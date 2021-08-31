@@ -1,4 +1,5 @@
 ---
+subcategory: "WAF Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_ipset"
 description: |-
@@ -11,7 +12,7 @@ Provides a WAF Regional IPSet Resource for use with Application Load Balancer.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_wafregional_ipset" "ipset" {
   name = "tfIPSet"
 

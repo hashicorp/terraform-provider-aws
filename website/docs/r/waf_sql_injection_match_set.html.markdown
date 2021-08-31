@@ -1,4 +1,5 @@
 ---
+subcategory: "WAF"
 layout: "aws"
 page_title: "AWS: aws_waf_sql_injection_match_set"
 description: |-
@@ -11,7 +12,7 @@ Provides a WAF SQL Injection Match Set Resource
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_waf_sql_injection_match_set" "sql_injection_match_set" {
   name = "tf-sql_injection_match_set"
 
@@ -62,3 +63,11 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF SQL Injection Match Set.
+
+## Import
+
+AWS WAF SQL Injection Match Set can be imported using their ID, e.g.
+
+```
+$ terraform import aws_waf_sql_injection_match_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```

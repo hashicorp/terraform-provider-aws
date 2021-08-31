@@ -1,4 +1,5 @@
 ---
+subcategory: "CloudTrail"
 layout: "aws"
 page_title: "AWS: aws_cloudtrail_service_account"
 description: |-
@@ -12,7 +13,7 @@ in a given region for the purpose of allowing CloudTrail to store trail data in 
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_cloudtrail_service_account" "main" {}
 
 resource "aws_s3_bucket" "bucket" {

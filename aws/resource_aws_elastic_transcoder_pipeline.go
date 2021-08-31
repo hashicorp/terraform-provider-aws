@@ -6,10 +6,10 @@ import (
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsElasticTranscoderPipeline() *schema.Resource {
@@ -36,7 +36,7 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 
 			// ContentConfig also requires ThumbnailConfig
 			"content_config": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				MaxItems: 1,
@@ -52,6 +52,10 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 						"storage_class": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"Standard",
+								"ReducedRedundancy",
+							}, false),
 						},
 					},
 				},
@@ -65,7 +69,15 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 						"access": {
 							Type:     schema.TypeList,
 							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.StringInSlice([]string{
+									"Read",
+									"ReadAcp",
+									"WriteAcp",
+									"FullControl",
+								}, false),
+							},
 						},
 						"grantee": {
 							Type:     schema.TypeString,
@@ -74,6 +86,11 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 						"grantee_type": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"Canonical",
+								"Email",
+								"Group",
+							}, false),
 						},
 					},
 				},
@@ -89,40 +106,38 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if !regexp.MustCompile(`^[.0-9A-Za-z-_]+$`).MatchString(value) {
-						errors = append(errors, fmt.Errorf(
-							"only alphanumeric characters, hyphens, underscores, and periods allowed in %q", k))
-					}
-					if len(value) > 40 {
-						errors = append(errors, fmt.Errorf("%q cannot be longer than 40 characters", k))
-					}
-					return
-				},
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^[.0-9A-Za-z-_]+$`),
+						"only alphanumeric characters, hyphens, underscores, and periods allowed"),
+					validation.StringLenBetween(1, 40),
+				),
 			},
 
 			"notifications": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"completed": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
 						},
 						"error": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
 						},
 						"progressing": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
 						},
 						"warning": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -139,12 +154,13 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 			},
 
 			"role": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"thumbnail_config": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				MaxItems: 1,
@@ -160,6 +176,10 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 						"storage_class": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"Standard",
+								"ReducedRedundancy",
+							}, false),
 						},
 					},
 				},
@@ -173,7 +193,15 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 						"access": {
 							Type:     schema.TypeList,
 							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.StringInSlice([]string{
+									"Read",
+									"ReadAcp",
+									"WriteAcp",
+									"FullControl",
+								}, false),
+							},
 						},
 						"grantee": {
 							Type:     schema.TypeString,
@@ -182,6 +210,11 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 						"grantee_type": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"Canonical",
+								"Email",
+								"Group",
+							}, false),
 						},
 					},
 				},
@@ -191,16 +224,19 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 }
 
 func resourceAwsElasticTranscoderPipelineCreate(d *schema.ResourceData, meta interface{}) error {
-	elastictranscoderconn := meta.(*AWSClient).elastictranscoderconn
+	conn := meta.(*AWSClient).elastictranscoderconn
 
 	req := &elastictranscoder.CreatePipelineInput{
-		AwsKmsKeyArn:    getStringPtr(d, "aws_kms_key_arn"),
+		AwsKmsKeyArn:    aws.String(d.Get("aws_kms_key_arn").(string)),
 		ContentConfig:   expandETPiplineOutputConfig(d, "content_config"),
 		InputBucket:     aws.String(d.Get("input_bucket").(string)),
 		Notifications:   expandETNotifications(d),
-		OutputBucket:    getStringPtr(d, "output_bucket"),
-		Role:            getStringPtr(d, "role"),
+		Role:            aws.String(d.Get("role").(string)),
 		ThumbnailConfig: expandETPiplineOutputConfig(d, "thumbnail_config"),
+	}
+
+	if v, ok := d.GetOk("output_bucket"); ok {
+		req.OutputBucket = aws.String(v.(string))
 	}
 
 	if name, ok := d.GetOk("name"); ok {
@@ -217,12 +253,12 @@ func resourceAwsElasticTranscoderPipelineCreate(d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Elastic Transcoder Pipeline create opts: %s", req)
-	resp, err := elastictranscoderconn.CreatePipeline(req)
+	resp, err := conn.CreatePipeline(req)
 	if err != nil {
 		return fmt.Errorf("Error creating Elastic Transcoder Pipeline: %s", err)
 	}
 
-	d.SetId(*resp.Pipeline.Id)
+	d.SetId(aws.StringValue(resp.Pipeline.Id))
 
 	for _, w := range resp.Warnings {
 		log.Printf("[WARN] Elastic Transcoder Pipeline %v: %v", *w.Code, *w.Message)
@@ -232,22 +268,22 @@ func resourceAwsElasticTranscoderPipelineCreate(d *schema.ResourceData, meta int
 }
 
 func expandETNotifications(d *schema.ResourceData) *elastictranscoder.Notifications {
-	set, ok := d.GetOk("notifications")
+	list, ok := d.GetOk("notifications")
 	if !ok {
 		return nil
 	}
 
-	s := set.(*schema.Set).List()
-	if len(s) == 0 {
+	l := list.([]interface{})
+	if len(l) == 0 {
 		return nil
 	}
 
-	if s[0] == nil {
-		log.Printf("[ERR] First element of Notifications set is nil")
+	if l[0] == nil {
+		log.Printf("[ERR] First element of Notifications list is nil")
 		return nil
 	}
 
-	rN := s[0].(map[string]interface{})
+	rN := l[0].(map[string]interface{})
 
 	return &elastictranscoder.Notifications{
 		Completed:   aws.String(rN["completed"].(string)),
@@ -276,31 +312,32 @@ func flattenETNotifications(n *elastictranscoder.Notifications) []map[string]int
 		return nil
 	}
 
-	m := setMap(make(map[string]interface{}))
+	result := map[string]interface{}{
+		"completed":   aws.StringValue(n.Completed),
+		"error":       aws.StringValue(n.Error),
+		"progressing": aws.StringValue(n.Progressing),
+		"warning":     aws.StringValue(n.Warning),
+	}
 
-	m.SetString("completed", n.Completed)
-	m.SetString("error", n.Error)
-	m.SetString("progressing", n.Progressing)
-	m.SetString("warning", n.Warning)
-	return m.MapList()
+	return []map[string]interface{}{result}
 }
 
 func expandETPiplineOutputConfig(d *schema.ResourceData, key string) *elastictranscoder.PipelineOutputConfig {
-	set, ok := d.GetOk(key)
+	list, ok := d.GetOk(key)
 	if !ok {
 		return nil
 	}
 
-	s := set.(*schema.Set)
-	if s == nil || s.Len() == 0 {
+	l := list.([]interface{})
+	if len(l) == 0 {
 		return nil
 	}
 
-	cc := s.List()[0].(map[string]interface{})
+	cc := l[0].(map[string]interface{})
 
 	cfg := &elastictranscoder.PipelineOutputConfig{
-		Bucket:       getStringPtr(cc, "bucket"),
-		StorageClass: getStringPtr(cc, "storage_class"),
+		Bucket:       aws.String(cc["bucket"].(string)),
+		StorageClass: aws.String(cc["storage_class"].(string)),
 	}
 
 	switch key {
@@ -314,12 +351,16 @@ func expandETPiplineOutputConfig(d *schema.ResourceData, key string) *elastictra
 }
 
 func flattenETPipelineOutputConfig(cfg *elastictranscoder.PipelineOutputConfig) []map[string]interface{} {
-	m := setMap(make(map[string]interface{}))
+	if cfg == nil {
+		return nil
+	}
 
-	m.SetString("bucket", cfg.Bucket)
-	m.SetString("storage_class", cfg.StorageClass)
+	result := map[string]interface{}{
+		"bucket":        aws.StringValue(cfg.Bucket),
+		"storage_class": aws.StringValue(cfg.StorageClass),
+	}
 
-	return m.MapList()
+	return []map[string]interface{}{result}
 }
 
 func expandETPermList(permissions *schema.Set) []*elastictranscoder.Permission {
@@ -334,8 +375,8 @@ func expandETPermList(permissions *schema.Set) []*elastictranscoder.Permission {
 
 		perm := &elastictranscoder.Permission{
 			Access:      expandStringList(m["access"].([]interface{})),
-			Grantee:     getStringPtr(p, "grantee"),
-			GranteeType: getStringPtr(p, "grantee_type"),
+			Grantee:     aws.String(m["grantee"].(string)),
+			GranteeType: aws.String(m["grantee_type"].(string)),
 		}
 
 		perms = append(perms, perm)
@@ -347,25 +388,26 @@ func flattenETPermList(perms []*elastictranscoder.Permission) []map[string]inter
 	var set []map[string]interface{}
 
 	for _, p := range perms {
-		m := setMap(make(map[string]interface{}))
-		m.Set("access", flattenStringList(p.Access))
-		m.SetString("grantee", p.Grantee)
-		m.SetString("grantee_type", p.GranteeType)
+		result := map[string]interface{}{
+			"access":       flattenStringList(p.Access),
+			"grantee":      aws.StringValue(p.Grantee),
+			"grantee_type": aws.StringValue(p.GranteeType),
+		}
 
-		set = append(set, m)
+		set = append(set, result)
 	}
 	return set
 }
 
 func resourceAwsElasticTranscoderPipelineUpdate(d *schema.ResourceData, meta interface{}) error {
-	elastictranscoderconn := meta.(*AWSClient).elastictranscoderconn
+	conn := meta.(*AWSClient).elastictranscoderconn
 
 	req := &elastictranscoder.UpdatePipelineInput{
 		Id: aws.String(d.Id()),
 	}
 
 	if d.HasChange("aws_kms_key_arn") {
-		req.AwsKmsKeyArn = getStringPtr(d, "aws_kms_key_arn")
+		req.AwsKmsKeyArn = aws.String(d.Get("aws_kms_key_arn").(string))
 	}
 
 	if d.HasChange("content_config") {
@@ -373,11 +415,11 @@ func resourceAwsElasticTranscoderPipelineUpdate(d *schema.ResourceData, meta int
 	}
 
 	if d.HasChange("input_bucket") {
-		req.InputBucket = getStringPtr(d, "input_bucket")
+		req.InputBucket = aws.String(d.Get("input_bucket").(string))
 	}
 
 	if d.HasChange("name") {
-		req.Name = getStringPtr(d, "name")
+		req.Name = aws.String(d.Get("name").(string))
 	}
 
 	if d.HasChange("notifications") {
@@ -385,7 +427,7 @@ func resourceAwsElasticTranscoderPipelineUpdate(d *schema.ResourceData, meta int
 	}
 
 	if d.HasChange("role") {
-		req.Role = getStringPtr(d, "role")
+		req.Role = aws.String(d.Get("role").(string))
 	}
 
 	if d.HasChange("thumbnail_config") {
@@ -393,27 +435,29 @@ func resourceAwsElasticTranscoderPipelineUpdate(d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Updating Elastic Transcoder Pipeline: %#v", req)
-	output, err := elastictranscoderconn.UpdatePipeline(req)
+	output, err := conn.UpdatePipeline(req)
 	if err != nil {
 		return fmt.Errorf("Error updating Elastic Transcoder pipeline: %s", err)
 	}
 
 	for _, w := range output.Warnings {
-		log.Printf("[WARN] Elastic Transcoder Pipeline %v: %v", *w.Code, *w.Message)
+		log.Printf("[WARN] Elastic Transcoder Pipeline %v: %v", aws.StringValue(w.Code),
+			aws.StringValue(w.Message))
 	}
 
 	return resourceAwsElasticTranscoderPipelineRead(d, meta)
 }
 
 func resourceAwsElasticTranscoderPipelineRead(d *schema.ResourceData, meta interface{}) error {
-	elastictranscoderconn := meta.(*AWSClient).elastictranscoderconn
+	conn := meta.(*AWSClient).elastictranscoderconn
 
-	resp, err := elastictranscoderconn.ReadPipeline(&elastictranscoder.ReadPipelineInput{
+	resp, err := conn.ReadPipeline(&elastictranscoder.ReadPipelineInput{
 		Id: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		if err, ok := err.(awserr.Error); ok && err.Code() == "ResourceNotFoundException" {
+		if isAWSErr(err, elastictranscoder.ErrCodeResourceNotFoundException, "") {
+			log.Printf("[WARN] No such resource found for Elastic Transcoder Pipeline (%s)", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -424,10 +468,10 @@ func resourceAwsElasticTranscoderPipelineRead(d *schema.ResourceData, meta inter
 
 	pipeline := resp.Pipeline
 
-	d.Set("arn", *pipeline.Arn)
+	d.Set("arn", pipeline.Arn)
 
 	if arn := pipeline.AwsKmsKeyArn; arn != nil {
-		d.Set("aws_kms_key_arn", *arn)
+		d.Set("aws_kms_key_arn", arn)
 	}
 
 	if pipeline.ContentConfig != nil {
@@ -444,8 +488,8 @@ func resourceAwsElasticTranscoderPipelineRead(d *schema.ResourceData, meta inter
 		}
 	}
 
-	d.Set("input_bucket", *pipeline.InputBucket)
-	d.Set("name", *pipeline.Name)
+	d.Set("input_bucket", pipeline.InputBucket)
+	d.Set("name", pipeline.Name)
 
 	notifications := flattenETNotifications(pipeline.Notifications)
 	if notifications != nil {
@@ -454,7 +498,7 @@ func resourceAwsElasticTranscoderPipelineRead(d *schema.ResourceData, meta inter
 		}
 	}
 
-	d.Set("role", *pipeline.Role)
+	d.Set("role", pipeline.Role)
 
 	if pipeline.ThumbnailConfig != nil {
 		err := d.Set("thumbnail_config", flattenETPipelineOutputConfig(pipeline.ThumbnailConfig))
@@ -471,17 +515,17 @@ func resourceAwsElasticTranscoderPipelineRead(d *schema.ResourceData, meta inter
 	}
 
 	if pipeline.OutputBucket != nil {
-		d.Set("output_bucket", *pipeline.OutputBucket)
+		d.Set("output_bucket", pipeline.OutputBucket)
 	}
 
 	return nil
 }
 
 func resourceAwsElasticTranscoderPipelineDelete(d *schema.ResourceData, meta interface{}) error {
-	elastictranscoderconn := meta.(*AWSClient).elastictranscoderconn
+	conn := meta.(*AWSClient).elastictranscoderconn
 
 	log.Printf("[DEBUG] Elastic Transcoder Delete Pipeline: %s", d.Id())
-	_, err := elastictranscoderconn.DeletePipeline(&elastictranscoder.DeletePipelineInput{
+	_, err := conn.DeletePipeline(&elastictranscoder.DeletePipelineInput{
 		Id: aws.String(d.Id()),
 	})
 	if err != nil {

@@ -1,4 +1,5 @@
 ---
+subcategory: "Redshift"
 layout: "aws"
 page_title: "AWS: aws_redshift_security_group"
 description: |-
@@ -11,7 +12,7 @@ Creates a new Amazon Redshift security group. You use security groups to control
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_redshift_security_group" "default" {
   name = "redshift-sg"
 

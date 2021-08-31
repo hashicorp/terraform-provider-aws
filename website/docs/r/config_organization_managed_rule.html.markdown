@@ -1,4 +1,5 @@
 ---
+subcategory: "Config"
 layout: "aws"
 page_title: "AWS: aws_config_organization_managed_rule"
 description: |-
@@ -15,14 +16,14 @@ Manages a Config Organization Managed Rule. More information about these rules c
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_organizations_organization" "example" {
   aws_service_access_principals = ["config-multiaccountsetup.amazonaws.com"]
   feature_set                   = "ALL"
 }
 
 resource "aws_config_organization_managed_rule" "example" {
-  depends_on = ["aws_organizations_organization.example"]
+  depends_on = [aws_organizations_organization.example]
 
   name            = "example"
   rule_identifier = "IAM_PASSWORD_POLICY"
@@ -52,7 +53,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_config_organization_managed_rule` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+`aws_config_organization_managed_rule` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
 configuration options:
 
 * `create` - (Default `5m`) How long to wait for the rule to be created.

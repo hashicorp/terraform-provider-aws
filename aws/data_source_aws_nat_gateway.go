@@ -6,7 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsNatGateway() *schema.Resource {
@@ -38,6 +39,10 @@ func dataSourceAwsNatGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"connectivity_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"network_interface_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -58,6 +63,7 @@ func dataSourceAwsNatGateway() *schema.Resource {
 
 func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeNatGatewaysInput{}
 
@@ -91,7 +97,7 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 
 	if tags, ok := d.GetOk("tags"); ok {
 		req.Filter = append(req.Filter, buildEC2TagFilterList(
-			tagsFromMap(tags.(map[string]interface{})),
+			keyvaluetags.New(tags.(map[string]interface{})).Ec2Tags(),
 		)...)
 	}
 
@@ -119,13 +125,17 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] NAT Gateway response: %s", ngw)
 
 	d.SetId(aws.StringValue(ngw.NatGatewayId))
+	d.Set("connectivity_type", ngw.ConnectivityType)
 	d.Set("state", ngw.State)
 	d.Set("subnet_id", ngw.SubnetId)
 	d.Set("vpc_id", ngw.VpcId)
-	d.Set("tags", tagsToMap(ngw.Tags))
+
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(ngw.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
 
 	for _, address := range ngw.NatGatewayAddresses {
-		if *address.AllocationId != "" {
+		if aws.StringValue(address.AllocationId) != "" {
 			d.Set("allocation_id", address.AllocationId)
 			d.Set("network_interface_id", address.NetworkInterfaceId)
 			d.Set("private_ip", address.PrivateIp)

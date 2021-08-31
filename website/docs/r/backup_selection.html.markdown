@@ -1,4 +1,5 @@
 ---
+subcategory: "Backup"
 layout: "aws"
 page_title: "AWS: aws_backup_selection"
 description: |-
@@ -17,7 +18,7 @@ Manages selection conditions for AWS Backup plan resources.
 
 The below example creates an IAM role with the default managed IAM Policy for allowing AWS Backup to create backups.
 
-```hcl
+```terraform
 resource "aws_iam_role" "example" {
   name               = "example"
   assume_role_policy = <<POLICY
@@ -38,23 +39,23 @@ POLICY
 
 resource "aws_iam_role_policy_attachment" "example" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
-  role       = "${aws_iam_role.example.name}"
+  role       = aws_iam_role.example.name
 }
 
 resource "aws_backup_selection" "example" {
   # ... other configuration ...
 
-  iam_role_arn = "${aws_iam_role.example.arn}"
+  iam_role_arn = aws_iam_role.example.arn
 }
 ```
 
 ### Selecting Backups By Tag
 
-```hcl
+```terraform
 resource "aws_backup_selection" "example" {
-  iam_role_arn = "${aws_iam_role.example.arn}"
+  iam_role_arn = aws_iam_role.example.arn
   name         = "tf_example_backup_selection"
-  plan_id      = "${aws_backup_plan.example.id}"
+  plan_id      = aws_backup_plan.example.id
 
   selection_tag {
     type  = "STRINGEQUALS"
@@ -66,16 +67,16 @@ resource "aws_backup_selection" "example" {
 
 ### Selecting Backups By Resource
 
-```hcl
+```terraform
 resource "aws_backup_selection" "example" {
-  iam_role_arn = "${aws_iam_role.example.arn}"
+  iam_role_arn = aws_iam_role.example.arn
   name         = "tf_example_backup_selection"
-  plan_id      = "${aws_backup_plan.example.id}"
+  plan_id      = aws_backup_plan.example.id
 
   resources = [
-    "${aws_db_instance.example.arn}",
-    "${aws_ebs_volume.example.arn}",
-    "${aws_efs_file_system.example.arn}",
+    aws_db_instance.example.arn,
+    aws_ebs_volume.example.arn,
+    aws_efs_file_system.example.arn,
   ]
 }
 ```

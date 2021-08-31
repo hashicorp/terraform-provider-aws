@@ -3,11 +3,10 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -30,6 +29,11 @@ func dataSourceAwsRdsCluster() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 				Set:      schema.HashString,
+			},
+
+			"backtrack_window": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 
 			"backup_retention_period": {
@@ -120,12 +124,6 @@ func dataSourceAwsRdsCluster() *schema.Resource {
 			"preferred_maintenance_window": {
 				Type:     schema.TypeString,
 				Computed: true,
-				StateFunc: func(val interface{}) string {
-					if val == nil {
-						return ""
-					}
-					return strings.ToLower(val.(string))
-				},
 			},
 
 			"port": {
@@ -167,6 +165,7 @@ func dataSourceAwsRdsCluster() *schema.Resource {
 
 func dataSourceAwsRdsClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	dbClusterIdentifier := d.Get("cluster_identifier").(string)
 
@@ -177,7 +176,7 @@ func dataSourceAwsRdsClusterRead(d *schema.ResourceData, meta interface{}) error
 	resp, err := conn.DescribeDBClusters(params)
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving RDS cluster: %s", err)
+		return fmt.Errorf("Error retrieving RDS cluster: %w", err)
 	}
 
 	if resp == nil {
@@ -199,12 +198,12 @@ func dataSourceAwsRdsClusterRead(d *schema.ResourceData, meta interface{}) error
 	d.SetId(aws.StringValue(dbc.DBClusterIdentifier))
 
 	if err := d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones)); err != nil {
-		return fmt.Errorf("error setting availability_zones: %s", err)
+		return fmt.Errorf("error setting availability_zones: %w", err)
 	}
 
 	arn := dbc.DBClusterArn
 	d.Set("arn", arn)
-	d.Set("backtrack_window", int(aws.Int64Value(dbc.BacktrackWindow)))
+	d.Set("backtrack_window", dbc.BacktrackWindow)
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
 
@@ -213,7 +212,7 @@ func dataSourceAwsRdsClusterRead(d *schema.ResourceData, meta interface{}) error
 		cm = append(cm, aws.StringValue(m.DBInstanceIdentifier))
 	}
 	if err := d.Set("cluster_members", cm); err != nil {
-		return fmt.Errorf("error setting cluster_members: %s", err)
+		return fmt.Errorf("error setting cluster_members: %w", err)
 	}
 
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
@@ -230,7 +229,7 @@ func dataSourceAwsRdsClusterRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
 
 	if err := d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports)); err != nil {
-		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
+		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %w", err)
 	}
 
 	d.Set("endpoint", dbc.Endpoint)
@@ -244,7 +243,7 @@ func dataSourceAwsRdsClusterRead(d *schema.ResourceData, meta interface{}) error
 		roles = append(roles, aws.StringValue(r.RoleArn))
 	}
 	if err := d.Set("iam_roles", roles); err != nil {
-		return fmt.Errorf("error setting iam_roles: %s", err)
+		return fmt.Errorf("error setting iam_roles: %w", err)
 	}
 
 	d.Set("kms_key_id", dbc.KmsKeyId)
@@ -262,17 +261,17 @@ func dataSourceAwsRdsClusterRead(d *schema.ResourceData, meta interface{}) error
 		vpcg = append(vpcg, aws.StringValue(g.VpcSecurityGroupId))
 	}
 	if err := d.Set("vpc_security_group_ids", vpcg); err != nil {
-		return fmt.Errorf("error setting vpc_security_group_ids: %s", err)
+		return fmt.Errorf("error setting vpc_security_group_ids: %w", err)
 	}
 
 	tags, err := keyvaluetags.RdsListTags(conn, *arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for RDS Cluster (%s): %s", *arn, err)
+		return fmt.Errorf("error listing tags for RDS Cluster (%s): %w", *arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil

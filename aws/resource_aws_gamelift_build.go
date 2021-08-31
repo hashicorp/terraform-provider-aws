@@ -7,9 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsGameliftBuild() *schema.Resource {
@@ -26,13 +27,10 @@ func resourceAwsGameliftBuild() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"operating_system": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					gamelift.OperatingSystemAmazonLinux,
-					gamelift.OperatingSystemWindows2012,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(gamelift.OperatingSystem_Values(), false),
 			},
 			"storage_location": {
 				Type:     schema.TypeList,
@@ -65,18 +63,30 @@ func resourceAwsGameliftBuild() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags": tagsSchema(),
+
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsGameliftBuildCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).gameliftconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	sl := expandGameliftStorageLocation(d.Get("storage_location").([]interface{}))
 	input := gamelift.CreateBuildInput{
 		Name:            aws.String(d.Get("name").(string)),
 		OperatingSystem: aws.String(d.Get("operating_system").(string)),
 		StorageLocation: sl,
+		Tags:            tags.IgnoreAws().GameliftTags(),
 	}
 	if v, ok := d.GetOk("version"); ok {
 		input.Version = aws.String(v.(string))
@@ -101,7 +111,7 @@ func resourceAwsGameliftBuildCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error creating Gamelift build client: %s", err)
 	}
 
-	d.SetId(*out.Build.BuildId)
+	d.SetId(aws.StringValue(out.Build.BuildId))
 
 	stateConf := resource.StateChangeConf{
 		Pending: []string{gamelift.BuildStatusInitialized},
@@ -128,6 +138,8 @@ func resourceAwsGameliftBuildCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsGameliftBuildRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).gameliftconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading Gamelift Build: %s", d.Id())
 	out, err := conn.DescribeBuild(&gamelift.DescribeBuildInput{
@@ -147,6 +159,25 @@ func resourceAwsGameliftBuildRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("operating_system", b.OperatingSystem)
 	d.Set("version", b.Version)
 
+	arn := aws.StringValue(b.BuildArn)
+	d.Set("arn", arn)
+	tags, err := keyvaluetags.GameliftListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Game Lift Build (%s): %s", arn, err)
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
 	return nil
 }
 
@@ -165,6 +196,15 @@ func resourceAwsGameliftBuildUpdate(d *schema.ResourceData, meta interface{}) er
 	_, err := conn.UpdateBuild(&input)
 	if err != nil {
 		return err
+	}
+
+	arn := d.Get("arn").(string)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := keyvaluetags.GameliftUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating Game Lift Build (%s) tags: %s", arn, err)
+		}
 	}
 
 	return resourceAwsGameliftBuildRead(d, meta)

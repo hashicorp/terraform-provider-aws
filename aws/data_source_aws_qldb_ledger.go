@@ -2,15 +2,13 @@ package aws
 
 import (
 	"fmt"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/qldb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-
 	"log"
 	"regexp"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/qldb"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func dataSourceAwsQLDBLedger() *schema.Resource {
@@ -29,6 +27,11 @@ func dataSourceAwsQLDBLedger() *schema.Resource {
 					validation.StringLenBetween(1, 32),
 					validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
 				),
+			},
+
+			"permissions_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"deletion_protection": {
@@ -52,12 +55,13 @@ func dataSourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error
 	resp, err := conn.DescribeLedger(req)
 
 	if err != nil {
-		return fmt.Errorf("Error describing ledger: %s", err)
+		return fmt.Errorf("Error describing ledger: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.Name))
 	d.Set("arn", resp.Arn)
 	d.Set("deletion_protection", resp.DeletionProtection)
+	d.Set("permissions_mode", resp.PermissionsMode)
 
 	return nil
 }

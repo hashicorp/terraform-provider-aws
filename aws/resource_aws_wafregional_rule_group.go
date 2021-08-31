@@ -5,9 +5,11 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsWafRegionalRuleGroup() *schema.Resource {
@@ -66,12 +68,22 @@ func resourceAwsWafRegionalRuleGroup() *schema.Resource {
 					},
 				},
 			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsWafRegionalRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafregionalconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	region := meta.(*AWSClient).region
 
 	wr := newWafRegionalRetryer(conn, region)
@@ -82,18 +94,35 @@ func resourceAwsWafRegionalRuleGroupCreate(d *schema.ResourceData, meta interfac
 			Name:        aws.String(d.Get("name").(string)),
 		}
 
+		if len(tags) > 0 {
+			params.Tags = tags.IgnoreAws().WafregionalTags()
+		}
+
 		return conn.CreateRuleGroup(params)
 	})
 	if err != nil {
 		return err
 	}
 	resp := out.(*waf.CreateRuleGroupOutput)
-	d.SetId(*resp.RuleGroup.RuleGroupId)
-	return resourceAwsWafRegionalRuleGroupUpdate(d, meta)
+	d.SetId(aws.StringValue(resp.RuleGroup.RuleGroupId))
+
+	activatedRule := d.Get("activated_rule").(*schema.Set).List()
+	if len(activatedRule) > 0 {
+		noActivatedRules := []interface{}{}
+
+		err := updateWafRuleGroupResourceWR(d.Id(), noActivatedRules, activatedRule, conn, region)
+		if err != nil {
+			return fmt.Errorf("Error Updating WAF Regional Rule Group: %s", err)
+		}
+	}
+
+	return resourceAwsWafRegionalRuleGroupRead(d, meta)
 }
 
 func resourceAwsWafRegionalRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafregionalconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	params := &waf.GetRuleGroupInput{
 		RuleGroupId: aws.String(d.Id()),
@@ -117,6 +146,30 @@ func resourceAwsWafRegionalRuleGroupRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error listing activated rules in WAF Regional Rule Group (%s): %s", d.Id(), err)
 	}
 
+	arn := arn.ARN{
+		AccountID: meta.(*AWSClient).accountid,
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Resource:  fmt.Sprintf("rulegroup/%s", d.Id()),
+		Service:   "waf-regional",
+	}.String()
+	d.Set("arn", arn)
+
+	tags, err := keyvaluetags.WafregionalListTags(conn, arn)
+	if err != nil {
+		return fmt.Errorf("error listing tags for WAF Regional Rule Group (%s): %s", arn, err)
+	}
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
 	d.Set("activated_rule", flattenWafActivatedRules(rResp.ActivatedRules))
 	d.Set("name", resp.RuleGroup.Name)
 	d.Set("metric_name", resp.RuleGroup.MetricName)
@@ -135,6 +188,14 @@ func resourceAwsWafRegionalRuleGroupUpdate(d *schema.ResourceData, meta interfac
 		err := updateWafRuleGroupResourceWR(d.Id(), oldRules, newRules, conn, region)
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Regional Rule Group: %s", err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := keyvaluetags.WafregionalUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
 

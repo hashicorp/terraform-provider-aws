@@ -1,14 +1,15 @@
 package aws
 
 import (
+	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicediscovery/waiter"
 )
 
 func resourceAwsServiceDiscoveryService() *schema.Resource {
@@ -127,19 +128,26 @@ func resourceAwsServiceDiscoveryService() *schema.Resource {
 					},
 				},
 			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsServiceDiscoveryServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sdconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &servicediscovery.CreateServiceInput{
 		Name: aws.String(d.Get("name").(string)),
+		Tags: tags.IgnoreAws().ServicediscoveryTags(),
 	}
 
 	dnsConfig := d.Get("dns_config").([]interface{})
@@ -170,13 +178,15 @@ func resourceAwsServiceDiscoveryServiceCreate(d *schema.ResourceData, meta inter
 		return err
 	}
 
-	d.SetId(*resp.Service.Id)
-	d.Set("arn", resp.Service.Arn)
-	return nil
+	d.SetId(aws.StringValue(resp.Service.Id))
+
+	return resourceAwsServiceDiscoveryServiceRead(d, meta)
 }
 
 func resourceAwsServiceDiscoveryServiceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sdconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &servicediscovery.GetServiceInput{
 		Id: aws.String(d.Id()),
@@ -193,55 +203,70 @@ func resourceAwsServiceDiscoveryServiceRead(d *schema.ResourceData, meta interfa
 	}
 
 	service := resp.Service
-	d.Set("arn", service.Arn)
+	arn := aws.StringValue(service.Arn)
+	d.Set("arn", arn)
 	d.Set("name", service.Name)
 	d.Set("description", service.Description)
 	d.Set("namespace_id", service.NamespaceId)
 	d.Set("dns_config", flattenServiceDiscoveryDnsConfig(service.DnsConfig))
 	d.Set("health_check_config", flattenServiceDiscoveryHealthCheckConfig(service.HealthCheckConfig))
 	d.Set("health_check_custom_config", flattenServiceDiscoveryHealthCheckCustomConfig(service.HealthCheckCustomConfig))
+
+	tags, err := keyvaluetags.ServicediscoveryListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
 	return nil
 }
 
 func resourceAwsServiceDiscoveryServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sdconn
 
-	input := &servicediscovery.UpdateServiceInput{
-		Id: aws.String(d.Id()),
-	}
+	if d.HasChanges("description", "dns_config", "health_check_config") {
+		input := &servicediscovery.UpdateServiceInput{
+			Id: aws.String(d.Id()),
+			Service: &servicediscovery.ServiceChange{
+				Description: aws.String(d.Get("description").(string)),
+				DnsConfig:   expandServiceDiscoveryDnsConfigChange(d.Get("dns_config").([]interface{})[0].(map[string]interface{})),
+			},
+		}
 
-	sc := &servicediscovery.ServiceChange{
-		DnsConfig: expandServiceDiscoveryDnsConfigChange(d.Get("dns_config").([]interface{})[0].(map[string]interface{})),
-	}
-
-	if d.HasChange("description") {
-		sc.Description = aws.String(d.Get("description").(string))
-	}
-
-	if d.HasChange("health_check_config") {
 		hcconfig := d.Get("health_check_config").([]interface{})
-		sc.HealthCheckConfig = expandServiceDiscoveryHealthCheckConfig(hcconfig[0].(map[string]interface{}))
+		if len(hcconfig) > 0 {
+			input.Service.HealthCheckConfig = expandServiceDiscoveryHealthCheckConfig(hcconfig[0].(map[string]interface{}))
+		}
+
+		output, err := conn.UpdateService(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating Service Discovery Service (%s): %w", d.Id(), err)
+		}
+
+		if output != nil && output.OperationId != nil {
+			if _, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
+				return fmt.Errorf("error waiting for Service Discovery Service (%s) update: %w", d.Id(), err)
+			}
+		}
 	}
 
-	input.Service = sc
-
-	resp, err := conn.UpdateService(input)
-	if err != nil {
-		return err
-	}
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{servicediscovery.OperationStatusSubmitted, servicediscovery.OperationStatusPending},
-		Target:     []string{servicediscovery.OperationStatusSuccess},
-		Refresh:    servicediscoveryOperationRefreshStatusFunc(conn, *resp.OperationId),
-		Timeout:    5 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return err
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := keyvaluetags.ServicediscoveryUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Service Discovery Private DNS Namespace (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsServiceDiscoveryServiceRead(d, meta)
@@ -255,7 +280,16 @@ func resourceAwsServiceDiscoveryServiceDelete(d *schema.ResourceData, meta inter
 	}
 
 	_, err := conn.DeleteService(input)
-	return err
+
+	if isAWSErr(err, servicediscovery.ErrCodeServiceNotFound, "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting Service Discovery Service (%s): %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func expandServiceDiscoveryDnsConfig(configured map[string]interface{}) *servicediscovery.DnsConfig {
