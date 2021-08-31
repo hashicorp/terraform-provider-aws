@@ -156,9 +156,10 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 			},
 
 			"routing_control_arn": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"tags":     tagsSchema(),
