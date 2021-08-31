@@ -25,25 +25,13 @@ func resourceAwsServiceDiscoveryService() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"force_destroy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"namespace_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
 			},
 			"dns_config": {
 				Type:     schema.TypeList,
@@ -51,11 +39,6 @@ func resourceAwsServiceDiscoveryService() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"namespace_id": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
 						"dns_records": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -66,31 +49,33 @@ func resourceAwsServiceDiscoveryService() *schema.Resource {
 										Required: true,
 									},
 									"type": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											servicediscovery.RecordTypeSrv,
-											servicediscovery.RecordTypeA,
-											servicediscovery.RecordTypeAaaa,
-											servicediscovery.RecordTypeCname,
-										}, false),
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(servicediscovery.RecordType_Values(), false),
 									},
 								},
 							},
 						},
-						"routing_policy": {
+						"namespace_id": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 							ForceNew: true,
-							Default:  servicediscovery.RoutingPolicyMultivalue,
-							ValidateFunc: validation.StringInSlice([]string{
-								servicediscovery.RoutingPolicyMultivalue,
-								servicediscovery.RoutingPolicyWeighted,
-							}, false),
+						},
+						"routing_policy": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							Default:      servicediscovery.RoutingPolicyMultivalue,
+							ValidateFunc: validation.StringInSlice(servicediscovery.RoutingPolicy_Values(), false),
 						},
 					},
 				},
+			},
+			"force_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"health_check_config": {
 				Type:     schema.TypeList,
@@ -107,14 +92,10 @@ func resourceAwsServiceDiscoveryService() *schema.Resource {
 							Optional: true,
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								servicediscovery.HealthCheckTypeHttp,
-								servicediscovery.HealthCheckTypeHttps,
-								servicediscovery.HealthCheckTypeTcp,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(servicediscovery.HealthCheckType_Values(), false),
 						},
 					},
 				},
@@ -134,12 +115,19 @@ func resourceAwsServiceDiscoveryService() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
-			"arn": {
+			"name": {
 				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"namespace_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 				Computed: true,
 			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 
 		CustomizeDiff: SetTagsDiff,
