@@ -82,7 +82,6 @@ resource "aws_route53_health_check" "foo" {
 ### Recovery control health check
 
 ```terraform
-
 resource "aws_route53recoverycontrolconfig_cluster" "test" {
   name = "tf-acc-test-cluster"
 }
