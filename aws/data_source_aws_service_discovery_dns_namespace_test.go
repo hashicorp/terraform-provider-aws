@@ -15,7 +15,11 @@ func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_private(t *testing.T) {
 	resourceName := "aws_service_discovery_private_dns_namespace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
+			testAccPreCheckAWSServiceDiscovery(t)
+		},
 		ErrorCheck: testAccErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
@@ -38,7 +42,11 @@ func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_public(t *testing.T) {
 	resourceName := "aws_service_discovery_public_dns_namespace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
+			testAccPreCheckAWSServiceDiscovery(t)
+		},
 		ErrorCheck: testAccErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
