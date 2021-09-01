@@ -508,6 +508,59 @@ func TestAccAWSS3BucketReplicationConfig_replicationTimeControl(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3BucketReplicationConfig_replicaModifications(t *testing.T) {
+	rInt := acctest.RandInt()
+	partition := testAccGetPartition()
+	iamRoleResourceName := "aws_iam_role.role"
+	resourceName := "aws_s3_bucket_replication_configuration.replication"
+
+	// record the initialized providers so that we can use them to check for the instances in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
+		},
+		ErrorCheck:        testAccErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketReplicationConfigReplicaMods(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "1"),
+					testAccCheckAWSS3BucketReplicationRules(
+						resourceName,
+						[]*s3.ReplicationRule{
+							{
+								ID:       aws.String("foobar"),
+								Priority: aws.Int64(0),
+								Destination: &s3.Destination{
+									Bucket: aws.String(fmt.Sprintf("arn:%s:s3:::tf-test-bucket-destination-%d", partition, rInt)),
+								},
+								DeleteMarkerReplication: &s3.DeleteMarkerReplication{
+									Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+								},
+								Filter: &s3.ReplicationRuleFilter{
+									Prefix: aws.String("foo"),
+								},
+								Status: aws.String(s3.ReplicationRuleStatusEnabled),
+								SourceSelectionCriteria: &s3.SourceSelectionCriteria{
+									ReplicaModifications: &s3.ReplicaModifications{
+										Status: aws.String(s3.ReplicaModificationsStatusEnabled),
+									},
+								},
+							},
+						},
+					),
+				),
+			},
+		},
+	})
+}
+
 // StorageClass issue: https://github.com/hashicorp/terraform/issues/10909
 func TestAccAWSS3BucketReplicationConfig_withoutStorageClass(t *testing.T) {
 	rInt := acctest.RandInt()
@@ -1016,6 +1069,30 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
 }`
 }
 
+func testAccAWSS3BucketReplicationConfigReplicaMods(randInt int) string {
+	return testAccAWSS3BucketReplicationConfigBasic(randInt) + `
+resource "aws_s3_bucket_replication_configuration" "replication" {
+    bucket = aws_s3_bucket.source.id
+    role = aws_iam_role.role.arn
+
+    rules {
+      id     = "foobar"
+      filter {
+        prefix = "foo"
+      }
+	  source_selection_criteria {
+		replica_modifications {
+			status = "Enabled"
+		}
+	  }
+      status = "Enabled"
+      destination {
+        bucket = aws_s3_bucket.destination.arn
+      }
+    }
+}`
+}
+
 func testAccAWSS3BucketReplicationConfigWithMultipleDestinationsEmptyFilter(randInt int) string {
 	return composeConfig(
 		testAccAWSS3BucketReplicationConfigBasic(randInt),
@@ -1254,7 +1331,7 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
 
       source_selection_criteria {
         sse_kms_encrypted_objects {
-          enabled = true
+		  status = "Enabled"
         }
       }
     }
@@ -1341,7 +1418,7 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
 
       source_selection_criteria {
         sse_kms_encrypted_objects {
-          enabled = true
+		  status = "Enabled"
         }
       }
     }
@@ -1361,24 +1438,6 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
 
       destination {
         bucket = aws_s3_bucket.destination.arn
-      }
-    }
-} `
-}
-
-func testAccAWSS3BucketReplicationConfigWithoutPrefix(randInt int) string {
-	return testAccAWSS3BucketReplicationConfigBasic(randInt) + `
-resource "aws_s3_bucket_replication_configuration" "replication" {
-  bucket = aws_s3_bucket.source.id
-    role = aws_iam_role.role.arn
-
-    rules {
-      id     = "foobar"
-      status = "Enabled"
-
-      destination {
-        bucket        = aws_s3_bucket.destination.arn
-        storage_class = "STANDARD"
       }
     }
 } `

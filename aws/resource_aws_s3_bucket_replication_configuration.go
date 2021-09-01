@@ -159,7 +159,7 @@ func resourceAwsS3BucketReplicationConfiguration() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MinItems: 1,
-							MaxItems: 1,
+							MaxItems: 2,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"sse_kms_encrypted_objects": {
@@ -169,9 +169,25 @@ func resourceAwsS3BucketReplicationConfiguration() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"enabled": {
-													Type:     schema.TypeBool,
-													Required: true,
+												"status": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice([]string{s3.SseKmsEncryptedObjectsStatusEnabled}, false),
+												},
+											},
+										},
+									},
+									"replica_modifications": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"status": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice([]string{s3.ReplicaModificationsStatusEnabled}, false),
 												},
 											},
 										},
@@ -391,11 +407,7 @@ func resourceAwsS3BucketReplicationConfigurationRead(d *schema.ResourceData, met
 			tssc := make(map[string]interface{})
 			if vssc.SseKmsEncryptedObjects != nil {
 				tSseKms := make(map[string]interface{})
-				if aws.StringValue(vssc.SseKmsEncryptedObjects.Status) == s3.SseKmsEncryptedObjectsStatusEnabled {
-					tSseKms["enabled"] = true
-				} else if aws.StringValue(vssc.SseKmsEncryptedObjects.Status) == s3.SseKmsEncryptedObjectsStatusDisabled {
-					tSseKms["enabled"] = false
-				}
+				tSseKms["status"] = aws.StringValue(vssc.SseKmsEncryptedObjects.Status)
 				tssc["sse_kms_encrypted_objects"] = []interface{}{tSseKms}
 			}
 			t["source_selection_criteria"] = []interface{}{tssc}
@@ -530,12 +542,16 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(d *schema.ResourceData, m
 					if sseKms[0] != nil {
 						sseKmsValues := sseKms[0].(map[string]interface{})
 						sseKmsEncryptedObjects := &s3.SseKmsEncryptedObjects{}
-						if sseKmsValues["enabled"].(bool) {
-							sseKmsEncryptedObjects.Status = aws.String(s3.SseKmsEncryptedObjectsStatusEnabled)
-						} else {
-							sseKmsEncryptedObjects.Status = aws.String(s3.SseKmsEncryptedObjectsStatusDisabled)
-						}
+						sseKmsEncryptedObjects.Status = aws.String(sseKmsValues["status"].(string))
 						ruleSsc.SseKmsEncryptedObjects = sseKmsEncryptedObjects
+					}
+				}
+				if sscRm, ok := sscValues["replica_modifications"].([]interface{}); ok && len(sscRm) > 0 {
+					if sscRm[0] != nil {
+						replicaModValues := sscRm[0].(map[string]interface{})
+						replicaModifications := &s3.ReplicaModifications{}
+						replicaModifications.Status = aws.String(replicaModValues["status"].(string))
+						ruleSsc.ReplicaModifications = replicaModifications
 					}
 				}
 				rcRule.SourceSelectionCriteria = ruleSsc
