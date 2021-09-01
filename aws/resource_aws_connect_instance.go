@@ -99,11 +99,12 @@ func resourceAwsConnectInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"use_custom_tts_voices_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false, //verified default result from ListInstanceAttributes()
-			},
+			// Pre-release feature requiring allow-list from AWS. Removing all functionality until feature is GA
+			// "use_custom_tts_voices_enabled": {
+			// 	Type:     schema.TypeBool,
+			// 	Optional: true,
+			// 	Default:  false, //verified default result from ListInstanceAttributes()
+			// },
 		},
 	}
 }

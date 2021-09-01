@@ -12,6 +12,7 @@ func InstanceAttributeMapping() map[string]string {
 		connect.InstanceAttributeTypeEarlyMedia:            "early_media_enabled",
 		connect.InstanceAttributeTypeInboundCalls:          "inbound_calls_enabled",
 		connect.InstanceAttributeTypeOutboundCalls:         "outbound_calls_enabled",
-		connect.InstanceAttributeTypeUseCustomTtsVoices:    "use_custom_tts_voices_enabled",
+		// Pre-release feature requiring allow-list from AWS. Removing all functionality until feature is GA
+		//connect.InstanceAttributeTypeUseCustomTtsVoices:    "use_custom_tts_voices_enabled",
 	}
 }
