@@ -282,15 +282,21 @@ func (p *Provider) Configure(ctx context.Context, c *terraform.ResourceConfig) d
 		}
 		p.meta = meta
 	}
+
+	var diags diag.Diagnostics
+
 	if p.ConfigureContextFunc != nil {
-		meta, diags := p.ConfigureContextFunc(ctx, data)
+		meta, configureDiags := p.ConfigureContextFunc(ctx, data)
+		diags = append(diags, configureDiags...)
+
 		if diags.HasError() {
 			return diags
 		}
+
 		p.meta = meta
 	}
 
-	return nil
+	return diags
 }
 
 // Resources returns all the available resource types that this provider
