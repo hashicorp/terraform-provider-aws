@@ -12,7 +12,7 @@ func dataSourceAwsEksClusters() *schema.Resource {
 		Read: dataSourceAwsEksClustersRead,
 
 		Schema: map[string]*schema.Schema{
-			"clusters": {
+			"names": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -39,7 +39,7 @@ func dataSourceAwsEksClustersRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		log.Printf("[DEBUG] There was an error while listing EKS Clusters: %v", err)
 	}
-	d.Set("clusters", clusters)
+	d.Set("names", clusters)
 
 	return nil
 }

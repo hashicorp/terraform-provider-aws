@@ -21,8 +21,8 @@ func TestAccAWSEksClustersDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAWSEksClustersDataSourceConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceResourceName, "clusters.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceResourceName, "clusters.0", rName),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "names.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "names.0", rName),
 				),
 			},
 		},
@@ -41,7 +41,7 @@ func TestAccAWSEksClustersDataSource_empty(t *testing.T) {
 			{
 				Config: testAccAWSEksClustersDataSourceConfig_empty(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceResourceName, "clusters.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "names.#", "0"),
 				),
 			},
 		},
