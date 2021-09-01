@@ -4,158 +4,143 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicediscovery/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicediscovery/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsServiceDiscoveryInstance() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsServiceDiscoveryInstanceCreate,
-		ReadContext:   resourceAwsServiceDiscoveryInstanceRead,
-		UpdateContext: resourceAwsServiceDiscoveryInstanceUpdate,
-		DeleteContext: resourceAwsServiceDiscoveryInstanceDelete,
+		Create: resourceAwsServiceDiscoveryInstanceCreate,
+		Read:   resourceAwsServiceDiscoveryInstanceRead,
+		Update: resourceAwsServiceDiscoveryInstanceUpdate,
+		Delete: resourceAwsServiceDiscoveryInstanceDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAwsServiceDiscoveryInstanceImport,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"attributes": {
+				Type:     schema.TypeMap,
+				Required: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				ValidateDiagFunc: allDiagFunc(
+					validation.MapKeyLenBetween(1, 255),
+					validation.MapKeyMatch(regexp.MustCompile(`^[a-zA-Z0-9!-~]+$`), ""),
+					validation.MapValueLenBetween(0, 1024),
+					validation.MapValueMatch(regexp.MustCompile(`^([a-zA-Z0-9!-~][ \ta-zA-Z0-9!-~]*){0,1}[a-zA-Z0-9!-~]{0,1}$`), ""),
+				),
+			},
+			"instance_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_/:.@-]+$`), ""),
+				),
+			},
 			"service_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
-			"instance_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"attributes": {
-				Type:     schema.TypeMap,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"creator_request_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
 		},
 	}
 }
 
-func resourceAwsServiceDiscoveryInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
+func resourceAwsServiceDiscoveryInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sdconn
 
+	instanceID := d.Get("instance_id").(string)
 	input := &servicediscovery.RegisterInstanceInput{
-		ServiceId:  aws.String(d.Get("service_id").(string)),
-		InstanceId: aws.String(d.Get("instance_id").(string)),
-		Attributes: stringMapToPointers(d.Get("attributes").(map[string]interface{})),
+		Attributes:       expandStringMap(d.Get("attributes").(map[string]interface{})),
+		CreatorRequestId: aws.String(resource.UniqueId()),
+		InstanceId:       aws.String(instanceID),
+		ServiceId:        aws.String(d.Get("service_id").(string)),
 	}
 
-	if v, ok := d.GetOk("creator_request_id"); ok {
-		input.CreatorRequestId = aws.String(v.(string))
-	}
+	log.Printf("[DEBUG] Registering Service Discovery Instance: %s", input)
+	output, err := conn.RegisterInstance(input)
 
-	resp, err := conn.RegisterInstance(input)
 	if err != nil {
-		return diag.FromErr(err)
+		return fmt.Errorf("error creating Service Discovery Instance (%s): %w", instanceID, err)
 	}
 
-	if resp != nil && resp.OperationId != nil {
-		if _, err := waiter.OperationSuccess(conn, aws.StringValue(resp.OperationId)); err != nil {
-			return diag.FromErr(fmt.Errorf("error waiting for Service Discovery Service Instance (%s) create: %w", d.Id(), err))
+	d.SetId(instanceID)
+
+	if output != nil && output.OperationId != nil {
+		if _, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
+			return fmt.Errorf("error waiting for Service Discovery Instance (%s) create: %w", d.Id(), err)
 		}
 	}
 
-	d.SetId(d.Get("instance_id").(string))
-
-	return resourceAwsServiceDiscoveryInstanceRead(ctx, d, meta)
+	return resourceAwsServiceDiscoveryInstanceRead(d, meta)
 }
 
-func resourceAwsServiceDiscoveryInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAwsServiceDiscoveryInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sdconn
 
-	input := &servicediscovery.GetInstanceInput{
-		ServiceId:  aws.String(d.Get("service_id").(string)),
-		InstanceId: aws.String(d.Get("instance_id").(string)),
-	}
+	instance, err := finder.InstanceByServiceIDAndInstanceID(conn, d.Get("service_id").(string), d.Get("instance_id").(string))
 
-	resp, err := conn.GetInstanceWithContext(ctx, input)
-	if err != nil {
-		if isAWSErr(err, servicediscovery.ErrCodeInstanceNotFound, "") {
-			log.Printf("[WARN] Service Discovery Instance (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return diag.FromErr(err)
-	}
-
-	attributes := resp.Instance.Attributes
-	if _, ok := attributes["AWS_EC2_INSTANCE_ID"]; ok {
-		delete(attributes, "AWS_INSTANCE_IPV4")
-	}
-
-	err = d.Set("attributes", aws.StringValueMap(attributes))
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	return nil
-}
-
-func resourceAwsServiceDiscoveryInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return resourceAwsServiceDiscoveryInstanceCreate(ctx, d, meta)
-}
-
-func resourceAwsServiceDiscoveryInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).sdconn
-
-	input := &servicediscovery.DeregisterInstanceInput{
-		ServiceId:  aws.String(d.Get("service_id").(string)),
-		InstanceId: aws.String(d.Get("instance_id").(string)),
-	}
-
-	resp, err := conn.DeregisterInstanceWithContext(ctx, input)
-
-	if isAWSErr(err, servicediscovery.ErrCodeInstanceNotFound, "") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Service Discovery Instance (%s) not found, removing from state", d.Id())
+		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error deregistering Service Discovery Instance (%s): %w", d.Id(), err))
+		return fmt.Errorf("error reading Service Discovery Instance (%s): %w", d.Id(), err)
 	}
 
-	if resp != nil && resp.OperationId != nil {
-		if _, err := waiter.OperationSuccess(conn, aws.StringValue(resp.OperationId)); err != nil {
-			return diag.FromErr(fmt.Errorf("Error waiting for Service Discovery Service Instance (%s) delete: %w", d.Id(), err))
-		}
+	attributes := instance.Attributes
+	if _, ok := attributes["AWS_EC2_INSTANCE_ID"]; ok {
+		delete(attributes, "AWS_INSTANCE_IPV4")
+	}
+
+	d.Set("attributes", aws.StringValueMap(attributes))
+	d.Set("instance_id", instance.Id)
+
+	return nil
+}
+
+func resourceAwsServiceDiscoveryInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+	return resourceAwsServiceDiscoveryInstanceCreate(d, meta)
+}
+
+func resourceAwsServiceDiscoveryInstanceDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).sdconn
+
+	err := deregisterServiceDiscoveryInstance(conn, d.Get("service_id").(string), d.Get("instance_id").(string))
+
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
 func resourceAwsServiceDiscoveryInstanceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	idParts := strings.SplitN(d.Id(), "/", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+	parts := strings.SplitN(d.Id(), "/", 2)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return nil, fmt.Errorf("unexpected format (%q), expected <service-id>/<instance-id>", d.Id())
 	}
 
-	serviceId := idParts[0]
-	instanceId := idParts[1]
-
-	d.Set("service_id", serviceId)
-	d.Set("instance_id", instanceId)
-	d.SetId(instanceId)
+	instanceID := parts[1]
+	serviceID := parts[0]
+	d.Set("instance_id", instanceID)
+	d.Set("service_id", serviceID)
+	d.SetId(instanceID)
 
 	return []*schema.ResourceData{d}, nil
 }
