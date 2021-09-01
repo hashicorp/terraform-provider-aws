@@ -475,7 +475,8 @@ func TestAccAWSS3BucketReplicationConfig_replicationTimeControl(t *testing.T) {
 						resourceName,
 						[]*s3.ReplicationRule{
 							{
-								ID: aws.String("foobar"),
+								ID:       aws.String("foobar"),
+								Priority: aws.Int64(0),
 								Destination: &s3.Destination{
 									Bucket: aws.String(fmt.Sprintf("arn:%s:s3:::tf-test-bucket-destination-%d", partition, rInt)),
 									ReplicationTime: &s3.ReplicationTime{
@@ -484,8 +485,19 @@ func TestAccAWSS3BucketReplicationConfig_replicationTimeControl(t *testing.T) {
 											Minutes: aws.Int64(15),
 										},
 									},
+									Metrics: &s3.Metrics{
+										Status: aws.String(s3.MetricsStatusEnabled),
+										EventThreshold: &s3.ReplicationTimeValue{
+											Minutes: aws.Int64(15),
+										},
+									},
 								},
-								Prefix: aws.String("foo"),
+								DeleteMarkerReplication: &s3.DeleteMarkerReplication{
+									Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+								},
+								Filter: &s3.ReplicationRuleFilter{
+									Prefix: aws.String("foo"),
+								},
 								Status: aws.String(s3.ReplicationRuleStatusEnabled),
 							},
 						},
@@ -981,14 +993,21 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
 
     rules {
       id     = "foobar"
-      prefix = "foo"
+      filter {
+        prefix = "foo"
+      }
       status = "Enabled"
-
       destination {
         bucket = aws_s3_bucket.destination.arn
 		replication_time {
 			status = "Enabled"
 			time {
+				minutes = 15
+			}
+		}
+		metrics {
+			status = "Enabled"
+			event_threshold {
 				minutes = 15
 			}
 		}
