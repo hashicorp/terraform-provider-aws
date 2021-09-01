@@ -84,17 +84,13 @@ func resourceAwsServiceDiscoveryPublicDnsNamespaceCreate(d *schema.ResourceData,
 		return fmt.Errorf("error creating Service Discovery Public DNS Namespace (%s): creation response missing Operation ID", name)
 	}
 
-	operationOutput, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId))
+	operation, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Service Discovery Public DNS Namespace (%s) creation: %w", name, err)
 	}
 
-	if operationOutput == nil || operationOutput.Operation == nil {
-		return fmt.Errorf("error creating Service Discovery Public DNS Namespace (%s): operation response missing Operation information", name)
-	}
-
-	namespaceID, ok := operationOutput.Operation.Targets[servicediscovery.OperationTargetTypeNamespace]
+	namespaceID, ok := operation.Targets[servicediscovery.OperationTargetTypeNamespace]
 
 	if !ok {
 		return fmt.Errorf("error creating Service Discovery Public DNS Namespace (%s): operation response missing Namespace ID", name)
