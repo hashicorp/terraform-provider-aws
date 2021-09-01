@@ -448,6 +448,54 @@ func TestAccAWSS3BucketReplicationConfig_configurationRuleDestinationAddAccessCo
 	})
 }
 
+func TestAccAWSS3BucketReplicationConfig_replicationTimeControl(t *testing.T) {
+	rInt := acctest.RandInt()
+	partition := testAccGetPartition()
+	iamRoleResourceName := "aws_iam_role.role"
+	resourceName := "aws_s3_bucket_replication_configuration.replication"
+
+	// record the initialized providers so that we can use them to check for the instances in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
+		},
+		ErrorCheck:        testAccErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketReplicationConfigRTC(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "1"),
+					testAccCheckAWSS3BucketReplicationRules(
+						resourceName,
+						[]*s3.ReplicationRule{
+							{
+								ID: aws.String("foobar"),
+								Destination: &s3.Destination{
+									Bucket: aws.String(fmt.Sprintf("arn:%s:s3:::tf-test-bucket-destination-%d", partition, rInt)),
+									ReplicationTime: &s3.ReplicationTime{
+										Status: aws.String(s3.ReplicationTimeStatusEnabled),
+										Time: &s3.ReplicationTimeValue{
+											Minutes: aws.Int64(15),
+										},
+									},
+								},
+								Prefix: aws.String("foo"),
+								Status: aws.String(s3.ReplicationRuleStatusEnabled),
+							},
+						},
+					),
+				),
+			},
+		},
+	})
+}
+
 // StorageClass issue: https://github.com/hashicorp/terraform/issues/10909
 func TestAccAWSS3BucketReplicationConfig_withoutStorageClass(t *testing.T) {
 	rInt := acctest.RandInt()
@@ -923,6 +971,30 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
       }
     }
 } `, storageClass)
+}
+
+func testAccAWSS3BucketReplicationConfigRTC(randInt int) string {
+	return testAccAWSS3BucketReplicationConfigBasic(randInt) + `
+resource "aws_s3_bucket_replication_configuration" "replication" {
+    bucket = aws_s3_bucket.source.id
+    role = aws_iam_role.role.arn
+
+    rules {
+      id     = "foobar"
+      prefix = "foo"
+      status = "Enabled"
+
+      destination {
+        bucket = aws_s3_bucket.destination.arn
+		replication_time {
+			status = "Enabled"
+			time {
+				minutes = 15
+			}
+		}
+      }
+    }
+}`
 }
 
 func testAccAWSS3BucketReplicationConfigWithMultipleDestinationsEmptyFilter(randInt int) string {
