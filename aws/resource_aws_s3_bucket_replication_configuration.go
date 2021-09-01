@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -91,6 +92,36 @@ func resourceAwsS3BucketReplicationConfiguration() *schema.Resource {
 											},
 										},
 									},
+									"replication_time": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"status": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice([]string{s3.ReplicationTimeStatusEnabled}, false),
+												},
+												"time": {
+													Type:     schema.TypeList,
+													Required: true,
+													MinItems: 1,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"minutes": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntAtLeast(0),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -157,7 +188,7 @@ func resourceAwsS3BucketReplicationConfiguration() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"status": {
 										Type:         schema.TypeString,
-										Optional:     true,
+										Required:     true,
 										ValidateFunc: validation.StringInSlice([]string{s3.ExistingObjectReplicationStatusEnabled}, false),
 									},
 								},
@@ -208,7 +239,7 @@ func resourceAwsS3BucketReplicationConfigurationRead(d *schema.ResourceData, met
 
 	s3conn := meta.(*AWSClient).s3conn
 
-	err := resource.Retry(s3BucketCreationTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.BucketCreatedTimeout, func() *resource.RetryError {
 		_, err := s3conn.HeadBucket(input)
 
 		if d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
@@ -288,10 +319,20 @@ func resourceAwsS3BucketReplicationConfigurationRead(d *schema.ResourceData, met
 				}
 				rd["access_control_translation"] = []interface{}{rdt}
 			}
+			if v.Destination.ReplicationTime != nil {
+				if v.Destination.ReplicationTime.Status != nil {
+					rd["replication_time"] = map[string]interface{}{
+						"status": v.Destination.ReplicationTime.Status,
+						"time": map[string]interface{}{
+							"minutes": v.Destination.ReplicationTime.Time.Minutes,
+						},
+					}
+				}
+			}
 			t["destination"] = []interface{}{rd}
 		}
 
-		if v.ExistingObjectReplication.Status != nil {
+		if v.ExistingObjectReplication != nil {
 			status := make(map[string]interface{})
 			status["status"] = aws.StringValue(v.ExistingObjectReplication.Status)
 			t["existing_object_replication"] = status
@@ -408,6 +449,21 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(d *schema.ResourceData, m
 					ruleAclTranslation.Owner = aws.String(aclTranslationValues["owner"].(string))
 					ruleDestination.AccessControlTranslation = ruleAclTranslation
 				}
+
+				rt, ok := bd["replication_time"].([]interface{})
+				if ok && len(rt) > 0 {
+					s := rt[0].(map[string]interface{})
+					if t, ok := s["time"].([]interface{}); ok && len(t) > 0 {
+						m := t[0].(map[string]interface{})
+						ruleDestination.ReplicationTime = &s3.ReplicationTime{
+							Status: aws.String(s["status"].(string)),
+							Time: &s3.ReplicationTimeValue{
+								Minutes: aws.Int64(int64(m["minutes"].(int))),
+							},
+						}
+					}
+				}
+
 			}
 		}
 		rcRule.Destination = ruleDestination
