@@ -29,6 +29,10 @@ func dataSourceAwsEc2TransitGatewayConnect() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"transit_gateway_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"filter": dataSourceFiltersSchema(),
 			"tags":   tagsSchemaComputed(),
 		},
@@ -80,6 +84,7 @@ func dataSourceAwsEc2TransitGatewayConnectRead(d *schema.ResourceData, meta inte
 
 	d.Set("transport_transit_gateway_attachment_id", aws.StringValue(transitGatewayConnect.TransportTransitGatewayAttachmentId))
 	d.Set("protocol", aws.StringValue(transitGatewayConnect.Options.Protocol))
+	d.Set("transit_gateway_id", aws.StringValue(transitGatewayConnect.TransitGatewayId))
 	d.SetId(aws.StringValue(transitGatewayConnect.TransitGatewayAttachmentId))
 
 	return nil

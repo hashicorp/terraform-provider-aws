@@ -11,7 +11,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-// https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#EC2.CreateTransitGatewayConnect
 func resourceAwsEc2TransitGatewayConnect() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsEc2TransitGatewayConnectCreate,
@@ -21,6 +20,8 @@ func resourceAwsEc2TransitGatewayConnect() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		CustomizeDiff: SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"transport_transit_gateway_attachment_id": {
@@ -36,7 +37,8 @@ func resourceAwsEc2TransitGatewayConnect() *schema.Resource {
 				Default:      ec2.ProtocolValueGre,
 				ValidateFunc: validation.StringInSlice(ec2.ProtocolValue_Values(), false),
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"transit_gateway_default_route_table_association": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -47,12 +49,18 @@ func resourceAwsEc2TransitGatewayConnect() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"transit_gateway_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
 
 func resourceAwsEc2TransitGatewayConnectCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	transportTransitGatewayAttachmentId := d.Get("transport_transit_gateway_attachment_id").(string)
 
@@ -61,7 +69,7 @@ func resourceAwsEc2TransitGatewayConnectCreate(d *schema.ResourceData, meta inte
 			Protocol: aws.String(d.Get("protocol").(string)),
 		},
 		TransportTransitGatewayAttachmentId: aws.String(transportTransitGatewayAttachmentId),
-		TagSpecifications:                   ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeTransitGatewayAttachment),
+		TagSpecifications:                   ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayAttachment),
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Connect: %s", input)
@@ -107,6 +115,7 @@ func resourceAwsEc2TransitGatewayConnectCreate(d *schema.ResourceData, meta inte
 
 func resourceAwsEc2TransitGatewayConnectRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	transitGatewayConnect, err := ec2DescribeTransitGatewayConnect(conn, d.Id())
@@ -171,14 +180,22 @@ func resourceAwsEc2TransitGatewayConnectRead(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error reading EC2 Transit Gateway Connect (%s): missing options", d.Id())
 	}
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGatewayConnect.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	tags := keyvaluetags.Ec2KeyValueTags(transitGatewayConnect.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	d.Set("transit_gateway_default_route_table_association", (transitGatewayDefaultRouteTableAssociation != nil))
 	d.Set("transit_gateway_default_route_table_propagation", (transitGatewayDefaultRouteTablePropagation != nil))
 	d.Set("transport_transit_gateway_attachment_id", aws.StringValue(transitGatewayConnect.TransportTransitGatewayAttachmentId))
 	d.Set("protocol", aws.StringValue(transitGatewayConnect.Options.Protocol))
+	d.Set("transit_gateway_id", aws.StringValue(transitGatewayConnect.TransitGatewayId))
 
 	return nil
 }
@@ -216,11 +233,11 @@ func resourceAwsEc2TransitGatewayConnectUpdate(d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Transit Gateway VPC Attachment (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating EC2 Transit Gateway Connect (%s) tags: %s", d.Id(), err)
 		}
 	}
 

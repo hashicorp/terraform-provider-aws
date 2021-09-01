@@ -11,7 +11,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-// https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#EC2.CreateTransitGatewayConnect
 func resourceAwsEc2TransitGatewayConnectPeer() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsEc2TransitGatewayConnectPeerCreate,
@@ -21,6 +20,8 @@ func resourceAwsEc2TransitGatewayConnectPeer() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		CustomizeDiff: SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"transit_gateway_attachment_id": {
@@ -33,6 +34,7 @@ func resourceAwsEc2TransitGatewayConnectPeer() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
+				Computed: true,
 			},
 			"inside_cidr_blocks": {
 				Type:     schema.TypeSet,
@@ -50,24 +52,34 @@ func resourceAwsEc2TransitGatewayConnectPeer() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceAwsEc2TransitGatewayConnectPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateTransitGatewayConnectPeerInput{
-		BgpOptions: &ec2.TransitGatewayConnectRequestBgpOptions{
-			PeerAsn: aws.Int64(int64(d.Get("peer_asn").(int))),
-		},
 		InsideCidrBlocks:           expandStringSet(d.Get("inside_cidr_blocks").(*schema.Set)),
 		PeerAddress:                aws.String(d.Get("peer_address").(string)),
-		TransitGatewayAddress:      aws.String(d.Get("transit_gateway_address").(string)),
 		TransitGatewayAttachmentId: aws.String(d.Get("transit_gateway_attachment_id").(string)),
-		TagSpecifications:          ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeTransitGatewayAttachment),
+		TagSpecifications:          ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayConnectPeer),
+	}
+
+	if v, ok := d.GetOk("peer_asn"); ok {
+		input.BgpOptions = &ec2.TransitGatewayConnectRequestBgpOptions{
+			PeerAsn: aws.Int64(int64(v.(int))),
+		}
+	}
+
+	if v, ok := d.GetOk("transit_gateway_address"); ok {
+		input.TransitGatewayAddress = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Connect Peer: %s", input)
@@ -87,6 +99,7 @@ func resourceAwsEc2TransitGatewayConnectPeerCreate(d *schema.ResourceData, meta 
 
 func resourceAwsEc2TransitGatewayConnectPeerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	transitGatewayConnectPeer, err := ec2DescribeTransitGatewayConnectPeer(conn, d.Id())
@@ -113,8 +126,15 @@ func resourceAwsEc2TransitGatewayConnectPeerRead(d *schema.ResourceData, meta in
 		return nil
 	}
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGatewayConnectPeer.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags := keyvaluetags.Ec2KeyValueTags(transitGatewayConnectPeer.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	d.Set("transit_gateway_attachment_id", aws.StringValue(transitGatewayConnectPeer.TransitGatewayAttachmentId))
@@ -131,8 +151,8 @@ func resourceAwsEc2TransitGatewayConnectPeerRead(d *schema.ResourceData, meta in
 func resourceAwsEc2TransitGatewayConnectPeerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 Transit Gateway Connect Peer (%s) tags: %s", d.Id(), err)
@@ -160,7 +180,7 @@ func resourceAwsEc2TransitGatewayConnectPeerDelete(d *schema.ResourceData, meta 
 		return fmt.Errorf("error deleting EC2 Transit Gateway Connect Peer: %s", err)
 	}
 
-	if err := waitForEc2TransitGatewayConnectDeletion(conn, d.Id()); err != nil {
+	if err := waitForEc2TransitGatewayConnectPeerDeletion(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway Connect Peer (%s) deletion: %s", d.Id(), err)
 	}
 

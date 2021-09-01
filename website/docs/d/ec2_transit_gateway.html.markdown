@@ -60,3 +60,4 @@ In addition to all arguments above, the following attributes are exported:
 * `propagation_default_route_table_id` - Identifier of the default propagation route table.
 * `tags` - Key-value tags for the EC2 Transit Gateway
 * `vpn_ecmp_support` - Whether VPN Equal Cost Multipath Protocol support is enabled.
+* `transit_gateway_cidr_blocks` -  IPv4 or IPv6 CIDR blocks for the transit gateway

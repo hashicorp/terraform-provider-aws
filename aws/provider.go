@@ -261,6 +261,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_managed_prefix_list":                    dataSourceAwsEc2ManagedPrefixList(),
 			"aws_ec2_spot_price":                             dataSourceAwsEc2SpotPrice(),
 			"aws_ec2_transit_gateway":                        dataSourceAwsEc2TransitGateway(),
+			"aws_ec2_transit_gateway_connect":                dataSourceAwsEc2TransitGatewayConnect(),
 			"aws_ec2_transit_gateway_dx_gateway_attachment":  dataSourceAwsEc2TransitGatewayDxGatewayAttachment(),
 			"aws_ec2_transit_gateway_peering_attachment":     dataSourceAwsEc2TransitGatewayPeeringAttachment(),
 			"aws_ec2_transit_gateway_route_table":            dataSourceAwsEc2TransitGatewayRouteTable(),

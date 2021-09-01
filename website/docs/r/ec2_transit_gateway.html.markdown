@@ -30,6 +30,7 @@ The following arguments are supported:
 * `dns_support` - (Optional) Whether DNS support is enabled. Valid values: `disable`, `enable`. Default value: `enable`.
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpn_ecmp_support` - (Optional) Whether VPN Equal Cost Multipath Protocol support is enabled. Valid values: `disable`, `enable`. Default value: `enable`.
+* `transit_gateway_cidr_blocks` - (Optional) List of IPv4 or IPv6 CIDR blocks for the transit gateway. Must be a size `/24` CIDR block or larger for IPv4, or a size `/64` CIDR block or larger for IPv6.
 
 ## Attributes Reference
 
