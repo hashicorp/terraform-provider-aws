@@ -92,6 +92,36 @@ func resourceAwsS3BucketReplicationConfiguration() *schema.Resource {
 											},
 										},
 									},
+									"metrics": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"status": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice([]string{s3.MetricsStatusEnabled}, false),
+												},
+												"event_threshold": {
+													Type:     schema.TypeList,
+													Required: true,
+													MinItems: 1,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"minutes": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntAtLeast(0),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 									"replication_time": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -320,13 +350,23 @@ func resourceAwsS3BucketReplicationConfigurationRead(d *schema.ResourceData, met
 				rd["access_control_translation"] = []interface{}{rdt}
 			}
 			if v.Destination.ReplicationTime != nil {
+				drt := make(map[string]interface{})
 				if v.Destination.ReplicationTime.Status != nil {
-					rd["replication_time"] = map[string]interface{}{
-						"status": v.Destination.ReplicationTime.Status,
-						"time": map[string]interface{}{
-							"minutes": v.Destination.ReplicationTime.Time.Minutes,
-						},
-					}
+					drt["status"] = aws.StringValue(v.Destination.ReplicationTime.Status)
+					drtm := make(map[string]interface{})
+					drtm["minutes"] = aws.Int64Value(v.Destination.ReplicationTime.Time.Minutes)
+					drt["time"] = []interface{}{drtm}
+					rd["replication_time"] = []interface{}{drt}
+				}
+			}
+			if v.Destination.Metrics != nil {
+				dm := make(map[string]interface{})
+				if v.Destination.Metrics.Status != nil {
+					dm["status"] = aws.StringValue(v.Destination.Metrics.Status)
+					dmetm := make(map[string]interface{})
+					dmetm["minutes"] = aws.Int64Value(v.Destination.Metrics.EventThreshold.Minutes)
+					dm["event_threshold"] = []interface{}{dmetm}
+					rd["metrics"] = []interface{}{dm}
 				}
 			}
 			t["destination"] = []interface{}{rd}
@@ -458,6 +498,20 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(d *schema.ResourceData, m
 						ruleDestination.ReplicationTime = &s3.ReplicationTime{
 							Status: aws.String(s["status"].(string)),
 							Time: &s3.ReplicationTimeValue{
+								Minutes: aws.Int64(int64(m["minutes"].(int))),
+							},
+						}
+					}
+				}
+
+				rm, ok := bd["metrics"].([]interface{})
+				if ok && len(rm) > 0 {
+					s := rm[0].(map[string]interface{})
+					if et, ok := s["event_threshold"].([]interface{}); ok && len(et) > 0 {
+						m := et[0].(map[string]interface{})
+						ruleDestination.Metrics = &s3.Metrics{
+							Status: aws.String(s["status"].(string)),
+							EventThreshold: &s3.ReplicationTimeValue{
 								Minutes: aws.Int64(int64(m["minutes"].(int))),
 							},
 						}
