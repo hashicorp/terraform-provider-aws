@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"time"
@@ -106,7 +107,29 @@ func resourceAwsLexSlotType() *schema.Resource {
 				Computed: true,
 			},
 		},
+		CustomizeDiff: updateComputedAttributesOnSlotTypeCreateVersion,
 	}
+}
+
+func updateComputedAttributesOnSlotTypeCreateVersion(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	createVersion := d.Get("create_version").(bool)
+	if createVersion && hasSlotTypeConfigChanges(d) {
+		d.SetNewComputed("version")
+	}
+	return nil
+}
+
+func hasSlotTypeConfigChanges(d resourceDiffer) bool {
+	for _, key := range []string{
+		"description",
+		"enumeration_value",
+		"value_selection_strategy",
+	} {
+		if d.HasChange(key) {
+			return true
+		}
+	}
+	return false
 }
 
 func resourceAwsLexSlotTypeCreate(d *schema.ResourceData, meta interface{}) error {
@@ -138,7 +161,7 @@ func resourceAwsLexSlotTypeCreate(d *schema.ResourceData, meta interface{}) erro
 		return nil
 	})
 
-	if tfresource.TimedOut(err) {
+	if tfresource.TimedOut(err) { // nosemgrep: helper-schema-TimeoutError-check-doesnt-return-output
 		_, err = conn.PutSlotType(input)
 	}
 

@@ -19,9 +19,6 @@ func init() {
 	resource.AddTestSweepers("aws_ec2_client_vpn_network_association", &resource.Sweeper{
 		Name: "aws_ec2_client_vpn_network_association",
 		F:    testSweepEc2ClientVpnNetworkAssociations,
-		Dependencies: []string{
-			"aws_directory_service_directory",
-		},
 	})
 }
 

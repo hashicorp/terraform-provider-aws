@@ -38,6 +38,8 @@ resource "aws_rds_cluster" "primary" {
 
 resource "aws_rds_cluster_instance" "primary" {
   provider             = aws.primary
+  engine               = aws_rds_global_cluster.example.engine
+  engine_version       = aws_rds_global_cluster.example.engine_version
   identifier           = "test-primary-cluster-instance"
   cluster_identifier   = aws_rds_cluster.primary.id
   instance_class       = "db.r4.large"
@@ -55,6 +57,8 @@ resource "aws_rds_cluster" "secondary" {
 
 resource "aws_rds_cluster_instance" "secondary" {
   provider             = aws.secondary
+  engine               = aws_rds_global_cluster.example.engine
+  engine_version       = aws_rds_global_cluster.example.engine_version
   identifier           = "test-secondary-cluster-instance"
   cluster_identifier   = aws_rds_cluster.secondary.id
   instance_class       = "db.r4.large"

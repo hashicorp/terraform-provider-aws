@@ -86,6 +86,8 @@ func TestAccAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
+	commonName := testAccRandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
@@ -93,7 +95,7 @@ func TestAccAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Required,
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Required(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+`)),
@@ -101,7 +103,7 @@ func TestAccAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.0.key_algorithm", "RSA_4096"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.0.signing_algorithm", "SHA512WITHRSA"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.0.subject.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.0.subject.0.common_name", "terraformtesting.com"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.0.subject.0.common_name", commonName),
 					resource.TestCheckResourceAttr(resourceName, "certificate", ""),
 					resource.TestCheckResourceAttr(resourceName, "certificate_chain", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_signing_request"),
@@ -131,6 +133,8 @@ func TestAccAwsAcmpcaCertificateAuthority_disappears(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
+	commonName := testAccRandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
@@ -138,7 +142,7 @@ func TestAccAwsAcmpcaCertificateAuthority_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Required,
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Required(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsAcmpcaCertificateAuthority(), resourceName),
@@ -151,8 +155,9 @@ func TestAccAwsAcmpcaCertificateAuthority_disappears(t *testing.T) {
 
 func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
-	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority.test"
+
+	commonName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -161,7 +166,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(rName, acmpca.CertificateAuthorityTypeRoot, true),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(commonName, acmpca.CertificateAuthorityTypeRoot, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
@@ -171,7 +176,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(rName, acmpca.CertificateAuthorityTypeRoot, true),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(commonName, acmpca.CertificateAuthorityTypeRoot, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
@@ -180,7 +185,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(rName, acmpca.CertificateAuthorityTypeRoot, false),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(commonName, acmpca.CertificateAuthorityTypeRoot, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
@@ -201,8 +206,9 @@ func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 
 func TestAccAwsAcmpcaCertificateAuthority_DeleteFromActiveState(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
-	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority.test"
+
+	commonName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -211,7 +217,7 @@ func TestAccAwsAcmpcaCertificateAuthority_DeleteFromActiveState(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_WithRootCertificate(rName),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_WithRootCertificate(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
@@ -230,6 +236,11 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority.test"
 
+	domain := testAccRandomDomain()
+	commonName := domain.String()
+	customCName := domain.Subdomain("crl").String()
+	customCName2 := domain.Subdomain("crl2").String()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
@@ -238,12 +249,12 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 		Steps: []resource.TestStep{
 			// Test creating revocation configuration on resource creation
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_CustomCname(rName, "crl.terraformtesting.com"),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_CustomCname(rName, commonName, customCName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_cname", "crl.terraformtesting.com"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_cname", customCName),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.expiration_in_days", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.s3_bucket_name", rName),
@@ -260,12 +271,12 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 			},
 			// Test updating revocation configuration
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_CustomCname(rName, "crl2.terraformtesting.com"),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_CustomCname(rName, commonName, customCName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_cname", "crl2.terraformtesting.com"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_cname", customCName2),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.expiration_in_days", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.s3_bucket_name", rName),
@@ -273,7 +284,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 			},
 			// Test removing custom cname on resource update
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_Enabled(rName, true),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_Enabled(rName, commonName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
@@ -286,12 +297,12 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 			},
 			// Test adding custom cname on resource update
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_CustomCname(rName, "crl.terraformtesting.com"),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_CustomCname(rName, commonName, customCName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_cname", "crl.terraformtesting.com"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_cname", customCName),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.expiration_in_days", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.s3_bucket_name", rName),
@@ -299,7 +310,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 			},
 			// Test removing revocation configuration on resource update
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Required,
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Required(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
@@ -316,6 +327,8 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority.test"
 
+	commonName := testAccRandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
@@ -324,7 +337,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 		Steps: []resource.TestStep{
 			// Test creating revocation configuration on resource creation
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_Enabled(rName, true),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_Enabled(rName, commonName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
@@ -346,7 +359,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 			},
 			// Test disabling revocation configuration
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_Enabled(rName, false),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_Enabled(rName, commonName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
@@ -356,7 +369,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 			},
 			// Test enabling revocation configuration
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_Enabled(rName, true),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_Enabled(rName, commonName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
@@ -369,7 +382,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 			},
 			// Test removing revocation configuration on resource update
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Required,
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Required(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
@@ -386,6 +399,8 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority.test"
 
+	commonName := testAccRandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
@@ -394,7 +409,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 		Steps: []resource.TestStep{
 			// Test creating revocation configuration on resource creation
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_ExpirationInDays(rName, 1),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_ExpirationInDays(rName, commonName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
@@ -417,7 +432,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 			},
 			// Test updating revocation configuration
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_ExpirationInDays(rName, 2),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_ExpirationInDays(rName, commonName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
@@ -429,7 +444,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 			},
 			// Test removing revocation configuration on resource update
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Required,
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Required(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
@@ -446,6 +461,8 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority.test"
 
+	commonName := testAccRandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
@@ -454,7 +471,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 		Steps: []resource.TestStep{
 			// Test creating revocation configuration on resource creation
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_s3ObjectAcl(rName, "BUCKET_OWNER_FULL_CONTROL"),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_s3ObjectAcl(rName, commonName, "BUCKET_OWNER_FULL_CONTROL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
@@ -476,7 +493,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 			},
 			// Test updating revocation configuration
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_s3ObjectAcl(rName, "PUBLIC_READ"),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_s3ObjectAcl(rName, commonName, "PUBLIC_READ"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
@@ -495,6 +512,8 @@ func TestAccAwsAcmpcaCertificateAuthority_Tags(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
+	commonName := testAccRandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
@@ -502,7 +521,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Tags(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Tags_Single,
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Tags_Single(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -510,7 +529,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Tags_SingleUpdated,
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Tags_SingleUpdated(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -518,7 +537,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Tags_Multiple,
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Tags_Multiple(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -527,7 +546,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Tags_Single,
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Tags_Single(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -692,7 +711,7 @@ func listAcmpcaCertificateAuthorities(conn *acmpca.ACMPCA) ([]*acmpca.Certificat
 	return certificateAuthorities, nil
 }
 
-func testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(rName, certificateAuthorityType string, enabled bool) string {
+func testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(commonName, certificateAuthorityType string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   enabled                         = %[1]t
@@ -704,14 +723,14 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "%[3]s.com"
+      common_name = %[3]q
     }
   }
 }
-`, enabled, certificateAuthorityType, rName)
+`, enabled, certificateAuthorityType, commonName)
 }
 
-func testAccAwsAcmpcaCertificateAuthorityConfig_WithRootCertificate(rName string) string {
+func testAccAwsAcmpcaCertificateAuthorityConfig_WithRootCertificate(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
@@ -722,7 +741,7 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "%[1]s.com"
+      common_name = %[1]q
     }
   }
 }
@@ -748,26 +767,28 @@ resource "aws_acmpca_certificate" "test" {
 }
 
 data "aws_partition" "current" {}
-`, rName)
+`, commonName)
 }
 
-const testAccAwsAcmpcaCertificateAuthorityConfig_Required = `
+func testAccAwsAcmpcaCertificateAuthorityConfig_Required(commonName string) string {
+	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "terraformtesting.com"
+      common_name = %[1]q
     }
   }
 }
-`
+`, commonName)
+}
 
-func testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_CustomCname(rName, customCname string) string {
-	return fmt.Sprintf(`
-%s
-
+func testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_CustomCname(rName, commonName, customCname string) string {
+	return composeConfig(
+		testAccAwsAcmpcaCertificateAuthorityConfig_S3Bucket(rName),
+		fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
 
@@ -776,13 +797,13 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "terraformtesting.com"
+      common_name = %[1]q
     }
   }
 
   revocation_configuration {
     crl_configuration {
-      custom_cname       = "%s"
+      custom_cname       = %[2]q
       enabled            = true
       expiration_in_days = 1
       s3_bucket_name     = aws_s3_bucket.test.id
@@ -791,13 +812,13 @@ resource "aws_acmpca_certificate_authority" "test" {
 
   depends_on = [aws_s3_bucket_policy.test]
 }
-`, testAccAwsAcmpcaCertificateAuthorityConfig_S3Bucket(rName), customCname)
+`, commonName, customCname))
 }
 
-func testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_Enabled(rName string, enabled bool) string {
-	return fmt.Sprintf(`
-%s
-
+func testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_Enabled(rName, commonName string, enabled bool) string {
+	return composeConfig(
+		testAccAwsAcmpcaCertificateAuthorityConfig_S3Bucket(rName),
+		fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
 
@@ -806,25 +827,25 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "terraformtesting.com"
+      common_name = %[1]q
     }
   }
 
   revocation_configuration {
     crl_configuration {
-      enabled            = %t
+      enabled            = %[2]t
       expiration_in_days = 1
       s3_bucket_name     = aws_s3_bucket.test.id
     }
   }
 }
-`, testAccAwsAcmpcaCertificateAuthorityConfig_S3Bucket(rName), enabled)
+`, commonName, enabled))
 }
 
-func testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_ExpirationInDays(rName string, expirationInDays int) string {
-	return fmt.Sprintf(`
-%s
-
+func testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_ExpirationInDays(rName, commonName string, expirationInDays int) string {
+	return composeConfig(
+		testAccAwsAcmpcaCertificateAuthorityConfig_S3Bucket(rName),
+		fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
 
@@ -833,25 +854,25 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "terraformtesting.com"
+      common_name = %[1]q
     }
   }
 
   revocation_configuration {
     crl_configuration {
       enabled            = true
-      expiration_in_days = %d
+      expiration_in_days = %[2]d
       s3_bucket_name     = aws_s3_bucket.test.id
     }
   }
 }
-`, testAccAwsAcmpcaCertificateAuthorityConfig_S3Bucket(rName), expirationInDays)
+`, commonName, expirationInDays))
 }
 
-func testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_s3ObjectAcl(rName, s3ObjectAcl string) string {
-	return fmt.Sprintf(`
-%s
-
+func testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfiguration_s3ObjectAcl(rName, commonName, s3ObjectAcl string) string {
+	return composeConfig(
+		testAccAwsAcmpcaCertificateAuthorityConfig_S3Bucket(rName),
+		fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
 
@@ -860,7 +881,7 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "terraformtesting.com"
+      common_name = %[1]q
     }
   }
 
@@ -869,19 +890,19 @@ resource "aws_acmpca_certificate_authority" "test" {
       enabled            = true
       expiration_in_days = 1
       s3_bucket_name     = aws_s3_bucket.test.id
-      s3_object_acl      = "%s"
+      s3_object_acl      = %[2]q
     }
   }
 
   depends_on = [aws_s3_bucket_policy.test]
 }
-`, testAccAwsAcmpcaCertificateAuthorityConfig_S3Bucket(rName), s3ObjectAcl)
+`, commonName, s3ObjectAcl))
 }
 
 func testAccAwsAcmpcaCertificateAuthorityConfig_S3Bucket(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket        = "%s"
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -913,7 +934,8 @@ resource "aws_s3_bucket_policy" "test" {
 `, rName)
 }
 
-const testAccAwsAcmpcaCertificateAuthorityConfig_Tags_Single = `
+func testAccAwsAcmpcaCertificateAuthorityConfig_Tags_Single(commonName string) string {
+	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
 
@@ -922,7 +944,7 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "terraformtesting.com"
+      common_name = %[1]q
     }
   }
 
@@ -930,9 +952,11 @@ resource "aws_acmpca_certificate_authority" "test" {
     tag1 = "tag1value"
   }
 }
-`
+`, commonName)
+}
 
-const testAccAwsAcmpcaCertificateAuthorityConfig_Tags_SingleUpdated = `
+func testAccAwsAcmpcaCertificateAuthorityConfig_Tags_SingleUpdated(commonName string) string {
+	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
 
@@ -941,7 +965,7 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "terraformtesting.com"
+      common_name = %[1]q
     }
   }
 
@@ -949,9 +973,11 @@ resource "aws_acmpca_certificate_authority" "test" {
     tag1 = "tag1value-updated"
   }
 }
-`
+`, commonName)
+}
 
-const testAccAwsAcmpcaCertificateAuthorityConfig_Tags_Multiple = `
+func testAccAwsAcmpcaCertificateAuthorityConfig_Tags_Multiple(commonName string) string {
+	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
 
@@ -960,7 +986,7 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "terraformtesting.com"
+      common_name = %[1]q
     }
   }
 
@@ -969,4 +995,5 @@ resource "aws_acmpca_certificate_authority" "test" {
     tag2 = "tag2value"
   }
 }
-`
+`, commonName)
+}

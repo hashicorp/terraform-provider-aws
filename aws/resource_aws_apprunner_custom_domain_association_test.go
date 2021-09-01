@@ -3,6 +3,7 @@ package aws
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/apprunner"
@@ -16,6 +17,11 @@ import (
 )
 
 func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
+	domain := os.Getenv("APPRUNNER_CUSTOM_DOMAIN")
+	if domain == "" {
+		t.Skip("Environment variable APPRUNNER_CUSTOM_DOMAIN is not set")
+	}
+
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_custom_domain_association.test"
 	serviceResourceName := "aws_apprunner_service.test"
@@ -27,12 +33,12 @@ func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAppRunnerCustomDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppRunnerCustomDomainAssociation_basic(rName),
+				Config: testAccAppRunnerCustomDomainAssociation_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerCustomDomainAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "certificate_validation_records.#", "3"),
 					resource.TestCheckResourceAttrSet(resourceName, "dns_target"),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "hashicorp.com"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
 					resource.TestCheckResourceAttr(resourceName, "enable_www_subdomain", "true"),
 					resource.TestCheckResourceAttr(resourceName, "status", waiter.CustomDomainAssociationStatusPendingCertificateDnsValidation),
 					resource.TestCheckResourceAttrPair(resourceName, "service_arn", serviceResourceName, "arn"),
@@ -49,6 +55,11 @@ func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 }
 
 func TestAccAwsAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
+	domain := os.Getenv("APPRUNNER_CUSTOM_DOMAIN")
+	if domain == "" {
+		t.Skip("Environment variable APPRUNNER_CUSTOM_DOMAIN is not set")
+	}
+
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_custom_domain_association.test"
 
@@ -59,7 +70,7 @@ func TestAccAwsAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAppRunnerCustomDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppRunnerCustomDomainAssociation_basic(rName),
+				Config: testAccAppRunnerCustomDomainAssociation_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerCustomDomainAssociationExists(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppRunnerCustomDomainAssociation(), resourceName),
@@ -135,26 +146,26 @@ func testAccCheckAwsAppRunnerCustomDomainAssociationExists(n string) resource.Te
 	}
 }
 
-func testAccAppRunnerCustomDomainAssociation_basic(rName string) string {
+func testAccAppRunnerCustomDomainAssociation_basic(rName, domain string) string {
 	return fmt.Sprintf(`
 resource "aws_apprunner_service" "test" {
-  service_name = %q
+  service_name = %[1]q
 
   source_configuration {
     auto_deployments_enabled = false
     image_repository {
       image_configuration {
-        port = "8080"
+        port = "80"
       }
-      image_identifier      = "public.ecr.aws/a8a7m9a7/test-ecr-public:latest"
+      image_identifier      = "public.ecr.aws/nginx/nginx:latest"
       image_repository_type = "ECR_PUBLIC"
     }
   }
 }
 
 resource "aws_apprunner_custom_domain_association" "test" {
-  domain_name = "hashicorp.com"
+  domain_name = %[2]q
   service_arn = aws_apprunner_service.test.arn
 }
-`, rName)
+`, rName, domain)
 }

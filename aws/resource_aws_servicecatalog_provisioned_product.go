@@ -28,6 +28,12 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(waiter.ProvisionedProductReadyTimeout),
+			Update: schema.DefaultTimeout(waiter.ProvisionedProductUpdateTimeout),
+			Delete: schema.DefaultTimeout(waiter.ProvisionedProductDeleteTimeout),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"accept_language": {
 				Type:         schema.TypeString,

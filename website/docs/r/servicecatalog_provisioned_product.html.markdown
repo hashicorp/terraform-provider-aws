@@ -24,12 +24,13 @@ Like this resource, the `aws_servicecatalog_record` data source also provides in
 
 ```terraform
 resource "aws_servicecatalog_provisioned_product" "example" {
-  name  = "example"
-  owner = [aws_security_group.example.id]
-  type  = aws_subnet.main.id
+  name                       = "example"
+  product_name               = "Example product"
+  provisioning_artifact_name = "Example version"
 
-  provisioning_artifact_parameters {
-    template_url = "https://s3.amazonaws.com/cf-templates-ozkq9d3hgiq2-us-east-1/temp1.json"
+  provisioning_parameters {
+    key   = "foo"
+    value = "bar"
   }
 
   tags = {

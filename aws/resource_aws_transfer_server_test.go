@@ -828,6 +828,11 @@ func testAccAWSTransferServer_forceDestroy(t *testing.T) {
 	sshKeyResourceName := "aws_transfer_ssh_key.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
+	publicKey, _, err := acctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
@@ -835,7 +840,7 @@ func testAccAWSTransferServer_forceDestroy(t *testing.T) {
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTransferServerForceDestroyConfig(rName),
+				Config: testAccAWSTransferServerForceDestroyConfig(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &s),
 					testAccCheckAWSTransferUserExists(userResourceName, &u),
@@ -1200,7 +1205,7 @@ resource "aws_transfer_server" "test" {
 `, forceDestroy))
 }
 
-func testAccAWSTransferServerForceDestroyConfig(rName string) string {
+func testAccAWSTransferServerForceDestroyConfig(rName, publicKey string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   force_destroy = true
@@ -1251,9 +1256,9 @@ resource "aws_transfer_user" "test" {
 resource "aws_transfer_ssh_key" "test" {
   server_id = aws_transfer_server.test.id
   user_name = aws_transfer_user.test.user_name
-  body      = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
+  body      = "%[2]s"
 }
-`, rName)
+`, rName, publicKey)
 }
 
 func testAccAWSTransferServerVpcEndpointConfig(rName string) string {

@@ -341,6 +341,8 @@ func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *t
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_msk_cluster.test"
 
+	commonName := testAccRandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
@@ -348,7 +350,7 @@ func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *t
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMskClusterConfigClientAuthenticationTlsCertificateAuthorityArns(rName),
+				Config: testAccMskClusterConfigClientAuthenticationTlsCertificateAuthorityArns(rName, commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMskClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
@@ -1094,7 +1096,7 @@ resource "aws_msk_cluster" "test" {
 `, rName, t))
 }
 
-func testAccMskClusterConfigClientAuthenticationTlsCertificateAuthorityArns(rName string) string {
+func testAccMskClusterConfigClientAuthenticationTlsCertificateAuthorityArns(rName, commonName string) string {
 	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   certificate_authority_configuration {
@@ -1102,7 +1104,7 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "terraformtesting.com"
+      common_name = %[2]q
     }
   }
 }
@@ -1131,7 +1133,7 @@ resource "aws_msk_cluster" "test" {
     }
   }
 }
-`, rName))
+`, rName, commonName))
 }
 
 func testAccMskClusterConfigClientAuthenticationSaslScram(rName string, enabled bool) string {

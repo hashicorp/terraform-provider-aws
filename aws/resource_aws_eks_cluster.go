@@ -97,7 +97,6 @@ func resourceAwsEksCluster() *schema.Resource {
 						},
 						"resources": {
 							Type:     schema.TypeSet,
-							MinItems: 1,
 							Required: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
@@ -409,24 +408,28 @@ func resourceAwsEksClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("encryption_config") {
-		input := &eks.AssociateEncryptionConfigInput{
-			ClusterName:      aws.String(d.Id()),
-			EncryptionConfig: expandEksEncryptionConfig(d.Get("encryption_config").([]interface{})),
-		}
+		o, n := d.GetChange("encryption_config")
 
-		log.Printf("[DEBUG] Associating EKS Cluster (%s) encryption config: %s", d.Id(), input)
-		output, err := conn.AssociateEncryptionConfig(input)
+		if len(o.([]interface{})) == 0 && len(n.([]interface{})) == 1 {
+			input := &eks.AssociateEncryptionConfigInput{
+				ClusterName:      aws.String(d.Id()),
+				EncryptionConfig: expandEksEncryptionConfig(d.Get("encryption_config").([]interface{})),
+			}
 
-		if err != nil {
-			return fmt.Errorf("error associating EKS Cluster (%s) encryption config: %w", d.Id(), err)
-		}
+			log.Printf("[DEBUG] Associating EKS Cluster (%s) encryption config: %s", d.Id(), input)
+			output, err := conn.AssociateEncryptionConfig(input)
 
-		updateID := aws.StringValue(output.Update.Id)
+			if err != nil {
+				return fmt.Errorf("error associating EKS Cluster (%s) encryption config: %w", d.Id(), err)
+			}
 
-		_, err = waiter.ClusterUpdateSuccessful(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+			updateID := aws.StringValue(output.Update.Id)
 
-		if err != nil {
-			return fmt.Errorf("error waiting for EKS Cluster (%s) encryption config association (%s): %w", d.Id(), updateID, err)
+			_, err = waiter.ClusterUpdateSuccessful(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+
+			if err != nil {
+				return fmt.Errorf("error waiting for EKS Cluster (%s) encryption config association (%s): %w", d.Id(), updateID, err)
+			}
 		}
 	}
 

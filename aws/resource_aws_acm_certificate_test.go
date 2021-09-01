@@ -222,7 +222,9 @@ func TestAccAWSAcmCertificate_root(t *testing.T) {
 func TestAccAWSAcmCertificate_privateCert(t *testing.T) {
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
 	resourceName := "aws_acm_certificate.cert"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	commonName := testAccRandomDomain()
+	certificateDomainName := commonName.RandomSubdomain().String()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -231,10 +233,10 @@ func TestAccAWSAcmCertificate_privateCert(t *testing.T) {
 		CheckDestroy: testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateConfig_privateCert(rName),
+				Config: testAccAcmCertificateConfig_privateCert(commonName.String(), certificateDomainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", fmt.Sprintf("%s.terraformtesting.com", rName)),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", certificateDomainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusFailed), // FailureReason: PCA_INVALID_STATE (PCA State: PENDING_CERTIFICATE)
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "0"),
@@ -640,6 +642,8 @@ func TestAccAWSAcmCertificate_imported_DomainName(t *testing.T) {
 	newCaCertificate := tlsRsaX509SelfSignedCaCertificatePem(newCaKey)
 	newCertificate := tlsRsaX509LocallySignedCertificatePem(newCaKey, newCaCertificate, key, commonName)
 
+	withoutChainDomain := testAccRandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, acm.EndpointsID),
@@ -662,11 +666,11 @@ func TestAccAWSAcmCertificate_imported_DomainName(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAcmCertificateConfigPrivateKeyWithoutChain("example2.com"),
+				Config: testAccAcmCertificateConfigPrivateKeyWithoutChain(withoutChainDomain),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example2.com"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", withoutChainDomain),
 				),
 			},
 			{
@@ -751,7 +755,7 @@ resource "aws_acm_certificate" "cert" {
 
 }
 
-func testAccAcmCertificateConfig_privateCert(rName string) string {
+func testAccAcmCertificateConfig_privateCert(commonName, certificateDomainName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
@@ -762,16 +766,16 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "terraformtesting.com"
+      common_name = %[1]q
     }
   }
 }
 
 resource "aws_acm_certificate" "cert" {
-  domain_name               = "%s.terraformtesting.com"
+  domain_name               = %[2]q
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
 }
-`, rName)
+`, commonName, certificateDomainName)
 }
 
 func testAccAcmCertificateConfig_subjectAlternativeNames(domainName, subjectAlternativeNames, validationMethod string) string {

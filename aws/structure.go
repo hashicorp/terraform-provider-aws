@@ -232,32 +232,6 @@ func expandIPPerms(
 	return perms, nil
 }
 
-// Takes the result of flatmap.Expand for an array of parameters and
-// returns Parameter API compatible objects
-func expandParameters(configured []interface{}) []*rds.Parameter {
-	var parameters []*rds.Parameter
-
-	// Loop over our configured parameters and create
-	// an array of aws-sdk-go compatible objects
-	for _, pRaw := range configured {
-		data := pRaw.(map[string]interface{})
-
-		if data["name"].(string) == "" {
-			continue
-		}
-
-		p := &rds.Parameter{
-			ApplyMethod:    aws.String(data["apply_method"].(string)),
-			ParameterName:  aws.String(data["name"].(string)),
-			ParameterValue: aws.String(data["value"].(string)),
-		}
-
-		parameters = append(parameters, p)
-	}
-
-	return parameters
-}
-
 func expandRedshiftParameters(configured []interface{}) []*redshift.Parameter {
 	var parameters []*redshift.Parameter
 
@@ -692,25 +666,57 @@ func flattenOptions(apiOptions []*rds.Option, optionConfigurations []*rds.Option
 	return result
 }
 
+// Takes the result of flatmap.Expand for an array of parameters and
+// returns Parameter API compatible objects
+func expandParameters(configured []interface{}) []*rds.Parameter {
+	var parameters []*rds.Parameter
+
+	// Loop over our configured parameters and create
+	// an array of aws-sdk-go compatible objects
+	for _, pRaw := range configured {
+		data := pRaw.(map[string]interface{})
+
+		if data["name"].(string) == "" {
+			continue
+		}
+
+		p := &rds.Parameter{
+			ParameterName:  aws.String(strings.ToLower(data["name"].(string))),
+			ParameterValue: aws.String(data["value"].(string)),
+		}
+
+		if data["apply_method"].(string) != "" {
+			p.ApplyMethod = aws.String(strings.ToLower(data["apply_method"].(string)))
+		}
+
+		parameters = append(parameters, p)
+	}
+
+	return parameters
+}
+
 // Flattens an array of Parameters into a []map[string]interface{}
 func flattenParameters(list []*rds.Parameter) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, i := range list {
 		if i.ParameterName != nil {
 			r := make(map[string]interface{})
-			r["name"] = strings.ToLower(*i.ParameterName)
+			if i.ApplyMethod != nil {
+				r["apply_method"] = strings.ToLower(aws.StringValue(i.ApplyMethod))
+			}
+
+			r["name"] = strings.ToLower(aws.StringValue(i.ParameterName))
+
 			// Default empty string, guard against nil parameter values
 			r["value"] = ""
 			if i.ParameterValue != nil {
-				r["value"] = strings.ToLower(*i.ParameterValue)
-			}
-			if i.ApplyMethod != nil {
-				r["apply_method"] = strings.ToLower(*i.ApplyMethod)
+				r["value"] = aws.StringValue(i.ParameterValue)
 			}
 
 			result = append(result, r)
 		}
 	}
+
 	return result
 }
 
@@ -719,8 +725,8 @@ func flattenRedshiftParameters(list []*redshift.Parameter) []map[string]interfac
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, i := range list {
 		result = append(result, map[string]interface{}{
-			"name":  strings.ToLower(*i.ParameterName),
-			"value": strings.ToLower(*i.ParameterValue),
+			"name":  aws.StringValue(i.ParameterName),
+			"value": aws.StringValue(i.ParameterValue),
 		})
 	}
 	return result
@@ -2688,61 +2694,6 @@ func flattenIotThingTypeProperties(s *iot.ThingTypeProperties) []map[string]inte
 	m["searchable_attributes"] = flattenStringSet(s.SearchableAttributes)
 
 	return []map[string]interface{}{m}
-}
-
-func expandLaunchTemplateSpecification(specs []interface{}) (*autoscaling.LaunchTemplateSpecification, error) {
-	if len(specs) < 1 {
-		return nil, nil
-	}
-
-	spec := specs[0].(map[string]interface{})
-
-	idValue, idOk := spec["id"]
-	nameValue, nameOk := spec["name"]
-
-	if idValue == "" && nameValue == "" {
-		return nil, fmt.Errorf("One of `id` or `name` must be set for `launch_template`")
-	}
-
-	result := &autoscaling.LaunchTemplateSpecification{}
-
-	// DescribeAutoScalingGroups returns both name and id but LaunchTemplateSpecification
-	// allows only one of them to be set
-	if idOk && idValue != "" {
-		result.LaunchTemplateId = aws.String(idValue.(string))
-	} else if nameOk && nameValue != "" {
-		result.LaunchTemplateName = aws.String(nameValue.(string))
-	}
-
-	if v, ok := spec["version"]; ok && v != "" {
-		result.Version = aws.String(v.(string))
-	}
-
-	return result, nil
-}
-
-func flattenLaunchTemplateSpecification(lt *autoscaling.LaunchTemplateSpecification) []map[string]interface{} {
-	if lt == nil {
-		return []map[string]interface{}{}
-	}
-
-	attrs := map[string]interface{}{}
-	result := make([]map[string]interface{}, 0)
-
-	// id and name are always returned by DescribeAutoscalingGroups
-	attrs["id"] = *lt.LaunchTemplateId
-	attrs["name"] = *lt.LaunchTemplateName
-
-	// version is returned only if it was previosly set
-	if lt.Version != nil {
-		attrs["version"] = *lt.Version
-	} else {
-		attrs["version"] = nil
-	}
-
-	result = append(result, attrs)
-
-	return result
 }
 
 func flattenVpcPeeringConnectionOptions(options *ec2.VpcPeeringConnectionOptionsDescription) []interface{} {

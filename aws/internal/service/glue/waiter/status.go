@@ -1,13 +1,11 @@
 package waiter
 
 import (
-	"fmt"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -110,26 +108,16 @@ func TriggerStatus(conn *glue.Glue, triggerName string) resource.StateRefreshFun
 
 func GlueDevEndpointStatus(conn *glue.Glue, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		getDevEndpointInput := &glue.GetDevEndpointInput{
-			EndpointName: aws.String(name),
-		}
-		endpoint, err := conn.GetDevEndpoint(getDevEndpointInput)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-				return nil, "", nil
-			}
+		output, err := finder.DevEndpointByName(conn, name)
 
-			return nil, "", err
-		}
-
-		if endpoint == nil || endpoint.DevEndpoint == nil {
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
-		if aws.StringValue(endpoint.DevEndpoint.Status) == "FAILED" && endpoint.DevEndpoint.FailureReason != nil {
-			return endpoint, aws.StringValue(endpoint.DevEndpoint.Status), fmt.Errorf("%s", aws.StringValue(endpoint.DevEndpoint.FailureReason))
+		if err != nil {
+			return nil, "", err
 		}
 
-		return endpoint, aws.StringValue(endpoint.DevEndpoint.Status), nil
+		return output, aws.StringValue(output.Status), nil
 	}
 }

@@ -1,0 +1,15 @@
+```release-note:new-resource
+aws_route53recoverycontrolconfig_cluster
+```
+
+```release-note:new-resource
+aws_route53recoverycontrolconfig_control_panel
+```
+
+```release-note:new-resource
+aws_route53recoverycontrolconfig_routing_control
+```
+
+```release-note:new-resource
+aws_route53recoverycontrolconfig_safety_rule
+```

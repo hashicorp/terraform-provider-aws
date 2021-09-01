@@ -3,14 +3,16 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	tfkms "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsKmsAlias() *schema.Resource {
@@ -21,7 +23,7 @@ func resourceAwsKmsAlias() *schema.Resource {
 		Delete: resourceAwsKmsAliasDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsKmsAliasImport,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -29,28 +31,34 @@ func resourceAwsKmsAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validateAwsKmsName,
 			},
+
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validateAwsKmsName,
 			},
-			"target_key_id": {
-				Type:             schema.TypeString,
-				Required:         true,
-				DiffSuppressFunc: suppressEquivalentTargetKeyIdAndARN,
-			},
+
 			"target_key_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			"target_key_id": {
+				Type:             schema.TypeString,
+				Required:         true,
+				DiffSuppressFunc: suppressEquivalentKmsKeyARNOrID,
 			},
 		},
 	}
@@ -59,71 +67,64 @@ func resourceAwsKmsAlias() *schema.Resource {
 func resourceAwsKmsAliasCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
 
-	var name string
-	if v, ok := d.GetOk("name"); ok {
-		name = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		name = resource.PrefixedUniqueId(v.(string))
-	} else {
-		name = resource.PrefixedUniqueId("alias/")
+	namePrefix := d.Get("name_prefix").(string)
+	if namePrefix == "" {
+		namePrefix = tfkms.AliasNamePrefix
 	}
+	name := naming.Generate(d.Get("name").(string), namePrefix)
 
-	targetKeyId := d.Get("target_key_id").(string)
-
-	log.Printf("[DEBUG] KMS alias create name: %s, target_key: %s", name, targetKeyId)
-
-	req := &kms.CreateAliasInput{
+	input := &kms.CreateAliasInput{
 		AliasName:   aws.String(name),
-		TargetKeyId: aws.String(targetKeyId),
+		TargetKeyId: aws.String(d.Get("target_key_id").(string)),
 	}
 
-	// KMS is eventually consistent
-	_, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
-		return conn.CreateAlias(req)
-	})
+	// KMS is eventually consistent.
+	log.Printf("[DEBUG] Creating KMS Alias: %s", input)
+
+	_, err := tfresource.RetryWhenAwsErrCodeEquals(waiter.KeyRotationUpdatedTimeout, func() (interface{}, error) {
+		return conn.CreateAlias(input)
+	}, kms.ErrCodeNotFoundException)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating KMS Alias (%s): %w", name, err)
 	}
+
 	d.SetId(name)
+
 	return resourceAwsKmsAliasRead(d, meta)
 }
 
 func resourceAwsKmsAliasRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
 
-	var alias *kms.AliasListEntry
-	var err error
-	if d.IsNewResource() {
-		alias, err = retryFindKmsAliasByName(conn, d.Id())
-	} else {
-		alias, err = findKmsAliasByName(conn, d.Id(), nil)
-	}
-	if err != nil {
-		return err
-	}
-	if alias == nil {
-		log.Printf("[DEBUG] Removing KMS Alias (%s) as it's already gone", d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
+		return finder.AliasByName(conn, d.Id())
+	}, d.IsNewResource())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] KMS Alias (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	log.Printf("[DEBUG] Found KMS Alias: %s", alias)
+	if err != nil {
+		return fmt.Errorf("error reading KMS Alias (%s): %w", d.Id(), err)
+	}
 
-	d.Set("arn", alias.AliasArn)
-	d.Set("target_key_id", alias.TargetKeyId)
+	alias := outputRaw.(*kms.AliasListEntry)
+	aliasARN := aws.StringValue(alias.AliasArn)
+	targetKeyID := aws.StringValue(alias.TargetKeyId)
+	targetKeyARN, err := tfkms.AliasARNToKeyARN(aliasARN, targetKeyID)
 
-	aliasARN, err := arn.Parse(*alias.AliasArn)
 	if err != nil {
 		return err
 	}
-	targetKeyARN := arn.ARN{
-		Partition: aliasARN.Partition,
-		Service:   aliasARN.Service,
-		Region:    aliasARN.Region,
-		AccountID: aliasARN.AccountID,
-		Resource:  fmt.Sprintf("key/%s", *alias.TargetKeyId),
-	}
-	d.Set("target_key_arn", targetKeyARN.String())
+
+	d.Set("arn", aliasARN)
+	d.Set("name", alias.AliasName)
+	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(alias.AliasName)))
+	d.Set("target_key_arn", targetKeyARN)
+	d.Set("target_key_id", targetKeyID)
 
 	return nil
 }
@@ -132,109 +133,41 @@ func resourceAwsKmsAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
 
 	if d.HasChange("target_key_id") {
-		err := resourceAwsKmsAliasTargetUpdate(conn, d)
-		if err != nil {
-			return err
+		input := &kms.UpdateAliasInput{
+			AliasName:   aws.String(d.Id()),
+			TargetKeyId: aws.String(d.Get("target_key_id").(string)),
 		}
-		return resourceAwsKmsAliasRead(d, meta)
+
+		log.Printf("[DEBUG] Updating KMS Alias: %s", input)
+		_, err := conn.UpdateAlias(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating KMS Alias (%s): %w", d.Id(), err)
+		}
 	}
-	return nil
-}
 
-func resourceAwsKmsAliasTargetUpdate(conn *kms.KMS, d *schema.ResourceData) error {
-	name := d.Get("name").(string)
-	targetKeyId := d.Get("target_key_id").(string)
-
-	log.Printf("[DEBUG] KMS alias: %s, update target: %s", name, targetKeyId)
-
-	req := &kms.UpdateAliasInput{
-		AliasName:   aws.String(name),
-		TargetKeyId: aws.String(targetKeyId),
-	}
-	_, err := conn.UpdateAlias(req)
-
-	return err
+	return resourceAwsKmsAliasRead(d, meta)
 }
 
 func resourceAwsKmsAliasDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
 
-	req := &kms.DeleteAliasInput{
+	log.Printf("[DEBUG] Deleting KMS Alias: (%s)", d.Id())
+	_, err := conn.DeleteAlias(&kms.DeleteAliasInput{
 		AliasName: aws.String(d.Id()),
-	}
-	_, err := conn.DeleteAlias(req)
-	if err != nil {
-		return err
+	})
+
+	if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
+		return nil
 	}
 
-	log.Printf("[DEBUG] KMS Alias: (%s) deleted.", d.Id())
+	if err != nil {
+		return fmt.Errorf("error deleting KMS Alias (%s): %w", d.Id(), err)
+	}
 
 	return nil
 }
 
-func retryFindKmsAliasByName(conn *kms.KMS, name string) (*kms.AliasListEntry, error) {
-	var resp *kms.AliasListEntry
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
-		resp, err = findKmsAliasByName(conn, name, nil)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		if resp == nil {
-			return resource.RetryableError(&resource.NotFoundError{})
-		}
-		return nil
-	})
-
-	if isResourceTimeoutError(err) {
-		resp, err = findKmsAliasByName(conn, name, nil)
-	}
-
-	return resp, err
-}
-
-// API by default limits results to 50 aliases
-// This is how we make sure we won't miss any alias
-// See http://docs.aws.amazon.com/kms/latest/APIReference/API_ListAliases.html
-func findKmsAliasByName(conn *kms.KMS, name string, marker *string) (*kms.AliasListEntry, error) {
-	req := kms.ListAliasesInput{
-		Limit: aws.Int64(int64(100)),
-	}
-	if marker != nil {
-		req.Marker = marker
-	}
-
-	log.Printf("[DEBUG] Listing KMS aliases: %s", req)
-	resp, err := conn.ListAliases(&req)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, entry := range resp.Aliases {
-		if *entry.AliasName == name {
-			return entry, nil
-		}
-	}
-	if *resp.Truncated {
-		log.Printf("[DEBUG] KMS alias list is truncated, listing more via %s", *resp.NextMarker)
-		return findKmsAliasByName(conn, name, resp.NextMarker)
-	}
-
-	return nil, nil
-}
-
-func resourceAwsKmsAliasImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	d.Set("name", d.Id())
-	return []*schema.ResourceData{d}, nil
-}
-
-func suppressEquivalentTargetKeyIdAndARN(k, old, new string, d *schema.ResourceData) bool {
-	newARN, err := arn.Parse(new)
-	if err != nil {
-		log.Printf("[DEBUG] %q can not be parsed as an ARN: %q", new, err)
-		return false
-	}
-
-	resource := strings.TrimPrefix(newARN.Resource, "key/")
-	return old == resource
+func suppressEquivalentKmsKeyARNOrID(k, old, new string, d *schema.ResourceData) bool {
+	return tfkms.KeyARNOrIDEqual(old, new)
 }

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -33,6 +34,10 @@ func resourceAwsRoute53Zone() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				// AWS Provider 3.0.0 - trailing period removed from name
 				// returned from API, no longer requiring custom DiffSuppressFunc;
@@ -46,9 +51,10 @@ func resourceAwsRoute53Zone() *schema.Resource {
 			},
 
 			"comment": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "Managed by Terraform",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "Managed by Terraform",
+				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
 
 			"vpc": {
@@ -248,6 +254,13 @@ func resourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "route53",
+		Resource:  fmt.Sprintf("hostedzone/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+
 	return nil
 }
 
@@ -362,7 +375,7 @@ func deleteAllRecordsInHostedZoneId(hostedZoneId, hostedZoneName string, conn *r
 				continue
 			}
 			changes = append(changes, &route53.Change{
-				Action:            aws.String("DELETE"),
+				Action:            aws.String(route53.ChangeActionDelete),
 				ResourceRecordSet: set,
 			})
 		}

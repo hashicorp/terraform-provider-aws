@@ -160,6 +160,42 @@ func testAccAwsGuardDutyDetector_tags(t *testing.T) {
 	})
 }
 
+func testAccAwsGuardDutyDetector_datasources_s3logs(t *testing.T) {
+	resourceName := "aws_guardduty_detector.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsGuardDutyDetectorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardDutyDetectorConfigDatasourcesS3Logs(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsGuardDutyDetectorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGuardDutyDetectorConfigDatasourcesS3Logs(false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsGuardDutyDetectorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "false"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsGuardDutyDetectorDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
 
@@ -238,4 +274,16 @@ resource "aws_guardduty_detector" "test" {
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccGuardDutyDetectorConfigDatasourcesS3Logs(enable bool) string {
+	return fmt.Sprintf(`
+resource "aws_guardduty_detector" "test" {
+  datasources {
+    s3_logs {
+      enable = %[1]t
+    }
+  }
+}
+`, enable)
 }

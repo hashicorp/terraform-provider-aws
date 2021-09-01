@@ -65,6 +65,11 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
+						"account_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 255),
+						},
 						"expression": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -506,6 +511,7 @@ func flattenAwsCloudWatchMetricAlarmMetrics(metrics []*cloudwatch.MetricDataQuer
 	metricQueries := make([]map[string]interface{}, 0)
 	for _, mq := range metrics {
 		metricQuery := map[string]interface{}{
+			"account_id":  aws.StringValue(mq.AccountId),
 			"expression":  aws.StringValue(mq.Expression),
 			"id":          aws.StringValue(mq.Id),
 			"label":       aws.StringValue(mq.Label),
@@ -558,6 +564,9 @@ func expandCloudWatchMetricAlarmMetrics(v *schema.Set) []*cloudwatch.MetricDataQ
 		}
 		if v := metricQueryResource["metric"]; v != nil && len(v.([]interface{})) > 0 {
 			metricQuery.MetricStat = expandCloudWatchMetricAlarmMetricsMetric(v.([]interface{}))
+		}
+		if v, ok := metricQueryResource["account_id"]; ok && v.(string) != "" {
+			metricQuery.AccountId = aws.String(v.(string))
 		}
 		metrics = append(metrics, &metricQuery)
 	}

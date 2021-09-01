@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -56,6 +57,15 @@ func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(sagemaker.InstanceType_Values(), false),
 			},
+
+			"platform_identifier": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(notebook-al1-v1|notebook-al2-v1)$`), ""),
+			},
+
 			"additional_code_repositories": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -147,6 +157,10 @@ func resourceAwsSagemakerNotebookInstanceCreate(d *schema.ResourceData, meta int
 		createOpts.RootAccess = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("platform_identifier"); ok {
+		createOpts.PlatformIdentifier = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("direct_internet_access"); ok {
 		createOpts.DirectInternetAccess = aws.String(v.(string))
 	}
@@ -226,6 +240,11 @@ func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta inter
 	if err := d.Set("instance_type", notebookInstance.InstanceType); err != nil {
 		return fmt.Errorf("error setting instance_type for sagemaker notebook instance (%s): %s", d.Id(), err)
 	}
+
+	if err := d.Set("platform_identifier", notebookInstance.PlatformIdentifier); err != nil {
+		return fmt.Errorf("error setting platform_identifier for sagemaker notebook instance (%s): %s", d.Id(), err)
+	}
+
 	if err := d.Set("subnet_id", notebookInstance.SubnetId); err != nil {
 		return fmt.Errorf("error setting subnet_id for sagemaker notebook instance (%s): %s", d.Id(), err)
 	}
