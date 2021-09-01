@@ -5,12 +5,15 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicediscovery/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicediscovery/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsServiceDiscoveryService() *schema.Resource {
@@ -139,37 +142,40 @@ func resourceAwsServiceDiscoveryServiceCreate(d *schema.ResourceData, meta inter
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
+	name := d.Get("name").(string)
 	input := &servicediscovery.CreateServiceInput{
-		Name: aws.String(d.Get("name").(string)),
-		Tags: tags.IgnoreAws().ServicediscoveryTags(),
-	}
-
-	dnsConfig := d.Get("dns_config").([]interface{})
-	if len(dnsConfig) > 0 {
-		input.DnsConfig = expandServiceDiscoveryDnsConfig(dnsConfig[0].(map[string]interface{}))
+		Name: aws.String(name),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("dns_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.DnsConfig = expandServiceDiscoveryDnsConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("health_check_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.HealthCheckConfig = expandServiceDiscoveryHealthCheckConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("health_check_custom_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.HealthCheckCustomConfig = expandServiceDiscoveryHealthCheckCustomConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("namespace_id"); ok {
 		input.NamespaceId = aws.String(v.(string))
 	}
 
-	hcconfig := d.Get("health_check_config").([]interface{})
-	if len(hcconfig) > 0 {
-		input.HealthCheckConfig = expandServiceDiscoveryHealthCheckConfig(hcconfig[0].(map[string]interface{}))
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().ServicediscoveryTags()
 	}
 
-	healthCustomConfig := d.Get("health_check_custom_config").([]interface{})
-	if len(healthCustomConfig) > 0 {
-		input.HealthCheckCustomConfig = expandServiceDiscoveryHealthCheckCustomConfig(healthCustomConfig[0].(map[string]interface{}))
-	}
-
+	log.Printf("[DEBUG] Creating Service Discovery Service: %s", input)
 	resp, err := conn.CreateService(input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating Service Discovery Service (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(resp.Service.Id))
@@ -182,34 +188,37 @@ func resourceAwsServiceDiscoveryServiceRead(d *schema.ResourceData, meta interfa
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	input := &servicediscovery.GetServiceInput{
-		Id: aws.String(d.Id()),
+	service, err := finder.ServiceByID(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Service Discovery Service (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	resp, err := conn.GetService(input)
 	if err != nil {
-		if isAWSErr(err, servicediscovery.ErrCodeServiceNotFound, "") {
-			log.Printf("[WARN] Service Discovery Service (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("error reading Service Discovery Service (%s): %w", d.Id(), err)
 	}
 
-	service := resp.Service
 	arn := aws.StringValue(service.Arn)
 	d.Set("arn", arn)
-	d.Set("name", service.Name)
 	d.Set("description", service.Description)
+	if err := d.Set("dns_config", flattenServiceDiscoveryDnsConfig(service.DnsConfig)); err != nil {
+		return fmt.Errorf("error setting dns_config: %w", err)
+	}
+	if err := d.Set("health_check_config", flattenServiceDiscoveryHealthCheckConfig(service.HealthCheckConfig)); err != nil {
+		return fmt.Errorf("error setting health_check_config: %w", err)
+	}
+	if err := d.Set("health_check_custom_config", flattenServiceDiscoveryHealthCheckCustomConfig(service.HealthCheckCustomConfig)); err != nil {
+		return fmt.Errorf("error setting health_check_custom_config: %w", err)
+	}
+	d.Set("name", service.Name)
 	d.Set("namespace_id", service.NamespaceId)
-	d.Set("dns_config", flattenServiceDiscoveryDnsConfig(service.DnsConfig))
-	d.Set("health_check_config", flattenServiceDiscoveryHealthCheckConfig(service.HealthCheckConfig))
-	d.Set("health_check_custom_config", flattenServiceDiscoveryHealthCheckCustomConfig(service.HealthCheckCustomConfig))
 
 	tags, err := keyvaluetags.ServicediscoveryListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+		return fmt.Errorf("error listing tags for resource (%s): %w", arn, err)
 	}
 
 	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
@@ -229,18 +238,20 @@ func resourceAwsServiceDiscoveryServiceRead(d *schema.ResourceData, meta interfa
 func resourceAwsServiceDiscoveryServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sdconn
 
-	if d.HasChanges("description", "dns_config", "health_check_config") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &servicediscovery.UpdateServiceInput{
 			Id: aws.String(d.Id()),
 			Service: &servicediscovery.ServiceChange{
 				Description: aws.String(d.Get("description").(string)),
-				DnsConfig:   expandServiceDiscoveryDnsConfigChange(d.Get("dns_config").([]interface{})[0].(map[string]interface{})),
 			},
 		}
 
-		hcconfig := d.Get("health_check_config").([]interface{})
-		if len(hcconfig) > 0 {
-			input.Service.HealthCheckConfig = expandServiceDiscoveryHealthCheckConfig(hcconfig[0].(map[string]interface{}))
+		if v, ok := d.GetOk("dns_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.Service.DnsConfig = expandServiceDiscoveryDnsConfigChange(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		if v, ok := d.GetOk("health_check_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.Service.HealthCheckConfig = expandServiceDiscoveryHealthCheckConfig(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		output, err := conn.UpdateService(input)
@@ -259,7 +270,7 @@ func resourceAwsServiceDiscoveryServiceUpdate(d *schema.ResourceData, meta inter
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.ServicediscoveryUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Service Discovery Private DNS Namespace (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating Service Discovery Service (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -269,42 +280,54 @@ func resourceAwsServiceDiscoveryServiceUpdate(d *schema.ResourceData, meta inter
 func resourceAwsServiceDiscoveryServiceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sdconn
 
-	input := &servicediscovery.DeleteServiceInput{
-		Id: aws.String(d.Id()),
-	}
-
 	if d.Get("force_destroy").(bool) {
-		result, err := conn.ListInstances(&servicediscovery.ListInstancesInput{ServiceId: aws.String(d.Id())})
+		input := &servicediscovery.ListInstancesInput{
+			ServiceId: aws.String(d.Id()),
+		}
+
+		var deletionErrs *multierror.Error
+
+		err := conn.ListInstancesPages(input, func(page *servicediscovery.ListInstancesOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
+
+			for _, instance := range page.Instances {
+				err := deregisterServiceDiscoveryInstance(conn, d.Id(), aws.StringValue(instance.Id))
+
+				if err != nil {
+					log.Printf("[ERROR] %s", err)
+					deletionErrs = multierror.Append(deletionErrs, err)
+
+					continue
+				}
+			}
+
+			return !lastPage
+		})
+
+		if err != nil {
+			deletionErrs = multierror.Append(deletionErrs, fmt.Errorf("error listing Service Discovery Instances: %w", err))
+		}
+
+		err = deletionErrs.ErrorOrNil()
+
 		if err != nil {
 			return err
 		}
-
-		instances := result.Instances
-		for _, instance := range instances {
-			_, err := conn.DeregisterInstance(&servicediscovery.DeregisterInstanceInput{InstanceId: instance.Id, ServiceId: aws.String(d.Id())})
-			if err != nil {
-				sderr, ok := err.(awserr.Error)
-				if ok && sderr.Code() != "DuplicateRequest" && sderr.Code() != "InstanceNotFound" {
-					return err
-				}
-			}
-		}
 	}
 
-	_, err := conn.DeleteService(input)
+	log.Printf("[DEBUG] Deleting Service Discovery Service: (%s)", d.Id())
+	_, err := conn.DeleteService(&servicediscovery.DeleteServiceInput{
+		Id: aws.String(d.Id()),
+	})
 
-	if isAWSErr(err, servicediscovery.ErrCodeServiceNotFound, "") {
+	if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeServiceNotFound) {
 		return nil
 	}
 
 	if err != nil {
-		sderr, ok := err.(awserr.Error)
-		if ok && sderr.Code() == "ResourceInUse" {
-			// this line recurses until all instances are deregistered or an error is returned
-			return resourceAwsServiceDiscoveryServiceDelete(d, meta)
-		} else {
-			return fmt.Errorf("error deleting Service Discovery Service (%s): %w", d.Id(), err)
-		}
+		return fmt.Errorf("error deleting Service Discovery Service (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -451,4 +474,26 @@ func flattenServiceDiscoveryHealthCheckCustomConfig(config *servicediscovery.Hea
 	}
 
 	return []map[string]interface{}{result}
+}
+
+func deregisterServiceDiscoveryInstance(conn *servicediscovery.ServiceDiscovery, serviceID, instanceID string) error {
+	input := &servicediscovery.DeregisterInstanceInput{
+		InstanceId: aws.String(instanceID),
+		ServiceId:  aws.String(serviceID),
+	}
+
+	log.Printf("[INFO] Deregistering Service Discovery Service (%s) Instance: %s", serviceID, instanceID)
+	output, err := conn.DeregisterInstance(input)
+
+	if err != nil {
+		return fmt.Errorf("error deregistering Service Discovery Service (%s) Instance (%s): %w", serviceID, instanceID, err)
+	}
+
+	if output != nil && output.OperationId != nil {
+		if _, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
+			return fmt.Errorf("error waiting for Service Discovery Service (%s) Instance (%s) delete: %w", serviceID, instanceID, err)
+		}
+	}
+
+	return nil
 }
