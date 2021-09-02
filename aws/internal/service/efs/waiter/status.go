@@ -28,3 +28,26 @@ func AccessPointLifeCycleState(conn *efs.EFS, accessPointId string) resource.Sta
 		return mt, aws.StringValue(mt.LifeCycleState), nil
 	}
 }
+
+// FileSystemLifeCycleState fetches the Access Point and its LifecycleState
+func FileSystemLifeCycleState(conn *efs.EFS, fileSystemID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &efs.DescribeFileSystemsInput{
+			FileSystemId: aws.String(fileSystemID),
+		}
+
+		output, err := conn.DescribeFileSystems(input)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || len(output.FileSystems) == 0 || output.FileSystems[0] == nil {
+			return nil, "", nil
+		}
+
+		mt := output.FileSystems[0]
+
+		return mt, aws.StringValue(mt.LifeCycleState), nil
+	}
+}

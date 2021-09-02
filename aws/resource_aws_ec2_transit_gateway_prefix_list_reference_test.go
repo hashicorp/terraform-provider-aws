@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -24,6 +25,7 @@ func TestAccAwsEc2TransitGatewayPrefixListReference_basic(t *testing.T) {
 			testAccPreCheckAWSEc2TransitGateway(t)
 			testAccPreCheckEc2ManagedPrefixList(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2TransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
@@ -57,6 +59,7 @@ func TestAccAwsEc2TransitGatewayPrefixListReference_disappears(t *testing.T) {
 			testAccPreCheckAWSEc2TransitGateway(t)
 			testAccPreCheckEc2ManagedPrefixList(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2TransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
@@ -83,6 +86,7 @@ func TestAccAwsEc2TransitGatewayPrefixListReference_disappears_TransitGateway(t 
 			testAccPreCheckAWSEc2TransitGateway(t)
 			testAccPreCheckEc2ManagedPrefixList(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2TransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
@@ -110,6 +114,7 @@ func TestAccAwsEc2TransitGatewayPrefixListReference_TransitGatewayAttachmentId(t
 			testAccPreCheckAWSEc2TransitGateway(t)
 			testAccPreCheckEc2ManagedPrefixList(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2TransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{

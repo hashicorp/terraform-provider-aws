@@ -15,6 +15,7 @@ func TestAccAWSCloudFrontDataSourceOriginRequestPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
@@ -33,6 +34,7 @@ func TestAccAWSCloudFrontDataSourceOriginRequestPolicy_basic(t *testing.T) {
 		},
 	})
 }
+
 func testAccAWSCloudFrontDataSourceOriginRequestPolicyConfig(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_cloudfront_origin_request_policy" "example" {

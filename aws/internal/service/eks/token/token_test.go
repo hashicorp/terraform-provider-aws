@@ -6,6 +6,7 @@ With the following modifications:
 
  - Fix staticcheck reports
  - Ignore errorlint reports
+ - Refactor deprecated io/ioutil in Go 1.16
 */
 
 package token
@@ -17,7 +18,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"testing"
@@ -69,7 +69,7 @@ func toToken(url string) string {
 func newVerifier(statusCode int, body string, err error) Verifier {
 	var rc io.ReadCloser
 	if body != "" {
-		rc = ioutil.NopCloser(bytes.NewReader([]byte(body)))
+		rc = io.NopCloser(bytes.NewReader([]byte(body)))
 	}
 	return tokenVerifier{
 		client: &http.Client{

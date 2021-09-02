@@ -157,3 +157,25 @@ func AppImageConfigByName(conn *sagemaker.SageMaker, appImageConfigID string) (*
 
 	return output, nil
 }
+
+// AppByName returns the domain corresponding to the specified domain id.
+// Returns nil if no domain is found.
+func AppByName(conn *sagemaker.SageMaker, domainID, userProfileName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
+	input := &sagemaker.DescribeAppInput{
+		DomainId:        aws.String(domainID),
+		UserProfileName: aws.String(userProfileName),
+		AppType:         aws.String(appType),
+		AppName:         aws.String(appName),
+	}
+
+	output, err := conn.DescribeApp(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	return output, nil
+}

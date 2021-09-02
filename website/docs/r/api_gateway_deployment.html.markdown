@@ -25,7 +25,7 @@ To properly capture all REST API configuration in a deployment, this resource mu
 
 An end-to-end example of a REST API configured with OpenAPI can be found in the [`/examples/api-gateway-rest-api-openapi` directory within the GitHub repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/api-gateway-rest-api-openapi).
 
-```hcl
+```terraform
 resource "aws_api_gateway_rest_api" "example" {
   body = jsonencode({
     openapi = "3.0.1"
@@ -71,7 +71,7 @@ resource "aws_api_gateway_stage" "example" {
 
 ### Terraform Resources
 
-```hcl
+```terraform
 resource "aws_api_gateway_rest_api" "example" {
   name = "example"
 }

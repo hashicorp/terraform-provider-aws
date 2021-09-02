@@ -12,7 +12,7 @@ Provides a CloudFront real-time log configuration resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_role" "example" {
   name = "cloudfront-realtime-log-config-example"
 

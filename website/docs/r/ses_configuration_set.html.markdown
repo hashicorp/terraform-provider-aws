@@ -12,7 +12,7 @@ Provides an SES configuration set resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ses_configuration_set" "test" {
   name = "some-configuration-set-test"
 }
@@ -20,7 +20,7 @@ resource "aws_ses_configuration_set" "test" {
 
 ### Require TLS Connections
 
-```hcl
+```terraform
 resource "aws_ses_configuration_set" "test" {
   name = "some-configuration-set-test"
 
@@ -39,6 +39,8 @@ The following argument is required:
 The following argument is optional:
 
 * `delivery_options` - (Optional) Configuration block. Detailed below.
+* `reputation_metrics_enabled` - (Optional) Whether or not Amazon SES publishes reputation metrics for the configuration set, such as bounce and complaint rates, to Amazon CloudWatch. The default value is `false`.
+* `sending_enabled` - (Optional) Whether email sending is enabled or disabled for the configuration set. The default value is `true`.
 
 ### delivery_options
 
@@ -46,10 +48,11 @@ The following argument is optional:
 
 ## Attributes Reference
 
-In addition to the arguments, which are exported, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - SES configuration set ARN.
 * `id` - SES configuration set name.
+* `last_fresh_start` - The date and time at which the reputation metrics for the configuration set were last reset. Resetting these metrics is known as a fresh start.
 
 ## Import
 

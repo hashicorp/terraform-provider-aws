@@ -12,7 +12,7 @@ Gives an external source (like a CloudWatch Event Rule, SNS, or S3) permission t
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_lambda_permission" "allow_cloudwatch" {
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
@@ -60,7 +60,7 @@ resource "aws_iam_role" "iam_for_lambda" {
 
 ## Usage with SNS
 
-```hcl
+```terraform
 resource "aws_lambda_permission" "with_sns" {
   statement_id  = "AllowExecutionFromSNS"
   action        = "lambda:InvokeFunction"
@@ -110,7 +110,7 @@ resource "aws_iam_role" "default" {
 
 ## Specify Lambda permissions for API Gateway REST API
 
-```hcl
+```terraform
 resource "aws_api_gateway_rest_api" "MyDemoAPI" {
   name        = "MyDemoAPI"
   description = "This is my API for demonstration purposes"
@@ -130,7 +130,7 @@ resource "aws_lambda_permission" "lambda_permission" {
 
 ## Usage with CloudWatch log group
 
-```hcl
+```terraform
 resource "aws_lambda_permission" "logging" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.logging.function_name
@@ -197,6 +197,10 @@ EOF
 
 [1]: https://developer.amazon.com/docs/custom-skills/host-a-custom-skill-as-an-aws-lambda-function.html#use-aws-cli
 [2]: https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-control-access-using-iam-policies-to-invoke-api.html
+
+## Attributes Reference
+
+No additional attributes are exported.
 
 ## Import
 

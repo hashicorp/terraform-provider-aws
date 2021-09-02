@@ -8,11 +8,11 @@ description: |-
 
 # Resource: aws_route53_key_signing_key
 
-Manages an Route 53 Key Signing Key. For more information about managing Domain Name System Security Extensions (DNSSEC)in Route 53, see the [Route 53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-configuring-dnssec.html).
+Manages a Route 53 Key Signing Key. To manage Domain Name System Security Extensions (DNSSEC) for a Hosted Zone, see the [`aws_route53_hosted_zone_dnssec` resource](route53_hosted_zone_dnssec.html). For more information about managing DNSSEC in Route 53, see the [Route 53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-configuring-dnssec.html).
 
 ## Example Usage
 
-```hcl
+```terraform
 provider "aws" {
   region = "us-east-1"
 }
@@ -31,9 +31,24 @@ resource "aws_kms_key" "example" {
         ],
         Effect = "Allow"
         Principal = {
-          Service = "api-service.dnssec.route53.aws.internal"
+          Service = "dnssec-route53.amazonaws.com"
         }
-        Sid = "Route 53 DNSSEC Permissions"
+        Sid      = "Allow Route 53 DNSSEC Service",
+        Resource = "*"
+      },
+      {
+        Action = "kms:CreateGrant",
+        Effect = "Allow"
+        Principal = {
+          Service = "dnssec-route53.amazonaws.com"
+        }
+        Sid      = "Allow Route 53 DNSSEC Service to CreateGrant",
+        Resource = "*"
+        Condition = {
+          Bool = {
+            "kms:GrantIsForAWSResource" = "true"
+          }
+        }
       },
       {
         Action = "kms:*"
@@ -57,6 +72,13 @@ resource "aws_route53_key_signing_key" "example" {
   hosted_zone_id             = aws_route53_zone.test.id
   key_management_service_arn = aws_kms_key.test.arn
   name                       = "example"
+}
+
+resource "aws_route53_hosted_zone_dnssec" "example" {
+  depends_on = [
+    aws_route53_key_signing_key.example
+  ]
+  hosted_zone_id = aws_route53_key_signing_key.example.hosted_zone_id
 }
 ```
 

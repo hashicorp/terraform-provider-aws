@@ -14,7 +14,7 @@ Provides a Sagemaker Code Repository resource.
 
 ### Basic usage
 
-```hcl
+```terraform
 resource "aws_sagemaker_code_repository" "example" {
   code_repository_name = "example"
 
@@ -26,7 +26,7 @@ resource "aws_sagemaker_code_repository" "example" {
 
 ### Example with Secret
 
-```hcl
+```terraform
 resource "aws_secretsmanager_secret" "example" {
   name = "example"
 }

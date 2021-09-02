@@ -122,8 +122,8 @@ type volumeSort []*ec2.Volume
 func (a volumeSort) Len() int      { return len(a) }
 func (a volumeSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a volumeSort) Less(i, j int) bool {
-	itime := *a[i].CreateTime
-	jtime := *a[j].CreateTime
+	itime := aws.TimeValue(a[i].CreateTime)
+	jtime := aws.TimeValue(a[j].CreateTime)
 	return itime.Unix() < jtime.Unix()
 }
 

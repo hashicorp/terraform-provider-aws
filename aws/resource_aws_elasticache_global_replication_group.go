@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
@@ -70,12 +71,17 @@ func resourceAwsElasticacheGlobalReplicationGroup() *schema.Resource {
 			},
 			// Leaving space for `engine_version` for creation and updating.
 			// `engine_version` cannot be used for returning the version because, starting with Redis 6,
-			// version configuration is major-version-only: `engine_version = "6.x"`, while `actual_engine_version`
+			// version configuration is major-version-only: `engine_version = "6.x"`, while `engine_version_actual`
 			// will be e.g. `6.0.5`
 			// See also https://github.com/hashicorp/terraform-provider-aws/issues/15625
-			"actual_engine_version": {
+			"engine_version_actual": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"actual_engine_version": {
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "Use engine_version_actual instead",
 			},
 			"global_replication_group_id": {
 				Type:     schema.TypeString,
@@ -115,9 +121,10 @@ func resourceAwsElasticacheGlobalReplicationGroup() *schema.Resource {
 			// 	},
 			// },
 			"primary_replication_group_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateReplicationGroupID,
 			},
 			"transit_encryption_enabled": {
 				Type:     schema.TypeBool,
@@ -193,6 +200,7 @@ func resourceAwsElasticacheGlobalReplicationGroupRead(d *schema.ResourceData, me
 	d.Set("cache_node_type", globalReplicationGroup.CacheNodeType)
 	d.Set("cluster_enabled", globalReplicationGroup.ClusterEnabled)
 	d.Set("engine", globalReplicationGroup.Engine)
+	d.Set("engine_version_actual", globalReplicationGroup.EngineVersion)
 	d.Set("actual_engine_version", globalReplicationGroup.EngineVersion)
 	d.Set("global_replication_group_description", globalReplicationGroup.GlobalReplicationGroupDescription)
 	d.Set("global_replication_group_id", globalReplicationGroup.GlobalReplicationGroupId)
@@ -248,7 +256,8 @@ func updateElasticacheGlobalReplicationGroup(conn *elasticache.ElastiCache, id s
 func resourceAwsElasticacheGlobalReplicationGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
 
-	err := deleteElasticacheGlobalReplicationGroup(conn, d.Id())
+	// Using Update timeout because the Global Replication Group could be in the middle of an update operation
+	err := deleteElasticacheGlobalReplicationGroup(conn, d.Id(), waiter.GlobalReplicationGroupDefaultUpdatedTimeout)
 	if err != nil {
 		return fmt.Errorf("error deleting ElastiCache Global Replication Group: %w", err)
 	}
@@ -256,14 +265,13 @@ func resourceAwsElasticacheGlobalReplicationGroupDelete(d *schema.ResourceData, 
 	return nil
 }
 
-func deleteElasticacheGlobalReplicationGroup(conn *elasticache.ElastiCache, id string) error {
+func deleteElasticacheGlobalReplicationGroup(conn *elasticache.ElastiCache, id string, readyTimeout time.Duration) error {
 	input := &elasticache.DeleteGlobalReplicationGroupInput{
 		GlobalReplicationGroupId:      aws.String(id),
 		RetainPrimaryReplicationGroup: aws.Bool(true),
 	}
 
-	// Using Update timeout because the Global Replication Group could be in the middle of an update operation
-	err := resource.Retry(waiter.GlobalReplicationGroupDefaultUpdatedTimeout, func() *resource.RetryError {
+	err := resource.Retry(readyTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteGlobalReplicationGroup(input)
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeGlobalReplicationGroupNotFoundFault) {
 			return resource.NonRetryableError(&resource.NotFoundError{
@@ -271,7 +279,7 @@ func deleteElasticacheGlobalReplicationGroup(conn *elasticache.ElastiCache, id s
 				LastRequest: input,
 			})
 		}
-		if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidGlobalReplicationGroupStateFault, "is not empty") {
+		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeInvalidGlobalReplicationGroupStateFault) {
 			return resource.RetryableError(err)
 		}
 		if err != nil {

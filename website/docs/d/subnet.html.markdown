@@ -16,7 +16,7 @@ This resource can prove useful when a module accepts a subnet ID as an input var
 
 The following example shows how one might accept a subnet ID as a variable and use this data source to obtain the data necessary to create a security group that allows connections from hosts in that subnet.
 
-```hcl
+```terraform
 variable "subnet_id" {}
 
 data "aws_subnet" "selected" {
@@ -39,7 +39,7 @@ resource "aws_security_group" "subnet" {
 
 If you want to match against tag `Name`, use:
 
-```hcl
+```terraform
 data "aws_subnet" "selected" {
   filter {
     name   = "tag:Name"

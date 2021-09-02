@@ -11,9 +11,6 @@ on:
       - .go-version
       - docs/**
 
-env:
-  GO111MODULE: on
-
 jobs:
   markdown-link-check:
     runs-on: ubuntu-latest

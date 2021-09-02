@@ -22,6 +22,20 @@ func TableByName(conn *glue.Glue, catalogID, dbName, name string) (*glue.GetTabl
 	return output, nil
 }
 
+// TriggerByName returns the Trigger corresponding to the specified name.
+func TriggerByName(conn *glue.Glue, name string) (*glue.GetTriggerOutput, error) {
+	input := &glue.GetTriggerInput{
+		Name: aws.String(name),
+	}
+
+	output, err := conn.GetTrigger(input)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 // RegistryByID returns the Registry corresponding to the specified ID.
 func RegistryByID(conn *glue.Glue, id string) (*glue.GetRegistryOutput, error) {
 	input := &glue.GetRegistryInput{

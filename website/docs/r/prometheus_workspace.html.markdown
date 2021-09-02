@@ -14,7 +14,7 @@ Manages an Amazon Managed Service for Prometheus (AMP) Workspace.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_prometheus_workspace" "demo" {
   alias = "prometheus-test"
 }

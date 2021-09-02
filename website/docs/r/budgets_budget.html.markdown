@@ -12,7 +12,7 @@ Provides a budgets budget resource. Budgets use the cost visualisation provided 
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_budgets_budget" "ec2" {
   name              = "budget-ec2-monthly"
   budget_type       = "COST"
@@ -38,7 +38,7 @@ resource "aws_budgets_budget" "ec2" {
 
 Create a budget for *$100*.
 
-```hcl
+```terraform
 resource "aws_budgets_budget" "cost" {
   # ...
   budget_type  = "COST"
@@ -49,7 +49,7 @@ resource "aws_budgets_budget" "cost" {
 
 Create a budget for s3 with a limit of *3 GB* of storage.
 
-```hcl
+```terraform
 resource "aws_budgets_budget" "s3" {
   # ...
   budget_type  = "USAGE"
@@ -60,7 +60,7 @@ resource "aws_budgets_budget" "s3" {
 
 Create a Savings Plan Utilization Budget
 
-```hcl
+```terraform
 resource "aws_budgets_budget" "savings_plan_utilization" {
   # ...
   budget_type  = "SAVINGS_PLANS_UTILIZATION"
@@ -84,7 +84,7 @@ resource "aws_budgets_budget" "savings_plan_utilization" {
 
 Create a RI Utilization Budget
 
-```hcl
+```terraform
 resource "aws_budgets_budget" "ri_utilization" {
   # ...
   budget_type  = "RI_UTILIZATION"

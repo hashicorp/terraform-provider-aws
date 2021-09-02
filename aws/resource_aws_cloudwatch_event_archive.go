@@ -92,6 +92,12 @@ func resourceAwsCloudWatchEventArchiveRead(d *schema.ResourceData, meta interfac
 
 	out, err := conn.DescribeArchive(input)
 
+	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+		log.Printf("[WARN] CloudWatch Events archive (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error reading CloudWatch Events archive: %w", err)
 	}
@@ -166,7 +172,7 @@ func buildCreateArchiveInputStruct(d *schema.ResourceData) (*events.CreateArchiv
 	}
 
 	if v, ok := d.GetOk("retention_days"); ok {
-		input.RetentionDays = aws.Int64(v.(int64))
+		input.RetentionDays = aws.Int64(int64(v.(int)))
 	}
 
 	return &input, nil
@@ -190,11 +196,8 @@ func buildUpdateArchiveInputStruct(d *schema.ResourceData) (*events.UpdateArchiv
 	}
 
 	if v, ok := d.GetOk("retention_days"); ok {
-		retentionInDays := int64(v.(int))
-		input.RetentionDays = aws.Int64(retentionInDays)
+		input.RetentionDays = aws.Int64(int64(v.(int)))
 	}
 
 	return &input, nil
 }
-
-// create a datasource

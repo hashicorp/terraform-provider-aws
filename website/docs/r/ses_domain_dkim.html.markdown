@@ -31,7 +31,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ses_domain_identity" "example" {
   domain = "example.com"
 }
